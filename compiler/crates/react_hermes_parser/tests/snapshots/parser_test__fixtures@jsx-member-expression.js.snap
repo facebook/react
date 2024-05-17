@@ -1,0 +1,279 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/jsx-member-expression.js
+---
+Input:
+function Component(props) {
+  return (
+    <Sathya.Codes.Forget>
+      <Foo.Bar.Baz />
+    </Sathya.Codes.Forget>
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXMemberExpression",
+                  "object": {
+                    "type": "JSXMemberExpression",
+                    "object": {
+                      "type": "JSXIdentifier",
+                      "name": "Sathya",
+                      "loc": null,
+                      "range": [
+                        44,
+                        50
+                      ]
+                    },
+                    "property": {
+                      "type": "JSXIdentifier",
+                      "name": "Codes",
+                      "loc": null,
+                      "range": [
+                        51,
+                        56
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      44,
+                      56
+                    ]
+                  },
+                  "property": {
+                    "type": "JSXIdentifier",
+                    "name": "Forget",
+                    "loc": null,
+                    "range": [
+                      57,
+                      63
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    44,
+                    63
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  43,
+                  64
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXText",
+                  "value": "\n      ",
+                  "raw": "\n      ",
+                  "loc": null,
+                  "range": [
+                    64,
+                    71
+                  ]
+                },
+                {
+                  "type": "JSXElement",
+                  "openingElement": {
+                    "type": "JSXOpeningElement",
+                    "name": {
+                      "type": "JSXMemberExpression",
+                      "object": {
+                        "type": "JSXMemberExpression",
+                        "object": {
+                          "type": "JSXIdentifier",
+                          "name": "Foo",
+                          "loc": null,
+                          "range": [
+                            72,
+                            75
+                          ]
+                        },
+                        "property": {
+                          "type": "JSXIdentifier",
+                          "name": "Bar",
+                          "loc": null,
+                          "range": [
+                            76,
+                            79
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          72,
+                          79
+                        ]
+                      },
+                      "property": {
+                        "type": "JSXIdentifier",
+                        "name": "Baz",
+                        "loc": null,
+                        "range": [
+                          80,
+                          83
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        72,
+                        83
+                      ]
+                    },
+                    "attributes": [],
+                    "selfClosing": true,
+                    "loc": null,
+                    "range": [
+                      71,
+                      86
+                    ]
+                  },
+                  "children": [],
+                  "closingElement": null,
+                  "loc": null,
+                  "range": [
+                    71,
+                    86
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n    ",
+                  "raw": "\n    ",
+                  "loc": null,
+                  "range": [
+                    86,
+                    91
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXMemberExpression",
+                  "object": {
+                    "type": "JSXMemberExpression",
+                    "object": {
+                      "type": "JSXIdentifier",
+                      "name": "Sathya",
+                      "loc": null,
+                      "range": [
+                        93,
+                        99
+                      ]
+                    },
+                    "property": {
+                      "type": "JSXIdentifier",
+                      "name": "Codes",
+                      "loc": null,
+                      "range": [
+                        100,
+                        105
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      93,
+                      105
+                    ]
+                  },
+                  "property": {
+                    "type": "JSXIdentifier",
+                    "name": "Forget",
+                    "loc": null,
+                    "range": [
+                      106,
+                      112
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    93,
+                    112
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  91,
+                  113
+                ]
+              },
+              "loc": null,
+              "range": [
+                43,
+                113
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              118
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          120
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        120
+      ],
+      "loc": null,
+      "range": [
+        0,
+        120
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    120
+  ]
+}

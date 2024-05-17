@@ -15,12 +15,9 @@
 // that do use JSX syntax. We should port them to React.createElement, and also
 // confirm there's a corresponding test that uses JSX syntax.
 
-let PropTypes;
 let React;
 let ReactDOMClient;
 let act;
-
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('ReactElementValidator', () => {
   let ComponentClass;
@@ -28,9 +25,6 @@ describe('ReactElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    PropTypes = require('prop-types');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -91,7 +85,7 @@ describe('ReactElementValidator', () => {
       await act(() => root.render(<Anonymous>{divs}</Anonymous>));
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
-        '"key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+        '"key" prop. See https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)',
     );
   });
@@ -106,7 +100,7 @@ describe('ReactElementValidator', () => {
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
         '"key" prop.\n\nCheck the top-level render call using <div>. See ' +
-        'https://reactjs.org/link/warning-keys for more information.\n' +
+        'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)',
     );
   });
@@ -130,7 +124,7 @@ describe('ReactElementValidator', () => {
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
         '"key" prop.\n\nCheck the render method of `Component`. See ' +
-        'https://reactjs.org/link/warning-keys for more information.\n' +
+        'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
@@ -221,26 +215,19 @@ describe('ReactElementValidator', () => {
     React.createElement(ComponentClass, null, [{}, {}]);
   });
 
-  it('should give context for PropType errors in nested components.', async () => {
-    // In this test, we're making sure that if a proptype error is found in a
-    // component, we give a small hint as to which parent instantiated that
-    // component as per warnings about key usage in ReactElementValidator.
-    function MyComp(props) {
-      return React.createElement('div', null, 'My color is ' + props.color);
+  it('should give context for errors in nested components.', async () => {
+    function MyComp() {
+      return [React.createElement('div')];
     }
-    MyComp.propTypes = {
-      color: PropTypes.string,
-    };
     function ParentComp() {
-      return React.createElement(MyComp, {color: 123});
+      return React.createElement(MyComp);
     }
     await expect(async () => {
       const root = ReactDOMClient.createRoot(document.createElement('div'));
       await act(() => root.render(React.createElement(ParentComp)));
     }).toErrorDev(
-      'Warning: Failed prop type: ' +
-        'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
-        'expected `string`.\n' +
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://react.dev/link/warning-keys for more information.\n' +
         '    in MyComp (at **)\n' +
         '    in ParentComp (at **)',
     );
@@ -319,132 +306,13 @@ describe('ReactElementValidator', () => {
     }).toErrorDev([
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
-        'components) but got: null.' +
-        '\n\nCheck the render method of `ParentComp`.\n    in ParentComp',
+        'components) but got: null.\n' +
+        '    in ParentComp (at **)',
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
-        'components) but got: null.' +
-        '\n\nCheck the render method of `ParentComp`.\n    in ParentComp',
+        'components) but got: null.\n' +
+        '    in ParentComp (at **)',
     ]);
-  });
-
-  it('should check default prop values', async () => {
-    class Component extends React.Component {
-      static propTypes = {prop: PropTypes.string.isRequired};
-      static defaultProps = {prop: null};
-      render() {
-        return React.createElement('span', null, this.props.prop);
-      }
-    }
-
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(document.createElement('div'));
-      await act(() => root.render(React.createElement(Component)));
-    }).toErrorDev(
-      'Warning: Failed prop type: The prop `prop` is marked as required in ' +
-        '`Component`, but its value is `null`.\n' +
-        '    in Component',
-    );
-  });
-
-  it('should not check the default for explicit null', async () => {
-    class Component extends React.Component {
-      static propTypes = {prop: PropTypes.string.isRequired};
-      static defaultProps = {prop: 'text'};
-      render() {
-        return React.createElement('span', null, this.props.prop);
-      }
-    }
-
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(document.createElement('div'));
-      await act(() =>
-        root.render(React.createElement(Component, {prop: null})),
-      );
-    }).toErrorDev(
-      'Warning: Failed prop type: The prop `prop` is marked as required in ' +
-        '`Component`, but its value is `null`.\n' +
-        '    in Component',
-    );
-  });
-
-  it('should check declared prop types', async () => {
-    class Component extends React.Component {
-      static propTypes = {
-        prop: PropTypes.string.isRequired,
-      };
-      render() {
-        return React.createElement('span', null, this.props.prop);
-      }
-    }
-
-    const root = ReactDOMClient.createRoot(document.createElement('div'));
-    await expect(async () => {
-      await act(() => root.render(React.createElement(Component)));
-      await act(() => root.render(React.createElement(Component, {prop: 42})));
-    }).toErrorDev([
-      'Warning: Failed prop type: ' +
-        'The prop `prop` is marked as required in `Component`, but its value ' +
-        'is `undefined`.\n' +
-        '    in Component',
-      'Warning: Failed prop type: ' +
-        'Invalid prop `prop` of type `number` supplied to ' +
-        '`Component`, expected `string`.\n' +
-        '    in Component',
-    ]);
-
-    // Should not error for strings
-    await act(() =>
-      root.render(React.createElement(Component, {prop: 'string'})),
-    );
-  });
-
-  it('should warn if a PropType creator is used as a PropType', async () => {
-    class Component extends React.Component {
-      static propTypes = {
-        myProp: PropTypes.shape,
-      };
-      render() {
-        return React.createElement('span', null, this.props.myProp.value);
-      }
-    }
-
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(document.createElement('div'));
-      await act(() =>
-        root.render(React.createElement(Component, {myProp: {value: 'hi'}})),
-      );
-    }).toErrorDev(
-      'Warning: Component: type specification of prop `myProp` is invalid; ' +
-        'the type checker function must return `null` or an `Error` but ' +
-        'returned a function. You may have forgotten to pass an argument to ' +
-        'the type checker creator (arrayOf, instanceOf, objectOf, oneOf, ' +
-        'oneOfType, and shape all require an argument).',
-    );
-  });
-
-  it('should warn if component declares PropTypes instead of propTypes', async () => {
-    class MisspelledPropTypesComponent extends React.Component {
-      static PropTypes = {
-        prop: PropTypes.string,
-      };
-      render() {
-        return React.createElement('span', null, this.props.prop);
-      }
-    }
-
-    await expect(async () => {
-      const root = ReactDOMClient.createRoot(document.createElement('div'));
-      await act(() =>
-        root.render(
-          React.createElement(MisspelledPropTypesComponent, {prop: 'Hi'}),
-        ),
-      );
-    }).toErrorDev(
-      'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
-        'instead of `propTypes`. Did you misspell the property assignment?',
-      {withoutStack: true},
-    );
   });
 
   it('warns for fragments with illegal attributes', async () => {
@@ -462,34 +330,6 @@ describe('ReactElementValidator', () => {
         'can only have `key` and `children` props.',
     );
   });
-
-  if (!__EXPERIMENTAL__) {
-    it('should warn when accessing .type on an element factory', () => {
-      function TestComponent() {
-        return <div />;
-      }
-
-      let TestFactory;
-
-      expect(() => {
-        TestFactory = React.createFactory(TestComponent);
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-
-      expect(() => TestFactory.type).toWarnDev(
-        'Warning: Factory.type is deprecated. Access the class directly before ' +
-          'passing it to createFactory.',
-        {withoutStack: true},
-      );
-
-      // Warn once, not again
-      expect(TestFactory.type).toBe(TestComponent);
-    });
-  }
 
   it('does not warn when using DOM node as children', async () => {
     class DOMContainer extends React.Component {
@@ -555,7 +395,7 @@ describe('ReactElementValidator', () => {
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +
-        'default and named imports.\n\nCheck your code at **.',
+        'default and named imports.',
       {withoutStack: true},
     );
   });

@@ -8,6 +8,7 @@
  */
 
 import type {Request} from 'react-server/src/ReactFlightServer';
+import type {ReactComponentInfo} from 'shared/ReactTypes';
 
 export * from '../ReactFlightServerConfigBundlerCustom';
 
@@ -20,10 +21,12 @@ export type HintModel<T: any> = any;
 
 export const isPrimaryRenderer = false;
 
-export const prepareHostDispatcher = () => {};
-
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
+
+export const supportsComponentStorage = false;
+export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
+  (null: any);
 
 export function createHints(): any {
   return null;

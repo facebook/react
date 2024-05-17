@@ -1,0 +1,417 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/timers.js
+---
+Input:
+function Component(props) {
+  const start = performance.now();
+  const now = Date.now();
+  const time = performance.now() - start;
+  return (
+    <div>
+      rendering took {time} at {now}
+    </div>
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "start",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    41
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "performance",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        44,
+                        55
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "now",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        56,
+                        59
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      44,
+                      59
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    44,
+                    61
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  61
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              62
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "now",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    71,
+                    74
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "Date",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        77,
+                        81
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "now",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        82,
+                        85
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      77,
+                      85
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    77,
+                    87
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  71,
+                  87
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              65,
+              88
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "time",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    97,
+                    101
+                  ]
+                },
+                "init": {
+                  "type": "BinaryExpression",
+                  "left": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "performance",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          104,
+                          115
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "now",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          116,
+                          119
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        104,
+                        119
+                      ]
+                    },
+                    "arguments": [],
+                    "loc": null,
+                    "range": [
+                      104,
+                      121
+                    ]
+                  },
+                  "operator": "-",
+                  "right": {
+                    "type": "Identifier",
+                    "name": "start",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      124,
+                      129
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    104,
+                    129
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  97,
+                  129
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              91,
+              130
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    147,
+                    150
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  146,
+                  151
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXText",
+                  "value": "\n      rendering took ",
+                  "raw": "\n      rendering took ",
+                  "loc": null,
+                  "range": [
+                    151,
+                    173
+                  ]
+                },
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "time",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      174,
+                      178
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    173,
+                    179
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": " at ",
+                  "raw": " at ",
+                  "loc": null,
+                  "range": [
+                    179,
+                    183
+                  ]
+                },
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "now",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      184,
+                      187
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    183,
+                    188
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n    ",
+                  "raw": "\n    ",
+                  "loc": null,
+                  "range": [
+                    188,
+                    193
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    195,
+                    198
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  193,
+                  199
+                ]
+              },
+              "loc": null,
+              "range": [
+                146,
+                199
+              ]
+            },
+            "loc": null,
+            "range": [
+              133,
+              204
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          206
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        206
+      ],
+      "loc": null,
+      "range": [
+        0,
+        206
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    206
+  ]
+}

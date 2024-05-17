@@ -1,0 +1,684 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/repro.js
+---
+Input:
+function Component(props) {
+  const item = props.item;
+  const thumbnails = [];
+  const baseVideos = getBaseVideos(item);
+  useMemo(() => {
+    baseVideos.forEach((video) => {
+      const baseVideo = video.hasBaseVideo;
+      if (Boolean(baseVideo)) {
+        thumbnails.push({ extraVideo: true });
+      }
+    });
+  });
+  return <FlatList baseVideos={baseVideos} items={thumbnails} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "item",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    40
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      43,
+                      48
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "item",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      49,
+                      53
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    43,
+                    53
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  53
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              54
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "thumbnails",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    63,
+                    73
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    76,
+                    78
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  63,
+                  78
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              57,
+              79
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "baseVideos",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    88,
+                    98
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "getBaseVideos",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      101,
+                      114
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "Identifier",
+                      "name": "item",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        115,
+                        119
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    101,
+                    120
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  88,
+                  120
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              82,
+              121
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useMemo",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  124,
+                  131
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "baseVideos",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                144,
+                                154
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "forEach",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                155,
+                                162
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              144,
+                              162
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "ArrowFunctionExpression",
+                              "id": null,
+                              "params": [
+                                {
+                                  "type": "Identifier",
+                                  "name": "video",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    164,
+                                    169
+                                  ]
+                                }
+                              ],
+                              "body": {
+                                "type": "BlockStatement",
+                                "body": [
+                                  {
+                                    "type": "VariableDeclaration",
+                                    "kind": "const",
+                                    "declarations": [
+                                      {
+                                        "type": "VariableDeclarator",
+                                        "id": {
+                                          "type": "Identifier",
+                                          "name": "baseVideo",
+                                          "typeAnnotation": null,
+                                          "loc": null,
+                                          "range": [
+                                            188,
+                                            197
+                                          ]
+                                        },
+                                        "init": {
+                                          "type": "MemberExpression",
+                                          "object": {
+                                            "type": "Identifier",
+                                            "name": "video",
+                                            "typeAnnotation": null,
+                                            "loc": null,
+                                            "range": [
+                                              200,
+                                              205
+                                            ]
+                                          },
+                                          "property": {
+                                            "type": "Identifier",
+                                            "name": "hasBaseVideo",
+                                            "typeAnnotation": null,
+                                            "loc": null,
+                                            "range": [
+                                              206,
+                                              218
+                                            ]
+                                          },
+                                          "computed": false,
+                                          "loc": null,
+                                          "range": [
+                                            200,
+                                            218
+                                          ]
+                                        },
+                                        "loc": null,
+                                        "range": [
+                                          188,
+                                          218
+                                        ]
+                                      }
+                                    ],
+                                    "loc": null,
+                                    "range": [
+                                      182,
+                                      219
+                                    ]
+                                  },
+                                  {
+                                    "type": "IfStatement",
+                                    "test": {
+                                      "type": "CallExpression",
+                                      "callee": {
+                                        "type": "Identifier",
+                                        "name": "Boolean",
+                                        "typeAnnotation": null,
+                                        "loc": null,
+                                        "range": [
+                                          230,
+                                          237
+                                        ]
+                                      },
+                                      "arguments": [
+                                        {
+                                          "type": "Identifier",
+                                          "name": "baseVideo",
+                                          "typeAnnotation": null,
+                                          "loc": null,
+                                          "range": [
+                                            238,
+                                            247
+                                          ]
+                                        }
+                                      ],
+                                      "loc": null,
+                                      "range": [
+                                        230,
+                                        248
+                                      ]
+                                    },
+                                    "consequent": {
+                                      "type": "BlockStatement",
+                                      "body": [
+                                        {
+                                          "type": "ExpressionStatement",
+                                          "expression": {
+                                            "type": "CallExpression",
+                                            "callee": {
+                                              "type": "MemberExpression",
+                                              "object": {
+                                                "type": "Identifier",
+                                                "name": "thumbnails",
+                                                "typeAnnotation": null,
+                                                "loc": null,
+                                                "range": [
+                                                  260,
+                                                  270
+                                                ]
+                                              },
+                                              "property": {
+                                                "type": "Identifier",
+                                                "name": "push",
+                                                "typeAnnotation": null,
+                                                "loc": null,
+                                                "range": [
+                                                  271,
+                                                  275
+                                                ]
+                                              },
+                                              "computed": false,
+                                              "loc": null,
+                                              "range": [
+                                                260,
+                                                275
+                                              ]
+                                            },
+                                            "arguments": [
+                                              {
+                                                "type": "ObjectExpression",
+                                                "properties": [
+                                                  {
+                                                    "type": "Property",
+                                                    "key": {
+                                                      "type": "Identifier",
+                                                      "name": "extraVideo",
+                                                      "typeAnnotation": null,
+                                                      "loc": null,
+                                                      "range": [
+                                                        278,
+                                                        288
+                                                      ]
+                                                    },
+                                                    "value": {
+                                                      "type": "BooleanLiteral",
+                                                      "value": true,
+                                                      "loc": null,
+                                                      "range": [
+                                                        290,
+                                                        294
+                                                      ]
+                                                    },
+                                                    "kind": "init",
+                                                    "method": false,
+                                                    "shorthand": false,
+                                                    "computed": false,
+                                                    "loc": null,
+                                                    "range": [
+                                                      278,
+                                                      294
+                                                    ]
+                                                  }
+                                                ],
+                                                "loc": null,
+                                                "range": [
+                                                  276,
+                                                  296
+                                                ]
+                                              }
+                                            ],
+                                            "loc": null,
+                                            "range": [
+                                              260,
+                                              297
+                                            ]
+                                          },
+                                          "directive": null,
+                                          "loc": null,
+                                          "range": [
+                                            260,
+                                            298
+                                          ]
+                                        }
+                                      ],
+                                      "loc": null,
+                                      "range": [
+                                        250,
+                                        306
+                                      ]
+                                    },
+                                    "alternate": null,
+                                    "loc": null,
+                                    "range": [
+                                      226,
+                                      306
+                                    ]
+                                  }
+                                ],
+                                "loc": null,
+                                "range": [
+                                  174,
+                                  312
+                                ]
+                              },
+                              "generator": false,
+                              "async": false,
+                              "loc": null,
+                              "range": [
+                                163,
+                                312
+                              ],
+                              "expression": false,
+                              "loc": null,
+                              "range": [
+                                163,
+                                312
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            144,
+                            313
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          144,
+                          314
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      138,
+                      318
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    132,
+                    318
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    132,
+                    318
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                124,
+                319
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              124,
+              320
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "FlatList",
+                  "loc": null,
+                  "range": [
+                    331,
+                    339
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "baseVideos",
+                      "loc": null,
+                      "range": [
+                        340,
+                        350
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "baseVideos",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          352,
+                          362
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        351,
+                        363
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      340,
+                      363
+                    ]
+                  },
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "items",
+                      "loc": null,
+                      "range": [
+                        364,
+                        369
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "thumbnails",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          371,
+                          381
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        370,
+                        382
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      364,
+                      382
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  330,
+                  385
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                330,
+                385
+              ]
+            },
+            "loc": null,
+            "range": [
+              323,
+              386
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          388
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        388
+      ],
+      "loc": null,
+      "range": [
+        0,
+        388
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    388
+  ]
+}

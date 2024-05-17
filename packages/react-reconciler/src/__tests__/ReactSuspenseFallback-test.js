@@ -17,6 +17,8 @@ let waitForAll;
 
 describe('ReactSuspenseFallback', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -133,7 +135,7 @@ describe('ReactSuspenseFallback', () => {
   it('suspends and shows fallback', async () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Loading..." />}>
-        <AsyncText text="A" ms={100} />
+        <AsyncText text="A" />
       </Suspense>,
     );
 
@@ -145,7 +147,7 @@ describe('ReactSuspenseFallback', () => {
   it('suspends and shows null fallback', async () => {
     ReactNoop.render(
       <Suspense fallback={null}>
-        <AsyncText text="A" ms={100} />
+        <AsyncText text="A" />
       </Suspense>,
     );
 
@@ -160,7 +162,7 @@ describe('ReactSuspenseFallback', () => {
   it('suspends and shows undefined fallback', async () => {
     ReactNoop.render(
       <Suspense>
-        <AsyncText text="A" ms={100} />
+        <AsyncText text="A" />
       </Suspense>,
     );
 
@@ -176,7 +178,7 @@ describe('ReactSuspenseFallback', () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>
         <Suspense fallback={<Text text="Loading..." />}>
-          <AsyncText text="A" ms={100} />
+          <AsyncText text="A" />
         </Suspense>
       </Suspense>,
     );
@@ -190,7 +192,7 @@ describe('ReactSuspenseFallback', () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>
         <Suspense>
-          <AsyncText text="A" ms={100} />
+          <AsyncText text="A" />
         </Suspense>
       </Suspense>,
     );
@@ -207,7 +209,7 @@ describe('ReactSuspenseFallback', () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Should not show..." />}>
         <Suspense fallback={null}>
-          <AsyncText text="A" ms={100} />
+          <AsyncText text="A" />
         </Suspense>
       </Suspense>,
     );

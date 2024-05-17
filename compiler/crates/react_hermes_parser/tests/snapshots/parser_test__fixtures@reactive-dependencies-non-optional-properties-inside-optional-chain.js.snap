@@ -1,0 +1,206 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/reactive-dependencies-non-optional-properties-inside-optional-chain.js
+---
+Input:
+function Component(props) {
+  return props.post.feedback.comments?.edges?.map(render);
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "OptionalCallExpression",
+              "callee": {
+                "type": "OptionalMemberExpression",
+                "object": {
+                  "type": "OptionalMemberExpression",
+                  "object": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            37,
+                            42
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "post",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            43,
+                            47
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          37,
+                          47
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "feedback",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          48,
+                          56
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        37,
+                        56
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "comments",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        57,
+                        65
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      37,
+                      65
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "edges",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      67,
+                      72
+                    ]
+                  },
+                  "computed": false,
+                  "optional": true,
+                  "loc": null,
+                  "range": [
+                    37,
+                    72
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "map",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    74,
+                    77
+                  ]
+                },
+                "computed": false,
+                "optional": true,
+                "loc": null,
+                "range": [
+                  37,
+                  77
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "render",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    78,
+                    84
+                  ]
+                }
+              ],
+              "optional": false,
+              "loc": null,
+              "range": [
+                37,
+                85
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              86
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          88
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        88
+      ],
+      "loc": null,
+      "range": [
+        0,
+        88
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    88
+  ]
+}

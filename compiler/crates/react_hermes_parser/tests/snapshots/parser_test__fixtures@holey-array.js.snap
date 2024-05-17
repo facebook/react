@@ -1,0 +1,206 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/holey-array.js
+---
+Input:
+function t(props) {
+  let [, setstate] = useState();
+  setstate(1);
+  return props.foo;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "t",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          10
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            11,
+            16
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    null,
+                    {
+                      "type": "Identifier",
+                      "name": "setstate",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        29,
+                        37
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    26,
+                    38
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useState",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      41,
+                      49
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    41,
+                    51
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  26,
+                  51
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              22,
+              52
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "setstate",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  55,
+                  63
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    64,
+                    65
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                55,
+                66
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              55,
+              67
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  77,
+                  82
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "foo",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  83,
+                  86
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                77,
+                86
+              ]
+            },
+            "loc": null,
+            "range": [
+              70,
+              87
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          18,
+          89
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        89
+      ],
+      "loc": null,
+      "range": [
+        0,
+        89
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    89
+  ]
+}

@@ -26,6 +26,7 @@ describe('ReactDOMSelect', () => {
   const noop = function () {};
 
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -874,7 +875,7 @@ describe('ReactDOMSelect', () => {
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled select ' +
         'element and remove one of these props. More info: ' +
-        'https://reactjs.org/link/controlled-components',
+        'https://react.dev/link/controlled-components',
     );
 
     await act(() => {
@@ -964,6 +965,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // c
   });
 
+  // @gate !disableLegacyMode
   it('should allow controlling `value` in a nested legacy render', async () => {
     let selectNode;
 
@@ -1446,7 +1448,13 @@ describe('ReactDOMSelect', () => {
               </select>,
             );
           }),
-        ).rejects.toThrowError(new TypeError('prod message'));
+        ).rejects.toThrowError(
+          // eslint-disable-next-line no-undef
+          new AggregateError([
+            new TypeError('prod message'),
+            new TypeError('prod message'),
+          ]),
+        );
       }).toErrorDev([
         'The provided `value` attribute is an unsupported type TemporalLike.' +
           ' This value must be coerced to a string before using it here.',

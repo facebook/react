@@ -1,0 +1,234 @@
+---
+source: crates/react_semantic_analysis/tests/analysis_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nAnalysis:\\n{output}\")"
+input_file: crates/react_semantic_analysis/tests/fixtures/tdz.js
+---
+Input:
+function Component() {
+  a; // invalid
+  if (true) {
+    a; // invalid
+  }
+  for (;;) {
+    a; // invalid
+  }
+  function foo() {
+    a; // will be a runtime tdz error but we don't detect that statically
+  }
+  foo(); // above is a runtime tdz error bc of this call
+  let a;
+}
+
+
+Analysis:
+ScopeManager {
+    globals: [
+        (
+            "Array",
+            DeclarationId(
+                0,
+            ),
+        ),
+        (
+            "Boolean",
+            DeclarationId(
+                1,
+            ),
+        ),
+        (
+            "console",
+            DeclarationId(
+                2,
+            ),
+        ),
+        (
+            "global",
+            DeclarationId(
+                3,
+            ),
+        ),
+        (
+            "Math",
+            DeclarationId(
+                4,
+            ),
+        ),
+        (
+            "Number",
+            DeclarationId(
+                5,
+            ),
+        ),
+        (
+            "setInterval",
+            DeclarationId(
+                6,
+            ),
+        ),
+        (
+            "setTimeout",
+            DeclarationId(
+                7,
+            ),
+        ),
+        (
+            "String",
+            DeclarationId(
+                8,
+            ),
+        ),
+    ],
+    root: Scope {
+        id: ScopeId(
+            0,
+        ),
+        kind: Module,
+        declarations: {
+            "Component": Declaration {
+                id: DeclarationId(
+                    9,
+                ),
+                kind: Function,
+                scope: ScopeId(
+                    0,
+                ),
+            },
+        },
+        references: [],
+        children: [
+            Scope {
+                id: ScopeId(
+                    1,
+                ),
+                kind: Function,
+                declarations: {
+                    "foo": Declaration {
+                        id: DeclarationId(
+                            10,
+                        ),
+                        kind: Function,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                    "a": Declaration {
+                        id: DeclarationId(
+                            11,
+                        ),
+                        kind: Let,
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                },
+                references: [
+                    Reference {
+                        id: ReferenceId(
+                            1,
+                        ),
+                        kind: Read,
+                        declaration: DeclarationId(
+                            10,
+                        ),
+                        declaration (name): "foo",
+                        scope: ScopeId(
+                            1,
+                        ),
+                    },
+                ],
+                children: [
+                    Scope {
+                        id: ScopeId(
+                            2,
+                        ),
+                        kind: Block,
+                        declarations: {},
+                        references: [],
+                        children: [],
+                    },
+                    Scope {
+                        id: ScopeId(
+                            3,
+                        ),
+                        kind: Block,
+                        declarations: {},
+                        references: [],
+                        children: [],
+                    },
+                    Scope {
+                        id: ScopeId(
+                            4,
+                        ),
+                        kind: Function,
+                        declarations: {},
+                        references: [
+                            Reference {
+                                id: ReferenceId(
+                                    0,
+                                ),
+                                kind: Read,
+                                declaration: DeclarationId(
+                                    11,
+                                ),
+                                declaration (name): "a",
+                                scope: ScopeId(
+                                    4,
+                                ),
+                            },
+                        ],
+                        children: [],
+                    },
+                ],
+            },
+        ],
+    },
+}
+Diagnostic(
+    DiagnosticData {
+        message: "Undefined variable",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    25,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+Diagnostic(
+    DiagnosticData {
+        message: "Undefined variable",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    57,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+Diagnostic(
+    DiagnosticData {
+        message: "Undefined variable",
+        span: Some(
+            SourceSpan {
+                offset: SourceOffset(
+                    92,
+                ),
+                length: 1,
+            },
+        ),
+        related_information: [],
+        severity: InvalidSyntax,
+        data: [],
+    },
+)
+

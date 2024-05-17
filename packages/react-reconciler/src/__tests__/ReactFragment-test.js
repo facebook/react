@@ -15,6 +15,8 @@ let waitForAll;
 
 describe('ReactFragment', () => {
   beforeEach(function () {
+    jest.resetModules();
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 
@@ -962,5 +964,52 @@ describe('ReactFragment', () => {
         <div>Hello</div>
       </>,
     );
+  });
+
+  it('should preserve state of children when adding a fragment wrapped in Lazy', async function () {
+    const ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    const lazyChild = React.lazy(async () => ({
+      default: (
+        <>
+          <Stateful key="a" />
+          <div key="b">World</div>
+        </>
+      ),
+    }));
+
+    function Foo({condition}) {
+      return condition ? <Stateful key="a" /> : lazyChild;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    await waitForAll([]);
+
+    ReactNoop.render(<Foo condition={false} />);
+    await waitForAll([]);
+
+    expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>Hello</div>
+        <div>World</div>
+      </>,
+    );
+
+    ReactNoop.render(<Foo condition={true} />);
+    await waitForAll([]);
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
+    expect(ReactNoop).toMatchRenderedOutput(<div>Hello</div>);
   });
 });

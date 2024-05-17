@@ -1,0 +1,114 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/recursive-function-expr.js
+---
+Input:
+function foo() {
+  (() => foo())();
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "ArrowFunctionExpression",
+                "id": null,
+                "params": [],
+                "body": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "foo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      26,
+                      29
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    26,
+                    31
+                  ]
+                },
+                "generator": true,
+                "async": false,
+                "loc": null,
+                "range": [
+                  20,
+                  31
+                ],
+                "expression": true,
+                "loc": null,
+                "range": [
+                  20,
+                  31
+                ]
+              },
+              "arguments": [],
+              "loc": null,
+              "range": [
+                19,
+                34
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              19,
+              35
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          37
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        37
+      ],
+      "loc": null,
+      "range": [
+        0,
+        37
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    37
+  ]
+}

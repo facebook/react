@@ -1,0 +1,316 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/concise-arrow-expr.js
+---
+Input:
+function component() {
+  let [x, setX] = useState(0);
+  const handler = (v) => setX(v);
+  return <Foo handler={handler}></Foo>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        30,
+                        31
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "setX",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        33,
+                        37
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    29,
+                    38
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useState",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      41,
+                      49
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        50,
+                        51
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    41,
+                    52
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  29,
+                  52
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              53
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "handler",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    62,
+                    69
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [
+                    {
+                      "type": "Identifier",
+                      "name": "v",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        73,
+                        74
+                      ]
+                    }
+                  ],
+                  "body": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "setX",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        79,
+                        83
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "Identifier",
+                        "name": "v",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          84,
+                          85
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      79,
+                      86
+                    ]
+                  },
+                  "generator": true,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    72,
+                    86
+                  ],
+                  "expression": true,
+                  "loc": null,
+                  "range": [
+                    72,
+                    86
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  62,
+                  86
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              56,
+              87
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    98,
+                    101
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "handler",
+                      "loc": null,
+                      "range": [
+                        102,
+                        109
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "handler",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          111,
+                          118
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        110,
+                        119
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      102,
+                      119
+                    ]
+                  }
+                ],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  97,
+                  120
+                ]
+              },
+              "children": [],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    122,
+                    125
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  120,
+                  126
+                ]
+              },
+              "loc": null,
+              "range": [
+                97,
+                126
+              ]
+            },
+            "loc": null,
+            "range": [
+              90,
+              127
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          129
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        129
+      ],
+      "loc": null,
+      "range": [
+        0,
+        129
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    129
+  ]
+}

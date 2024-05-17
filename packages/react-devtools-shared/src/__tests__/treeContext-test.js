@@ -33,6 +33,8 @@ describe('TreeListContext', () => {
   let state: StateContext;
 
   beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+
     utils = require('./utils');
     utils.beforeEachProfiling();
 
@@ -2584,14 +2586,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
+          ✕ 2, ⚠ 0
           [root]
               <ErrorBoundary> ✕
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
+          ✕ 2, ⚠ 0
           [root]
           →    <ErrorBoundary> ✕
         `);
@@ -2646,14 +2648,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
+          ✕ 2, ⚠ 0
           [root]
               <ErrorBoundary> ✕
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
+          ✕ 2, ⚠ 0
           [root]
           →    <ErrorBoundary> ✕
         `);
@@ -2703,7 +2705,7 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 0
+          ✕ 3, ⚠ 0
           [root]
             ▾ <ErrorBoundary> ✕
                 <Child> ✕
@@ -2711,7 +2713,7 @@ describe('TreeListContext', () => {
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 0
+          ✕ 3, ⚠ 0
           [root]
           →  ▾ <ErrorBoundary> ✕
                  <Child> ✕

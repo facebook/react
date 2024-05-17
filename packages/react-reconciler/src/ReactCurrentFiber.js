@@ -11,9 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-
-const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 
 export let current: Fiber | null = null;
 export let isRendering: boolean = false;
@@ -24,8 +22,8 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
       return null;
     }
     const owner = current._debugOwner;
-    if (owner !== null && typeof owner !== 'undefined') {
-      return getComponentNameFromFiber(owner);
+    if (owner != null) {
+      return getComponentNameFromOwner(owner);
     }
   }
   return null;
@@ -45,7 +43,7 @@ function getCurrentFiberStackInDev(): string {
 
 export function resetCurrentFiber() {
   if (__DEV__) {
-    ReactDebugCurrentFrame.getCurrentStack = null;
+    ReactSharedInternals.getCurrentStack = null;
     current = null;
     isRendering = false;
   }
@@ -53,7 +51,7 @@ export function resetCurrentFiber() {
 
 export function setCurrentFiber(fiber: Fiber | null) {
   if (__DEV__) {
-    ReactDebugCurrentFrame.getCurrentStack =
+    ReactSharedInternals.getCurrentStack =
       fiber === null ? null : getCurrentFiberStackInDev;
     current = fiber;
     isRendering = false;

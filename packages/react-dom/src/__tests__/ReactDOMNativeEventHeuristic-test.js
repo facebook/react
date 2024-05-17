@@ -22,6 +22,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   let container;
 
   beforeEach(() => {
+    jest.resetModules();
     container = document.createElement('div');
     React = require('react');
     ReactDOM = require('react-dom');
@@ -296,6 +297,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     });
     expect(container.textContent).toEqual('not hovered');
 
+    assertLog(['not hovered']);
     await act(async () => {
       // Note: React does not use native mouseenter/mouseleave events
       // but we should still correctly determine their priority.
@@ -307,7 +309,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       dispatchAndSetCurrentEvent(target.current, mouseEnterEvent);
 
       // Since mouse end is not discrete, should not have updated yet
-      assertLog(['not hovered']);
+      assertLog([]);
       expect(container.textContent).toEqual('not hovered');
 
       await waitFor(['hovered']);

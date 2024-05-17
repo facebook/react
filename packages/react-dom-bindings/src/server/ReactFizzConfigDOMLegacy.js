@@ -163,7 +163,6 @@ export {
   writeHoistables,
   writePostamble,
   hoistHoistables,
-  prepareHostDispatcher,
   resetResumableState,
   completeResumableState,
   emitEarlyPreloads,
@@ -220,6 +219,7 @@ export function writeStartClientRenderedSuspenseBoundary(
   // flushing these error arguments are not currently supported in this legacy streaming format.
   errorDigest: ?string,
   errorMessage: ?string,
+  errorStack: ?string,
   errorComponentStack: ?string,
 ): boolean {
   if (renderState.generateStaticMarkup) {
@@ -232,6 +232,7 @@ export function writeStartClientRenderedSuspenseBoundary(
     renderState,
     errorDigest,
     errorMessage,
+    errorStack,
     errorComponentStack,
   );
 }

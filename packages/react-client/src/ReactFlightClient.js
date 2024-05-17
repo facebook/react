@@ -7,7 +7,12 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  ReactDebugInfo,
+  ReactComponentInfo,
+  ReactAsyncInfo,
+} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
@@ -23,11 +28,23 @@ import type {
   HintModel,
 } from 'react-server/src/ReactFlightServerConfig';
 
-import type {CallServerCallback} from './ReactFlightReplyClient';
+import type {
+  CallServerCallback,
+  EncodeFormActionCallback,
+} from './ReactFlightReplyClient';
 
 import type {Postpone} from 'react/src/ReactPostpone';
 
-import {enableBinaryFlight, enablePostpone} from 'shared/ReactFeatureFlags';
+import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
+
+import {
+  disableStringRefs,
+  enableBinaryFlight,
+  enablePostpone,
+  enableRefAsProp,
+  enableFlightReadableStream,
+  enableOwnerStacks,
+} from 'shared/ReactFeatureFlags';
 
 import {
   resolveClientReference,
@@ -38,17 +55,28 @@ import {
   readFinalStringChunk,
   createStringDecoder,
   prepareDestinationForModule,
+  printToConsole,
 } from './ReactFlightClientConfig';
 
 import {registerServerReference} from './ReactFlightReplyClient';
+
+import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
 import {
   REACT_LAZY_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_POSTPONE_TYPE,
+  ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
 
-export type {CallServerCallback};
+export type {CallServerCallback, EncodeFormActionCallback};
+
+interface FlightStreamController {
+  enqueueValue(value: any): void;
+  enqueueModel(json: UninitializedModel): void;
+  close(json: UninitializedModel): void;
+  error(error: Error): void;
+}
 
 type UninitializedModel = string;
 
@@ -81,49 +109,65 @@ type PendingChunk<T> = {
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  _debugInfo?: null | ReactDebugInfo,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type BlockedChunk<T> = {
   status: 'blocked',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  _debugInfo?: null | ReactDebugInfo,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type CyclicChunk<T> = {
   status: 'cyclic',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  _debugInfo?: null | ReactDebugInfo,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModelChunk<T> = {
   status: 'resolved_model',
   value: UninitializedModel,
   reason: null,
   _response: Response,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  _debugInfo?: null | ReactDebugInfo,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type ResolvedModuleChunk<T> = {
   status: 'resolved_module',
   value: ClientReference<T>,
   reason: null,
   _response: Response,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  _debugInfo?: null | ReactDebugInfo,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type InitializedChunk<T> = {
   status: 'fulfilled',
   value: T,
-  reason: null,
+  reason: null | FlightStreamController,
   _response: Response,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  _debugInfo?: null | ReactDebugInfo,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
+};
+type InitializedStreamChunk<
+  T: ReadableStream | $AsyncIterable<any, any, void>,
+> = {
+  status: 'fulfilled',
+  value: T,
+  reason: FlightStreamController,
+  _response: Response,
+  then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
   status: 'rejected',
   value: null,
   reason: mixed,
   _response: Response,
-  then(resolve: (T) => mixed, reject: (mixed) => mixed): void,
+  _debugInfo?: null | ReactDebugInfo,
+  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
 };
 type SomeChunk<T> =
   | PendingChunk<T>
@@ -140,6 +184,9 @@ function Chunk(status: any, value: any, reason: any, response: Response) {
   this.value = value;
   this.reason = reason;
   this._response = response;
+  if (__DEV__) {
+    this._debugInfo = null;
+  }
 }
 // We subclass Promise.prototype so that we get other methods like .catch
 Chunk.prototype = (Object.create(Promise.prototype): any);
@@ -147,7 +194,7 @@ Chunk.prototype = (Object.create(Promise.prototype): any);
 Chunk.prototype.then = function <T>(
   this: SomeChunk<T>,
   resolve: (value: T) => mixed,
-  reject: (reason: mixed) => mixed,
+  reject?: (reason: mixed) => mixed,
 ) {
   const chunk: SomeChunk<T> = this;
   // If we have resolved content, we try to initialize it first which
@@ -182,7 +229,9 @@ Chunk.prototype.then = function <T>(
       }
       break;
     default:
-      reject(chunk.reason);
+      if (reject) {
+        reject(chunk.reason);
+      }
       break;
   }
 };
@@ -191,6 +240,7 @@ export type Response = {
   _bundlerConfig: SSRModuleMap,
   _moduleLoading: ModuleLoading,
   _callServer: CallServerCallback,
+  _encodeFormAction: void | EncodeFormActionCallback,
   _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
@@ -200,6 +250,7 @@ export type Response = {
   _rowTag: number, // 0 indicates that we're currently parsing the row ID
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
+  _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -282,7 +333,14 @@ function wakeChunkIfInitialized<T>(
 
 function triggerErrorOnChunk<T>(chunk: SomeChunk<T>, error: mixed): void {
   if (chunk.status !== PENDING && chunk.status !== BLOCKED) {
-    // We already resolved. We didn't expect to see this.
+    if (enableFlightReadableStream) {
+      // If we get more data to an already resolved ID, we assume that it's
+      // a stream chunk since any other row shouldn't have more than one entry.
+      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+      const controller = streamChunk.reason;
+      // $FlowFixMe[incompatible-call]: The error method should accept mixed.
+      controller.error(error);
+    }
     return;
   }
   const listeners = chunk.reason;
@@ -326,12 +384,63 @@ function createInitializedBufferChunk(
   return new Chunk(INITIALIZED, value, null, response);
 }
 
+function createInitializedIteratorResultChunk<T>(
+  response: Response,
+  value: T,
+  done: boolean,
+): InitializedChunk<IteratorResult<T, T>> {
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(INITIALIZED, {done: done, value: value}, null, response);
+}
+
+function createInitializedStreamChunk<
+  T: ReadableStream | $AsyncIterable<any, any, void>,
+>(
+  response: Response,
+  value: T,
+  controller: FlightStreamController,
+): InitializedChunk<T> {
+  // We use the reason field to stash the controller since we already have that
+  // field. It's a bit of a hack but efficient.
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(INITIALIZED, value, controller, response);
+}
+
+function createResolvedIteratorResultChunk<T>(
+  response: Response,
+  value: UninitializedModel,
+  done: boolean,
+): ResolvedModelChunk<IteratorResult<T, T>> {
+  // To reuse code as much code as possible we add the wrapper element as part of the JSON.
+  const iteratorResultJSON =
+    (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
+  // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+  return new Chunk(RESOLVED_MODEL, iteratorResultJSON, null, response);
+}
+
+function resolveIteratorResultChunk<T>(
+  chunk: SomeChunk<IteratorResult<T, T>>,
+  value: UninitializedModel,
+  done: boolean,
+): void {
+  // To reuse code as much code as possible we add the wrapper element as part of the JSON.
+  const iteratorResultJSON =
+    (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
+  resolveModelChunk(chunk, iteratorResultJSON);
+}
+
 function resolveModelChunk<T>(
   chunk: SomeChunk<T>,
   value: UninitializedModel,
 ): void {
   if (chunk.status !== PENDING) {
-    // We already resolved. We didn't expect to see this.
+    if (enableFlightReadableStream) {
+      // If we get more data to an already resolved ID, we assume that it's
+      // a stream chunk since any other row shouldn't have more than one entry.
+      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+      const controller = streamChunk.reason;
+      controller.enqueueModel(value);
+    }
     return;
   }
   const resolveListeners = chunk.value;
@@ -444,24 +553,58 @@ export function reportGlobalError(response: Response, error: Error): void {
   });
 }
 
+function nullRefGetter() {
+  if (__DEV__) {
+    return null;
+  }
+}
+
 function createElement(
   type: mixed,
   key: mixed,
   props: mixed,
+  owner: null | ReactComponentInfo, // DEV-only
+  stack: null | string, // DEV-only
 ): React$Element<any> {
-  const element: any = {
-    // This tag allows us to uniquely identify this as a React Element
-    $$typeof: REACT_ELEMENT_TYPE,
+  let element: any;
+  if (__DEV__ && enableRefAsProp) {
+    // `ref` is non-enumerable in dev
+    element = ({
+      $$typeof: REACT_ELEMENT_TYPE,
+      type,
+      key,
+      props,
+      _owner: owner,
+    }: any);
+    Object.defineProperty(element, 'ref', {
+      enumerable: false,
+      get: nullRefGetter,
+    });
+  } else if (!__DEV__ && disableStringRefs) {
+    element = ({
+      // This tag allows us to uniquely identify this as a React Element
+      $$typeof: REACT_ELEMENT_TYPE,
 
-    // Built-in properties that belong on the element
-    type: type,
-    key: key,
-    ref: null,
-    props: props,
+      type,
+      key,
+      ref: null,
+      props,
+    }: any);
+  } else {
+    element = ({
+      // This tag allows us to uniquely identify this as a React Element
+      $$typeof: REACT_ELEMENT_TYPE,
 
-    // Record the component responsible for creating this element.
-    _owner: null,
-  };
+      type,
+      key,
+      ref: null,
+      props,
+
+      // Record the component responsible for creating this element.
+      _owner: owner,
+    }: any);
+  }
+
   if (__DEV__) {
     // We don't really need to add any of these but keeping them for good measure.
     // Unfortunately, _store is enumerable in jest matchers so for equality to
@@ -475,18 +618,30 @@ function createElement(
       writable: true,
       value: true, // This element has already been validated on the server.
     });
-    Object.defineProperty(element, '_self', {
+    // debugInfo contains Server Component debug information.
+    Object.defineProperty(element, '_debugInfo', {
       configurable: false,
       enumerable: false,
-      writable: false,
+      writable: true,
       value: null,
     });
-    Object.defineProperty(element, '_source', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: null,
-    });
+    if (enableOwnerStacks) {
+      Object.defineProperty(element, '_debugStack', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: {stack: stack},
+      });
+      Object.defineProperty(element, '_debugTask', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: null,
+      });
+    }
+    // TODO: We should be freezing the element but currently, we might write into
+    // _debugInfo later. We could move it into _store which remains mutable.
+    Object.freeze(element.props);
   }
   return element;
 }
@@ -499,6 +654,12 @@ function createLazyChunkWrapper<T>(
     _payload: chunk,
     _init: readChunk,
   };
+  if (__DEV__) {
+    // Ensure we have a live array to track future debug info.
+    const chunkDebugInfo: ReactDebugInfo =
+      chunk._debugInfo || (chunk._debugInfo = []);
+    lazyType._debugInfo = chunkDebugInfo;
+  }
   return lazyType;
 }
 
@@ -517,6 +678,9 @@ function createModelResolver<T>(
   parentObject: Object,
   key: string,
   cyclic: boolean,
+  response: Response,
+  map: (response: Response, model: any) => T,
+  path: Array<string>,
 ): (value: any) => void {
   let blocked;
   if (initializingChunkBlockedModel) {
@@ -531,7 +695,17 @@ function createModelResolver<T>(
     };
   }
   return value => {
-    parentObject[key] = value;
+    for (let i = 1; i < path.length; i++) {
+      value = value[path[i]];
+    }
+    parentObject[key] = map(response, value);
+
+    // If this is the root object for a model reference, where `blocked.value`
+    // is a stale `null`, the resolved value can be used directly.
+    if (key === '' && blocked.value === null) {
+      blocked.value = parentObject[key];
+    }
+
     blocked.deps--;
     if (blocked.deps === 0) {
       if (chunk.status !== BLOCKED) {
@@ -576,26 +750,118 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
       },
     );
   };
-  registerServerReference(proxy, metaData);
+  registerServerReference(proxy, metaData, response._encodeFormAction);
   return proxy;
 }
 
-function getOutlinedModel(response: Response, id: number): any {
+function getOutlinedModel<T>(
+  response: Response,
+  reference: string,
+  parentObject: Object,
+  key: string,
+  map: (response: Response, model: any) => T,
+): T {
+  const path = reference.split(':');
+  const id = parseInt(path[0], 16);
   const chunk = getChunk(response, id);
   switch (chunk.status) {
     case RESOLVED_MODEL:
       initializeModelChunk(chunk);
       break;
+    case RESOLVED_MODULE:
+      initializeModuleChunk(chunk);
+      break;
   }
   // The status might have changed after initialization.
   switch (chunk.status) {
-    case INITIALIZED: {
-      return chunk.value;
-    }
-    // We always encode it first in the stream so it won't be pending.
+    case INITIALIZED:
+      let value = chunk.value;
+      for (let i = 1; i < path.length; i++) {
+        value = value[path[i]];
+      }
+      const chunkValue = map(response, value);
+      if (__DEV__ && chunk._debugInfo) {
+        // If we have a direct reference to an object that was rendered by a synchronous
+        // server component, it might have some debug info about how it was rendered.
+        // We forward this to the underlying object. This might be a React Element or
+        // an Array fragment.
+        // If this was a string / number return value we lose the debug info. We choose
+        // that tradeoff to allow sync server components to return plain values and not
+        // use them as React Nodes necessarily. We could otherwise wrap them in a Lazy.
+        if (
+          typeof chunkValue === 'object' &&
+          chunkValue !== null &&
+          (Array.isArray(chunkValue) ||
+            typeof chunkValue[ASYNC_ITERATOR] === 'function' ||
+            chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
+          !chunkValue._debugInfo
+        ) {
+          // We should maybe use a unique symbol for arrays but this is a React owned array.
+          // $FlowFixMe[prop-missing]: This should be added to elements.
+          Object.defineProperty((chunkValue: any), '_debugInfo', {
+            configurable: false,
+            enumerable: false,
+            writable: true,
+            value: chunk._debugInfo,
+          });
+        }
+      }
+      return chunkValue;
+    case PENDING:
+    case BLOCKED:
+    case CYCLIC:
+      const parentChunk = initializingChunk;
+      chunk.then(
+        createModelResolver(
+          parentChunk,
+          parentObject,
+          key,
+          chunk.status === CYCLIC,
+          response,
+          map,
+          path,
+        ),
+        createModelReject(parentChunk),
+      );
+      return (null: any);
     default:
       throw chunk.reason;
   }
+}
+
+function createMap(
+  response: Response,
+  model: Array<[any, any]>,
+): Map<any, any> {
+  return new Map(model);
+}
+
+function createSet(response: Response, model: Array<any>): Set<any> {
+  return new Set(model);
+}
+
+function createBlob(response: Response, model: Array<any>): Blob {
+  return new Blob(model.slice(1), {type: model[0]});
+}
+
+function createFormData(
+  response: Response,
+  model: Array<[any, any]>,
+): FormData {
+  const formData = new FormData();
+  for (let i = 0; i < model.length; i++) {
+    formData.append(model[i][0], model[i][1]);
+  }
+  return formData;
+}
+
+function extractIterator(response: Response, model: Array<any>): Iterator<any> {
+  // $FlowFixMe[incompatible-use]: This uses raw Symbols because we're extracting from a native array.
+  return model[Symbol.iterator]();
+}
+
+function createModel(response: Response, model: any): any {
+  return model;
 }
 
 function parseModelString(
@@ -624,6 +890,10 @@ function parseModelString(
       }
       case '@': {
         // Promise
+        if (value.length === 2) {
+          // Infinite promise that never resolves.
+          return new Promise(() => {});
+        }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         return chunk;
@@ -634,21 +904,66 @@ function parseModelString(
       }
       case 'F': {
         // Server Reference
-        const id = parseInt(value.slice(2), 16);
-        const metadata = getOutlinedModel(response, id);
-        return createServerReferenceProxy(response, metadata);
+        const ref = value.slice(2);
+        return getOutlinedModel(
+          response,
+          ref,
+          parentObject,
+          key,
+          createServerReferenceProxy,
+        );
+      }
+      case 'T': {
+        // Temporary Reference
+        const reference = '$' + value.slice(2);
+        const temporaryReferences = response._tempRefs;
+        if (temporaryReferences == null) {
+          throw new Error(
+            'Missing a temporary reference set but the RSC response returned a temporary reference. ' +
+              'Pass a temporaryReference option with the set that was used with the reply.',
+          );
+        }
+        return readTemporaryReference(temporaryReferences, reference);
       }
       case 'Q': {
         // Map
-        const id = parseInt(value.slice(2), 16);
-        const data = getOutlinedModel(response, id);
-        return new Map(data);
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, parentObject, key, createMap);
       }
       case 'W': {
         // Set
-        const id = parseInt(value.slice(2), 16);
-        const data = getOutlinedModel(response, id);
-        return new Set(data);
+        const ref = value.slice(2);
+        return getOutlinedModel(response, ref, parentObject, key, createSet);
+      }
+      case 'B': {
+        // Blob
+        if (enableBinaryFlight) {
+          const ref = value.slice(2);
+          return getOutlinedModel(response, ref, parentObject, key, createBlob);
+        }
+        return undefined;
+      }
+      case 'K': {
+        // FormData
+        const ref = value.slice(2);
+        return getOutlinedModel(
+          response,
+          ref,
+          parentObject,
+          key,
+          createFormData,
+        );
+      }
+      case 'i': {
+        // Iterator
+        const ref = value.slice(2);
+        return getOutlinedModel(
+          response,
+          ref,
+          parentObject,
+          key,
+          extractIterator,
+        );
       }
       case 'I': {
         // $Infinity
@@ -679,39 +994,25 @@ function parseModelString(
         // BigInt
         return BigInt(value.slice(2));
       }
+      case 'E': {
+        if (__DEV__) {
+          // In DEV mode we allow indirect eval to produce functions for logging.
+          // This should not compile to eval() because then it has local scope access.
+          try {
+            // eslint-disable-next-line no-eval
+            return (0, eval)(value.slice(2));
+          } catch (x) {
+            // We currently use this to express functions so we fail parsing it,
+            // let's just return a blank function as a place holder.
+            return function () {};
+          }
+        }
+        // Fallthrough
+      }
       default: {
         // We assume that anything else is a reference ID.
-        const id = parseInt(value.slice(1), 16);
-        const chunk = getChunk(response, id);
-        switch (chunk.status) {
-          case RESOLVED_MODEL:
-            initializeModelChunk(chunk);
-            break;
-          case RESOLVED_MODULE:
-            initializeModuleChunk(chunk);
-            break;
-        }
-        // The status might have changed after initialization.
-        switch (chunk.status) {
-          case INITIALIZED:
-            return chunk.value;
-          case PENDING:
-          case BLOCKED:
-          case CYCLIC:
-            const parentChunk = initializingChunk;
-            chunk.then(
-              createModelResolver(
-                parentChunk,
-                parentObject,
-                key,
-                chunk.status === CYCLIC,
-              ),
-              createModelReject(parentChunk),
-            );
-            return null;
-          default:
-            throw chunk.reason;
-        }
+        const ref = value.slice(1);
+        return getOutlinedModel(response, ref, parentObject, key, createModel);
       }
     }
   }
@@ -727,7 +1028,13 @@ function parseModelTuple(
   if (tuple[0] === REACT_ELEMENT_TYPE) {
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
-    return createElement(tuple[1], tuple[2], tuple[3]);
+    return createElement(
+      tuple[1],
+      tuple[2],
+      tuple[3],
+      __DEV__ ? (tuple: any)[4] : null,
+      __DEV__ && enableOwnerStacks ? (tuple: any)[5] : null,
+    );
   }
   return value;
 }
@@ -743,13 +1050,16 @@ export function createResponse(
   bundlerConfig: SSRModuleMap,
   moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
+  encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
     _bundlerConfig: bundlerConfig,
     _moduleLoading: moduleLoading,
     _callServer: callServer !== undefined ? callServer : missingCall,
+    _encodeFormAction: encodeFormAction,
     _nonce: nonce,
     _chunks: chunks,
     _stringDecoder: createStringDecoder(),
@@ -759,6 +1069,7 @@ export function createResponse(
     _rowTag: 0,
     _rowLength: 0,
     _buffer: [],
+    _tempRefs: temporaryReferences,
   };
   // Don't inline this call because it causes closure to outline the call above.
   response._fromJSON = createFromJSONCallback(response);
@@ -781,8 +1092,17 @@ function resolveModel(
 
 function resolveText(response: Response, id: number, text: string): void {
   const chunks = response._chunks;
-  // We assume that we always reference large strings after they've been
-  // emitted.
+  if (enableFlightReadableStream) {
+    const chunk = chunks.get(id);
+    if (chunk && chunk.status !== PENDING) {
+      // If we get more data to an already resolved ID, we assume that it's
+      // a stream chunk since any other row shouldn't have more than one entry.
+      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+      const controller = streamChunk.reason;
+      controller.enqueueValue(text);
+      return;
+    }
+  }
   chunks.set(id, createInitializedTextChunk(response, text));
 }
 
@@ -792,7 +1112,17 @@ function resolveBuffer(
   buffer: $ArrayBufferView | ArrayBuffer,
 ): void {
   const chunks = response._chunks;
-  // We assume that we always reference buffers after they've been emitted.
+  if (enableFlightReadableStream) {
+    const chunk = chunks.get(id);
+    if (chunk && chunk.status !== PENDING) {
+      // If we get more data to an already resolved ID, we assume that it's
+      // a stream chunk since any other row shouldn't have more than one entry.
+      const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+      const controller = streamChunk.reason;
+      controller.enqueueValue(buffer);
+      return;
+    }
+  }
   chunks.set(id, createInitializedBufferChunk(response, buffer));
 }
 
@@ -848,6 +1178,266 @@ function resolveModule(
       resolveModuleChunk(chunk, clientReference);
     }
   }
+}
+
+function resolveStream<T: ReadableStream | $AsyncIterable<any, any, void>>(
+  response: Response,
+  id: number,
+  stream: T,
+  controller: FlightStreamController,
+): void {
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  if (!chunk) {
+    chunks.set(id, createInitializedStreamChunk(response, stream, controller));
+    return;
+  }
+  if (chunk.status !== PENDING) {
+    // We already resolved. We didn't expect to see this.
+    return;
+  }
+  const resolveListeners = chunk.value;
+  const resolvedChunk: InitializedStreamChunk<T> = (chunk: any);
+  resolvedChunk.status = INITIALIZED;
+  resolvedChunk.value = stream;
+  resolvedChunk.reason = controller;
+  if (resolveListeners !== null) {
+    wakeChunk(resolveListeners, chunk.value);
+  }
+}
+
+function startReadableStream<T>(
+  response: Response,
+  id: number,
+  type: void | 'bytes',
+): void {
+  let controller: ReadableStreamController = (null: any);
+  const stream = new ReadableStream({
+    type: type,
+    start(c) {
+      controller = c;
+    },
+  });
+  let previousBlockedChunk: SomeChunk<T> | null = null;
+  const flightController = {
+    enqueueValue(value: T): void {
+      if (previousBlockedChunk === null) {
+        controller.enqueue(value);
+      } else {
+        // We're still waiting on a previous chunk so we can't enqueue quite yet.
+        previousBlockedChunk.then(function () {
+          controller.enqueue(value);
+        });
+      }
+    },
+    enqueueModel(json: UninitializedModel): void {
+      if (previousBlockedChunk === null) {
+        // If we're not blocked on any other chunks, we can try to eagerly initialize
+        // this as a fast-path to avoid awaiting them.
+        const chunk: ResolvedModelChunk<T> = createResolvedModelChunk(
+          response,
+          json,
+        );
+        initializeModelChunk(chunk);
+        const initializedChunk: SomeChunk<T> = chunk;
+        if (initializedChunk.status === INITIALIZED) {
+          controller.enqueue(initializedChunk.value);
+        } else {
+          chunk.then(
+            v => controller.enqueue(v),
+            e => controller.error((e: any)),
+          );
+          previousBlockedChunk = chunk;
+        }
+      } else {
+        // We're still waiting on a previous chunk so we can't enqueue quite yet.
+        const blockedChunk = previousBlockedChunk;
+        const chunk: SomeChunk<T> = createPendingChunk(response);
+        chunk.then(
+          v => controller.enqueue(v),
+          e => controller.error((e: any)),
+        );
+        previousBlockedChunk = chunk;
+        blockedChunk.then(function () {
+          if (previousBlockedChunk === chunk) {
+            // We were still the last chunk so we can now clear the queue and return
+            // to synchronous emitting.
+            previousBlockedChunk = null;
+          }
+          resolveModelChunk(chunk, json);
+        });
+      }
+    },
+    close(json: UninitializedModel): void {
+      if (previousBlockedChunk === null) {
+        controller.close();
+      } else {
+        const blockedChunk = previousBlockedChunk;
+        // We shouldn't get any more enqueues after this so we can set it back to null.
+        previousBlockedChunk = null;
+        blockedChunk.then(() => controller.close());
+      }
+    },
+    error(error: mixed): void {
+      if (previousBlockedChunk === null) {
+        // $FlowFixMe[incompatible-call]
+        controller.error(error);
+      } else {
+        const blockedChunk = previousBlockedChunk;
+        // We shouldn't get any more enqueues after this so we can set it back to null.
+        previousBlockedChunk = null;
+        blockedChunk.then(() => controller.error((error: any)));
+      }
+    },
+  };
+  resolveStream(response, id, stream, flightController);
+}
+
+function asyncIterator(this: $AsyncIterator<any, any, void>) {
+  // Self referencing iterator.
+  return this;
+}
+
+function createIterator<T>(
+  next: (arg: void) => SomeChunk<IteratorResult<T, T>>,
+): $AsyncIterator<T, T, void> {
+  const iterator: any = {
+    next: next,
+    // TODO: Add return/throw as options for aborting.
+  };
+  // TODO: The iterator could inherit the AsyncIterator prototype which is not exposed as
+  // a global but exists as a prototype of an AsyncGenerator. However, it's not needed
+  // to satisfy the iterable protocol.
+  (iterator: any)[ASYNC_ITERATOR] = asyncIterator;
+  return iterator;
+}
+
+function startAsyncIterable<T>(
+  response: Response,
+  id: number,
+  iterator: boolean,
+): void {
+  const buffer: Array<SomeChunk<IteratorResult<T, T>>> = [];
+  let closed = false;
+  let nextWriteIndex = 0;
+  const flightController = {
+    enqueueValue(value: T): void {
+      if (nextWriteIndex === buffer.length) {
+        buffer[nextWriteIndex] = createInitializedIteratorResultChunk(
+          response,
+          value,
+          false,
+        );
+      } else {
+        const chunk: PendingChunk<IteratorResult<T, T>> = (buffer[
+          nextWriteIndex
+        ]: any);
+        const resolveListeners = chunk.value;
+        const rejectListeners = chunk.reason;
+        const initializedChunk: InitializedChunk<IteratorResult<T, T>> =
+          (chunk: any);
+        initializedChunk.status = INITIALIZED;
+        initializedChunk.value = {done: false, value: value};
+        if (resolveListeners !== null) {
+          wakeChunkIfInitialized(chunk, resolveListeners, rejectListeners);
+        }
+      }
+      nextWriteIndex++;
+    },
+    enqueueModel(value: UninitializedModel): void {
+      if (nextWriteIndex === buffer.length) {
+        buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
+          response,
+          value,
+          false,
+        );
+      } else {
+        resolveIteratorResultChunk(buffer[nextWriteIndex], value, false);
+      }
+      nextWriteIndex++;
+    },
+    close(value: UninitializedModel): void {
+      closed = true;
+      if (nextWriteIndex === buffer.length) {
+        buffer[nextWriteIndex] = createResolvedIteratorResultChunk(
+          response,
+          value,
+          true,
+        );
+      } else {
+        resolveIteratorResultChunk(buffer[nextWriteIndex], value, true);
+      }
+      nextWriteIndex++;
+      while (nextWriteIndex < buffer.length) {
+        // In generators, any extra reads from the iterator have the value undefined.
+        resolveIteratorResultChunk(
+          buffer[nextWriteIndex++],
+          '"$undefined"',
+          true,
+        );
+      }
+    },
+    error(error: Error): void {
+      closed = true;
+      if (nextWriteIndex === buffer.length) {
+        buffer[nextWriteIndex] =
+          createPendingChunk<IteratorResult<T, T>>(response);
+      }
+      while (nextWriteIndex < buffer.length) {
+        triggerErrorOnChunk(buffer[nextWriteIndex++], error);
+      }
+    },
+  };
+  const iterable: $AsyncIterable<T, T, void> = {
+    [ASYNC_ITERATOR](): $AsyncIterator<T, T, void> {
+      let nextReadIndex = 0;
+      return createIterator(arg => {
+        if (arg !== undefined) {
+          throw new Error(
+            'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
+          );
+        }
+        if (nextReadIndex === buffer.length) {
+          if (closed) {
+            // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
+            return new Chunk(
+              INITIALIZED,
+              {done: true, value: undefined},
+              null,
+              response,
+            );
+          }
+          buffer[nextReadIndex] =
+            createPendingChunk<IteratorResult<T, T>>(response);
+        }
+        return buffer[nextReadIndex++];
+      });
+    },
+  };
+  // TODO: If it's a single shot iterator we can optimize memory by cleaning up the buffer after
+  // reading through the end, but currently we favor code size over this optimization.
+  resolveStream(
+    response,
+    id,
+    iterator ? iterable[ASYNC_ITERATOR]() : iterable,
+    flightController,
+  );
+}
+
+function stopStream(
+  response: Response,
+  id: number,
+  row: UninitializedModel,
+): void {
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  if (!chunk || chunk.status !== INITIALIZED) {
+    // We didn't expect not to have an existing stream;
+    return;
+  }
+  const streamChunk: InitializedStreamChunk<any> = (chunk: any);
+  const controller = streamChunk.reason;
+  controller.close(row === '' ? '"$undefined"' : row);
 }
 
 type ErrorWithDigest = Error & {digest?: string};
@@ -971,6 +1561,47 @@ function resolveHint<Code: HintCode>(
   dispatchHint(code, hintModel);
 }
 
+function resolveDebugInfo(
+  response: Response,
+  id: number,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolveDebugInfo should never be called in production mode. This is a bug in React.',
+    );
+  }
+  const chunk = getChunk(response, id);
+  const chunkDebugInfo: ReactDebugInfo =
+    chunk._debugInfo || (chunk._debugInfo = []);
+  chunkDebugInfo.push(debugInfo);
+}
+
+function resolveConsoleEntry(
+  response: Response,
+  value: UninitializedModel,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolveConsoleEntry should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  const payload: [string, string, null | ReactComponentInfo, string, mixed] =
+    parseModel(response, value);
+  const methodName = payload[0];
+  // TODO: Restore the fake stack before logging.
+  // const stackTrace = payload[1];
+  // const owner = payload[2];
+  const env = payload[3];
+  const args = payload.slice(4);
+  printToConsole(methodName, args, env);
+}
+
 function mergeBuffer(
   buffer: Array<Uint8Array>,
   lastChunk: Uint8Array,
@@ -1036,10 +1667,10 @@ function processFullRow(
         // We must always clone to extract it into a separate buffer instead of just a view.
         resolveBuffer(response, id, mergeBuffer(buffer, chunk).buffer);
         return;
-      case 67 /* "C" */:
+      case 79 /* "O" */:
         resolveTypedArray(response, id, buffer, chunk, Int8Array, 1);
         return;
-      case 99 /* "c" */:
+      case 111 /* "o" */:
         resolveBuffer(
           response,
           id,
@@ -1061,13 +1692,13 @@ function processFullRow(
       case 108 /* "l" */:
         resolveTypedArray(response, id, buffer, chunk, Uint32Array, 4);
         return;
-      case 70 /* "F" */:
+      case 71 /* "G" */:
         resolveTypedArray(response, id, buffer, chunk, Float32Array, 4);
         return;
-      case 68 /* "D" */:
+      case 103 /* "g" */:
         resolveTypedArray(response, id, buffer, chunk, Float64Array, 8);
         return;
-      case 78 /* "N" */:
+      case 77 /* "M" */:
         resolveTypedArray(response, id, buffer, chunk, BigInt64Array, 8);
         return;
       case 109 /* "m" */:
@@ -1114,6 +1745,63 @@ function processFullRow(
       resolveText(response, id, row);
       return;
     }
+    case 68 /* "D" */: {
+      if (__DEV__) {
+        const debugInfo: ReactComponentInfo | ReactAsyncInfo = parseModel(
+          response,
+          row,
+        );
+        resolveDebugInfo(response, id, debugInfo);
+        return;
+      }
+      // Fallthrough to share the error with Console entries.
+    }
+    case 87 /* "W" */: {
+      if (__DEV__) {
+        resolveConsoleEntry(response, row);
+        return;
+      }
+      throw new Error(
+        'Failed to read a RSC payload created by a development version of React ' +
+          'on the server while using a production version on the client. Always use ' +
+          'matching versions on the server and the client.',
+      );
+    }
+    case 82 /* "R" */: {
+      if (enableFlightReadableStream) {
+        startReadableStream(response, id, undefined);
+        return;
+      }
+    }
+    // Fallthrough
+    case 114 /* "r" */: {
+      if (enableFlightReadableStream) {
+        startReadableStream(response, id, 'bytes');
+        return;
+      }
+    }
+    // Fallthrough
+    case 88 /* "X" */: {
+      if (enableFlightReadableStream) {
+        startAsyncIterable(response, id, false);
+        return;
+      }
+    }
+    // Fallthrough
+    case 120 /* "x" */: {
+      if (enableFlightReadableStream) {
+        startAsyncIterable(response, id, true);
+        return;
+      }
+    }
+    // Fallthrough
+    case 67 /* "C" */: {
+      if (enableFlightReadableStream) {
+        stopStream(response, id, row);
+        return;
+      }
+    }
+    // Fallthrough
     case 80 /* "P" */: {
       if (enablePostpone) {
         if (__DEV__) {
@@ -1169,23 +1857,27 @@ export function processBinaryChunk(
           resolvedRowTag === 84 /* "T" */ ||
           (enableBinaryFlight &&
             (resolvedRowTag === 65 /* "A" */ ||
-              resolvedRowTag === 67 /* "C" */ ||
-              resolvedRowTag === 99 /* "c" */ ||
+              resolvedRowTag === 79 /* "O" */ ||
+              resolvedRowTag === 111 /* "o" */ ||
               resolvedRowTag === 85 /* "U" */ ||
               resolvedRowTag === 83 /* "S" */ ||
               resolvedRowTag === 115 /* "s" */ ||
               resolvedRowTag === 76 /* "L" */ ||
               resolvedRowTag === 108 /* "l" */ ||
-              resolvedRowTag === 70 /* "F" */ ||
-              resolvedRowTag === 68 /* "D" */ ||
-              resolvedRowTag === 78 /* "N" */ ||
+              resolvedRowTag === 71 /* "G" */ ||
+              resolvedRowTag === 103 /* "g" */ ||
+              resolvedRowTag === 77 /* "M" */ ||
               resolvedRowTag === 109 /* "m" */ ||
               resolvedRowTag === 86)) /* "V" */
         ) {
           rowTag = resolvedRowTag;
           rowState = ROW_LENGTH;
           i++;
-        } else if (resolvedRowTag > 64 && resolvedRowTag < 91 /* "A"-"Z" */) {
+        } else if (
+          (resolvedRowTag > 64 && resolvedRowTag < 91) /* "A"-"Z" */ ||
+          resolvedRowTag === 114 /* "r" */ ||
+          resolvedRowTag === 120 /* "x" */
+        ) {
           rowTag = resolvedRowTag;
           rowState = ROW_CHUNK_BY_NEWLINE;
           i++;

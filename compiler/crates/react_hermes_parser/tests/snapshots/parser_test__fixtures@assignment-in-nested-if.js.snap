@@ -1,0 +1,269 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/assignment-in-nested-if.js
+---
+Input:
+function useBar(props) {
+  let z;
+
+  if (props.a) {
+    if (props.b) {
+      z = baz();
+    }
+  }
+
+  return z;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "useBar",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          15
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            21
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "z",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    31,
+                    32
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  31,
+                  32
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              27,
+              33
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  41,
+                  46
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  47,
+                  48
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                41,
+                48
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "IfStatement",
+                  "test": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        60,
+                        65
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "b",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        66,
+                        67
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      60,
+                      67
+                    ]
+                  },
+                  "consequent": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "z",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              77,
+                              78
+                            ]
+                          },
+                          "right": {
+                            "type": "CallExpression",
+                            "callee": {
+                              "type": "Identifier",
+                              "name": "baz",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                81,
+                                84
+                              ]
+                            },
+                            "arguments": [],
+                            "loc": null,
+                            "range": [
+                              81,
+                              86
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            77,
+                            86
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          77,
+                          87
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      69,
+                      93
+                    ]
+                  },
+                  "alternate": null,
+                  "loc": null,
+                  "range": [
+                    56,
+                    93
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                50,
+                97
+              ]
+            },
+            "alternate": null,
+            "loc": null,
+            "range": [
+              37,
+              97
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "z",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                108,
+                109
+              ]
+            },
+            "loc": null,
+            "range": [
+              101,
+              110
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          23,
+          112
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        112
+      ],
+      "loc": null,
+      "range": [
+        0,
+        112
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    112
+  ]
+}

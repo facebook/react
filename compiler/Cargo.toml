@@ -1,0 +1,61 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+authors     = ["The React Team https://react.dev/community/team"]
+description = "React Compiler"
+edition     = "2021"
+homepage    = "https://github.com/facebook/react"
+keywords    = ["JavaScript", "TypeScript", "React", "React Compiler", "Compiler"]
+license     = "MIT"
+repository  = "https://github.com/facebook/react"
+
+[workspace.dependencies]
+# workspace crates
+react_build_hir = { path = "crates/react_build_hir" }
+react_diagnostics = { path = "crates/react_diagnostics" }
+react_estree = { path = "crates/react_estree" }
+react_estree_codegen = { path = "crates/react_estree_codegen" }
+react_fixtures = { path = "crates/react_fixtures" }
+react_hermes_parser = { path = "crates/react_hermes_parser" }
+react_hir = { path = "crates/react_hir" }
+react_optimization = { path = "crates/react_optimization" }
+react_semantic_analysis = { path = "crates/react_semantic_analysis" }
+react_ssa = { path = "crates/react_ssa" }
+react_utils = { path = "crates/react_utils" }
+
+# dependencies
+indexmap = { version = "2.0.0", features = ["serde"] }
+insta = { version = "1.30.0", features = ["glob"] }
+miette = { version = "5.9.0" }
+prettyplease = "0.2.10"
+quote = "1.0.29"
+serde = { version = "1.0.167", features = ["serde_derive"] }
+serde_json = "1.0.100"
+stacker = "0.1.15"
+static_assertions = "1.1.0"
+syn = "2.0.23"
+thiserror = "1.0.41"
+hermes = { git = "https://github.com/facebook/hermes.git" }
+juno_support = { git = "https://github.com/facebook/hermes.git" }
+
+[profile.release]
+# configuration adapted from oxc
+# https://github.com/Boshen/oxc/blob/ea85ee9f2d64dd284c5b7410f491d81fb879abae/Cargo.toml#L89-L97
+opt-level     = 3
+lto           = "fat"
+codegen-units = 1
+strip         = "symbols"
+debug         = false
+panic         = "abort"   # Let it crash and force ourselves to write safe Rust.
+
+# Make insta run faster by compiling with release mode optimizations
+# https://docs.rs/insta/latest/insta/#optional-faster-runs
+[profile.dev.package.insta]
+opt-level = 3
+
+# Make insta diffing libary faster by compiling with release mode optimizations
+# https://docs.rs/insta/latest/insta/#optional-faster-runs
+[profile.dev.package.similar]
+opt-level = 3

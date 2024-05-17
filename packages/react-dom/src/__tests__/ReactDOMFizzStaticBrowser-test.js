@@ -29,6 +29,7 @@ let container;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
@@ -125,15 +126,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       </html>,
     );
     const prelude = await readContent(result.prelude);
-    if (gate(flags => flags.enableFloat)) {
-      expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-      );
-    } else {
-      expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-      );
-    }
+    expect(prelude).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+    );
   });
 
   // @gate experimental

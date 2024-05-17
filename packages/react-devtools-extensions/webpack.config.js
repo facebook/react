@@ -14,6 +14,7 @@ const {
   getVersionString,
 } = require('./utils');
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
+const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -39,6 +40,7 @@ const LOGGING_URL = process.env.LOGGING_URL || null;
 const IS_CHROME = process.env.IS_CHROME === 'true';
 const IS_FIREFOX = process.env.IS_FIREFOX === 'true';
 const IS_EDGE = process.env.IS_EDGE === 'true';
+const IS_INTERNAL_VERSION = process.env.FEATURE_FLAG_TARGET === 'extension-fb';
 
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
@@ -53,7 +55,7 @@ const babelOptions = {
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-source-map' : false,
+  devtool: false,
   entry: {
     background: './src/background/index.js',
     backendManager: './src/contentScripts/backendManager.js',
@@ -119,6 +121,7 @@ module.exports = {
       __IS_CHROME__: IS_CHROME,
       __IS_FIREFOX__: IS_FIREFOX,
       __IS_EDGE__: IS_EDGE,
+      __IS_INTERNAL_VERSION__: IS_INTERNAL_VERSION,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,
@@ -131,6 +134,27 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
+    }),
+    new Webpack.SourceMapDevToolPlugin({
+      filename: '[file].map',
+      noSources: !__DEV__,
+    }),
+    new SourceMapIgnoreListPlugin({
+      shouldIgnoreSource: (assetName, _source) => {
+        if (__DEV__) {
+          // Don't ignore list anything in DEV build for debugging purposes
+          return false;
+        }
+
+        const contentScriptNamesToIgnoreList = [
+          // This is where we override console
+          'installHook',
+        ];
+
+        return contentScriptNamesToIgnoreList.some(ignoreListName =>
+          assetName.startsWith(ignoreListName),
+        );
+      },
     }),
   ],
   module: {

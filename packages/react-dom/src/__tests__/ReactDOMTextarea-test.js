@@ -22,6 +22,8 @@ describe('ReactDOMTextarea', () => {
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
@@ -71,6 +73,18 @@ describe('ReactDOMTextarea', () => {
     const root = ReactDOMClient.createRoot(container);
     const node = await renderTextarea(
       <textarea defaultValue={0} />,
+      container,
+      root,
+    );
+
+    expect(node.value).toBe('0');
+  });
+
+  it('should display `defaultValue` of bigint 0', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    const node = await renderTextarea(
+      <textarea defaultValue={0n} />,
       container,
       root,
     );
@@ -727,7 +741,7 @@ describe('ReactDOMTextarea', () => {
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled textarea ' +
         'and remove one of these props. More info: ' +
-        'https://reactjs.org/link/controlled-components',
+        'https://react.dev/link/controlled-components',
     );
 
     container = document.createElement('div');

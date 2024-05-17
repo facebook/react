@@ -6,10 +6,10 @@ module.exports = {
     '<rootDir>/scripts/rollup/shims/',
     '<rootDir>/scripts/bench/',
   ],
-  resetModules: true,
   transform: {
     '.*': require.resolve('./preprocessor.js'),
   },
+  prettierPath: require.resolve('prettier-2'),
   setupFiles: [require.resolve('./setupEnvironment.js')],
   setupFilesAfterEnv: [require.resolve('./setupTests.js')],
   // Only include files directly in __tests__, not in nested folders.

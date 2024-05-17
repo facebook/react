@@ -1,0 +1,439 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/useEffect-arg-memoized.js
+---
+Input:
+function Component(props) {
+  const dispatch = useDispatch();
+  useFreeze(dispatch);
+
+  // onUpdate should be memoized even though it doesn't
+  // flow into the return value
+  const onUpdate = () => {
+    dispatch({ kind: "update" });
+  };
+
+  useEffect(() => {
+    onUpdate();
+  }, [onUpdate]);
+
+  return <div />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "dispatch",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    44
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useDispatch",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      47,
+                      58
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    47,
+                    60
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  60
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              61
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useFreeze",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  64,
+                  73
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "dispatch",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    74,
+                    82
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                64,
+                83
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              64,
+              84
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "onUpdate",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    182,
+                    190
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "Identifier",
+                            "name": "dispatch",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              205,
+                              213
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "ObjectExpression",
+                              "properties": [
+                                {
+                                  "type": "Property",
+                                  "key": {
+                                    "type": "Identifier",
+                                    "name": "kind",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      216,
+                                      220
+                                    ]
+                                  },
+                                  "value": {
+                                    "type": "StringLiteral",
+                                    "value": "update",
+                                    "loc": null,
+                                    "range": [
+                                      222,
+                                      230
+                                    ]
+                                  },
+                                  "kind": "init",
+                                  "method": false,
+                                  "shorthand": false,
+                                  "computed": false,
+                                  "loc": null,
+                                  "range": [
+                                    216,
+                                    230
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                214,
+                                232
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            205,
+                            233
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          205,
+                          234
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      199,
+                      238
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    193,
+                    238
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    193,
+                    238
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  182,
+                  238
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              176,
+              239
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useEffect",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  243,
+                  252
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "Identifier",
+                            "name": "onUpdate",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              265,
+                              273
+                            ]
+                          },
+                          "arguments": [],
+                          "loc": null,
+                          "range": [
+                            265,
+                            275
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          265,
+                          276
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      259,
+                      280
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    253,
+                    280
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    253,
+                    280
+                  ]
+                },
+                {
+                  "type": "ArrayExpression",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "onUpdate",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        283,
+                        291
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    282,
+                    292
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                243,
+                293
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              243,
+              294
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    306,
+                    309
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  305,
+                  312
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                305,
+                312
+              ]
+            },
+            "loc": null,
+            "range": [
+              298,
+              313
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          315
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        315
+      ],
+      "loc": null,
+      "range": [
+        0,
+        315
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    315
+  ]
+}

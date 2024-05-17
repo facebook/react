@@ -29,7 +29,7 @@ export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
 // Export all exports so that they're available in tests.
 // We can't use export * from in Flow for some reason.
 export {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   act,
   Children,
   Component,
@@ -41,7 +41,6 @@ export {
   cloneElement,
   createContext,
   createElement,
-  createFactory,
   createRef,
   use,
   forwardRef,
@@ -50,17 +49,14 @@ export {
   memo,
   cache,
   startTransition,
-  unstable_Cache,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
   unstable_Activity,
   unstable_Scope,
   unstable_SuspenseList,
   unstable_TracingMarker,
-  unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
-  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
@@ -78,5 +74,6 @@ export {
   useRef,
   useState,
   useTransition,
+  useActionState,
   version,
 } from './src/ReactClient';

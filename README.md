@@ -36,7 +36,7 @@ The documentation is divided into several sections:
 * [Where to Get Support](https://react.dev/community)
 * [Contributing Guide](https://legacy.reactjs.org/docs/how-to-contribute.html)
 
-You can improve it by sending pull requests to [this repository](https://github.com/reactjs/reactjs.org).
+You can improve it by sending pull requests to [this repository](https://github.com/reactjs/react.dev).
 
 ## Examples
 

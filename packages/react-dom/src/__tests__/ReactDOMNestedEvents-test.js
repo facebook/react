@@ -18,6 +18,7 @@ describe('ReactDOMNestedEvents', () => {
   let assertLog;
 
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');

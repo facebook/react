@@ -7,10 +7,11 @@
  * @flow
  */
 
-export type Source = {
-  fileName: string,
-  lineNumber: number,
-};
+import type {ReactDebugInfo} from './ReactTypes';
+
+interface ConsoleTask {
+  run<T>(f: () => T): T;
+}
 
 export type ReactElement = {
   $$typeof: any,
@@ -18,12 +19,12 @@ export type ReactElement = {
   key: any,
   ref: any,
   props: any,
-  // ReactFiber
+  // __DEV__ or for string refs
   _owner: any,
 
   // __DEV__
   _store: {validated: boolean, ...},
-  _self: React$Element<any>,
-  _shadowChildren: any,
-  _source: Source,
+  _debugInfo: null | ReactDebugInfo,
+  _debugStack: Error,
+  _debugTask: null | ConsoleTask,
 };

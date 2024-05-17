@@ -21,6 +21,7 @@ let ReactDOMFizzServer;
 
 describe('ReactDOMFizzServerEdge', () => {
   beforeEach(() => {
+    jest.resetModules();
     jest.useRealTimers();
     React = require('react');
     ReactDOM = require('react-dom');

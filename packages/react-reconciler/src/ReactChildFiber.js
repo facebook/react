@@ -8,7 +8,12 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactPortal, Thenable, ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactPortal,
+  Thenable,
+  ReactContext,
+  ReactDebugInfo,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {ThenableState} from './ReactFiberThenable';
@@ -22,15 +27,26 @@ import {
 } from './ReactFiberFlags';
 import {
   getIteratorFn,
+  ASYNC_ITERATOR,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_LEGACY_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
-import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
+import {
+  HostRoot,
+  HostText,
+  HostPortal,
+  Fragment,
+  FunctionComponent,
+} from './ReactWorkTags';
 import isArray from 'shared/isArray';
-import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
+import {
+  enableRefAsProp,
+  enableAsyncIterableChildren,
+} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -44,23 +60,41 @@ import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
-import {readContextDuringReconcilation} from './ReactFiberNewContext';
+import {readContextDuringReconciliation} from './ReactFiberNewContext';
 
 // This tracks the thenables that are unwrapped during reconcilation.
 let thenableState: ThenableState | null = null;
 let thenableIndexCounter: number = 0;
 
+function mergeDebugInfo(
+  outer: ReactDebugInfo | null,
+  inner: ReactDebugInfo | null | void,
+): ReactDebugInfo | null {
+  if (!__DEV__) {
+    return null;
+  }
+  if (inner == null) {
+    return outer;
+  } else if (outer === null) {
+    return inner;
+  } else {
+    // If we have two debugInfo, we need to create a new one. This makes the array no longer
+    // live so we'll miss any future updates if we received more so ideally we should always
+    // do this after both have fully resolved/unsuspended.
+    return outer.concat(inner);
+  }
+}
+
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
-let didWarnAboutStringRefs;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
+let ownerHasSymbolTypeWarning;
 let warnForMissingKey = (child: mixed, returnFiber: Fiber) => {};
 
 if (__DEV__) {
   didWarnAboutMaps = false;
   didWarnAboutGenerators = false;
-  didWarnAboutStringRefs = ({}: {[string]: boolean});
 
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
@@ -69,6 +103,7 @@ if (__DEV__) {
    */
   ownerHasKeyUseWarning = ({}: {[string]: boolean});
   ownerHasFunctionTypeWarning = ({}: {[string]: boolean});
+  ownerHasSymbolTypeWarning = ({}: {[string]: boolean});
 
   warnForMissingKey = (child: mixed, returnFiber: Fiber) => {
     if (child === null || typeof child !== 'object') {
@@ -97,14 +132,10 @@ if (__DEV__) {
 
     console.error(
       'Each child in a list should have a unique ' +
-        '"key" prop. See https://reactjs.org/link/warning-keys for ' +
+        '"key" prop. See https://react.dev/link/warning-keys for ' +
         'more information.',
     );
   };
-}
-
-function isReactClass(type: any) {
-  return type.prototype && type.prototype.isReactComponent;
 }
 
 function unwrapThenable<T>(thenable: Thenable<T>): T {
@@ -119,124 +150,37 @@ function unwrapThenable<T>(thenable: Thenable<T>): T {
 function coerceRef(
   returnFiber: Fiber,
   current: Fiber | null,
+  workInProgress: Fiber,
   element: ReactElement,
-) {
-  const mixedRef = element.ref;
-  if (
-    mixedRef !== null &&
-    typeof mixedRef !== 'function' &&
-    typeof mixedRef !== 'object'
-  ) {
-    if (__DEV__) {
-      if (
-        // We warn in ReactElement.js if owner and self are equal for string refs
-        // because these cannot be automatically converted to an arrow function
-        // using a codemod. Therefore, we don't have to warn about string refs again.
-        !(
-          element._owner &&
-          element._self &&
-          element._owner.stateNode !== element._self
-        ) &&
-        // Will already throw with "Function components cannot have string refs"
-        !(
-          element._owner &&
-          ((element._owner: any): Fiber).tag !== ClassComponent
-        ) &&
-        // Will already warn with "Function components cannot be given refs"
-        !(typeof element.type === 'function' && !isReactClass(element.type)) &&
-        // Will already throw with "Element ref was specified as a string (someStringRef) but no owner was set"
-        element._owner
-      ) {
-        const componentName =
-          getComponentNameFromFiber(returnFiber) || 'Component';
-        if (!didWarnAboutStringRefs[componentName]) {
-          console.error(
-            'Component "%s" contains the string ref "%s". Support for string refs ' +
-              'will be removed in a future major release. We recommend using ' +
-              'useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://reactjs.org/link/strict-mode-string-ref',
-            componentName,
-            mixedRef,
-          );
-          didWarnAboutStringRefs[componentName] = true;
-        }
-      }
-    }
-
-    if (element._owner) {
-      const owner: ?Fiber = (element._owner: any);
-      let inst;
-      if (owner) {
-        const ownerFiber = ((owner: any): Fiber);
-
-        if (ownerFiber.tag !== ClassComponent) {
-          throw new Error(
-            'Function components cannot have string refs. ' +
-              'We recommend using useRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://reactjs.org/link/strict-mode-string-ref',
-          );
-        }
-
-        inst = ownerFiber.stateNode;
-      }
-
-      if (!inst) {
-        throw new Error(
-          `Missing owner for string ref ${mixedRef}. This error is likely caused by a ` +
-            'bug in React. Please file an issue.',
-        );
-      }
-      // Assigning this to a const so Flow knows it won't change in the closure
-      const resolvedInst = inst;
-
-      if (__DEV__) {
-        checkPropStringCoercion(mixedRef, 'ref');
-      }
-      const stringRef = '' + mixedRef;
-      // Check if previous string ref matches new string ref
-      if (
-        current !== null &&
-        current.ref !== null &&
-        typeof current.ref === 'function' &&
-        current.ref._stringRef === stringRef
-      ) {
-        return current.ref;
-      }
-      const ref = function (value: mixed) {
-        const refs = resolvedInst.refs;
-        if (value === null) {
-          delete refs[stringRef];
-        } else {
-          refs[stringRef] = value;
-        }
-      };
-      ref._stringRef = stringRef;
-      return ref;
-    } else {
-      if (typeof mixedRef !== 'string') {
-        throw new Error(
-          'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-        );
-      }
-
-      if (!element._owner) {
-        throw new Error(
-          `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
-            ' the following reasons:\n' +
-            '1. You may be adding a ref to a function component\n' +
-            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-            '3. You have multiple copies of React loaded\n' +
-            'See https://reactjs.org/link/refs-must-have-owner for more information.',
-        );
-      }
-    }
+): void {
+  let ref;
+  if (enableRefAsProp) {
+    // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
+    // we should resolve the `ref` prop during the begin phase of the component
+    // it's attached to (HostComponent, ClassComponent, etc).
+    const refProp = element.props.ref;
+    ref = refProp !== undefined ? refProp : null;
+  } else {
+    // Old behavior.
+    ref = element.ref;
   }
-  return mixedRef;
+
+  // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
+  // should always read the ref from the prop.
+  workInProgress.ref = ref;
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
+  if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE) {
+    throw new Error(
+      'A React Element from an older version of React was rendered. ' +
+        'This is not supported. It can happen if:\n' +
+        '- Multiple copies of the "react" package is used.\n' +
+        '- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n' +
+        '- A compiler tries to "inline" JSX instead of using the runtime.',
+    );
+  }
+
   // $FlowFixMe[method-unbinding]
   const childString = Object.prototype.toString.call(newChild);
 
@@ -251,20 +195,68 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   );
 }
 
-function warnOnFunctionType(returnFiber: Fiber) {
+function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
   if (__DEV__) {
-    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
+    const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
-    if (ownerHasFunctionTypeWarning[componentName]) {
+    if (ownerHasFunctionTypeWarning[parentName]) {
       return;
     }
-    ownerHasFunctionTypeWarning[componentName] = true;
+    ownerHasFunctionTypeWarning[parentName] = true;
 
-    console.error(
-      'Functions are not valid as a React child. This may happen if ' +
-        'you return a Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
-    );
+    const name = invalidChild.displayName || invalidChild.name || 'Component';
+
+    if (returnFiber.tag === HostRoot) {
+      console.error(
+        'Functions are not valid as a React child. This may happen if ' +
+          'you return %s instead of <%s /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  root.render(%s)',
+        name,
+        name,
+        name,
+      );
+    } else {
+      console.error(
+        'Functions are not valid as a React child. This may happen if ' +
+          'you return %s instead of <%s /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  <%s>{%s}</%s>',
+        name,
+        name,
+        parentName,
+        name,
+        parentName,
+      );
+    }
+  }
+}
+
+function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+  if (__DEV__) {
+    const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
+
+    if (ownerHasSymbolTypeWarning[parentName]) {
+      return;
+    }
+    ownerHasSymbolTypeWarning[parentName] = true;
+
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const name = String(invalidChild);
+
+    if (returnFiber.tag === HostRoot) {
+      console.error(
+        'Symbols are not valid as a React child.\n' + '  root.render(%s)',
+        name,
+      );
+    } else {
+      console.error(
+        'Symbols are not valid as a React child.\n' + '  <%s>%s</%s>',
+        parentName,
+        name,
+        parentName,
+      );
+    }
   }
 }
 
@@ -322,7 +314,6 @@ function createChildReconciler(
   }
 
   function mapRemainingChildren(
-    returnFiber: Fiber,
     currentFirstChild: Fiber,
   ): Map<string | number, Fiber> {
     // Add the remaining children to a temporary map so that we can find them by
@@ -395,16 +386,23 @@ function createChildReconciler(
     current: Fiber | null,
     textContent: string,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ) {
     if (current === null || current.tag !== HostText) {
       // Insert
       const created = createFiberFromText(textContent, returnFiber.mode, lanes);
       created.return = returnFiber;
+      if (__DEV__) {
+        created._debugInfo = debugInfo;
+      }
       return created;
     } else {
       // Update
       const existing = useFiber(current, textContent);
       existing.return = returnFiber;
+      if (__DEV__) {
+        existing._debugInfo = debugInfo;
+      }
       return existing;
     }
   }
@@ -414,6 +412,7 @@ function createChildReconciler(
     current: Fiber | null,
     element: ReactElement,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber {
     const elementType = element.type;
     if (elementType === REACT_FRAGMENT_TYPE) {
@@ -423,6 +422,7 @@ function createChildReconciler(
         element.props.children,
         lanes,
         element.key,
+        debugInfo,
       );
     }
     if (current !== null) {
@@ -443,19 +443,22 @@ function createChildReconciler(
       ) {
         // Move based on index
         const existing = useFiber(current, element.props);
-        existing.ref = coerceRef(returnFiber, current, element);
+        coerceRef(returnFiber, current, existing, element);
         existing.return = returnFiber;
         if (__DEV__) {
-          existing._debugSource = element._source;
           existing._debugOwner = element._owner;
+          existing._debugInfo = debugInfo;
         }
         return existing;
       }
     }
     // Insert
     const created = createFiberFromElement(element, returnFiber.mode, lanes);
-    created.ref = coerceRef(returnFiber, current, element);
+    coerceRef(returnFiber, current, created, element);
     created.return = returnFiber;
+    if (__DEV__) {
+      created._debugInfo = debugInfo;
+    }
     return created;
   }
 
@@ -464,6 +467,7 @@ function createChildReconciler(
     current: Fiber | null,
     portal: ReactPortal,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber {
     if (
       current === null ||
@@ -474,11 +478,17 @@ function createChildReconciler(
       // Insert
       const created = createFiberFromPortal(portal, returnFiber.mode, lanes);
       created.return = returnFiber;
+      if (__DEV__) {
+        created._debugInfo = debugInfo;
+      }
       return created;
     } else {
       // Update
       const existing = useFiber(current, portal.children || []);
       existing.return = returnFiber;
+      if (__DEV__) {
+        existing._debugInfo = debugInfo;
+      }
       return existing;
     }
   }
@@ -489,6 +499,7 @@ function createChildReconciler(
     fragment: Iterable<React$Node>,
     lanes: Lanes,
     key: null | string,
+    debugInfo: null | ReactDebugInfo,
   ): Fiber {
     if (current === null || current.tag !== Fragment) {
       // Insert
@@ -499,11 +510,17 @@ function createChildReconciler(
         key,
       );
       created.return = returnFiber;
+      if (__DEV__) {
+        created._debugInfo = debugInfo;
+      }
       return created;
     } else {
       // Update
       const existing = useFiber(current, fragment);
       existing.return = returnFiber;
+      if (__DEV__) {
+        existing._debugInfo = debugInfo;
+      }
       return existing;
     }
   }
@@ -512,20 +529,26 @@ function createChildReconciler(
     returnFiber: Fiber,
     newChild: any,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber | null {
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      typeof newChild === 'bigint'
     ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
       const created = createFiberFromText(
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         '' + newChild,
         returnFiber.mode,
         lanes,
       );
       created.return = returnFiber;
+      if (__DEV__) {
+        created._debugInfo = debugInfo;
+      }
       return created;
     }
 
@@ -537,8 +560,11 @@ function createChildReconciler(
             returnFiber.mode,
             lanes,
           );
-          created.ref = coerceRef(returnFiber, null, newChild);
+          coerceRef(returnFiber, null, created, newChild);
           created.return = returnFiber;
+          if (__DEV__) {
+            created._debugInfo = mergeDebugInfo(debugInfo, newChild._debugInfo);
+          }
           return created;
         }
         case REACT_PORTAL_TYPE: {
@@ -548,16 +574,29 @@ function createChildReconciler(
             lanes,
           );
           created.return = returnFiber;
+          if (__DEV__) {
+            created._debugInfo = debugInfo;
+          }
           return created;
         }
         case REACT_LAZY_TYPE: {
           const payload = newChild._payload;
           const init = newChild._init;
-          return createChild(returnFiber, init(payload), lanes);
+          return createChild(
+            returnFiber,
+            init(payload),
+            lanes,
+            mergeDebugInfo(debugInfo, newChild._debugInfo), // call merge after init
+          );
         }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (
+        isArray(newChild) ||
+        getIteratorFn(newChild) ||
+        (enableAsyncIterableChildren &&
+          typeof newChild[ASYNC_ITERATOR] === 'function')
+      ) {
         const created = createFiberFromFragment(
           newChild,
           returnFiber.mode,
@@ -565,6 +604,9 @@ function createChildReconciler(
           null,
         );
         created.return = returnFiber;
+        if (__DEV__) {
+          created._debugInfo = mergeDebugInfo(debugInfo, newChild._debugInfo);
+        }
         return created;
       }
 
@@ -573,15 +615,21 @@ function createChildReconciler(
       // Unwrap the inner value and recursively call this function again.
       if (typeof newChild.then === 'function') {
         const thenable: Thenable<any> = (newChild: any);
-        return createChild(returnFiber, unwrapThenable(thenable), lanes);
+        return createChild(
+          returnFiber,
+          unwrapThenable(thenable),
+          lanes,
+          mergeDebugInfo(debugInfo, newChild._debugInfo),
+        );
       }
 
       if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return createChild(
           returnFiber,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
+          debugInfo,
         );
       }
 
@@ -590,7 +638,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -602,13 +653,15 @@ function createChildReconciler(
     oldFiber: Fiber | null,
     newChild: any,
     lanes: Lanes,
+    debugInfo: null | ReactDebugInfo,
   ): Fiber | null {
     // Update the fiber if the keys match, otherwise return null.
     const key = oldFiber !== null ? oldFiber.key : null;
 
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      typeof newChild === 'bigint'
     ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
@@ -616,21 +669,40 @@ function createChildReconciler(
       if (key !== null) {
         return null;
       }
-      return updateTextNode(returnFiber, oldFiber, '' + newChild, lanes);
+      return updateTextNode(
+        returnFiber,
+        oldFiber,
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
+        '' + newChild,
+        lanes,
+        debugInfo,
+      );
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           if (newChild.key === key) {
-            return updateElement(returnFiber, oldFiber, newChild, lanes);
+            return updateElement(
+              returnFiber,
+              oldFiber,
+              newChild,
+              lanes,
+              mergeDebugInfo(debugInfo, newChild._debugInfo),
+            );
           } else {
             return null;
           }
         }
         case REACT_PORTAL_TYPE: {
           if (newChild.key === key) {
-            return updatePortal(returnFiber, oldFiber, newChild, lanes);
+            return updatePortal(
+              returnFiber,
+              oldFiber,
+              newChild,
+              lanes,
+              debugInfo,
+            );
           } else {
             return null;
           }
@@ -638,16 +710,34 @@ function createChildReconciler(
         case REACT_LAZY_TYPE: {
           const payload = newChild._payload;
           const init = newChild._init;
-          return updateSlot(returnFiber, oldFiber, init(payload), lanes);
+          return updateSlot(
+            returnFiber,
+            oldFiber,
+            init(payload),
+            lanes,
+            mergeDebugInfo(debugInfo, newChild._debugInfo),
+          );
         }
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (
+        isArray(newChild) ||
+        getIteratorFn(newChild) ||
+        (enableAsyncIterableChildren &&
+          typeof newChild[ASYNC_ITERATOR] === 'function')
+      ) {
         if (key !== null) {
           return null;
         }
 
-        return updateFragment(returnFiber, oldFiber, newChild, lanes, null);
+        return updateFragment(
+          returnFiber,
+          oldFiber,
+          newChild,
+          lanes,
+          null,
+          mergeDebugInfo(debugInfo, newChild._debugInfo),
+        );
       }
 
       // Usable node types
@@ -660,6 +750,7 @@ function createChildReconciler(
           oldFiber,
           unwrapThenable(thenable),
           lanes,
+          debugInfo,
         );
       }
 
@@ -668,8 +759,9 @@ function createChildReconciler(
         return updateSlot(
           returnFiber,
           oldFiber,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
+          debugInfo,
         );
       }
 
@@ -678,7 +770,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -691,15 +786,24 @@ function createChildReconciler(
     newIdx: number,
     newChild: any,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber | null {
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      typeof newChild === 'bigint'
     ) {
       // Text nodes don't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
       const matchedFiber = existingChildren.get(newIdx) || null;
-      return updateTextNode(returnFiber, matchedFiber, '' + newChild, lanes);
+      return updateTextNode(
+        returnFiber,
+        matchedFiber,
+        // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
+        '' + newChild,
+        lanes,
+        debugInfo,
+      );
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
@@ -709,14 +813,26 @@ function createChildReconciler(
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
             ) || null;
-          return updateElement(returnFiber, matchedFiber, newChild, lanes);
+          return updateElement(
+            returnFiber,
+            matchedFiber,
+            newChild,
+            lanes,
+            mergeDebugInfo(debugInfo, newChild._debugInfo),
+          );
         }
         case REACT_PORTAL_TYPE: {
           const matchedFiber =
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
             ) || null;
-          return updatePortal(returnFiber, matchedFiber, newChild, lanes);
+          return updatePortal(
+            returnFiber,
+            matchedFiber,
+            newChild,
+            lanes,
+            debugInfo,
+          );
         }
         case REACT_LAZY_TYPE:
           const payload = newChild._payload;
@@ -727,12 +843,25 @@ function createChildReconciler(
             newIdx,
             init(payload),
             lanes,
+            mergeDebugInfo(debugInfo, newChild._debugInfo),
           );
       }
 
-      if (isArray(newChild) || getIteratorFn(newChild)) {
+      if (
+        isArray(newChild) ||
+        getIteratorFn(newChild) ||
+        (enableAsyncIterableChildren &&
+          typeof newChild[ASYNC_ITERATOR] === 'function')
+      ) {
         const matchedFiber = existingChildren.get(newIdx) || null;
-        return updateFragment(returnFiber, matchedFiber, newChild, lanes, null);
+        return updateFragment(
+          returnFiber,
+          matchedFiber,
+          newChild,
+          lanes,
+          null,
+          mergeDebugInfo(debugInfo, newChild._debugInfo),
+        );
       }
 
       // Usable node types
@@ -746,6 +875,7 @@ function createChildReconciler(
           newIdx,
           unwrapThenable(thenable),
           lanes,
+          debugInfo,
         );
       }
 
@@ -755,8 +885,9 @@ function createChildReconciler(
           existingChildren,
           returnFiber,
           newIdx,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
+          debugInfo,
         );
       }
 
@@ -765,7 +896,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -827,6 +961,7 @@ function createChildReconciler(
     currentFirstChild: Fiber | null,
     newChildren: Array<any>,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber | null {
     // This algorithm can't optimize by searching from both ends since we
     // don't have backpointers on fibers. I'm trying to see how far we can get
@@ -875,6 +1010,7 @@ function createChildReconciler(
         oldFiber,
         newChildren[newIdx],
         lanes,
+        debugInfo,
       );
       if (newFiber === null) {
         // TODO: This breaks on empty slots like null children. That's
@@ -922,7 +1058,12 @@ function createChildReconciler(
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
       for (; newIdx < newChildren.length; newIdx++) {
-        const newFiber = createChild(returnFiber, newChildren[newIdx], lanes);
+        const newFiber = createChild(
+          returnFiber,
+          newChildren[newIdx],
+          lanes,
+          debugInfo,
+        );
         if (newFiber === null) {
           continue;
         }
@@ -943,7 +1084,7 @@ function createChildReconciler(
     }
 
     // Add all children to a key map for quick lookups.
-    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
+    const existingChildren = mapRemainingChildren(oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
     for (; newIdx < newChildren.length; newIdx++) {
@@ -953,6 +1094,7 @@ function createChildReconciler(
         newIdx,
         newChildren[newIdx],
         lanes,
+        debugInfo,
       );
       if (newFiber !== null) {
         if (shouldTrackSideEffects) {
@@ -989,11 +1131,12 @@ function createChildReconciler(
     return resultingFirstChild;
   }
 
-  function reconcileChildrenIterator(
+  function reconcileChildrenIteratable(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChildrenIterable: Iterable<mixed>,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber | null {
     // This is the same implementation as reconcileChildrenArray(),
     // but using the iterator instead.
@@ -1007,52 +1150,120 @@ function createChildReconciler(
       );
     }
 
-    if (__DEV__) {
-      // We don't support rendering Generators because it's a mutation.
-      // See https://github.com/facebook/react/issues/12995
-      if (
-        typeof Symbol === 'function' &&
-        // $FlowFixMe[prop-missing] Flow doesn't know about toStringTag
-        newChildrenIterable[Symbol.toStringTag] === 'Generator'
-      ) {
-        if (!didWarnAboutGenerators) {
-          console.error(
-            'Using Generators as children is unsupported and will likely yield ' +
-              'unexpected results because enumerating a generator mutates it. ' +
-              'You may convert it to an array with `Array.from()` or the ' +
-              '`[...spread]` operator before rendering. Keep in mind ' +
-              'you might need to polyfill these features for older browsers.',
-          );
-        }
-        didWarnAboutGenerators = true;
-      }
+    const newChildren = iteratorFn.call(newChildrenIterable);
 
-      // Warn about using Maps as children
-      if ((newChildrenIterable: any).entries === iteratorFn) {
+    if (__DEV__) {
+      if (newChildren === newChildrenIterable) {
+        // We don't support rendering Generators as props because it's a mutation.
+        // See https://github.com/facebook/react/issues/12995
+        // We do support generators if they were created by a GeneratorFunction component
+        // as its direct child since we can recreate those by rerendering the component
+        // as needed.
+        const isGeneratorComponent =
+          returnFiber.tag === FunctionComponent &&
+          // $FlowFixMe[method-unbinding]
+          Object.prototype.toString.call(returnFiber.type) ===
+            '[object GeneratorFunction]' &&
+          // $FlowFixMe[method-unbinding]
+          Object.prototype.toString.call(newChildren) === '[object Generator]';
+        if (!isGeneratorComponent) {
+          if (!didWarnAboutGenerators) {
+            console.error(
+              'Using Iterators as children is unsupported and will likely yield ' +
+                'unexpected results because enumerating a generator mutates it. ' +
+                'You may convert it to an array with `Array.from()` or the ' +
+                '`[...spread]` operator before rendering. You can also use an ' +
+                'Iterable that can iterate multiple times over the same items.',
+            );
+          }
+          didWarnAboutGenerators = true;
+        }
+      } else if ((newChildrenIterable: any).entries === iteratorFn) {
+        // Warn about using Maps as children
         if (!didWarnAboutMaps) {
           console.error(
             'Using Maps as children is not supported. ' +
               'Use an array of keyed ReactElements instead.',
           );
-        }
-        didWarnAboutMaps = true;
-      }
-
-      // First, validate keys.
-      // We'll get a different iterator later for the main pass.
-      const newChildren = iteratorFn.call(newChildrenIterable);
-      if (newChildren) {
-        let knownKeys: Set<string> | null = null;
-        let step = newChildren.next();
-        for (; !step.done; step = newChildren.next()) {
-          const child = step.value;
-          knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber);
+          didWarnAboutMaps = true;
         }
       }
     }
 
-    const newChildren = iteratorFn.call(newChildrenIterable);
+    return reconcileChildrenIterator(
+      returnFiber,
+      currentFirstChild,
+      newChildren,
+      lanes,
+      debugInfo,
+    );
+  }
 
+  function reconcileChildrenAsyncIteratable(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    newChildrenIterable: AsyncIterable<mixed>,
+    lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
+  ): Fiber | null {
+    const newChildren = newChildrenIterable[ASYNC_ITERATOR]();
+
+    if (__DEV__) {
+      if (newChildren === newChildrenIterable) {
+        // We don't support rendering AsyncGenerators as props because it's a mutation.
+        // We do support generators if they were created by a AsyncGeneratorFunction component
+        // as its direct child since we can recreate those by rerendering the component
+        // as needed.
+        const isGeneratorComponent =
+          returnFiber.tag === FunctionComponent &&
+          // $FlowFixMe[method-unbinding]
+          Object.prototype.toString.call(returnFiber.type) ===
+            '[object AsyncGeneratorFunction]' &&
+          // $FlowFixMe[method-unbinding]
+          Object.prototype.toString.call(newChildren) ===
+            '[object AsyncGenerator]';
+        if (!isGeneratorComponent) {
+          if (!didWarnAboutGenerators) {
+            console.error(
+              'Using AsyncIterators as children is unsupported and will likely yield ' +
+                'unexpected results because enumerating a generator mutates it. ' +
+                'You can use an AsyncIterable that can iterate multiple times over ' +
+                'the same items.',
+            );
+          }
+          didWarnAboutGenerators = true;
+        }
+      }
+    }
+
+    if (newChildren == null) {
+      throw new Error('An iterable object provided no iterator.');
+    }
+
+    // To save bytes, we reuse the logic by creating a synchronous Iterable and
+    // reusing that code path.
+    const iterator: Iterator<mixed> = ({
+      next(): IteratorResult<mixed, void> {
+        return unwrapThenable(newChildren.next());
+      },
+    }: any);
+
+    return reconcileChildrenIterator(
+      returnFiber,
+      currentFirstChild,
+      iterator,
+      lanes,
+      debugInfo,
+    );
+  }
+
+  function reconcileChildrenIterator(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    newChildren: ?Iterator<mixed>,
+    lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
+  ): Fiber | null {
     if (newChildren == null) {
       throw new Error('An iterable object provided no iterator.');
     }
@@ -1065,11 +1276,20 @@ function createChildReconciler(
     let newIdx = 0;
     let nextOldFiber = null;
 
+    let knownKeys: Set<string> | null = null;
+
     let step = newChildren.next();
+    if (__DEV__) {
+      knownKeys = warnOnInvalidKey(step.value, knownKeys, returnFiber);
+    }
     for (
       ;
       oldFiber !== null && !step.done;
-      newIdx++, step = newChildren.next()
+      newIdx++,
+        step = newChildren.next(),
+        knownKeys = __DEV__
+          ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
+          : null
     ) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
@@ -1077,7 +1297,13 @@ function createChildReconciler(
       } else {
         nextOldFiber = oldFiber.sibling;
       }
-      const newFiber = updateSlot(returnFiber, oldFiber, step.value, lanes);
+      const newFiber = updateSlot(
+        returnFiber,
+        oldFiber,
+        step.value,
+        lanes,
+        debugInfo,
+      );
       if (newFiber === null) {
         // TODO: This breaks on empty slots like null children. That's
         // unfortunate because it triggers the slow path all the time. We need
@@ -1123,8 +1349,16 @@ function createChildReconciler(
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
-      for (; !step.done; newIdx++, step = newChildren.next()) {
-        const newFiber = createChild(returnFiber, step.value, lanes);
+      for (
+        ;
+        !step.done;
+        newIdx++,
+          step = newChildren.next(),
+          knownKeys = __DEV__
+            ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
+            : null
+      ) {
+        const newFiber = createChild(returnFiber, step.value, lanes, debugInfo);
         if (newFiber === null) {
           continue;
         }
@@ -1145,16 +1379,25 @@ function createChildReconciler(
     }
 
     // Add all children to a key map for quick lookups.
-    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
+    const existingChildren = mapRemainingChildren(oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
-    for (; !step.done; newIdx++, step = newChildren.next()) {
+    for (
+      ;
+      !step.done;
+      newIdx++,
+        step = newChildren.next(),
+        knownKeys = __DEV__
+          ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
+          : null
+    ) {
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
         newIdx,
         step.value,
         lanes,
+        debugInfo,
       );
       if (newFiber !== null) {
         if (shouldTrackSideEffects) {
@@ -1220,6 +1463,7 @@ function createChildReconciler(
     currentFirstChild: Fiber | null,
     element: ReactElement,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber {
     const key = element.key;
     let child = currentFirstChild;
@@ -1234,8 +1478,8 @@ function createChildReconciler(
             const existing = useFiber(child, element.props.children);
             existing.return = returnFiber;
             if (__DEV__) {
-              existing._debugSource = element._source;
               existing._debugOwner = element._owner;
+              existing._debugInfo = debugInfo;
             }
             return existing;
           }
@@ -1257,11 +1501,11 @@ function createChildReconciler(
           ) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props);
-            existing.ref = coerceRef(returnFiber, child, element);
+            coerceRef(returnFiber, child, existing, element);
             existing.return = returnFiber;
             if (__DEV__) {
-              existing._debugSource = element._source;
               existing._debugOwner = element._owner;
+              existing._debugInfo = debugInfo;
             }
             return existing;
           }
@@ -1283,11 +1527,17 @@ function createChildReconciler(
         element.key,
       );
       created.return = returnFiber;
+      if (__DEV__) {
+        created._debugInfo = debugInfo;
+      }
       return created;
     } else {
       const created = createFiberFromElement(element, returnFiber.mode, lanes);
-      created.ref = coerceRef(returnFiber, currentFirstChild, element);
+      coerceRef(returnFiber, currentFirstChild, created, element);
       created.return = returnFiber;
+      if (__DEV__) {
+        created._debugInfo = debugInfo;
+      }
       return created;
     }
   }
@@ -1297,6 +1547,7 @@ function createChildReconciler(
     currentFirstChild: Fiber | null,
     portal: ReactPortal,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber {
     const key = portal.key;
     let child = currentFirstChild;
@@ -1336,8 +1587,11 @@ function createChildReconciler(
     currentFirstChild: Fiber | null,
     newChild: any,
     lanes: Lanes,
+    debugInfo: ReactDebugInfo | null,
   ): Fiber | null {
-    // This function is not recursive.
+    // This function is only recursive for Usables/Lazy and not nested arrays.
+    // That's so that using a Lazy wrapper is unobservable to the Fragment
+    // convention.
     // If the top level item is an array, we treat it as a set of children,
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
@@ -1345,7 +1599,8 @@ function createChildReconciler(
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
-    // TODO: Let's use recursion like we do for Usable nodes?
+    // We don't use recursion here because a fragment inside a fragment
+    // is no longer considered "top level" for these purposes.
     const isUnkeyedTopLevelFragment =
       typeof newChild === 'object' &&
       newChild !== null &&
@@ -1365,6 +1620,7 @@ function createChildReconciler(
               currentFirstChild,
               newChild,
               lanes,
+              mergeDebugInfo(debugInfo, newChild._debugInfo),
             ),
           );
         case REACT_PORTAL_TYPE:
@@ -1374,17 +1630,18 @@ function createChildReconciler(
               currentFirstChild,
               newChild,
               lanes,
+              debugInfo,
             ),
           );
         case REACT_LAZY_TYPE:
           const payload = newChild._payload;
           const init = newChild._init;
-          // TODO: This function is supposed to be non-recursive.
-          return reconcileChildFibers(
+          return reconcileChildFibersImpl(
             returnFiber,
             currentFirstChild,
             init(payload),
             lanes,
+            mergeDebugInfo(debugInfo, newChild._debugInfo),
           );
       }
 
@@ -1394,15 +1651,30 @@ function createChildReconciler(
           currentFirstChild,
           newChild,
           lanes,
+          mergeDebugInfo(debugInfo, newChild._debugInfo),
         );
       }
 
       if (getIteratorFn(newChild)) {
-        return reconcileChildrenIterator(
+        return reconcileChildrenIteratable(
           returnFiber,
           currentFirstChild,
           newChild,
           lanes,
+          mergeDebugInfo(debugInfo, newChild._debugInfo),
+        );
+      }
+
+      if (
+        enableAsyncIterableChildren &&
+        typeof newChild[ASYNC_ITERATOR] === 'function'
+      ) {
+        return reconcileChildrenAsyncIteratable(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+          mergeDebugInfo(debugInfo, newChild._debugInfo),
         );
       }
 
@@ -1429,6 +1701,7 @@ function createChildReconciler(
           currentFirstChild,
           unwrapThenable(thenable),
           lanes,
+          mergeDebugInfo(debugInfo, thenable._debugInfo),
         );
       }
 
@@ -1437,8 +1710,9 @@ function createChildReconciler(
         return reconcileChildFibersImpl(
           returnFiber,
           currentFirstChild,
-          readContextDuringReconcilation(returnFiber, context, lanes),
+          readContextDuringReconciliation(returnFiber, context, lanes),
           lanes,
+          debugInfo,
         );
       }
 
@@ -1447,12 +1721,14 @@ function createChildReconciler(
 
     if (
       (typeof newChild === 'string' && newChild !== '') ||
-      typeof newChild === 'number'
+      typeof newChild === 'number' ||
+      typeof newChild === 'bigint'
     ) {
       return placeSingleChild(
         reconcileSingleTextNode(
           returnFiber,
           currentFirstChild,
+          // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           '' + newChild,
           lanes,
         ),
@@ -1461,7 +1737,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -1483,6 +1762,7 @@ function createChildReconciler(
       currentFirstChild,
       newChild,
       lanes,
+      null, // debugInfo
     );
     thenableState = null;
     // Don't bother to reset `thenableIndexCounter` to 0 because it always gets

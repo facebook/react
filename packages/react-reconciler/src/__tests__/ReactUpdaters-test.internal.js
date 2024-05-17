@@ -112,11 +112,13 @@ describe('updaters', () => {
       root.render(<Parent />);
     });
     expect(allSchedulerTags).toEqual([[HostRoot]]);
+    assertLog(['onCommitRoot']);
 
     await act(() => {
       root.render(<Parent />);
     });
     expect(allSchedulerTags).toEqual([[HostRoot], [HostRoot]]);
+    assertLog(['onCommitRoot']);
   });
 
   it('should report a function component as the scheduler for a hooks update', async () => {
@@ -148,12 +150,13 @@ describe('updaters', () => {
     expect(scheduleForA).not.toBeNull();
     expect(scheduleForB).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
+    assertLog(['onCommitRoot']);
 
     await act(() => {
       scheduleForA();
     });
     expect(allSchedulerTypes).toEqual([[null], [SchedulingComponentA]]);
-
+    assertLog(['onCommitRoot']);
     await act(() => {
       scheduleForB();
     });
@@ -162,6 +165,7 @@ describe('updaters', () => {
       [SchedulingComponentA],
       [SchedulingComponentB],
     ]);
+    assertLog(['onCommitRoot']);
   });
 
   it('should report a class component as the scheduler for a setState update', async () => {
@@ -180,7 +184,7 @@ describe('updaters', () => {
       root.render(<Parent />);
     });
     expect(allSchedulerTypes).toEqual([[null]]);
-
+    assertLog(['onCommitRoot']);
     expect(instance).not.toBeNull();
     await act(() => {
       instance.setState({});
@@ -262,6 +266,9 @@ describe('updaters', () => {
     await waitForAll([]);
   });
 
+  // This test should be convertable to createRoot but the allScheduledTypes assertions are no longer the same
+  // So I'm leaving it in legacy mode for now and just disabling if legacy mode is turned off
+  // @gate !disableLegacyMode
   it('should cover suspense pings', async () => {
     let data = null;
     let resolver = null;

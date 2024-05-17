@@ -34,6 +34,8 @@ describe('React hooks DevTools integration', () => {
       onCommitFiberUnmount: () => {},
     };
 
+    jest.resetModules();
+
     React = require('react');
     ReactDebugTools = require('react-debug-tools');
     ReactTestRenderer = require('react-test-renderer');
@@ -41,7 +43,7 @@ describe('React hooks DevTools integration', () => {
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
 
-    act = ReactTestRenderer.act;
+    act = require('internal-test-utils').act;
   });
 
   it('should support editing useState hooks', async () => {
@@ -53,7 +55,12 @@ describe('React hooks DevTools integration', () => {
       return <div>count:{count}</div>;
     }
 
-    const renderer = ReactTestRenderer.create(<MyComponent />);
+    let renderer;
+    await act(() => {
+      renderer = ReactTestRenderer.create(<MyComponent />, {
+        unstable_isConcurrent: true,
+      });
+    });
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       props: {},
@@ -105,7 +112,12 @@ describe('React hooks DevTools integration', () => {
       );
     }
 
-    const renderer = ReactTestRenderer.create(<MyComponent />);
+    let renderer;
+    await act(() => {
+      renderer = ReactTestRenderer.create(<MyComponent />, {
+        unstable_isConcurrent: true,
+      });
+    });
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       props: {},
@@ -153,7 +165,12 @@ describe('React hooks DevTools integration', () => {
       return <div>count:{count}</div>;
     }
 
-    const renderer = ReactTestRenderer.create(<MyComponent />);
+    let renderer;
+    await act(() => {
+      renderer = ReactTestRenderer.create(<MyComponent />, {
+        unstable_isConcurrent: true,
+      });
+    });
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       props: {},
@@ -190,14 +207,17 @@ describe('React hooks DevTools integration', () => {
     function MyComponent() {
       return 'Done';
     }
-
-    const renderer = ReactTestRenderer.create(
-      <div>
-        <React.Suspense fallback={'Loading'}>
-          <MyComponent />
-        </React.Suspense>
-      </div>,
-    );
+    let renderer;
+    await act(() => {
+      renderer = ReactTestRenderer.create(
+        <div>
+          <React.Suspense fallback={'Loading'}>
+            <MyComponent />
+          </React.Suspense>
+        </div>,
+        {unstable_isConcurrent: true},
+      );
+    });
     const fiber = renderer.root._currentFiber().child;
     if (__DEV__) {
       // First render was locked
@@ -234,7 +254,6 @@ describe('React hooks DevTools integration', () => {
     }
   });
 
-  // @gate __DEV__
   it('should support overriding suspense in concurrent mode', async () => {
     if (__DEV__) {
       // Lock the first render
@@ -252,7 +271,7 @@ describe('React hooks DevTools integration', () => {
             <MyComponent />
           </React.Suspense>
         </div>,
-        {isConcurrent: true},
+        {unstable_isConcurrent: true},
       ),
     );
 

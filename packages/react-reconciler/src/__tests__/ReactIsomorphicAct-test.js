@@ -108,7 +108,7 @@ describe('isomorphic act()', () => {
     expect(returnValue).toEqual('hi');
   });
 
-  // @gate __DEV__
+  // @gate __DEV__ && !disableLegacyMode
   test('in legacy mode, updates are batched', () => {
     const root = ReactNoop.createLegacyRoot();
 
@@ -136,7 +136,7 @@ describe('isomorphic act()', () => {
     expect(root).toMatchRenderedOutput('C');
   });
 
-  // @gate __DEV__
+  // @gate __DEV__ && !disableLegacyMode
   test('in legacy mode, in an async scope, updates are batched until the first `await`', async () => {
     const root = ReactNoop.createLegacyRoot();
 
@@ -167,7 +167,7 @@ describe('isomorphic act()', () => {
     });
   });
 
-  // @gate __DEV__
+  // @gate __DEV__ && !disableLegacyMode
   test('in legacy mode, in an async scope, updates are batched until the first `await` (regression test: batchedUpdates)', async () => {
     const root = ReactNoop.createLegacyRoot();
 

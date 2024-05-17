@@ -16,6 +16,7 @@ let ReactDOMServerBrowser;
 
 describe('ReactServerRenderingBrowser', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOMServer = require('react-dom/server');
     // For extra isolation between what would be two bundles on npm
@@ -42,19 +43,6 @@ describe('ReactServerRenderingBrowser', () => {
     );
     expect(ReactDOMServerBrowser.renderToStaticMarkup(<Greeting />)).toEqual(
       ReactDOMServer.renderToStaticMarkup(<Greeting />),
-    );
-  });
-
-  it('throws meaningfully for server-only APIs', () => {
-    expect(() => ReactDOMServerBrowser.renderToNodeStream(<div />)).toThrow(
-      'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToString() instead.',
-    );
-    expect(() =>
-      ReactDOMServerBrowser.renderToStaticNodeStream(<div />),
-    ).toThrow(
-      'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
     );
   });
 });

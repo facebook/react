@@ -1,0 +1,46 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/destructure-object.js
+---
+Input:
+function Component(a, b) {
+  const {
+    c,
+    d,
+    e: { e },
+    f: { _f: f },
+    g: {
+      g: {
+        g: { g, ...h },
+      },
+    },
+    ...i
+  } = a;
+  return [c, d, e, f, g, h, i];
+}
+
+
+Output:
+function Component(
+  unknown a$30,
+  unknown b$31,
+)
+entry bb0
+bb0 (block)
+  [0] unknown $32 = LoadLocal unknown a$30
+  [1] unknown $39 = Destructure { c: unknown c$33, d: unknown d$34, e: unknown $35, f: unknown $36, g: unknown $37, ...unknown i$38 } = unknown $32
+  [2] unknown $41 = Destructure { e: unknown e$40 } = unknown $35
+  [3] unknown $43 = Destructure { _f: unknown f$42 } = unknown $36
+  [4] unknown $45 = Destructure { g: unknown $44 } = unknown $37
+  [5] unknown $47 = Destructure { g: unknown $46 } = unknown $44
+  [6] unknown $50 = Destructure { g: unknown g$48, ...unknown h$49 } = unknown $46
+  [7] unknown $51 = LoadLocal unknown c$33
+  [8] unknown $52 = LoadLocal unknown d$34
+  [9] unknown $53 = LoadLocal unknown e$40
+  [10] unknown $54 = LoadLocal unknown f$42
+  [11] unknown $55 = LoadLocal unknown g$48
+  [12] unknown $56 = LoadLocal unknown h$49
+  [13] unknown $57 = LoadLocal unknown i$38
+  [14] unknown $58 = Array [unknown $51, unknown $52, unknown $53, unknown $54, unknown $55, unknown $56, unknown $57]
+  [15] Return unknown $58

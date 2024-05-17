@@ -17,6 +17,7 @@ let waitForThrow;
 
 describe('ReactIncrementalErrorReplay', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 

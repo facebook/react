@@ -48,6 +48,8 @@ describe('parseHookNames', () => {
   let parseHookNames;
 
   beforeEach(() => {
+    jest.resetModules();
+
     jest.mock('source-map-support', () => {
       console.trace('source-map-support');
     });
@@ -96,7 +98,7 @@ describe('parseHookNames', () => {
   });
 
   async function getHookNamesForComponent(Component, props = {}) {
-    const hooksTree = inspectHooks(Component, props, undefined, true);
+    const hooksTree = inspectHooks(Component, props, undefined);
     const hookNames = await parseHookNames(hooksTree);
     return hookNames;
   }
@@ -926,7 +928,7 @@ describe('parseHookNames worker', () => {
   });
 
   async function getHookNamesForComponent(Component, props = {}) {
-    const hooksTree = inspectHooks(Component, props, undefined, true);
+    const hooksTree = inspectHooks(Component, props, undefined);
     const hookNames = await parseHookNames(hooksTree);
     return hookNames;
   }

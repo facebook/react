@@ -33,20 +33,22 @@ let ReactServerDOM;
 
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     // Simulate the condition resolution
+
     jest.mock('react', () => require('react/react.react-server'));
+    ReactServer = require('react');
+    ReactServerDOM = require('react-dom');
+
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.browser'),
     );
-
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
-
-    ReactServer = require('react');
-    ReactServerDOM = require('react-dom');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
 
     __unmockReact();
@@ -581,7 +583,7 @@ describe('ReactFlightDOMBrowser', () => {
       controller.abort('for reasons');
     });
     const expectedValue = __DEV__
-      ? '<p>Error: for reasons + a dev digest</p>'
+      ? '<p>for reasons + a dev digest</p>'
       : '<p>digest("for reasons")</p>';
     expect(container.innerHTML).toBe(expectedValue);
 
@@ -607,7 +609,7 @@ describe('ReactFlightDOMBrowser', () => {
       await ReactServerDOMClient.createFromReadableStream(stream);
     }).toErrorDev(
       'Each child in a list should have a unique "key" prop. ' +
-        'See https://reactjs.org/link/warning-keys for more information.',
+        'See https://react.dev/link/warning-keys for more information.',
     );
   });
 
@@ -1076,6 +1078,99 @@ describe('ReactFlightDOMBrowser', () => {
     }
   });
 
+  it('can use the same function twice as a server action', async () => {
+    let actionProxy1;
+    let actionProxy2;
+
+    function Client({action1, action2}) {
+      actionProxy1 = action1;
+      actionProxy2 = action2;
+      return 'Click Me';
+    }
+
+    function greet(text) {
+      return 'Hello ' + text;
+    }
+
+    const ServerModule = serverExports({
+      greet,
+      greet2: greet,
+    });
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action1={ServerModule.greet} action2={ServerModule.greet2} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const body = await ReactServerDOMClient.encodeReply(args);
+        return callServer(ref, body);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
+    expect(typeof actionProxy1).toBe('function');
+    expect(actionProxy1).not.toBe(greet);
+
+    // TODO: Ideally flight would be encoding this the same.
+    expect(actionProxy1).not.toBe(actionProxy2);
+
+    const result = await actionProxy1('world');
+    expect(result).toBe('Hello world');
+  });
+
+  it('can pass an async server exports that resolves later to an outline object like a Map', async () => {
+    let resolve;
+    const chunkPromise = new Promise(r => (resolve = r));
+
+    function action() {}
+    const serverModule = serverExports(
+      {
+        action: action,
+      },
+      chunkPromise,
+    );
+
+    // Send the action to the client
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      {action: serverModule.action},
+      webpackMap,
+    );
+    const response =
+      await ReactServerDOMClient.createFromReadableStream(stream);
+
+    // Pass the action back to the server inside a Map
+
+    const map = new Map();
+    map.set('action', response.action);
+
+    const body = await ReactServerDOMClient.encodeReply(map);
+    const resultPromise = ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    // We couldn't yet resolve the server reference because we haven't loaded
+    // its chunk yet in the new server instance. We now resolve it which loads
+    // it asynchronously.
+    await resolve();
+
+    const result = await resultPromise;
+    expect(result instanceof Map).toBe(true);
+    expect(result.get('action')).toBe(action);
+  });
+
   it('supports Float hints before the first await in server components in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
@@ -1118,7 +1213,22 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
     expect(document.head.innerHTML).toBe(
-      '<link rel="preload" href="before" as="style">',
+      gate(f => f.www)
+        ? // The www entrypoints for ReactDOM and ReactDOMClient are unified so even
+          // when you pull in just the top level the dispatcher for the Document is
+          // loaded alongside it. In a normal environment there would be nothing to dispatch to
+          // in a server environment so the preload calls would still only be dispatched to fizz
+          // or the browser but not both. However in this contrived test environment the preloads
+          // are being dispatched simultaneously causing an extraneous preload to show up. This test currently
+          // asserts this be demonstrating that the preload call after the await point
+          // is written to the document before the call before it. We still demonstrate that
+          // flight handled the sync call because if the fiber implementation did it would appear
+          // before the after call. In the future we will change this assertion once the fiber
+          // implementation no long automatically gets pulled in
+          '<link rel="preload" href="after" as="style"><link rel="preload" href="before" as="style">'
+        : // For other release channels the client and isomorphic entrypoints are separate and thus we only
+          // observe the expected preload from before the first await
+          '<link rel="preload" href="before" as="style">',
     );
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });
@@ -1339,5 +1449,386 @@ describe('ReactFlightDOMBrowser', () => {
 
     expect(postponed).toBe('testing postpone');
     expect(error).toBe(null);
+  });
+
+  function passThrough(stream) {
+    // Simulate more realistic network by splitting up and rejoining some chunks.
+    // This lets us test that we don't accidentally rely on particular bounds of the chunks.
+    return new ReadableStream({
+      async start(controller) {
+        const reader = stream.getReader();
+        function push() {
+          reader.read().then(({done, value}) => {
+            if (done) {
+              controller.close();
+              return;
+            }
+            controller.enqueue(value);
+            push();
+            return;
+          });
+        }
+        push();
+      },
+    });
+  }
+
+  // @gate enableFlightReadableStream
+  it('should supports streaming ReadableStream with objects', async () => {
+    const errors = [];
+    let controller1;
+    let controller2;
+    const s1 = new ReadableStream({
+      start(c) {
+        controller1 = c;
+      },
+    });
+    const s2 = new ReadableStream({
+      start(c) {
+        controller2 = c;
+      },
+    });
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      {
+        s1,
+        s2,
+      },
+      {},
+      {
+        onError(x) {
+          errors.push(x);
+          return x;
+        },
+      },
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      passThrough(rscStream),
+    );
+    const reader1 = result.s1.getReader();
+    const reader2 = result.s2.getReader();
+
+    controller1.enqueue({hello: 'world'});
+    controller2.enqueue({hi: 'there'});
+    expect(await reader1.read()).toEqual({
+      value: {hello: 'world'},
+      done: false,
+    });
+    expect(await reader2.read()).toEqual({
+      value: {hi: 'there'},
+      done: false,
+    });
+
+    controller1.enqueue('text1');
+    controller2.enqueue('text2');
+    controller1.close();
+    controller2.error('rejected');
+
+    expect(await reader1.read()).toEqual({
+      value: 'text1',
+      done: false,
+    });
+    expect(await reader1.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(await reader2.read()).toEqual({
+      value: 'text2',
+      done: false,
+    });
+    let error = null;
+    try {
+      await reader2.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('rejected');
+    expect(errors).toEqual(['rejected']);
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we are cancelled', async () => {
+    let controller;
+    let cancelReason;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+    let loggedReason;
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      s,
+      {},
+      {
+        onError(reason) {
+          loggedReason = reason;
+        },
+      },
+    );
+    const reader = rscStream.getReader();
+    controller.enqueue('hi');
+    const reason = new Error('aborted');
+    reader.cancel(reason);
+    await reader.read();
+    expect(cancelReason).toBe(reason);
+    expect(loggedReason).toBe(reason);
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we abort', async () => {
+    const errors = [];
+    let controller;
+    let cancelReason;
+    const abortController = new AbortController();
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      s,
+      {},
+      {
+        signal: abortController.signal,
+        onError(x) {
+          errors.push(x);
+          return x.message;
+        },
+      },
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      passThrough(rscStream),
+    );
+    const reader = result.getReader();
+    controller.enqueue('hi');
+
+    await 0;
+
+    const reason = new Error('aborted');
+    abortController.abort(reason);
+
+    // We should be able to read the part we already emitted before the abort
+    expect(await reader.read()).toEqual({
+      value: 'hi',
+      done: false,
+    });
+
+    expect(cancelReason).toBe(reason);
+
+    let error = null;
+    try {
+      await reader.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('aborted');
+    expect(errors).toEqual([reason]);
+  });
+
+  // @gate enableFlightReadableStream
+  it('should supports streaming AsyncIterables with objects', async () => {
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+    const errors = [];
+    const multiShotIterable = {
+      async *[Symbol.asyncIterator]() {
+        const next = yield {hello: 'A'};
+        expect(next).toBe(undefined);
+        await wait;
+        yield {hi: 'B'};
+        return 'C';
+      },
+    };
+    const singleShotIterator = (async function* () {
+      const next = yield {hello: 'D'};
+      expect(next).toBe(undefined);
+      await wait;
+      yield {hi: 'E'};
+      // eslint-disable-next-line no-throw-literal
+      throw 'F';
+    })();
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      {
+        multiShotIterable,
+        singleShotIterator,
+      },
+      {},
+      {
+        onError(x) {
+          errors.push(x);
+          return x;
+        },
+      },
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      passThrough(rscStream),
+    );
+
+    const iterator1 = result.multiShotIterable[Symbol.asyncIterator]();
+    const iterator2 = result.singleShotIterator[Symbol.asyncIterator]();
+
+    expect(iterator1).not.toBe(result.multiShotIterable);
+    expect(iterator2).toBe(result.singleShotIterator);
+
+    expect(await iterator1.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(await iterator2.next()).toEqual({
+      value: {hello: 'D'},
+      done: false,
+    });
+
+    await resolve();
+
+    expect(await iterator1.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(await iterator2.next()).toEqual({
+      value: {hi: 'E'},
+      done: false,
+    });
+    expect(await iterator1.next()).toEqual({
+      value: 'C', // Return value
+      done: true,
+    });
+    expect(await iterator1.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    let error = null;
+    try {
+      await iterator2.next();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('F');
+    expect(errors).toEqual(['F']);
+
+    // Multi-shot iterables should be able to do the same thing again
+    const iterator3 = result.multiShotIterable[Symbol.asyncIterator]();
+
+    expect(iterator3).not.toBe(iterator1);
+
+    // We should be able to iterate over the iterable again and it should be
+    // synchronously available using instrumented promises so that React can
+    // rerender it synchronously.
+    expect(iterator3.next().value).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: 'C', // Return value
+      done: true,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    expect(() => iterator3.next('this is not allowed')).toThrow(
+      'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
+    );
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying AsyncIterable when we are cancelled', async () => {
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+    let thrownReason;
+    const iterator = (async function* () {
+      try {
+        await wait;
+        yield 'a';
+        yield 'b';
+      } catch (x) {
+        thrownReason = x;
+      }
+      yield 'c';
+    })();
+    let loggedReason;
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      iterator,
+      {},
+      {
+        onError(reason) {
+          loggedReason = reason;
+        },
+      },
+    );
+    const reader = rscStream.getReader();
+    const reason = new Error('aborted');
+    reader.cancel(reason);
+    await resolve();
+    await reader.read();
+    expect(thrownReason).toBe(reason);
+    expect(loggedReason).toBe(reason);
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying AsyncIterable when we abort', async () => {
+    const errors = [];
+    const abortController = new AbortController();
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+    let thrownReason;
+    const iterator = (async function* () {
+      try {
+        yield 'a';
+        await wait;
+        yield 'b';
+      } catch (x) {
+        thrownReason = x;
+      }
+      yield 'c';
+    })();
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      iterator,
+      {},
+      {
+        signal: abortController.signal,
+        onError(x) {
+          errors.push(x);
+          return x.message;
+        },
+      },
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      passThrough(rscStream),
+    );
+
+    const reason = new Error('aborted');
+    abortController.abort(reason);
+
+    await resolve();
+
+    // We should be able to read the part we already emitted before the abort
+    expect(await result.next()).toEqual({
+      value: 'a',
+      done: false,
+    });
+
+    expect(thrownReason).toBe(reason);
+
+    let error = null;
+    try {
+      await result.next();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('aborted');
+    expect(errors).toEqual([reason]);
   });
 });

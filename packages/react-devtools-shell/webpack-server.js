@@ -1,7 +1,6 @@
 const {resolve} = require('path');
 const Webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
-const fs = require('fs');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -17,10 +16,7 @@ const semver = require('semver');
 
 const {SUCCESSFUL_COMPILATION_MESSAGE} = require('./constants');
 
-const ReactVersionSrc = fs.readFileSync(require.resolve('shared/ReactVersion'));
-const currentReactVersion = /export default '([^']+)';/.exec(
-  ReactVersionSrc,
-)[1];
+const {ReactVersion: currentReactVersion} = require('../../ReactVersions');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -146,8 +142,8 @@ const app = makeConfig(
     react: resolve(builtModulesDir, 'react'),
     'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
     'react-devtools-feature-flags': resolveFeatureFlags('shell'),
-    'react-dom/client': resolve(builtModulesDir, 'react-dom/client'),
-    'react-dom': resolve(builtModulesDir, 'react-dom/unstable_testing'),
+    'react-dom/client': resolve(builtModulesDir, 'react-dom/unstable_testing'),
+    'react-dom': resolve(builtModulesDir, 'react-dom'),
     'react-is': resolve(builtModulesDir, 'react-is'),
     scheduler: resolve(builtModulesDir, 'scheduler'),
   },

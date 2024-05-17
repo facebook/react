@@ -6,17 +6,23 @@
  *
  * @flow
  */
-
-// These are implementations of the jsx APIs for React Server runtimes.
 import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 import {
-  jsxWithValidationStatic,
-  jsxWithValidationDynamic,
-} from './ReactJSXElementValidator';
-import {jsx as jsxProd} from './ReactJSXElement';
-const jsx: any = __DEV__ ? jsxWithValidationDynamic : jsxProd;
+  jsxProd,
+  jsxProdSignatureRunningInDevWithDynamicChildren,
+  jsxProdSignatureRunningInDevWithStaticChildren,
+  jsxDEV as _jsxDEV,
+} from './ReactJSXElement';
+
+const jsx: any = __DEV__
+  ? jsxProdSignatureRunningInDevWithDynamicChildren
+  : jsxProd;
 // we may want to special case jsxs internally to take advantage of static children.
 // for now we can ship identical prod functions
-const jsxs: any = __DEV__ ? jsxWithValidationStatic : jsxProd;
+const jsxs: any = __DEV__
+  ? jsxProdSignatureRunningInDevWithStaticChildren
+  : jsxProd;
 
-export {REACT_FRAGMENT_TYPE as Fragment, jsx, jsxs};
+const jsxDEV: any = __DEV__ ? _jsxDEV : undefined;
+
+export {REACT_FRAGMENT_TYPE as Fragment, jsx, jsxs, jsxDEV};

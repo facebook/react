@@ -214,6 +214,7 @@ export default class ProfilerStore extends EventEmitter<{
         hocDisplayNames: element.hocDisplayNames,
         key: element.key,
         type: element.type,
+        compiledWithForget: element.compiledWithForget,
       };
       profilingSnapshots.set(elementID, snapshotNode);
 

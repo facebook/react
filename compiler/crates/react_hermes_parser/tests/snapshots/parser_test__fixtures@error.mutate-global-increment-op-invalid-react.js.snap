@@ -1,0 +1,166 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.mutate-global-increment-op-invalid-react.js
+---
+Input:
+let renderCount = 0;
+
+function NoHooks() {
+  renderCount++;
+  return <div />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "kind": "let",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "renderCount",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              4,
+              15
+            ]
+          },
+          "init": {
+            "type": "NumericLiteral",
+            "value": 0.0,
+            "loc": null,
+            "range": [
+              18,
+              19
+            ]
+          },
+          "loc": null,
+          "range": [
+            4,
+            19
+          ]
+        }
+      ],
+      "loc": null,
+      "range": [
+        0,
+        20
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "NoHooks",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          31,
+          38
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "UpdateExpression",
+              "operator": "++",
+              "argument": {
+                "type": "Identifier",
+                "name": "renderCount",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  45,
+                  56
+                ]
+              },
+              "prefix": false,
+              "loc": null,
+              "range": [
+                45,
+                58
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              45,
+              59
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    70,
+                    73
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  69,
+                  76
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                69,
+                76
+              ]
+            },
+            "loc": null,
+            "range": [
+              62,
+              77
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          41,
+          79
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        22,
+        79
+      ],
+      "loc": null,
+      "range": [
+        22,
+        79
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    79
+  ]
+}

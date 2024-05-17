@@ -18,6 +18,7 @@ let waitForAll;
 // probably move to one of the other test files once it is official.
 describe('ReactTopLevelText', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 
@@ -35,6 +36,13 @@ describe('ReactTopLevelText', () => {
   it('should render a component returning numbers directly from render', async () => {
     const Text = ({value}) => value;
     ReactNoop.render(<Text value={10} />);
+    await waitForAll([]);
+    expect(ReactNoop).toMatchRenderedOutput('10');
+  });
+
+  it('should render a component returning bigints directly from render', async () => {
+    const Text = ({value}) => value;
+    ReactNoop.render(<Text value={10n} />);
     await waitForAll([]);
     expect(ReactNoop).toMatchRenderedOutput('10');
   });

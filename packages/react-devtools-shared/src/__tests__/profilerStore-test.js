@@ -17,6 +17,8 @@ describe('ProfilerStore', () => {
   let utils;
 
   beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+
     utils = require('./utils');
     utils.beforeEachProfiling();
 

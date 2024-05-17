@@ -1,0 +1,254 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/do-while-early-unconditional-break.js
+---
+Input:
+function Component(props) {
+  let x = [1, 2, 3];
+  do {
+    mutate(x);
+    break;
+  } while (props.cond);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    35
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        39,
+                        40
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 2.0,
+                      "loc": null,
+                      "range": [
+                        42,
+                        43
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 3.0,
+                      "loc": null,
+                      "range": [
+                        45,
+                        46
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    38,
+                    47
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  34,
+                  47
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              48
+            ]
+          },
+          {
+            "type": "DoWhileStatement",
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "mutate",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        60,
+                        66
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          67,
+                          68
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      60,
+                      69
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    60,
+                    70
+                  ]
+                },
+                {
+                  "type": "BreakStatement",
+                  "label": null,
+                  "loc": null,
+                  "range": [
+                    75,
+                    81
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                54,
+                85
+              ]
+            },
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  93,
+                  98
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "cond",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  99,
+                  103
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                93,
+                103
+              ]
+            },
+            "loc": null,
+            "range": [
+              51,
+              105
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                115,
+                116
+              ]
+            },
+            "loc": null,
+            "range": [
+              108,
+              117
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          119
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        119
+      ],
+      "loc": null,
+      "range": [
+        0,
+        119
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    119
+  ]
+}

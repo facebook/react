@@ -23,6 +23,8 @@ describe('Store', () => {
   let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+
     agent = global.agent;
     bridge = global.bridge;
     store = global.store;
@@ -225,6 +227,7 @@ describe('Store', () => {
 
     // @reactVersion >= 18.0
     // @reactVersion < 19
+    // @gate !disableLegacyMode
     it('should support mount and update operations for multiple roots (legacy render)', () => {
       const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
@@ -939,6 +942,7 @@ describe('Store', () => {
 
     // @reactVersion >= 18.0
     // @reactVersion < 19
+    // @gate !disableLegacyMode
     it('should support mount and update operations for multiple roots (legacy render)', () => {
       const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
@@ -1467,6 +1471,7 @@ describe('Store', () => {
 
   // @reactVersion >= 18.0
   // @reactVersion < 19
+  // @gate !disableLegacyMode
   it('detects and updates profiling support based on the attached roots (legacy render)', () => {
     const Component = () => null;
 
@@ -1570,7 +1575,6 @@ describe('Store', () => {
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
-        <React.unstable_Cache />
         <MemoizedFakeHigherOrderComponentWithDisplayNameOverride />
         <ForwardRefFakeHigherOrderComponentWithDisplayNameOverride />
       </React.Fragment>
@@ -1598,7 +1602,6 @@ describe('Store', () => {
             <Baz> [withFoo][withBar]
             <Baz> [Memo][withFoo][withBar]
             <Baz> [ForwardRef][withFoo][withBar]
-            <Cache>
             <memoRefOverride>
             <forwardRefOverride>
     `);
@@ -1630,6 +1633,7 @@ describe('Store', () => {
 
     // @reactVersion >= 18.0
     // @reactVersion < 19
+    // @gate !disableLegacyMode
     it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
@@ -1700,6 +1704,7 @@ describe('Store', () => {
 
     // @reactVersion >= 18.0
     // @reactVersion < 19
+    // @gate !disableLegacyMode
     it('should support Lazy components that are unmounted before they finish loading (legacy render)', async () => {
       const container = document.createElement('div');
 

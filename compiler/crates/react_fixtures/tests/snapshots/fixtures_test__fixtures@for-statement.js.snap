@@ -1,0 +1,54 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/for-statement.js
+---
+Input:
+function foo() {
+  let x = 0;
+  for (let i = 0; i < 10; i = i + 1) {
+    x = x + i;
+  }
+  return x;
+}
+
+
+Output:
+function foo(
+)
+entry bb0
+bb0 (block)
+  [0] unknown $19 = 0
+  [1] unknown $21 = StoreLocal Let unknown x$20 = unknown $19
+  [2] For init=bb3 test=bb1 update=bb4 body=bb5 fallthrough=bb2
+bb3 (loop)
+  predecessors: bb0
+  [3] unknown $22 = 0
+  [4] unknown $24 = StoreLocal Let unknown i$23 = unknown $22
+  [5] Goto bb1
+bb1 (loop)
+  predecessors: bb3, bb4
+  i$25: phi(bb3: i$23, bb4: i$38)
+  x$29: phi(bb3: x$20, bb4: x$33)
+  [6] unknown $26 = LoadLocal unknown i$25
+  [7] unknown $27 = 10
+  [8] unknown $28 = Binary unknown $26 < unknown $27
+  [9] Branch unknown $28 consequent=bb5 alternate=bb2
+bb5 (block)
+  predecessors: bb1
+  [10] unknown $30 = LoadLocal unknown x$29
+  [11] unknown $31 = LoadLocal unknown i$25
+  [12] unknown $32 = Binary unknown $30 + unknown $31
+  [13] unknown $34 = StoreLocal Reassign unknown x$33 = unknown $32
+  [14] Goto bb4
+bb4 (loop)
+  predecessors: bb5
+  [15] unknown $35 = LoadLocal unknown i$25
+  [16] unknown $36 = 1
+  [17] unknown $37 = Binary unknown $35 + unknown $36
+  [18] unknown $39 = StoreLocal Reassign unknown i$38 = unknown $37
+  [19] Goto bb1
+bb2 (block)
+  predecessors: bb1
+  [20] unknown $40 = LoadLocal unknown x$29
+  [21] Return unknown $40

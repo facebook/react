@@ -27,6 +27,7 @@ function clearLog() {
 beforeEach(() => {
   prevActGlobal = global.IS_REACT_ACT_ENVIRONMENT;
   global.IS_REACT_ACT_ENVIRONMENT = true;
+  jest.resetModules();
   jest.unmock('scheduler');
   yields = [];
   React = require('react');

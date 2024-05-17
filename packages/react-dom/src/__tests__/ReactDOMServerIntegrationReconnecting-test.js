@@ -12,23 +12,22 @@
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 describe('ReactDOMServerIntegration', () => {
   function initModules() {
+    // Reset warning cache.
+    jest.resetModules();
+
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
 
     // Make them available to the helpers.
     return {
       ReactDOMClient,
       ReactDOMServer,
-      ReactTestUtils,
     };
   }
 
@@ -452,71 +451,4 @@ describe('ReactDOMServerIntegration', () => {
         />,
       ));
   });
-});
-
-describe('ReactDOMServerIntegration (legacy)', () => {
-  function initModules() {
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
-
-    // Make them available to the helpers.
-    return {
-      ReactDOM,
-      ReactDOMServer,
-      ReactTestUtils,
-    };
-  }
-
-  const {resetModules, expectMarkupMatch} =
-    ReactDOMServerIntegrationUtils(initModules);
-
-  beforeEach(() => {
-    resetModules();
-  });
-
-  it('legacy mode can explicitly ignore errors reconnecting different element types of children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <span />
-      </div>,
-    ));
-
-  it('legacy mode can explicitly ignore reconnecting more children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <div />
-        <div />
-      </div>,
-    ));
-
-  it('legacy mode can explicitly ignore reconnecting fewer children', () =>
-    expectMarkupMatch(
-      <div>
-        <div />
-        <div />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <div />
-      </div>,
-    ));
-
-  it('legacy mode can explicitly ignore reconnecting reordered children', () =>
-    expectMarkupMatch(
-      <div suppressHydrationWarning={true}>
-        <div />
-        <span />
-      </div>,
-      <div suppressHydrationWarning={true}>
-        <span />
-        <div />
-      </div>,
-    ));
 });

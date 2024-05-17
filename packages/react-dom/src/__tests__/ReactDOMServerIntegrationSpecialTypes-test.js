@@ -15,7 +15,6 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 let forwardRef;
 let memo;
 let yieldedValues;
@@ -23,10 +22,11 @@ let log;
 let clearLog;
 
 function initModules() {
+  // Reset warning cache.
+  jest.resetModules();
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
   forwardRef = React.forwardRef;
   memo = React.memo;
 
@@ -44,7 +44,6 @@ function initModules() {
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 

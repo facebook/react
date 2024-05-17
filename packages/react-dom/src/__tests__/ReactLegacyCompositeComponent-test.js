@@ -11,19 +11,25 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let PropTypes;
 let act;
 
 describe('ReactLegacyCompositeComponent', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    findDOMNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode;
     PropTypes = require('prop-types');
     act = require('internal-test-utils').act;
   });
 
+  // @gate !disableLegacyMode
   it('should warn about `setState` in render in legacy mode', () => {
     const container = document.createElement('div');
 
@@ -113,7 +119,7 @@ describe('ReactLegacyCompositeComponent', () => {
     await act(() => {
       root.render(<Parent ref={current => (component = current)} />);
     });
-    expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
+    expect(findDOMNode(component).innerHTML).toBe('bar');
   });
 
   // @gate !disableLegacyContext
@@ -376,6 +382,7 @@ describe('ReactLegacyCompositeComponent', () => {
   });
 
   // @gate !disableLegacyContext
+  // @gate !disableLegacyMode
   it('unmasked context propagates through updates', () => {
     class Leaf extends React.Component {
       static contextTypes = {
@@ -440,6 +447,7 @@ describe('ReactLegacyCompositeComponent', () => {
   });
 
   // @gate !disableLegacyContext
+  // @gate !disableLegacyMode
   it('should trigger componentWillReceiveProps for context changes', () => {
     let contextChanges = 0;
     let propChanges = 0;
@@ -552,6 +560,7 @@ describe('ReactLegacyCompositeComponent', () => {
     expect(contextChanges).toBe(3); // ChildWithContext, GrandChild x 2
   });
 
+  // @gate !disableLegacyMode
   it('only renders once if updated in componentWillReceiveProps in legacy mode', () => {
     let renders = 0;
 
@@ -580,6 +589,7 @@ describe('ReactLegacyCompositeComponent', () => {
     expect(instance.state.updated).toBe(true);
   });
 
+  // @gate !disableLegacyMode
   it('only renders once if updated in componentWillReceiveProps when batching in legacy mode', () => {
     let renders = 0;
 
@@ -610,6 +620,7 @@ describe('ReactLegacyCompositeComponent', () => {
     expect(instance.state.updated).toBe(true);
   });
 
+  // @gate !disableLegacyMode
   it('should update refs if shouldComponentUpdate gives false in legacy mode', () => {
     class Static extends React.Component {
       shouldComponentUpdate() {
@@ -654,28 +665,29 @@ describe('ReactLegacyCompositeComponent', () => {
 
     const container = document.createElement('div');
     const comp = ReactDOM.render(<Component flipped={false} />, container);
-    expect(ReactDOM.findDOMNode(comp.static0Ref.current).textContent).toBe('A');
-    expect(ReactDOM.findDOMNode(comp.static1Ref.current).textContent).toBe('B');
+    expect(findDOMNode(comp.static0Ref.current).textContent).toBe('A');
+    expect(findDOMNode(comp.static1Ref.current).textContent).toBe('B');
 
     // When flipping the order, the refs should update even though the actual
     // contents do not
     ReactDOM.render(<Component flipped={true} />, container);
-    expect(ReactDOM.findDOMNode(comp.static0Ref.current).textContent).toBe('B');
-    expect(ReactDOM.findDOMNode(comp.static1Ref.current).textContent).toBe('A');
+    expect(findDOMNode(comp.static0Ref.current).textContent).toBe('B');
+    expect(findDOMNode(comp.static1Ref.current).textContent).toBe('A');
   });
 
+  // @gate !disableLegacyMode
   it('should allow access to findDOMNode in componentWillUnmount in legacy mode', () => {
     let a = null;
     let b = null;
 
     class Component extends React.Component {
       componentDidMount() {
-        a = ReactDOM.findDOMNode(this);
+        a = findDOMNode(this);
         expect(a).not.toBe(null);
       }
 
       componentWillUnmount() {
-        b = ReactDOM.findDOMNode(this);
+        b = findDOMNode(this);
         expect(b).not.toBe(null);
       }
 
@@ -692,6 +704,7 @@ describe('ReactLegacyCompositeComponent', () => {
   });
 
   // @gate !disableLegacyContext || !__DEV__
+  // @gate !disableLegacyMode
   it('context should be passed down from the parent', () => {
     class Parent extends React.Component {
       static childContextTypes = {
@@ -812,6 +825,7 @@ describe('ReactLegacyCompositeComponent', () => {
     expect(moo.state.amIImmutable).toBe(undefined);
   });
 
+  // @gate !disableLegacyMode
   it('should not warn about unmounting during unmounting in legacy mode', () => {
     const container = document.createElement('div');
     const layer = document.createElement('div');

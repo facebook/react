@@ -1,0 +1,13 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/error.assign-to-global.js
+---
+Input:
+function foo() {
+  x = true;
+}
+
+
+Output:
+React functions may not reassign variables defined outside of the component or hook

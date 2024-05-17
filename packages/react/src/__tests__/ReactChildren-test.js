@@ -15,6 +15,7 @@ describe('ReactChildren', () => {
   let act;
 
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -182,11 +183,12 @@ describe('ReactChildren', () => {
         {false}
         {null}
         {undefined}
+        {9n}
       </div>
     );
 
     function assertCalls() {
-      expect(callback).toHaveBeenCalledTimes(9);
+      expect(callback).toHaveBeenCalledTimes(10);
       expect(callback).toHaveBeenCalledWith(div, 0);
       expect(callback).toHaveBeenCalledWith(span, 1);
       expect(callback).toHaveBeenCalledWith(a, 2);
@@ -196,6 +198,7 @@ describe('ReactChildren', () => {
       expect(callback).toHaveBeenCalledWith(null, 6);
       expect(callback).toHaveBeenCalledWith(null, 7);
       expect(callback).toHaveBeenCalledWith(null, 8);
+      expect(callback).toHaveBeenCalledWith(9n, 9);
       callback.mockClear();
     }
 
@@ -214,6 +217,7 @@ describe('ReactChildren', () => {
       <a key=".2:$aNode" />,
       'string',
       1234,
+      9n,
     ]);
   });
 
@@ -948,6 +952,38 @@ describe('ReactChildren', () => {
     );
   });
 
+  it('should render React.lazy after suspending', async () => {
+    const lazyElement = React.lazy(async () => ({default: <div />}));
+    function Component() {
+      return React.Children.map([lazyElement], c =>
+        React.cloneElement(c, {children: 'hi'}),
+      );
+    }
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component />);
+    });
+
+    expect(container.innerHTML).toBe('<div>hi</div>');
+  });
+
+  it('should render cached Promises after suspending', async () => {
+    const promise = Promise.resolve(<div />);
+    function Component() {
+      return React.Children.map([promise], c =>
+        React.cloneElement(c, {children: 'hi'}),
+      );
+    }
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component />);
+    });
+
+    expect(container.innerHTML).toBe('<div>hi</div>');
+  });
+
   it('should throw on regex', () => {
     // Really, we care about dates (#4840) but those have nondeterministic
     // serialization (timezones) so let's test a regex instead:
@@ -979,7 +1015,7 @@ describe('ReactChildren', () => {
       }).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://reactjs.org/link/warning-keys for more information.' +
+          ' See https://react.dev/link/warning-keys for more information.' +
           '\n    in ComponentReturningArray (at **)',
       );
     });
@@ -1008,7 +1044,7 @@ describe('ReactChildren', () => {
       }).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://reactjs.org/link/warning-keys for more information.',
+          ' See https://react.dev/link/warning-keys for more information.',
         {withoutStack: true}, // There's nothing on the stack
       );
     });

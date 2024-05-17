@@ -32,7 +32,7 @@ type NativeSchedulerType = {
   unstable_now: () => DOMHighResTimeStamp,
 };
 
-declare var nativeRuntimeScheduler: void | NativeSchedulerType;
+declare const nativeRuntimeScheduler: void | NativeSchedulerType;
 
 export const unstable_UserBlockingPriority: PriorityLevel =
   typeof nativeRuntimeScheduler !== 'undefined'

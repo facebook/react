@@ -23,6 +23,7 @@ const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('ReactStrictMode', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -76,6 +77,7 @@ describe('ReactStrictMode', () => {
   });
 
   // @gate __DEV__
+  // @gate !disableLegacyMode
   it('should invoke only precommit lifecycle methods twice in legacy roots', async () => {
     let log = [];
     let shouldComponentUpdate = false;
@@ -241,6 +243,7 @@ describe('ReactStrictMode', () => {
     ]);
   });
 
+  // @gate !disableLegacyMode
   it('should invoke only precommit lifecycle methods twice in DEV legacy roots', async () => {
     const {StrictMode} = React;
 
@@ -568,6 +571,8 @@ describe('ReactStrictMode', () => {
 
 describe('Concurrent Mode', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -621,18 +626,18 @@ describe('Concurrent Mode', () => {
     ).toErrorDev(
       [
         /* eslint-disable max-len */
-        `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: App`,
-        `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
-* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 
 Please update the following components: Bar, Foo`,
-        `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 
@@ -685,18 +690,18 @@ Please update the following components: App`,
       ).toErrorDev(
         [
           /* eslint-disable max-len */
-          `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+          `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: App`,
-          `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+          `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
-* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 
 Please update the following components: Child`,
-          `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+          `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 
@@ -708,20 +713,20 @@ Please update the following components: App`,
     }).toWarnDev(
       [
         /* eslint-disable max-len */
-        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 * Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: Parent`,
-        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
-* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://reactjs.org/link/derived-state
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 * Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: Parent`,
-        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
@@ -830,6 +835,7 @@ Please update the following components: Parent`,
 
 describe('symbol checks', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -957,12 +963,14 @@ describe('symbol checks', () => {
 
 describe('string refs', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
   });
 
+  // @gate !disableStringRefs
   it('should warn within a strict tree', async () => {
     const {StrictMode} = React;
 
@@ -989,11 +997,11 @@ describe('string refs', () => {
         root.render(<OuterComponent />);
       });
     }).toErrorDev(
-      'Warning: Component "StrictMode" contains the string ref "somestring". ' +
+      'Warning: Component "OuterComponent" contains the string ref "somestring". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in OuterComponent (at **)',
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in InnerComponent (at **)',
     );
 
     await act(() => {
@@ -1001,6 +1009,7 @@ describe('string refs', () => {
     });
   });
 
+  // @gate !disableStringRefs
   it('should warn within a strict tree', async () => {
     const {StrictMode} = React;
 
@@ -1027,11 +1036,11 @@ describe('string refs', () => {
         root.render(<OuterComponent />);
       });
     }).toErrorDev(
-      'Warning: Component "StrictMode" contains the string ref "somestring". ' +
+      'Warning: Component "OuterComponent" contains the string ref "somestring". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in OuterComponent (at **)',
+        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+        '    in InnerComponent (at **)',
     );
 
     await act(() => {
@@ -1042,6 +1051,7 @@ describe('string refs', () => {
 
 describe('context legacy', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -1118,7 +1128,7 @@ describe('context legacy', () => {
         '\n\nPlease update the following components: ' +
         'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
         '\n\nLearn more about this warning here: ' +
-        'https://reactjs.org/link/legacy-context' +
+        'https://react.dev/link/legacy-context' +
         '\n    in LegacyContextProvider (at **)' +
         '\n    in div (at **)' +
         '\n    in Root (at **)',
@@ -1132,15 +1142,21 @@ describe('context legacy', () => {
 
   describe('console logs logging', () => {
     beforeEach(() => {
+      jest.resetModules();
       React = require('react');
       ReactDOMClient = require('react-dom/client');
       act = require('internal-test-utils').act;
+
+      // These tests are specifically testing console.log.
+      spyOnDevAndProd(console, 'log').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      console.log.mockRestore();
     });
 
     if (ReactFeatureFlags.consoleManagedByDevToolsDuringStrictMode) {
       it('does not disable logs for class double render', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         class Foo extends React.Component {
           render() {
@@ -1168,8 +1184,6 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for class double ctor', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         class Foo extends React.Component {
           constructor(props) {
@@ -1200,8 +1214,6 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for class double getDerivedStateFromProps', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         class Foo extends React.Component {
           state = {};
@@ -1233,8 +1245,6 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for class double shouldComponentUpdate', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         class Foo extends React.Component {
           state = {};
@@ -1274,8 +1284,6 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for class state updaters', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let inst;
         let count = 0;
         class Foo extends React.Component {
@@ -1312,8 +1320,6 @@ describe('context legacy', () => {
       });
 
       it('does not disable logs for function double render', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         function Foo() {
           count++;
@@ -1339,8 +1345,6 @@ describe('context legacy', () => {
       });
     } else {
       it('disable logs for class double render', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         class Foo extends React.Component {
           render() {
@@ -1368,8 +1372,6 @@ describe('context legacy', () => {
       });
 
       it('disables logs for class double ctor', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         class Foo extends React.Component {
           constructor(props) {
@@ -1400,8 +1402,6 @@ describe('context legacy', () => {
       });
 
       it('disable logs for class double getDerivedStateFromProps', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         class Foo extends React.Component {
           state = {};
@@ -1433,8 +1433,6 @@ describe('context legacy', () => {
       });
 
       it('disable logs for class double shouldComponentUpdate', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         class Foo extends React.Component {
           state = {};
@@ -1473,8 +1471,6 @@ describe('context legacy', () => {
       });
 
       it('disable logs for class state updaters', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let inst;
         let count = 0;
         class Foo extends React.Component {
@@ -1511,8 +1507,6 @@ describe('context legacy', () => {
       });
 
       it('disable logs for function double render', async () => {
-        spyOnDevAndProd(console, 'log');
-
         let count = 0;
         function Foo() {
           count++;

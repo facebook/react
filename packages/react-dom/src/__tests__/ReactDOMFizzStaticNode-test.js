@@ -16,6 +16,7 @@ let Suspense;
 
 describe('ReactDOMFizzStaticNode', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static');
@@ -62,15 +63,9 @@ describe('ReactDOMFizzStaticNode', () => {
       </html>,
     );
     const prelude = await readContent(result.prelude);
-    if (gate(flags => flags.enableFloat)) {
-      expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-      );
-    } else {
-      expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-      );
-    }
+    expect(prelude).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+    );
   });
 
   // @gate experimental

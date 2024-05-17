@@ -8,7 +8,6 @@ global.__DEV__ = NODE_ENV === 'development';
 global.__EXTENSION__ = false;
 global.__TEST__ = NODE_ENV === 'test';
 global.__PROFILE__ = NODE_ENV === 'development';
-global.__UMD__ = false;
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
 

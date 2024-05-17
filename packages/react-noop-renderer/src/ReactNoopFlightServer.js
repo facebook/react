@@ -46,9 +46,6 @@ const ReactNoopFlightServer = ReactFlightServer({
   stringToPrecomputedChunk(content: string): Uint8Array {
     return textEncoder.encode(content);
   },
-  clonePrecomputedChunk(chunk: Uint8Array): Uint8Array {
-    return chunk;
-  },
   isClientReference(reference: Object): boolean {
     return reference.$$typeof === Symbol.for('react.client.reference');
   },
@@ -64,12 +61,13 @@ const ReactNoopFlightServer = ReactFlightServer({
   ) {
     return saveModule(reference.value);
   },
-  prepareHostDispatcher() {},
 });
 
 type Options = {
-  onError?: (error: mixed) => void,
+  environmentName?: string,
   identifierPrefix?: string,
+  onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
 };
 
 function render(model: ReactClientValue, options?: Options): Destination {
@@ -80,6 +78,8 @@ function render(model: ReactClientValue, options?: Options): Destination {
     bundlerConfig,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);

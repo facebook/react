@@ -1,0 +1,73 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/constant-propagation-constant-if-condition.js
+---
+Input:
+function Component() {
+  let a = 1;
+
+  let b;
+  if (a === 1) {
+    b = true;
+  } else {
+    b = false;
+  }
+
+  let c;
+  if (b) {
+    c = "hello";
+  } else {
+    c = null;
+  }
+
+  let d;
+  if (c === "hello") {
+    d = 42.0;
+  } else {
+    d = 42.001;
+  }
+
+  let e;
+  if (d === 42.0) {
+    e = "ok";
+  } else {
+    e = "nope";
+  }
+
+  // should constant-propagate to "ok"
+  return e;
+}
+
+
+Output:
+function Component(
+)
+entry bb0
+bb0 (block)
+  [0] unknown $39 = 1
+  [1] unknown $41 = StoreLocal Let unknown a$40 = unknown $39
+  [2] unknown $43 = DeclareLocal Let unknown b$42
+  [3] unknown $44 = 1
+  [4] unknown $45 = 1
+  [5] unknown $46 = true
+  [6] unknown $47 = true
+  [7] unknown $49 = StoreLocal Reassign unknown b$48 = unknown $47
+  [8] unknown $54 = DeclareLocal Let unknown c$53
+  [9] unknown $56 = true
+  [10] unknown $57 = "hello"
+  [11] unknown $59 = StoreLocal Reassign unknown c$58 = unknown $57
+  [12] unknown $64 = DeclareLocal Let unknown d$63
+  [13] unknown $66 = "hello"
+  [14] unknown $67 = "hello"
+  [15] unknown $68 = true
+  [16] unknown $69 = 42
+  [17] unknown $71 = StoreLocal Reassign unknown d$70 = unknown $69
+  [18] unknown $76 = DeclareLocal Let unknown e$75
+  [19] unknown $78 = 42
+  [20] unknown $79 = 42
+  [21] unknown $80 = true
+  [22] unknown $81 = "ok"
+  [23] unknown $83 = StoreLocal Reassign unknown e$82 = unknown $81
+  [24] unknown $88 = "ok"
+  [25] Return unknown $88

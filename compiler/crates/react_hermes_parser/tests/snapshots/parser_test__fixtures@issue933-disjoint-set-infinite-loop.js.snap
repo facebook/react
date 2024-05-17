@@ -1,0 +1,315 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/issue933-disjoint-set-infinite-loop.js
+---
+Input:
+// This caused an infinite loop in the compiler
+function MyApp(props) {
+  const y = makeObj();
+  const tmp = y.a;
+  const tmp2 = tmp.b;
+  y.push(tmp2);
+  return y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "MyApp",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          57,
+          62
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            63,
+            68
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    80,
+                    81
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "makeObj",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      84,
+                      91
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    84,
+                    93
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  80,
+                  93
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              74,
+              94
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "tmp",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    103,
+                    106
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "y",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      109,
+                      110
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "a",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      111,
+                      112
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    109,
+                    112
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  103,
+                  112
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              97,
+              113
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "tmp2",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    122,
+                    126
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "tmp",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      129,
+                      132
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "b",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      133,
+                      134
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    129,
+                    134
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  122,
+                  134
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              116,
+              135
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    138,
+                    139
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "push",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    140,
+                    144
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  138,
+                  144
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "tmp2",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    145,
+                    149
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                138,
+                150
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              138,
+              151
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "y",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                161,
+                162
+              ]
+            },
+            "loc": null,
+            "range": [
+              154,
+              163
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          70,
+          165
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        48,
+        165
+      ],
+      "loc": null,
+      "range": [
+        48,
+        165
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    48,
+    165
+  ]
+}

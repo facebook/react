@@ -27,9 +27,9 @@
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",
     "@babel/plugin-transform-object-super": "^7.10.4",
     "@babel/plugin-transform-parameters": "^7.10.5",
-    "@babel/plugin-transform-react-jsx-source": "^7.10.5",
     "@babel/plugin-transform-react-jsx": "^7.23.4",
     "@babel/plugin-transform-react-jsx-development": "^7.22.5",
+    "@babel/plugin-transform-react-jsx-source": "^7.10.5",
     "@babel/plugin-transform-shorthand-properties": "^7.10.4",
     "@babel/plugin-transform-spread": "^7.11.0",
     "@babel/plugin-transform-template-literals": "^7.10.5",
@@ -63,14 +63,14 @@
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules",
     "fbjs-scripts": "^3.0.1",
     "filesize": "^6.0.1",
-    "flow-bin": "^0.227.0",
-    "flow-remove-types": "^2.227.0",
+    "flow-bin": "^0.232.0",
+    "flow-remove-types": "^2.232.0",
     "glob": "^7.1.6",
     "glob-stream": "^6.1.0",
     "google-closure-compiler": "^20230206.0.0",
     "gzip-size": "^5.1.1",
-    "hermes-eslint": "^0.18.2",
-    "hermes-parser": "^0.18.2",
+    "hermes-eslint": "^0.20.1",
+    "hermes-parser": "^0.20.1",
     "jest": "^29.4.2",
     "jest-cli": "^29.4.2",
     "jest-diff": "^29.4.2",
@@ -81,6 +81,7 @@
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "prettier": "3.0.3",
+    "prettier-2": "npm:prettier@^2",
     "pretty-format": "^29.4.1",
     "prop-types": "^15.6.2",
     "random-seed": "^0.3.0",
@@ -96,6 +97,7 @@
     "through2": "^3.0.1",
     "tmp": "^0.1.0",
     "typescript": "^3.7.5",
+    "undici": "^5.28.4",
     "web-streams-polyfill": "^3.1.1",
     "yargs": "^15.3.1"
   },
@@ -107,7 +109,7 @@
   },
   "scripts": {
     "build": "node ./scripts/rollup/build-all-release-channels.js",
-    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom/index,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE",
+    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react/compiler-runtime,react-dom/index,react-dom/client,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE",
     "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
     "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
     "linc": "node ./scripts/tasks/linc.js",
@@ -120,7 +122,7 @@
     "test-www": "node ./scripts/jest/jest-cli.js --release-channel=www-modern",
     "test-classic": "node ./scripts/jest/jest-cli.js --release-channel=www-classic",
     "test-build-devtools": "node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental",
-    "test-dom-fixture": "cd fixtures/dom && yarn && yarn predev && yarn test",
+    "test-dom-fixture": "cd fixtures/dom && yarn && yarn test",
     "flow": "node ./scripts/tasks/flow.js",
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
@@ -135,6 +137,7 @@
     "flags": "node ./scripts/flags/flags.js"
   },
   "resolutions": {
-    "react-is": "npm:react-is"
+    "react-is": "npm:react-is",
+    "jsdom": "22.1.0"
   }
 }

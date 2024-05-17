@@ -16,6 +16,8 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
   let ReactDOMClient;
 
   beforeEach(() => {
+    jest.resetModules();
+
     act = require('internal-test-utils').act;
     React = require('react');
     ReactDOMClient = require('react-dom/client');

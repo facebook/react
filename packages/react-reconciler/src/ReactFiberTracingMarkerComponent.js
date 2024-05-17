@@ -40,6 +40,7 @@ export type PendingTransitionCallbacks = {
 export type Transition = {
   name: string,
   startTime: number,
+  ...
 };
 
 export type BatchConfigTransition = {

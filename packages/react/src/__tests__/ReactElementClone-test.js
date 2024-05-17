@@ -10,7 +10,6 @@
 'use strict';
 
 let act;
-let PropTypes;
 let React;
 let ReactDOMClient;
 
@@ -18,9 +17,10 @@ describe('ReactElementClone', () => {
   let ComponentClass;
 
   beforeEach(() => {
+    jest.resetModules();
+
     act = require('internal-test-utils').act;
 
-    PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
 
@@ -212,7 +212,11 @@ describe('ReactElementClone', () => {
           ref: this.xyzRef,
         });
         expect(clone.key).toBe('xyz');
-        expect(clone.ref).toBe(this.xyzRef);
+        if (gate(flags => flags.enableRefAsProp)) {
+          expect(clone.props.ref).toBe(this.xyzRef);
+        } else {
+          expect(clone.ref).toBe(this.xyzRef);
+        }
         return <div>{clone}</div>;
       }
     }
@@ -270,8 +274,56 @@ describe('ReactElementClone', () => {
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => root.render(<Grandparent />));
-    expect(component.childRef).toEqual({current: null});
-    expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
+    if (gate(flags => flags.enableRefAsProp && flags.disableStringRefs)) {
+      expect(component.childRef).toEqual({current: null});
+      expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
+    } else if (
+      gate(flags => !flags.enableRefAsProp && !flags.disableStringRefs)
+    ) {
+      expect(component.childRef).toEqual({current: null});
+      expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
+    } else if (
+      gate(flags => flags.enableRefAsProp && !flags.disableStringRefs)
+    ) {
+      expect(component.childRef).toEqual({current: null});
+      expect(component.parentRef.current.xyzRef.current.tagName).toBe('SPAN');
+    } else {
+      // Not going to bother testing every possible combination.
+    }
+  });
+
+  // @gate !disableStringRefs
+  it('should steal the ref if a new string ref is specified without an owner', async () => {
+    // Regression test for this specific feature combination calling cloneElement on an element
+    // without an owner
+    await expect(async () => {
+      // create an element without an owner
+      const element = React.createElement('div', {id: 'some-id'});
+      class Parent extends React.Component {
+        render() {
+          return <Child>{element}</Child>;
+        }
+      }
+      let child;
+      class Child extends React.Component {
+        render() {
+          child = this;
+          const clone = React.cloneElement(this.props.children, {
+            ref: 'xyz',
+          });
+          return <div>{clone}</div>;
+        }
+      }
+
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => root.render(<Parent />));
+      expect(child.refs.xyz.tagName).toBe('DIV');
+    }).toErrorDev([
+      'Warning: Component "Child" contains the string ref "xyz". Support for ' +
+        'string refs will be removed in a future major release. We recommend ' +
+        'using useRef() or createRef() instead. Learn more about using refs ' +
+        'safely here: https://react.dev/link/strict-mode-string-ref',
+    ]);
   });
 
   it('should overwrite props', async () => {
@@ -290,6 +342,7 @@ describe('ReactElementClone', () => {
     );
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('should normalize props with default values', () => {
     class Component extends React.Component {
       render() {
@@ -329,46 +382,15 @@ describe('ReactElementClone', () => {
     React.cloneElement(<div />, null, [{}, {}]);
   });
 
-  it('should check declared prop types after clone', async () => {
-    class Component extends React.Component {
-      static propTypes = {
-        color: PropTypes.string.isRequired,
-      };
-      render() {
-        return React.createElement('div', null, 'My color is ' + this.color);
-      }
-    }
-    class Parent extends React.Component {
-      render() {
-        return React.cloneElement(this.props.child, {color: 123});
-      }
-    }
-    class GrandParent extends React.Component {
-      render() {
-        return React.createElement(Parent, {
-          child: React.createElement(Component, {color: 'red'}),
-        });
-      }
-    }
-    const root = ReactDOMClient.createRoot(document.createElement('div'));
-    await expect(
-      async () =>
-        await act(() => root.render(React.createElement(GrandParent))),
-    ).toErrorDev(
-      'Warning: Failed prop type: ' +
-        'Invalid prop `color` of type `number` supplied to `Component`, ' +
-        'expected `string`.\n' +
-        '    in Component (at **)\n' +
-        '    in Parent (at **)\n' +
-        '    in GrandParent',
-    );
-  });
-
   it('should ignore key and ref warning getters', () => {
     const elementA = React.createElement('div');
     const elementB = React.cloneElement(elementA, elementA.props);
     expect(elementB.key).toBe(null);
-    expect(elementB.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(elementB.ref).toBe(null);
+    } else {
+      expect(elementB.ref).toBe(null);
+    }
   });
 
   it('should ignore undefined key and ref', () => {
@@ -385,12 +407,34 @@ describe('ReactElementClone', () => {
     const clone = React.cloneElement(element, props);
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
-    expect(clone.ref).toBe('34');
+    if (gate(flags => flags.enableRefAsProp && flags.disableStringRefs)) {
+      expect(clone.props.ref).toBe('34');
+      expect(() => expect(clone.ref).toBe('34')).toErrorDev(
+        'Accessing element.ref was removed in React 19',
+        {withoutStack: true},
+      );
+      expect(clone.props).toEqual({foo: 'ef', ref: '34'});
+    } else if (
+      gate(flags => !flags.enableRefAsProp && !flags.disableStringRefs)
+    ) {
+      expect(clone.ref).toBe(element.ref);
+      expect(clone.props).toEqual({foo: 'ef'});
+    } else if (
+      gate(flags => flags.enableRefAsProp && !flags.disableStringRefs)
+    ) {
+      expect(() => {
+        expect(clone.ref).toBe(element.ref);
+      }).toErrorDev('Accessing element.ref was removed in React 19', {
+        withoutStack: true,
+      });
+      expect(clone.props).toEqual({foo: 'ef', ref: element.ref});
+    } else {
+      // Not going to bother testing every possible combination.
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
     }
-    expect(clone.props).toEqual({foo: 'ef'});
   });
 
   it('should extract null key and ref', () => {
@@ -407,25 +451,31 @@ describe('ReactElementClone', () => {
     const clone = React.cloneElement(element, props);
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('null');
-    expect(clone.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(clone.ref).toBe(null);
+      expect(clone.props).toEqual({foo: 'ef', ref: null});
+    } else {
+      expect(clone.ref).toBe(null);
+      expect(clone.props).toEqual({foo: 'ef'});
+    }
+
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
     }
-    expect(clone.props).toEqual({foo: 'ef'});
   });
 
   it('throws an error if passed null', () => {
     const element = null;
     expect(() => React.cloneElement(element)).toThrow(
-      'React.cloneElement(...): The argument must be a React element, but you passed null.',
+      'The argument must be a React element, but you passed null.',
     );
   });
 
   it('throws an error if passed undefined', () => {
     let element;
     expect(() => React.cloneElement(element)).toThrow(
-      'React.cloneElement(...): The argument must be a React element, but you passed undefined.',
+      'The argument must be a React element, but you passed undefined.',
     );
   });
 });

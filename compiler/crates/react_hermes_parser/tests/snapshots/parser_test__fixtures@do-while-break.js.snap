@@ -1,0 +1,147 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/do-while-break.js
+---
+Input:
+function Component(props) {
+  do {
+    break;
+  } while (props.cond);
+  return props;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "DoWhileStatement",
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "BreakStatement",
+                  "label": null,
+                  "loc": null,
+                  "range": [
+                    39,
+                    45
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                33,
+                49
+              ]
+            },
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  57,
+                  62
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "cond",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  63,
+                  67
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                57,
+                67
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              69
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "props",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                79,
+                84
+              ]
+            },
+            "loc": null,
+            "range": [
+              72,
+              85
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          87
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        87
+      ],
+      "loc": null,
+      "range": [
+        0,
+        87
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    87
+  ]
+}

@@ -12,6 +12,8 @@
 
 'use strict';
 
+import {useInsertionEffect} from 'react';
+
 describe('useEffectEvent', () => {
   let React;
   let ReactNoop;
@@ -23,7 +25,6 @@ describe('useEffectEvent', () => {
   let useEffectEvent;
   let useEffect;
   let useLayoutEffect;
-  let useInsertionEffect;
   let useMemo;
   let waitForAll;
   let assertLog;
@@ -42,7 +43,6 @@ describe('useEffectEvent', () => {
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
     useMemo = React.useMemo;
-    useInsertionEffect = React.useInsertionEffect;
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -742,7 +742,7 @@ describe('useEffectEvent', () => {
     await act(() =>
       ReactNoop.render(<ChatRoom roomId="general" theme="light" />),
     );
-    await act(() => jest.runAllTimers());
+
     assertLog(['Welcome to the general room!', 'Connected! theme: light']);
     expect(ReactNoop).toMatchRenderedOutput(
       <span prop="Welcome to the general room!" />,
@@ -752,20 +752,17 @@ describe('useEffectEvent', () => {
     await act(() =>
       ReactNoop.render(<ChatRoom roomId="music" theme="light" />),
     );
-    await act(() => jest.runAllTimers());
     assertLog([
       'Welcome to the music room!',
       // should trigger a reconnect
       'Connected! theme: light',
     ]);
-
     expect(ReactNoop).toMatchRenderedOutput(
       <span prop="Welcome to the music room!" />,
     );
 
     // change theme only
     await act(() => ReactNoop.render(<ChatRoom roomId="music" theme="dark" />));
-    await act(() => jest.runAllTimers());
     // should not trigger a reconnect
     assertLog(['Welcome to the music room!']);
     expect(ReactNoop).toMatchRenderedOutput(
@@ -776,7 +773,6 @@ describe('useEffectEvent', () => {
     await act(() =>
       ReactNoop.render(<ChatRoom roomId="travel" theme="dark" />),
     );
-    await act(() => jest.runAllTimers());
     assertLog([
       'Welcome to the travel room!',
       // should trigger a reconnect

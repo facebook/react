@@ -11,6 +11,7 @@
 
 describe('ReactDOMInReactServer', () => {
   beforeEach(() => {
+    jest.resetModules();
     jest.mock('react', () => require('react/react.react-server'));
   });
 

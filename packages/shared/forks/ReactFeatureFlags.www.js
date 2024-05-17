@@ -15,20 +15,13 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  disableInputAttributeSyncing,
-  disableIEWorkarounds,
   enableTrustedTypesIntegration,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableLegacyFBSupport,
   enableDebugTracing,
-  enableUseRefAccessWarning,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,
-  enableAsyncActions,
-  enableFormActions,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
@@ -36,6 +29,14 @@ export const {
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
+  enableInfiniteRenderLoopDetection,
+  enableRenderableContext,
+  enableRefAsProp,
+  favorSafetyOverHydrationPerf,
+  disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache,
+  enableAddPropertiesFastPath,
+  enableFastJSX,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -45,20 +46,19 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-export const enableProfilerNestedUpdateScheduledHook: boolean =
-  __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
-export const enableCustomElementPropertySupport = true;
+export const disableIEWorkarounds = true;
 export const enableCPUSuspense = true;
-export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
-export const enableClientRenderFallbackOnTextMismatch = false;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableAsyncActions = true;
+export const disableInputAttributeSyncing = false;
+export const enableLegacyFBSupport = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -67,23 +67,22 @@ export const enableSchedulingProfiler: boolean =
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
+export const renameElementSymbol = false;
+
 export const enableCache = true;
 export const enableLegacyCache = true;
-export const enableCacheElement = true;
-export const enableFetchInstrumentation = false;
 
-export const enableBinaryFlight = false;
+export const enableBinaryFlight = true;
+export const enableFlightReadableStream = true;
+export const enableAsyncIterableChildren = false;
+
 export const enableTaint = false;
 
 export const enablePostpone = false;
 
-export const disableJavaScriptURLs = true;
-
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
 export const disableCommentsAsDOMContainers = false;
-
-export const disableModulePatternComponents = true;
 
 export const enableCreateEventHandleAPI = true;
 
@@ -101,18 +100,29 @@ export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
-export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
 
 export const forceConcurrentByDefaultForTesting = false;
 
-export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableAsyncDebugInfo = false;
 export const disableClientCache = true;
 
-export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
+
+export const enableReactTestRendererWarning = false;
+export const useModernStrictMode = true;
+
+// TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
+// because JSX is an extremely hot path.
+export const disableStringRefs = false;
+
+export const disableLegacyMode = __EXPERIMENTAL__;
+
+export const disableDOMTestUtils = false;
+
+export const enableOwnerStacks = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

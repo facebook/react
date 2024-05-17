@@ -244,6 +244,8 @@ export default function (babel, opts = {}) {
       case 'React.useFormStatus':
       case 'useFormState':
       case 'React.useFormState':
+      case 'useActionState':
+      case 'React.useActionState':
       case 'useOptimistic':
       case 'React.useOptimistic':
         return true;

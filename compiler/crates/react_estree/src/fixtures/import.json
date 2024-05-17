@@ -1,0 +1,104 @@
+{
+    "type": "Program",
+    "loc": {
+      "source": null,
+      "start": {
+        "line": 1,
+        "column": 0
+      },
+      "end": {
+        "line": 1,
+        "column": 26
+      }
+    },
+    "body": [
+      {
+        "type": "ImportDeclaration",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 26
+          }
+        },
+        "specifiers": [
+          {
+            "type": "ImportDefaultSpecifier",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 1,
+                "column": 7
+              },
+              "end": {
+                "line": 1,
+                "column": 12
+              }
+            },
+            "local": {
+              "type": "Identifier",
+              "loc": {
+                "source": null,
+                "start": {
+                  "line": 1,
+                  "column": 7
+                },
+                "end": {
+                  "line": 1,
+                  "column": 12
+                }
+              },
+              "name": "React",
+              "typeAnnotation": null,
+              "optional": false,
+              "range": [
+                7,
+                12
+              ]
+            },
+            "range": [
+              7,
+              12
+            ]
+          }
+        ],
+        "source": {
+          "type": "Literal",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 18
+            },
+            "end": {
+              "line": 1,
+              "column": 25
+            }
+          },
+          "value": "react",
+          "range": [
+            18,
+            25
+          ],
+          "raw": "'react'"
+        },
+        "attributes": [],
+        "importKind": "value",
+        "range": [
+          0,
+          26
+        ]
+      }
+    ],
+    "comments": [],
+    "interpreter": null,
+    "range": [
+      0,
+      26
+    ],
+    "sourceType": "module"
+  }

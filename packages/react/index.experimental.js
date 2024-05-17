@@ -8,7 +8,7 @@
  */
 
 export {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   act,
   Children,
   Component,
@@ -20,7 +20,6 @@ export {
   cloneElement,
   createContext,
   createElement,
-  createFactory,
   createRef,
   use,
   forwardRef,
@@ -29,15 +28,12 @@ export {
   memo,
   cache,
   startTransition,
-  unstable_Cache,
   unstable_DebugTracingMode,
   unstable_Activity,
   unstable_postpone,
-  unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_SuspenseList,
   unstable_useCacheRefresh,
-  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
@@ -55,6 +51,7 @@ export {
   useState,
   useSyncExternalStore,
   useTransition,
+  useActionState,
   version,
 } from './src/ReactClient';
 
