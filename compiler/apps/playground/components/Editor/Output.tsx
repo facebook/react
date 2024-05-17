@@ -149,11 +149,7 @@ async function codegen(
 ): Promise<{ code: any; sourceMapUrl: string | null }> {
   const generated = generate(
     ast,
-    {
-      sourceMaps: true,
-      sourceFileName: 'input.js',
-      jsescOption: { minimal: true }
-    },
+    { sourceMaps: true, sourceFileName: "input.js" },
     source,
   );
   const sourceMapUrl = getSourceMapUrl(
