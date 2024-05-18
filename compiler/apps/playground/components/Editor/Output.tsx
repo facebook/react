@@ -201,7 +201,6 @@ function Output({ store, compilerOutput }: Props) {
       lastResult = currResult;
     }
   }
-  console.log([...changedPasses]);
 
   return (
     <>
