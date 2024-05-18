@@ -11,7 +11,7 @@ const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
 const StrictModeRE = /<(React\.StrictMode|StrictMode)>/;
 let StrictModeUsage = false;
 
-const NextJSConfigRE = /next\.config\.js/;
+const NextJSConfigRE = /next\.config\.m?js/;
 const StrictModeNextRE = /reactStrictMode: true/;
 
 export default {
