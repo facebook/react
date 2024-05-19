@@ -318,7 +318,7 @@ export default function Editor() {
 
   return (
     <>
-      <div className="relative flex basis top-14">
+      <div className="relative flex basis top-14 flex-col sm:flex-row overflow-y-hidden sm:!h-[calc(100vh_-_3.5rem)]">
         <div
           className={clsx("relative sm:basis-1/4")}
         >
@@ -328,7 +328,7 @@ export default function Editor() {
             }
           />
         </div>
-        <div className={clsx("flex sm:flex flex-wrap")}>
+        <div className="flex w-full border-t sm:border-t-0">
           <Output store={deferredStore} compilerOutput={compilerOutput} />
         </div>
       </div>

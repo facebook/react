@@ -197,14 +197,14 @@ function Output({ store, compilerOutput }: Props) {
       />
       {compilerOutput.kind === "err" ? (
         <div
-          className="flex flex-wrap absolute bottom-0 bg-white grow border-y border-grey-200 transition-all ease-in"
+          className="flex flex-wrap absolute bottom-0 bg-white grow border-y border-grey-200"
           style={{ width: "calc(100vw - 650px)" }}
         >
           <div className="w-full p-4 basis-full border-b">
             <h2>COMPILER ERRORS</h2>
           </div>
           <pre
-            className="p-4 basis-full text-red-600 overflow-y-scroll whitespace-pre-wrap"
+            className="p-4 basis-full text-red-600 whitespace-pre-wrap"
             style={{ width: "calc(100vw - 650px)", height: "150px" }}
           >
             <code>{compilerOutput.error.toString()}</code>

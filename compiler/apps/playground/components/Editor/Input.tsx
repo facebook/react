@@ -104,11 +104,11 @@ export default function Input({ errors }: Props) {
   return (
     <div className="relative flex flex-col flex-none border-r border-gray-200">
       <Resizable
-        minWidth={650}
+        minWidth={'320px'}
         enable={{ right: true }}
         // Restrict MonacoEditor's height, since the config autoLayout:true
         // will grow the editor to fit within parent element
-        className="!h-[calc(100vh_-_3.5rem)]"
+        className="sm:!h-[calc(100vh_-_3.5rem)] !h-[calc(50vh_-_3.5rem)]"
       >
         <MonacoEditor
           path={"index.js"}

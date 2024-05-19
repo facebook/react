@@ -24,6 +24,7 @@
     "@heroicons/react": "^1.0.6",
     "@monaco-editor/react": "^4.4.6",
     "@playwright/test": "^1.42.1",
+    "@types/react": "^18.3.2",
     "@use-gesture/react": "^10.2.22",
     "hermes-eslint": "^0.14.0",
     "invariant": "^2.2.4",
@@ -35,8 +36,8 @@
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
     "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-compiler-runtime": "*"
+    "react-compiler-runtime": "*",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
