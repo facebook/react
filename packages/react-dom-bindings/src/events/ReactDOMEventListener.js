@@ -290,6 +290,7 @@ export function findInstanceBlockingTarget(
 export function getEventPriority(domEventName: DOMEventName): EventPriority {
   switch (domEventName) {
     // Used by SimpleEventPlugin:
+    case 'beforetoggle':
     case 'cancel':
     case 'click':
     case 'close':
@@ -321,6 +322,7 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'resize':
     case 'seeked':
     case 'submit':
+    case 'toggle':
     case 'touchcancel':
     case 'touchend':
     case 'touchstart':
@@ -345,7 +347,6 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'select':
     case 'selectstart':
       return DiscreteEventPriority;
-    case 'beforetoggle':
     case 'drag':
     case 'dragenter':
     case 'dragexit':
@@ -358,7 +359,6 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'pointerout':
     case 'pointerover':
     case 'scroll':
-    case 'toggle':
     case 'touchmove':
     case 'wheel':
     // Not used by React but could be by user code: (fall through)
