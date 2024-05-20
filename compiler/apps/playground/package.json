@@ -48,7 +48,7 @@
     "eslint": "^8.28.0",
     "eslint-config-next": "^13.5.6",
     "monaco-editor-webpack-plugin": "^7.1.0",
-    "postcss": "^8.4.19",
+    "postcss": "^8.4.31",
     "tailwindcss": "^3.2.4"
   },
   "resolutions": {
