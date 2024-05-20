@@ -63,35 +63,29 @@ function Component(props) {
   }
   let t2;
   if ($[3] !== state) {
-    t2 = () => setState(state + 1);
+    t2 = {
+      component: "button",
+      props: {
+        "data-testid": "button",
+        onClick: () => setState(state + 1),
+        children: ["increment"],
+      },
+    };
     $[3] = state;
     $[4] = t2;
   } else {
     t2 = $[4];
   }
   let t3;
-  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = ["increment"];
-    $[5] = t3;
-  } else {
-    t3 = $[5];
-  }
-  let t4;
-  if ($[6] !== t2) {
-    t4 = [
-      t0,
-      t1,
-      {
-        component: "button",
-        props: { "data-testid": "button", onClick: t2, children: t3 },
-      },
-    ];
+  if ($[5] !== t1 || $[6] !== t2) {
+    t3 = [t0, t1, t2];
+    $[5] = t1;
     $[6] = t2;
-    $[7] = t4;
+    $[7] = t3;
   } else {
-    t4 = $[7];
+    t3 = $[7];
   }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -52,7 +52,7 @@ function MaybeMutable() {
 function maybeMutate(x) {}
 
 function Component(props) {
-  const $ = _c(7);
+  const $ = _c(11);
   let Tag;
   let T0;
   let t0;
@@ -74,18 +74,28 @@ function Component(props) {
   }
   let t1;
   if ($[5] !== Tag) {
-    t1 = (
-      <T0>
-        {t0}
-        <Tag />
-      </T0>
-    );
+    t1 = <Tag />;
     $[5] = Tag;
     $[6] = t1;
   } else {
     t1 = $[6];
   }
-  return t1;
+  let t2;
+  if ($[7] !== T0 || $[8] !== t0 || $[9] !== t1) {
+    t2 = (
+      <T0>
+        {t0}
+        {t1}
+      </T0>
+    );
+    $[7] = T0;
+    $[8] = t0;
+    $[9] = t1;
+    $[10] = t2;
+  } else {
+    t2 = $[10];
+  }
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -56,24 +56,29 @@ import { use, useMemo } from "react";
 
 const FooContext = React.createContext(null);
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(5);
   let t0;
   if ($[0] !== props.cond) {
-    t0 = (
-      <FooContext.Provider value={props.value}>
-        <Inner cond={props.cond} />
-      </FooContext.Provider>
-    );
+    t0 = <Inner cond={props.cond} />;
     $[0] = props.cond;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  return t0;
+  let t1;
+  if ($[2] !== props.value || $[3] !== t0) {
+    t1 = <FooContext.Provider value={props.value}>{t0}</FooContext.Provider>;
+    $[2] = props.value;
+    $[3] = t0;
+    $[4] = t1;
+  } else {
+    t1 = $[4];
+  }
+  return t1;
 }
 
 function Inner(props) {
-  const $ = _c(4);
+  const $ = _c(7);
   let input;
   input = null;
   if (props.cond) {
@@ -97,13 +102,22 @@ function Inner(props) {
   const t3 = input;
   let t4;
   if ($[2] !== t3) {
-    t4 = <ValidateMemoization inputs={[t3]} output={output} />;
+    t4 = [t3];
     $[2] = t3;
     $[3] = t4;
   } else {
     t4 = $[3];
   }
-  return t4;
+  let t5;
+  if ($[4] !== t4 || $[5] !== output) {
+    t5 = <ValidateMemoization inputs={t4} output={output} />;
+    $[4] = t4;
+    $[5] = output;
+    $[6] = t5;
+  } else {
+    t5 = $[6];
+  }
+  return t5;
 }
 
 export const FIXTURE_ENTRYPOINT = {

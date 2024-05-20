@@ -320,7 +320,6 @@ export default function Editor() {
     <>
       <div className="relative flex basis top-14">
         <div
-          style={{ minWidth: 650 }}
           className={clsx("relative sm:basis-1/4")}
         >
           <Input

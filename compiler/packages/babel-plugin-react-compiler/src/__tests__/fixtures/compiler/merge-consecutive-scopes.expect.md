@@ -33,7 +33,7 @@ import { useState } from "react";
 import { Stringify } from "shared-runtime";
 
 function Component() {
-  const $ = _c(5);
+  const $ = _c(8);
   const [state, setState] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -53,20 +53,31 @@ function Component() {
   let t2;
   if ($[3] !== state) {
     t2 = (
-      <div>
-        {t0}
-        {t1}
-        <button data-testid="button" onClick={() => setState(state + 1)}>
-          increment
-        </button>
-      </div>
+      <button data-testid="button" onClick={() => setState(state + 1)}>
+        increment
+      </button>
     );
     $[3] = state;
     $[4] = t2;
   } else {
     t2 = $[4];
   }
-  return t2;
+  let t3;
+  if ($[5] !== t1 || $[6] !== t2) {
+    t3 = (
+      <div>
+        {t0}
+        {t1}
+        {t2}
+      </div>
+    );
+    $[5] = t1;
+    $[6] = t2;
+    $[7] = t3;
+  } else {
+    t3 = $[7];
+  }
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
