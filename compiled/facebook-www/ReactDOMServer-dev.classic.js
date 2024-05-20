@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var ReactVersion = '19.0.0-www-classic-b547cfd9';
+var ReactVersion = '19.0.0-www-classic-81f51e28';
 
 // This refers to a WWW module.
 var warningWWW = require('warning');
@@ -1212,6 +1212,9 @@ var possibleStandardNames = {
   pointsatx: 'pointsAtX',
   pointsaty: 'pointsAtY',
   pointsatz: 'pointsAtZ',
+  popover: 'popover',
+  popovertarget: 'popoverTarget',
+  popovertargetaction: 'popoverTargetAction',
   prefix: 'prefix',
   preservealpha: 'preserveAlpha',
   preserveaspectratio: 'preserveAspectRatio',

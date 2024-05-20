@@ -278,6 +278,7 @@ export default [
   "The `%s` prop supplied to <select> must be an array if `multiple` is true.",
   "The `%s` prop supplied to <select> must be an array if `multiple` is true.%s",
   "The `aria` attribute is reserved for future use in React. Pass individual `aria-` attributes instead.",
+  "The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.",
   "The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.",
   "The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?",
   "The current testing environment is not configured to support act(...)",

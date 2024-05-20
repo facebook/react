@@ -5473,6 +5473,9 @@ var possibleStandardNames = {
   pointsatx: 'pointsAtX',
   pointsaty: 'pointsAtY',
   pointsatz: 'pointsAtZ',
+  popover: 'popover',
+  popovertarget: 'popoverTarget',
+  popovertargetaction: 'popoverTargetAction',
   prefix: 'prefix',
   preservealpha: 'preserveAlpha',
   preserveaspectratio: 'preserveAspectRatio',
@@ -30021,7 +30024,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-811b0700';
+var ReactVersion = '19.0.0-www-modern-7e811787';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -31395,6 +31398,13 @@ var WheelEventInterface = assign({}, MouseEventInterface, {
 });
 
 var SyntheticWheelEvent = createSyntheticEvent(WheelEventInterface);
+
+var ToggleEventInterface = assign({}, EventInterface, {
+  newState: 0,
+  oldState: 0
+});
+
+var SyntheticToggleEvent = createSyntheticEvent(ToggleEventInterface);
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 
@@ -32859,7 +32869,7 @@ var topLevelEventsToReactNames = new Map(); // NOTE: Capitalization is important
 //
 // prettier-ignore
 
-var simpleEventPluginEvents = ['abort', 'auxClick', 'cancel', 'canPlay', 'canPlayThrough', 'click', 'close', 'contextMenu', 'copy', 'cut', 'drag', 'dragEnd', 'dragEnter', 'dragExit', 'dragLeave', 'dragOver', 'dragStart', 'drop', 'durationChange', 'emptied', 'encrypted', 'ended', 'error', 'gotPointerCapture', 'input', 'invalid', 'keyDown', 'keyPress', 'keyUp', 'load', 'loadedData', 'loadedMetadata', 'loadStart', 'lostPointerCapture', 'mouseDown', 'mouseMove', 'mouseOut', 'mouseOver', 'mouseUp', 'paste', 'pause', 'play', 'playing', 'pointerCancel', 'pointerDown', 'pointerMove', 'pointerOut', 'pointerOver', 'pointerUp', 'progress', 'rateChange', 'reset', 'resize', 'seeked', 'seeking', 'stalled', 'submit', 'suspend', 'timeUpdate', 'touchCancel', 'touchEnd', 'touchStart', 'volumeChange', 'scroll', 'scrollEnd', 'toggle', 'touchMove', 'waiting', 'wheel'];
+var simpleEventPluginEvents = ['abort', 'auxClick', 'beforeToggle', 'cancel', 'canPlay', 'canPlayThrough', 'click', 'close', 'contextMenu', 'copy', 'cut', 'drag', 'dragEnd', 'dragEnter', 'dragExit', 'dragLeave', 'dragOver', 'dragStart', 'drop', 'durationChange', 'emptied', 'encrypted', 'ended', 'error', 'gotPointerCapture', 'input', 'invalid', 'keyDown', 'keyPress', 'keyUp', 'load', 'loadedData', 'loadedMetadata', 'loadStart', 'lostPointerCapture', 'mouseDown', 'mouseMove', 'mouseOut', 'mouseOver', 'mouseUp', 'paste', 'pause', 'play', 'playing', 'pointerCancel', 'pointerDown', 'pointerMove', 'pointerOut', 'pointerOver', 'pointerUp', 'progress', 'rateChange', 'reset', 'resize', 'seeked', 'seeking', 'stalled', 'submit', 'suspend', 'timeUpdate', 'touchCancel', 'touchEnd', 'touchStart', 'volumeChange', 'scroll', 'scrollEnd', 'toggle', 'touchMove', 'waiting', 'wheel'];
 
 {
   // Special case: these two events don't have on* React handler
@@ -33014,6 +33024,12 @@ function extractEvents$2(dispatchQueue, domEventName, targetInst, nativeEvent, n
     case 'pointerover':
     case 'pointerup':
       SyntheticEventCtor = SyntheticPointerEvent;
+      break;
+
+    case 'toggle':
+    case 'beforetoggle':
+      // MDN claims <details> should not receive ToggleEvent contradicting the spec: https://html.spec.whatwg.org/multipage/indices.html#event-toggle
+      SyntheticEventCtor = SyntheticToggleEvent;
       break;
   }
 
@@ -33250,7 +33266,7 @@ var mediaEventTypes = ['abort', 'canplay', 'canplaythrough', 'durationchange', '
 // set them on the actual target element itself. This is primarily
 // because these events do not consistently bubble in the DOM.
 
-var nonDelegatedEvents = new Set(['cancel', 'close', 'invalid', 'load', 'scroll', 'scrollend', 'toggle'].concat(mediaEventTypes));
+var nonDelegatedEvents = new Set(['beforetoggle', 'cancel', 'close', 'invalid', 'load', 'scroll', 'scrollend', 'toggle'].concat(mediaEventTypes));
 
 function executeDispatch(event, listener, currentTarget) {
   event.currentTarget = currentTarget;
@@ -33848,6 +33864,7 @@ var didWarnFormActionName = false;
 var didWarnFormActionTarget = false;
 var didWarnFormActionMethod = false;
 var didWarnForNewBooleanPropsWithEmptyValue;
+var didWarnPopoverTargetObject = false;
 var canDiffStyleForHydrationWarning;
 
 {
@@ -34442,6 +34459,12 @@ function setProp(domElement, tag, key, value, props, prevValue) {
         break;
       }
 
+    case 'popover':
+      listenToNonDelegatedEvent('beforetoggle', domElement);
+      listenToNonDelegatedEvent('toggle', domElement);
+      setValueForAttribute(domElement, 'popover', value);
+      break;
+
     case 'xlinkActuate':
       setValueForNamespacedAttribute(domElement, xlinkNamespace, 'xlink:actuate', value);
       break;
@@ -34498,6 +34521,16 @@ function setProp(domElement, tag, key, value, props, prevValue) {
     case 'innerText':
     case 'textContent':
       break;
+
+    case 'popoverTarget':
+      {
+        if (!didWarnPopoverTargetObject && value != null && typeof value === 'object') {
+          didWarnPopoverTargetObject = true;
+
+          error('The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.', value);
+        }
+      }
+
     // Fall through
 
     default:
@@ -36410,6 +36443,13 @@ function hydrateProperties(domElement, tag, props, hostContext) {
     domElement.textContent !== '' + children && props.suppressHydrationWarning !== true && !checkForUnmatchedText(domElement.textContent, children)) {
       return false;
     }
+  }
+
+  if (props.popover != null) {
+    // We listen to this event in case to ensure emulated bubble
+    // listeners still fire for the toggle event.
+    listenToNonDelegatedEvent('beforetoggle', domElement);
+    listenToNonDelegatedEvent('toggle', domElement);
   }
 
   if (props.onScroll != null) {
@@ -40070,6 +40110,7 @@ function getEventPriority(domEventName) {
     case 'selectstart':
       return DiscreteEventPriority;
 
+    case 'beforetoggle':
     case 'drag':
     case 'dragenter':
     case 'dragexit':

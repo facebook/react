@@ -1837,7 +1837,10 @@ function prepareToHydrateHostInstance(fiber) {
   instance.textContent === "" + type ||
   !0 === props.suppressHydrationWarning ||
   checkForUnmatchedText(instance.textContent, type)
-    ? (null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
+    ? (null != props.popover &&
+        (listenToNonDelegatedEvent("beforetoggle", instance),
+        listenToNonDelegatedEvent("toggle", instance)),
+      null != props.onScroll && listenToNonDelegatedEvent("scroll", instance),
       null != props.onScrollEnd &&
         listenToNonDelegatedEvent("scrollend", instance),
       null != props.onClick && (instance.onclick = noop$1),
@@ -13217,6 +13220,11 @@ var KeyboardEventInterface = assign({}, UIEventInterface, {
     deltaMode: 0
   }),
   SyntheticWheelEvent = createSyntheticEvent(WheelEventInterface),
+  ToggleEventInterface = assign({}, EventInterface, {
+    newState: 0,
+    oldState: 0
+  }),
+  SyntheticToggleEvent = createSyntheticEvent(ToggleEventInterface),
   END_KEYCODES = [9, 13, 27, 32],
   canUseCompositionEvent = canUseDOM && "CompositionEvent" in window,
   documentMode = null;
@@ -13673,7 +13681,7 @@ var ANIMATION_END = getVendorPrefixedEventName("animationend"),
   TRANSITION_END = getVendorPrefixedEventName("transitionend"),
   topLevelEventsToReactNames = new Map(),
   simpleEventPluginEvents =
-    "abort auxClick cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll scrollEnd toggle touchMove waiting wheel".split(
+    "abort auxClick beforeToggle cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll scrollEnd toggle touchMove waiting wheel".split(
       " "
     );
 topLevelEventsToReactNames.set("beforeblur", null);
@@ -13840,7 +13848,7 @@ var mediaEventTypes =
       " "
     ),
   nonDelegatedEvents = new Set(
-    "cancel close invalid load scroll scrollend toggle"
+    "beforetoggle cancel close invalid load scroll scrollend toggle"
       .split(" ")
       .concat(mediaEventTypes)
   );
@@ -14138,6 +14146,10 @@ function dispatchEventForPluginEventSystem(
           case "pointerover":
           case "pointerup":
             SyntheticEventCtor = SyntheticPointerEvent;
+            break;
+          case "toggle":
+          case "beforetoggle":
+            SyntheticEventCtor = SyntheticToggleEvent;
         }
         var inCapturePhase = 0 !== (eventSystemFlags & 4);
         eventSystemFlags & 1
@@ -14860,6 +14872,11 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       isNaN(value)
         ? domElement.removeAttribute(key)
         : domElement.setAttribute(key, value);
+      break;
+    case "popover":
+      listenToNonDelegatedEvent("beforetoggle", domElement);
+      listenToNonDelegatedEvent("toggle", domElement);
+      setValueForAttribute(domElement, "popover", value);
       break;
     case "xlinkActuate":
       setValueForNamespacedAttribute(
@@ -17265,6 +17282,7 @@ function getEventPriority(domEventName) {
     case "select":
     case "selectstart":
       return 2;
+    case "beforetoggle":
     case "drag":
     case "dragenter":
     case "dragexit":
@@ -17365,7 +17383,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1763 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-821c24d7",
+  version: "19.0.0-www-classic-67b98651",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2212 = {
@@ -17395,7 +17413,7 @@ var internals$jscomp$inline_2212 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-821c24d7"
+  reconcilerVersion: "19.0.0-www-classic-67b98651"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2213 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18050,4 +18068,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-821c24d7";
+exports.version = "19.0.0-www-classic-67b98651";
