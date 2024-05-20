@@ -2077,6 +2077,7 @@ function codegenJsxAttribute(
   }
 }
 
+const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&]/;
 function codegenJsxElement(
   cx: Context,
   place: Place
@@ -2089,6 +2090,12 @@ function codegenJsxElement(
   const value = codegenPlace(cx, place);
   switch (value.type) {
     case "JSXText": {
+      if (JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value)) {
+        return createJsxExpressionContainer(
+          place.loc,
+          createStringLiteral(place.loc, value.value)
+        );
+      }
       return createJsxText(place.loc, value.value);
     }
     case "JSXElement":

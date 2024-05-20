@@ -67,7 +67,7 @@ function Component(props) {
 }
 
 function Inner(props) {
-  const $ = _c(4);
+  const $ = _c(7);
   const input = use(FooContext);
   let t0;
   let t1;
@@ -82,13 +82,22 @@ function Inner(props) {
   const output = t0;
   let t2;
   if ($[2] !== input) {
-    t2 = <ValidateMemoization inputs={[input]} output={output} />;
+    t2 = [input];
     $[2] = input;
     $[3] = t2;
   } else {
     t2 = $[3];
   }
-  return t2;
+  let t3;
+  if ($[4] !== t2 || $[5] !== output) {
+    t3 = <ValidateMemoization inputs={t2} output={output} />;
+    $[4] = t2;
+    $[5] = output;
+    $[6] = t3;
+  } else {
+    t3 = $[6];
+  }
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
