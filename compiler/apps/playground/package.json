@@ -30,13 +30,14 @@
     "lz-string": "^1.5.0",
     "monaco-editor": "^0.34.1",
     "next": "^13.5.6",
+    "next-themes": "^0.3.0",
     "notistack": "^3.0.0-alpha.7",
     "prettier": "3.0.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
     "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-compiler-runtime": "*"
+    "react-compiler-runtime": "*",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
