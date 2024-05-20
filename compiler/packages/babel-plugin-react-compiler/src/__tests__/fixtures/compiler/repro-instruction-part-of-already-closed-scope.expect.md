@@ -35,7 +35,7 @@ import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRul
 import { Stringify, identity, useHook } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(13);
+  const $ = _c(17);
   const { index } = t0;
   const data = useHook();
   let T0;
@@ -79,20 +79,30 @@ function Component(t0) {
   }
   let t4;
   if ($[10] !== T0 || $[11] !== t1) {
-    t4 = (
-      <div>
-        {t2}
-        {t3}
-        <T0 value={t1} />
-      </div>
-    );
+    t4 = <T0 value={t1} />;
     $[10] = T0;
     $[11] = t1;
     $[12] = t4;
   } else {
     t4 = $[12];
   }
-  return t4;
+  let t5;
+  if ($[13] !== t2 || $[14] !== t3 || $[15] !== t4) {
+    t5 = (
+      <div>
+        {t2}
+        {t3}
+        {t4}
+      </div>
+    );
+    $[13] = t2;
+    $[14] = t3;
+    $[15] = t4;
+    $[16] = t5;
+  } else {
+    t5 = $[16];
+  }
+  return t5;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -42,7 +42,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(8);
   const items = props.items;
   const maxItems = props.maxItems;
   let renderedItems;
@@ -72,18 +72,27 @@ function Component(props) {
   const count = renderedItems.length;
   let t0;
   if ($[3] !== count) {
-    t0 = (
-      <div>
-        <h1>{count} Items</h1>
-        {renderedItems}
-      </div>
-    );
+    t0 = <h1>{count} Items</h1>;
     $[3] = count;
     $[4] = t0;
   } else {
     t0 = $[4];
   }
-  return t0;
+  let t1;
+  if ($[5] !== t0 || $[6] !== renderedItems) {
+    t1 = (
+      <div>
+        {t0}
+        {renderedItems}
+      </div>
+    );
+    $[5] = t0;
+    $[6] = renderedItems;
+    $[7] = t1;
+  } else {
+    t1 = $[7];
+  }
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

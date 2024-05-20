@@ -4,13 +4,14 @@ const path = require("path");
 const yargs = require("yargs");
 const util = require("util");
 const { hashElement } = require("folder-hash");
+const promptForOTP = require("./prompt-for-otp");
 
 const PUBLISHABLE_PACKAGES = [
   "babel-plugin-react-compiler",
   "eslint-plugin-react-compiler",
   "react-compiler-healthcheck",
 ];
-const TIME_TO_RECONSIDER = 1_000;
+const TIME_TO_RECONSIDER = 3_000;
 
 function _spawn(command, args, options, cb) {
   const child = cp.spawn(command, args, options);
@@ -69,13 +70,6 @@ async function getDateStringForCommit(commit) {
  * the command only report what it would have done, instead of actually publishing to npm.
  */
 async function main() {
-  const currBranchName = await execHelper("git rev-parse --abbrev-ref HEAD");
-  const isPristine = (await execHelper("git status --porcelain")) === "";
-  if (currBranchName !== "main" || isPristine === false) {
-    throw new Error(
-      "This script must be run from the `main` branch with no uncommitted changes",
-    );
-  }
   const argv = yargs(process.argv.slice(2))
     .option("packages", {
       description: "which packages to publish, defaults to all",
@@ -99,6 +93,17 @@ async function main() {
     .parseSync();
 
   const { packages, forReal, debug } = argv;
+
+  if (debug === false) {
+    const currBranchName = await execHelper("git rev-parse --abbrev-ref HEAD");
+    const isPristine = (await execHelper("git status --porcelain")) === "";
+    if (currBranchName !== "main" || isPristine === false) {
+      throw new Error(
+        "This script must be run from the `main` branch with no uncommitted changes",
+      );
+    }
+  }
+
   let pkgNames = packages;
   if (Array.isArray(packages) === false) {
     pkgNames = [packages];
@@ -130,7 +135,7 @@ async function main() {
       spinner.start(`Running npm pack --dry-run\n`);
       try {
         await spawnHelper("npm", ["pack", "--dry-run"], {
-          cwd: path.resolve(__dirname, `../packages/${pkgName}`),
+          cwd: path.resolve(__dirname, `../../packages/${pkgName}`),
           stdio: "inherit",
         });
       } catch (e) {
@@ -145,6 +150,7 @@ async function main() {
   }
 
   if (forReal === true) {
+    const otp = await promptForOTP();
     const commit = await execHelper(
       "git show -s --no-show-signature --format=%h",
       {
@@ -154,9 +160,10 @@ async function main() {
     const dateString = await getDateStringForCommit(commit);
 
     for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../packages/${pkgName}`);
+      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       const { hash } = await hashElement(pkgDir, {
         encoding: "hex",
+        folders: { exclude: ["node_modules"] },
         files: { exclude: [".DS_Store"] },
       });
       const truncatedHash = hash.slice(0, 7);
@@ -195,7 +202,7 @@ async function main() {
     }
 
     for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../packages/${pkgName}`);
+      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       console.log(`\n========== ${pkgName} ==========\n`);
       spinner.start(`Publishing ${pkgName} to npm\n`);
 
@@ -203,7 +210,7 @@ async function main() {
       try {
         await spawnHelper(
           "npm",
-          [...opts, "--registry=https://registry.npmjs.org"],
+          [...opts, "--registry=https://registry.npmjs.org", `--otp=${otp}`],
           {
             cwd: pkgDir,
             stdio: "inherit",
