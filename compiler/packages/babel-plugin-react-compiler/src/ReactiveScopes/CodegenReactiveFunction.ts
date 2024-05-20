@@ -86,7 +86,7 @@ export function codegenFunction(
    * If HMR detection is enabled and we know the source code of the component, assign a cache slot to track
    * the source hash, and later, emit code to check for source changes and reset the cache on source changes.
    */
-  let fasthRefreshResetState: {
+  let fastRefreshState: {
     cacheIndex: number;
     hash: string;
   } | null = null;
@@ -95,7 +95,7 @@ export function codegenFunction(
     fn.env.code !== null
   ) {
     const hash = createHmac("sha256", fn.env.code).digest("hex");
-    fasthRefreshResetState = {
+    fastRefreshState = {
       cacheIndex: cx.nextCacheIndex,
       hash,
     };
@@ -134,7 +134,7 @@ export function codegenFunction(
         ),
       ])
     );
-    if (fasthRefreshResetState !== null) {
+    if (fastRefreshState !== null) {
       // HMR detection is enabled, emit code to reset the memo cache on source changes
       const index = cx.synthesizeName("$i");
       preface.push(
@@ -143,10 +143,10 @@ export function codegenFunction(
             "!==",
             t.memberExpression(
               t.identifier(cx.synthesizeName("$")),
-              t.numericLiteral(fasthRefreshResetState.cacheIndex),
+              t.numericLiteral(fastRefreshState.cacheIndex),
               true
             ),
-            t.stringLiteral(fasthRefreshResetState.hash)
+            t.stringLiteral(fastRefreshState.hash)
           ),
           t.blockStatement([
             t.forStatement(
@@ -188,10 +188,10 @@ export function codegenFunction(
                 "=",
                 t.memberExpression(
                   t.identifier(cx.synthesizeName("$")),
-                  t.numericLiteral(fasthRefreshResetState.cacheIndex),
+                  t.numericLiteral(fastRefreshState.cacheIndex),
                   true
                 ),
-                t.stringLiteral(fasthRefreshResetState.hash)
+                t.stringLiteral(fastRefreshState.hash)
               )
             ),
           ])
