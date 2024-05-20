@@ -27,6 +27,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",
     "@babel/plugin-transform-react-jsx-source": "^7.10.5",
     "@babel/preset-react": "^7.10.4",
+    "babel-plugin-react-compiler": "0.0.0-experimental-592953e-20240517",
     "acorn-jsx": "^5.2.0",
     "archiver": "^3.0.0",
     "babel-core": "^7.0.0-bridge",

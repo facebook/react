@@ -30,6 +30,10 @@ const builtModulesDir = resolve(
   'oss-experimental',
 );
 
+const ReactCompilerConfig = {
+  /* ... */
+};
+
 const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString(process.env.DEVTOOLS_VERSION);
@@ -185,6 +189,19 @@ module.exports = {
             options: babelOptions,
           },
         ],
+      },
+      {
+        test: /\.js$/,
+        exclude: [/node_modules/],
+        loader: 'babel-loader',
+        options: {
+          plugins: [
+            [
+              require.resolve('babel-plugin-react-compiler'),
+              ReactCompilerConfig,
+            ],
+          ],
+        },
       },
       {
         test: /\.js$/,

@@ -87,6 +87,7 @@ type Props = {
 };
 
 function ProfilerContextController({children}: Props): React.Node {
+  'use no memo';
   const store = useContext(StoreContext);
   const {selectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
