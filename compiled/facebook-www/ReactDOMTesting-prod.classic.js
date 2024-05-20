@@ -17230,6 +17230,7 @@ function findInstanceBlockingTarget(targetNode) {
 }
 function getEventPriority(domEventName) {
   switch (domEventName) {
+    case "beforetoggle":
     case "cancel":
     case "click":
     case "close":
@@ -17261,6 +17262,7 @@ function getEventPriority(domEventName) {
     case "resize":
     case "seeked":
     case "submit":
+    case "toggle":
     case "touchcancel":
     case "touchend":
     case "touchstart":
@@ -17282,7 +17284,6 @@ function getEventPriority(domEventName) {
     case "select":
     case "selectstart":
       return 2;
-    case "beforetoggle":
     case "drag":
     case "dragenter":
     case "dragexit":
@@ -17295,7 +17296,6 @@ function getEventPriority(domEventName) {
     case "pointerout":
     case "pointerover":
     case "scroll":
-    case "toggle":
     case "touchmove":
     case "wheel":
     case "mouseenter":
@@ -17383,7 +17383,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1763 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-67b98651",
+  version: "19.0.0-www-classic-c5247b0e",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2212 = {
@@ -17413,7 +17413,7 @@ var internals$jscomp$inline_2212 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-67b98651"
+  reconcilerVersion: "19.0.0-www-classic-c5247b0e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2213 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18068,4 +18068,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-67b98651";
+exports.version = "19.0.0-www-classic-c5247b0e";

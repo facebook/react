@@ -30024,7 +30024,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-7e811787';
+var ReactVersion = '19.0.0-www-modern-ba0dc724';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -40054,6 +40054,7 @@ function findInstanceBlockingTarget(targetNode) {
 function getEventPriority(domEventName) {
   switch (domEventName) {
     // Used by SimpleEventPlugin:
+    case 'beforetoggle':
     case 'cancel':
     case 'click':
     case 'close':
@@ -40085,6 +40086,7 @@ function getEventPriority(domEventName) {
     case 'resize':
     case 'seeked':
     case 'submit':
+    case 'toggle':
     case 'touchcancel':
     case 'touchend':
     case 'touchstart':
@@ -40110,7 +40112,6 @@ function getEventPriority(domEventName) {
     case 'selectstart':
       return DiscreteEventPriority;
 
-    case 'beforetoggle':
     case 'drag':
     case 'dragenter':
     case 'dragexit':
@@ -40123,7 +40124,6 @@ function getEventPriority(domEventName) {
     case 'pointerout':
     case 'pointerover':
     case 'scroll':
-    case 'toggle':
     case 'touchmove':
     case 'wheel': // Not used by React but could be by user code: (fall through)
 
