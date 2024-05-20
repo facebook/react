@@ -443,11 +443,12 @@ function canMergeScopes(
       ),
       next.scope.dependencies
     ) ||
-    [...next.scope.dependencies].every(
-      (dep) =>
-        current.scope.declarations.has(dep.identifier.id) &&
-        isAlwaysInvalidatingType(dep.identifier.type)
-    )
+    (next.scope.dependencies.size !== 0 &&
+      [...next.scope.dependencies].every(
+        (dep) =>
+          current.scope.declarations.has(dep.identifier.id) &&
+          isAlwaysInvalidatingType(dep.identifier.type)
+      ))
   ) {
     log(`  outputs of prev are input to current`);
     return true;
