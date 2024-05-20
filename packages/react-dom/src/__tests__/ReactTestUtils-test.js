@@ -45,6 +45,7 @@ describe('ReactTestUtils', () => {
         "animationStart",
         "auxClick",
         "beforeInput",
+        "beforeToggle",
         "blur",
         "canPlay",
         "canPlayThrough",

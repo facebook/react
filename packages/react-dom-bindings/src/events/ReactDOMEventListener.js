@@ -345,6 +345,7 @@ export function getEventPriority(domEventName: DOMEventName): EventPriority {
     case 'select':
     case 'selectstart':
       return DiscreteEventPriority;
+    case 'beforetoggle':
     case 'drag':
     case 'dragenter':
     case 'dragexit':
