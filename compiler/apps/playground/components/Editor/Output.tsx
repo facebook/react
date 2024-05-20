@@ -130,7 +130,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
         <>
           <iframe
             src={sourceMapUrl}
-            className="w-full h-96"
+            className="w-full h-monaco_small sm:h-monaco"
             title="Generated Code"
           />
         </>,

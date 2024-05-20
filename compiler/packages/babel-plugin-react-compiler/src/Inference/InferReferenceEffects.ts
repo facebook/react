@@ -1611,14 +1611,14 @@ function inferBlock(
               val,
               Effect.Freeze,
               ValueReason.Other,
-              functionEffects
+              []
             );
           } else {
             state.referenceAndRecordEffects(
               val,
               Effect.Read,
               ValueReason.Other,
-              functionEffects
+              []
             );
           }
         }

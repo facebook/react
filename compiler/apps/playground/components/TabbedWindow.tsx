@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Resizable } from "re-resizable";
 import React, { useCallback } from "react";
 
 type TabsRecord = Map<string, React.ReactNode>;
@@ -68,7 +69,7 @@ function TabbedWindowItem({
   return (
     <div key={name} className="flex flex-row">
       {isShow ? (
-        <div className="border-r" style={{ minWidth: 550, overflow: "hidden" }}>
+        <Resizable className="border-r" minWidth={550} enable={{ right: true }}>
           <h2
             title="Minimize tab"
             aria-label="Minimize tab"
@@ -78,7 +79,7 @@ function TabbedWindowItem({
             - {name}
           </h2>
           {tabs.get(name) ?? <div>No output for {name}</div>}
-        </div>
+        </Resizable>
       ) : (
         <div className="relative items-center h-full px-1 py-6 align-middle border-r border-grey-200">
           <button

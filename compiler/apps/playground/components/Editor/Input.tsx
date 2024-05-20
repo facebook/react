@@ -10,6 +10,7 @@ import { CompilerErrorDetail } from "babel-plugin-react-compiler/src";
 import invariant from "invariant";
 import type { editor } from "monaco-editor";
 import * as monaco from "monaco-editor";
+import { Resizable } from "re-resizable";
 import { useEffect, useState } from "react";
 import { renderReactCompilerMarkers } from "../../lib/reactCompilerMonacoDiagnostics";
 import { useStore, useStoreDispatch } from "../StoreContext";
@@ -102,9 +103,13 @@ export default function Input({ errors }: Props) {
 
   return (
     <div className="relative flex flex-col flex-none border-r border-gray-200">
-      {/* Restrict MonacoEditor's height, since the config autoLayout:true
-          will grow the editor to fit within parent element */}
-      <div className="w-full" style={{ height: "calc(100vh - 3.5rem)" }}>
+      <Resizable
+        minWidth={650}
+        enable={{ right: true }}
+        // Restrict MonacoEditor's height, since the config autoLayout:true
+        // will grow the editor to fit within parent element
+        className="!h-[calc(100vh_-_3.5rem)]"
+      >
         <MonacoEditor
           path={"index.js"}
           // .js and .jsx files are specified to be TS so that Monaco can actually
@@ -116,7 +121,7 @@ export default function Input({ errors }: Props) {
           onChange={handleChange}
           options={monacoOptions}
         />
-      </div>
+      </Resizable>
     </div>
   );
 }
