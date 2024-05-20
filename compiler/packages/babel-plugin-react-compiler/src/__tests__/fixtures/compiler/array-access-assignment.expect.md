@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function foo(a, b, c) {
+function Component({ a, b, c }) {
   const x = [a];
   const y = [null, b];
   const z = [[], [], [c]];
@@ -12,9 +12,15 @@ function foo(a, b, c) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
-  params: [1, 2, 3],
-  isComponent: false,
+  fn: Component,
+  params: [{ a: 1, b: 20, c: 300 }],
+  sequentialRenders: [
+    { a: 2, b: 20, c: 300 },
+    { a: 3, b: 20, c: 300 },
+    { a: 3, b: 21, c: 300 },
+    { a: 3, b: 22, c: 300 },
+    { a: 3, b: 22, c: 301 },
+  ],
 };
 
 ```
@@ -23,41 +29,52 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-function foo(a, b, c) {
+function Component(t0) {
   const $ = _c(6);
-  let t0;
+  const { a, b, c } = t0;
+  let t1;
   if ($[0] !== a || $[1] !== b || $[2] !== c) {
     const x = [a];
-    let t1;
+    let t2;
     if ($[4] !== b) {
-      t1 = [null, b];
+      t2 = [null, b];
       $[4] = b;
-      $[5] = t1;
+      $[5] = t2;
     } else {
-      t1 = $[5];
+      t2 = $[5];
     }
-    const y = t1;
+    const y = t2;
     const z = [[], [], [c]];
     x[0] = y[1];
     z[0][0] = x[0];
-    t0 = [x, z];
+    t1 = [x, z];
     $[0] = a;
     $[1] = b;
     $[2] = c;
-    $[3] = t0;
+    $[3] = t1;
   } else {
-    t0 = $[3];
+    t1 = $[3];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
-  params: [1, 2, 3],
-  isComponent: false,
+  fn: Component,
+  params: [{ a: 1, b: 20, c: 300 }],
+  sequentialRenders: [
+    { a: 2, b: 20, c: 300 },
+    { a: 3, b: 20, c: 300 },
+    { a: 3, b: 21, c: 300 },
+    { a: 3, b: 22, c: 300 },
+    { a: 3, b: 22, c: 301 },
+  ],
 };
 
 ```
       
 ### Eval output
-(kind: ok) [[2],[[2],[],[3]]]
+(kind: ok) [[20],[[20],[],[300]]]
+[[20],[[20],[],[300]]]
+[[21],[[21],[],[300]]]
+[[22],[[22],[],[300]]]
+[[22],[[22],[],[301]]]

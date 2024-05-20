@@ -13,6 +13,10 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ hello: null, world: undefined, "!": true }],
+  sequentialRenders: [
+    { a: null, b: null, c: null },
+    { lauren: true, mofei: true, sathya: true, jason: true },
+  ],
 };
 
 ```
@@ -42,9 +46,14 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ hello: null, world: undefined, "!": true }],
+  sequentialRenders: [
+    { a: null, b: null, c: null },
+    { lauren: true, mofei: true, sathya: true, jason: true },
+  ],
 };
 
 ```
       
 ### Eval output
-(kind: ok) <div><div>hello</div><div>world</div><div>!</div></div>
+(kind: ok) <div><div>a</div><div>b</div><div>c</div></div>
+<div><div>lauren</div><div>mofei</div><div>sathya</div><div>jason</div></div>

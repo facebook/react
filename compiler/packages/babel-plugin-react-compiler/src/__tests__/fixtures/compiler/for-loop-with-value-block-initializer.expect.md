@@ -23,6 +23,38 @@ export const FIXTURE_ENTRYPOINT = {
       ],
     },
   ],
+  sequentialRenders: [
+    {
+      start: 1,
+      items: [
+        { id: 0, value: "zero" },
+        { id: 1, value: "one" },
+      ],
+    },
+    {
+      start: 2,
+      items: [
+        { id: 0, value: "zero" },
+        { id: 1, value: "one" },
+      ],
+    },
+    {
+      start: 0,
+      items: [
+        { id: 0, value: "zero" },
+        { id: 1, value: "one" },
+        { id: 2, value: "two" },
+      ],
+    },
+    {
+      start: 1,
+      items: [
+        { id: 0, value: "zero" },
+        { id: 1, value: "one" },
+        { id: 2, value: "two" },
+      ],
+    },
+  ],
 };
 
 ```
@@ -63,9 +95,45 @@ export const FIXTURE_ENTRYPOINT = {
       ],
     },
   ],
+
+  sequentialRenders: [
+    {
+      start: 1,
+      items: [
+        { id: 0, value: "zero" },
+        { id: 1, value: "one" },
+      ],
+    },
+    {
+      start: 2,
+      items: [
+        { id: 0, value: "zero" },
+        { id: 1, value: "one" },
+      ],
+    },
+    {
+      start: 0,
+      items: [
+        { id: 0, value: "zero" },
+        { id: 1, value: "one" },
+        { id: 2, value: "two" },
+      ],
+    },
+    {
+      start: 1,
+      items: [
+        { id: 0, value: "zero" },
+        { id: 1, value: "one" },
+        { id: 2, value: "two" },
+      ],
+    },
+  ],
 };
 
 ```
       
 ### Eval output
-(kind: ok) <div><div>zero</div><div>one</div></div>
+(kind: ok) <div><div>one</div></div>
+<div></div>
+<div><div>zero</div><div>one</div><div>two</div></div>
+<div><div>one</div><div>two</div></div>
