@@ -49,7 +49,7 @@
     "babel-jest": "^29.0.3",
     "babel-plugin-fbt": "^1.0.0",
     "babel-plugin-fbt-runtime": "^1.0.0",
-    "eslint": "8.27.0",
+    "eslint": "^8.56.0",
     "glob": "^7.1.6",
     "jest": "^29.0.3",
     "jest-environment-jsdom": "^29.0.3",
