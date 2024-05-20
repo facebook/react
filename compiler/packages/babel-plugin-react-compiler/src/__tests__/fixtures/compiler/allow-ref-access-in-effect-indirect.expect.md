@@ -60,17 +60,20 @@ function Component() {
   }
   const setRef = t0;
   let t1;
-  let t2;
   if ($[1] !== setRef) {
     t1 = () => {
       setRef();
     };
-    t2 = [];
     $[1] = setRef;
     $[2] = t1;
-    $[3] = t2;
   } else {
     t1 = $[2];
+  }
+  let t2;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = [];
+    $[3] = t2;
+  } else {
     t2 = $[3];
   }
   useEffect(t1, t2);
