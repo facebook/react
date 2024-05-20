@@ -1450,7 +1450,16 @@ const attributes = [
   {name: 'popover', overrideStringValue: 'manual'},
   {
     name: 'popoverTarget',
-    read: element => element.popoverTargetElement,
+    read: element => {
+      document.body.appendChild(element);
+      try {
+        // trigger and target need to be connected for `popoverTargetElement` to read the actual value.
+        return element.popoverTargetElement;
+      } finally {
+        document.body.removeChild(element);
+      }
+    },
+    overrideStringValue: 'popover-target',
     tagName: 'button',
   },
   {name: 'popoverTargetAction', overrideStringValue: 'show', tagName: 'button'},

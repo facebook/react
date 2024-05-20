@@ -82,6 +82,7 @@ let didWarnFormActionName = false;
 let didWarnFormActionTarget = false;
 let didWarnFormActionMethod = false;
 let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
+let didWarnPopoverTargetObject = false;
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
   didWarnForNewBooleanPropsWithEmptyValue = {};
@@ -866,6 +867,20 @@ function setProp(
     case 'innerText':
     case 'textContent':
       break;
+    case 'popoverTarget':
+      if (__DEV__) {
+        if (
+          !didWarnPopoverTargetObject &&
+          value != null &&
+          typeof value === 'object'
+        ) {
+          didWarnPopoverTargetObject = true;
+          console.error(
+            'The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.',
+            value,
+          );
+        }
+      }
     // Fall through
     default: {
       if (

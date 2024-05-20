@@ -8476,11 +8476,11 @@
 ## `popoverTarget` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `popoverTarget=(string)`| (initial)| `<null>` |
+| `popoverTarget=(string)`| (changed)| `<HTMLDivElement>` |
 | `popoverTarget=(empty string)`| (initial)| `<null>` |
-| `popoverTarget=(array with string)`| (initial)| `<null>` |
-| `popoverTarget=(empty array)`| (initial)| `<null>` |
-| `popoverTarget=(object)`| (initial)| `<null>` |
+| `popoverTarget=(array with string)`| (changed, warning, ssr warning)| `<HTMLDivElement>` |
+| `popoverTarget=(empty array)`| (initial, warning, ssr warning)| `<null>` |
+| `popoverTarget=(object)`| (initial, warning, ssr warning)| `<null>` |
 | `popoverTarget=(numeric string)`| (initial)| `<null>` |
 | `popoverTarget=(-1)`| (initial)| `<null>` |
 | `popoverTarget=(0)`| (initial)| `<null>` |
