@@ -161,7 +161,11 @@ describe('ReactInternalTestUtils', () => {
 
     const root = ReactNoop.createRoot();
     await act(() => {
-      root.render(<App />);
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
     });
     assertLog(['A', 'B', 'C']);
   });
