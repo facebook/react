@@ -34,7 +34,7 @@ import { c as _c } from "react/compiler-runtime";
 import { useEffect, useState } from "react";
 
 function Component(props) {
-  const $ = _c(8);
+  const $ = _c(11);
   let t0;
   if ($[0] !== props.value) {
     t0 = [props.value];
@@ -69,19 +69,22 @@ function Component(props) {
   const onClick = t3;
   let t4;
   if ($[6] !== x) {
-    t4 = (
-      <div onClick={onClick}>
-        {x.map((item) => (
-          <span key={item}>{item}</span>
-        ))}
-      </div>
-    );
+    t4 = x.map((item) => <span key={item}>{item}</span>);
     $[6] = x;
     $[7] = t4;
   } else {
     t4 = $[7];
   }
-  return t4;
+  let t5;
+  if ($[8] !== onClick || $[9] !== t4) {
+    t5 = <div onClick={onClick}>{t4}</div>;
+    $[8] = onClick;
+    $[9] = t4;
+    $[10] = t5;
+  } else {
+    t5 = $[10];
+  }
+  return t5;
 }
 
 export const FIXTURE_ENTRYPOINT = {

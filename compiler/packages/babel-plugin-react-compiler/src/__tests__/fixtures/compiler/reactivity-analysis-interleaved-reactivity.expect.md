@@ -35,23 +35,34 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(6);
+  let a;
   let t0;
   if ($[0] !== props.b) {
-    const a = {};
+    a = {};
     const b = [];
     b.push(props.b);
     a.a = null;
 
-    const c = [a];
-
-    t0 = [c, a];
+    t0 = [a];
     $[0] = props.b;
-    $[1] = t0;
+    $[1] = a;
+    $[2] = t0;
   } else {
-    t0 = $[1];
+    a = $[1];
+    t0 = $[2];
   }
-  return t0;
+  const c = t0;
+  let t1;
+  if ($[3] !== c || $[4] !== a) {
+    t1 = [c, a];
+    $[3] = c;
+    $[4] = a;
+    $[5] = t1;
+  } else {
+    t1 = $[5];
+  }
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {
