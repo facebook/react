@@ -12,13 +12,13 @@ export type ComponentDeclaration = t.FunctionDeclaration & {
 };
 
 export function isComponentDeclaration(
-  node: t.FunctionDeclaration
+  node: t.FunctionDeclaration,
 ): node is ComponentDeclaration {
   return Object.prototype.hasOwnProperty.call(node, "__componentDeclaration");
 }
 
 export function parseComponentDeclaration(
-  node: t.FunctionDeclaration
+  node: t.FunctionDeclaration,
 ): ComponentDeclaration | null {
   return isComponentDeclaration(node) ? node : null;
 }

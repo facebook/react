@@ -167,7 +167,7 @@ enum MemoizationLevel {
  */
 function joinAliases(
   kind1: MemoizationLevel,
-  kind2: MemoizationLevel
+  kind2: MemoizationLevel,
 ): MemoizationLevel {
   if (
     kind1 === MemoizationLevel.Memoized ||
@@ -240,7 +240,7 @@ class State {
   visitOperand(
     id: InstructionId,
     place: Place,
-    identifier: IdentifierId
+    identifier: IdentifierId,
   ): void {
     const scope = getPlaceScope(id, place);
     if (scope !== null) {
@@ -358,7 +358,7 @@ function computeMemoizationInputs(
   env: Environment,
   value: ReactiveValue,
   lvalue: Place | null,
-  options: MemoizationOptions
+  options: MemoizationOptions,
 ): {
   // can optionally return a custom set of lvalues per instruction
   lvalues: Array<LValueMemoization>;
@@ -660,7 +660,7 @@ function computeMemoizationInputs(
     case "CallExpression": {
       const signature = getFunctionCallSignature(
         env,
-        value.callee.identifier.type
+        value.callee.identifier.type,
       );
       const operands = [...eachReactiveValueOperand(value)];
       let lvalues = [];
@@ -676,7 +676,7 @@ function computeMemoizationInputs(
       lvalues.push(
         ...operands
           .filter((operand) => isMutableEffect(operand.effect, operand.loc))
-          .map((place) => ({ place, level: MemoizationLevel.Memoized }))
+          .map((place) => ({ place, level: MemoizationLevel.Memoized })),
       );
       return {
         lvalues,
@@ -686,7 +686,7 @@ function computeMemoizationInputs(
     case "MethodCall": {
       const signature = getFunctionCallSignature(
         env,
-        value.property.identifier.type
+        value.property.identifier.type,
       );
       const operands = [...eachReactiveValueOperand(value)];
       let lvalues = [];
@@ -702,7 +702,7 @@ function computeMemoizationInputs(
       lvalues.push(
         ...operands
           .filter((operand) => isMutableEffect(operand.effect, operand.loc))
-          .map((place) => ({ place, level: MemoizationLevel.Memoized }))
+          .map((place) => ({ place, level: MemoizationLevel.Memoized })),
       );
       return {
         lvalues,
@@ -752,7 +752,7 @@ function computeMemoizationInputs(
     default: {
       assertExhaustive(
         value,
-        `Unexpected value kind \`${(value as any).kind}\``
+        `Unexpected value kind \`${(value as any).kind}\``,
       );
     }
   }
@@ -790,7 +790,7 @@ function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -816,7 +816,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: State
+    state: State,
   ): void {
     this.traverseInstruction(instruction, state);
 
@@ -825,7 +825,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
       this.env,
       instruction.value,
       instruction.lvalue,
-      this.options
+      this.options,
     );
 
     // Associate all the rvalues with the instruction's scope if it has one
@@ -870,7 +870,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     if (instruction.value.kind === "LoadLocal" && instruction.lvalue !== null) {
       state.definitions.set(
         instruction.lvalue.identifier.id,
-        instruction.value.place.identifier.id
+        instruction.value.place.identifier.id,
       );
     } else if (
       instruction.value.kind === "CallExpression" ||
@@ -883,7 +883,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
       if (getHookKind(state.env, callee.identifier) != null) {
         const signature = getFunctionCallSignature(
           this.env,
-          callee.identifier.type
+          callee.identifier.type,
         );
         /*
          * Hook values are assumed to escape by default since they can be inputs
@@ -904,7 +904,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
 
   override visitTerminal(
     stmt: ReactiveTerminalStatement<ReactiveTerminal>,
-    state: State
+    state: State,
   ): void {
     this.traverseTerminal(stmt, state);
 
@@ -922,7 +922,7 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
 
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    state: Set<IdentifierId>
+    state: Set<IdentifierId>,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, state);
 
@@ -941,10 +941,10 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
 
     const hasMemoizedOutput =
       Array.from(scopeBlock.scope.declarations.keys()).some((id) =>
-        state.has(id)
+        state.has(id),
       ) ||
       Array.from(scopeBlock.scope.reassignments).some((identifier) =>
-        state.has(identifier.id)
+        state.has(identifier.id),
       );
     if (hasMemoizedOutput) {
       return { kind: "keep" };
@@ -956,7 +956,7 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
 
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: Set<IdentifierId>
+    state: Set<IdentifierId>,
   ): Transformed<ReactiveStatement> {
     this.traverseInstruction(instruction, state);
 

@@ -223,8 +223,8 @@ class SSABuilder {
       for (const incompletePhi of state.incompletePhis) {
         text.push(
           `  iphi \$${printIdentifier(
-            incompletePhi.newId
-          )} = \$${printIdentifier(incompletePhi.oldId)}`
+            incompletePhi.newId,
+          )} = \$${printIdentifier(incompletePhi.oldId)}`,
         );
       }
     }
@@ -242,7 +242,7 @@ export default function enterSSA(func: HIRFunction): void {
 function enterSSAImpl(
   func: HIRFunction,
   builder: SSABuilder,
-  rootEntry: BlockId
+  rootEntry: BlockId,
 ): void {
   const visitedBlocks: Set<BasicBlock> = new Set();
   for (const [blockId, block] of func.body.blocks) {
@@ -298,7 +298,7 @@ function enterSSAImpl(
         builder.defineFunction(loweredFunc);
         builder.enter(() => {
           loweredFunc.context = loweredFunc.context.map((p) =>
-            builder.getPlace(p)
+            builder.getPlace(p),
           );
           loweredFunc.params = loweredFunc.params.map((param) => {
             if (param.kind === "Identifier") {

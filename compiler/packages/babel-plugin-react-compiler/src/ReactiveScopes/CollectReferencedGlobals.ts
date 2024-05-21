@@ -22,7 +22,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<string>> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: Set<string>
+    state: Set<string>,
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
@@ -36,7 +36,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<string>> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     fn: ReactiveFunction,
-    state: Set<string>
+    state: Set<string>,
   ): void {
     visitReactiveFunction(fn, this, state);
   }
