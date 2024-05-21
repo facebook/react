@@ -79,6 +79,7 @@ export default function NewKeyValue({
 
   return (
     <div
+      data-testname="NewKeyValue"
       key={newPropKey}
       hidden={hidden}
       style={{

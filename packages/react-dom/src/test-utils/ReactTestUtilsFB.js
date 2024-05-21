@@ -850,6 +850,7 @@ const simulatedEventTypes = [
   'change',
   'select',
   'beforeInput',
+  'beforeToggle',
   'compositionEnd',
   'compositionStart',
   'compositionUpdate',

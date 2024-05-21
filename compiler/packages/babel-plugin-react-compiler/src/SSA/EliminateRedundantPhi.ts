@@ -21,7 +21,7 @@ import {
  * In both these cases, the phi is eliminated and all usages of the phi identifier
  * are replaced with the other operand (ie in both cases above, all usages of `x2` are replaced with `x1` .
  *
- * The algorithm is inspired by that in https://pp.info.uni-karlsruhe.de/uploads/publikationen/braun13cc.pdf
+ * The algorithm is inspired by that in https://pp.ipd.kit.edu/uploads/publikationen/braun13cc.pdf
  * but modified to reduce passes over the CFG. We visit the blocks in reverse postorder. Each time a redundant
  * phi is encountered we add a mapping (eg x2 -> x1) to a rewrite table. Subsequent instructions, terminals,
  * and phis rewrite all their identifiers based on this table. The algorithm loops over the CFG repeatedly
