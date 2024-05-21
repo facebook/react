@@ -55,7 +55,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: VisitorState
+    state: VisitorState,
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
@@ -67,7 +67,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     fn: ReactiveFunction,
-    state: VisitorState
+    state: VisitorState,
   ): void {
     for (const operand of fn.params) {
       const place = operand.kind === "Identifier" ? operand : operand.place;
@@ -84,7 +84,7 @@ class CollectJsxTagsVisitor extends ReactiveFunctionVisitor<JsxExpressionTags> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: JsxExpressionTags
+    state: JsxExpressionTags,
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === "JsxExpression" && value.tag.kind === "Identifier") {

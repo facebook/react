@@ -7,7 +7,7 @@ function useFoo() {
       function () {
         someGlobal();
       },
-    []
+    [],
   );
   useEffect(() => {
     fn();

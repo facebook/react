@@ -54,7 +54,7 @@ export class IdentifierState {
 
   declareTemporary(lvalue: Place, value: Place): void {
     const resolved: ReactiveScopeDependency = this.properties.get(
-      value.identifier
+      value.identifier,
     ) ?? {
       identifier: value.identifier,
       path: [],
@@ -79,7 +79,7 @@ export default function analyseFunctions(func: HIRFunction): void {
           state.declareProperty(
             instr.lvalue,
             instr.value.object,
-            instr.value.property
+            instr.value.property,
           );
           break;
         }
@@ -117,7 +117,7 @@ function lower(func: HIRFunction): void {
 function infer(
   loweredFunc: LoweredFunction,
   state: IdentifierState,
-  context: Array<Place>
+  context: Array<Place>,
 ): void {
   const mutations = new Map<string, Effect>();
   for (const operand of loweredFunc.func.context) {

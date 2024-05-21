@@ -77,7 +77,7 @@ export type ReactiveInstructionStatement = {
 };
 
 export type ReactiveTerminalStatement<
-  Tterminal extends ReactiveTerminal = ReactiveTerminal
+  Tterminal extends ReactiveTerminal = ReactiveTerminal,
 > = {
   kind: "terminal";
   terminal: Tterminal;
@@ -158,14 +158,14 @@ export type ReactiveTerminal =
   | ReactiveTryTerminal;
 
 function _staticInvariantReactiveTerminalHasLocation(
-  terminal: ReactiveTerminal
+  terminal: ReactiveTerminal,
 ): SourceLocation {
   // If this fails, it is because a variant of ReactiveTerminal is missing a .loc - add it!
   return terminal.loc;
 }
 
 function _staticInvariantReactiveTerminalHasInstructionId(
-  terminal: ReactiveTerminal
+  terminal: ReactiveTerminal,
 ): InstructionId {
   // If this fails, it is because a variant of ReactiveTerminal is missing a .id - add it!
   return terminal.id;
@@ -366,21 +366,21 @@ export type Terminal =
 export type TerminalWithFallthrough = Terminal & { fallthrough: BlockId };
 
 function _staticInvariantTerminalHasLocation(
-  terminal: Terminal
+  terminal: Terminal,
 ): SourceLocation {
   // If this fails, it is because a variant of Terminal is missing a .loc - add it!
   return terminal.loc;
 }
 
 function _staticInvariantTerminalHasInstructionId(
-  terminal: Terminal
+  terminal: Terminal,
 ): InstructionId {
   // If this fails, it is because a variant of Terminal is missing a .id - add it!
   return terminal.id;
 }
 
 function _staticInvariantTerminalHasFallthrough(
-  terminal: Terminal
+  terminal: Terminal,
 ): BlockId | never | undefined {
   // If this fails, it is because a variant of Terminal is missing a fallthrough annotation
   return terminal.fallthrough;
@@ -704,7 +704,7 @@ export enum InstructionKind {
 }
 
 function _staticInvariantInstructionValueHasLocation(
-  value: InstructionValue
+  value: InstructionValue,
 ): SourceLocation {
   // If this fails, it is because a variant of InstructionValue is missing a .loc - add it!
   return value.loc;
@@ -1281,7 +1281,7 @@ export enum Effect {
 
 export function isMutableEffect(
   effect: Effect,
-  location: SourceLocation
+  location: SourceLocation,
 ): boolean {
   switch (effect) {
     case Effect.Capture:
@@ -1496,7 +1496,7 @@ export function isUseOperator(id: Identifier): boolean {
 
 export function getHookKindForType(
   env: Environment,
-  type: Type
+  type: Type,
 ): HookKind | null {
   if (type.kind === "Function") {
     const signature = env.getFunctionSignature(type);

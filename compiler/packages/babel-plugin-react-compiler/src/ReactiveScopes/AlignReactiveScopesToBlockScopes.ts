@@ -105,7 +105,7 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
         for (let i = prevScopeCount; i < scopes.length; i++) {
           const scope = scopes[i];
           scope.scope.range.start = makeInstructionId(
-            Math.min(instr.id, scope.scope.range.start)
+            Math.min(instr.id, scope.scope.range.start),
           );
         }
         break;

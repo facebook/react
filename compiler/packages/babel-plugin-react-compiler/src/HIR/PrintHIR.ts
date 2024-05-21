@@ -101,7 +101,7 @@ export function printHIR(ir: HIR, options: Options | null = null): string {
 }
 
 export function printMixedHIR(
-  value: Instruction | InstructionValue | Terminal
+  value: Instruction | InstructionValue | Terminal,
 ): string {
   if (!("kind" in value)) {
     return printInstruction(value);
@@ -293,7 +293,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${terminal as any as Terminal}\``
+        `Unexpected terminal kind \`${terminal as any as Terminal}\``,
       );
     }
   }
@@ -340,8 +340,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
           if (property.kind === "ObjectProperty") {
             properties.push(
               `${printObjectPropertyKey(property.key)}: ${printPlace(
-                property.place
-              )}`
+                property.place,
+              )}`,
             );
           } else {
             properties.push(`...${printPlace(property.place)}`);
@@ -375,7 +375,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "MethodCall": {
       value = `MethodCall ${printPlace(instrValue.receiver)}.${printPlace(
-        instrValue.property
+        instrValue.property,
       )}(${instrValue.args.map((arg) => printPattern(arg)).join(", ")})`;
       break;
     }
@@ -393,7 +393,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "TypeCastExpression": {
       value = `TypeCast ${printPlace(instrValue.value)}: ${printType(
-        instrValue.type
+        instrValue.type,
       )}`;
       break;
     }
@@ -404,7 +404,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
           propItems.push(
             `${attribute.name}={${
               attribute.place !== null ? printPlace(attribute.place) : "<empty>"
-            }}`
+            }}`,
           );
         } else {
           propItems.push(`...${printPlace(attribute.argument)}`);
@@ -443,19 +443,19 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "DeclareLocal": {
       value = `DeclareLocal ${instrValue.lvalue.kind} ${printPlace(
-        instrValue.lvalue.place
+        instrValue.lvalue.place,
       )}`;
       break;
     }
     case "DeclareContext": {
       value = `DeclareContext ${instrValue.lvalue.kind} ${printPlace(
-        instrValue.lvalue.place
+        instrValue.lvalue.place,
       )}`;
       break;
     }
     case "StoreLocal": {
       value = `StoreLocal ${instrValue.lvalue.kind} ${printPlace(
-        instrValue.lvalue.place
+        instrValue.lvalue.place,
       )} = ${printPlace(instrValue.value)}`;
       break;
     }
@@ -465,13 +465,13 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "StoreContext": {
       value = `StoreContext ${instrValue.lvalue.kind} ${printPlace(
-        instrValue.lvalue.place
+        instrValue.lvalue.place,
       )} = ${printPlace(instrValue.value)}`;
       break;
     }
     case "Destructure": {
       value = `Destructure ${instrValue.lvalue.kind} ${printPattern(
-        instrValue.lvalue.pattern
+        instrValue.lvalue.pattern,
       )} = ${printPlace(instrValue.value)}`;
       break;
     }
@@ -495,19 +495,19 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "ComputedLoad": {
       value = `ComputedLoad ${printPlace(instrValue.object)}[${printPlace(
-        instrValue.property
+        instrValue.property,
       )}]`;
       break;
     }
     case "ComputedStore": {
       value = `ComputedStore ${printPlace(instrValue.object)}[${printPlace(
-        instrValue.property
+        instrValue.property,
       )}] = ${printPlace(instrValue.value)}`;
       break;
     }
     case "ComputedDelete": {
       value = `ComputedDelete ${printPlace(instrValue.object)}[${printPlace(
-        instrValue.property
+        instrValue.property,
       )}]`;
       break;
     }
@@ -555,7 +555,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = [
         `Sequence`,
         ...instrValue.instructions.map(
-          (instr) => `    ${printInstruction(instr)}`
+          (instr) => `    ${printInstruction(instr)}`,
         ),
         `    ${printInstructionValue(instrValue.value)}`,
       ].join("\n");
@@ -563,9 +563,9 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "ConditionalExpression": {
       value = `Ternary ${printInstructionValue(
-        instrValue.test
+        instrValue.test,
       )} ? ${printInstructionValue(
-        instrValue.consequent
+        instrValue.consequent,
       )} : ${printInstructionValue(instrValue.alternate)}`;
       break;
     }
@@ -578,7 +578,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
           description: null,
           loc: instrValue.loc,
           suggestions: null,
-        }
+        },
       );
       for (let i = 0; i < instrValue.subexprs.length; i++) {
         value += instrValue.quasis[i].raw;
@@ -593,7 +593,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "StoreGlobal": {
       value = `StoreGlobal ${instrValue.name} = ${printPlace(
-        instrValue.value
+        instrValue.value,
       )}`;
       break;
     }
@@ -615,7 +615,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "IteratorNext": {
       value = `IteratorNext iterator=${printPlace(
-        instrValue.iterator
+        instrValue.iterator,
       )} collection=${printPlace(instrValue.collection)}`;
       break;
     }
@@ -629,7 +629,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "PostfixUpdate": {
       value = `PostfixUpdate ${printPlace(instrValue.lvalue)} = ${printPlace(
-        instrValue.value
+        instrValue.value,
       )} ${instrValue.operation}`;
       break;
     }
@@ -659,7 +659,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         instrValue,
         `Unexpected instruction kind '${
           (instrValue as any as InstructionValue).kind
-        }'`
+        }'`,
       );
     }
   }
@@ -738,7 +738,7 @@ export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
             switch (item.kind) {
               case "ObjectProperty": {
                 return `${printObjectPropertyKey(item.key)}: ${printPattern(
-                  item.place
+                  item.place,
                 )}`;
               }
               case "Spread": {
@@ -762,7 +762,7 @@ export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -797,7 +797,7 @@ function printScope(scope: ReactiveScope | null): string {
 
 export function printManualMemoDependency(
   val: ManualMemoDependency,
-  nameOnly: boolean
+  nameOnly: boolean,
 ): string {
   let rootStr;
   if (val.root.kind === "Global") {
@@ -847,7 +847,7 @@ export function printAliases(aliases: DisjointSet<Identifier>): string {
 
 function getFunctionName(
   instrValue: ObjectMethod | FunctionExpression,
-  defaultValue: string
+  defaultValue: string,
 ): string {
   switch (instrValue.kind) {
     case "FunctionExpression":

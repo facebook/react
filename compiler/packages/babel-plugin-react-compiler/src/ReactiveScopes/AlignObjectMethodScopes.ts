@@ -43,7 +43,7 @@ function findScopesToMerge(fn: HIRFunction): DisjointSet<ReactiveScope> {
                   "Internal error: Expected all ObjectExpressions and ObjectMethods to have non-null scope.",
                 suggestions: null,
                 loc: GeneratedSource,
-              }
+              },
             );
             mergeScopesBuilder.union([operandScope, lvalueScope]);
           }
@@ -74,10 +74,10 @@ export function alignObjectMethodScopes(fn: HIRFunction): void {
   for (const [scope, root] of scopeGroupsMap) {
     if (scope !== root) {
       root.range.start = makeInstructionId(
-        Math.min(scope.range.start, root.range.start)
+        Math.min(scope.range.start, root.range.start),
       );
       root.range.end = makeInstructionId(
-        Math.max(scope.range.end, root.range.end)
+        Math.max(scope.range.end, root.range.end),
       );
     }
   }
