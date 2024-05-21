@@ -25,6 +25,7 @@ import {
   Effect,
   FunctionType,
   IdentifierId,
+  NonLocalBinding,
   PolyType,
   ScopeId,
   Type,
@@ -511,7 +512,8 @@ export class Environment {
     return this.#hoistedIdentifiers.has(node);
   }
 
-  getGlobalDeclaration(name: string): Global | null {
+  getGlobalDeclaration(binding: NonLocalBinding): Global | null {
+    const name = binding.name;
     let resolvedName = name;
 
     if (this.config.hookPattern != null) {
@@ -534,6 +536,7 @@ export class Environment {
         log(() => `Undefined global \`${name}\``);
       }
     }
+
     return resolvedGlobal;
   }
 
