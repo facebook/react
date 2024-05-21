@@ -33,44 +33,23 @@ import { c as _c } from "react/compiler-runtime";
 import { useState } from "react";
 
 function Component() {
-  const $ = _c(8);
+  const $ = _c(2);
   const [count, setCount] = useState(0);
   let t0;
-  let t1;
   if ($[0] !== count) {
-    t0 = <button onClick={() => setCount(count - 1)}>Decrement</button>;
-
-    t1 = () => setCount(count + 1);
-    $[0] = count;
-    $[1] = t0;
-    $[2] = t1;
-  } else {
-    t0 = $[1];
-    t1 = $[2];
-  }
-  let t2;
-  if ($[3] !== t1) {
-    t2 = <button onClick={t1}>Increment</button>;
-    $[3] = t1;
-    $[4] = t2;
-  } else {
-    t2 = $[4];
-  }
-  let t3;
-  if ($[5] !== t0 || $[6] !== t2) {
-    t3 = (
+    t0 = (
       <div>
-        {t0}
-        {t2}
+        <button onClick={() => setCount(count - 1)}>Decrement</button>
+
+        <button onClick={() => setCount(count + 1)}>Increment</button>
       </div>
     );
-    $[5] = t0;
-    $[6] = t2;
-    $[7] = t3;
+    $[0] = count;
+    $[1] = t0;
   } else {
-    t3 = $[7];
+    t0 = $[1];
   }
-  return t3;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
