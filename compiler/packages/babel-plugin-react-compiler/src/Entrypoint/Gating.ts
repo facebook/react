@@ -17,12 +17,12 @@ export function insertGatedFunctionDeclaration(
     | t.FunctionDeclaration
     | t.ArrowFunctionExpression
     | t.FunctionExpression,
-  gating: NonNullable<PluginOptions["gating"]>
+  gating: NonNullable<PluginOptions["gating"]>,
 ): NodePath<t.ConditionalExpression | t.VariableDeclaration> {
   const gatingExpression = t.conditionalExpression(
     t.callExpression(t.identifier(gating.importSpecifierName), []),
     buildFunctionExpression(compiled),
-    buildFunctionExpression(fnPath.node)
+    buildFunctionExpression(fnPath.node),
   );
 
   let compiledFn;
@@ -40,7 +40,7 @@ export function insertGatedFunctionDeclaration(
     compiledFn = fnPath.replaceWith(
       t.variableDeclaration("const", [
         t.variableDeclarator(fnPath.node.id, gatingExpression),
-      ])
+      ]),
     )[0];
   } else {
     compiledFn = fnPath.replaceWith(gatingExpression)[0];
@@ -50,7 +50,10 @@ export function insertGatedFunctionDeclaration(
 }
 
 function buildFunctionExpression(
-  node: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  node:
+    | t.FunctionDeclaration
+    | t.ArrowFunctionExpression
+    | t.FunctionExpression,
 ): t.ArrowFunctionExpression | t.FunctionExpression {
   if (
     node.type === "ArrowFunctionExpression" ||

@@ -79,7 +79,7 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
       env: fn.env,
     },
     pushStartScopeTerminal,
-    pushEndScopeTerminal
+    pushEndScopeTerminal,
   );
 
   /**
@@ -190,7 +190,7 @@ type ScopeTraversalContext = {
 
 function pushStartScopeTerminal(
   scope: ReactiveScope,
-  context: ScopeTraversalContext
+  context: ScopeTraversalContext,
 ): void {
   const blockId = context.env.nextBlockId;
   const fallthroughId = context.env.nextBlockId;
@@ -206,7 +206,7 @@ function pushStartScopeTerminal(
 
 function pushEndScopeTerminal(
   scope: ReactiveScope,
-  context: ScopeTraversalContext
+  context: ScopeTraversalContext,
 ): void {
   const fallthroughId = context.fallthroughs.get(scope.id);
   CompilerError.invariant(fallthroughId != null, {
@@ -248,7 +248,7 @@ type RewriteContext = {
 function handleRewrite(
   terminalInfo: TerminalRewriteInfo,
   idx: number,
-  context: RewriteContext
+  context: RewriteContext,
 ): void {
   // TODO make consistent instruction IDs instead of reusing
   const terminal: ReactiveScopeTerminal | GotoTerminal =

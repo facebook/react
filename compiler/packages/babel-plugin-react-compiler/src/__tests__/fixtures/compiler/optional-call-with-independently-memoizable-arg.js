@@ -7,7 +7,7 @@ function Component(props) {
   const y = x?.(
     <div>
       <span>{props.text}</span>
-    </div>
+    </div>,
   );
   return y;
 }

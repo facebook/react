@@ -11,7 +11,7 @@ export default function todo(message: string): never {
 
 export function todoInvariant(
   condition: unknown,
-  message: string
+  message: string,
 ): asserts condition {
   if (!condition) {
     throw new Error("TODO: " + message);

@@ -37,7 +37,7 @@ class Transform extends ReactiveFunctionTransform<State> {
   }
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    _state: State
+    _state: State,
   ): Transformed<ReactiveStatement> {
     const scopeState: State = { hasReturnStatement: false };
     this.visitScope(scopeBlock, scopeState);

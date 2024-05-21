@@ -72,7 +72,7 @@ import { retainWhere } from "../Utils/utils";
  *    block (code following the CallExpression).
  */
 export function inlineImmediatelyInvokedFunctionExpressions(
-  fn: HIRFunction
+  fn: HIRFunction,
 ): void {
   // Track all function expressions that are assigned to a temporary
   const functions = new Map<IdentifierId, FunctionExpression>();
@@ -193,7 +193,7 @@ export function inlineImmediatelyInvokedFunctionExpressions(
     for (const [, block] of fn.body.blocks) {
       retainWhere(
         block.instructions,
-        (instr) => !inlinedFunctions.has(instr.lvalue.identifier.id)
+        (instr) => !inlinedFunctions.has(instr.lvalue.identifier.id),
       );
     }
 
@@ -216,7 +216,7 @@ function rewriteBlock(
   env: Environment,
   block: BasicBlock,
   returnTarget: BlockId,
-  returnValue: Place
+  returnValue: Place,
 ): void {
   const { terminal } = block;
   if (terminal.kind !== "return") {
@@ -261,7 +261,7 @@ function rewriteBlock(
 function declareTemporary(
   env: Environment,
   block: BasicBlock,
-  result: Place
+  result: Place,
 ): void {
   block.instructions.push({
     id: makeInstructionId(0),

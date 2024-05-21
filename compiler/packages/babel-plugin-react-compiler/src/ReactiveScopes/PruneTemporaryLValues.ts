@@ -34,7 +34,7 @@ class Visitor extends ReactiveFunctionVisitor<LValues> {
   }
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: LValues
+    state: LValues,
   ): void {
     this.traverseInstruction(instruction, state);
     if (

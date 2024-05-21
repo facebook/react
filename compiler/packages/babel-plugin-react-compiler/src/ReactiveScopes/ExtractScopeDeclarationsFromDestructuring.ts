@@ -74,7 +74,7 @@ import {
  *
  */
 export function extractScopeDeclarationsFromDestructuring(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): void {
   const state = new State(fn.env);
   visitReactiveFunction(fn, new Visitor(), state);
@@ -99,7 +99,7 @@ class Visitor extends ReactiveFunctionTransform<State> {
 
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: State
+    state: State,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
 
@@ -107,7 +107,7 @@ class Visitor extends ReactiveFunctionTransform<State> {
       const transformed = transformDestructuring(
         state,
         instruction,
-        instruction.value
+        instruction.value,
       );
       if (transformed) {
         return {
@@ -126,7 +126,7 @@ class Visitor extends ReactiveFunctionTransform<State> {
 function transformDestructuring(
   state: State,
   instr: ReactiveInstruction,
-  destructure: Destructure
+  destructure: Destructure,
 ): null | Array<ReactiveInstruction> {
   let reassigned: Set<IdentifierId> = new Set();
   let hasDeclaration = false;

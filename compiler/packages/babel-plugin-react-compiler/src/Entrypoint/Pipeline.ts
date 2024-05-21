@@ -107,7 +107,7 @@ export function* run(
   useMemoCacheIdentifier: string,
   logger: Logger | null,
   filename: string | null,
-  code: string | null
+  code: string | null,
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(
@@ -117,7 +117,7 @@ export function* run(
     logger,
     filename,
     code,
-    useMemoCacheIdentifier
+    useMemoCacheIdentifier,
   );
   yield {
     kind: "debug",
@@ -136,7 +136,7 @@ function* runWithEnvironment(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  env: Environment
+  env: Environment,
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
@@ -457,7 +457,7 @@ export function compileFn(
   useMemoCacheIdentifier: string,
   logger: Logger | null,
   filename: string | null,
-  code: string | null
+  code: string | null,
 ): CodegenFunction {
   let generator = run(
     func,
@@ -466,7 +466,7 @@ export function compileFn(
     useMemoCacheIdentifier,
     logger,
     filename,
-    code
+    code,
   );
   while (true) {
     const next = generator.next();

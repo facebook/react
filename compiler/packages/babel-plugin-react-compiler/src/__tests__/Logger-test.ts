@@ -22,7 +22,7 @@ it("logs succesful compilation", () => {
     "function Component(props) { return <div>{props}</div> }",
     "test.js",
     "flow",
-    { logger, panicThreshold: "all_errors" }
+    { logger, panicThreshold: "all_errors" },
   );
 
   const [filename, event] = logs.at(0)!;
@@ -47,7 +47,7 @@ it("logs failed compilation", () => {
       "function Component(props) { props.foo = 1; return <div>{props}</div> }",
       "test.js",
       "flow",
-      { logger, panicThreshold: "all_errors" }
+      { logger, panicThreshold: "all_errors" },
     );
   }).toThrow();
 

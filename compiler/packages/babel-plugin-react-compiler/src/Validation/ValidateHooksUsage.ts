@@ -95,7 +95,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
 
   function recordError(
     loc: SourceLocation,
-    errorDetail: CompilerErrorDetail
+    errorDetail: CompilerErrorDetail,
   ): void {
     if (typeof loc === "symbol") {
       errors.pushErrorDetail(errorDetail);
@@ -126,7 +126,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
           suggestions: null,
-        })
+        }),
       );
     }
   }
@@ -143,7 +143,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
           suggestions: null,
-        })
+        }),
       );
     }
   }
@@ -160,7 +160,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
           suggestions: null,
-        })
+        }),
       );
     }
   }
@@ -242,7 +242,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           visitPlace(instr.value.value);
           const kind = joinKinds(
             getKindForPlace(instr.value.value),
-            getKindForPlace(instr.value.lvalue.place)
+            getKindForPlace(instr.value.lvalue.place),
           );
           setKind(instr.value.lvalue.place, kind);
           setKind(instr.lvalue, kind);
@@ -383,7 +383,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
               default: {
                 assertExhaustive(
                   objectKind,
-                  `Unexpected kind \`${objectKind}\``
+                  `Unexpected kind \`${objectKind}\``,
                 );
               }
             }
@@ -450,7 +450,7 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
                 loc: callee.loc,
                 description: `Cannot call ${hookKind} within a function component`,
                 suggestions: null,
-              })
+              }),
             );
           }
           break;
