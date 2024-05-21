@@ -209,7 +209,7 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
         });
 
         // different global values, can't constant propogate
-        if (operandValue.name !== value.name) {
+        if (operandValue.binding.name !== value.binding.name) {
           return null;
         }
         break;
