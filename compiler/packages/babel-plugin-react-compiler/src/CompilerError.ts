@@ -116,7 +116,7 @@ export class CompilerError extends Error {
 
   static invariant(
     condition: unknown,
-    options: Omit<CompilerErrorDetailOptions, "severity">
+    options: Omit<CompilerErrorDetailOptions, "severity">,
   ): asserts condition {
     if (!condition) {
       const errors = new CompilerError();
@@ -124,57 +124,57 @@ export class CompilerError extends Error {
         new CompilerErrorDetail({
           ...options,
           severity: ErrorSeverity.Invariant,
-        })
+        }),
       );
       throw errors;
     }
   }
 
   static throwTodo(
-    options: Omit<CompilerErrorDetailOptions, "severity">
+    options: Omit<CompilerErrorDetailOptions, "severity">,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
-      new CompilerErrorDetail({ ...options, severity: ErrorSeverity.Todo })
+      new CompilerErrorDetail({ ...options, severity: ErrorSeverity.Todo }),
     );
     throw errors;
   }
 
   static throwInvalidJS(
-    options: Omit<CompilerErrorDetailOptions, "severity">
+    options: Omit<CompilerErrorDetailOptions, "severity">,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         ...options,
         severity: ErrorSeverity.InvalidJS,
-      })
+      }),
     );
     throw errors;
   }
 
   static throwInvalidReact(
-    options: Omit<CompilerErrorDetailOptions, "severity">
+    options: Omit<CompilerErrorDetailOptions, "severity">,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         ...options,
         severity: ErrorSeverity.InvalidReact,
-      })
+      }),
     );
     throw errors;
   }
 
   static throwInvalidConfig(
-    options: Omit<CompilerErrorDetailOptions, "severity">
+    options: Omit<CompilerErrorDetailOptions, "severity">,
   ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({
         ...options,
         severity: ErrorSeverity.InvalidConfig,
-      })
+      }),
     );
     throw errors;
   }

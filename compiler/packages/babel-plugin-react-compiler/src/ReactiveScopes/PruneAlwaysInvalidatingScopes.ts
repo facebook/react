@@ -38,7 +38,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
 
   override transformInstruction(
     instruction: ReactiveInstruction,
-    withinScope: boolean
+    withinScope: boolean,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, withinScope);
 
@@ -87,7 +87,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
 
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    _withinScope: boolean
+    _withinScope: boolean,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, true);
 

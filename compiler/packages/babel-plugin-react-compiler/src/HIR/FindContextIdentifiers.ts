@@ -35,7 +35,7 @@ type FindContextIdentifierState = {
 const withFunctionScope = {
   enter: function (
     path: BabelFunction,
-    state: FindContextIdentifierState
+    state: FindContextIdentifierState,
   ): void {
     state.currentFn.push(path);
   },
@@ -45,7 +45,7 @@ const withFunctionScope = {
 };
 
 export function findContextIdentifiers(
-  func: NodePath<t.Function>
+  func: NodePath<t.Function>,
 ): Set<t.Identifier> {
   const state: FindContextIdentifierState = {
     currentFn: [],
@@ -60,7 +60,7 @@ export function findContextIdentifiers(
       ObjectMethod: withFunctionScope,
       AssignmentExpression(
         path: NodePath<t.AssignmentExpression>,
-        state: FindContextIdentifierState
+        state: FindContextIdentifierState,
       ): void {
         const left = path.get("left");
         const currentFn = state.currentFn.at(-1) ?? null;
@@ -68,7 +68,7 @@ export function findContextIdentifiers(
       },
       UpdateExpression(
         path: NodePath<t.UpdateExpression>,
-        state: FindContextIdentifierState
+        state: FindContextIdentifierState,
       ): void {
         const argument = path.get("argument");
         const currentFn = state.currentFn.at(-1) ?? null;
@@ -78,7 +78,7 @@ export function findContextIdentifiers(
       },
       Identifier(
         path: NodePath<t.Identifier>,
-        state: FindContextIdentifierState
+        state: FindContextIdentifierState,
       ): void {
         const currentFn = state.currentFn.at(-1) ?? null;
         if (path.isReferencedIdentifier()) {
@@ -86,7 +86,7 @@ export function findContextIdentifiers(
         }
       },
     },
-    state
+    state,
   );
 
   const result = new Set<t.Identifier>();
@@ -103,7 +103,7 @@ export function findContextIdentifiers(
 function handleIdentifier(
   currentFn: BabelFunction | null,
   identifiers: Map<t.Identifier, IdentifierInfo>,
-  path: NodePath<t.Identifier>
+  path: NodePath<t.Identifier>,
 ): void {
   const name = path.node.name;
   const binding = path.scope.getBinding(name);
@@ -126,7 +126,7 @@ function handleIdentifier(
 function handleAssignment(
   currentFn: BabelFunction | null,
   identifiers: Map<t.Identifier, IdentifierInfo>,
-  lvalPath: NodePath<t.LVal>
+  lvalPath: NodePath<t.LVal>,
 ): void {
   /*
    * Find all reassignments to identifiers declared outside of currentFn
@@ -215,7 +215,7 @@ function handleAssignment(
 }
 
 function nonNull<T extends NonNullable<t.Node>>(
-  t: NodePath<T | null>
+  t: NodePath<T | null>,
 ): t is NodePath<T> {
   return t.node != null;
 }

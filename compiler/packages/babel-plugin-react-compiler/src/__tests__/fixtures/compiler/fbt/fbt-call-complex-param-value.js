@@ -4,7 +4,7 @@ import { identity } from "shared-runtime";
 function Component(props) {
   const text = fbt(
     `Hello, ${fbt.param("(key) name", identity(props.name))}!`,
-    "(description) Greeting"
+    "(description) Greeting",
   );
   return <div>{text}</div>;
 }

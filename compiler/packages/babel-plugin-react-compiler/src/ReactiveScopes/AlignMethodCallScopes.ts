@@ -57,10 +57,10 @@ export function alignMethodCallScopes(fn: HIRFunction): void {
       return;
     }
     root.range.start = makeInstructionId(
-      Math.min(scope.range.start, root.range.start)
+      Math.min(scope.range.start, root.range.start),
     );
     root.range.end = makeInstructionId(
-      Math.max(scope.range.end, root.range.end)
+      Math.max(scope.range.end, root.range.end),
     );
   });
 

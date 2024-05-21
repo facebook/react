@@ -34,7 +34,7 @@ export function computeDominatorTree(fn: HIRFunction): Dominator<BlockId> {
  */
 export function computePostDominatorTree(
   fn: HIRFunction,
-  options: { includeThrowsAsExitNode: boolean }
+  options: { includeThrowsAsExitNode: boolean },
 ): PostDominator<BlockId> {
   const graph = buildReverseGraph(fn, options.includeThrowsAsExitNode);
   const nodes = computeImmediateDominators(graph);
@@ -237,7 +237,7 @@ function buildGraph(fn: HIRFunction): Graph<BlockId> {
  */
 function buildReverseGraph(
   fn: HIRFunction,
-  includeThrowsAsExitNode: boolean
+  includeThrowsAsExitNode: boolean,
 ): Graph<BlockId> {
   const nodes: Map<BlockId, Node<BlockId>> = new Map();
   const exitId = fn.env.nextBlockId;

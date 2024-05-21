@@ -13,7 +13,7 @@ import { getOrInsertDefault } from "../Utils/utils";
 
 export function addImportsToProgram(
   path: NodePath<t.Program>,
-  importList: Array<ExternalFunction>
+  importList: Array<ExternalFunction>,
 ): void {
   const identifiers: Set<string> = new Set();
   const sortedImports: Map<string, Array<string>> = new Map();
@@ -35,14 +35,14 @@ export function addImportsToProgram(
         description: null,
         loc: GeneratedSource,
         suggestions: null,
-      }
+      },
     );
     identifiers.add(importSpecifierName);
 
     const importSpecifierNameList = getOrInsertDefault(
       sortedImports,
       source,
-      []
+      [],
     );
     importSpecifierNameList.push(importSpecifierName);
   }
@@ -65,7 +65,7 @@ export function addImportsToProgram(
  */
 function isNonNamespacedImport(
   importDeclPath: NodePath<t.ImportDeclaration>,
-  moduleName: string
+  moduleName: string,
 ): boolean {
   return (
     importDeclPath.get("source").node.value === moduleName &&
@@ -79,7 +79,7 @@ function isNonNamespacedImport(
 
 function hasExistingNonNamespacedImportOfModule(
   program: NodePath<t.Program>,
-  moduleName: string
+  moduleName: string,
 ): boolean {
   let hasExistingImport = false;
   program.traverse({
@@ -100,7 +100,7 @@ function hasExistingNonNamespacedImportOfModule(
 function addMemoCacheFunctionSpecifierToExistingImport(
   program: NodePath<t.Program>,
   moduleName: string,
-  identifierName: string
+  identifierName: string,
 ): boolean {
   let didInsertUseMemoCache = false;
   program.traverse({
@@ -111,7 +111,7 @@ function addMemoCacheFunctionSpecifierToExistingImport(
       ) {
         importDeclPath.pushContainer(
           "specifiers",
-          t.importSpecifier(t.identifier(identifierName), t.identifier("c"))
+          t.importSpecifier(t.identifier(identifierName), t.identifier("c")),
         );
         didInsertUseMemoCache = true;
       }
@@ -123,7 +123,7 @@ function addMemoCacheFunctionSpecifierToExistingImport(
 export function updateMemoCacheFunctionImport(
   program: NodePath<t.Program>,
   moduleName: string,
-  useMemoCacheIdentifier: string
+  useMemoCacheIdentifier: string,
 ): void {
   /*
    * If there isn't already an import of * as React, insert it so useMemoCache doesn't
@@ -131,25 +131,25 @@ export function updateMemoCacheFunctionImport(
    */
   const hasExistingImport = hasExistingNonNamespacedImportOfModule(
     program,
-    moduleName
+    moduleName,
   );
 
   if (hasExistingImport) {
     const didUpdateImport = addMemoCacheFunctionSpecifierToExistingImport(
       program,
       moduleName,
-      useMemoCacheIdentifier
+      useMemoCacheIdentifier,
     );
     if (!didUpdateImport) {
       throw new Error(
-        `Expected an ImportDeclaration of \`${moduleName}\` in order to update ImportSpecifiers with useMemoCache`
+        `Expected an ImportDeclaration of \`${moduleName}\` in order to update ImportSpecifiers with useMemoCache`,
       );
     }
   } else {
     addMemoCacheFunctionImportDeclaration(
       program,
       moduleName,
-      useMemoCacheIdentifier
+      useMemoCacheIdentifier,
     );
   }
 }
@@ -157,13 +157,13 @@ export function updateMemoCacheFunctionImport(
 function addMemoCacheFunctionImportDeclaration(
   program: NodePath<t.Program>,
   moduleName: string,
-  localName: string
+  localName: string,
 ): void {
   program.unshiftContainer(
     "body",
     t.importDeclaration(
       [t.importSpecifier(t.identifier(localName), t.identifier("c"))],
-      t.stringLiteral(moduleName)
-    )
+      t.stringLiteral(moduleName),
+    ),
   );
 }
