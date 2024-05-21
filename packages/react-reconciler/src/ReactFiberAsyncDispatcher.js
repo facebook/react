@@ -16,7 +16,7 @@ import {CacheContext} from './ReactFiberCacheComponent';
 
 import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
-import {current as currentOwner} from 'react-reconciler/src/ReactCurrentFiber';
+import {current as currentOwner} from './ReactCurrentFiber';
 
 function getCacheForType<T>(resourceType: () => T): T {
   if (!enableCache) {
