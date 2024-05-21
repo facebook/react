@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b7b2f662c5835954130899d62b8c2425>>
+ * @generated SignedSource<<41909aca302c98b3f31b275cee319e39>>
  */
 
 'use strict';
@@ -4954,6 +4954,7 @@ var clearSuspenseBoundaryFromContainer = shim$1;
 function shim() {
   throw new Error('The current renderer does not support Resources. ' + 'This error is likely caused by a bug in React. ' + 'Please file an issue.');
 } // Resources (when unsupported)
+var preloadResource = shim;
 var suspendResource = shim;
 
 var getViewConfigForType = ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get; // Unused
@@ -5249,7 +5250,7 @@ function unhideTextInstance(textInstance, text) {
   throw new Error('Not yet implemented.');
 }
 function preloadInstance(type, props) {
-  // Return true to indicate it's already loaded
+  // Return false to indicate it's already loaded
   return true;
 }
 function waitForCommitToBeReady() {
@@ -23013,7 +23014,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
 function commitRootWhenReady(root, finishedWork, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, lanes, spawnedLane) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
-  if (includesOnlyNonUrgentLanes(lanes)) {
+  if (finishedWork.subtreeFlags & ShouldSuspendCommit) {
     // the suspensey resources. The renderer is responsible for accumulating
     // all the load events. This all happens in a single synchronous
     // transaction, so it track state in its own module scope.
@@ -23837,9 +23838,16 @@ function renderRootConcurrent(root, lanes) {
 
           case SuspendedOnInstanceAndReadyToContinue:
             {
+              var resource = null;
+
               switch (workInProgress.tag) {
-                case HostComponent:
                 case HostHoistable:
+                  {
+                    resource = workInProgress.memoizedState;
+                  }
+                // intentional fallthrough
+
+                case HostComponent:
                 case HostSingleton:
                   {
                     // Before unwinding the stack, check one more time if the
@@ -23850,7 +23858,7 @@ function renderRootConcurrent(root, lanes) {
                     var hostFiber = workInProgress;
                     var type = hostFiber.type;
                     var props = hostFiber.pendingProps;
-                    var isReady = preloadInstance(type, props);
+                    var isReady = resource ? preloadResource(resource) : preloadInstance(type, props);
 
                     if (isReady) {
                       // The data resolved. Resume the work loop as if nothing
@@ -26384,7 +26392,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-4c4395fb';
+var ReactVersion = '19.0.0-rc-a63abc4e';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

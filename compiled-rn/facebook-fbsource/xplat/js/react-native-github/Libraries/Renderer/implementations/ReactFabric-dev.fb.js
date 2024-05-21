@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d18444af705bdf41cb8fd0822b9f61d9>>
+ * @generated SignedSource<<c3dfb8294efc9a95c7b084ad29cac4c4>>
  */
 
 'use strict';
@@ -4167,6 +4167,7 @@ var registerSuspenseInstanceRetry = shim$1;
 function shim() {
   throw new Error('The current renderer does not support Resources. ' + 'This error is likely caused by a bug in React. ' + 'Please file an issue.');
 } // Resources (when unsupported)
+var preloadResource = shim;
 var suspendResource = shim;
 
 var _nativeFabricUIManage = nativeFabricUIManager,
@@ -22663,7 +22664,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
 function commitRootWhenReady(root, finishedWork, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, lanes, spawnedLane) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
-  if (includesOnlyNonUrgentLanes(lanes)) {
+  if (finishedWork.subtreeFlags & ShouldSuspendCommit) {
     // the suspensey resources. The renderer is responsible for accumulating
     // all the load events. This all happens in a single synchronous
     // transaction, so it track state in its own module scope.
@@ -23487,9 +23488,16 @@ function renderRootConcurrent(root, lanes) {
 
           case SuspendedOnInstanceAndReadyToContinue:
             {
+              var resource = null;
+
               switch (workInProgress.tag) {
-                case HostComponent:
                 case HostHoistable:
+                  {
+                    resource = workInProgress.memoizedState;
+                  }
+                // intentional fallthrough
+
+                case HostComponent:
                 case HostSingleton:
                   {
                     // Before unwinding the stack, check one more time if the
@@ -23500,7 +23508,7 @@ function renderRootConcurrent(root, lanes) {
                     var hostFiber = workInProgress;
                     var type = hostFiber.type;
                     var props = hostFiber.pendingProps;
-                    var isReady = preloadInstance(type, props);
+                    var isReady = resource ? preloadResource(resource) : preloadInstance(type, props);
 
                     if (isReady) {
                       // The data resolved. Resume the work loop as if nothing
@@ -26034,7 +26042,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-7ae4ed4c';
+var ReactVersion = '19.0.0-rc-a8857e8e';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b0d18c08c1118339c7a6b1aa7f61bfde>>
+ * @generated SignedSource<<fc84f528a334e47ad6643d63ed2e7b4d>>
  */
 
 "use strict";
@@ -522,6 +522,11 @@ function lanesToEventPriority(lanes) {
 function shim$1() {
   throw Error(
     "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
+  );
+}
+function shim() {
+  throw Error(
+    "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue."
   );
 }
 var NO_CONTEXT = {},
@@ -7364,10 +7369,9 @@ function accumulateSuspenseyCommitOnFiber(fiber) {
   switch (fiber.tag) {
     case 26:
       recursivelyAccumulateSuspenseyCommit(fiber);
-      if (fiber.flags & suspenseyCommitFlag && null !== fiber.memoizedState)
-        throw Error(
-          "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue."
-        );
+      fiber.flags & suspenseyCommitFlag &&
+        null !== fiber.memoizedState &&
+        shim();
       break;
     case 5:
       recursivelyAccumulateSuspenseyCommit(fiber);
@@ -7774,7 +7778,8 @@ function commitRootWhenReady(
   lanes,
   spawnedLane
 ) {
-  0 === (lanes & 42) && accumulateSuspenseyCommitOnFiber(finishedWork);
+  finishedWork.subtreeFlags & 8192 &&
+    accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
     recoverableErrors,
@@ -8120,23 +8125,27 @@ function renderRootConcurrent(root, lanes) {
                 throwAndUnwindWorkLoop(root, lanes, thrownValue));
             break;
           case 5:
+            var resource = null;
             switch (workInProgress.tag) {
-              case 5:
               case 26:
+                resource = workInProgress.memoizedState;
+              case 5:
               case 27:
-                lanes = workInProgress;
-                workInProgressSuspendedReason = 0;
-                workInProgressThrownValue = null;
-                var sibling = lanes.sibling;
-                if (null !== sibling) workInProgress = sibling;
-                else {
-                  var returnFiber = lanes.return;
-                  null !== returnFiber
-                    ? ((workInProgress = returnFiber),
-                      completeUnitOfWork(returnFiber))
-                    : (workInProgress = null);
+                var hostFiber = workInProgress;
+                if (resource ? shim(resource) : 1) {
+                  workInProgressSuspendedReason = 0;
+                  workInProgressThrownValue = null;
+                  var sibling = hostFiber.sibling;
+                  if (null !== sibling) workInProgress = sibling;
+                  else {
+                    var returnFiber = hostFiber.return;
+                    null !== returnFiber
+                      ? ((workInProgress = returnFiber),
+                        completeUnitOfWork(returnFiber))
+                      : (workInProgress = null);
+                  }
+                  break b;
                 }
-                break b;
             }
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
@@ -9286,19 +9295,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1037 = {
+var devToolsConfig$jscomp$inline_1042 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-rc-34590b32",
+  version: "19.0.0-rc-f717fc51",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1226 = {
-  bundleType: devToolsConfig$jscomp$inline_1037.bundleType,
-  version: devToolsConfig$jscomp$inline_1037.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1037.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1037.rendererConfig,
+var internals$jscomp$inline_1229 = {
+  bundleType: devToolsConfig$jscomp$inline_1042.bundleType,
+  version: devToolsConfig$jscomp$inline_1042.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1042.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1042.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9315,26 +9324,26 @@ var internals$jscomp$inline_1226 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1037.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1042.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-34590b32"
+  reconcilerVersion: "19.0.0-rc-f717fc51"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1227 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1230 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1227.isDisabled &&
-    hook$jscomp$inline_1227.supportsFiber
+    !hook$jscomp$inline_1230.isDisabled &&
+    hook$jscomp$inline_1230.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1227.inject(
-        internals$jscomp$inline_1226
+      (rendererID = hook$jscomp$inline_1230.inject(
+        internals$jscomp$inline_1229
       )),
-        (injectedHook = hook$jscomp$inline_1227);
+        (injectedHook = hook$jscomp$inline_1230);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
