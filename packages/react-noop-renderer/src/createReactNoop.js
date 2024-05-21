@@ -611,12 +611,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         }
         return false;
       } else {
-        // If this is false, React will trigger a fallback, if needed.
         return record.status === 'fulfilled';
       }
     },
 
-    preloadResource(resource: mixed): boolean {
+    preloadResource(resource: mixed): number {
       throw new Error(
         'Resources are not implemented for React Noop yet. This method should not be called',
       );
