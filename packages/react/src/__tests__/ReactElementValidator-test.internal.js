@@ -142,11 +142,10 @@ describe('ReactElementValidator', () => {
         '"key" prop.\n\nCheck the render method of `Component`. See ' +
         'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
-        // TODO: Because this validates after the div has been mounted, it is part of
-        // the parent stack but since owner stacks will switch to owners this goes away again.
-        (gate(flags => flags.enableOwnerStacks) ? '    in div (at **)\n' : '') +
         '    in Component (at **)\n' +
-        '    in Parent (at **)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in Parent (at **)\n') +
         '    in GrandParent (at **)',
     );
   });
@@ -262,8 +261,6 @@ describe('ReactElementValidator', () => {
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the render method of `ParentComp`. It was passed a child from MyComp. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
-        // TODO: Because this validates after the div has been mounted, it is part of
-        // the parent stack but since owner stacks will switch to owners this goes away again.
         '    in div (at **)\n' +
         '    in MyComp (at **)\n' +
         '    in ParentComp (at **)',

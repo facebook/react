@@ -228,10 +228,18 @@ describe('ReactLazy', () => {
 
     expect(error.message).toMatch('Element type is invalid');
     assertLog(['Loading...']);
-    assertConsoleErrorDev([
-      'Expected the result of a dynamic import() call',
-      'Expected the result of a dynamic import() call',
-    ]);
+    assertConsoleErrorDev(
+      [
+        'Expected the result of a dynamic import() call',
+        'Expected the result of a dynamic import() call',
+      ],
+      gate(flags => flags.enableOwnerStacks)
+        ? {
+            // There's no owner
+            withoutStack: true,
+          }
+        : undefined,
+    );
     expect(root).not.toMatchRenderedOutput('Hi');
   });
 
@@ -996,10 +1004,7 @@ describe('ReactLazy', () => {
       await act(() => resolveFakeImport(Foo));
       assertLog(['A', 'B']);
     }).toErrorDev(
-      '    in Text (at **)\n' +
-        // TODO: Because this validates after the div has been mounted, it is part of
-        // the parent stack but since owner stacks will switch to owners this goes away again.
-        (gate(flags => flags.enableOwnerStacks) ? '    in div (at **)\n' : '') +
+      (gate(flags => flags.enableOwnerStacks) ? '' : '    in Text (at **)\n') +
         '    in Foo (at **)',
     );
     expect(root).toMatchRenderedOutput(<div>AB</div>);

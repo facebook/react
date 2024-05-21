@@ -622,8 +622,8 @@ describe('memo', () => {
           '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
           'See https://react.dev/link/warning-keys for more information.\n' +
           '    in span (at **)\n' +
-          '    in Inner (at **)\n' +
-          '    in p (at **)',
+          '    in Inner (at **)' +
+          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
       );
     });
 

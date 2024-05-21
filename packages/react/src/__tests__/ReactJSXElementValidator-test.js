@@ -209,8 +209,6 @@ describe('ReactJSXElementValidator', () => {
       'Each child in a list should have a unique "key" prop.' +
         '\n\nCheck the render method of `ParentComp`. It was passed a child from MyComp. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
-        // TODO: Because this validates after the div has been mounted, it is part of
-        // the parent stack but since owner stacks will switch to owners this goes away again.
         '    in div (at **)\n' +
         '    in MyComp (at **)\n' +
         '    in ParentComp (at **)',
