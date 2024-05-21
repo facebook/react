@@ -31,7 +31,7 @@
     "monaco-editor": "^0.34.1",
     "next": "^13.5.6",
     "notistack": "^3.0.0-alpha.7",
-    "prettier": "3.0.3",
+    "prettier": "3.2.5",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
     "react": "19.0.0-beta-04b058868c-20240508",

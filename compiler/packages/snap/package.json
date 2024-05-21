@@ -50,7 +50,7 @@
     "@types/node": "^18.7.18",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
-    "prettier": "2.8.8",
+    "prettier": "3.2.5",
     "rimraf": "^3.0.2"
   },
   "resolutions": {
