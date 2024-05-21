@@ -27,6 +27,7 @@ import {
   SyntheticWheelEvent,
   SyntheticClipboardEvent,
   SyntheticPointerEvent,
+  SyntheticToggleEvent,
 } from '../../events/SyntheticEvent';
 
 import {
@@ -160,6 +161,11 @@ function extractEvents(
     case 'pointerover':
     case 'pointerup':
       SyntheticEventCtor = SyntheticPointerEvent;
+      break;
+    case 'toggle':
+    case 'beforetoggle':
+      // MDN claims <details> should not receive ToggleEvent contradicting the spec: https://html.spec.whatwg.org/multipage/indices.html#event-toggle
+      SyntheticEventCtor = SyntheticToggleEvent;
       break;
     default:
       // Unknown event. This is used by createEventHandle.
