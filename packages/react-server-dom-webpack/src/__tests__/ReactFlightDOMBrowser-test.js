@@ -247,6 +247,55 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<span>Hello, World!</span>');
   });
 
+  it('should resolve deduped objects within the same model root when it is blocked', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientOuter = clientExports(function ClientOuter({Component, value}) {
+      return <Component value={value} />;
+    });
+
+    const ClientInner = clientExports(
+      function ClientInner({value}) {
+        return <pre>{JSON.stringify(value)}</pre>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function Server({value}) {
+      return <ClientOuter Component={ClientInner} value={value} />;
+    }
+
+    const shared = [1, 2, 3];
+    const value = [shared, shared];
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Server value={value} />,
+      webpackMap,
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<pre>[[1,2,3],[1,2,3]]</pre>');
+  });
+
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 

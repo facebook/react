@@ -464,8 +464,6 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       // We have to go the BLOCKED state until they're resolved.
       const blockedChunk: BlockedChunk<T> = (chunk: any);
       blockedChunk.status = BLOCKED;
-      blockedChunk.value = null;
-      blockedChunk.reason = null;
     } else {
       const resolveListeners = cyclicChunk.value;
       const initializedChunk: InitializedChunk<T> = (chunk: any);
