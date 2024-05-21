@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ca956efb4aaf22602f53006d2b2ee8b9>>
+ * @generated SignedSource<<d18444af705bdf41cb8fd0822b9f61d9>>
  */
 
 'use strict';
@@ -1992,11 +1992,9 @@ var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-e
 var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     consoleManagedByDevToolsDuringStrictMode = dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
     disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses,
-    disableStringRefs = dynamicFlags.disableStringRefs,
     enableAddPropertiesFastPath = dynamicFlags.enableAddPropertiesFastPath,
     enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
     enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
-    enableRefAsProp = dynamicFlags.enableRefAsProp,
     passChildrenWhenCloningPersistedNodes = dynamicFlags.passChildrenWhenCloningPersistedNodes; // The rest of the flags are static for better dead code elimination.
 var enableAsyncActions = true;
 var enableSchedulingProfiler = true;
@@ -7794,21 +7792,6 @@ function shallowEqual(objA, objB) {
 
 var current = null;
 var isRendering = false;
-function getCurrentFiberOwnerNameInDevOrNull() {
-  {
-    if (current === null) {
-      return null;
-    }
-
-    var owner = current._debugOwner;
-
-    if (owner != null) {
-      return getComponentNameFromOwner(owner);
-    }
-  }
-
-  return null;
-}
 
 function getCurrentFiberStackInDev() {
   {
@@ -8401,15 +8384,12 @@ function unwrapThenable(thenable) {
 function coerceRef(returnFiber, current, workInProgress, element) {
   var ref;
 
-  if (enableRefAsProp) {
+  {
     // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
     // we should resolve the `ref` prop during the begin phase of the component
     // it's attached to (HostComponent, ClassComponent, etc).
     var refProp = element.props.ref;
     ref = refProp !== undefined ? refProp : null;
-  } else {
-    // Old behavior.
-    ref = element.ref;
   } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
   // should always read the ref from the prop.
 
@@ -14271,7 +14251,7 @@ function resolveClassComponentProps(Component, baseProps, // Only resolve defaul
 alreadyResolvedDefaultProps) {
   var newProps = baseProps;
 
-  if (enableRefAsProp) {
+  {
     // Remove ref from the props object, if it exists.
     if ('ref' in baseProps) {
       newProps = {};
@@ -14900,7 +14880,6 @@ var didReceiveUpdate = false;
 var didWarnAboutBadClass;
 var didWarnAboutContextTypeOnFunctionComponent;
 var didWarnAboutGetDerivedStateOnFunctionComponent;
-var didWarnAboutFunctionRefs;
 var didWarnAboutReassigningProps;
 var didWarnAboutRevealOrder;
 var didWarnAboutTailOptions;
@@ -14910,7 +14889,6 @@ var didWarnAboutDefaultPropsOnFunctionComponent;
   didWarnAboutBadClass = {};
   didWarnAboutContextTypeOnFunctionComponent = {};
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
-  didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
   didWarnAboutRevealOrder = {};
   didWarnAboutTailOptions = {};
@@ -14959,7 +14937,7 @@ function updateForwardRef(current, workInProgress, Component, nextProps, renderL
   var ref = workInProgress.ref;
   var propsWithoutRef;
 
-  if (enableRefAsProp && 'ref' in nextProps) {
+  if ('ref' in nextProps) {
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
@@ -15405,19 +15383,6 @@ function markRef(current, workInProgress) {
     }
 
     if (current === null || current.ref !== ref) {
-      if (!disableStringRefs && current !== null) {
-        var oldRef = current.ref;
-        var newRef = ref;
-
-        if (typeof oldRef === 'function' && typeof newRef === 'function' && typeof oldRef.__stringRef === 'string' && oldRef.__stringRef === newRef.__stringRef && oldRef.__stringRefType === newRef.__stringRefType && oldRef.__stringRefOwner === newRef.__stringRefOwner) {
-          // Although this is a different callback, it represents the same
-          // string ref. To avoid breaking old Meta code that relies on string
-          // refs only being attached once, reuse the old ref. This will
-          // prevent us from detaching and reattaching the ref on each update.
-          workInProgress.ref = oldRef;
-          return;
-        }
-      } // Schedule a Ref effect
 
 
       workInProgress.flags |= Ref | RefStatic;
@@ -15909,24 +15874,6 @@ function validateFunctionComponentInDev(workInProgress, Component) {
     if (Component) {
       if (Component.childContextTypes) {
         error('childContextTypes cannot be defined on a function component.\n' + '  %s.childContextTypes = ...', Component.displayName || Component.name || 'Component');
-      }
-    }
-
-    if (!enableRefAsProp && workInProgress.ref !== null) {
-      var info = '';
-      var componentName = getComponentNameFromType(Component) || 'Unknown';
-      var ownerName = getCurrentFiberOwnerNameInDevOrNull();
-
-      if (ownerName) {
-        info += '\n\nCheck the render method of `' + ownerName + '`.';
-      }
-
-      var warningKey = componentName + '|' + (ownerName || '');
-
-      if (!didWarnAboutFunctionRefs[warningKey]) {
-        didWarnAboutFunctionRefs[warningKey] = true;
-
-        error('Function components cannot be given refs. ' + 'Attempts to access this ref will fail. ' + 'Did you mean to use React.forwardRef()?%s', info);
       }
     }
 
@@ -20229,7 +20176,7 @@ function commitAttachRef(finishedWork) {
       {
         // TODO: We should move these warnings to happen during the render
         // phase (markRef).
-        if (disableStringRefs && typeof ref === 'string') {
+        if (typeof ref === 'string') {
           error('String refs are no longer supported.');
         } else if (!ref.hasOwnProperty('current')) {
           error('Unexpected ref object provided for %s. ' + 'Use either a ref-setter function or React.createRef().', getComponentNameFromFiber(finishedWork));
@@ -26087,7 +26034,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-79d761af';
+var ReactVersion = '19.0.0-rc-7ae4ed4c';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

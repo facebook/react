@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<71139a2081b9ee803b48b333bc213727>>
+ * @generated SignedSource<<4c3bee042278a4a49d386c57d4f82f3b>>
  */
 
 'use strict';
@@ -24,15 +24,15 @@ var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-e
 // the exports object every time a flag is read.
 
 var disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses,
-    disableStringRefs = dynamicFlags.disableStringRefs,
-    enableFastJSX = dynamicFlags.enableFastJSX,
-    enableRefAsProp = dynamicFlags.enableRefAsProp;
+    enableFastJSX = dynamicFlags.enableFastJSX;
  // The rest of the flags are static for better dead code elimination.
 var enableDebugTracing = false;
 var enableRenderableContext = true;
 var enableScopeAPI = false;
 var enableLegacyHidden = false;
 var enableTransitionTracing = false;
+var enableRefAsProp = true;
+var disableStringRefs = true;
 
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
@@ -108,7 +108,7 @@ function printWarning(level, format, args) {
   }
 }
 
-function getWrappedName$1(outerType, innerType, wrapperName) {
+function getWrappedName(outerType, innerType, wrapperName) {
   var displayName = outerType.displayName;
 
   if (displayName) {
@@ -120,7 +120,7 @@ function getWrappedName$1(outerType, innerType, wrapperName) {
 } // Keep in sync with react-reconciler/getComponentNameFromFiber
 
 
-function getContextName$1(type) {
+function getContextName(type) {
   return type.displayName || 'Context';
 }
 
@@ -183,17 +183,17 @@ function getComponentNameFromType(type) {
         var context = type;
 
         {
-          return getContextName$1(context) + '.Provider';
+          return getContextName(context) + '.Provider';
         }
 
       case REACT_CONSUMER_TYPE:
         {
           var consumer = type;
-          return getContextName$1(consumer._context) + '.Consumer';
+          return getContextName(consumer._context) + '.Consumer';
         }
 
       case REACT_FORWARD_REF_TYPE:
-        return getWrappedName$1(type, type.render, 'ForwardRef');
+        return getWrappedName(type, type.render, 'ForwardRef');
 
       case REACT_MEMO_TYPE:
         var outerName = type.displayName || null;
@@ -289,15 +289,6 @@ function checkKeyStringCoercion(value) {
   {
     if (willCoercionThrow(value)) {
       error('The provided key is an unsupported type %s.' + ' This value must be coerced to a string before using it here.', typeName(value));
-
-      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-    }
-  }
-}
-function checkPropStringCoercion(value, propName) {
-  {
-    if (willCoercionThrow(value)) {
-      error('The provided `%s` prop is an unsupported type %s.' + ' This value must be coerced to a string before using it here.', propName, typeName(value));
 
       return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
     }
@@ -754,143 +745,6 @@ function describeUnknownElementTypeFrameInDEV(type) {
   return '';
 }
 
-var FunctionComponent = 0;
-var ClassComponent = 1;
-var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
-
-var HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
-
-var HostComponent = 5;
-var HostText = 6;
-var Fragment = 7;
-var Mode = 8;
-var ContextConsumer = 9;
-var ContextProvider = 10;
-var ForwardRef = 11;
-var Profiler = 12;
-var SuspenseComponent = 13;
-var MemoComponent = 14;
-var SimpleMemoComponent = 15;
-var LazyComponent = 16;
-var IncompleteClassComponent = 17;
-var DehydratedFragment = 18;
-var SuspenseListComponent = 19;
-var ScopeComponent = 21;
-var OffscreenComponent = 22;
-var CacheComponent = 24;
-var TracingMarkerComponent = 25;
-var HostHoistable = 26;
-var HostSingleton = 27;
-var IncompleteFunctionComponent = 28;
-
-function getWrappedName(outerType, innerType, wrapperName) {
-  var functionName = innerType.displayName || innerType.name || '';
-  return outerType.displayName || (functionName !== '' ? wrapperName + "(" + functionName + ")" : wrapperName);
-} // Keep in sync with shared/getComponentNameFromType
-
-
-function getContextName(type) {
-  return type.displayName || 'Context';
-}
-function getComponentNameFromFiber(fiber) {
-  var tag = fiber.tag,
-      type = fiber.type;
-
-  switch (tag) {
-    case CacheComponent:
-      return 'Cache';
-
-    case ContextConsumer:
-      {
-        var consumer = type;
-        return getContextName(consumer._context) + '.Consumer';
-      }
-
-    case ContextProvider:
-      {
-        var _context = type;
-        return getContextName(_context) + '.Provider';
-      }
-
-    case DehydratedFragment:
-      return 'DehydratedFragment';
-
-    case ForwardRef:
-      return getWrappedName(type, type.render, 'ForwardRef');
-
-    case Fragment:
-      return 'Fragment';
-
-    case HostHoistable:
-    case HostSingleton:
-    case HostComponent:
-      // Host component type is the display name (e.g. "div", "View")
-      return type;
-
-    case HostPortal:
-      return 'Portal';
-
-    case HostRoot:
-      return 'Root';
-
-    case HostText:
-      return 'Text';
-
-    case LazyComponent:
-      // Name comes from the type in this case; we don't have a tag.
-      return getComponentNameFromType(type);
-
-    case Mode:
-      if (type === REACT_STRICT_MODE_TYPE) {
-        // Don't be less specific than shared/getComponentNameFromType
-        return 'StrictMode';
-      }
-
-      return 'Mode';
-
-    case OffscreenComponent:
-      return 'Offscreen';
-
-    case Profiler:
-      return 'Profiler';
-
-    case ScopeComponent:
-      return 'Scope';
-
-    case SuspenseComponent:
-      return 'Suspense';
-
-    case SuspenseListComponent:
-      return 'SuspenseList';
-
-    case TracingMarkerComponent:
-      return 'TracingMarker';
-    // The display name for these tags come from the user-provided type:
-
-    case IncompleteClassComponent:
-    case IncompleteFunctionComponent:
-
-    // Fallthrough
-
-    case ClassComponent:
-    case FunctionComponent:
-    case MemoComponent:
-    case SimpleMemoComponent:
-      if (typeof type === 'function') {
-        return type.displayName || type.name || null;
-      }
-
-      if (typeof type === 'string') {
-        return type;
-      }
-
-      break;
-
-  }
-
-  return null;
-}
-
 var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
 
 function getOwner() {
@@ -906,12 +760,9 @@ function getOwner() {
 }
 
 var specialPropKeyWarningShown;
-var specialPropRefWarningShown;
-var didWarnAboutStringRefs;
 var didWarnAboutElementRef;
 
 {
-  didWarnAboutStringRefs = {};
   didWarnAboutElementRef = {};
 }
 
@@ -946,22 +797,6 @@ function hasValidKey(config) {
   return config.key !== undefined;
 }
 
-function warnIfStringRefCannotBeAutoConverted(config, self) {
-  {
-    var owner;
-
-    if (!disableStringRefs && typeof config.ref === 'string' && (owner = getOwner()) && self && owner.stateNode !== self) {
-      var componentName = getComponentNameFromType(owner.type);
-
-      if (!didWarnAboutStringRefs[componentName]) {
-        error('Component "%s" contains the string ref "%s". ' + 'Support for string refs will be removed in a future major release. ' + 'This case cannot be automatically converted to an arrow function. ' + 'We ask you to manually fix this case by using useRef() or createRef() instead. ' + 'Learn more about using refs safely here: ' + 'https://react.dev/link/strict-mode-string-ref', getComponentNameFromType(owner.type), config.ref);
-
-        didWarnAboutStringRefs[componentName] = true;
-      }
-    }
-  }
-}
-
 function defineKeyPropWarningGetter(props, displayName) {
   {
     var warnAboutAccessingKey = function () {
@@ -977,26 +812,6 @@ function defineKeyPropWarningGetter(props, displayName) {
       get: warnAboutAccessingKey,
       configurable: true
     });
-  }
-}
-
-function defineRefPropWarningGetter(props, displayName) {
-  if (!enableRefAsProp) {
-    {
-      var warnAboutAccessingRef = function () {
-        if (!specialPropRefWarningShown) {
-          specialPropRefWarningShown = true;
-
-          error('%s: `ref` is not a prop. Trying to access it will result ' + 'in `undefined` being returned. If you need to access the same ' + 'value within the child component, you should pass it as a different ' + 'prop. (https://react.dev/link/special-props)', displayName);
-        }
-      };
-
-      warnAboutAccessingRef.isReactWarning = true;
-      Object.defineProperty(props, 'ref', {
-        get: warnAboutAccessingRef,
-        configurable: true
-      });
-    }
   }
 }
 
@@ -1041,7 +856,7 @@ function elementRefGetterWithDeprecationWarning() {
 function ReactElement(type, key, _ref, self, source, owner, props, debugStack, debugTask) {
   var ref;
 
-  if (enableRefAsProp) {
+  {
     // When enableRefAsProp is on, ignore whatever was passed as the ref
     // argument and treat `props.ref` as the source of truth. The only thing we
     // use this for is `element.ref`, which will log a deprecation warning on
@@ -1051,13 +866,11 @@ function ReactElement(type, key, _ref, self, source, owner, props, debugStack, d
     // backwards compatibility.
 
     ref = refProp !== undefined ? refProp : null;
-  } else {
-    ref = _ref;
   }
 
   var element;
 
-  if (enableRefAsProp) {
+  {
     // In dev, make `ref` a non-enumerable property with a warning. It's non-
     // enumerable so that test matchers and serializers don't access it and
     // trigger the warning.
@@ -1098,20 +911,6 @@ function ReactElement(type, key, _ref, self, source, owner, props, debugStack, d
         value: null
       });
     }
-  } else {
-    // In prod, `ref` is a regular property. It will be removed in a
-    // future release.
-    element = {
-      // This tag allows us to uniquely identify this as a React Element
-      $$typeof: REACT_ELEMENT_TYPE,
-      // Built-in properties that belong on the element
-      type: type,
-      key: key,
-      ref: ref,
-      props: props,
-      // Record the component responsible for creating this element.
-      _owner: owner
-    };
   }
 
   {
@@ -1274,19 +1073,7 @@ function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       key = '' + config.key;
     }
 
-    if (hasValidRef(config)) {
-      if (!enableRefAsProp) {
-        ref = config.ref;
-
-        if (!disableStringRefs) {
-          ref = coerceStringRef(ref, getOwner(), type);
-        }
-      }
-
-      if (!disableStringRefs) {
-        warnIfStringRefCannotBeAutoConverted(config, self);
-      }
-    }
+    if (hasValidRef(config)) ;
 
     var props;
 
@@ -1309,10 +1096,8 @@ function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
 
       for (var propName in config) {
         // Skip over reserved prop names
-        if (propName !== 'key' && (enableRefAsProp || propName !== 'ref')) {
-          if (enableRefAsProp && !disableStringRefs && propName === 'ref') {
-            props.ref = coerceStringRef(config[propName], getOwner(), type);
-          } else {
+        if (propName !== 'key' && (enableRefAsProp )) {
+          {
             props[propName] = config[propName];
           }
         }
@@ -1332,15 +1117,11 @@ function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    if (key || !enableRefAsProp && ref) {
+    if (key || !enableRefAsProp ) {
       var displayName = typeof type === 'function' ? type.displayName || type.name || 'Unknown' : type;
 
       if (key) {
         defineKeyPropWarningGetter(props, displayName);
-      }
-
-      if (!enableRefAsProp && ref) {
-        defineRefPropWarningGetter(props, displayName);
       }
     }
 
@@ -1536,92 +1317,7 @@ function validateFragmentProps(fragment) {
         break;
       }
     }
-
-    if (!enableRefAsProp && fragment.ref !== null) {
-      setCurrentlyValidatingElement(fragment);
-
-      error('Invalid attribute `ref` supplied to `React.Fragment`.');
-
-      setCurrentlyValidatingElement(null);
-    }
   }
-}
-
-function coerceStringRef(mixedRef, owner, type) {
-  if (disableStringRefs) {
-    return mixedRef;
-  }
-
-  var stringRef;
-
-  if (typeof mixedRef === 'string') {
-    stringRef = mixedRef;
-  } else {
-    if (typeof mixedRef === 'number' || typeof mixedRef === 'boolean') {
-      {
-        checkPropStringCoercion(mixedRef, 'ref');
-      }
-
-      stringRef = '' + mixedRef;
-    } else {
-      return mixedRef;
-    }
-  }
-
-  var callback = stringRefAsCallbackRef.bind(null, stringRef, type, owner); // This is used to check whether two callback refs conceptually represent
-  // the same string ref, and can therefore be reused by the reconciler. Needed
-  // for backwards compatibility with old Meta code that relies on string refs
-  // not being reattached on every render.
-
-  callback.__stringRef = stringRef;
-  callback.__type = type;
-  callback.__owner = owner;
-  return callback;
-}
-
-function stringRefAsCallbackRef(stringRef, type, owner, value) {
-  if (disableStringRefs) {
-    return;
-  }
-
-  if (!owner) {
-    throw new Error("Element ref was specified as a string (" + stringRef + ") but no owner was set. This could happen for one of" + ' the following reasons:\n' + '1. You may be adding a ref to a function component\n' + "2. You may be adding a ref to a component that was not created inside a component's render method\n" + '3. You have multiple copies of React loaded\n' + 'See https://react.dev/link/refs-must-have-owner for more information.');
-  }
-
-  if (owner.tag !== ClassComponent) {
-    throw new Error('Function components cannot have string refs. ' + 'We recommend using useRef() instead. ' + 'Learn more about using refs safely here: ' + 'https://react.dev/link/strict-mode-string-ref');
-  }
-
-  {
-    if ( // Will already warn with "Function components cannot be given refs"
-    !(typeof type === 'function' && !isReactClass(type))) {
-      var componentName = getComponentNameFromFiber(owner) || 'Component';
-
-      if (!didWarnAboutStringRefs[componentName]) {
-        error('Component "%s" contains the string ref "%s". Support for string refs ' + 'will be removed in a future major release. We recommend using ' + 'useRef() or createRef() instead. ' + 'Learn more about using refs safely here: ' + 'https://react.dev/link/strict-mode-string-ref', componentName, stringRef);
-
-        didWarnAboutStringRefs[componentName] = true;
-      }
-    }
-  }
-
-  var inst = owner.stateNode;
-
-  if (!inst) {
-    throw new Error("Missing owner for string ref " + stringRef + ". This error is likely caused by a " + 'bug in React. Please file an issue.');
-  }
-
-  var refs = inst.refs;
-
-  if (value === null) {
-    delete refs[stringRef];
-  } else {
-    refs[stringRef] = value;
-  }
-}
-
-function isReactClass(type) {
-  return type.prototype && type.prototype.isReactComponent;
 }
 
 var jsx = jsxProdSignatureRunningInDevWithDynamicChildren ; // we may want to special case jsxs internally to take advantage of static children.

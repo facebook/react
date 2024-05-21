@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<93fe9935111766fb9f8765d67d8a279a>>
+ * @generated SignedSource<<9ae22f6743741ff043022da819bd073c>>
  */
 
 "use strict";
@@ -1119,12 +1119,10 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-  disableStringRefs = dynamicFlagsUntyped.disableStringRefs,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
   enableInfiniteRenderLoopDetection =
     dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
-  enableRefAsProp = dynamicFlagsUntyped.enableRefAsProp,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1261,7 +1259,6 @@ function getComponentNameFromFiber(fiber) {
   }
   return null;
 }
-var currentOwner = null;
 function getNearestMountedFiber(fiber) {
   var node = fiber,
     nearestMounted = fiber;
@@ -3050,11 +3047,8 @@ function unwrapThenable(thenable) {
   return trackUsedThenable(thenableState$1, thenable, index);
 }
 function coerceRef(returnFiber, current, workInProgress, element) {
-  enableRefAsProp
-    ? ((returnFiber = element.props.ref),
-      (returnFiber = void 0 !== returnFiber ? returnFiber : null))
-    : (returnFiber = element.ref);
-  workInProgress.ref = returnFiber;
+  returnFiber = element.props.ref;
+  workInProgress.ref = void 0 !== returnFiber ? returnFiber : null;
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
@@ -5243,7 +5237,7 @@ function resolveClassComponentProps(
   alreadyResolvedDefaultProps
 ) {
   var newProps = baseProps;
-  if (enableRefAsProp && "ref" in baseProps) {
+  if ("ref" in baseProps) {
     newProps = {};
     for (var propName in baseProps)
       "ref" !== propName && (newProps[propName] = baseProps[propName]);
@@ -5544,7 +5538,7 @@ function updateForwardRef(
 ) {
   Component = Component.render;
   var ref = workInProgress.ref;
-  if (enableRefAsProp && "ref" in nextProps) {
+  if ("ref" in nextProps) {
     var propsWithoutRef = {};
     for (var key in nextProps)
       "ref" !== key && (propsWithoutRef[key] = nextProps[key]);
@@ -5742,23 +5736,8 @@ function markRef(current, workInProgress) {
       throw Error(
         "Expected ref to be a function, an object returned by React.createRef(), or undefined/null."
       );
-    if (null === current || current.ref !== ref) {
-      if (
-        !disableStringRefs &&
-        null !== current &&
-        ((current = current.ref),
-        "function" === typeof current &&
-          "function" === typeof ref &&
-          "string" === typeof current.__stringRef &&
-          current.__stringRef === ref.__stringRef &&
-          current.__stringRefType === ref.__stringRefType &&
-          current.__stringRefOwner === ref.__stringRefOwner)
-      ) {
-        workInProgress.ref = current;
-        return;
-      }
+    if (null === current || current.ref !== ref)
       workInProgress.flags |= 2097664;
-    }
   }
 }
 function updateFunctionComponent(
@@ -6043,7 +6022,6 @@ function finishClassComponent(
       bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
     );
   shouldUpdate = workInProgress.stateNode;
-  disableStringRefs || (currentOwner = workInProgress);
   if (
     didCaptureError &&
     "function" !== typeof Component.getDerivedStateFromError
@@ -9645,20 +9623,16 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultAsyncDispatcher = {
-  getCacheForType: function (resourceType) {
-    var cache = readContext(CacheContext),
-      cacheForType = cache.data.get(resourceType);
-    void 0 === cacheForType &&
-      ((cacheForType = resourceType()),
-      cache.data.set(resourceType, cacheForType));
-    return cacheForType;
-  }
-};
-disableStringRefs ||
-  (DefaultAsyncDispatcher.getOwner = function () {
-    return currentOwner;
-  });
-var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
+    getCacheForType: function (resourceType) {
+      var cache = readContext(CacheContext),
+        cacheForType = cache.data.get(resourceType);
+      void 0 === cacheForType &&
+        ((cacheForType = resourceType()),
+        cache.data.set(resourceType, cacheForType));
+      return cacheForType;
+    }
+  },
+  PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   executionContext = 0,
   workInProgressRoot = null,
   workInProgress = null,
@@ -10086,7 +10060,6 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  disableStringRefs || (currentOwner = null);
   if (thrownValue === SuspenseException) {
     thrownValue = getSuspendedThenable();
     var handler = suspenseHandlerStackCursor.current;
@@ -10370,7 +10343,6 @@ function performUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  disableStringRefs || (currentOwner = null);
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
   var current = unitOfWork.alternate,
@@ -10429,7 +10401,6 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  disableStringRefs || (currentOwner = null);
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -10596,7 +10567,6 @@ function commitRootImpl(
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    disableStringRefs || (currentOwner = null);
     commitBeforeMutationEffects(root, finishedWork);
     commitTime = now();
     commitMutationEffects(root, finishedWork, lanes);
@@ -11471,10 +11441,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1272 = {
+  devToolsConfig$jscomp$inline_1262 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-58c9faab",
+    version: "19.0.0-rc-433bdfbc",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11504,10 +11474,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1272.bundleType,
-  version: devToolsConfig$jscomp$inline_1272.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1272.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1272.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1262.bundleType,
+  version: devToolsConfig$jscomp$inline_1262.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1262.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1262.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11523,14 +11493,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1272.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1262.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-58c9faab"
+  reconcilerVersion: "19.0.0-rc-433bdfbc"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

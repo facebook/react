@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3c9da8b1a20c2a64d5902762d2d5248f>>
+ * @generated SignedSource<<e3a290955ee1a06627486a0c933c7df0>>
  */
 
 "use strict";
@@ -970,13 +970,11 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-  disableStringRefs = dynamicFlagsUntyped.disableStringRefs,
   enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
   enableInfiniteRenderLoopDetection =
     dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
-  enableRefAsProp = dynamicFlagsUntyped.enableRefAsProp,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   emptyObject$1 = {},
@@ -1810,7 +1808,6 @@ function getComponentNameFromFiber(fiber) {
   }
   return null;
 }
-var currentOwner = null;
 function getNearestMountedFiber(fiber) {
   var node = fiber,
     nearestMounted = fiber;
@@ -2905,11 +2902,8 @@ function unwrapThenable(thenable) {
   return trackUsedThenable(thenableState$1, thenable, index);
 }
 function coerceRef(returnFiber, current, workInProgress, element) {
-  enableRefAsProp
-    ? ((returnFiber = element.props.ref),
-      (returnFiber = void 0 !== returnFiber ? returnFiber : null))
-    : (returnFiber = element.ref);
-  workInProgress.ref = returnFiber;
+  returnFiber = element.props.ref;
+  workInProgress.ref = void 0 !== returnFiber ? returnFiber : null;
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
@@ -5028,7 +5022,7 @@ function resolveClassComponentProps(
   alreadyResolvedDefaultProps
 ) {
   var newProps = baseProps;
-  if (enableRefAsProp && "ref" in baseProps) {
+  if ("ref" in baseProps) {
     newProps = {};
     for (var propName in baseProps)
       "ref" !== propName && (newProps[propName] = baseProps[propName]);
@@ -5328,7 +5322,7 @@ function updateForwardRef(
 ) {
   Component = Component.render;
   var ref = workInProgress.ref;
-  if (enableRefAsProp && "ref" in nextProps) {
+  if ("ref" in nextProps) {
     var propsWithoutRef = {};
     for (var key in nextProps)
       "ref" !== key && (propsWithoutRef[key] = nextProps[key]);
@@ -5524,23 +5518,8 @@ function markRef(current, workInProgress) {
       throw Error(
         "Expected ref to be a function, an object returned by React.createRef(), or undefined/null."
       );
-    if (null === current || current.ref !== ref) {
-      if (
-        !disableStringRefs &&
-        null !== current &&
-        ((current = current.ref),
-        "function" === typeof current &&
-          "function" === typeof ref &&
-          "string" === typeof current.__stringRef &&
-          current.__stringRef === ref.__stringRef &&
-          current.__stringRefType === ref.__stringRefType &&
-          current.__stringRefOwner === ref.__stringRefOwner)
-      ) {
-        workInProgress.ref = current;
-        return;
-      }
+    if (null === current || current.ref !== ref)
       workInProgress.flags |= 2097664;
-    }
   }
 }
 function updateFunctionComponent(
@@ -5821,7 +5800,6 @@ function finishClassComponent(
       bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
     );
   shouldUpdate = workInProgress.stateNode;
-  disableStringRefs || (currentOwner = workInProgress);
   var nextChildren =
     didCaptureError && "function" !== typeof Component.getDerivedStateFromError
       ? null
@@ -8937,20 +8915,16 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   }
 }
 var DefaultAsyncDispatcher = {
-  getCacheForType: function (resourceType) {
-    var cache = readContext(CacheContext),
-      cacheForType = cache.data.get(resourceType);
-    void 0 === cacheForType &&
-      ((cacheForType = resourceType()),
-      cache.data.set(resourceType, cacheForType));
-    return cacheForType;
-  }
-};
-disableStringRefs ||
-  (DefaultAsyncDispatcher.getOwner = function () {
-    return currentOwner;
-  });
-var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
+    getCacheForType: function (resourceType) {
+      var cache = readContext(CacheContext),
+        cacheForType = cache.data.get(resourceType);
+      void 0 === cacheForType &&
+        ((cacheForType = resourceType()),
+        cache.data.set(resourceType, cacheForType));
+      return cacheForType;
+    }
+  },
+  PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   executionContext = 0,
   workInProgressRoot = null,
   workInProgress = null,
@@ -9371,7 +9345,6 @@ function prepareFreshStack(root, lanes) {
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
   ReactSharedInternals.H = ContextOnlyDispatcher;
-  disableStringRefs || (currentOwner = null);
   if (thrownValue === SuspenseException) {
     thrownValue = getSuspendedThenable();
     var handler = suspenseHandlerStackCursor.current;
@@ -9591,7 +9564,6 @@ function performUnitOfWork(unitOfWork) {
   var next = beginWork(unitOfWork.alternate, unitOfWork, entangledRenderLanes);
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
-  disableStringRefs || (currentOwner = null);
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
   var current = unitOfWork.alternate;
@@ -9647,7 +9619,6 @@ function replaySuspendedUnitOfWork(unitOfWork) {
   null === current
     ? completeUnitOfWork(unitOfWork)
     : (workInProgress = current);
-  disableStringRefs || (currentOwner = null);
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -9802,7 +9773,6 @@ function commitRootImpl(
     currentUpdatePriority = 2;
     var prevExecutionContext = executionContext;
     executionContext |= 4;
-    disableStringRefs || (currentOwner = null);
     commitBeforeMutationEffects(root, finishedWork);
     commitMutationEffectsOnFiber(finishedWork, root);
     root.current = finishedWork;
@@ -10576,10 +10546,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1124 = {
+  devToolsConfig$jscomp$inline_1114 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-086e14ed",
+    version: "19.0.0-rc-40a71621",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10595,11 +10565,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1356 = {
-  bundleType: devToolsConfig$jscomp$inline_1124.bundleType,
-  version: devToolsConfig$jscomp$inline_1124.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1124.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1124.rendererConfig,
+var internals$jscomp$inline_1346 = {
+  bundleType: devToolsConfig$jscomp$inline_1114.bundleType,
+  version: devToolsConfig$jscomp$inline_1114.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1114.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1114.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10615,26 +10585,26 @@ var internals$jscomp$inline_1356 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1124.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1114.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-086e14ed"
+  reconcilerVersion: "19.0.0-rc-40a71621"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1357 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1347 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1357.isDisabled &&
-    hook$jscomp$inline_1357.supportsFiber
+    !hook$jscomp$inline_1347.isDisabled &&
+    hook$jscomp$inline_1347.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1357.inject(
-        internals$jscomp$inline_1356
+      (rendererID = hook$jscomp$inline_1347.inject(
+        internals$jscomp$inline_1346
       )),
-        (injectedHook = hook$jscomp$inline_1357);
+        (injectedHook = hook$jscomp$inline_1347);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
