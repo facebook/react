@@ -11,7 +11,6 @@ import { fromZodError } from "zod-validation-error";
 import { CompilerError } from "../CompilerError";
 import { Logger } from "../Entrypoint";
 import { Err, Ok, Result } from "../Utils/Result";
-import { log } from "../Utils/logger";
 import {
   DEFAULT_GLOBALS,
   DEFAULT_SHAPES,
@@ -320,6 +319,8 @@ const EnvironmentConfigSchema = z.object({
    */
   throwUnknownException__testonly: z.boolean().default(false),
 
+  enableSharedRuntime__testonly: z.boolean().default(false),
+
   /**
    * Enables deps of a function epxression to be treated as conditional. This
    * makes sure we don't load a dep when it's a property (to check if it has
@@ -514,7 +515,6 @@ export class Environment {
 
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {
     const name = binding.name;
-    let resolvedName = name;
 
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(name);
@@ -523,21 +523,45 @@ export class Environment {
         typeof match[1] === "string" &&
         isHookName(match[1])
       ) {
-        resolvedName = match[1];
+        const resolvedName = match[1];
+        return this.#globals.get(resolvedName) ?? this.#getCustomHookType();
       }
     }
 
-    let resolvedGlobal: Global | null = this.#globals.get(resolvedName) ?? null;
-    if (resolvedGlobal === null) {
-      // Hack, since we don't track module level declarations and imports
-      if (isHookName(resolvedName)) {
-        return this.#getCustomHookType();
-      } else {
-        log(() => `Undefined global \`${name}\``);
+    let global: Global | null = null;
+    switch (binding.kind) {
+      case "ModuleLocal": {
+        // don't resolve module locals
+        break;
+      }
+      case "Global": {
+        global = this.#globals.get(name) ?? null;
+        break;
+      }
+      case "ImportDefault":
+      case "ImportNamespace":
+      case "ImportSpecifier": {
+        if (
+          binding.module.toLowerCase() === "react" ||
+          binding.module.toLowerCase() === "react-dom" ||
+          (this.config.enableSharedRuntime__testonly &&
+            binding.module === "shared-runtime")
+        ) {
+          // only resolve imports to modules we know about
+          global = this.#globals.get(name) ?? null;
+        }
+        break;
       }
     }
 
-    return resolvedGlobal;
+    if (global === null && isHookName(name)) {
+      /**
+       * Type inference relies on all hooks being resolved as such, so if we don't have
+       * a global declaration and its a hook name, return the default custom hook type.
+       */
+      return this.#getCustomHookType();
+    }
+    return global;
   }
 
   getPropertyType(
