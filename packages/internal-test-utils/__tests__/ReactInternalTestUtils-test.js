@@ -2417,6 +2417,32 @@ describe('ReactInternalTestUtils console assertions', () => {
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
         `);
       });
+
+      // @gate __DEV__
+      it('fails with a helpful error message if the expected error message mismatches', () => {
+        const message = expectToThrowFailure(() => {
+          console.error('Bye\n    in div');
+          assertConsoleErrorDev([
+            [
+              'Hello',
+              {
+                withoutStack: true,
+              },
+            ],
+          ]);
+        });
+        expect(message).toMatchInlineSnapshot(`
+          "assertConsoleErrorDev(expected)
+
+          Unexpected error(s) recorded.
+
+          - Expected errors
+          + Received errors
+
+          - Hello
+          + Bye <component stack>"
+        `);
+      });
     });
 
     // @gate __DEV__
