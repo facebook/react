@@ -10,11 +10,8 @@
 import * as React from 'react';
 import {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext} from './TreeContext';
-import {BridgeContext, ContextMenuContext, StoreContext} from '../context';
-import ContextMenu from '../../ContextMenu/ContextMenu';
-import ContextMenuItem from '../../ContextMenu/ContextMenuItem';
+import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
-import Icon from '../Icon';
 import InspectedElementBadges from './InspectedElementBadges';
 import InspectedElementContextTree from './InspectedElementContextTree';
 import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWarningsTree';
@@ -26,17 +23,12 @@ import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
 import NativeStyleEditor from './NativeStyleEditor';
 import ElementBadges from './ElementBadges';
 import {useHighlightNativeElement} from '../hooks';
-import {
-  copyInspectedElementPath as copyInspectedElementPathAPI,
-  storeAsGlobal as storeAsGlobalAPI,
-} from 'react-devtools-shared/src/backendAPI';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 import InspectedElementSourcePanel from './InspectedElementSourcePanel';
 
 import styles from './InspectedElementView.css';
 
-import type {ContextMenuContextType} from '../context';
 import type {
   Element,
   InspectedElement,
@@ -62,17 +54,11 @@ export default function InspectedElementView({
   toggleParseHookNames,
   symbolicatedSourcePromise,
 }: Props): React.Node {
-  const {id} = element;
   const {owners, rendererPackageName, rendererVersion, rootType, source} =
     inspectedElement;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
-
-  const {
-    isEnabledForInspectedElement: isContextMenuEnabledForInspectedElement,
-    viewAttributeSourceFunction,
-  } = useContext<ContextMenuContextType>(ContextMenuContext);
 
   const rendererLabel =
     rendererPackageName !== null && rendererVersion !== null
@@ -182,65 +168,6 @@ export default function InspectedElementView({
           />
         )}
       </div>
-
-      {isContextMenuEnabledForInspectedElement && (
-        <ContextMenu id="InspectedElement">
-          {({path, type: pathType}) => {
-            const copyInspectedElementPath = () => {
-              const rendererID = store.getRendererIDForElement(id);
-              if (rendererID !== null) {
-                copyInspectedElementPathAPI({
-                  bridge,
-                  id,
-                  path,
-                  rendererID,
-                });
-              }
-            };
-
-            const storeAsGlobal = () => {
-              const rendererID = store.getRendererIDForElement(id);
-              if (rendererID !== null) {
-                storeAsGlobalAPI({
-                  bridge,
-                  id,
-                  path,
-                  rendererID,
-                });
-              }
-            };
-
-            return (
-              <Fragment>
-                <ContextMenuItem
-                  onClick={copyInspectedElementPath}
-                  title="Copy value to clipboard">
-                  <Icon className={styles.ContextMenuIcon} type="copy" /> Copy
-                  value to clipboard
-                </ContextMenuItem>
-                <ContextMenuItem
-                  onClick={storeAsGlobal}
-                  title="Store as global variable">
-                  <Icon
-                    className={styles.ContextMenuIcon}
-                    type="store-as-global-variable"
-                  />{' '}
-                  Store as global variable
-                </ContextMenuItem>
-                {viewAttributeSourceFunction !== null &&
-                  pathType === 'function' && (
-                    <ContextMenuItem
-                      onClick={() => viewAttributeSourceFunction(id, path)}
-                      title="Go to definition">
-                      <Icon className={styles.ContextMenuIcon} type="code" /> Go
-                      to definition
-                    </ContextMenuItem>
-                  )}
-              </Fragment>
-            );
-          }}
-        </ContextMenu>
-      )}
     </Fragment>
   );
 }
