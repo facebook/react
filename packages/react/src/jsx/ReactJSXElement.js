@@ -492,7 +492,16 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
 ) {
   if (__DEV__) {
     const isStaticChildren = false;
-    return jsxDEV(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(
+      type,
+      config,
+      maybeKey,
+      isStaticChildren,
+      source,
+      self,
+      __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
+      __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+    );
   }
 }
 
@@ -505,7 +514,16 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
 ) {
   if (__DEV__) {
     const isStaticChildren = true;
-    return jsxDEV(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(
+      type,
+      config,
+      maybeKey,
+      isStaticChildren,
+      source,
+      self,
+      __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
+      __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+    );
   }
 }
 
@@ -518,6 +536,28 @@ const didWarnAboutKeySpread = {};
  * @param {string} key
  */
 export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
+  return jsxDEVImpl(
+    type,
+    config,
+    maybeKey,
+    isStaticChildren,
+    source,
+    self,
+    __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
+    __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+  );
+}
+
+function jsxDEVImpl(
+  type,
+  config,
+  maybeKey,
+  isStaticChildren,
+  source,
+  self,
+  debugStack,
+  debugTask,
+) {
   if (__DEV__) {
     if (!isValidElementType(type)) {
       // This is an invalid element type.
@@ -716,8 +756,8 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       source,
       getOwner(),
       props,
-      __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
-      __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+      debugStack,
+      debugTask,
     );
   }
 }
