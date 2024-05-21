@@ -2427,7 +2427,17 @@ describe('ReactInternalTestUtils console assertions', () => {
             ],
           ]);
         });
-        expect(message).toMatchInlineSnapshot(`"message.replace is not a function"`);
+        expect(message).toMatchInlineSnapshot(`
+          "assertConsoleErrorDev(expected)
+
+          Unexpected error(s) recorded.
+
+          - Expected errors
+          + Received errors
+
+          - Hello
+          + Bye <component stack>"
+        `);
       });
     });
 
