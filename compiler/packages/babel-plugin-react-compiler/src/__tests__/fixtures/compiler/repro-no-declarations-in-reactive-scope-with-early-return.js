@@ -6,7 +6,7 @@ function Component() {
       items.filter(([item]) => {
         return item.name != null;
       }),
-    [item]
+    [item],
   );
 
   if (filteredItems.length === 0) {

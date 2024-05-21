@@ -25,7 +25,7 @@ const FIXTURES_DIR = path.join(
   "__tests__",
   "fixtures",
   "compiler",
-  "rules-of-hooks"
+  "rules-of-hooks",
 );
 
 const PRETTIER_OPTIONS = prettier.resolveConfig.sync(FIXTURES_DIR, {
@@ -53,7 +53,7 @@ for (const fixture of fixtures) {
         environment: {
           validateHooksUsage: false,
         },
-      }
+      },
     );
     // Does the fixture pass with hooks validation enabled?
     try {
@@ -65,7 +65,7 @@ for (const fixture of fixtures) {
           environment: {
             validateHooksUsage: true,
           },
-        }
+        },
       );
     } catch (e) {
       passes = false;

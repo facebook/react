@@ -12,13 +12,13 @@ export type HookDeclaration = t.FunctionDeclaration & {
 };
 
 export function isHookDeclaration(
-  node: t.FunctionDeclaration
+  node: t.FunctionDeclaration,
 ): node is HookDeclaration {
   return Object.prototype.hasOwnProperty.call(node, "__hookDeclaration");
 }
 
 export function parseHookDeclaration(
-  node: t.FunctionDeclaration
+  node: t.FunctionDeclaration,
 ): HookDeclaration | null {
   return isHookDeclaration(node) ? node : null;
 }

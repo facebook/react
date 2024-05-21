@@ -44,7 +44,7 @@ export function assertConsistentIdentifiers(fn: HIRFunction): void {
       CompilerError.invariant(!assignments.has(instr.lvalue.identifier.id), {
         reason: `Expected lvalues to be assigned exactly once`,
         description: `Found duplicate assignment of '${printPlace(
-          instr.lvalue
+          instr.lvalue,
         )}'`,
         loc: instr.lvalue.loc,
         suggestions: null,
@@ -68,7 +68,7 @@ type Identifiers = Map<IdentifierId, Identifier>;
 function validate(
   identifiers: Identifiers,
   identifier: Identifier,
-  loc: SourceLocation | null = null
+  loc: SourceLocation | null = null,
 ): void {
   const previous = identifiers.get(identifier.id);
   if (previous === undefined) {

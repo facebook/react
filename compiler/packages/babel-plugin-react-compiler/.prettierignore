@@ -1,5 +1,7 @@
+.prettierignore
 **/dist
 **/__tests__/fixtures/**/*.expect.md
 **/__tests__/fixtures/**/*.flow.js
-*.md
+*.md*
 *.json
+*.sh

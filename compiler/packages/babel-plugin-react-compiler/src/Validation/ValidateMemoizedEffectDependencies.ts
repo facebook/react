@@ -60,7 +60,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    state: CompilerError
+    state: CompilerError,
   ): void {
     this.traverseScope(scopeBlock, state);
 
@@ -88,7 +88,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: CompilerError
+    state: CompilerError,
   ): void {
     this.traverseInstruction(instruction, state);
     if (

@@ -32,7 +32,7 @@ const ESLINT_CONFIG: Linter.Config = {
  * setting.
  */
 export default function validateNoUseBeforeDefine(
-  source: string
+  source: string,
 ): Array<{ line: number; column: number; message: string }> | null {
   const linter = new Linter();
   linter.defineParser("hermes-eslint", HermesESLint);

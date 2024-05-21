@@ -72,7 +72,7 @@ function infer(place: Place, instrId: InstructionId): void {
 function inferPlace(
   place: Place,
   instrId: InstructionId,
-  inferMutableRangeForStores: boolean
+  inferMutableRangeForStores: boolean,
 ): void {
   switch (place.effect) {
     case Effect.Unknown: {
@@ -99,7 +99,7 @@ function inferPlace(
 
 export function inferMutableLifetimes(
   func: HIRFunction,
-  inferMutableRangeForStores: boolean
+  inferMutableRangeForStores: boolean,
 ): void {
   /*
    * Context variables only appear to mutate where they are assigned, but we need
@@ -125,7 +125,7 @@ export function inferMutableLifetimes(
             phi.id.mutableRange.start = operand.mutableRange.start;
           } else {
             phi.id.mutableRange.start = makeInstructionId(
-              Math.min(phi.id.mutableRange.start, operand.mutableRange.start)
+              Math.min(phi.id.mutableRange.start, operand.mutableRange.start),
             );
           }
         }
@@ -160,7 +160,7 @@ export function inferMutableLifetimes(
         // Save declarations of context variables
         contextVariableDeclarationInstructions.set(
           instr.value.lvalue.place.identifier,
-          instr.id
+          instr.id,
         );
       } else if (instr.value.kind === "StoreContext") {
         /*
@@ -169,7 +169,7 @@ export function inferMutableLifetimes(
          * within a function expression before (or without) a read of the same variable
          */
         const declaration = contextVariableDeclarationInstructions.get(
-          instr.value.lvalue.place.identifier
+          instr.value.lvalue.place.identifier,
         );
         if (declaration != null) {
           const range = instr.value.lvalue.place.identifier.mutableRange;

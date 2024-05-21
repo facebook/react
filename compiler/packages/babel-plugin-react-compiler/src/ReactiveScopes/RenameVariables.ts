@@ -54,7 +54,7 @@ export function renameVariables(fn: ReactiveFunction): Set<string> {
 function renameVariablesImpl(
   fn: ReactiveFunction,
   visitor: Visitor,
-  scopes: Scopes
+  scopes: Scopes,
 ): void {
   scopes.enter(() => {
     for (const param of fn.params) {
@@ -94,7 +94,7 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: Scopes
+    state: Scopes,
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
@@ -106,7 +106,7 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     _fn: ReactiveFunction,
-    _state: Scopes
+    _state: Scopes,
   ): void {
     renameVariablesImpl(_fn, this, _state);
   }

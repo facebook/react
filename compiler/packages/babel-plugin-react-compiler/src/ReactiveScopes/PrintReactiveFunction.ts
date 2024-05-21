@@ -50,25 +50,25 @@ export function printReactiveScopeSummary(scope: ReactiveScope): string {
   items.push(
     `dependencies=[${Array.from(scope.dependencies)
       .map((dep) => printDependency(dep))
-      .join(", ")}]`
+      .join(", ")}]`,
   );
   items.push(
     `declarations=[${Array.from(scope.declarations)
       .map(([, decl]) =>
-        printIdentifier({ ...decl.identifier, scope: decl.scope })
+        printIdentifier({ ...decl.identifier, scope: decl.scope }),
       )
-      .join(", ")}]`
+      .join(", ")}]`,
   );
   items.push(
     `reassignments=[${Array.from(scope.reassignments).map((reassign) =>
-      printIdentifier(reassign)
-    )}]`
+      printIdentifier(reassign),
+    )}]`,
   );
   if (scope.earlyReturnValue !== null) {
     items.push(
       `earlyReturn={id: ${printIdentifier(
-        scope.earlyReturnValue.value
-      )}, label: ${scope.earlyReturnValue.label}}}`
+        scope.earlyReturnValue.value,
+      )}, label: ${scope.earlyReturnValue.label}}}`,
     );
   }
   return items.join(" ");
@@ -76,7 +76,7 @@ export function printReactiveScopeSummary(scope: ReactiveScope): string {
 
 export function writeReactiveBlock(
   writer: Writer,
-  block: ReactiveScopeBlock
+  block: ReactiveScopeBlock,
 ): void {
   writer.writeLine(`${printReactiveScopeSummary(block.scope)} {`);
   writeReactiveInstructions(writer, block.instructions);
@@ -91,7 +91,7 @@ export function printDependency(dependency: ReactiveScopeDependency): string {
 }
 
 export function printReactiveInstructions(
-  instructions: Array<ReactiveStatement>
+  instructions: Array<ReactiveStatement>,
 ): string {
   const writer = new Writer();
   writeReactiveInstructions(writer, instructions);
@@ -100,7 +100,7 @@ export function printReactiveInstructions(
 
 export function writeReactiveInstructions(
   writer: Writer,
-  instructions: Array<ReactiveStatement>
+  instructions: Array<ReactiveStatement>,
 ): void {
   writer.indented(() => {
     for (const instr of instructions) {
@@ -111,7 +111,7 @@ export function writeReactiveInstructions(
 
 function writeReactiveInstruction(
   writer: Writer,
-  instr: ReactiveStatement
+  instr: ReactiveStatement,
 ): void {
   switch (instr.kind) {
     case "instruction": {
@@ -143,7 +143,7 @@ function writeReactiveInstruction(
     default: {
       assertExhaustive(
         instr,
-        `Unexpected terminal kind \`${(instr as any).kind}\``
+        `Unexpected terminal kind \`${(instr as any).kind}\``,
       );
     }
   }
@@ -191,7 +191,7 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
             writeReactiveInstruction(writer, {
               kind: "instruction",
               instruction: instr,
-            })
+            }),
           );
           writer.write(`[${value.id}] `);
           writeReactiveValue(writer, value.value);
@@ -230,7 +230,7 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     case "break": {
       const id = terminal.id !== null ? `[${terminal.id}]` : [];
       writer.writeLine(
-        `${id} break bb${terminal.target} (${terminal.targetKind})`
+        `${id} break bb${terminal.target} (${terminal.targetKind})`,
       );
 
       break;
@@ -238,7 +238,7 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     case "continue": {
       const id = `[${terminal.id}]`;
       writer.writeLine(
-        `${id} continue bb${terminal.target} (${terminal.targetKind})`
+        `${id} continue bb${terminal.target} (${terminal.targetKind})`,
       );
       break;
     }
@@ -275,7 +275,7 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     }
     case "switch": {
       writer.writeLine(
-        `[${terminal.id}] switch (${printPlace(terminal.test)}) {`
+        `[${terminal.id}] switch (${printPlace(terminal.test)}) {`,
       );
       writer.indented(() => {
         for (const case_ of terminal.cases) {
