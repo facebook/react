@@ -32,3 +32,8 @@ function Component() {
     NonReassignedClass,
   ];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
