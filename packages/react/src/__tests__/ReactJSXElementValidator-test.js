@@ -28,7 +28,7 @@ describe('ReactJSXElementValidator', () => {
 
     Component = class extends React.Component {
       render() {
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
     };
 
@@ -97,7 +97,11 @@ describe('ReactJSXElementValidator', () => {
       await act(() => {
         root.render(<Component>{iterable}</Component>);
       });
-    }).toErrorDev('Each child in a list should have a unique "key" prop.');
+    }).toErrorDev([
+      'Each child in a list should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
+    ]);
   });
 
   it('does not warn for arrays of elements with keys', async () => {
@@ -137,7 +141,7 @@ describe('ReactJSXElementValidator', () => {
     });
   });
 
-  it('does not warn for numeric keys in entry iterable as a child', async () => {
+  it('warns when using map-like iterables as a child', async () => {
     const iterable = {
       '@@iterator': function () {
         let i = 0;
@@ -153,9 +157,14 @@ describe('ReactJSXElementValidator', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<Component>{iterable}</Component>);
-    });
+    await expect(async () => {
+      await act(() => {
+        root.render(<Component>{iterable}</Component>);
+      });
+    }).toErrorDev([
+      'Using Maps as children is not supported. Use an array of keyed ReactElements instead.',
+      'Each child in a list should have a unique "key" prop.',
+    ]);
   });
 
   it('does not warn when the element is directly as children', async () => {
