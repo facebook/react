@@ -255,7 +255,7 @@ export default class HIRBuilder {
       return { kind: "Global", name: originalName };
     }
 
-    // Check if the binding is from module scope, if so return null
+    // Check if the binding is from module scope
     const outerBinding =
       this.parentFunction.scope.parent.getBinding(originalName);
     if (babelBinding === outerBinding) {
@@ -306,6 +306,13 @@ export default class HIRBuilder {
   isContextIdentifier(path: NodePath<t.Identifier | t.JSXIdentifier>): boolean {
     const binding = this.#resolveBabelBinding(path);
     if (binding) {
+      // Check if the binding is from module scope, if so return null
+      const outerBinding = this.parentFunction.scope.parent.getBinding(
+        path.node.name
+      );
+      if (binding === outerBinding) {
+        return false;
+      }
       return this.#env.isContextIdentifier(binding.identifier);
     } else {
       return false;
