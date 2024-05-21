@@ -39,7 +39,7 @@
     "react-compiler-runtime": "*"
   },
   "devDependencies": {
-    "@types/node": "18.11.9",
+    "@types/node": "18.7.19",
     "@types/prettier": "^2.7.1",
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.9",
