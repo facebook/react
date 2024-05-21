@@ -187,6 +187,21 @@ function Output({ store, compilerOutput }: Props) {
     });
   }, [store.source, compilerOutput]);
 
+  const changedPasses: Set<string> = new Set();
+  let lastResult: string = "";
+  for (const [passName, results] of compilerOutput.results) {
+    for (const result of results) {
+      let currResult = "";
+      if (result.kind === "hir" || result.kind === "reactive") {
+        currResult += `function ${result.fnName}\n\n${result.value}`;
+      }
+      if (currResult !== lastResult) {
+        changedPasses.add(passName);
+      }
+      lastResult = currResult;
+    }
+  }
+
   return (
     <>
       <TabbedWindow
@@ -194,6 +209,7 @@ function Output({ store, compilerOutput }: Props) {
         setTabsOpen={setTabsOpen}
         tabsOpen={tabsOpen}
         tabs={tabs}
+        changedPasses={changedPasses}
       />
       {compilerOutput.kind === "err" ? (
         <div

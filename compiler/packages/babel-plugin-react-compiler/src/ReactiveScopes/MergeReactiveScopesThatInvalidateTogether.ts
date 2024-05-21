@@ -29,10 +29,7 @@ import {
 } from "../HIR/ObjectShape";
 import { eachInstructionLValue } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
-import {
-  printReactiveFunction,
-  printReactiveScopeSummary,
-} from "./PrintReactiveFunction";
+import { printReactiveScopeSummary } from "./PrintReactiveFunction";
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
@@ -87,8 +84,6 @@ import {
 export function mergeReactiveScopesThatInvalidateTogether(
   fn: ReactiveFunction
 ): void {
-  log("MergeReactiveScopesThatInvalidateTogether");
-  log(printReactiveFunction(fn));
   const lastUsageVisitor = new FindLastUsageVisitor();
   visitReactiveFunction(fn, lastUsageVisitor, undefined);
   visitReactiveFunction(fn, new Transform(lastUsageVisitor.lastUsage), null);
