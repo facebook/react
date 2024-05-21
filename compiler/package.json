@@ -49,7 +49,7 @@
     "yargs": "^17.7.2"
   },
   "resolutions": {
-    "react-is": "19.0.0-beta-b498834eab-20240506"
+    "react-is": "19.0.0-beta-04b058868c-20240508"
   },
   "packageManager": "yarn@1.22.22"
 }
