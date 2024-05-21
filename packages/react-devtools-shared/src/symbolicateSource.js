@@ -68,9 +68,9 @@ async function symbolicateSource(
         resourceLine.length,
       );
 
-      const sourceMap = await fetchFileWithCaching(new URL(sourceMapURL, sourceURL).toString()).catch(
-        () => null,
-      );
+      const sourceMap = await fetchFileWithCaching(
+        new URL(sourceMapURL, sourceURL).toString(),
+      ).catch(() => null);
       if (sourceMap != null) {
         try {
           const parsedSourceMap = JSON.parse(sourceMap);
@@ -92,13 +92,19 @@ async function symbolicateSource(
           } catch (e) {
             // This is not valid URL
             // /path or X:\\path
-            if (possiblyURL.startsWith('/') || possiblyURL.slice(1).startsWith(':\\\\')) {
+            if (
+              possiblyURL.startsWith('/') ||
+              possiblyURL.slice(1).startsWith(':\\\\')
+            ) {
               // This is an absolute path
               return {sourceURL: possiblyURL, line, column};
             }
 
             // This is a relative path
-            const absoluteSourcePath = new URL(possiblyURL, sourceMapURL).toString();
+            const absoluteSourcePath = new URL(
+              possiblyURL,
+              sourceMapURL,
+            ).toString();
             return {sourceURL: absoluteSourcePath, line, column};
           }
         } catch (e) {
