@@ -7,7 +7,7 @@ function App({ text, hasDeps }) {
     () => {
       return text.toUpperCase();
     },
-    hasDeps ? null : [text] // should be DCE'd
+    hasDeps ? null : [text], // should be DCE'd
   );
   return resolvedText;
 }

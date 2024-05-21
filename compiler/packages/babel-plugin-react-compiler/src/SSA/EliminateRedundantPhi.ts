@@ -29,7 +29,7 @@ import {
  */
 export function eliminateRedundantPhi(
   fn: HIRFunction,
-  sharedRewrites?: Map<Identifier, Identifier>
+  sharedRewrites?: Map<Identifier, Identifier>,
 ): void {
   const ir = fn.body;
   const rewrites: Map<Identifier, Identifier> =
@@ -72,7 +72,7 @@ export function eliminateRedundantPhi(
           Array.from(phi.operands).map(([block, id]) => [
             block,
             rewrites.get(id) ?? id,
-          ])
+          ]),
         );
         // Find if the phi can be eliminated
         let same: Identifier | null = null;
@@ -150,7 +150,7 @@ export function eliminateRedundantPhi(
 
 function rewritePlace(
   place: Place,
-  rewrites: Map<Identifier, Identifier>
+  rewrites: Map<Identifier, Identifier>,
 ): void {
   const rewrite = rewrites.get(place.identifier);
   if (rewrite != null) {

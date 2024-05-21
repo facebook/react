@@ -9,6 +9,11 @@ const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const path = require("path");
 
 const nextConfig = {
+  experimental: {
+    reactCompiler: {
+      runtimeModule: "react-compiler-runtime",
+    }
+  },
   reactStrictMode: true,
   webpack: (config, options) => {
     // Load *.d.ts files as strings using https://webpack.js.org/guides/asset-modules/#source-assets.

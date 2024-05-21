@@ -32,7 +32,7 @@ type ReactiveIdentifiers = Set<IdentifierId>;
 class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: ReactiveIdentifiers
+    state: ReactiveIdentifiers,
   ): void {
     this.traverseInstruction(instruction, state);
 
@@ -92,7 +92,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    state: ReactiveIdentifiers
+    state: ReactiveIdentifiers,
   ): void {
     this.traverseScope(scopeBlock, state);
     for (const dep of scopeBlock.scope.dependencies) {

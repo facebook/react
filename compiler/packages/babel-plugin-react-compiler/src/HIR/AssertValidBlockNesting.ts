@@ -96,7 +96,7 @@ export function getScopes(fn: HIRFunction): Set<ReactiveScope> {
  */
 export function rangePreOrderComparator(
   a: MutableRange,
-  b: MutableRange
+  b: MutableRange,
 ): number {
   const startDiff = a.start - b.start;
   if (startDiff !== 0) return startDiff;
@@ -108,7 +108,7 @@ export function recursivelyTraverseItems<T, TContext>(
   getRange: (val: T) => MutableRange,
   context: TContext,
   enter: (val: T, context: TContext) => void,
-  exit: (val: T, context: TContext) => void
+  exit: (val: T, context: TContext) => void,
 ): void {
   items.sort((a, b) => rangePreOrderComparator(getRange(a), getRange(b)));
   let activeItems: Array<T> = [];

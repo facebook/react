@@ -134,7 +134,7 @@ class Driver {
           });
         } else {
           consequent = this.traverseBlock(
-            this.cx.ir.blocks.get(terminal.consequent)!
+            this.cx.ir.blocks.get(terminal.consequent)!,
           );
         }
 
@@ -201,7 +201,7 @@ class Driver {
             return;
           } else {
             consequent = this.traverseBlock(
-              this.cx.ir.blocks.get(case_.block)!
+              this.cx.ir.blocks.get(case_.block)!,
             );
             const scheduleId = this.cx.schedule(case_.block, "case");
             scheduleIds.push(scheduleId);
@@ -245,7 +245,7 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.test,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
@@ -261,7 +261,7 @@ class Driver {
 
         const testValue = this.visitValueBlock(
           terminal.test,
-          terminal.loc
+          terminal.loc,
         ).value;
 
         this.cx.unscheduleAll(scheduleIds);
@@ -301,13 +301,13 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.test,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
         const testValue = this.visitValueBlock(
           terminal.test,
-          terminal.loc
+          terminal.loc,
         ).value;
 
         let loopBody: ReactiveBlock;
@@ -357,7 +357,7 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.update ?? terminal.test,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
@@ -388,7 +388,7 @@ class Driver {
 
         const testValue = this.visitValueBlock(
           terminal.test,
-          terminal.loc
+          terminal.loc,
         ).value;
 
         const updateValue =
@@ -442,7 +442,7 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.init,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
@@ -541,7 +541,7 @@ class Driver {
         const scheduleId = this.cx.scheduleLoop(
           terminal.fallthrough,
           terminal.init,
-          terminal.loop
+          terminal.loop,
         );
         scheduleIds.push(scheduleId);
 
@@ -606,14 +606,14 @@ class Driver {
           const break_ = this.visitBreak(
             terminal.consequent,
             terminal.id,
-            terminal.loc
+            terminal.loc,
           );
           if (break_ !== null) {
             consequent = [break_];
           }
         } else {
           consequent = this.traverseBlock(
-            this.cx.ir.blocks.get(terminal.consequent)!
+            this.cx.ir.blocks.get(terminal.consequent)!,
           );
         }
 
@@ -625,7 +625,7 @@ class Driver {
           });
         } else {
           alternate = this.traverseBlock(
-            this.cx.ir.blocks.get(terminal.alternate)!
+            this.cx.ir.blocks.get(terminal.alternate)!,
           );
         }
 
@@ -722,7 +722,7 @@ class Driver {
             const break_ = this.visitBreak(
               terminal.block,
               terminal.id,
-              terminal.loc
+              terminal.loc,
             );
             if (break_ !== null) {
               blockValue.push(break_);
@@ -733,7 +733,7 @@ class Driver {
             const continue_ = this.visitContinue(
               terminal.block,
               terminal.id,
-              terminal.loc
+              terminal.loc,
             );
             if (continue_ !== null) {
               blockValue.push(continue_);
@@ -746,7 +746,7 @@ class Driver {
           default: {
             assertExhaustive(
               terminal.variant,
-              `Unexpected goto variant \`${terminal.variant}\``
+              `Unexpected goto variant \`${terminal.variant}\``,
             );
           }
         }
@@ -760,7 +760,7 @@ class Driver {
         if (!this.cx.isScheduled(terminal.continuation)) {
           this.visitBlock(
             this.cx.ir.blocks.get(terminal.continuation)!,
-            blockValue
+            blockValue,
           );
         }
         break;
@@ -778,10 +778,10 @@ class Driver {
         this.cx.scheduleCatchHandler(terminal.handler);
 
         const block = this.traverseBlock(
-          this.cx.ir.blocks.get(terminal.block)!
+          this.cx.ir.blocks.get(terminal.block)!,
         );
         const handler = this.traverseBlock(
-          this.cx.ir.blocks.get(terminal.handler)!
+          this.cx.ir.blocks.get(terminal.handler)!,
         );
 
         this.cx.unscheduleAll(scheduleIds);
@@ -858,7 +858,7 @@ class Driver {
 
   visitValueBlock(
     id: BlockId,
-    loc: SourceLocation
+    loc: SourceLocation,
   ): { block: BlockId; value: ReactiveValue; place: Place; id: InstructionId } {
     const defaultBlock = this.cx.ir.blocks.get(id)!;
     if (defaultBlock.terminal.kind === "branch") {
@@ -885,7 +885,7 @@ class Driver {
             description: null,
             loc: instr.lvalue.loc,
             suggestions: null,
-          }
+          },
         );
         return {
           block: defaultBlock.id,
@@ -1024,7 +1024,7 @@ class Driver {
         }
         const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
-          terminal.loc
+          terminal.loc,
         );
         const call: ReactiveSequenceValue = {
           kind: "SequenceExpression",
@@ -1067,7 +1067,7 @@ class Driver {
 
         const leftFinal = this.visitValueBlock(
           testBlock.terminal.consequent,
-          terminal.loc
+          terminal.loc,
         );
         const left: ReactiveSequenceValue = {
           kind: "SequenceExpression",
@@ -1085,7 +1085,7 @@ class Driver {
         };
         const right = this.visitValueBlock(
           testBlock.terminal.alternate,
-          terminal.loc
+          terminal.loc,
         );
         const value: ReactiveLogicalValue = {
           kind: "LogicalExpression",
@@ -1114,11 +1114,11 @@ class Driver {
         }
         const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
-          terminal.loc
+          terminal.loc,
         );
         const alternate = this.visitValueBlock(
           testBlock.terminal.alternate,
-          terminal.loc
+          terminal.loc,
         );
         const value: ReactiveTernaryValue = {
           kind: "ConditionalExpression",
@@ -1169,7 +1169,7 @@ class Driver {
   visitBreak(
     block: BlockId,
     id: InstructionId,
-    loc: SourceLocation
+    loc: SourceLocation,
   ): ReactiveTerminalStatement<ReactiveBreakTerminal> | null {
     const target = this.cx.getBreakTarget(block);
     if (target === null) {
@@ -1203,7 +1203,7 @@ class Driver {
   visitContinue(
     block: BlockId,
     id: InstructionId,
-    loc: SourceLocation
+    loc: SourceLocation,
   ): ReactiveTerminalStatement<ReactiveContinueTerminal> {
     const target = this.cx.getContinueTarget(block);
     CompilerError.invariant(target !== null, {
@@ -1295,7 +1295,7 @@ class Context {
   scheduleLoop(
     fallthroughBlock: BlockId,
     continueBlock: BlockId,
-    loopBlock: BlockId | null
+    loopBlock: BlockId | null,
   ): number {
     const id = this.#nextScheduleId++;
     const ownsBlock = !this.#scheduled.has(fallthroughBlock);
@@ -1422,7 +1422,7 @@ class Context {
    * The returned 'block' value should be used as the label if necessary.
    */
   getContinueTarget(
-    block: BlockId
+    block: BlockId,
   ): { block: BlockId; type: ReactiveTerminalTargetKind } | null {
     let hasPrecedingLoop = false;
     for (let i = this.#controlFlowStack.length - 1; i >= 0; i--) {

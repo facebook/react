@@ -28,7 +28,7 @@ import { assertExhaustive } from "../Utils/utils";
 export function visitReactiveFunction<TState>(
   fn: ReactiveFunction,
   visitor: ReactiveFunctionVisitor<TState>,
-  state: TState
+  state: TState,
 ): void {
   visitor.visitBlock(fn.body, state);
 }
@@ -42,7 +42,7 @@ export class ReactiveFunctionVisitor<TState = void> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     _fn: ReactiveFunction,
-    _state: TState
+    _state: TState,
   ): void {}
 
   visitValue(id: InstructionId, value: ReactiveValue, state: TState): void {
@@ -77,7 +77,7 @@ export class ReactiveFunctionVisitor<TState = void> {
           id,
           value.dependencies,
           value.fn,
-          state
+          state,
         );
         break;
       }
@@ -183,7 +183,7 @@ export class ReactiveFunctionVisitor<TState = void> {
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind \`${(terminal as any).kind}\``
+          `Unexpected terminal kind \`${(terminal as any).kind}\``,
         );
       }
     }
@@ -217,7 +217,7 @@ export class ReactiveFunctionVisitor<TState = void> {
         default: {
           assertExhaustive(
             instr,
-            `Unexpected instruction kind \`${(instr as any).kind}\``
+            `Unexpected instruction kind \`${(instr as any).kind}\``,
           );
         }
       }
@@ -257,7 +257,7 @@ export type Transformed<T> =
   | { kind: "replace-many"; value: Array<T> };
 
 export class ReactiveFunctionTransform<
-  TState = void
+  TState = void,
 > extends ReactiveFunctionVisitor<TState> {
   override traverseBlock(block: ReactiveBlock, state: TState): void {
     let nextBlock: ReactiveBlock | null = null;
@@ -280,7 +280,7 @@ export class ReactiveFunctionTransform<
         default: {
           assertExhaustive(
             instr,
-            `Unexpected instruction kind \`${(instr as any).kind}\``
+            `Unexpected instruction kind \`${(instr as any).kind}\``,
           );
         }
       }
@@ -317,7 +317,7 @@ export class ReactiveFunctionTransform<
 
   transformInstruction(
     instruction: ReactiveInstruction,
-    state: TState
+    state: TState,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
     return { kind: "keep" };
@@ -325,7 +325,7 @@ export class ReactiveFunctionTransform<
 
   transformTerminal(
     stmt: ReactiveTerminalStatement,
-    state: TState
+    state: TState,
   ): Transformed<ReactiveStatement> {
     this.visitTerminal(stmt, state);
     return { kind: "keep" };
@@ -333,7 +333,7 @@ export class ReactiveFunctionTransform<
 
   transformScope(
     scope: ReactiveScopeBlock,
-    state: TState
+    state: TState,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scope, state);
     return { kind: "keep" };
@@ -342,7 +342,7 @@ export class ReactiveFunctionTransform<
   transformValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: TState
+    state: TState,
   ): TransformedValue {
     this.visitValue(id, value, state);
     return { kind: "keep" };
@@ -352,7 +352,7 @@ export class ReactiveFunctionTransform<
     id: InstructionId,
     dependencies: Array<Place>,
     fn: ReactiveFunction,
-    state: TState
+    state: TState,
   ): { kind: "keep" } | { kind: "replace"; value: ReactiveFunction } {
     this.visitReactiveFunctionValue(id, dependencies, fn, state);
     return { kind: "keep" };
@@ -361,7 +361,7 @@ export class ReactiveFunctionTransform<
   override traverseValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: TState
+    state: TState,
   ): void {
     switch (value.kind) {
       case "OptionalExpression": {
@@ -412,7 +412,7 @@ export class ReactiveFunctionTransform<
           id,
           value.dependencies,
           value.fn,
-          state
+          state,
         );
         if (nextValue.kind === "replace") {
           value.fn = nextValue.value;
@@ -429,7 +429,7 @@ export class ReactiveFunctionTransform<
 
   override traverseInstruction(
     instruction: ReactiveInstruction,
-    state: TState
+    state: TState,
   ): void {
     this.visitID(instruction.id, state);
     for (const operand of eachInstructionLValue(instruction)) {
@@ -438,7 +438,7 @@ export class ReactiveFunctionTransform<
     const nextValue = this.transformValue(
       instruction.id,
       instruction.value,
-      state
+      state,
     );
     if (nextValue.kind === "replace") {
       instruction.value = nextValue.value;
@@ -447,7 +447,7 @@ export class ReactiveFunctionTransform<
 
   override traverseTerminal(
     stmt: ReactiveTerminalStatement,
-    state: TState
+    state: TState,
   ): void {
     const { terminal } = stmt;
     if (terminal.id !== null) {
@@ -479,7 +479,7 @@ export class ReactiveFunctionTransform<
           const update = this.transformValue(
             terminal.id,
             terminal.update,
-            state
+            state,
           );
           if (update.kind === "replace") {
             terminal.update = update.value;
@@ -559,7 +559,7 @@ export class ReactiveFunctionTransform<
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind \`${(terminal as any).kind}\``
+          `Unexpected terminal kind \`${(terminal as any).kind}\``,
         );
       }
     }
@@ -567,7 +567,7 @@ export class ReactiveFunctionTransform<
 }
 
 export function* eachReactiveValueOperand(
-  instrValue: ReactiveValue
+  instrValue: ReactiveValue,
 ): Iterable<Place> {
   switch (instrValue.kind) {
     case "OptionalExpression": {
@@ -604,7 +604,7 @@ export function* eachReactiveValueOperand(
 
 export function mapTerminalBlocks(
   terminal: ReactiveTerminal,
-  fn: (block: ReactiveBlock) => ReactiveBlock
+  fn: (block: ReactiveBlock) => ReactiveBlock,
 ): void {
   switch (terminal.kind) {
     case "break":
@@ -657,7 +657,7 @@ export function mapTerminalBlocks(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }
