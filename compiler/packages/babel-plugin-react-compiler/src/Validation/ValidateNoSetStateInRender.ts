@@ -46,7 +46,7 @@ export function validateNoSetStateInRender(fn: HIRFunction): void {
 
 function validateNoSetStateInRenderImpl(
   fn: HIRFunction,
-  unconditionalSetStateFunctions: Set<IdentifierId>
+  unconditionalSetStateFunctions: Set<IdentifierId>,
 ): Result<void, CompilerError> {
   const unconditionalBlocks = computeUnconditionalBlocks(fn);
 
@@ -58,7 +58,7 @@ function validateNoSetStateInRenderImpl(
           case "LoadLocal": {
             if (
               unconditionalSetStateFunctions.has(
-                instr.value.place.identifier.id
+                instr.value.place.identifier.id,
               )
             ) {
               unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
@@ -68,11 +68,11 @@ function validateNoSetStateInRenderImpl(
           case "StoreLocal": {
             if (
               unconditionalSetStateFunctions.has(
-                instr.value.value.identifier.id
+                instr.value.value.identifier.id,
               )
             ) {
               unconditionalSetStateFunctions.add(
-                instr.value.lvalue.place.identifier.id
+                instr.value.lvalue.place.identifier.id,
               );
               unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
             }
@@ -85,12 +85,12 @@ function validateNoSetStateInRenderImpl(
               [...eachInstructionValueOperand(instr.value)].some(
                 (operand) =>
                   isSetStateType(operand.identifier) ||
-                  unconditionalSetStateFunctions.has(operand.identifier.id)
+                  unconditionalSetStateFunctions.has(operand.identifier.id),
               ) &&
               // if yes, does it unconditonally call it?
               validateNoSetStateInRenderImpl(
                 instr.value.loweredFunc.func,
-                unconditionalSetStateFunctions
+                unconditionalSetStateFunctions,
               ).isErr()
             ) {
               // This function expression unconditionally calls a setState
@@ -102,7 +102,7 @@ function validateNoSetStateInRenderImpl(
             validateNonSetState(
               errors,
               unconditionalSetStateFunctions,
-              instr.value.callee
+              instr.value.callee,
             );
             break;
           }
@@ -121,7 +121,7 @@ function validateNoSetStateInRenderImpl(
 function validateNonSetState(
   errors: CompilerError,
   unconditionalSetStateFunctions: Set<IdentifierId>,
-  operand: Place
+  operand: Place,
 ): void {
   if (
     isSetStateType(operand.identifier) ||

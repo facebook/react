@@ -28,7 +28,7 @@ export function pruneAllReactiveScopes(fn: ReactiveFunction): void {
 class Transform extends ReactiveFunctionTransform<void> {
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    state: void
+    state: void,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, state);
     return { kind: "replace-many", value: scopeBlock.instructions };

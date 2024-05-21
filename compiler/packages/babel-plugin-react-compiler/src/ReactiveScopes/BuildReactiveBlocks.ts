@@ -63,7 +63,7 @@ class Context {
 
   append(
     stmt: ReactiveStatement,
-    label: { id: BlockId; implicit: boolean } | null
+    label: { id: BlockId; implicit: boolean } | null,
   ): void {
     this.#builders.at(-1)!.append(stmt, label);
   }
@@ -98,7 +98,7 @@ class Builder {
 
   append(
     item: ReactiveStatement,
-    label: { id: BlockId; implicit: boolean } | null
+    label: { id: BlockId; implicit: boolean } | null,
   ): void {
     if (label !== null) {
       CompilerError.invariant(item.kind === "terminal", {
@@ -194,7 +194,7 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
       default: {
         assertExhaustive(
           stmt,
-          `Unexpected statement kind \`${(stmt as any).kind}\``
+          `Unexpected statement kind \`${(stmt as any).kind}\``,
         );
       }
     }
@@ -202,7 +202,7 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
 }
 
 export function getInstructionScope(
-  instr: ReactiveInstruction
+  instr: ReactiveInstruction,
 ): ReactiveScope | null {
   CompilerError.invariant(instr.lvalue !== null, {
     reason:
@@ -229,7 +229,7 @@ export function getInstructionScope(
 
 export function getPlaceScope(
   id: InstructionId,
-  place: Place
+  place: Place,
 ): ReactiveScope | null {
   const scope = place.identifier.scope;
   if (scope !== null && isScopeActive(scope, id)) {

@@ -94,10 +94,10 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
     seen.add(scope);
     if (node.valueRange !== null) {
       scope.range.start = makeInstructionId(
-        Math.min(node.valueRange.start, scope.range.start)
+        Math.min(node.valueRange.start, scope.range.start),
       );
       scope.range.end = makeInstructionId(
-        Math.max(node.valueRange.end, scope.range.end)
+        Math.max(node.valueRange.end, scope.range.end),
       );
     }
   }
@@ -150,7 +150,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
         const scope = child.scope;
         if (scope.range.end > terminal.id) {
           scope.range.end = makeInstructionId(
-            Math.max(scope.range.end, nextId)
+            Math.max(scope.range.end, nextId),
           );
         }
       }
@@ -257,12 +257,12 @@ function _debug(node: BlockNode): string {
 function _printNode(
   node: BlockNode | ReactiveScopeNode,
   out: Array<string>,
-  depth: number = 0
+  depth: number = 0,
 ): void {
   let prefix = "  ".repeat(depth);
   if (node.kind === "scope") {
     out.push(
-      `${prefix}[${node.id}] @${node.scope.id} [${node.scope.range.start}:${node.scope.range.end}]`
+      `${prefix}[${node.id}] @${node.scope.id} [${node.scope.range.start}:${node.scope.range.end}]`,
     );
   } else {
     let range =

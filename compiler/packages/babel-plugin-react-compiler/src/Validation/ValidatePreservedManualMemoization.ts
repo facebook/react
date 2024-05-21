@@ -118,13 +118,13 @@ enum CompareDependencyResult {
 
 function merge(
   a: CompareDependencyResult,
-  b: CompareDependencyResult
+  b: CompareDependencyResult,
 ): CompareDependencyResult {
   return Math.max(a, b);
 }
 
 function getCompareDependencyResultDescription(
-  result: CompareDependencyResult
+  result: CompareDependencyResult,
 ): string {
   switch (result) {
     case CompareDependencyResult.Ok:
@@ -141,7 +141,7 @@ function getCompareDependencyResultDescription(
 
 function compareDeps(
   inferred: ManualMemoDependency,
-  source: ManualMemoDependency
+  source: ManualMemoDependency,
 ): CompareDependencyResult {
   const rootsEqual =
     (inferred.root.kind === "Global" &&
@@ -208,7 +208,7 @@ function validateInferredDep(
   declsWithinMemoBlock: Set<IdentifierId>,
   validDepsInMemoBlock: Array<ManualMemoDependency>,
   errorState: CompilerError,
-  memoLocation: SourceLocation
+  memoLocation: SourceLocation,
 ): void {
   let normalizedDep: ManualMemoDependency;
   const maybeNormalizedRoot = temporaries.get(dep.identifier.id);
@@ -261,7 +261,7 @@ function validateInferredDep(
       "React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected",
     description: DEBUG
       ? `The inferred dependency was \`${prettyPrintScopeDependency(
-          dep
+          dep,
         )}\`, but the source dependencies were [${validDepsInMemoBlock
           .map((dep) => printManualMemoDependency(dep, true))
           .join(", ")}]. Detail: ${
@@ -282,7 +282,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
   collectMaybeMemoDependencies(
     value: ReactiveValue,
-    state: VisitorState
+    state: VisitorState,
   ): ManualMemoDependency | null {
     switch (value.kind) {
       case "SequenceExpression": {
@@ -354,7 +354,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    state: VisitorState
+    state: VisitorState,
   ): void {
     this.traverseScope(scopeBlock, state);
 
@@ -369,7 +369,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           state.manualMemoState.decls,
           state.manualMemoState.depsFromSource,
           state.errors,
-          state.manualMemoState.loc
+          state.manualMemoState.loc,
         );
       }
     }
@@ -398,7 +398,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: VisitorState
+    state: VisitorState,
   ): void {
     this.traverseInstruction(instruction, state);
     this.recordTemporaries(instruction, state);
@@ -430,7 +430,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${instruction.value.manualMemoId}`,
           loc: instruction.value.loc,
           suggestions: null,
-        }
+        },
       );
       state.manualMemoState = null;
     }
@@ -440,7 +440,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       instruction.value.kind === "FinishMemoize" && !instruction.value.pruned;
     if (isDep || isDecl) {
       for (const value of eachInstructionValueOperand(
-        instruction.value as InstructionValue
+        instruction.value as InstructionValue,
       )) {
         if (
           isMutable(instruction as Instruction, value) ||

@@ -47,7 +47,7 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
       {
         reason: "Unexpected phis when merging label blocks",
         loc: label.terminal.loc,
-      }
+      },
     );
 
     CompilerError.invariant(
@@ -58,7 +58,7 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
       {
         reason: "Unexpected block predecessors when merging label blocks",
         loc: label.terminal.loc,
-      }
+      },
     );
 
     label.instructions.push(...next.instructions, ...fallthrough.instructions);

@@ -133,7 +133,7 @@ class Transform extends ReactiveFunctionTransform<State> {
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    parentState: State
+    parentState: State,
   ): void {
     const innerState: State = {
       withinReactiveScope: true,
@@ -263,7 +263,7 @@ class Transform extends ReactiveFunctionTransform<State> {
 
   override transformTerminal(
     stmt: ReactiveTerminalStatement,
-    state: State
+    state: State,
   ): Transformed<ReactiveStatement> {
     if (state.withinReactiveScope && stmt.terminal.kind === "return") {
       const loc = stmt.terminal.value.loc;

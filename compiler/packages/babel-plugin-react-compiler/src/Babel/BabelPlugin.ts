@@ -18,7 +18,7 @@ import {
  * @returns
  */
 export default function BabelPluginReactCompiler(
-  _babel: typeof BabelCore
+  _babel: typeof BabelCore,
 ): BabelCore.PluginObj {
   return {
     name: "react-forget",

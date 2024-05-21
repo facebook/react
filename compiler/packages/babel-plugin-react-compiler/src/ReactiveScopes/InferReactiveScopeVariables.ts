@@ -114,10 +114,10 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       scopes.set(groupIdentifier, scope);
     } else {
       scope.range.start = makeInstructionId(
-        Math.min(scope.range.start, identifier.mutableRange.start)
+        Math.min(scope.range.start, identifier.mutableRange.start),
       );
       scope.range.end = makeInstructionId(
-        Math.max(scope.range.end, identifier.mutableRange.end)
+        Math.max(scope.range.end, identifier.mutableRange.end),
       );
     }
     identifier.scope = scope;
@@ -130,7 +130,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       maxInstruction = makeInstructionId(Math.max(maxInstruction, instr.id));
     }
     maxInstruction = makeInstructionId(
-      Math.max(maxInstruction, block.terminal.id)
+      Math.max(maxInstruction, block.terminal.id),
     );
   }
 
@@ -221,14 +221,14 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     default: {
       assertExhaustive(
         value,
-        `Unexpected value kind \`${(value as any).kind}\``
+        `Unexpected value kind \`${(value as any).kind}\``,
       );
     }
   }
 }
 
 export function findDisjointMutableValues(
-  fn: HIRFunction
+  fn: HIRFunction,
 ): DisjointSet<Identifier> {
   const scopeIdentifiers = new DisjointSet<Identifier>();
   for (const [_, block] of fn.body.blocks) {
