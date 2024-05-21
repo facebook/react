@@ -40,7 +40,7 @@ export type CompilerPass = {
 };
 
 function findDirectiveEnablingMemoization(
-  directives: Array<t.Directive>
+  directives: Array<t.Directive>,
 ): t.Directive | null {
   for (const directive of directives) {
     const directiveValue = directive.value.value;
@@ -53,7 +53,7 @@ function findDirectiveEnablingMemoization(
 
 function findDirectiveDisablingMemoization(
   directives: Array<t.Directive>,
-  options: PluginOptions
+  options: PluginOptions,
 ): t.Directive | null {
   for (const directive of directives) {
     const directiveValue = directive.value.value;
@@ -75,7 +75,7 @@ function isCriticalError(err: unknown): boolean {
 function isConfigError(err: unknown): boolean {
   if (err instanceof CompilerError) {
     return err.details.some(
-      (detail) => detail.severity === ErrorSeverity.InvalidConfig
+      (detail) => detail.severity === ErrorSeverity.InvalidConfig,
     );
   }
   return false;
@@ -94,7 +94,7 @@ export type CompileResult = {
 function handleError(
   err: unknown,
   pass: CompilerPass,
-  fnLoc: t.SourceLocation | null
+  fnLoc: t.SourceLocation | null,
 ): void {
   if (pass.opts.logger) {
     if (err instanceof CompilerError) {
@@ -131,7 +131,7 @@ function handleError(
 
 export function createNewFunctionNode(
   originalFn: BabelFn,
-  compiledFn: CodegenFunction
+  compiledFn: CodegenFunction,
 ): t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression {
   let transformedFn:
     | t.FunctionDeclaration
@@ -198,7 +198,7 @@ const DEFAULT_ESLINT_SUPPRESSIONS = [
 
 function isFilePartOfSources(
   sources: Array<string> | ((filename: string) => boolean),
-  filename: string
+  filename: string,
 ): boolean {
   if (typeof sources === "function") {
     return sources(filename);
@@ -215,7 +215,7 @@ function isFilePartOfSources(
 
 export function compileProgram(
   program: NodePath<t.Program>,
-  pass: CompilerPass
+  pass: CompilerPass,
 ): void {
   const options = parsePluginOptions(pass.opts);
 
@@ -229,7 +229,7 @@ export function compileProgram(
             "When the 'sources' config options is specified, the React compiler will only compile files with a name",
           severity: ErrorSeverity.InvalidConfig,
           loc: null,
-        })
+        }),
       );
       handleError(error, pass, null);
       return;
@@ -262,7 +262,7 @@ export function compileProgram(
   const suppressions = findProgramSuppressions(
     pass.comments,
     options.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
-    options.flowSuppressions
+    options.flowSuppressions,
   );
   const lintError = suppressionsToCompilerError(suppressions);
   let hasCriticalError = lintError != null;
@@ -290,7 +290,7 @@ export function compileProgram(
        */
       const suppressionsInFunction = filterSuppressionsThatAffectFunction(
         suppressions,
-        fn
+        fn,
       );
       if (suppressionsInFunction.length > 0) {
         handleError(lintError, pass, fn.node.loc ?? null);
@@ -321,7 +321,7 @@ export function compileProgram(
         useMemoCacheIdentifier.name,
         options.logger,
         pass.filename,
-        pass.code
+        pass.code,
       );
       options.logger?.logEvent(pass.filename, {
         kind: "CompileSuccess",
@@ -372,13 +372,13 @@ export function compileProgram(
       ...pass,
       opts: { ...pass.opts, ...options },
       filename: pass.filename ?? null,
-    }
+    },
   );
 
   if (options.gating != null) {
     const error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
       program,
-      compiledFns.map(({ originalFn }) => originalFn)
+      compiledFns.map(({ originalFn }) => originalFn),
     );
     if (error) {
       handleError(error, pass, null);
@@ -399,25 +399,25 @@ export function compileProgram(
       options.environment?.enableEmitInstrumentForget;
     if (enableEmitInstrumentForget != null) {
       externalFunctions.push(
-        tryParseExternalFunction(enableEmitInstrumentForget.fn)
+        tryParseExternalFunction(enableEmitInstrumentForget.fn),
       );
       if (enableEmitInstrumentForget.gating != null) {
         externalFunctions.push(
-          tryParseExternalFunction(enableEmitInstrumentForget.gating)
+          tryParseExternalFunction(enableEmitInstrumentForget.gating),
         );
       }
     }
 
     if (options.environment?.enableEmitFreeze != null) {
       const enableEmitFreeze = tryParseExternalFunction(
-        options.environment.enableEmitFreeze
+        options.environment.enableEmitFreeze,
       );
       externalFunctions.push(enableEmitFreeze);
     }
 
     if (options.environment?.enableEmitHookGuards != null) {
       const enableEmitHookGuards = tryParseExternalFunction(
-        options.environment.enableEmitHookGuards
+        options.environment.enableEmitHookGuards,
       );
       externalFunctions.push(enableEmitHookGuards);
     }
@@ -454,7 +454,7 @@ export function compileProgram(
       updateMemoCacheFunctionImport(
         program,
         moduleName,
-        useMemoCacheIdentifier.name
+        useMemoCacheIdentifier.name,
       );
     }
     addImportsToProgram(program, externalFunctions);
@@ -463,14 +463,14 @@ export function compileProgram(
 
 function getReactFunctionType(
   fn: BabelFn,
-  pass: CompilerPass
+  pass: CompilerPass,
 ): ReactFunctionType | null {
   const hookPattern = pass.opts.environment?.hookPattern ?? null;
   if (fn.node.body.type === "BlockStatement") {
     // Opt-outs disable compilation regardless of mode
     const useNoForget = findDirectiveDisablingMemoization(
       fn.node.body.directives,
-      pass.opts
+      pass.opts,
     );
     if (useNoForget != null) {
       pass.opts.logger?.logEvent(pass.filename, {
@@ -519,7 +519,7 @@ function getReactFunctionType(
     default: {
       assertExhaustive(
         pass.opts.compilationMode,
-        `Unexpected compilationMode \`${pass.opts.compilationMode}\``
+        `Unexpected compilationMode \`${pass.opts.compilationMode}\``,
       );
     }
   }
@@ -532,7 +532,7 @@ function getReactFunctionType(
  */
 function hasMemoCacheFunctionImport(
   program: NodePath<t.Program>,
-  moduleName: string
+  moduleName: string,
 ): boolean {
   let hasUseMemoCache = false;
   program.traverse({
@@ -570,7 +570,7 @@ function isHookName(s: string, hookPattern: string | null): boolean {
 
 function isHook(
   path: NodePath<t.Expression | t.PrivateName>,
-  hookPattern: string | null
+  hookPattern: string | null,
 ): boolean {
   if (path.isIdentifier()) {
     return isHookName(path.node.name, hookPattern);
@@ -598,7 +598,7 @@ function isComponentName(path: NodePath<t.Expression>): boolean {
 
 function isReactAPI(
   path: NodePath<t.Expression | t.PrivateName | t.V8IntrinsicIdentifier>,
-  functionName: string
+  functionName: string,
 ): boolean {
   const node = path.node;
   return (
@@ -638,7 +638,7 @@ function isMemoCallback(path: NodePath<t.Expression>): boolean {
 }
 
 function isValidComponentParams(
-  params: Array<NodePath<t.Identifier | t.Pattern | t.RestElement>>
+  params: Array<NodePath<t.Identifier | t.Pattern | t.RestElement>>,
 ): boolean {
   if (params.length === 0) {
     return true;
@@ -667,7 +667,7 @@ function getComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  hookPattern: string | null
+  hookPattern: string | null,
 ): ReactFunctionType | null {
   const functionName = getFunctionName(node);
   // Check if the name is component or hook like:
@@ -696,7 +696,7 @@ function getComponentOrHookLike(
 
 function callsHooksOrCreatesJsx(
   node: NodePath<t.Node>,
-  hookPattern: string | null
+  hookPattern: string | null,
 ): boolean {
   let invokesHooks = false;
   let createsJsx = false;
@@ -726,7 +726,7 @@ function callsHooksOrCreatesJsx(
 function getFunctionName(
   path: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
 ): NodePath<t.Expression> | null {
   if (path.isFunctionDeclaration()) {
     const id = path.get("id");
@@ -781,15 +781,15 @@ function getFunctionName(
 
 function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   program: NodePath<t.Program>,
-  fns: Array<BabelFn>
+  fns: Array<BabelFn>,
 ): CompilerError | null {
   const fnIds = new Set(
     fns
       .map((fn) => getFunctionName(fn))
       .filter(
-        (name): name is NodePath<t.Identifier> => !!name && name.isIdentifier()
+        (name): name is NodePath<t.Identifier> => !!name && name.isIdentifier(),
       )
-      .map((name) => name.node)
+      .map((name) => name.node),
   );
   const fnNames = new Map([...fnIds].map((id) => [id.name, id]));
   const errors = new CompilerError();
@@ -837,7 +837,7 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
             loc: fn.loc ?? null,
             suggestions: null,
             severity: ErrorSeverity.Invariant,
-          })
+          }),
         );
       }
     },

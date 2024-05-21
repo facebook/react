@@ -88,8 +88,8 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
           fbtScope.range.start = makeInstructionId(
             Math.min(
               fbtScope.range.start,
-              operand.identifier.mutableRange.start
-            )
+              operand.identifier.mutableRange.start,
+            ),
           );
         }
       } else if (
@@ -113,8 +113,8 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
           fbtScope.range.start = makeInstructionId(
             Math.min(
               fbtScope.range.start,
-              operand.identifier.mutableRange.start
-            )
+              operand.identifier.mutableRange.start,
+            ),
           );
 
           /*
@@ -130,7 +130,7 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
 
 function isFbtCallExpression(
   fbtValues: Set<IdentifierId>,
-  value: ReactiveValue
+  value: ReactiveValue,
 ): boolean {
   return (
     value.kind === "CallExpression" && fbtValues.has(value.callee.identifier.id)
@@ -139,7 +139,7 @@ function isFbtCallExpression(
 
 function isFbtJsxExpression(
   fbtValues: Set<IdentifierId>,
-  value: ReactiveValue
+  value: ReactiveValue,
 ): boolean {
   return (
     value.kind === "JsxExpression" &&
@@ -152,7 +152,7 @@ function isFbtJsxExpression(
 function isFbtJsxChild(
   fbtValues: Set<IdentifierId>,
   lvalue: Place | null,
-  value: ReactiveValue
+  value: ReactiveValue,
 ): boolean {
   return (
     (value.kind === "JsxExpression" || value.kind === "JsxFragment") &&

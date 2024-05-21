@@ -2,7 +2,7 @@ function Component(
   x,
   y = () => {
     return x;
-  }
+  },
 ) {
   return y();
 }
