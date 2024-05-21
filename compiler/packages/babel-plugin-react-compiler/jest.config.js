@@ -5,9 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/** @type {import('jest').Config} */
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 const config = {
-  projects: ["<rootDir>/scripts/jest/*.config.js"],
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  modulePathIgnorePatterns: [
+    '<rootDir>/src/__tests__/fixtures',
+    '<rootDir>/src/__tests__/test-utils',
+    '<rootDir>/dist',
+    '<rootDir>/node_modules',
+  ],
 };
 
 module.exports = config;

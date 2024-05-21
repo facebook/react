@@ -9,7 +9,7 @@
     "src"
   ],
   "peerDependencies": {
-    "react": "^18.2.0 || ^19.0.0"
+    "react": "^18.2.0 || ^19.0.0 || 19.0.0-beta-04b058868c-20240508"
   },
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
