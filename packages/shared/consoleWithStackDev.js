@@ -40,19 +40,30 @@ function printWarning(level, format, args) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   if (__DEV__) {
+    const isErrorLogger =
+      format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
+
     const stack = ReactSharedInternals.getStackAddendum();
     if (stack !== '') {
       format += '%s';
       args = args.concat([stack]);
     }
 
-    // eslint-disable-next-line react-internal/safe-string-coercion
-    const argsWithFormat = args.map(item => String(item));
-    // Careful: RN currently depends on this prefix
-    argsWithFormat.unshift('Warning: ' + format);
+    if (isErrorLogger) {
+      // Don't prefix our default logging formatting in ReactFiberErrorLoggger.
+      // Don't toString the arguments.
+      args.unshift(format);
+    } else {
+      // TODO: Remove this prefix and stop toStringing in the wrapper and
+      // instead do it at each callsite as needed.
+      // Careful: RN currently depends on this prefix
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      args = args.map(item => String(item));
+      args.unshift('Warning: ' + format);
+    }
     // We intentionally don't use spread (or .apply) directly because it
     // breaks IE9: https://github.com/facebook/react/issues/13610
     // eslint-disable-next-line react-internal/no-production-logging
-    Function.prototype.apply.call(console[level], console, argsWithFormat);
+    Function.prototype.apply.call(console[level], console, args);
   }
 }
