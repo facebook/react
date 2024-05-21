@@ -36,23 +36,16 @@ import { c as _c } from "react/compiler-runtime"; // @enableReactiveScopesInHIR:
 import { useFragment } from "shared-runtime";
 
 function Foo() {
-  const $ = _c(4);
+  const $ = _c(2);
   const data = useFragment();
-  let t0;
-  if ($[0] !== data) {
-    t0 = data?.toString() || "";
-    $[0] = data;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
+  const t0 = data?.toString() || "";
   let t1;
-  if ($[2] !== t0) {
+  if ($[0] !== t0) {
     t1 = [t0];
-    $[2] = t0;
-    $[3] = t1;
+    $[0] = t0;
+    $[1] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[1];
   }
   return t1;
 }
