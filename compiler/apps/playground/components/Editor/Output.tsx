@@ -121,7 +121,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
       <TextTabContent
         output={code}
         diff={null}
-        showInfoPanel={false}
+        showInfoPanel={true}
       ></TextTabContent>,
     );
     if (sourceMapUrl) {
