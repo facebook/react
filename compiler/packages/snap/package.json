@@ -32,8 +32,8 @@
     "hermes-parser": "^0.19.1",
     "jsdom": "^22.1.0",
     "prettier": "2.8.8",
-    "react": "19.0.0-beta-b498834eab-20240506",
-    "react-dom": "19.0.0-beta-b498834eab-20240506",
+    "react": "19.0.0-beta-04b058868c-20240508",
+    "react-dom": "19.0.0-beta-04b058868c-20240508",
     "readline": "^1.3.0",
     "yargs": "^17.7.1"
   },
