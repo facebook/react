@@ -1017,7 +1017,6 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
-// This is a hacky one to just support this exact case.
 export function normalizeUrl(url: string): string {
-  return url.replace('/./', '/');
+  return new URL(url).toString();
 }
