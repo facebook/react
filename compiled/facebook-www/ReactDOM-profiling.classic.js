@@ -7930,15 +7930,7 @@ function markUpdate(workInProgress) {
 function preloadResourceAndSuspendIfNeeded(workInProgress, resource) {
   if ("stylesheet" !== resource.type || 0 !== (resource.state.loading & 4))
     workInProgress.flags &= -16777217;
-  else if (
-    ((workInProgress.flags |= 16777216),
-    0 === (workInProgressRootRenderLanes & 42) &&
-      ((resource =
-        "stylesheet" === resource.type && 0 === (resource.state.loading & 3)
-          ? !1
-          : !0),
-      !resource))
-  )
+  else if (((workInProgress.flags |= 16777216), !preloadResource(resource)))
     if (shouldRemainOnPreviousScreen()) workInProgress.flags |= 8192;
     else
       throw (
@@ -11665,7 +11657,7 @@ function commitRootWhenReady(
   spawnedLane
 ) {
   if (
-    0 === (lanes & 42) &&
+    finishedWork.subtreeFlags & 8192 &&
     ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
     accumulateSuspenseyCommitOnFiber(finishedWork),
     (finishedWork = waitForCommitToBeReady()),
@@ -12093,23 +12085,27 @@ function renderRootConcurrent(root, lanes) {
                 throwAndUnwindWorkLoop(root, lanes, memoizedUpdaters));
             break;
           case 5:
+            var resource = null;
             switch (workInProgress.tag) {
-              case 5:
               case 26:
+                resource = workInProgress.memoizedState;
+              case 5:
               case 27:
-                lanes = workInProgress;
-                workInProgressSuspendedReason = 0;
-                workInProgressThrownValue = null;
-                var sibling = lanes.sibling;
-                if (null !== sibling) workInProgress = sibling;
-                else {
-                  var returnFiber = lanes.return;
-                  null !== returnFiber
-                    ? ((workInProgress = returnFiber),
-                      completeUnitOfWork(returnFiber))
-                    : (workInProgress = null);
+                var hostFiber = workInProgress;
+                if (resource ? preloadResource(resource) : 1) {
+                  workInProgressSuspendedReason = 0;
+                  workInProgressThrownValue = null;
+                  var sibling = hostFiber.sibling;
+                  if (null !== sibling) workInProgress = sibling;
+                  else {
+                    var returnFiber = hostFiber.return;
+                    null !== returnFiber
+                      ? ((workInProgress = returnFiber),
+                        completeUnitOfWork(returnFiber))
+                      : (workInProgress = null);
+                  }
+                  break b;
                 }
-                break b;
             }
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
@@ -13840,19 +13836,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$374;
+  var JSCompiler_inline_result$jscomp$375;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1601 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1601) {
-      var element$jscomp$inline_1602 = document.createElement("div");
-      element$jscomp$inline_1602.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1601 =
-        "function" === typeof element$jscomp$inline_1602.oninput;
+    var isSupported$jscomp$inline_1602 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1602) {
+      var element$jscomp$inline_1603 = document.createElement("div");
+      element$jscomp$inline_1603.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1602 =
+        "function" === typeof element$jscomp$inline_1603.oninput;
     }
-    JSCompiler_inline_result$jscomp$374 = isSupported$jscomp$inline_1601;
-  } else JSCompiler_inline_result$jscomp$374 = !1;
+    JSCompiler_inline_result$jscomp$375 = isSupported$jscomp$inline_1602;
+  } else JSCompiler_inline_result$jscomp$375 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$374 &&
+    JSCompiler_inline_result$jscomp$375 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -14261,20 +14257,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1642 = 0;
-  i$jscomp$inline_1642 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1642++
+  var i$jscomp$inline_1643 = 0;
+  i$jscomp$inline_1643 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1643++
 ) {
-  var eventName$jscomp$inline_1643 =
-      simpleEventPluginEvents[i$jscomp$inline_1642],
-    domEventName$jscomp$inline_1644 =
-      eventName$jscomp$inline_1643.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1645 =
-      eventName$jscomp$inline_1643[0].toUpperCase() +
-      eventName$jscomp$inline_1643.slice(1);
+  var eventName$jscomp$inline_1644 =
+      simpleEventPluginEvents[i$jscomp$inline_1643],
+    domEventName$jscomp$inline_1645 =
+      eventName$jscomp$inline_1644.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1646 =
+      eventName$jscomp$inline_1644[0].toUpperCase() +
+      eventName$jscomp$inline_1644.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1644,
-    "on" + capitalizedEvent$jscomp$inline_1645
+    domEventName$jscomp$inline_1645,
+    "on" + capitalizedEvent$jscomp$inline_1646
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16927,6 +16923,11 @@ function isHostHoistableType(type, props, hostContext) {
   }
   return !1;
 }
+function preloadResource(resource) {
+  return "stylesheet" === resource.type && 0 === (resource.state.loading & 3)
+    ? !1
+    : !0;
+}
 var suspendedState = null;
 function noop() {}
 function suspendResource(hoistableRoot, resource, props) {
@@ -17799,10 +17800,10 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1820 = {
+var devToolsConfig$jscomp$inline_1821 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-4513b6b6",
+  version: "19.0.0-www-classic-2e18da43",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17820,10 +17821,10 @@ var devToolsConfig$jscomp$inline_1820 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1820.bundleType,
-  version: devToolsConfig$jscomp$inline_1820.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1820.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1820.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1821.bundleType,
+  version: devToolsConfig$jscomp$inline_1821.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1821.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1821.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17839,14 +17840,14 @@ var devToolsConfig$jscomp$inline_1820 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1820.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1821.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-4513b6b6"
+  reconcilerVersion: "19.0.0-www-classic-2e18da43"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -18337,7 +18338,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-4513b6b6";
+exports.version = "19.0.0-www-classic-2e18da43";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

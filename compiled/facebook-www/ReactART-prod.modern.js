@@ -8781,7 +8781,8 @@ function commitRootWhenReady(
   lanes,
   spawnedLane
 ) {
-  0 === (lanes & 42) && accumulateSuspenseyCommitOnFiber(finishedWork);
+  finishedWork.subtreeFlags & 8192 &&
+    accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
     recoverableErrors,
@@ -9091,7 +9092,8 @@ function renderRootConcurrent(root, lanes) {
             throwAndUnwindWorkLoop(root, lanes, thrownValue);
             break;
           case 2:
-            if (isThenableResolved(thrownValue)) {
+            var thenable = thrownValue;
+            if (isThenableResolved(thenable)) {
               workInProgressSuspendedReason = 0;
               workInProgressThrownValue = null;
               replaySuspendedUnitOfWork(lanes);
@@ -9103,7 +9105,7 @@ function renderRootConcurrent(root, lanes) {
                 (workInProgressSuspendedReason = 7);
               ensureRootIsScheduled(root);
             };
-            thrownValue.then(lanes, lanes);
+            thenable.then(lanes, lanes);
             break a;
           case 3:
             workInProgressSuspendedReason = 7;
@@ -9121,11 +9123,14 @@ function renderRootConcurrent(root, lanes) {
                 throwAndUnwindWorkLoop(root, lanes, thrownValue));
             break;
           case 5:
+            thenable = null;
             switch (workInProgress.tag) {
-              case 5:
               case 26:
+                thenable = workInProgress.memoizedState;
+              case 5:
               case 27:
                 lanes = workInProgress;
+                if (thenable) throw Error(formatProdErrorMessage(442));
                 workInProgressSuspendedReason = 0;
                 workInProgressThrownValue = null;
                 var sibling = lanes.sibling;
@@ -10104,19 +10109,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1097 = {
+  devToolsConfig$jscomp$inline_1102 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-94d3d045",
+    version: "19.0.0-www-modern-2946f075",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1327 = {
-  bundleType: devToolsConfig$jscomp$inline_1097.bundleType,
-  version: devToolsConfig$jscomp$inline_1097.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1097.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1097.rendererConfig,
+var internals$jscomp$inline_1336 = {
+  bundleType: devToolsConfig$jscomp$inline_1102.bundleType,
+  version: devToolsConfig$jscomp$inline_1102.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1102.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1102.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10133,26 +10138,26 @@ var internals$jscomp$inline_1327 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1097.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1102.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-94d3d045"
+  reconcilerVersion: "19.0.0-www-modern-2946f075"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1328 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1337 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1328.isDisabled &&
-    hook$jscomp$inline_1328.supportsFiber
+    !hook$jscomp$inline_1337.isDisabled &&
+    hook$jscomp$inline_1337.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1328.inject(
-        internals$jscomp$inline_1327
+      (rendererID = hook$jscomp$inline_1337.inject(
+        internals$jscomp$inline_1336
       )),
-        (injectedHook = hook$jscomp$inline_1328);
+        (injectedHook = hook$jscomp$inline_1337);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

@@ -18349,35 +18349,17 @@ function preloadInstanceAndSuspendIfNeeded(workInProgress, type, props, renderLa
   // loaded yet.
 
 
-  workInProgress.flags |= MaySuspendCommit; // Check if we're rendering at a "non-urgent" priority. This is the same
-  // check that `useDeferredValue` does to determine whether it needs to
-  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
-  // suspending until you opt in with startTransition or Suspense) but it
-  // also happens to be the desired behavior for the concrete use cases we've
-  // thought of so far, like CSS loading, fonts, images, etc.
-  //
-  // We check the "root" render lanes here rather than the "subtree" render
-  // because during a retry or offscreen prerender, the "subtree" render
-  // lanes may include additional "base" lanes that were deferred during
-  // a previous render.
-  // TODO: We may decide to expose a way to force a fallback even during a
-  // sync update.
+  workInProgress.flags |= MaySuspendCommit; // preload the instance if necessary. Even if this is an urgent render there
+  // could be benefits to preloading early.
+  // @TODO we should probably do the preload in begin work
 
-  var rootRenderLanes = getWorkInProgressRootRenderLanes();
+  var isReady = preloadInstance(type, props);
 
-  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) ; else {
-    // Preload the instance
-    var isReady = preloadInstance(type, props);
-
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen()) {
-        // It's OK to suspend. Mark the fiber so we know to suspend before the
-        // commit phase. Then continue rendering.
-        workInProgress.flags |= ShouldSuspendCommit;
-      } else {
-        // Trigger a fallback rather than block the render.
-        suspendCommit();
-      }
+  if (!isReady) {
+    if (shouldRemainOnPreviousScreen()) {
+      workInProgress.flags |= ShouldSuspendCommit;
+    } else {
+      suspendCommit();
     }
   }
 }
@@ -18390,17 +18372,13 @@ function preloadResourceAndSuspendIfNeeded(workInProgress, resource, type, props
   }
 
   workInProgress.flags |= MaySuspendCommit;
-  var rootRenderLanes = getWorkInProgressRootRenderLanes();
+  var isReady = preloadResource(resource);
 
-  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) ; else {
-    var isReady = preloadResource(resource);
-
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen()) {
-        workInProgress.flags |= ShouldSuspendCommit;
-      } else {
-        suspendCommit();
-      }
+  if (!isReady) {
+    if (shouldRemainOnPreviousScreen()) {
+      workInProgress.flags |= ShouldSuspendCommit;
+    } else {
+      suspendCommit();
     }
   }
 }
@@ -24971,7 +24949,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
 function commitRootWhenReady(root, finishedWork, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, lanes, spawnedLane) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
-  if (includesOnlyNonUrgentLanes(lanes)) {
+  if (finishedWork.subtreeFlags & ShouldSuspendCommit) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
     startSuspendingCommit(); // This will walk the completed fiber tree and attach listeners to all
@@ -25907,9 +25885,16 @@ function renderRootConcurrent(root, lanes) {
 
           case SuspendedOnInstanceAndReadyToContinue:
             {
+              var resource = null;
+
               switch (workInProgress.tag) {
-                case HostComponent:
                 case HostHoistable:
+                  {
+                    resource = workInProgress.memoizedState;
+                  }
+                // intentional fallthrough
+
+                case HostComponent:
                 case HostSingleton:
                   {
                     // Before unwinding the stack, check one more time if the
@@ -25920,7 +25905,7 @@ function renderRootConcurrent(root, lanes) {
                     var hostFiber = workInProgress;
                     var type = hostFiber.type;
                     var props = hostFiber.pendingProps;
-                    var isReady = preloadInstance(type, props);
+                    var isReady = resource ? preloadResource(resource) : preloadInstance(type, props);
 
                     if (isReady) {
                       // The data resolved. Resume the work loop as if nothing
@@ -28665,7 +28650,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-4ced1037';
+var ReactVersion = '19.0.0-www-classic-d0612afb';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

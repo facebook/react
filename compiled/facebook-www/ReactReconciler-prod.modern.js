@@ -6279,11 +6279,7 @@ module.exports = function ($$$config) {
   }
   function preloadInstanceAndSuspendIfNeeded(workInProgress, type, props) {
     if (maySuspendCommit(type, props)) {
-      if (
-        ((workInProgress.flags |= 16777216),
-        0 === (workInProgressRootRenderLanes & 42) &&
-          !preloadInstance(type, props))
-      )
+      if (((workInProgress.flags |= 16777216), !preloadInstance(type, props)))
         if (shouldRemainOnPreviousScreen()) workInProgress.flags |= 8192;
         else
           throw (
@@ -6294,11 +6290,7 @@ module.exports = function ($$$config) {
   }
   function preloadResourceAndSuspendIfNeeded(workInProgress, resource) {
     if (mayResourceSuspendCommit(resource)) {
-      if (
-        ((workInProgress.flags |= 16777216),
-        0 === (workInProgressRootRenderLanes & 42) &&
-          !preloadResource(resource))
-      )
+      if (((workInProgress.flags |= 16777216), !preloadResource(resource)))
         if (shouldRemainOnPreviousScreen()) workInProgress.flags |= 8192;
         else
           throw (
@@ -9627,7 +9619,7 @@ module.exports = function ($$$config) {
     spawnedLane
   ) {
     if (
-      0 === (lanes & 42) &&
+      finishedWork.subtreeFlags & 8192 &&
       (startSuspendingCommit(),
       accumulateSuspenseyCommitOnFiber(finishedWork),
       (finishedWork = waitForCommitToBeReady()),
@@ -9992,12 +9984,20 @@ module.exports = function ($$$config) {
                   throwAndUnwindWorkLoop(root, lanes, thrownValue));
               break;
             case 5:
+              var resource = null;
               switch (workInProgress.tag) {
-                case 5:
                 case 26:
+                  resource = workInProgress.memoizedState;
+                case 5:
                 case 27:
-                  var hostFiber = workInProgress;
-                  if (preloadInstance(hostFiber.type, hostFiber.pendingProps)) {
+                  var hostFiber = workInProgress,
+                    type = hostFiber.type,
+                    props = hostFiber.pendingProps;
+                  if (
+                    resource
+                      ? preloadResource(resource)
+                      : preloadInstance(type, props)
+                  ) {
                     workInProgressSuspendedReason = 0;
                     workInProgressThrownValue = null;
                     var sibling = hostFiber.sibling;
@@ -12145,7 +12145,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-1eb185ad"
+      reconcilerVersion: "19.0.0-www-modern-8adc81b7"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

@@ -20763,17 +20763,13 @@ function preloadResourceAndSuspendIfNeeded(workInProgress, resource, type, props
   }
 
   workInProgress.flags |= MaySuspendCommit;
-  var rootRenderLanes = getWorkInProgressRootRenderLanes();
+  var isReady = preloadResource(resource);
 
-  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) ; else {
-    var isReady = preloadResource(resource);
-
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen()) {
-        workInProgress.flags |= ShouldSuspendCommit;
-      } else {
-        suspendCommit();
-      }
+  if (!isReady) {
+    if (shouldRemainOnPreviousScreen()) {
+      workInProgress.flags |= ShouldSuspendCommit;
+    } else {
+      suspendCommit();
     }
   }
 }
@@ -27065,7 +27061,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
 function commitRootWhenReady(root, finishedWork, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, lanes, spawnedLane) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
-  if (includesOnlyNonUrgentLanes(lanes)) {
+  if (finishedWork.subtreeFlags & ShouldSuspendCommit) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
     startSuspendingCommit(); // This will walk the completed fiber tree and attach listeners to all
@@ -27921,9 +27917,16 @@ function renderRootConcurrent(root, lanes) {
 
           case SuspendedOnInstanceAndReadyToContinue:
             {
+              var resource = null;
+
               switch (workInProgress.tag) {
-                case HostComponent:
                 case HostHoistable:
+                  {
+                    resource = workInProgress.memoizedState;
+                  }
+                // intentional fallthrough
+
+                case HostComponent:
                 case HostSingleton:
                   {
                     // Before unwinding the stack, check one more time if the
@@ -27934,7 +27937,7 @@ function renderRootConcurrent(root, lanes) {
                     var hostFiber = workInProgress;
                     var type = hostFiber.type;
                     var props = hostFiber.pendingProps;
-                    var isReady = preloadInstance(type, props);
+                    var isReady = resource ? preloadResource(resource) : preloadInstance(type, props);
 
                     if (isReady) {
                       // The data resolved. Resume the work loop as if nothing
@@ -30590,7 +30593,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-f5cffda9';
+var ReactVersion = '19.0.0-www-modern-8378a978';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -39626,14 +39629,13 @@ function mayResourceSuspendCommit(resource) {
   return resource.type === 'stylesheet' && (resource.state.loading & Inserted) === NotLoaded;
 }
 function preloadInstance(type, props) {
-  // Return true to indicate it's already loaded
   return true;
 }
 function preloadResource(resource) {
   if (resource.type === 'stylesheet' && (resource.state.loading & Settled) === NotLoaded) {
-    // we have not finished loading the underlying stylesheet yet.
+    // Return false to indicate this resource should suspend
     return false;
-  } // Return true to indicate it's already loaded
+  } // Return true to indicate this resource should not suspend
 
 
   return true;

@@ -7768,15 +7768,7 @@ function markUpdate(workInProgress) {
 function preloadResourceAndSuspendIfNeeded(workInProgress, resource) {
   if ("stylesheet" !== resource.type || 0 !== (resource.state.loading & 4))
     workInProgress.flags &= -16777217;
-  else if (
-    ((workInProgress.flags |= 16777216),
-    0 === (workInProgressRootRenderLanes & 42) &&
-      ((resource =
-        "stylesheet" === resource.type && 0 === (resource.state.loading & 3)
-          ? !1
-          : !0),
-      !resource))
-  )
+  else if (((workInProgress.flags |= 16777216), !preloadResource(resource)))
     if (shouldRemainOnPreviousScreen()) workInProgress.flags |= 8192;
     else
       throw (
@@ -11344,7 +11336,7 @@ function commitRootWhenReady(
   spawnedLane
 ) {
   if (
-    0 === (lanes & 42) &&
+    finishedWork.subtreeFlags & 8192 &&
     ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
     accumulateSuspenseyCommitOnFiber(finishedWork),
     (finishedWork = waitForCommitToBeReady()),
@@ -11719,23 +11711,27 @@ function renderRootConcurrent(root, lanes) {
                 throwAndUnwindWorkLoop(root, lanes, thrownValue));
             break;
           case 5:
+            var resource = null;
             switch (workInProgress.tag) {
-              case 5:
               case 26:
+                resource = workInProgress.memoizedState;
+              case 5:
               case 27:
-                lanes = workInProgress;
-                workInProgressSuspendedReason = 0;
-                workInProgressThrownValue = null;
-                var sibling = lanes.sibling;
-                if (null !== sibling) workInProgress = sibling;
-                else {
-                  var returnFiber = lanes.return;
-                  null !== returnFiber
-                    ? ((workInProgress = returnFiber),
-                      completeUnitOfWork(returnFiber))
-                    : (workInProgress = null);
+                var hostFiber = workInProgress;
+                if (resource ? preloadResource(resource) : 1) {
+                  workInProgressSuspendedReason = 0;
+                  workInProgressThrownValue = null;
+                  var sibling = hostFiber.sibling;
+                  if (null !== sibling) workInProgress = sibling;
+                  else {
+                    var returnFiber = hostFiber.return;
+                    null !== returnFiber
+                      ? ((workInProgress = returnFiber),
+                        completeUnitOfWork(returnFiber))
+                      : (workInProgress = null);
+                  }
+                  break b;
                 }
-                break b;
             }
             workInProgressSuspendedReason = 0;
             workInProgressThrownValue = null;
@@ -13364,19 +13360,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$355;
+  var JSCompiler_inline_result$jscomp$356;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1544 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1544) {
-      var element$jscomp$inline_1545 = document.createElement("div");
-      element$jscomp$inline_1545.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1544 =
-        "function" === typeof element$jscomp$inline_1545.oninput;
+    var isSupported$jscomp$inline_1545 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1545) {
+      var element$jscomp$inline_1546 = document.createElement("div");
+      element$jscomp$inline_1546.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1545 =
+        "function" === typeof element$jscomp$inline_1546.oninput;
     }
-    JSCompiler_inline_result$jscomp$355 = isSupported$jscomp$inline_1544;
-  } else JSCompiler_inline_result$jscomp$355 = !1;
+    JSCompiler_inline_result$jscomp$356 = isSupported$jscomp$inline_1545;
+  } else JSCompiler_inline_result$jscomp$356 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$355 &&
+    JSCompiler_inline_result$jscomp$356 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13785,20 +13781,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1585 = 0;
-  i$jscomp$inline_1585 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1585++
+  var i$jscomp$inline_1586 = 0;
+  i$jscomp$inline_1586 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1586++
 ) {
-  var eventName$jscomp$inline_1586 =
-      simpleEventPluginEvents[i$jscomp$inline_1585],
-    domEventName$jscomp$inline_1587 =
-      eventName$jscomp$inline_1586.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1588 =
-      eventName$jscomp$inline_1586[0].toUpperCase() +
-      eventName$jscomp$inline_1586.slice(1);
+  var eventName$jscomp$inline_1587 =
+      simpleEventPluginEvents[i$jscomp$inline_1586],
+    domEventName$jscomp$inline_1588 =
+      eventName$jscomp$inline_1587.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1589 =
+      eventName$jscomp$inline_1587[0].toUpperCase() +
+      eventName$jscomp$inline_1587.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1587,
-    "on" + capitalizedEvent$jscomp$inline_1588
+    domEventName$jscomp$inline_1588,
+    "on" + capitalizedEvent$jscomp$inline_1589
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16508,6 +16504,11 @@ function isHostHoistableType(type, props, hostContext) {
   }
   return !1;
 }
+function preloadResource(resource) {
+  return "stylesheet" === resource.type && 0 === (resource.state.loading & 3)
+    ? !1
+    : !0;
+}
 var suspendedState = null;
 function noop() {}
 function suspendResource(hoistableRoot, resource, props) {
@@ -17380,17 +17381,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1763 = {
+var devToolsConfig$jscomp$inline_1764 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-c5247b0e",
+  version: "19.0.0-www-classic-53e83227",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2212 = {
-  bundleType: devToolsConfig$jscomp$inline_1763.bundleType,
-  version: devToolsConfig$jscomp$inline_1763.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1763.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1763.rendererConfig,
+var internals$jscomp$inline_2213 = {
+  bundleType: devToolsConfig$jscomp$inline_1764.bundleType,
+  version: devToolsConfig$jscomp$inline_1764.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1764.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1764.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17406,26 +17407,26 @@ var internals$jscomp$inline_2212 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1763.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1764.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-c5247b0e"
+  reconcilerVersion: "19.0.0-www-classic-53e83227"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2213 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2214 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2213.isDisabled &&
-    hook$jscomp$inline_2213.supportsFiber
+    !hook$jscomp$inline_2214.isDisabled &&
+    hook$jscomp$inline_2214.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2213.inject(
-        internals$jscomp$inline_2212
+      (rendererID = hook$jscomp$inline_2214.inject(
+        internals$jscomp$inline_2213
       )),
-        (injectedHook = hook$jscomp$inline_2213);
+        (injectedHook = hook$jscomp$inline_2214);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18068,4 +18069,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-c5247b0e";
+exports.version = "19.0.0-www-classic-53e83227";
