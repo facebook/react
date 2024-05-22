@@ -310,7 +310,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         hookKind: "useEffect",
         returnValueKind: ValueKind.Frozen,
       },
-      BuiltInUseEffectHookId
+      BuiltInUseEffectHookId,
     ),
   ],
   [
@@ -325,7 +325,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         hookKind: "useLayoutEffect",
         returnValueKind: ValueKind.Frozen,
       },
-      BuiltInUseLayoutEffectHookId
+      BuiltInUseLayoutEffectHookId,
     ),
   ],
   [
@@ -340,7 +340,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         hookKind: "useLayoutEffect",
         returnValueKind: ValueKind.Frozen,
       },
-      BuiltInUseInsertionEffectHookId
+      BuiltInUseInsertionEffectHookId,
     ),
   ],
   [
@@ -355,7 +355,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Frozen,
       },
-      BuiltInUseOperatorId
+      BuiltInUseOperatorId,
     ),
   ],
 ];
@@ -406,7 +406,7 @@ TYPED_GLOBALS.push(
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Frozen,
     }),
-  ]
+  ],
 );
 
 export type Global = BuiltInType | PolyType;
@@ -427,12 +427,12 @@ for (const [name, type_] of TYPED_GLOBALS) {
 // Recursive global type
 DEFAULT_GLOBALS.set(
   "globalThis",
-  addObject(DEFAULT_SHAPES, "globalThis", TYPED_GLOBALS)
+  addObject(DEFAULT_SHAPES, "globalThis", TYPED_GLOBALS),
 );
 
 export function installReAnimatedTypes(
   globals: GlobalRegistry,
-  registry: ShapeRegistry
+  registry: ShapeRegistry,
 ): void {
   // hooks that freeze args and return frozen value
   const frozenHooks = [
@@ -454,7 +454,7 @@ export function installReAnimatedTypes(
         noAlias: true,
         calleeEffect: Effect.Read,
         hookKind: "Custom",
-      })
+      }),
     );
   }
 
@@ -474,7 +474,7 @@ export function installReAnimatedTypes(
         noAlias: true,
         calleeEffect: Effect.Read,
         hookKind: "Custom",
-      })
+      }),
     );
   }
 
@@ -498,7 +498,7 @@ export function installReAnimatedTypes(
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Mutable,
         noAlias: true,
-      })
+      }),
     );
   }
 }

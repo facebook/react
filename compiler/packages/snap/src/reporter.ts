@@ -22,7 +22,7 @@ export function writeOutputToString(
   input: string,
   compilerOutput: string | null,
   evaluatorOutput: string | null,
-  errorMessage: string | null
+  errorMessage: string | null,
 ) {
   // leading newline intentional
   let result = `
@@ -74,13 +74,13 @@ export async function update(results: TestResults): Promise<void> {
   for (const [basename, result] of results) {
     if (result.unexpectedError != null) {
       console.log(
-        chalk.red.inverse.bold(" FAILED ") + " " + chalk.dim(basename)
+        chalk.red.inverse.bold(" FAILED ") + " " + chalk.dim(basename),
       );
       failed.push([basename, result.unexpectedError]);
     } else if (result.actual == null) {
       // Input was deleted but the expect file still existed, remove it
       console.log(
-        chalk.red.inverse.bold(" REMOVE ") + " " + chalk.dim(basename)
+        chalk.red.inverse.bold(" REMOVE ") + " " + chalk.dim(basename),
       );
       try {
         fs.unlinkSync(result.outputPath);
@@ -88,14 +88,14 @@ export async function update(results: TestResults): Promise<void> {
         deleted++;
       } catch (e) {
         console.error(
-          "[Snap tester error]: failed to remove " + result.outputPath
+          "[Snap tester error]: failed to remove " + result.outputPath,
         );
         failed.push([basename, result.unexpectedError]);
       }
     } else if (result.actual !== result.expected) {
       // Expected output has changed
       console.log(
-        chalk.blue.inverse.bold(" UPDATE ") + " " + chalk.dim(basename)
+        chalk.blue.inverse.bold(" UPDATE ") + " " + chalk.dim(basename),
       );
       try {
         fs.writeFileSync(result.outputPath, result.actual, "utf8");
@@ -114,12 +114,12 @@ export async function update(results: TestResults): Promise<void> {
     } else {
       // Expected output is current
       console.log(
-        chalk.green.inverse.bold("  OKAY  ") + " " + chalk.dim(basename)
+        chalk.green.inverse.bold("  OKAY  ") + " " + chalk.dim(basename),
       );
     }
   }
   console.log(
-    `${deleted} Deleted, ${created} Created, ${updated} Updated, ${failed.length} Failed`
+    `${deleted} Deleted, ${created} Created, ${updated} Updated, ${failed.length} Failed`,
   );
   for (const [basename, errorMsg] of failed) {
     console.log(`${chalk.red.bold("Fail:")} ${basename}\n${errorMsg}`);
@@ -135,7 +135,7 @@ export function report(results: TestResults): boolean {
   for (const [basename, result] of results) {
     if (result.actual === result.expected && result.unexpectedError == null) {
       console.log(
-        chalk.green.inverse.bold(" PASS ") + " " + chalk.dim(basename)
+        chalk.green.inverse.bold(" PASS ") + " " + chalk.dim(basename),
       );
     } else {
       console.log(chalk.red.inverse.bold(" FAIL ") + " " + chalk.dim(basename));
@@ -150,19 +150,19 @@ export function report(results: TestResults): boolean {
       console.log(chalk.red.bold("FAIL:") + " " + basename);
       if (result.unexpectedError != null) {
         console.log(
-          ` >> Unexpected error during test: \n${result.unexpectedError}`
+          ` >> Unexpected error during test: \n${result.unexpectedError}`,
         );
       } else {
         if (result.expected == null) {
           invariant(result.actual != null, "[Tester] Internal failure.");
           console.log(
-            chalk.red("[ expected fixture output is absent ]") + "\n"
+            chalk.red("[ expected fixture output is absent ]") + "\n",
           );
         } else if (result.actual == null) {
           invariant(result.expected != null, "[Tester] Internal failure.");
           console.log(
             chalk.red(`[ fixture input for ${result.outputPath} is absent ]`) +
-              "\n"
+              "\n",
           );
         } else {
           console.log(diff(result.expected, result.actual) + "\n");
@@ -174,7 +174,7 @@ export function report(results: TestResults): boolean {
   console.log(
     `${results.size} Tests, ${results.size - failures.length} Passed, ${
       failures.length
-    } Failed`
+    } Failed`,
   );
   return failures.length === 0;
 }

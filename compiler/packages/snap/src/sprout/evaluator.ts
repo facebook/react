@@ -88,7 +88,7 @@ class WrapperTestComponentWithErrorBoundary extends React.Component<
     if (this.state.hasError) {
       this.propsErrorMap.current!.set(
         this.props,
-        `[[ (exception in render) ${this.state.error?.toString()} ]]`
+        `[[ (exception in render) ${this.state.error?.toString()} ]]`,
       );
     }
     const cachedError = this.propsErrorMap.current!.get(this.props);
@@ -113,11 +113,11 @@ function WrapperTestComponent(props: { fn: any; params: Array<any> }) {
 
 function renderComponentSequentiallyForEachProps(
   fn: any,
-  sequentialRenders: Array<any>
+  sequentialRenders: Array<any>,
 ): string {
   if (sequentialRenders.length === 0) {
     throw new Error(
-      "Expected at least one set of props when using `sequentialRenders`"
+      "Expected at least one set of props when using `sequentialRenders`",
     );
   }
   const initialProps = sequentialRenders[0]!;
@@ -126,7 +126,7 @@ function renderComponentSequentiallyForEachProps(
     React.createElement(WrapperTestComponentWithErrorBoundary, {
       fn,
       params: [initialProps],
-    })
+    }),
   );
   results.push(container.innerHTML);
 
@@ -135,7 +135,7 @@ function renderComponentSequentiallyForEachProps(
       React.createElement(WrapperTestComponentWithErrorBoundary, {
         fn,
         params: [sequentialRenders[i]],
-      })
+      }),
     );
     results.push(container.innerHTML);
   }
@@ -144,7 +144,7 @@ function renderComponentSequentiallyForEachProps(
 
 type FixtureEvaluatorResult = Omit<EvaluatorResult, "logs">;
 (globalThis as any).evaluateFixtureExport = function (
-  exports: unknown
+  exports: unknown,
 ): FixtureEvaluatorResult {
   const parsedExportResult = ExportSchema.safeParse(exports);
   if (!parsedExportResult.success) {
@@ -161,7 +161,7 @@ type FixtureEvaluatorResult = Omit<EvaluatorResult, "logs">;
   if (entrypoint.sequentialRenders !== null) {
     const result = renderComponentSequentiallyForEachProps(
       entrypoint.fn,
-      entrypoint.sequentialRenders
+      entrypoint.sequentialRenders,
     );
 
     return {
@@ -172,7 +172,7 @@ type FixtureEvaluatorResult = Omit<EvaluatorResult, "logs">;
     // Try to run fixture as a react component. This is necessary because not
     // all components are functions (some are ForwardRef or Memo objects).
     const result = render(
-      React.createElement(entrypoint.fn as any, entrypoint.params[0])
+      React.createElement(entrypoint.fn as any, entrypoint.params[0]),
     ).container.innerHTML;
 
     return {
@@ -203,7 +203,7 @@ export function doEval(source: string): EvaluatorResult {
         } else {
           return util.inspect(arg);
         }
-      })}`
+      })}`,
     );
   };
 

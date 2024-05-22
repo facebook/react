@@ -29,7 +29,7 @@ export function inferAliases(func: HIRFunction): DisjointSet<Identifier> {
 
 function inferInstr(
   instr: Instruction,
-  aliases: DisjointSet<Identifier>
+  aliases: DisjointSet<Identifier>,
 ): void {
   const { lvalue, value: instrValue } = instr;
   let alias: Place | null = null;

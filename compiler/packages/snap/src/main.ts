@@ -41,7 +41,7 @@ const childProc = fork(require.resolve("./runner.js"), hideBin(process.argv), {
 
 invariant(
   childProc.stdin && childProc.stdout && childProc.stderr,
-  "Expected forked process to have piped stdio"
+  "Expected forked process to have piped stdio",
 );
 process.stdin.pipe(childProc.stdin);
 childProc.stdout.pipe(process.stdout);

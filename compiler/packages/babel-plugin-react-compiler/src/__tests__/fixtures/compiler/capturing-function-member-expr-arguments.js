@@ -3,7 +3,7 @@ function Foo(props) {
     (reason) => {
       log(props.router.location);
     },
-    [props.router.location]
+    [props.router.location],
   );
 
   return onFoo;

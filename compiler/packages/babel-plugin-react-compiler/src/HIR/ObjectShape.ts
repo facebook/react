@@ -43,7 +43,7 @@ export function addFunction(
   registry: ShapeRegistry,
   properties: Iterable<[string, BuiltInType | PolyType]>,
   fn: Omit<FunctionSignature, "hookKind">,
-  id: string | null = null
+  id: string | null = null,
 ): FunctionType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, properties, {
@@ -65,7 +65,7 @@ export function addFunction(
 export function addHook(
   registry: ShapeRegistry,
   fn: FunctionSignature & { hookKind: HookKind },
-  id: string | null = null
+  id: string | null = null,
 ): FunctionType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, [], fn);
@@ -84,7 +84,7 @@ export function addHook(
 export function addObject(
   registry: ShapeRegistry,
   id: string | null,
-  properties: Iterable<[string, BuiltInType | PolyType]>
+  properties: Iterable<[string, BuiltInType | PolyType]>,
 ): ObjectType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, properties, null);
@@ -98,7 +98,7 @@ function addShape(
   registry: ShapeRegistry,
   id: string,
   properties: Iterable<[string, BuiltInType | PolyType]>,
-  functionType: FunctionSignature | null
+  functionType: FunctionSignature | null,
 ): ObjectShape {
   const shape: ObjectShape = {
     properties: new Map(properties),
@@ -380,7 +380,7 @@ addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Primitive,
       },
-      BuiltInSetStateId
+      BuiltInSetStateId,
     ),
   ],
 ]);
@@ -439,7 +439,7 @@ export const DefaultMutatingHook = addHook(
     hookKind: "Custom",
     returnValueKind: ValueKind.Mutable,
   },
-  "DefaultMutatingHook"
+  "DefaultMutatingHook",
 );
 
 export const DefaultNonmutatingHook = addHook(
@@ -452,5 +452,5 @@ export const DefaultNonmutatingHook = addHook(
     hookKind: "Custom",
     returnValueKind: ValueKind.Frozen,
   },
-  "DefaultNonmutatingHook"
+  "DefaultNonmutatingHook",
 );

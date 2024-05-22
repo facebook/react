@@ -71,7 +71,7 @@ const LazyGuardDispatcher: { [key: string]: (...args: Array<any>) => any } = {};
   LazyGuardDispatcher[name] = () => {
     throw new Error(
       `[React] Unexpected React hook call (${name}) from a React Forget compiled function. ` +
-        "Check that all hooks are called directly and named according to convention ('use[A-Z]') "
+        "Check that all hooks are called directly and named according to convention ('use[A-Z]') ",
     );
   };
 });
@@ -82,7 +82,7 @@ let originalDispatcher: unknown = null;
 LazyGuardDispatcher["useMemoCache"] = (count: number) => {
   if (originalDispatcher == null) {
     throw new Error(
-      "React Forget internal invariant violation: unexpected null dispatcher"
+      "React Forget internal invariant violation: unexpected null dispatcher",
     );
   } else {
     return (originalDispatcher as any).useMemoCache(count);
@@ -153,7 +153,7 @@ export function $dispatcherGuard(kind: GuardKind) {
       throw new Error(
         `[React] Unexpected call to custom hook or component from a React Forget compiled function. ` +
           "Check that (1) all hooks are called directly and named according to convention ('use[A-Z]') " +
-          "and (2) components are returned as JSX instead of being directly invoked."
+          "and (2) components are returned as JSX instead of being directly invoked.",
       );
     }
     setCurrent(LazyGuardDispatcher);
@@ -163,7 +163,7 @@ export function $dispatcherGuard(kind: GuardKind) {
 
     if (lastFrame == null) {
       throw new Error(
-        "React Forget internal error: unexpected null in guard stack"
+        "React Forget internal error: unexpected null in guard stack",
       );
     }
     if (guardFrames.length === 0) {
@@ -179,7 +179,7 @@ export function $dispatcherGuard(kind: GuardKind) {
     const lastFrame = guardFrames.pop();
     if (lastFrame == null) {
       throw new Error(
-        "React Forget internal error: unexpected null in guard stack"
+        "React Forget internal error: unexpected null in guard stack",
       );
     }
     setCurrent(lastFrame);

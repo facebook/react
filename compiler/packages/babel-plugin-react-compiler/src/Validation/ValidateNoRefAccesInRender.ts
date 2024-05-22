@@ -48,7 +48,7 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
 
 function validateNoRefAccessInRenderImpl(
   fn: HIRFunction,
-  refAccessingFunctions: Set<IdentifierId>
+  refAccessingFunctions: Set<IdentifierId>,
 ): Result<void, CompilerError> {
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
@@ -64,7 +64,7 @@ function validateNoRefAccessInRenderImpl(
                   "Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)",
                 loc: operand.loc,
                 description: `Cannot access ref value at ${printPlace(
-                  operand
+                  operand,
                 )}`,
                 suggestions: null,
               });
@@ -98,15 +98,15 @@ function validateNoRefAccessInRenderImpl(
             [...eachInstructionValueOperand(instr.value)].some(
               (operand) =>
                 isRefValueType(operand.identifier) ||
-                refAccessingFunctions.has(operand.identifier.id)
+                refAccessingFunctions.has(operand.identifier.id),
             ) ||
             // check for cases where .current is accessed through an aliased ref
             ([...eachInstructionValueOperand(instr.value)].some((operand) =>
-              isUseRefType(operand.identifier)
+              isUseRefType(operand.identifier),
             ) &&
               validateNoRefAccessInRenderImpl(
                 instr.value.loweredFunc.func,
-                refAccessingFunctions
+                refAccessingFunctions,
               ).isErr())
           ) {
             // This function expression unconditionally accesses a ref
@@ -173,7 +173,7 @@ function validateNoRefAccessInRenderImpl(
 function validateNoRefValueAccess(
   errors: CompilerError,
   unconditionalSetStateFunctions: Set<IdentifierId>,
-  operand: Place
+  operand: Place,
 ): void {
   if (
     isRefValueType(operand.identifier) ||
@@ -193,7 +193,7 @@ function validateNoRefValueAccess(
 function validateNoRefAccess(
   errors: CompilerError,
   unconditionalSetStateFunctions: Set<IdentifierId>,
-  operand: Place
+  operand: Place,
 ): void {
   if (
     isRefValueType(operand.identifier) ||

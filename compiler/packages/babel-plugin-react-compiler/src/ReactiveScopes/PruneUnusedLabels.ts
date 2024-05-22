@@ -31,7 +31,7 @@ type Labels = Set<BlockId>;
 class Transform extends ReactiveFunctionTransform<Labels> {
   override transformTerminal(
     stmt: ReactiveTerminalStatement,
-    state: Labels
+    state: Labels,
   ): Transformed<ReactiveStatement> {
     this.traverseTerminal(stmt, state);
     const { terminal } = stmt;

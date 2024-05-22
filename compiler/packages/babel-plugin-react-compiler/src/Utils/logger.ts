@@ -47,7 +47,7 @@ export function logCodegenFunction(step: string, fn: CodegenFunction): void {
         fn.params,
         fn.body,
         fn.generator,
-        fn.async
+        fn.async,
       );
       const ast = generate(node);
       printed = ast.code;

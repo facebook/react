@@ -25,7 +25,7 @@ export function validateContextVariableLValues(fn: HIRFunction): void {
 
 function validateContextVariableLValuesImpl(
   fn: HIRFunction,
-  identifierKinds: IdentifierKinds
+  identifierKinds: IdentifierKinds,
 ): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
@@ -64,7 +64,7 @@ function validateContextVariableLValuesImpl(
         case "FunctionExpression": {
           validateContextVariableLValuesImpl(
             value.loweredFunc.func,
-            identifierKinds
+            identifierKinds,
           );
           break;
         }
@@ -92,7 +92,7 @@ type IdentifierKinds = Map<
 function visit(
   identifiers: IdentifierKinds,
   place: Place,
-  kind: "local" | "context" | "destructure"
+  kind: "local" | "context" | "destructure",
 ): void {
   const prev = identifiers.get(place.identifier.id);
   if (prev !== undefined) {
@@ -112,7 +112,7 @@ function visit(
         reason: `Expected all references to a variable to be consistently local or context references`,
         loc: place.loc,
         description: `Identifier ${printPlace(
-          place
+          place,
         )} is referenced as a ${kind} variable, but was previously referenced as a ${prev} variable`,
         suggestions: null,
       });

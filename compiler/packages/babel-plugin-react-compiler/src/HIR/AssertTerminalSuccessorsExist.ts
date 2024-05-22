@@ -16,7 +16,7 @@ export function assertTerminalSuccessorsExist(fn: HIRFunction): void {
       CompilerError.invariant(fn.body.blocks.has(successor), {
         reason: `Terminal successor references unknown block`,
         description: `Block bb${successor} does not exist for terminal '${printTerminal(
-          block.terminal
+          block.terminal,
         )}'`,
         loc: (block.terminal as any).loc ?? GeneratedSource,
         suggestions: null,
