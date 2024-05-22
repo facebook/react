@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<41909aca302c98b3f31b275cee319e39>>
+ * @generated SignedSource<<55f31038f2be45dd38383c50d946e009>>
  */
 
 'use strict';
@@ -25060,6 +25060,7 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, parentFiber, isInS
 
 function doubleInvokeEffectsOnFiber(root, fiber) {
   var shouldDoubleInvokePassiveEffects = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+  setIsStrictModeForDevtools(true);
   disappearLayoutEffects(fiber);
 
   if (shouldDoubleInvokePassiveEffects) {
@@ -25071,6 +25072,8 @@ function doubleInvokeEffectsOnFiber(root, fiber) {
   if (shouldDoubleInvokePassiveEffects) {
     reconnectPassiveEffects(root, fiber, NoLanes, null, false);
   }
+
+  setIsStrictModeForDevtools(false);
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(root, fiber, parentIsInStrictMode) {
@@ -26392,7 +26395,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-a63abc4e';
+var ReactVersion = '19.0.0-rc-5945dec0';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
