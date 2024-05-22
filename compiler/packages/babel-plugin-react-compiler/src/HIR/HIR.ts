@@ -694,7 +694,7 @@ export enum InstructionKind {
   Const = "Const",
   // let declaration
   Let = "Let",
-  // assing a new value to a let binding
+  // assign a new value to a let binding
   Reassign = "Reassign",
   // catch clause binding
   Catch = "Catch",

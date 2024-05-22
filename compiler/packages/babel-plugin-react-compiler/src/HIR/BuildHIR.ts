@@ -77,7 +77,7 @@ export function lower(
   const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
   const context: Array<Place> = [];
 
-  for (const ref of capturedRefs ?? []) {
+  for (const ref of capturedRefs) {
     context.push({
       kind: "Identifier",
       identifier: builder.resolveBinding(ref),
