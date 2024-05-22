@@ -85,7 +85,6 @@ function runBabelPluginReactCompiler(
     retainLines: true,
     plugins: [[BabelPluginReactCompiler, options]],
     sourceType: "module",
-    configFile: false
   });
   if (result?.code == null) {
     throw new Error(
@@ -141,7 +140,7 @@ export default {
   report(): void {
     const totalComponents =
       SucessfulCompilation.length +
-      countUniqueLocInEvents(OtherFailures) +
+      countUniqueLocInEvents(OtherFailures) + 
       countUniqueLocInEvents(ActionableFailures)
     console.log(
       chalk.green(
