@@ -16,6 +16,7 @@ let act;
 let use;
 let useDebugValue;
 let useState;
+let useTransition;
 let useMemo;
 let useEffect;
 let Suspense;
@@ -38,6 +39,7 @@ describe('ReactUse', () => {
     use = React.use;
     useDebugValue = React.useDebugValue;
     useState = React.useState;
+    useTransition = React.useTransition;
     useMemo = React.useMemo;
     useEffect = React.useEffect;
     Suspense = React.Suspense;
@@ -1914,5 +1916,63 @@ describe('ReactUse', () => {
 
     assertLog(['Hi', 'World']);
     expect(root).toMatchRenderedOutput(<div>Hi World</div>);
+  });
+
+  it('does not get stuck in pending state with usable values in state', async () => {
+    const initial = new Promise(resolve => {
+      setTimeout(() => {
+        resolve('initial');
+      }, 1000);
+    });
+    let click;
+    function Reader({promise, setPromise}) {
+      const value = use(promise);
+      const [isPending, startLocalTransition] = useTransition();
+      click = () => {
+        startLocalTransition(() => {
+          setPromise(
+            new Promise(resolve => {
+              setTimeout(() => {
+                resolve('updated');
+              }, 1000);
+            }),
+          );
+        });
+      };
+
+      Scheduler.log(`Value: ${value}, Pending: ${String(isPending)}`);
+
+      return (
+        <>
+          Value: {value}, Pending: {String(isPending)}
+        </>
+      );
+    }
+    function App() {
+      const [promise, setPromise] = useState(initial);
+
+      return (
+        <Suspense fallback="Loading">
+          <Reader promise={promise} setPromise={setPromise} />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App />);
+    });
+    assertLog(['Value: initial, Pending: false']);
+    expect(root).toMatchRenderedOutput('Value: initial, Pending: false');
+
+    await act(() => {
+      click();
+    });
+
+    assertLog([
+      'Value: initial, Pending: true',
+      'Value: updated, Pending: true',
+    ]);
+    expect(root).toMatchRenderedOutput('Value: updated, Pending: true');
   });
 });
