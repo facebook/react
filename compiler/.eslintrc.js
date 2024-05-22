@@ -87,7 +87,7 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint"],
   root: true,
-  ignorePatterns: ["src/__tests__/**/*", "src/**/*.d.ts", "dist/**/*"],
+  ignorePatterns: ["**/__tests__/**/*", "**/*.d.ts", "**/dist/**/*"],
   env: {
     node: true,
   },
