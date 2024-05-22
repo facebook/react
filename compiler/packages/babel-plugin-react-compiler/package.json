@@ -15,9 +15,6 @@
     "snap:build": "yarn workspace snap run build",
     "snap:ci": "yarn snap:build && yarn snap",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
-    "prettier": "node ./scripts/prettier.js write-changed",
-    "prettier:all": "node ./scripts/prettier.js write",
-    "prettier:ci": "prettier --check .",
     "lint": "yarn eslint src"
   },
   "dependencies": {
@@ -53,7 +50,6 @@
     "glob": "^7.1.6",
     "jest": "^29.0.3",
     "jest-environment-jsdom": "^29.0.3",
-    "prettier": "2.8.8",
     "react": "19.0.0-beta-b498834eab-20240506",
     "react-dom": "19.0.0-beta-b498834eab-20240506",
     "rimraf": "^3.0.2",

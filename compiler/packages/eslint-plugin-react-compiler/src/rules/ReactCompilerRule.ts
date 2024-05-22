@@ -40,7 +40,7 @@ const DEFAULT_REPORTABLE_LEVELS = new Set([
 let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
 
 function isReportableDiagnostic(
-  detail: CompilerErrorDetail
+  detail: CompilerErrorDetail,
 ): detail is CompilerErrorDetailWithLoc {
   return (
     reportableLevels.has(detail.severity) &&
@@ -87,7 +87,7 @@ const rule: Rule.RuleModule = {
 
     try {
       options.environment = validateEnvironmentConfig(
-        options.environment ?? {}
+        options.environment ?? {},
       );
     } catch (err) {
       options.logger?.logEvent("", err);
@@ -95,12 +95,12 @@ const rule: Rule.RuleModule = {
 
     function hasFlowSuppression(
       nodeLoc: BabelSourceLocation,
-      suppression: string
+      suppression: string,
     ) {
       const sourceCode = context.getSourceCode();
       const comments = sourceCode.getAllComments();
       const flowSuppressionRegex = new RegExp(
-        "\\$FlowFixMe\\[" + suppression + "\\]"
+        "\\$FlowFixMe\\[" + suppression + "\\]",
       );
       for (const commentNode of comments) {
         if (
@@ -143,6 +143,7 @@ const rule: Rule.RuleModule = {
             [BabelPluginReactCompiler, options],
           ],
           sourceType: "module",
+          configFile: false,
         });
       } catch (err) {
         if (isReactCompilerError(err) && Array.isArray(err.details)) {
@@ -164,7 +165,7 @@ const rule: Rule.RuleModule = {
                       fix(fixer) {
                         return fixer.insertTextBeforeRange(
                           suggestion.range,
-                          suggestion.text
+                          suggestion.text,
                         );
                       },
                     });
@@ -175,7 +176,7 @@ const rule: Rule.RuleModule = {
                       fix(fixer) {
                         return fixer.insertTextAfterRange(
                           suggestion.range,
-                          suggestion.text
+                          suggestion.text,
                         );
                       },
                     });
@@ -186,7 +187,7 @@ const rule: Rule.RuleModule = {
                       fix(fixer) {
                         return fixer.replaceTextRange(
                           suggestion.range,
-                          suggestion.text
+                          suggestion.text,
                         );
                       },
                     });
@@ -202,7 +203,7 @@ const rule: Rule.RuleModule = {
                   default:
                     assertExhaustive(
                       suggestion,
-                      "Unhandled suggestion operation"
+                      "Unhandled suggestion operation",
                     );
                 }
               }

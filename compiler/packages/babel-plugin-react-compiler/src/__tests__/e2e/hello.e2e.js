@@ -70,6 +70,6 @@ test("hello", () => {
   `);
 
   expectLogsAndClear(
-    __FORGET__ ? [] : ["recomputing 1", "recomputing 2", "recomputing 3"]
+    __FORGET__ ? [] : ["recomputing 1", "recomputing 2", "recomputing 3"],
   );
 });

@@ -56,7 +56,7 @@ const PROD_ROLLUP_CONFIG = {
  * @preserve-invariant-messages
  */
 
-"use no memo";` // DO NOT REMOVE
+"use no memo";`, // DO NOT REMOVE
     ),
   ],
 };

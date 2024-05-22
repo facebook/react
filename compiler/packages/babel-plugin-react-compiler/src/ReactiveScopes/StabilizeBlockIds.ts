@@ -30,7 +30,7 @@ class CollectReferencedLabels extends ReactiveFunctionVisitor<Set<BlockId>> {
   }
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    state: Set<BlockId>
+    state: Set<BlockId>,
   ): void {
     if (stmt.label != null) {
       if (!stmt.label.implicit) {
@@ -44,14 +44,14 @@ class CollectReferencedLabels extends ReactiveFunctionVisitor<Set<BlockId>> {
 class RewriteBlockIds extends ReactiveFunctionVisitor<Map<BlockId, BlockId>> {
   override visitScope(
     scope: ReactiveScopeBlock,
-    state: Map<BlockId, BlockId>
+    state: Map<BlockId, BlockId>,
   ): void {
     const { earlyReturnValue } = scope.scope;
     if (earlyReturnValue != null) {
       const rewrittenId = getOrInsertDefault(
         state,
         earlyReturnValue.label,
-        state.size
+        state.size,
       );
       earlyReturnValue.label = makeBlockId(rewrittenId);
     }
@@ -59,7 +59,7 @@ class RewriteBlockIds extends ReactiveFunctionVisitor<Map<BlockId, BlockId>> {
   }
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    state: Map<BlockId, BlockId>
+    state: Map<BlockId, BlockId>,
   ): void {
     if (stmt.label != null) {
       const rewrittenId = getOrInsertDefault(state, stmt.label.id, state.size);
@@ -71,7 +71,7 @@ class RewriteBlockIds extends ReactiveFunctionVisitor<Map<BlockId, BlockId>> {
       const rewrittenId = getOrInsertDefault(
         state,
         terminal.target,
-        state.size
+        state.size,
       );
       terminal.target = makeBlockId(rewrittenId);
     }

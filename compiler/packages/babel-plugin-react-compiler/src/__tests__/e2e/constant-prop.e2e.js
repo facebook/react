@@ -106,7 +106,7 @@ test("lambda-constant-propagation-of-phi-node", () => {
   }
 
   const { asFragment, rerender } = render(
-    <Component noopCallback={() => {}} />
+    <Component noopCallback={() => {}} />,
   );
 
   expect(asFragment()).toMatchInlineSnapshot(`

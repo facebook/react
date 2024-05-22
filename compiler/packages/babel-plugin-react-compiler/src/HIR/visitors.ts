@@ -20,7 +20,7 @@ import {
 } from "./HIR";
 
 export function* eachInstructionLValue(
-  instr: ReactiveInstruction
+  instr: ReactiveInstruction,
 ): Iterable<Place> {
   if (instr.lvalue !== null) {
     yield instr.lvalue;
@@ -29,7 +29,7 @@ export function* eachInstructionLValue(
 }
 
 export function* eachInstructionValueLValue(
-  value: ReactiveValue
+  value: ReactiveValue,
 ): Iterable<Place> {
   switch (value.kind) {
     case "DeclareContext":
@@ -55,7 +55,7 @@ export function* eachInstructionOperand(instr: Instruction): Iterable<Place> {
   yield* eachInstructionValueOperand(instr.value);
 }
 export function* eachInstructionValueOperand(
-  instrValue: InstructionValue
+  instrValue: InstructionValue,
 ): Iterable<Place> {
   switch (instrValue.kind) {
     case "NewExpression":
@@ -151,7 +151,7 @@ export function* eachInstructionValueOperand(
           default: {
             assertExhaustive(
               attribute,
-              `Unexpected attribute kind \`${(attribute as any).kind}\``
+              `Unexpected attribute kind \`${(attribute as any).kind}\``,
             );
           }
         }
@@ -251,14 +251,14 @@ export function* eachInstructionValueOperand(
     default: {
       assertExhaustive(
         instrValue,
-        `Unexpected instruction kind \`${(instrValue as any).kind}\``
+        `Unexpected instruction kind \`${(instrValue as any).kind}\``,
       );
     }
   }
 }
 
 export function* eachCallArgument(
-  args: Array<Place | SpreadPattern>
+  args: Array<Place | SpreadPattern>,
 ): Iterable<Place> {
   for (const arg of args) {
     if (arg.kind === "Identifier") {
@@ -290,7 +290,7 @@ export function doesPatternContainSpreadElement(pattern: Pattern): boolean {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -310,7 +310,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
         } else {
           assertExhaustive(
             item,
-            `Unexpected item kind \`${(item as any).kind}\``
+            `Unexpected item kind \`${(item as any).kind}\``,
           );
         }
       }
@@ -325,7 +325,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
         } else {
           assertExhaustive(
             property,
-            `Unexpected item kind \`${(property as any).kind}\``
+            `Unexpected item kind \`${(property as any).kind}\``,
           );
         }
       }
@@ -334,7 +334,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -342,7 +342,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
 
 export function mapInstructionLValues(
   instr: Instruction,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   switch (instr.value.kind) {
     case "DeclareLocal":
@@ -368,14 +368,14 @@ export function mapInstructionLValues(
 
 export function mapInstructionOperands(
   instr: Instruction,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   mapInstructionValueOperands(instr.value, fn);
 }
 
 export function mapInstructionValueOperands(
   instrValue: InstructionValue,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   switch (instrValue.kind) {
     case "BinaryExpression": {
@@ -471,7 +471,7 @@ export function mapInstructionValueOperands(
           default: {
             assertExhaustive(
               attribute,
-              `Unexpected attribute kind \`${(attribute as any).kind}\``
+              `Unexpected attribute kind \`${(attribute as any).kind}\``,
             );
           }
         }
@@ -580,7 +580,7 @@ export function mapInstructionValueOperands(
 
 export function mapCallArguments(
   args: Array<Place | SpreadPattern>,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): Array<Place | SpreadPattern> {
   return args.map((arg) => {
     if (arg.kind === "Identifier") {
@@ -594,7 +594,7 @@ export function mapCallArguments(
 
 export function mapPatternOperands(
   pattern: Pattern,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   switch (pattern.kind) {
     case "ArrayPattern": {
@@ -619,7 +619,7 @@ export function mapPatternOperands(
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -628,7 +628,7 @@ export function mapPatternOperands(
 // Maps a terminal node's block assignments using the provided function.
 export function mapTerminalSuccessors(
   terminal: Terminal,
-  fn: (block: BlockId) => BlockId
+  fn: (block: BlockId) => BlockId,
 ): Terminal {
   switch (terminal.kind) {
     case "goto": {
@@ -868,7 +868,7 @@ export function mapTerminalSuccessors(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``
+        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``,
       );
     }
   }
@@ -876,7 +876,7 @@ export function mapTerminalSuccessors(
 
 export function terminalHasFallthrough<
   T extends Terminal,
-  U extends T & { fallthrough: BlockId }
+  U extends T & { fallthrough: BlockId },
 >(terminal: T): terminal is U {
   switch (terminal.kind) {
     case "maybe-throw":
@@ -909,7 +909,7 @@ export function terminalHasFallthrough<
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }
@@ -1014,7 +1014,7 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``
+        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``,
       );
     }
   }
@@ -1022,7 +1022,7 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
 
 export function mapTerminalOperands(
   terminal: Terminal,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   switch (terminal.kind) {
     case "if": {
@@ -1077,7 +1077,7 @@ export function mapTerminalOperands(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }
@@ -1135,7 +1135,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }

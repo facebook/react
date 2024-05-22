@@ -78,7 +78,7 @@ function pruneMaybeThrowsImpl(fn: HIRFunction): Map<BlockId, BlockId> | null {
       continue;
     }
     const canThrow = block.instructions.some((instr) =>
-      instructionMayThrow(instr)
+      instructionMayThrow(instr),
     );
     if (!canThrow) {
       const source = terminalMapping.get(block.id) ?? block.id;

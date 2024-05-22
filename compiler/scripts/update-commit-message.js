@@ -30,7 +30,7 @@ const fetchPullRequest = async (pullNumber) => {
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
-    }
+    },
   );
   return { body: response.data.body, title: response.data.title };
 };

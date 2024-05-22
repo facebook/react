@@ -11,7 +11,7 @@ export function Component(props) {
       {fbt(
         `for ${fbt.param("count", count)} experiences`,
         `Label for the number of items`,
-        { project: "public" }
+        { project: "public" },
       )}
     </Stringify>
   );

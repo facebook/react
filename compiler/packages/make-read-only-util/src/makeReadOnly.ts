@@ -16,7 +16,7 @@ type ROViolationLogger = (
   violation: ROViolationType,
   source: string,
   key: string,
-  value?: any
+  value?: any,
 ) => void;
 
 /**
@@ -38,7 +38,7 @@ function isWriteable(desc: PropertyDescriptor) {
 
 function getOrInsertDefault(
   m: SavedROObjects,
-  k: object
+  k: object,
 ): { existed: boolean; entry: SavedROObject } {
   const entry = m.get(k);
   if (entry) {
@@ -52,7 +52,7 @@ function getOrInsertDefault(
 
 function buildMakeReadOnly(
   logger: ROViolationLogger,
-  skippedClasses: string[]
+  skippedClasses: string[],
 ): <T>(val: T, source: string) => T {
   // All saved proxys
   const savedROObjects: SavedROObjects = new WeakMap();
@@ -63,7 +63,7 @@ function buildMakeReadOnly(
     source: string,
     key: string,
     prop: PropertyDescriptor,
-    savedEntries: Map<string, SavedEntry>
+    savedEntries: Map<string, SavedEntry>,
   ) {
     const proxy: PropertyDescriptor & { get(): unknown } = {
       get() {
@@ -124,10 +124,14 @@ function buildMakeReadOnly(
       }
     }
     for (const [k, prop] of Object.entries(
-      Object.getOwnPropertyDescriptors(o)
+      Object.getOwnPropertyDescriptors(o),
     )) {
       if (!cache.has(k) && isWriteable(prop)) {
-        if (prop.hasOwnProperty("set") || prop.hasOwnProperty("get") || k === "current") {
+        if (
+          prop.hasOwnProperty("set") ||
+          prop.hasOwnProperty("get") ||
+          k === "current"
+        ) {
           // - we currently don't handle accessor properties
           // - we currently have no other way of checking whether an object
           // is a `ref` (i.e. returned by useRef).

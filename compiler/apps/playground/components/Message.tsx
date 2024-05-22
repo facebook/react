@@ -76,7 +76,7 @@ const Message = forwardRef<HTMLDivElement, MessageProps>(
         ) : null}
       </SnackbarContent>
     );
-  }
+  },
 );
 
 Message.displayName = "MessageComponent";

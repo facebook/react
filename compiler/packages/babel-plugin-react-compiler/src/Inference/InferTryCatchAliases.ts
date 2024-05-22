@@ -16,7 +16,7 @@ import DisjointSet from "../Utils/DisjointSet";
  */
 export function inferTryCatchAliases(
   fn: HIRFunction,
-  aliases: DisjointSet<Identifier>
+  aliases: DisjointSet<Identifier>,
 ): void {
   const handlerParams: Map<BlockId, Identifier> = new Map();
   for (const [_, block] of fn.body.blocks) {
@@ -26,7 +26,7 @@ export function inferTryCatchAliases(
     ) {
       handlerParams.set(
         block.terminal.handler,
-        block.terminal.handlerBinding.identifier
+        block.terminal.handlerBinding.identifier,
       );
     } else if (block.terminal.kind === "maybe-throw") {
       const handlerParam = handlerParams.get(block.terminal.handler);

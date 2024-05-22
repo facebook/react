@@ -16,7 +16,7 @@ import BabelPluginReactCompiler, {
 import { LoggerEvent as RawLoggerEvent } from "babel-plugin-react-compiler/src/Entrypoint";
 import chalk from "chalk";
 
-type LoggerEvent = RawLoggerEvent & {filename: string | null};
+type LoggerEvent = RawLoggerEvent & { filename: string | null };
 
 const SucessfulCompilation: Array<LoggerEvent> = [];
 const ActionableFailures: Array<LoggerEvent> = [];
@@ -24,7 +24,7 @@ const OtherFailures: Array<LoggerEvent> = [];
 
 const logger = {
   logEvent(filename: string | null, rawEvent: RawLoggerEvent) {
-    const event = {...rawEvent, filename};
+    const event = { ...rawEvent, filename };
     switch (event.kind) {
       case "CompileSuccess": {
         SucessfulCompilation.push(event);
@@ -72,7 +72,7 @@ function runBabelPluginReactCompiler(
   text: string,
   file: string,
   language: "flow" | "typescript",
-  options: Partial<PluginOptions> | null
+  options: Partial<PluginOptions> | null,
 ): BabelCore.BabelFileResult {
   const ast = BabelParser.parse(text, {
     sourceFilename: file,
@@ -85,10 +85,11 @@ function runBabelPluginReactCompiler(
     retainLines: true,
     plugins: [[BabelPluginReactCompiler, options]],
     sourceType: "module",
+    configFile: false,
   });
   if (result?.code == null) {
     throw new Error(
-      `Expected BabelPluginReactForget to codegen successfully, got: ${result}`
+      `Expected BabelPluginReactForget to codegen successfully, got: ${result}`,
     );
   }
   return result;
@@ -100,7 +101,7 @@ function compile(sourceCode: string, filename: string) {
       sourceCode,
       filename,
       "typescript",
-      COMPILER_OPTIONS
+      COMPILER_OPTIONS,
     );
   } catch {}
 }
@@ -140,12 +141,12 @@ export default {
   report(): void {
     const totalComponents =
       SucessfulCompilation.length +
-      countUniqueLocInEvents(OtherFailures) + 
-      countUniqueLocInEvents(ActionableFailures)
+      countUniqueLocInEvents(OtherFailures) +
+      countUniqueLocInEvents(ActionableFailures);
     console.log(
       chalk.green(
-        `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`
-      )
+        `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`,
+      ),
     );
   },
 };

@@ -69,7 +69,7 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
   visitReactiveFunction(
     fn,
     new PropagationVisitor(fn.env.config.enableTreatFunctionDepsAsConditional),
-    context
+    context,
   );
 }
 
@@ -87,7 +87,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
 
   override visitScope(
     scope: ReactiveScopeBlock,
-    state: TemporariesUsedOutsideDefiningScope
+    state: TemporariesUsedOutsideDefiningScope,
   ): void {
     this.scopes.push(scope.scope.id);
     this.traverseScope(scope, state);
@@ -96,7 +96,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: TemporariesUsedOutsideDefiningScope
+    state: TemporariesUsedOutsideDefiningScope,
   ): void {
     // Visit all places first, then record temporaries which may need to be promoted
     this.traverseInstruction(instruction, state);
@@ -121,7 +121,7 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
   override visitPlace(
     _id: InstructionId,
     place: Place,
-    state: TemporariesUsedOutsideDefiningScope
+    state: TemporariesUsedOutsideDefiningScope,
   ): void {
     const declaringScope = state.declarations.get(place.identifier.id);
     if (declaringScope === undefined) {
@@ -163,7 +163,7 @@ class PoisonState {
   constructor(
     poisonedBlocks: Set<BlockId>,
     poisonedScopes: Set<ScopeId>,
-    isPoisoned: boolean
+    isPoisoned: boolean,
   ) {
     this.poisonedBlocks = poisonedBlocks;
     this.poisonedScopes = poisonedScopes;
@@ -174,7 +174,7 @@ class PoisonState {
     return new PoisonState(
       new Set(this.poisonedBlocks),
       new Set(this.poisonedScopes),
-      this.isPoisoned
+      this.isPoisoned,
     );
   }
 
@@ -182,7 +182,7 @@ class PoisonState {
     const copy = new PoisonState(
       this.poisonedBlocks,
       this.poisonedScopes,
-      this.isPoisoned
+      this.isPoisoned,
     );
     this.poisonedBlocks = other.poisonedBlocks;
     this.poisonedScopes = other.poisonedScopes;
@@ -192,7 +192,7 @@ class PoisonState {
 
   merge(
     others: Array<PoisonState>,
-    currentScope: ScopeTraversalState | null
+    currentScope: ScopeTraversalState | null,
   ): void {
     for (const other of others) {
       for (const id of other.poisonedBlocks) {
@@ -212,7 +212,7 @@ class PoisonState {
         return;
       } else if (
         currentScope.ownBlocks.find((blockId) =>
-          this.poisonedBlocks.has(blockId)
+          this.poisonedBlocks.has(blockId),
         )
       ) {
         this.isPoisoned = true;
@@ -232,7 +232,7 @@ class PoisonState {
    */
   addPoisonTarget(
     target: BlockId | null,
-    activeScopes: Stack<ScopeTraversalState>
+    activeScopes: Stack<ScopeTraversalState>,
   ): void {
     const currentScope = activeScopes.value;
     if (target == null && currentScope != null) {
@@ -268,7 +268,7 @@ class PoisonState {
    */
   removeMaybePoisonedScope(
     id: ScopeId,
-    currentScope: ScopeTraversalState | null
+    currentScope: ScopeTraversalState | null,
   ): void {
     this.poisonedScopes.delete(id);
     this.#invalidate(currentScope);
@@ -276,7 +276,7 @@ class PoisonState {
 
   removeMaybePoisonedBlock(
     id: BlockId,
-    currentScope: ScopeTraversalState | null
+    currentScope: ScopeTraversalState | null,
   ): void {
     this.poisonedBlocks.delete(id);
     this.#invalidate(currentScope);
@@ -364,7 +364,7 @@ class Context {
     this.#dependencies.addDepsFromInnerScope(
       scopedDependencies,
       this.#inConditionalWithinScope || this.isPoisoned,
-      this.#checkValidDependency.bind(this)
+      this.#checkValidDependency.bind(this),
     );
 
     if (prevDepsInConditional != null) {
@@ -372,7 +372,7 @@ class Context {
       prevDepsInConditional.addDepsFromInnerScope(
         this.#depsInCurrentConditional,
         true,
-        this.#checkValidDependency.bind(this)
+        this.#checkValidDependency.bind(this),
       );
       this.#depsInCurrentConditional = prevDepsInConditional;
     }
@@ -427,13 +427,13 @@ class Context {
    * @param depsInConditionals
    */
   promoteDepsFromExhaustiveConditionals(
-    depsInConditionals: Array<ReactiveScopeDependencyTree>
+    depsInConditionals: Array<ReactiveScopeDependencyTree>,
   ): void {
     this.#dependencies.promoteDepsFromExhaustiveConditionals(
-      depsInConditionals
+      depsInConditionals,
     );
     this.#depsInCurrentConditional.promoteDepsFromExhaustiveConditionals(
-      depsInConditionals
+      depsInConditionals,
     );
   }
 
@@ -461,7 +461,7 @@ class Context {
   #getProperty(
     object: Place,
     property: string,
-    isConditional: boolean
+    isConditional: boolean,
   ): ReactiveScopePropertyDependency {
     const resolvedObject = this.resolveTemporary(object);
     const resolvedDependency = this.#properties.get(resolvedObject.identifier);
@@ -603,7 +603,7 @@ class Context {
      *  (all other decls e.g. `let x;` should be initialized in BuildHIR)
      */
     const originalDeclaration = this.#declarations.get(
-      maybeDependency.identifier.id
+      maybeDependency.identifier.id,
     );
     if (
       originalDeclaration !== undefined &&
@@ -628,7 +628,7 @@ class Context {
        */
       this.#dependencies.add(
         maybeDependency,
-        this.#inConditionalWithinScope || isPoisoned
+        this.#inConditionalWithinScope || isPoisoned,
       );
     }
   }
@@ -642,7 +642,7 @@ class Context {
     if (
       currentScope != null &&
       !Array.from(currentScope.reassignments).some(
-        (identifier) => identifier.id === place.identifier.id
+        (identifier) => identifier.id === place.identifier.id,
       ) &&
       this.#checkValidDependency({ identifier: place.identifier, path: [] })
     ) {
@@ -689,7 +689,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    context: Context
+    context: Context,
   ): void {
     const { id, value, lvalue } = instruction;
     this.visitInstructionValue(context, id, value, lvalue);
@@ -705,7 +705,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
   visitReactiveValue(
     context: Context,
     id: InstructionId,
-    value: ReactiveValue
+    value: ReactiveValue,
   ): void {
     switch (value.kind) {
       case "OptionalExpression": {
@@ -795,7 +795,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     context: Context,
     id: InstructionId,
     value: ReactiveValue,
-    lvalue: Place | null
+    lvalue: Place | null,
   ): void {
     if (value.kind === "LoadLocal" && lvalue !== null) {
       if (
@@ -868,7 +868,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       case "break": {
         context.poisonState.addPoisonTarget(
           terminal.target,
-          context.currentScope
+          context.currentScope,
         );
         break;
       }
@@ -887,7 +887,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
 
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    context: Context
+    context: Context,
   ): void {
     this.enterTerminal(stmt, context);
     const terminal = stmt.terminal;
@@ -961,7 +961,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
           });
           context.poisonState.merge(
             [ifPoisonState],
-            context.currentScope.value
+            context.currentScope.value,
           );
           context.promoteDepsFromExhaustiveConditionals([depsInIf, depsInElse]);
         }
@@ -998,12 +998,12 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
           }
           if (block !== undefined) {
             mutExPoisonStates.push(
-              context.poisonState.take(prevPoisonState.clone())
+              context.poisonState.take(prevPoisonState.clone()),
             );
             depsInCases.push(
               context.enterConditional(() => {
                 this.visitBlock(block, context);
-              })
+              }),
             );
           }
         }
@@ -1012,7 +1012,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         }
         context.poisonState.merge(
           mutExPoisonStates,
-          context.currentScope.value
+          context.currentScope.value,
         );
         break;
       }
@@ -1028,7 +1028,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind \`${(terminal as any).kind}\``
+          `Unexpected terminal kind \`${(terminal as any).kind}\``,
         );
       }
     }

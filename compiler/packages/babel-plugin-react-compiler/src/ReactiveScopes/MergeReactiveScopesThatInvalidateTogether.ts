@@ -76,7 +76,7 @@ import {
  * better to flatten.
  */
 export function mergeReactiveScopesThatInvalidateTogether(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): void {
   const lastUsageVisitor = new FindLastUsageVisitor();
   visitReactiveFunction(fn, lastUsageVisitor, undefined);
@@ -113,7 +113,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
 
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    state: ReactiveScopeDependencies | null
+    state: ReactiveScopeDependencies | null,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, scopeBlock.scope.dependencies);
     if (
@@ -128,7 +128,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
 
   override visitBlock(
     block: ReactiveBlock,
-    state: ReactiveScopeDependencies | null
+    state: ReactiveScopeDependencies | null,
   ): void {
     // Pass 1: visit nested blocks to potentially merge their scopes
     this.traverseBlock(block, state);
@@ -162,7 +162,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
           // For now we don't merge across terminals
           if (current !== null) {
             log(
-              `Reset scope @${current.block.scope.id} from terminal [${instr.terminal.id}]`
+              `Reset scope @${current.block.scope.id} from terminal [${instr.terminal.id}]`,
             );
             reset();
           }
@@ -202,13 +202,13 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
                   instr.instruction.value.lvalue.kind === InstructionKind.Const
                 ) {
                   for (const lvalue of eachInstructionLValue(
-                    instr.instruction
+                    instr.instruction,
                   )) {
                     current.lvalues.add(lvalue.identifier.id);
                   }
                 } else {
                   log(
-                    `Reset scope @${current.block.scope.id} from StoreLocal in [${instr.instruction.id}]`
+                    `Reset scope @${current.block.scope.id} from StoreLocal in [${instr.instruction.id}]`,
                   );
                   reset();
                 }
@@ -219,7 +219,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
               // Other instructions are known to prevent merging, so we reset the scope if present
               if (current !== null) {
                 log(
-                  `Reset scope @${current.block.scope.id} from instruction [${instr.instruction.id}]`
+                  `Reset scope @${current.block.scope.id} from instruction [${instr.instruction.id}]`,
                 );
                 reset();
               }
@@ -234,16 +234,16 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
             areLValuesLastUsedByScope(
               instr.scope,
               current.lvalues,
-              this.lastUsage
+              this.lastUsage,
             )
           ) {
             // The current and next scopes can merge!
             log(
-              `Can merge scope @${current.block.scope.id} with @${instr.scope.id}`
+              `Can merge scope @${current.block.scope.id} with @${instr.scope.id}`,
             );
             // Update the merged scope's range
             current.block.scope.range.end = makeInstructionId(
-              Math.max(current.block.scope.range.end, instr.scope.range.end)
+              Math.max(current.block.scope.range.end, instr.scope.range.end),
             );
             // Add declarations
             for (const [key, value] of instr.scope.declarations) {
@@ -267,7 +267,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
                * inputs change, so it is not a candidate for future merging
                */
               log(
-                `  but scope @${instr.scope.id} doesnt guaranteed invalidate so it cannot merge further`
+                `  but scope @${instr.scope.id} doesnt guaranteed invalidate so it cannot merge further`,
               );
               reset();
             }
@@ -276,7 +276,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
             if (current !== null) {
               // Reset if necessary
               log(
-                `Reset scope @${current.block.scope.id}, not mergeable with subsequent scope @${instr.scope.id}`
+                `Reset scope @${current.block.scope.id}, not mergeable with subsequent scope @${instr.scope.id}`,
               );
               reset();
             }
@@ -290,7 +290,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
               };
             } else {
               log(
-                `scope @${instr.scope.id} doesnt guaranteed invalidate so it cannot merge further`
+                `scope @${instr.scope.id} doesnt guaranteed invalidate so it cannot merge further`,
               );
             }
           }
@@ -299,7 +299,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
         default: {
           assertExhaustive(
             instr,
-            `Unexpected instruction kind \`${(instr as any).kind}\``
+            `Unexpected instruction kind \`${(instr as any).kind}\``,
           );
         }
       }
@@ -312,7 +312,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
       for (const entry of merged) {
         log(
           printReactiveScopeSummary(entry.block.scope) +
-            ` from=${entry.from} to=${entry.to}`
+            ` from=${entry.from} to=${entry.to}`,
         );
       }
     }
@@ -363,7 +363,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
  */
 function updateScopeDeclarations(
   scope: ReactiveScope,
-  lastUsage: Map<IdentifierId, InstructionId>
+  lastUsage: Map<IdentifierId, InstructionId>,
 ): void {
   for (const [key] of scope.declarations) {
     const lastUsedAt = lastUsage.get(key)!;
@@ -381,7 +381,7 @@ function updateScopeDeclarations(
 function areLValuesLastUsedByScope(
   scope: ReactiveScope,
   lvalues: Set<IdentifierId>,
-  lastUsage: Map<IdentifierId, InstructionId>
+  lastUsage: Map<IdentifierId, InstructionId>,
 ): boolean {
   for (const lvalue of lvalues) {
     const lastUsedAt = lastUsage.get(lvalue)!;
@@ -395,7 +395,7 @@ function areLValuesLastUsedByScope(
 
 function canMergeScopes(
   current: ReactiveScopeBlock,
-  next: ReactiveScopeBlock
+  next: ReactiveScopeBlock,
 ): boolean {
   // Don't merge scopes with reassignments
   if (
@@ -427,9 +427,9 @@ function canMergeScopes(
         [...current.scope.declarations.values()].map((declaration) => ({
           identifier: declaration.identifier,
           path: [],
-        }))
+        })),
       ),
-      next.scope.dependencies
+      next.scope.dependencies,
     )
   ) {
     log(`  outputs of prev are input to current`);
@@ -443,7 +443,7 @@ function canMergeScopes(
 
 function areEqualDependencies(
   a: Set<ReactiveScopeDependency>,
-  b: Set<ReactiveScopeDependency>
+  b: Set<ReactiveScopeDependency>,
 ): boolean {
   if (a.size !== b.size) {
     return false;
@@ -511,7 +511,7 @@ class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: void
+    state: void,
   ): void {
     this.traverseInstruction(instruction, state);
     if (
@@ -528,7 +528,7 @@ class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
         } declaration?=${
           instruction.lvalue != null &&
           this.scope.declarations.has(instruction.lvalue.identifier.id)
-        } scope=${printReactiveScopeSummary(this.scope)}`
+        } scope=${printReactiveScopeSummary(this.scope)}`,
       );
       return;
     }
