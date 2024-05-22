@@ -14,7 +14,7 @@ module.exports = function makeSnapshotResolver(useForget) {
     resolveTestPath: (snapshotFilePath, snapshotExtension) =>
       snapshotFilePath.slice(
         0,
-        -modeExtension.length - snapshotExtension.length
+        -modeExtension.length - snapshotExtension.length,
       ),
 
     testPathForConsistencyCheck: "some/__tests__/example.test.js",

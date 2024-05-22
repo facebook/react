@@ -57,7 +57,7 @@ type State = {
 class Transform extends ReactiveFunctionTransform<State> {
   override transformScope(
     scope: ReactiveScopeBlock,
-    outerState: State
+    outerState: State,
   ): Transformed<ReactiveStatement> {
     const innerState: State = {
       env: outerState.env,
@@ -75,7 +75,7 @@ class Transform extends ReactiveFunctionTransform<State> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: State
+    state: State,
   ): void {
     this.traverseValue(id, value, state);
     switch (value.kind) {

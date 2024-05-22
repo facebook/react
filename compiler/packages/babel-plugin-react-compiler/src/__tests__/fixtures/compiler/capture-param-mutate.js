@@ -26,7 +26,7 @@ function getNativeLogFunction(level) {
         INSPECTOR_LEVELS[logLevel],
         str,
         [].slice.call(arguments),
-        INSPECTOR_FRAMES_TO_SKIP
+        INSPECTOR_FRAMES_TO_SKIP,
       );
     }
     if (groupStack.length) {

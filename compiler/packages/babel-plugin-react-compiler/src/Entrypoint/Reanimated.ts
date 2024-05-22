@@ -24,7 +24,7 @@ function hasModule(name: string): boolean {
  * See https://github.com/expo/expo/blob/e4b8d86442482c7316365a6b7ec1141eec73409d/packages/babel-preset-expo/src/index.ts#L300-L301
  */
 export function pipelineUsesReanimatedPlugin(
-  plugins: Array<BabelCore.PluginItem> | null | undefined
+  plugins: Array<BabelCore.PluginItem> | null | undefined,
 ): boolean {
   if (Array.isArray(plugins)) {
     for (const plugin of plugins) {

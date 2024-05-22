@@ -65,7 +65,7 @@ export function inferMutableContextVariables(fn: HIRFunction): void {
           state.declareProperty(
             instr.lvalue,
             instr.value.object,
-            instr.value.property
+            instr.value.property,
           );
           break;
         }
@@ -105,7 +105,7 @@ export function inferMutableContextVariables(fn: HIRFunction): void {
 function visitOperand(
   state: IdentifierState,
   knownMutatedIdentifiers: Set<Identifier>,
-  operand: Place
+  operand: Place,
 ): void {
   const resolved = state.resolve(operand.identifier);
   if (operand.effect === Effect.Mutate || operand.effect === Effect.Store) {

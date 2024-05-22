@@ -30,7 +30,7 @@ export function flattenReactiveLoops(fn: ReactiveFunction): void {
 class Transform extends ReactiveFunctionTransform<boolean> {
   override transformScope(
     scope: ReactiveScopeBlock,
-    isWithinLoop: boolean
+    isWithinLoop: boolean,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scope, isWithinLoop);
     if (isWithinLoop) {
@@ -42,7 +42,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
 
   override visitTerminal(
     stmt: ReactiveTerminalStatement<ReactiveTerminal>,
-    isWithinLoop: boolean
+    isWithinLoop: boolean,
   ): void {
     switch (stmt.terminal.kind) {
       // Loop terminals flatten nested scopes
@@ -69,7 +69,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
       default: {
         assertExhaustive(
           stmt.terminal,
-          `Unexpected terminal kind \`${(stmt.terminal as any).kind}\``
+          `Unexpected terminal kind \`${(stmt.terminal as any).kind}\``,
         );
       }
     }

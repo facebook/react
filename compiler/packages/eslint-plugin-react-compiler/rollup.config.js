@@ -69,7 +69,7 @@ const DEV_ROLLUP_CONFIG = {
  */
 
 "use no memo";
-`
+`,
     ),
   ],
 };

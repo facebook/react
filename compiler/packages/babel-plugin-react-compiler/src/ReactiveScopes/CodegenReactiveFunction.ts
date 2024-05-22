@@ -71,13 +71,13 @@ export type CodegenFunction = {
 
 export function codegenFunction(
   fn: ReactiveFunction,
-  uniqueIdentifiers: Set<string>
+  uniqueIdentifiers: Set<string>,
 ): Result<CodegenFunction, CompilerError> {
   const cx = new Context(
     fn.env,
     fn.id ?? "[[ anonymous ]]",
     uniqueIdentifiers,
-    null
+    null,
   );
 
   /**
@@ -111,7 +111,7 @@ export function codegenFunction(
         hookGuard,
         compiled.body.body,
         GuardKind.PushHookGuard,
-        GuardKind.PopHookGuard
+        GuardKind.PopHookGuard,
       ),
     ]);
   }
@@ -127,9 +127,9 @@ export function codegenFunction(
           t.identifier(cx.synthesizeName("$")),
           t.callExpression(t.identifier(fn.env.useMemoCacheIdentifier), [
             t.numericLiteral(cacheCount),
-          ])
+          ]),
         ),
-      ])
+      ]),
     );
     if (hotModuleReloadState !== null) {
       // HMR detection is enabled, emit code to reset the memo cache on source changes
@@ -141,9 +141,9 @@ export function codegenFunction(
             t.memberExpression(
               t.identifier(cx.synthesizeName("$")),
               t.numericLiteral(hotModuleReloadState.cacheIndex),
-              true
+              true,
             ),
-            t.stringLiteral(hotModuleReloadState.hash)
+            t.stringLiteral(hotModuleReloadState.hash),
           ),
           t.blockStatement([
             t.forStatement(
@@ -153,12 +153,12 @@ export function codegenFunction(
               t.binaryExpression(
                 "<",
                 t.identifier(index),
-                t.numericLiteral(cacheCount)
+                t.numericLiteral(cacheCount),
               ),
               t.assignmentExpression(
                 "+=",
                 t.identifier(index),
-                t.numericLiteral(1)
+                t.numericLiteral(1),
               ),
               t.blockStatement([
                 t.expressionStatement(
@@ -167,18 +167,18 @@ export function codegenFunction(
                     t.memberExpression(
                       t.identifier(cx.synthesizeName("$")),
                       t.identifier(index),
-                      true
+                      true,
                     ),
                     t.callExpression(
                       t.memberExpression(
                         t.identifier("Symbol"),
-                        t.identifier("for")
+                        t.identifier("for"),
                       ),
-                      [t.stringLiteral(MEMO_CACHE_SENTINEL)]
-                    )
-                  )
+                      [t.stringLiteral(MEMO_CACHE_SENTINEL)],
+                    ),
+                  ),
                 ),
-              ])
+              ]),
             ),
             t.expressionStatement(
               t.assignmentExpression(
@@ -186,13 +186,13 @@ export function codegenFunction(
                 t.memberExpression(
                   t.identifier(cx.synthesizeName("$")),
                   t.numericLiteral(hotModuleReloadState.cacheIndex),
-                  true
+                  true,
                 ),
-                t.stringLiteral(hotModuleReloadState.hash)
-              )
+                t.stringLiteral(hotModuleReloadState.hash),
+              ),
             ),
-          ])
-        )
+          ]),
+        ),
       );
     }
     compiled.body.body.unshift(...preface);
@@ -212,7 +212,7 @@ export function codegenFunction(
       gating = t.logicalExpression(
         "&&",
         t.identifier(emitInstrumentForget.globalGating),
-        t.identifier(emitInstrumentForget.gating.importSpecifierName)
+        t.identifier(emitInstrumentForget.gating.importSpecifierName),
       );
     } else if (emitInstrumentForget.gating != null) {
       gating = t.identifier(emitInstrumentForget.gating.importSpecifierName);
@@ -230,9 +230,9 @@ export function codegenFunction(
       t.expressionStatement(
         t.callExpression(
           t.identifier(emitInstrumentForget.fn.importSpecifierName),
-          [t.stringLiteral(fn.id), t.stringLiteral(fn.env.filename ?? "")]
-        )
-      )
+          [t.stringLiteral(fn.id), t.stringLiteral(fn.env.filename ?? "")],
+        ),
+      ),
     );
     compiled.body.body.unshift(test);
   }
@@ -242,7 +242,7 @@ export function codegenFunction(
 
 function codegenReactiveFunction(
   cx: Context,
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): Result<CodegenFunction, CompilerError> {
   for (const param of fn.params) {
     if (param.kind === "Identifier") {
@@ -255,7 +255,7 @@ function codegenReactiveFunction(
   const params = fn.params.map((param) => convertParameter(param));
   const body: t.BlockStatement = codegenBlock(cx, fn.body);
   body.directives = fn.directives.map((d) =>
-    t.directive(t.directiveLiteral(d))
+    t.directive(t.directiveLiteral(d)),
   );
   const statements = body.body;
   if (statements.length !== 0) {
@@ -295,7 +295,7 @@ class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void> {
 }
 
 function convertParameter(
-  param: Place | SpreadPattern
+  param: Place | SpreadPattern,
 ): t.Identifier | t.RestElement {
   if (param.kind === "Identifier") {
     return convertIdentifier(param.identifier);
@@ -319,7 +319,7 @@ class Context {
     env: Environment,
     fnName: string,
     uniqueIdentifiers: Set<string>,
-    temporaries: Temporaries | null = null
+    temporaries: Temporaries | null = null,
   ) {
     this.env = env;
     this.fnName = fnName;
@@ -385,7 +385,7 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
  */
 function codegenBlockNoReset(
   cx: Context,
-  block: ReactiveBlock
+  block: ReactiveBlock,
 ): t.BlockStatement {
   const statements: Array<t.Statement> = [];
   for (const item of block) {
@@ -414,7 +414,10 @@ function codegenBlockNoReset(
               ? statement.body[0]
               : statement;
           statements.push(
-            t.labeledStatement(t.identifier(codegenLabel(item.label.id)), block)
+            t.labeledStatement(
+              t.identifier(codegenLabel(item.label.id)),
+              block,
+            ),
           );
         } else if (statement.type === "BlockStatement") {
           statements.push(...statement.body);
@@ -426,7 +429,7 @@ function codegenBlockNoReset(
       default: {
         assertExhaustive(
           item,
-          `Unexpected item kind \`${(item as any).kind}\``
+          `Unexpected item kind \`${(item as any).kind}\``,
         );
       }
     }
@@ -441,9 +444,9 @@ function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
       t.identifier("__DEV__"),
       t.callExpression(
         t.identifier(cx.env.config.enableEmitFreeze.importSpecifierName),
-        [value, t.stringLiteral(cx.fnName)]
+        [value, t.stringLiteral(cx.fnName)],
       ),
-      value
+      value,
     );
   } else {
     return value;
@@ -454,7 +457,7 @@ function codegenReactiveScope(
   cx: Context,
   statements: Array<t.Statement>,
   scope: ReactiveScope,
-  block: ReactiveBlock
+  block: ReactiveBlock,
 ): void {
   const cacheStoreStatements: Array<t.Statement> = [];
   const cacheLoadStatements: Array<t.Statement> = [];
@@ -469,9 +472,9 @@ function codegenReactiveScope(
       t.memberExpression(
         t.identifier(cx.synthesizeName("$")),
         t.numericLiteral(index),
-        true
+        true,
       ),
-      codegenDependency(cx, dep)
+      codegenDependency(cx, dep),
     );
 
     if (cx.env.config.enableChangeVariableCodegen) {
@@ -479,7 +482,7 @@ function codegenReactiveScope(
       statements.push(
         t.variableDeclaration("const", [
           t.variableDeclarator(changeIdentifier, comparison),
-        ])
+        ]),
       );
       changeExpressions.push(changeIdentifier);
     } else {
@@ -492,11 +495,11 @@ function codegenReactiveScope(
           t.memberExpression(
             t.identifier(cx.synthesizeName("$")),
             t.numericLiteral(index),
-            true
+            true,
           ),
-          codegenDependency(cx, dep)
-        )
-      )
+          codegenDependency(cx, dep),
+        ),
+      ),
     );
   }
   let firstOutputIndex: number | null = null;
@@ -517,7 +520,7 @@ function codegenReactiveScope(
     outputComments.push(name.name);
     if (!cx.hasDeclared(identifier)) {
       statements.push(
-        t.variableDeclaration("let", [t.variableDeclarator(name)])
+        t.variableDeclaration("let", [t.variableDeclarator(name)]),
       );
     }
     cacheStoreStatements.push(
@@ -527,11 +530,11 @@ function codegenReactiveScope(
           t.memberExpression(
             t.identifier(cx.synthesizeName("$")),
             t.numericLiteral(index),
-            true
+            true,
           ),
-          wrapCacheDep(cx, name)
-        )
-      )
+          wrapCacheDep(cx, name),
+        ),
+      ),
     );
     cacheLoadStatements.push(
       t.expressionStatement(
@@ -541,10 +544,10 @@ function codegenReactiveScope(
           t.memberExpression(
             t.identifier(cx.synthesizeName("$")),
             t.numericLiteral(index),
-            true
-          )
-        )
-      )
+            true,
+          ),
+        ),
+      ),
     );
     cx.declare(identifier);
   }
@@ -563,11 +566,11 @@ function codegenReactiveScope(
           t.memberExpression(
             t.identifier(cx.synthesizeName("$")),
             t.numericLiteral(index),
-            true
+            true,
           ),
-          wrapCacheDep(cx, name)
-        )
-      )
+          wrapCacheDep(cx, name),
+        ),
+      ),
     );
     cacheLoadStatements.push(
       t.expressionStatement(
@@ -577,10 +580,10 @@ function codegenReactiveScope(
           t.memberExpression(
             t.identifier(cx.synthesizeName("$")),
             t.numericLiteral(index),
-            true
-          )
-        )
-      )
+            true,
+          ),
+        ),
+      ),
     );
   }
   let testCondition = (changeExpressions as Array<t.Expression>).reduce(
@@ -590,7 +593,7 @@ function codegenReactiveScope(
       }
       return t.logicalExpression("||", acc, ident);
     },
-    null as t.Expression | null
+    null as t.Expression | null,
   );
   if (testCondition === null) {
     CompilerError.invariant(firstOutputIndex !== null, {
@@ -604,12 +607,12 @@ function codegenReactiveScope(
       t.memberExpression(
         t.identifier(cx.synthesizeName("$")),
         t.numericLiteral(firstOutputIndex),
-        true
+        true,
       ),
       t.callExpression(
         t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
-        [t.stringLiteral(MEMO_CACHE_SENTINEL)]
-      )
+        [t.stringLiteral(MEMO_CACHE_SENTINEL)],
+      ),
     );
   }
 
@@ -620,7 +623,7 @@ function codegenReactiveScope(
   const memoStatement = t.ifStatement(
     testCondition,
     computationBlock,
-    memoBlock
+    memoBlock,
   );
 
   if (cx.env.config.enableMemoizationComments) {
@@ -630,28 +633,28 @@ function codegenReactiveScope(
         "leading",
         ` check if ${printDelimitedCommentList(
           changeExpressionComments,
-          "or"
+          "or",
         )} changed`,
-        true
+        true,
       );
       t.addComment(
         memoStatement,
         "leading",
         ` "useMemo" for ${printDelimitedCommentList(outputComments, "and")}:`,
-        true
+        true,
       );
     } else {
       t.addComment(
         memoStatement,
         "leading",
         " cache value with no dependencies",
-        true
+        true,
       );
       t.addComment(
         memoStatement,
         "leading",
         ` "useMemo" for ${printDelimitedCommentList(outputComments, "and")}:`,
-        true
+        true,
       );
     }
     if (computationBlock.body.length > 0) {
@@ -659,7 +662,7 @@ function codegenReactiveScope(
         computationBlock.body[0]!,
         "leading",
         ` Inputs changed, recompute`,
-        true
+        true,
       );
     }
     if (memoBlock.body.length > 0) {
@@ -667,7 +670,7 @@ function codegenReactiveScope(
         memoBlock.body[0]!,
         "leading",
         ` Inputs did not change, use cached value`,
-        true
+        true,
       );
     }
   }
@@ -683,7 +686,7 @@ function codegenReactiveScope(
         loc: earlyReturnValue.loc,
         description: null,
         suggestions: null,
-      }
+      },
     );
     const name: ValidIdentifierName = earlyReturnValue.value.name.value;
     statements.push(
@@ -693,18 +696,18 @@ function codegenReactiveScope(
           t.identifier(name),
           t.callExpression(
             t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
-            [t.stringLiteral(EARLY_RETURN_SENTINEL)]
-          )
+            [t.stringLiteral(EARLY_RETURN_SENTINEL)],
+          ),
         ),
-        t.blockStatement([t.returnStatement(t.identifier(name))])
-      )
+        t.blockStatement([t.returnStatement(t.identifier(name))]),
+      ),
     );
   }
 }
 
 function codegenTerminal(
   cx: Context,
-  terminal: ReactiveTerminal
+  terminal: ReactiveTerminal,
 ): t.Statement | null {
   switch (terminal.kind) {
     case "break": {
@@ -714,7 +717,7 @@ function codegenTerminal(
       return t.breakStatement(
         terminal.targetKind === "labeled"
           ? t.identifier(codegenLabel(terminal.target))
-          : null
+          : null,
       );
     }
     case "continue": {
@@ -724,7 +727,7 @@ function codegenTerminal(
       return t.continueStatement(
         terminal.targetKind === "labeled"
           ? t.identifier(codegenLabel(terminal.target))
-          : null
+          : null,
       );
     }
     case "for": {
@@ -734,7 +737,7 @@ function codegenTerminal(
         terminal.update !== null
           ? codegenInstructionValueToExpression(cx, terminal.update)
           : null,
-        codegenBlock(cx, terminal.loop)
+        codegenBlock(cx, terminal.loop),
       );
     }
     case "for-in": {
@@ -805,7 +808,7 @@ function codegenTerminal(
         default:
           assertExhaustive(
             iterableItem.value.lvalue.kind,
-            `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`
+            `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`,
           );
       }
       return t.forInStatement(
@@ -817,7 +820,7 @@ function codegenTerminal(
           t.variableDeclarator(lval, null),
         ]),
         codegenInstructionValueToExpression(cx, iterableCollection.value),
-        codegenBlock(cx, terminal.loop)
+        codegenBlock(cx, terminal.loop),
       );
     }
     case "for-of": {
@@ -830,7 +833,7 @@ function codegenTerminal(
           description: `Got \`${terminal.init.kind}\` expression instead`,
           loc: terminal.init.loc,
           suggestions: null,
-        }
+        },
       );
       const iterableCollection = terminal.init.instructions[0].value;
 
@@ -900,7 +903,7 @@ function codegenTerminal(
         default:
           assertExhaustive(
             iterableItem.value.lvalue.kind,
-            `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`
+            `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`,
           );
       }
       return t.forOfStatement(
@@ -912,7 +915,7 @@ function codegenTerminal(
           t.variableDeclarator(lval, null),
         ]),
         codegenInstructionValueToExpression(cx, iterableCollection),
-        codegenBlock(cx, terminal.loop)
+        codegenBlock(cx, terminal.loop),
       );
     }
     case "if": {
@@ -945,7 +948,7 @@ function codegenTerminal(
               : null;
           const block = codegenBlock(cx, case_.block!);
           return t.switchCase(test, [block]);
-        })
+        }),
       );
     }
     case "throw": {
@@ -970,13 +973,13 @@ function codegenTerminal(
       }
       return t.tryStatement(
         codegenBlock(cx, terminal.block),
-        t.catchClause(catchParam, codegenBlock(cx, terminal.handler))
+        t.catchClause(catchParam, codegenBlock(cx, terminal.handler)),
       );
     }
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }
@@ -984,7 +987,7 @@ function codegenTerminal(
 
 function codegenInstructionNullable(
   cx: Context,
-  instr: ReactiveInstruction
+  instr: ReactiveInstruction,
 ): t.Statement | null {
   if (
     instr.value.kind === "StoreLocal" ||
@@ -1076,7 +1079,7 @@ function codegenInstructionNullable(
         const expr = t.assignmentExpression(
           "=",
           codegenLValue(cx, lvalue),
-          value
+          value,
         );
         if (instr.lvalue !== null) {
           if (instr.value.kind !== "StoreContext") {
@@ -1137,7 +1140,7 @@ function codegenInstructionNullable(
 
 function codegenForInit(
   cx: Context,
-  init: ReactiveValue
+  init: ReactiveValue,
 ): t.Expression | t.VariableDeclaration | null {
   if (init.kind === "SequenceExpression") {
     for (const instr of init.instructions) {
@@ -1159,7 +1162,7 @@ function codegenForInit(
       init.instructions.map((instruction) => ({
         kind: "instruction",
         instruction,
-      }))
+      })),
     ).body;
     const declarators: Array<t.VariableDeclarator> = [];
     let kind: "let" | "const" = "const";
@@ -1172,7 +1175,7 @@ function codegenForInit(
           loc: init.loc,
           description: `Got ${instr.type}`,
           suggestions: null,
-        }
+        },
       );
       if (instr.kind === "let") {
         kind = "let";
@@ -1204,7 +1207,7 @@ function printDependencyComment(dependency: ReactiveScopeDependency): string {
 
 function printDelimitedCommentList(
   items: Array<string>,
-  finalCompletion: string
+  finalCompletion: string,
 ): string {
   if (items.length === 2) {
     return items.join(` ${finalCompletion} `);
@@ -1228,7 +1231,7 @@ function printDelimitedCommentList(
 
 function codegenDependency(
   cx: Context,
-  dependency: ReactiveScopeDependency
+  dependency: ReactiveScopeDependency,
 ): t.Expression {
   let object: t.Expression = convertIdentifier(dependency.identifier);
   if (dependency.path !== null) {
@@ -1240,7 +1243,7 @@ function codegenDependency(
 }
 
 function withLoc<T extends (...args: Array<any>) => t.Node>(
-  fn: T
+  fn: T,
 ): (
   loc: SourceLocation | null | undefined,
   ...args: Parameters<T>
@@ -1281,20 +1284,20 @@ function createHookGuard(
   guard: ExternalFunction,
   stmts: Array<t.Statement>,
   before: GuardKind,
-  after: GuardKind
+  after: GuardKind,
 ): t.TryStatement {
   function createHookGuardImpl(kind: number): t.ExpressionStatement {
     return t.expressionStatement(
       t.callExpression(t.identifier(guard.importSpecifierName), [
         t.numericLiteral(kind),
-      ])
+      ]),
     );
   }
 
   return t.tryStatement(
     t.blockStatement([createHookGuardImpl(before), ...stmts]),
     null,
-    t.blockStatement([createHookGuardImpl(after)])
+    t.blockStatement([createHookGuardImpl(after)]),
   );
 }
 
@@ -1322,7 +1325,7 @@ function createCallExpression(
   callee: t.Expression,
   args: Array<t.Expression | t.SpreadElement>,
   loc: SourceLocation | null,
-  isHook: boolean
+  isHook: boolean,
 ): t.CallExpression {
   const callExpr = t.callExpression(callee, args);
   if (loc != null && loc != GeneratedSource) {
@@ -1339,9 +1342,9 @@ function createCallExpression(
           hookGuard,
           [t.returnStatement(callExpr)],
           GuardKind.AllowHook,
-          GuardKind.DisallowHook
+          GuardKind.DisallowHook,
         ),
-      ])
+      ]),
     );
     return t.callExpression(iife, []);
   } else {
@@ -1358,7 +1361,7 @@ function codegenLabel(id: BlockId): string {
 function codegenInstruction(
   cx: Context,
   instr: ReactiveInstruction,
-  value: t.Expression | t.JSXText
+  value: t.Expression | t.JSXText,
 ): t.Statement {
   if (t.isStatement(value)) {
     return value;
@@ -1378,14 +1381,14 @@ function codegenInstruction(
         t.assignmentExpression(
           "=",
           convertIdentifier(instr.lvalue.identifier),
-          expressionValue
-        )
+          expressionValue,
+        ),
       );
     } else {
       return createVariableDeclaration(instr.loc, "const", [
         t.variableDeclarator(
           convertIdentifier(instr.lvalue.identifier),
-          expressionValue
+          expressionValue,
         ),
       ]);
     }
@@ -1393,7 +1396,7 @@ function codegenInstruction(
 }
 
 function convertValueToExpression(
-  value: t.JSXText | t.Expression
+  value: t.JSXText | t.Expression,
 ): t.Expression {
   if (value.type === "JSXText") {
     return createStringLiteral(value.loc, value.value);
@@ -1403,7 +1406,7 @@ function convertValueToExpression(
 
 function codegenInstructionValueToExpression(
   cx: Context,
-  instrValue: ReactiveValue
+  instrValue: ReactiveValue,
 ): t.Expression {
   const value = codegenInstructionValue(cx, instrValue);
   return convertValueToExpression(value);
@@ -1411,7 +1414,7 @@ function codegenInstructionValueToExpression(
 
 function codegenInstructionValue(
   cx: Context,
-  instrValue: ReactiveValue
+  instrValue: ReactiveValue,
 ): t.Expression | t.JSXText {
   let value: t.Expression | t.JSXText;
   switch (instrValue.kind) {
@@ -1435,14 +1438,14 @@ function codegenInstructionValue(
         instrValue.loc,
         instrValue.operator,
         left,
-        right
+        right,
       );
       break;
     }
     case "UnaryExpression": {
       value = t.unaryExpression(
         instrValue.operator as "throw", // todo
-        codegenPlaceToExpression(cx, instrValue.value)
+        codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
     }
@@ -1457,7 +1460,7 @@ function codegenInstructionValue(
         value = t.callExpression(callee, args);
         if (instrValue.typeArguments != null) {
           value.typeArguments = t.typeParameterInstantiation(
-            instrValue.typeArguments
+            instrValue.typeArguments,
           );
         }
         break;
@@ -1470,14 +1473,14 @@ function codegenInstructionValue(
         callee,
         args,
         instrValue.loc,
-        isHook
+        isHook,
       );
       break;
     }
     case "OptionalExpression": {
       const optionalValue = codegenInstructionValueToExpression(
         cx,
-        instrValue.value
+        instrValue.value,
       );
       switch (optionalValue.type) {
         case "OptionalCallExpression":
@@ -1491,7 +1494,7 @@ function codegenInstructionValue(
           value = t.optionalCallExpression(
             optionalValue.callee,
             optionalValue.arguments,
-            instrValue.optional
+            instrValue.optional,
           );
           break;
         }
@@ -1508,7 +1511,7 @@ function codegenInstructionValue(
             optionalValue.object,
             property,
             optionalValue.computed,
-            instrValue.optional
+            instrValue.optional,
           );
           break;
         }
@@ -1538,12 +1541,12 @@ function codegenInstructionValue(
           description: null,
           loc: memberExpr.loc ?? null,
           suggestions: null,
-        }
+        },
       );
       CompilerError.invariant(
         t.isNodesEquivalent(
           memberExpr.object,
-          codegenPlaceToExpression(cx, instrValue.receiver)
+          codegenPlaceToExpression(cx, instrValue.receiver),
         ),
         {
           reason:
@@ -1552,7 +1555,7 @@ function codegenInstructionValue(
           description: null,
           loc: memberExpr.loc ?? null,
           suggestions: null,
-        }
+        },
       );
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = createCallExpression(
@@ -1560,7 +1563,7 @@ function codegenInstructionValue(
         memberExpr,
         args,
         instrValue.loc,
-        isHook
+        isHook,
       );
       break;
     }
@@ -1586,8 +1589,8 @@ function codegenInstructionValue(
                   property.key.kind === "computed",
                   key.type === "Identifier" &&
                     value.type === "Identifier" &&
-                    value.name === key.name
-                )
+                    value.name === key.name,
+                ),
               );
               break;
             }
@@ -1607,9 +1610,9 @@ function codegenInstructionValue(
                   cx.env,
                   reactiveFunction.id ?? "[[ anonymous ]]",
                   cx.uniqueIdentifiers,
-                  cx.temp
+                  cx.temp,
                 ),
-                reactiveFunction
+                reactiveFunction,
               ).unwrap();
 
               /*
@@ -1621,7 +1624,7 @@ function codegenInstructionValue(
                 key,
                 fn.params,
                 fn.body,
-                false
+                false,
               );
               babelNode.async = fn.async;
               babelNode.generator = fn.generator;
@@ -1631,12 +1634,12 @@ function codegenInstructionValue(
             default:
               assertExhaustive(
                 property.type,
-                `Unexpected property type: ${property.type}`
+                `Unexpected property type: ${property.type}`,
               );
           }
         } else {
           properties.push(
-            t.spreadElement(codegenPlaceToExpression(cx, property.place))
+            t.spreadElement(codegenPlaceToExpression(cx, property.place)),
           );
         }
       }
@@ -1673,7 +1676,7 @@ function codegenInstructionValue(
           tag = createJsxNamespacedName(
             instrValue.tag.loc,
             createJsxIdentifier(instrValue.tag.loc, namespace),
-            createJsxIdentifier(instrValue.tag.loc, name)
+            createJsxIdentifier(instrValue.tag.loc, name),
           );
         } else {
           tag = createJsxIdentifier(instrValue.loc, tagValue.value);
@@ -1691,7 +1694,7 @@ function codegenInstructionValue(
           description: null,
         });
         children = instrValue.children.map((child) =>
-          codegenJsxFbtChildElement(cx, child)
+          codegenJsxFbtChildElement(cx, child),
         );
       } else {
         children =
@@ -1705,13 +1708,13 @@ function codegenInstructionValue(
           instrValue.openingLoc,
           tag,
           attributes,
-          instrValue.children === null
+          instrValue.children === null,
         ),
         instrValue.children !== null
           ? createJsxClosingElement(instrValue.closingLoc, tag)
           : null,
         children,
-        instrValue.children === null
+        instrValue.children === null,
       );
       break;
     }
@@ -1719,7 +1722,7 @@ function codegenInstructionValue(
       value = t.jsxFragment(
         t.jsxOpeningFragment(),
         t.jsxClosingFragment(),
-        instrValue.children.map((child) => codegenJsxElement(cx, child))
+        instrValue.children.map((child) => codegenJsxElement(cx, child)),
       );
       break;
     }
@@ -1736,9 +1739,9 @@ function codegenInstructionValue(
         "=",
         t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
-          t.identifier(instrValue.property)
+          t.identifier(instrValue.property),
         ),
-        codegenPlaceToExpression(cx, instrValue.value)
+        codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
     }
@@ -1751,7 +1754,7 @@ function codegenInstructionValue(
       value = t.memberExpression(
         object,
         t.identifier(instrValue.property),
-        undefined
+        undefined,
       );
       break;
     }
@@ -1760,8 +1763,8 @@ function codegenInstructionValue(
         "delete",
         t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
-          t.identifier(instrValue.property)
-        )
+          t.identifier(instrValue.property),
+        ),
       );
       break;
     }
@@ -1771,9 +1774,9 @@ function codegenInstructionValue(
         t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
           codegenPlaceToExpression(cx, instrValue.property),
-          true
+          true,
         ),
-        codegenPlaceToExpression(cx, instrValue.value)
+        codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
     }
@@ -1789,8 +1792,8 @@ function codegenInstructionValue(
         t.memberExpression(
           codegenPlaceToExpression(cx, instrValue.object),
           codegenPlaceToExpression(cx, instrValue.property),
-          true
-        )
+          true,
+        ),
       );
       break;
     }
@@ -1810,9 +1813,9 @@ function codegenInstructionValue(
           cx.env,
           reactiveFunction.id ?? "[[ anonymous ]]",
           cx.uniqueIdentifiers,
-          cx.temp
+          cx.temp,
         ),
-        reactiveFunction
+        reactiveFunction,
       ).unwrap();
       if (instrValue.expr.type === "ArrowFunctionExpression") {
         let body: t.BlockStatement | t.Expression = fn.body;
@@ -1830,7 +1833,7 @@ function codegenInstructionValue(
           fn.params,
           fn.body,
           fn.generator,
-          fn.async
+          fn.async,
         );
       }
       break;
@@ -1839,7 +1842,7 @@ function codegenInstructionValue(
       value = createTaggedTemplateExpression(
         instrValue.loc,
         codegenPlaceToExpression(cx, instrValue.tag),
-        t.templateLiteral([t.templateElement(instrValue.value)], [])
+        t.templateLiteral([t.templateElement(instrValue.value)], []),
       );
       break;
     }
@@ -1847,12 +1850,12 @@ function codegenInstructionValue(
       if (t.isTSType(instrValue.typeAnnotation)) {
         value = t.tsAsExpression(
           codegenPlaceToExpression(cx, instrValue.value),
-          instrValue.typeAnnotation
+          instrValue.typeAnnotation,
         );
       } else {
         value = t.typeCastExpression(
           codegenPlaceToExpression(cx, instrValue.value),
-          t.typeAnnotation(instrValue.typeAnnotation)
+          t.typeAnnotation(instrValue.typeAnnotation),
         );
       }
       break;
@@ -1862,7 +1865,7 @@ function codegenInstructionValue(
         instrValue.loc,
         instrValue.operator,
         codegenInstructionValueToExpression(cx, instrValue.left),
-        codegenInstructionValueToExpression(cx, instrValue.right)
+        codegenInstructionValueToExpression(cx, instrValue.right),
       );
       break;
     }
@@ -1871,7 +1874,7 @@ function codegenInstructionValue(
         instrValue.loc,
         codegenInstructionValueToExpression(cx, instrValue.test),
         codegenInstructionValueToExpression(cx, instrValue.consequent),
-        codegenInstructionValueToExpression(cx, instrValue.alternate)
+        codegenInstructionValueToExpression(cx, instrValue.alternate),
       );
       break;
     }
@@ -1881,7 +1884,7 @@ function codegenInstructionValue(
         instrValue.instructions.map((instruction) => ({
           kind: "instruction",
           instruction,
-        }))
+        })),
       ).body;
       const expressions = body.map((stmt) => {
         if (stmt.type === "ExpressionStatement") {
@@ -1923,7 +1926,7 @@ function codegenInstructionValue(
       value = createTemplateLiteral(
         instrValue.loc,
         instrValue.quasis.map((q) => t.templateElement(q)),
-        instrValue.subexprs.map((p) => codegenPlaceToExpression(cx, p))
+        instrValue.subexprs.map((p) => codegenPlaceToExpression(cx, p)),
       );
       break;
     }
@@ -1955,7 +1958,7 @@ function codegenInstructionValue(
       value = t.updateExpression(
         instrValue.operation,
         codegenPlaceToExpression(cx, instrValue.lvalue),
-        false
+        false,
       );
       break;
     }
@@ -1963,7 +1966,7 @@ function codegenInstructionValue(
       value = t.updateExpression(
         instrValue.operation,
         codegenPlaceToExpression(cx, instrValue.lvalue),
-        true
+        true,
       );
       break;
     }
@@ -1975,12 +1978,12 @@ function codegenInstructionValue(
           description: null,
           loc: instrValue.loc,
           suggestions: null,
-        }
+        },
       );
       value = t.assignmentExpression(
         "=",
         codegenLValue(cx, instrValue.lvalue.place),
-        codegenPlaceToExpression(cx, instrValue.value)
+        codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
     }
@@ -1988,7 +1991,7 @@ function codegenInstructionValue(
       value = t.assignmentExpression(
         "=",
         t.identifier(instrValue.name),
-        codegenPlaceToExpression(cx, instrValue.value)
+        codegenPlaceToExpression(cx, instrValue.value),
       );
       break;
     }
@@ -2011,7 +2014,7 @@ function codegenInstructionValue(
     default: {
       assertExhaustive(
         instrValue,
-        `Unexpected instruction value kind \`${(instrValue as any).kind}\``
+        `Unexpected instruction value kind \`${(instrValue as any).kind}\``,
       );
     }
   }
@@ -2025,7 +2028,7 @@ function codegenInstructionValue(
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN = /[\u{0080}-\u{FFFF}]|"/u;
 function codegenJsxAttribute(
   cx: Context,
-  attribute: JsxAttribute
+  attribute: JsxAttribute,
 ): t.JSXAttribute | t.JSXSpreadAttribute {
   switch (attribute.kind) {
     case "JsxAttribute": {
@@ -2037,7 +2040,7 @@ function codegenJsxAttribute(
         propName = createJsxNamespacedName(
           attribute.place.loc,
           createJsxIdentifier(attribute.place.loc, namespace),
-          createJsxIdentifier(attribute.place.loc, name)
+          createJsxIdentifier(attribute.place.loc, name),
         );
       }
       const innerValue = codegenPlaceToExpression(cx, attribute.place);
@@ -2065,13 +2068,13 @@ function codegenJsxAttribute(
     }
     case "JsxSpreadAttribute": {
       return t.jsxSpreadAttribute(
-        codegenPlaceToExpression(cx, attribute.argument)
+        codegenPlaceToExpression(cx, attribute.argument),
       );
     }
     default: {
       assertExhaustive(
         attribute,
-        `Unexpected attribute kind \`${(attribute as any).kind}\``
+        `Unexpected attribute kind \`${(attribute as any).kind}\``,
       );
     }
   }
@@ -2080,7 +2083,7 @@ function codegenJsxAttribute(
 const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&]/;
 function codegenJsxElement(
   cx: Context,
-  place: Place
+  place: Place,
 ):
   | t.JSXText
   | t.JSXExpressionContainer
@@ -2093,7 +2096,7 @@ function codegenJsxElement(
       if (JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value)) {
         return createJsxExpressionContainer(
           place.loc,
-          createStringLiteral(place.loc, value.value)
+          createStringLiteral(place.loc, value.value),
         );
       }
       return createJsxText(place.loc, value.value);
@@ -2110,7 +2113,7 @@ function codegenJsxElement(
 
 function codegenJsxFbtChildElement(
   cx: Context,
-  place: Place
+  place: Place,
 ):
   | t.JSXText
   | t.JSXExpressionContainer
@@ -2131,7 +2134,7 @@ function codegenJsxFbtChildElement(
 }
 
 function convertMemberExpressionToJsx(
-  expr: t.MemberExpression
+  expr: t.MemberExpression,
 ): t.JSXMemberExpression {
   CompilerError.invariant(expr.property.type === "Identifier", {
     reason: "Expected JSX member expression property to be a string",
@@ -2157,7 +2160,7 @@ function convertMemberExpressionToJsx(
 
 function codegenObjectPropertyKey(
   cx: Context,
-  key: ObjectPropertyKey
+  key: ObjectPropertyKey,
 ): t.Expression {
   switch (key.kind) {
     case "string": {
@@ -2181,7 +2184,7 @@ function codegenObjectPropertyKey(
 
 function codegenArrayPattern(
   cx: Context,
-  pattern: ArrayPattern
+  pattern: ArrayPattern,
 ): t.ArrayPattern {
   const hasHoles = !pattern.items.every((e) => e.kind !== "Hole");
   if (hasHoles) {
@@ -2212,14 +2215,14 @@ function codegenArrayPattern(
           return null;
         }
         return codegenLValue(cx, item);
-      })
+      }),
     );
   }
 }
 
 function codegenLValue(
   cx: Context,
-  pattern: Pattern | Place | SpreadPattern
+  pattern: Pattern | Place | SpreadPattern,
 ): t.ArrayPattern | t.ObjectPattern | t.RestElement | t.Identifier {
   switch (pattern.kind) {
     case "ArrayPattern": {
@@ -2237,12 +2240,12 @@ function codegenLValue(
               property.key.kind === "computed",
               key.type === "Identifier" &&
                 value.type === "Identifier" &&
-                value.name === key.name
+                value.name === key.name,
             );
           } else {
             return t.restElement(codegenLValue(cx, property.place));
           }
-        })
+        }),
       );
     }
     case "Spread": {
@@ -2254,7 +2257,7 @@ function codegenLValue(
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -2263,7 +2266,7 @@ function codegenLValue(
 function codegenValue(
   cx: Context,
   loc: SourceLocation,
-  value: boolean | number | string | null | undefined
+  value: boolean | number | string | null | undefined,
 ): t.Expression {
   if (typeof value === "number") {
     return t.numericLiteral(value);
@@ -2282,7 +2285,7 @@ function codegenValue(
 
 function codegenArgument(
   cx: Context,
-  arg: Place | SpreadPattern
+  arg: Place | SpreadPattern,
 ): t.Expression | t.SpreadElement {
   if (arg.kind === "Identifier") {
     return codegenPlaceToExpression(cx, arg);
@@ -2304,7 +2307,7 @@ function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
   CompilerError.invariant(place.identifier.name !== null || tmp !== undefined, {
     reason: `[Codegen] No value found for temporary`,
     description: `Value for '${printPlace(
-      place
+      place,
     )}' was not set in the codegen context`,
     loc: place.loc,
     suggestions: null,
@@ -2322,7 +2325,7 @@ function convertIdentifier(identifier: Identifier): t.Identifier {
       loc: GeneratedSource,
       description: `identifier ${identifier.id} is unnamed`,
       suggestions: null,
-    }
+    },
   );
   return t.identifier(identifier.name.value);
 }

@@ -63,7 +63,7 @@ describe("makeReadOnly", () => {
         "FORGET_MUTATE_IMMUT",
         "test5",
         "a",
-        newVal
+        newVal,
       );
       expect(o.a).toBe(newVal);
     });
@@ -79,7 +79,7 @@ describe("makeReadOnly", () => {
         "FORGET_MUTATE_IMMUT",
         "test6",
         "a",
-        newVal
+        newVal,
       );
       expect(o.a).toBe(newVal);
     });

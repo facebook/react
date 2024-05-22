@@ -58,7 +58,7 @@ export const InstrumentationSchema = z
   })
   .refine(
     (opts) => opts.gating != null || opts.globalGating != null,
-    "Expected at least one of gating or globalGating"
+    "Expected at least one of gating or globalGating",
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
@@ -449,7 +449,7 @@ export class Environment {
     logger: Logger | null,
     filename: string | null,
     code: string | null,
-    useMemoCacheIdentifier: string
+    useMemoCacheIdentifier: string,
   ) {
     this.fnType = fnType;
     this.config = config;
@@ -479,7 +479,7 @@ export class Environment {
           calleeEffect: Effect.Read,
           hookKind: "Custom",
           noAlias: hook.noAlias,
-        })
+        }),
       );
     }
 
@@ -539,7 +539,7 @@ export class Environment {
 
   getPropertyType(
     receiver: Type,
-    property: string
+    property: string,
   ): BuiltInType | PolyType | null {
     let shapeId = null;
     if (receiver.kind === "Object" || receiver.kind === "Function") {
@@ -605,7 +605,7 @@ export function isHookName(name: string): boolean {
 }
 
 export function parseEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig
+  partialConfig: PartialEnvironmentConfig,
 ): Result<EnvironmentConfig, ZodError<PartialEnvironmentConfig>> {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
@@ -616,7 +616,7 @@ export function parseEnvironmentConfig(
 }
 
 export function validateEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig
+  partialConfig: PartialEnvironmentConfig,
 ): EnvironmentConfig {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
@@ -633,10 +633,10 @@ export function validateEnvironmentConfig(
 }
 
 export function tryParseExternalFunction(
-  maybeExternalFunction: any
+  maybeExternalFunction: any,
 ): ExternalFunction {
   const externalFunction = ExternalFunctionSchema.safeParse(
-    maybeExternalFunction
+    maybeExternalFunction,
   );
   if (externalFunction.success) {
     return externalFunction.data;

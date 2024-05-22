@@ -39,10 +39,10 @@ function Component(t0) {
         fbt._param(
           "paramName",
 
-          value
+          value,
         ),
       ],
-      { hk: "3z5SVE" }
+      { hk: "3z5SVE" },
     );
     $[0] = value;
     $[1] = t1;

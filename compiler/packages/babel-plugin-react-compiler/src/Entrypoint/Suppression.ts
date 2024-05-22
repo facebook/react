@@ -38,7 +38,7 @@ type SuppressionSource = "Eslint" | "Flow";
  */
 export function filterSuppressionsThatAffectFunction(
   suppressionRanges: Array<SuppressionRange>,
-  fn: NodePath<t.Function>
+  fn: NodePath<t.Function>,
 ): Array<SuppressionRange> {
   const suppressionsInScope: Array<SuppressionRange> = [];
   const fnNode = fn.node;
@@ -78,7 +78,7 @@ export function filterSuppressionsThatAffectFunction(
 export function findProgramSuppressions(
   programComments: Array<t.Comment>,
   ruleNames: Array<string>,
-  flowSuppressions: boolean
+  flowSuppressions: boolean,
 ): Array<SuppressionRange> {
   const suppressionRanges: Array<SuppressionRange> = [];
   let disableComment: t.Comment | null = null;
@@ -87,12 +87,12 @@ export function findProgramSuppressions(
 
   const rulePattern = `(${ruleNames.join("|")})`;
   const disableNextLinePattern = new RegExp(
-    `eslint-disable-next-line ${rulePattern}`
+    `eslint-disable-next-line ${rulePattern}`,
   );
   const disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
   const enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
   const flowSuppressionPattern = new RegExp(
-    "\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule"
+    "\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule",
   );
 
   for (const comment of programComments) {
@@ -147,7 +147,7 @@ export function findProgramSuppressions(
 }
 
 export function suppressionsToCompilerError(
-  suppressionRanges: Array<SuppressionRange>
+  suppressionRanges: Array<SuppressionRange>,
 ): CompilerError | null {
   if (suppressionRanges.length === 0) {
     return null;
@@ -176,7 +176,7 @@ export function suppressionsToCompilerError(
       default:
         assertExhaustive(
           suppressionRange.source,
-          "Unhandled suppression source"
+          "Unhandled suppression source",
         );
     }
     error.pushErrorDetail(
@@ -195,7 +195,7 @@ export function suppressionsToCompilerError(
             op: CompilerSuggestionOperation.Remove,
           },
         ],
-      })
+      }),
     );
   }
   return error;

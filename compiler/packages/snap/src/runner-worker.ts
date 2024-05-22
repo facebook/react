@@ -33,16 +33,16 @@ export function clearRequireCache() {
   });
 }
 
-function compile(
+async function compile(
   input: string,
   fixturePath: string,
   compilerVersion: number,
   shouldLog: boolean,
-  includeEvaluator: boolean
-): {
+  includeEvaluator: boolean,
+): Promise<{
   error: string | null;
   compileResult: TransformResult | null;
-} {
+}> {
   const seenConsoleErrors: Array<string> = [];
   console.error = (...messages: Array<string>) => {
     seenConsoleErrors.push(...messages);
@@ -68,12 +68,12 @@ function compile(
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic
     toggleLogging(shouldLog);
-    const result = transformFixtureInput(
+    const result = await transformFixtureInput(
       input,
       fixturePath,
       parseConfigPragma,
       BabelPluginReactCompiler,
-      includeEvaluator
+      includeEvaluator,
     );
 
     if (result.kind === "err") {
@@ -103,7 +103,7 @@ function compile(
           },
           {
             message: e.message,
-          }
+          },
         );
       } catch {
         // In case the location data isn't valid, skip printing a code frame.
@@ -131,7 +131,7 @@ export async function transformFixture(
   fixture: TestFixture,
   compilerVersion: number,
   shouldLog: boolean,
-  includeEvaluator: boolean
+  includeEvaluator: boolean,
 ): Promise<TestResult> {
   const { input, snapshot: expected, snapshotPath: outputPath } = fixture;
   const basename = getBasename(fixture);
@@ -147,12 +147,12 @@ export async function transformFixture(
       unexpectedError: null,
     };
   }
-  const { compileResult, error } = compile(
+  const { compileResult, error } = await compile(
     input,
     fixture.fixturePath,
     compilerVersion,
     shouldLog,
-    includeEvaluator
+    includeEvaluator,
   );
 
   let unexpectedError: string | null = null;
@@ -173,7 +173,7 @@ export async function transformFixture(
   if (compileResult?.evaluatorCode != null) {
     const sproutResult = runSprout(
       compileResult.evaluatorCode.original,
-      compileResult.evaluatorCode.forget
+      compileResult.evaluatorCode.forget,
     );
     if (sproutResult.kind === "invalid") {
       unexpectedError ??= "";
@@ -189,7 +189,7 @@ export async function transformFixture(
     input,
     snapOutput,
     sproutOutput,
-    error
+    error,
   );
 
   return {

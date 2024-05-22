@@ -41,14 +41,14 @@ import { ReactiveFunctionVisitor } from "./visitors";
  * against compiler coding mistakes in earlier passes.
  */
 export function assertScopeInstructionsWithinScopes(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): void {
   const existingScopes = new Set<ScopeId>();
   visitReactiveFunction(fn, new FindAllScopesVisitor(), existingScopes);
   visitReactiveFunction(
     fn,
     new CheckInstructionsAgainstScopesVisitor(),
-    existingScopes
+    existingScopes,
   );
 }
 
@@ -67,7 +67,7 @@ class CheckInstructionsAgainstScopesVisitor extends ReactiveFunctionVisitor<
   override visitPlace(
     id: InstructionId,
     place: Place,
-    state: Set<ScopeId>
+    state: Set<ScopeId>,
   ): void {
     const scope = getPlaceScope(id, place);
     if (

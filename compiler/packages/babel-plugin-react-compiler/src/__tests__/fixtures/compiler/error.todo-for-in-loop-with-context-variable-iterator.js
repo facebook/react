@@ -10,7 +10,7 @@ function Component(props) {
     items.push(
       <div key={key} onClick={() => data.set(key)}>
         {key}
-      </div>
+      </div>,
     );
   }
   return <div>{items}</div>;
