@@ -105,7 +105,7 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
 
 function applyConstantPropagation(
   fn: HIRFunction,
-  constants: Constants
+  constants: Constants,
 ): boolean {
   let hasChanges = false;
   for (const [, block] of fn.body.blocks) {
@@ -225,7 +225,7 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
 function evaluateInstruction(
   env: Environment,
   constants: Constants,
-  instr: Instruction
+  instr: Instruction,
 ): Constant | null {
   const value = instr.value;
   switch (value.kind) {

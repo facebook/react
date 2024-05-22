@@ -12,7 +12,7 @@ function Component() {
   };
 
   (console.log("A"), x)[(console.log("B"), "f")](
-    (changeF(x), console.log("arg"), 1)
+    (changeF(x), console.log("arg"), 1),
   );
   return x;
 }
@@ -46,7 +46,7 @@ function Component() {
     x = { f: () => console.log("original") };
 
     (console.log("A"), x)[(console.log("B"), "f")](
-      (changeF(x), console.log("arg"), 1)
+      (changeF(x), console.log("arg"), 1),
     );
     $[1] = x;
   } else {

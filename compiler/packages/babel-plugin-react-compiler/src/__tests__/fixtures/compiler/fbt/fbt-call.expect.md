@@ -7,7 +7,7 @@ import fbt from "fbt";
 function Component(props) {
   const text = fbt(
     `${fbt.param("(key) count", props.count)} items`,
-    "(description) Number of items"
+    "(description) Number of items",
   );
   return <div>{text}</div>;
 }
@@ -32,7 +32,7 @@ function Component(props) {
     t0 = fbt._(
       "{(key) count} items",
       [fbt._param("(key) count", props.count)],
-      { hk: "3yW91j" }
+      { hk: "3yW91j" },
     );
     $[0] = props.count;
     $[1] = t0;

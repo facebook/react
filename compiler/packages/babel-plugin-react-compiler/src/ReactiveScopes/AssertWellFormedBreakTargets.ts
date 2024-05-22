@@ -19,7 +19,7 @@ export function assertWellFormedBreakTargets(fn: ReactiveFunction): void {
 class Visitor extends ReactiveFunctionVisitor<Set<BlockId>> {
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    seenLabels: Set<BlockId>
+    seenLabels: Set<BlockId>,
   ): void {
     if (stmt.label != null) {
       seenLabels.add(stmt.label.id);

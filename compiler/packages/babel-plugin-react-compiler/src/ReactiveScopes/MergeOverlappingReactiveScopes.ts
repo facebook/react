@@ -120,7 +120,7 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
   }
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: Context
+    state: Context,
   ): void {
     if (
       instruction.value.kind === "ConditionalExpression" ||
@@ -240,7 +240,7 @@ class Context {
            * a scope relative to its eventual post-merge mutable range
            */
           const end = makeInstructionId(
-            Math.max(current.scope.range.end, scope.range.end)
+            Math.max(current.scope.range.end, scope.range.end),
           );
           current.scope.range.end = end;
           scope.range.end = end;
@@ -264,10 +264,10 @@ class Context {
     this.joinedScopes.forEach((scope, groupScope) => {
       if (scope !== groupScope) {
         groupScope.range.start = makeInstructionId(
-          Math.min(groupScope.range.start, scope.range.start)
+          Math.min(groupScope.range.start, scope.range.start),
         );
         groupScope.range.end = makeInstructionId(
-          Math.max(groupScope.range.end, scope.range.end)
+          Math.max(groupScope.range.end, scope.range.end),
         );
       }
     });

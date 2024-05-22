@@ -18,7 +18,7 @@ describe("parseConfigPragma()", () => {
     expect(defaultConfig.validateNoSetStateInRender).toBe(true);
 
     const config = parseConfigPragma(
-      "@enableUseTypeAnnotations @validateRefAccessDuringRender:true @validateNoSetStateInRender:false"
+      "@enableUseTypeAnnotations @validateRefAccessDuringRender:true @validateNoSetStateInRender:false",
     );
     expect(config).toEqual({
       ...defaultConfig,

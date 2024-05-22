@@ -51,7 +51,7 @@ type IdentifierSidemap = {
  */
 export function collectMaybeMemoDependencies(
   value: InstructionValue,
-  maybeDeps: Map<IdentifierId, ManualMemoDependency>
+  maybeDeps: Map<IdentifierId, ManualMemoDependency>,
 ): ManualMemoDependency | null {
   switch (value.kind) {
     case "LoadGlobal": {
@@ -115,14 +115,14 @@ export function collectMaybeMemoDependencies(
 function collectTemporaries(
   instr: Instruction,
   env: Environment,
-  sidemap: IdentifierSidemap
+  sidemap: IdentifierSidemap,
 ): void {
   const { value, lvalue } = instr;
   switch (value.kind) {
     case "FunctionExpression": {
       sidemap.functions.set(
         instr.lvalue.identifier.id,
-        instr as TInstruction<FunctionExpression>
+        instr as TInstruction<FunctionExpression>,
       );
       break;
     }
@@ -155,7 +155,7 @@ function collectTemporaries(
       if (value.elements.every((e) => e.kind === "Identifier")) {
         sidemap.maybeDepsLists.set(
           instr.lvalue.identifier.id,
-          value.elements as Array<Place>
+          value.elements as Array<Place>,
         );
       }
       break;
@@ -173,7 +173,7 @@ function makeManualMemoizationMarkers(
   env: Environment,
   depsList: Array<ManualMemoDependency> | null,
   memoDecl: Place,
-  manualMemoId: number
+  manualMemoId: number,
 ): [TInstruction<StartMemoize>, TInstruction<FinishMemoize>] {
   return [
     {
@@ -208,7 +208,7 @@ function makeManualMemoizationMarkers(
 function getManualMemoizationReplacement(
   fn: Place,
   loc: SourceLocation,
-  kind: "useMemo" | "useCallback"
+  kind: "useMemo" | "useCallback",
 ): LoadLocal | CallExpression {
   if (kind === "useMemo") {
     /*
@@ -272,7 +272,7 @@ function getManualMemoizationReplacement(
 function extractManualMemoizationArgs(
   instr: TInstruction<CallExpression> | TInstruction<MethodCall>,
   kind: "useCallback" | "useMemo",
-  sidemap: IdentifierSidemap
+  sidemap: IdentifierSidemap,
 ): {
   fnPlace: Place;
   depsList: Array<ManualMemoDependency> | null;
@@ -297,7 +297,7 @@ function extractManualMemoizationArgs(
   let depsList: Array<ManualMemoDependency> | null = null;
   if (depsListPlace != null) {
     const maybeDepsList = sidemap.maybeDepsLists.get(
-      depsListPlace.identifier.id
+      depsListPlace.identifier.id,
     );
     if (maybeDepsList == null) {
       CompilerError.throwInvalidReact({
@@ -375,12 +375,12 @@ export function dropManualMemoization(func: HIRFunction): void {
           const { fnPlace, depsList } = extractManualMemoizationArgs(
             instr as TInstruction<CallExpression> | TInstruction<MethodCall>,
             manualMemo.kind,
-            sidemap
+            sidemap,
           );
           instr.value = getManualMemoizationReplacement(
             fnPlace,
             instr.value.loc,
-            manualMemo.kind
+            manualMemo.kind,
           );
           if (isValidationEnabled) {
             /**
@@ -419,7 +419,7 @@ export function dropManualMemoization(func: HIRFunction): void {
               func.env,
               depsList,
               memoDecl,
-              nextManualMemoId++
+              nextManualMemoId++,
             );
 
             /**

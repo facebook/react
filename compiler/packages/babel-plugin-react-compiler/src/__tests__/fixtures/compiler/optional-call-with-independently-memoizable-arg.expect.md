@@ -11,7 +11,7 @@ function Component(props) {
   const y = x?.(
     <div>
       <span>{props.text}</span>
-    </div>
+    </div>,
   );
   return y;
 }
@@ -31,7 +31,7 @@ function Component(props) {
     t0 = x?.(
       <div>
         <span>{props.text}</span>
-      </div>
+      </div>,
     );
     $[0] = props;
     $[1] = t0;

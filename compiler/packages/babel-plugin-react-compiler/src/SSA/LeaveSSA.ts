@@ -167,7 +167,7 @@ export function leaveSSA(fn: HIRFunction): void {
           suggestions: null,
         });
         const originalLVal = declarations.get(
-          value.lvalue.identifier.name.value
+          value.lvalue.identifier.name.value,
         );
         CompilerError.invariant(originalLVal !== undefined, {
           reason: `Expected update expression to be applied to a previously defined variable`,
@@ -179,7 +179,7 @@ export function leaveSSA(fn: HIRFunction): void {
       } else if (value.kind === "StoreLocal") {
         if (value.lvalue.place.identifier.name != null) {
           const originalLVal = declarations.get(
-            value.lvalue.place.identifier.name.value
+            value.lvalue.place.identifier.name.value,
           );
           if (
             originalLVal === undefined ||
@@ -194,7 +194,7 @@ export function leaveSSA(fn: HIRFunction): void {
                 description: null,
                 loc: value.lvalue.place.loc,
                 suggestions: null,
-              }
+              },
             );
             declarations.set(value.lvalue.place.identifier.name.value, {
               lvalue: value.lvalue,
@@ -221,11 +221,11 @@ export function leaveSSA(fn: HIRFunction): void {
               {
                 reason: `Expected consistent kind for destructuring`,
                 description: `other places were \`${kind}\` but '${printPlace(
-                  place
+                  place,
                 )}' is const`,
                 loc: place.loc,
                 suggestions: null,
-              }
+              },
             );
             kind = InstructionKind.Const;
           } else {
@@ -241,7 +241,7 @@ export function leaveSSA(fn: HIRFunction): void {
                   description: null,
                   loc: place.loc,
                   suggestions: null,
-                }
+                },
               );
               declarations.set(place.identifier.name.value, {
                 lvalue: value.lvalue,
@@ -252,11 +252,11 @@ export function leaveSSA(fn: HIRFunction): void {
                 {
                   reason: `Expected consistent kind for destructuring`,
                   description: `Other places were \`${kind}\` but '${printPlace(
-                    place
+                    place,
                   )}' is const`,
                   loc: place.loc,
                   suggestions: null,
-                }
+                },
               );
               kind = InstructionKind.Const;
             } else {
@@ -265,11 +265,11 @@ export function leaveSSA(fn: HIRFunction): void {
                 {
                   reason: `Expected consistent kind for destructuring`,
                   description: `Other places were \`${kind}\` but '${printPlace(
-                    place
+                    place,
                   )}' is reassigned`,
                   loc: place.loc,
                   suggestions: null,
-                }
+                },
               );
               kind = InstructionKind.Reassign;
               originalLVal.lvalue.kind = InstructionKind.Let;
@@ -356,7 +356,7 @@ export function leaveSSA(fn: HIRFunction): void {
             const value = instr.value;
             if (value.lvalue.place.identifier.name !== null) {
               const originalLVal = declarations.get(
-                value.lvalue.place.identifier.name.value
+                value.lvalue.place.identifier.name.value,
               );
               if (originalLVal === undefined) {
                 declarations.set(value.lvalue.place.identifier.name.value, {
@@ -497,7 +497,7 @@ export function leaveSSA(fn: HIRFunction): void {
 function rewritePlace(
   place: Place,
   rewrites: Map<Identifier, Identifier>,
-  declarations: Map<string, { lvalue: LValue | LValuePattern; place: Place }>
+  declarations: Map<string, { lvalue: LValue | LValuePattern; place: Place }>,
 ): void {
   const prevIdentifier = place.identifier;
   const nextIdentifier = rewrites.get(prevIdentifier);

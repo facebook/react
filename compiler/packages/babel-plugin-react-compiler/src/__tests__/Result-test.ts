@@ -28,7 +28,7 @@ describe("Result", () => {
   test(".mapErr", () => {
     expect(addMax10(1, 1).mapErr((e) => `not a number: ${e}`)).toEqual(Ok(2));
     expect(addMax10(10, 10).mapErr((e) => `couldn't add: ${e}`)).toEqual(
-      Err("couldn't add: 20 is too high")
+      Err("couldn't add: 20 is too high"),
     );
   });
 
@@ -41,21 +41,21 @@ describe("Result", () => {
     expect(
       onlyFoo("foo").mapOrElse(
         () => 42,
-        (v) => v.length
-      )
+        (v) => v.length,
+      ),
     ).toEqual(3);
     expect(
       onlyFoo("bar").mapOrElse(
         () => 42,
-        (v) => v.length
-      )
+        (v) => v.length,
+      ),
     ).toEqual(42);
   });
 
   test(".andThen", () => {
     expect(addMax10(1, 1).andThen((n) => Ok(n * 2))).toEqual(Ok(4));
     expect(addMax10(10, 10).andThen((n) => Ok(n * 2))).toEqual(
-      Err("20 is too high")
+      Err("20 is too high"),
     );
   });
 
@@ -75,10 +75,10 @@ describe("Result", () => {
 
   test(".orElse", () => {
     expect(addMax10(1, 1).orElse((str) => Err(str.toUpperCase()))).toEqual(
-      Ok(2)
+      Ok(2),
     );
     expect(addMax10(10, 10).orElse((str) => Err(str.toUpperCase()))).toEqual(
-      Err("20 IS TOO HIGH")
+      Err("20 IS TOO HIGH"),
     );
   });
 
@@ -97,7 +97,7 @@ describe("Result", () => {
     expect(() => {
       addMax10(10, 10).expect("a number under 10");
     }).toThrowErrorMatchingInlineSnapshot(
-      `"a number under 10: 20 is too high"`
+      `"a number under 10: 20 is too high"`,
     );
   });
 
@@ -106,7 +106,7 @@ describe("Result", () => {
       addMax10(1, 1).expectErr("a number under 10");
     }).toThrowErrorMatchingInlineSnapshot(`"a number under 10: 2"`);
     expect(addMax10(10, 10).expectErr("a number under 10")).toEqual(
-      "20 is too high"
+      "20 is too high",
     );
   });
 
@@ -115,7 +115,7 @@ describe("Result", () => {
     expect(() => {
       addMax10(10, 10).unwrap();
     }).toThrowErrorMatchingInlineSnapshot(
-      `"Can't unwrap \`Err\` to \`Ok\`: 20 is too high"`
+      `"Can't unwrap \`Err\` to \`Ok\`: 20 is too high"`,
     );
     expect(() => {
       Err(new CustomDummyError("oops")).unwrap();
@@ -136,7 +136,7 @@ describe("Result", () => {
     expect(() => {
       addMax10(1, 1).unwrapErr();
     }).toThrowErrorMatchingInlineSnapshot(
-      `"Can't unwrap \`Ok\` to \`Err\`: 2"`
+      `"Can't unwrap \`Ok\` to \`Err\`: 2"`,
     );
     expect(addMax10(10, 10).unwrapErr()).toEqual("20 is too high");
     expect(() => {
