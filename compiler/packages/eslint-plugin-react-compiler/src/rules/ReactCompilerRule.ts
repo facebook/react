@@ -143,6 +143,7 @@ const rule: Rule.RuleModule = {
             [BabelPluginReactCompiler, options],
           ],
           sourceType: "module",
+          configFile: false
         });
       } catch (err) {
         if (isReactCompilerError(err) && Array.isArray(err.details)) {
