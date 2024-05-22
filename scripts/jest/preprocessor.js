@@ -111,7 +111,6 @@ module.exports = {
           Object.assign(
             {
               filename: path.relative(process.cwd(), filePath),
-              configFile: false,
             },
             babelOptions,
             {
