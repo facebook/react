@@ -62,10 +62,7 @@ import {pushTreeFork} from './ReactFiberTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
 import {readContextDuringReconciliation} from './ReactFiberNewContext';
 
-import {
-  getCurrentFiber as getCurrentDebugFiberInDEV,
-  setCurrentFiber as setCurrentDebugFiberInDEV,
-} from './ReactCurrentFiber';
+import {runWithFiberInDEV} from './ReactCurrentFiber';
 
 // This tracks the thenables that are unwrapped during reconcilation.
 let thenableState: ThenableState | null = null;
@@ -181,15 +178,14 @@ if (__DEV__) {
     const fiber = createFiberFromElement((child: any), returnFiber.mode, 0);
     fiber.return = returnFiber;
 
-    const prevDebugFiber = getCurrentDebugFiberInDEV();
-    setCurrentDebugFiberInDEV(fiber);
-    console.error(
-      'Each child in a list should have a unique "key" prop.' +
-        '%s%s See https://react.dev/link/warning-keys for more information.',
-      currentComponentErrorInfo,
-      childOwnerAppendix,
-    );
-    setCurrentDebugFiberInDEV(prevDebugFiber);
+    runWithFiberInDEV(fiber, () => {
+      console.error(
+        'Each child in a list should have a unique "key" prop.' +
+          '%s%s See https://react.dev/link/warning-keys for more information.',
+        currentComponentErrorInfo,
+        childOwnerAppendix,
+      );
+    });
   };
 }
 
@@ -212,14 +208,17 @@ function validateFragmentProps(
           fiber = createFiberFromElement(element, returnFiber.mode, 0);
           fiber.return = returnFiber;
         }
-        const prevDebugFiber = getCurrentDebugFiberInDEV();
-        setCurrentDebugFiberInDEV(fiber);
-        console.error(
-          'Invalid prop `%s` supplied to `React.Fragment`. ' +
-            'React.Fragment can only have `key` and `children` props.',
+        runWithFiberInDEV(
+          fiber,
+          erroredKey => {
+            console.error(
+              'Invalid prop `%s` supplied to `React.Fragment`. ' +
+                'React.Fragment can only have `key` and `children` props.',
+              erroredKey,
+            );
+          },
           key,
         );
-        setCurrentDebugFiberInDEV(prevDebugFiber);
         break;
       }
     }
@@ -231,10 +230,9 @@ function validateFragmentProps(
         fiber = createFiberFromElement(element, returnFiber.mode, 0);
         fiber.return = returnFiber;
       }
-      const prevDebugFiber = getCurrentDebugFiberInDEV();
-      setCurrentDebugFiberInDEV(fiber);
-      console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
-      setCurrentDebugFiberInDEV(prevDebugFiber);
+      runWithFiberInDEV(fiber, () => {
+        console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
+      });
     }
   }
 }
