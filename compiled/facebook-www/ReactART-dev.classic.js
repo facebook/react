@@ -60,7 +60,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-classic-27733b1d';
+var ReactVersion = '19.0.0-www-classic-52a43e30';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -24687,6 +24687,7 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, parentFiber, isInS
 
 function doubleInvokeEffectsOnFiber(root, fiber) {
   var shouldDoubleInvokePassiveEffects = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+  setIsStrictModeForDevtools(true);
   disappearLayoutEffects(fiber);
 
   if (shouldDoubleInvokePassiveEffects) {
@@ -24698,6 +24699,8 @@ function doubleInvokeEffectsOnFiber(root, fiber) {
   if (shouldDoubleInvokePassiveEffects) {
     reconnectPassiveEffects(root, fiber, NoLanes, null, false);
   }
+
+  setIsStrictModeForDevtools(false);
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(root, fiber, parentIsInStrictMode) {

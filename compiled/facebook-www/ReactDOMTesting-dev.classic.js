@@ -29984,6 +29984,7 @@ function recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, parentFiber, isInS
 
 function doubleInvokeEffectsOnFiber(root, fiber) {
   var shouldDoubleInvokePassiveEffects = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+  setIsStrictModeForDevtools(true);
   disappearLayoutEffects(fiber);
 
   if (shouldDoubleInvokePassiveEffects) {
@@ -29995,6 +29996,8 @@ function doubleInvokeEffectsOnFiber(root, fiber) {
   if (shouldDoubleInvokePassiveEffects) {
     reconnectPassiveEffects(root, fiber, NoLanes, null, false);
   }
+
+  setIsStrictModeForDevtools(false);
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(root, fiber, parentIsInStrictMode) {
@@ -31418,7 +31421,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-96e3c07d';
+var ReactVersion = '19.0.0-www-classic-5c88d62e';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
