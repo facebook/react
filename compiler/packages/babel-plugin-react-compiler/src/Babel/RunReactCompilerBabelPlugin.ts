@@ -36,7 +36,6 @@ export function runBabelPluginReactCompiler(
       "babel-plugin-fbt-runtime",
     ],
     sourceType: "module",
-    configFile: false,
   });
   invariant(
     result?.code != null,
