@@ -109,10 +109,7 @@ module.exports = {
           sourceAst,
           src,
           Object.assign(
-            {
-              filename: path.relative(process.cwd(), filePath),
-              configFile: false,
-            },
+            {filename: path.relative(process.cwd(), filePath)},
             babelOptions,
             {
               plugins,
