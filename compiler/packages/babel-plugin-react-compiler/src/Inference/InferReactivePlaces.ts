@@ -257,7 +257,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               default: {
                 assertExhaustive(
                   operand.effect,
-                  `Unexpected effect kind \`${operand.effect}\``
+                  `Unexpected effect kind \`${operand.effect}\``,
                 );
               }
             }
@@ -268,7 +268,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
           case "LoadLocal": {
             identifierMapping.set(
               instruction.lvalue.identifier,
-              value.place.identifier
+              value.place.identifier,
             );
             break;
           }
@@ -283,7 +283,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
           case "LoadContext": {
             identifierMapping.set(
               instruction.lvalue.identifier,
-              value.place.identifier
+              value.place.identifier,
             );
             break;
           }
@@ -304,7 +304,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
 function postDominatorFrontier(
   fn: HIRFunction,
   postDominators: PostDominator<BlockId>,
-  targetId: BlockId
+  targetId: BlockId,
 ): Set<BlockId> {
   const visited = new Set<BlockId>();
   const frontier = new Set<BlockId>();
@@ -328,7 +328,7 @@ function postDominatorFrontier(
 function postDominatorsOf(
   fn: HIRFunction,
   postDominators: PostDominator<BlockId>,
-  targetId: BlockId
+  targetId: BlockId,
 ): Set<BlockId> {
   const result = new Set<BlockId>();
   const visited = new Set<BlockId>();

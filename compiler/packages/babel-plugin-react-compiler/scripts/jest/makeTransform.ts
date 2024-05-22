@@ -48,7 +48,7 @@ module.exports = (useForget: boolean) => {
                      * (see https://github.com/jestjs/jest/blob/v29.6.2/packages/babel-jest/src/index.ts#L84)
                      */
                     compilerCacheKey: execSync(
-                      "yarn --silent --cwd ../.. hash packages/babel-plugin-react-compiler/dist"
+                      "yarn --silent --cwd ../.. hash packages/babel-plugin-react-compiler/dist",
                     ).toString(),
                     transformOptionsCacheKey: forgetOptions,
                     e2eTransformerCacheKey,
@@ -169,7 +169,7 @@ function ReactForgetFunctionTransform() {
         const filename = basename(state.file.opts.filename);
         if (fn.node.loc && fn.node.id) {
           console.log(
-            ` Compiling ${filename}:${fn.node.loc.start.line}:${fn.node.loc.start.column}  ${fn.node.id.name}`
+            ` Compiling ${filename}:${fn.node.loc.start.line}:${fn.node.loc.start.column}  ${fn.node.id.name}`,
           );
         } else {
           console.log(` Compiling ${filename} ${fn.node.id?.name}`);
@@ -183,7 +183,7 @@ function ReactForgetFunctionTransform() {
         "_c",
         null,
         null,
-        null
+        null,
       );
       compiledFns.add(compiled);
 
@@ -192,7 +192,7 @@ function ReactForgetFunctionTransform() {
         compiled.params,
         compiled.body,
         compiled.generator,
-        compiled.async
+        compiled.async,
       );
       fn.replaceWith(fun);
       fn.skip();

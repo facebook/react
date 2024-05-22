@@ -13,12 +13,12 @@ import { TestFilter, readTestFilter } from "./fixture-utils";
 
 export function watchSrc(
   onStart: () => void,
-  onComplete: (isSuccess: boolean) => void
+  onComplete: (isSuccess: boolean) => void,
 ): ts.WatchOfConfigFile<ts.SemanticDiagnosticsBuilderProgram> {
   const configPath = ts.findConfigFile(
     /*searchPath*/ "./",
     ts.sys.fileExists,
-    "tsconfig.json"
+    "tsconfig.json",
   );
   if (!configPath) {
     throw new Error("Could not find a valid 'tsconfig.json'.");
@@ -28,12 +28,12 @@ export function watchSrc(
     configPath,
     ts.convertCompilerOptionsFromJson(
       { module: "commonjs", outDir: "dist" },
-      "."
+      ".",
     ).options,
     ts.sys,
     createProgram,
     () => {}, // we manually report errors in afterProgramCreate
-    () => {} // we manually report watch status
+    () => {}, // we manually report watch status
   );
 
   const origCreateProgram = host.createProgram;
@@ -53,7 +53,7 @@ export function watchSrc(
     errors.push(
       ...program
         .getSemanticDiagnostics()
-        .filter((diag) => diag.category === ts.DiagnosticCategory.Error)
+        .filter((diag) => diag.category === ts.DiagnosticCategory.Error),
     );
 
     if (errors.length > 0) {
@@ -63,11 +63,11 @@ export function watchSrc(
           // https://github.com/microsoft/TypeScript/blob/ddd5084659c423f4003d2176e12d879b6a5bcf30/src/compiler/program.ts#L663-L674
           const { line, character } = ts.getLineAndCharacterOfPosition(
             diagnostic.file,
-            diagnostic.start!
+            diagnostic.start!,
           );
           const fileName = path.relative(
             ts.sys.getCurrentDirectory(),
-            diagnostic.file.fileName
+            diagnostic.file.fileName,
           );
           fileLoc = `${fileName}:${line + 1}:${character + 1} - `;
         } else {
@@ -75,13 +75,13 @@ export function watchSrc(
         }
         console.error(
           `${fileLoc}error TS${diagnostic.code}:`,
-          ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")
+          ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
         );
       }
       console.error(
         `Compilation failed (${errors.length} ${
           errors.length > 1 ? "errors" : "error"
-        }).\n`
+        }).\n`,
       );
     }
 
@@ -121,7 +121,7 @@ export type RunnerState = {
 
 function subscribeFixtures(
   state: RunnerState,
-  onChange: (state: RunnerState) => void
+  onChange: (state: RunnerState) => void,
 ) {
   // Watch the fixtures directory for changes
   watcher.subscribe(FIXTURES_PATH, async (err, _events) => {
@@ -144,7 +144,7 @@ function subscribeFixtures(
 
 function subscribeFilterFile(
   state: RunnerState,
-  onChange: (state: RunnerState) => void
+  onChange: (state: RunnerState) => void,
 ) {
   watcher.subscribe(process.cwd(), async (err, events) => {
     if (err) {
@@ -164,7 +164,7 @@ function subscribeFilterFile(
 
 function subscribeTsc(
   state: RunnerState,
-  onChange: (state: RunnerState) => void
+  onChange: (state: RunnerState) => void,
 ) {
   // Run TS in incremental watch mode
   watchSrc(
@@ -181,13 +181,13 @@ function subscribeTsc(
       state.isCompilerBuildValid = isSuccess;
       state.mode.action = RunnerAction.Test;
       onChange(state);
-    }
+    },
   );
 }
 
 function subscribeKeyEvents(
   state: RunnerState,
-  onChange: (state: RunnerState) => void
+  onChange: (state: RunnerState) => void,
 ) {
   process.stdin.on("keypress", (str, key) => {
     if (key.name === "u") {
@@ -208,7 +208,7 @@ function subscribeKeyEvents(
 
 export async function makeWatchRunner(
   onChange: (state: RunnerState) => void,
-  filterMode: boolean
+  filterMode: boolean,
 ): Promise<void> {
   const state = {
     compilerVersion: 0,

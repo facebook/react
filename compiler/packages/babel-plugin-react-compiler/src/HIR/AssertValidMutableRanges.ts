@@ -51,6 +51,6 @@ function validateMutableRange(mutableRange: MutableRange): void {
       mutableRange.end > mutableRange.start,
     "Identifier scope mutableRange was invalid: [%s:%s]",
     mutableRange.start,
-    mutableRange.end
+    mutableRange.end,
   );
 }

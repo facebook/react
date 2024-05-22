@@ -113,10 +113,10 @@ export function mergeOverlappingReactiveScopesHIR(fn: HIRFunction): void {
   joinedScopes.forEach((scope, groupScope) => {
     if (scope !== groupScope) {
       groupScope.range.start = makeInstructionId(
-        Math.min(groupScope.range.start, scope.range.start)
+        Math.min(groupScope.range.start, scope.range.start),
       );
       groupScope.range.end = makeInstructionId(
-        Math.max(groupScope.range.end, scope.range.end)
+        Math.max(groupScope.range.end, scope.range.end),
       );
     }
   });
@@ -150,7 +150,7 @@ function collectScopeInfo(fn: HIRFunction): ScopeInfo {
       placeScopes.set(place, scope);
       if (scope.range.start !== scope.range.end) {
         getOrInsertDefault(scopeStarts, scope.range.start, new Set()).add(
-          scope
+          scope,
         );
         getOrInsertDefault(scopeEnds, scope.range.end, new Set()).add(scope);
       }
@@ -185,7 +185,7 @@ function collectScopeInfo(fn: HIRFunction): ScopeInfo {
 function visitInstructionId(
   id: InstructionId,
   { scopeEnds, scopeStarts }: ScopeInfo,
-  { activeScopes, joined }: TraversalState
+  { activeScopes, joined }: TraversalState,
 ): void {
   /**
    * Handle all scopes that end at this instruction.
@@ -200,7 +200,7 @@ function visitInstructionId(
      * order of start IDs because the scopes stack is ordered as such
      */
     const scopesSortedStartDescending = [...scopeEndTop.scopes].sort(
-      (a, b) => b.range.start - a.range.start
+      (a, b) => b.range.start - a.range.start,
     );
     for (const scope of scopesSortedStartDescending) {
       const idx = activeScopes.indexOf(scope);
@@ -227,7 +227,7 @@ function visitInstructionId(
     scopeStarts.pop();
 
     const scopesSortedEndDescending = [...scopeStartTop.scopes].sort(
-      (a, b) => b.range.end - a.range.end
+      (a, b) => b.range.end - a.range.end,
     );
     activeScopes.push(...scopesSortedEndDescending);
     /**
@@ -247,7 +247,7 @@ function visitInstructionId(
 function visitPlace(
   id: InstructionId,
   place: Place,
-  { activeScopes, joined }: TraversalState
+  { activeScopes, joined }: TraversalState,
 ): void {
   /**
    * If an instruction mutates an outer scope, flatten all scopes from the top
@@ -264,7 +264,7 @@ function visitPlace(
 
 function getOverlappingReactiveScopes(
   fn: HIRFunction,
-  context: ScopeInfo
+  context: ScopeInfo,
 ): DisjointSet<ReactiveScope> {
   const state: TraversalState = {
     joined: new DisjointSet<ReactiveScope>(),
