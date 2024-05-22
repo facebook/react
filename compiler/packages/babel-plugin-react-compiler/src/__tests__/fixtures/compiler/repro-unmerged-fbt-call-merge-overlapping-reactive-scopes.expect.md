@@ -11,7 +11,7 @@ function Component(props) {
       many: "bars",
       showCount: "yes",
     }),
-    "The label text"
+    "The label text",
   );
   return props.cond ? (
     <Stringify
@@ -42,7 +42,7 @@ function Component(props) {
     const label = fbt._(
       { "*": "{number} bars", _1: "1 bar" },
       [fbt._plural(props.value.length, "number")],
-      { hk: "4mUen7" }
+      { hk: "4mUen7" },
     );
 
     t0 = props.cond ? (
