@@ -251,6 +251,7 @@ import {
   markRenderStopped,
   onCommitRoot as onCommitRootDevTools,
   onPostCommitRoot as onPostCommitRootDevTools,
+  setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 import {releaseCache} from './ReactFiberCacheComponent';
@@ -3675,6 +3676,7 @@ function doubleInvokeEffectsOnFiber(
   fiber: Fiber,
   shouldDoubleInvokePassiveEffects: boolean = true,
 ) {
+  setIsStrictModeForDevtools(true);
   disappearLayoutEffects(fiber);
   if (shouldDoubleInvokePassiveEffects) {
     disconnectPassiveEffect(fiber);
@@ -3683,6 +3685,7 @@ function doubleInvokeEffectsOnFiber(
   if (shouldDoubleInvokePassiveEffects) {
     reconnectPassiveEffects(root, fiber, NoLanes, null, false);
   }
+  setIsStrictModeForDevtools(false);
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(
