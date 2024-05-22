@@ -9,32 +9,32 @@ import path from "path";
 
 // We assume this is run from `babel-plugin-react-compiler`
 export const PROJECT_ROOT = path.normalize(
-  path.join(process.cwd(), "..", "..")
+  path.join(process.cwd(), "..", ".."),
 );
 export const COMPILER_PATH = path.join(
   process.cwd(),
   "dist",
   "Babel",
-  "BabelPlugin.js"
+  "BabelPlugin.js",
 );
 export const LOGGER_PATH = path.join(
   process.cwd(),
   "dist",
   "Utils",
-  "logger.js"
+  "logger.js",
 );
 export const PARSE_CONFIG_PRAGMA_PATH = path.join(
   process.cwd(),
   "dist",
   "HIR",
-  "Environment.js"
+  "Environment.js",
 );
 export const FIXTURES_PATH = path.join(
   process.cwd(),
   "src",
   "__tests__",
   "fixtures",
-  "compiler"
+  "compiler",
 );
 export const SNAPSHOT_EXTENSION = ".expect.md";
 export const FILTER_FILENAME = "testfilter.txt";

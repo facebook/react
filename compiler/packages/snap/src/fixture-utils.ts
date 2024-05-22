@@ -92,7 +92,7 @@ export type TestFixture =
 
 async function readInputFixtures(
   rootDir: string,
-  filter: TestFilter | null
+  filter: TestFilter | null,
 ): Promise<Map<string, { value: string; filepath: string }>> {
   let inputFiles: Array<string>;
   if (filter == null) {
@@ -105,8 +105,8 @@ async function readInputFixtures(
         filter.paths.map((pattern) =>
           glob.glob(`${pattern}{${INPUT_EXTENSIONS.join(",")}}`, {
             cwd: rootDir,
-          })
-        )
+          }),
+        ),
       )
     ).flat();
   }
@@ -124,14 +124,14 @@ async function readInputFixtures(
             filepath: filePath,
           },
         ];
-      })
+      }),
     );
   }
   return new Map(await Promise.all(inputs));
 }
 async function readOutputFixtures(
   rootDir: string,
-  filter: TestFilter | null
+  filter: TestFilter | null,
 ): Promise<Map<string, string>> {
   let outputFiles: Array<string>;
   if (filter == null) {
@@ -144,8 +144,8 @@ async function readOutputFixtures(
         filter.paths.map((pattern) =>
           glob.glob(`${pattern}${SNAPSHOT_EXTENSION}`, {
             cwd: rootDir,
-          })
-        )
+          }),
+        ),
       )
     ).flat();
   }
@@ -166,7 +166,7 @@ async function readOutputFixtures(
 }
 
 export async function getFixtures(
-  filter: TestFilter | null
+  filter: TestFilter | null,
 ): Promise<Map<string, TestFixture>> {
   const inputs = await readInputFixtures(FIXTURES_PATH, filter);
   const outputs = await readOutputFixtures(FIXTURES_PATH, filter);

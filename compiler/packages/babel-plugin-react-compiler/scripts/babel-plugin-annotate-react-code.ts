@@ -10,7 +10,7 @@ import { NodePath } from "@babel/core";
 import * as t from "@babel/types";
 
 export default function AnnotateReactCodeBabelPlugin(
-  _babel: typeof BabelCore
+  _babel: typeof BabelCore,
 ): BabelCore.PluginObj {
   return {
     name: "annotate-react-code",
@@ -64,15 +64,15 @@ function buildTypeOfReactForget(): t.Statement {
             t.identifier("Symbol"),
             t.identifier("for"),
             false,
-            false
+            false,
           ),
-          [t.stringLiteral("react_forget")]
+          [t.stringLiteral("react_forget")],
         ),
         true,
-        false
+        false,
       ),
-      true
-    )
+      true,
+    ),
   );
 }
 
@@ -89,7 +89,7 @@ type BabelFn =
   | NodePath<t.ArrowFunctionExpression>;
 
 export function isComponentDeclaration(
-  node: t.FunctionDeclaration
+  node: t.FunctionDeclaration,
 ): node is ComponentDeclaration {
   return Object.prototype.hasOwnProperty.call(node, "__componentDeclaration");
 }
@@ -101,7 +101,7 @@ export function isComponentDeclaration(
 function isComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
 ): boolean {
   const functionName = getFunctionName(node);
   // Check if the name is component or hook like:
@@ -197,7 +197,7 @@ function isMemoCallback(path: NodePath<t.Expression>): boolean {
 
 function isReactAPI(
   path: NodePath<t.Expression | t.PrivateName | t.V8IntrinsicIdentifier>,
-  functionName: string
+  functionName: string,
 ): boolean {
   const node = path.node;
   return (
@@ -239,7 +239,7 @@ function callsHooksOrCreatesJsx(node: NodePath<t.Node>): boolean {
 function getFunctionName(
   path: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
 ): NodePath<t.Expression> | null {
   if (path.isFunctionDeclaration()) {
     const id = path.get("id");

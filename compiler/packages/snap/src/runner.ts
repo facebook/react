@@ -40,13 +40,13 @@ const opts: RunnerOptions = yargs
   .boolean("sync")
   .describe(
     "sync",
-    "Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false."
+    "Run compiler in main thread (instead of using worker threads or subprocesses). Defaults to false.",
   )
   .default("sync", false)
   .boolean("worker-threads")
   .describe(
     "worker-threads",
-    "Run compiler in worker threads (instead of subprocesses). Defaults to true."
+    "Run compiler in worker threads (instead of subprocesses). Defaults to true.",
   )
   .default("worker-threads", true)
   .boolean("watch")
@@ -58,7 +58,7 @@ const opts: RunnerOptions = yargs
   .boolean("filter")
   .describe(
     "filter",
-    "Only run fixtures which match the contents of testfilter.txt"
+    "Only run fixtures which match the contents of testfilter.txt",
   )
   .default("filter", false)
   .help("help")
@@ -71,7 +71,7 @@ const opts: RunnerOptions = yargs
 async function runFixtures(
   worker: Worker & typeof runnerWorker,
   filter: TestFilter | null,
-  compilerVersion: number
+  compilerVersion: number,
 ): Promise<TestResults> {
   // We could in theory be fancy about tracking the contents of the fixtures
   // directory via our file subscription, but it's simpler to just re-read
@@ -90,9 +90,9 @@ async function runFixtures(
             fixture,
             compilerVersion,
             (filter?.debug ?? false) && isOnlyFixture,
-            true
+            true,
           )
-          .then((result) => [fixtureName, result])
+          .then((result) => [fixtureName, result]),
       );
     }
 
@@ -104,7 +104,7 @@ async function runFixtures(
         fixture,
         compilerVersion,
         (filter?.debug ?? false) && isOnlyFixture,
-        true
+        true,
       );
       entries.push([fixtureName, output]);
     }
@@ -116,7 +116,7 @@ async function runFixtures(
 // Callback to re-run tests after some change
 async function onChange(
   worker: Worker & typeof runnerWorker,
-  state: RunnerState
+  state: RunnerState,
 ) {
   const { compilerVersion, isCompilerBuildValid, mode, filter } = state;
   if (isCompilerBuildValid) {
@@ -131,7 +131,7 @@ async function onChange(
     const results = await runFixtures(
       worker,
       mode.filter ? filter : null,
-      compilerVersion
+      compilerVersion,
     );
     const end = performance.now();
     if (mode.action === RunnerAction.Update) {
@@ -143,7 +143,7 @@ async function onChange(
     console.log(`Completed in ${Math.floor(end - start)} ms`);
   } else {
     console.error(
-      `${mode}: Found errors in Forget source code, skipping test fixtures.`
+      `${mode}: Found errors in Forget source code, skipping test fixtures.`,
     );
   }
   console.log(
@@ -155,7 +155,7 @@ async function onChange(
       "u     - update all fixtures\n" +
       `f     - toggle (turn ${mode.filter ? "off" : "on"}) filter mode\n` +
       "q     - quit\n" +
-      "[any] - rerun tests\n"
+      "[any] - rerun tests\n",
   );
 }
 
@@ -195,7 +195,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
           },
           0,
           false,
-          false
+          false,
         );
       }
     }
@@ -218,13 +218,13 @@ export async function main(opts: RunnerOptions): Promise<void> {
             }
           } else {
             console.error(
-              "Found errors in Forget source code, skipping test fixtures."
+              "Found errors in Forget source code, skipping test fixtures.",
             );
           }
           tsWatch.close();
           await worker.end();
           process.exit(isSuccess ? 0 : 1);
-        }
+        },
       );
   }
 }

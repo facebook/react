@@ -72,7 +72,7 @@ export function lower(
   bindings: Bindings | null = null,
   capturedRefs: Array<t.Identifier> = [],
   // the outermost function being compiled, in case lower() is called recursively (for lambdas)
-  parent: NodePath<t.Function> | null = null
+  parent: NodePath<t.Function> | null = null,
 ): Result<HIRFunction, CompilerError> {
   const builder = new HIRBuilder(env, parent ?? func, bindings, capturedRefs);
   const context: Array<Place> = [];
@@ -136,7 +136,7 @@ export function lower(
         InstructionKind.Let,
         param,
         place,
-        "Assignment"
+        "Assignment",
       );
     } else if (param.isRestElement()) {
       const place: Place = {
@@ -156,7 +156,7 @@ export function lower(
         InstructionKind.Let,
         param.get("argument"),
         place,
-        "Assignment"
+        "Assignment",
       );
     } else {
       builder.errors.push({
@@ -207,7 +207,7 @@ export function lower(
       }),
       id: makeInstructionId(0),
     },
-    null
+    null,
   );
 
   return Ok({
@@ -230,7 +230,7 @@ export function lower(
 function lowerStatement(
   builder: HIRBuilder,
   stmtPath: NodePath<t.Statement>,
-  label: string | null = null
+  label: string | null = null,
 ): void {
   const stmtNode = stmtPath.node;
   switch (stmtNode.type) {
@@ -274,7 +274,7 @@ function lowerStatement(
       } else {
         value = lowerExpressionToTemporary(
           builder,
-          argument as NodePath<t.Expression>
+          argument as NodePath<t.Expression>,
         );
       }
       const terminal: ReturnTerminal = {
@@ -483,7 +483,7 @@ function lowerStatement(
           id: makeInstructionId(0),
           loc: stmt.node.loc ?? GeneratedSource,
         },
-        "block"
+        "block",
       );
       return;
     }
@@ -498,7 +498,7 @@ function lowerStatement(
           id: makeInstructionId(0),
           loc: stmt.node.loc ?? GeneratedSource,
         },
-        "block"
+        "block",
       );
       return;
     }
@@ -565,7 +565,7 @@ function lowerStatement(
               id: makeInstructionId(0),
               loc: body.node.loc ?? GeneratedSource,
             };
-          }
+          },
         );
       });
 
@@ -580,7 +580,7 @@ function lowerStatement(
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
         },
-        testBlock
+        testBlock,
       );
 
       const test = stmt.get("test");
@@ -597,14 +597,14 @@ function lowerStatement(
             kind: "branch",
             test: lowerExpressionToTemporary(
               builder,
-              test as NodePath<t.Expression>
+              test as NodePath<t.Expression>,
             ),
             consequent: bodyBlock,
             alternate: continuationBlock.id,
             id: makeInstructionId(0),
             loc: stmt.node.loc ?? GeneratedSource,
           },
-          continuationBlock
+          continuationBlock,
         );
       }
       return;
@@ -631,7 +631,7 @@ function lowerStatement(
               id: makeInstructionId(0),
               loc: body.node.loc ?? GeneratedSource,
             };
-          }
+          },
         );
       });
       /*
@@ -648,7 +648,7 @@ function lowerStatement(
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
         },
-        conditionalBlock
+        conditionalBlock,
       );
       /*
        * The conditional block is empty and exists solely as conditional for
@@ -711,7 +711,7 @@ function lowerStatement(
               id: makeInstructionId(0),
               loc: stmt.node.loc ?? GeneratedSource,
             },
-            continuationBlock
+            continuationBlock,
           );
         }
       }
@@ -791,7 +791,7 @@ function lowerStatement(
 
       const test = lowerExpressionToTemporary(
         builder,
-        stmt.get("discriminant")
+        stmt.get("discriminant"),
       );
       builder.terminateWithContinuation(
         {
@@ -802,7 +802,7 @@ function lowerStatement(
           id: makeInstructionId(0),
           loc: stmt.node.loc ?? GeneratedSource,
         },
-        continuationBlock
+        continuationBlock,
       );
       return;
     }
@@ -833,7 +833,7 @@ function lowerStatement(
             value,
             id.isObjectPattern() || id.isArrayPattern()
               ? "Destructure"
-              : "Assignment"
+              : "Assignment",
           );
         } else if (id.isIdentifier()) {
           const identifier = builder.resolveIdentifier(id);
@@ -940,7 +940,7 @@ function lowerStatement(
               id: makeInstructionId(0),
               loc: body.node.loc ?? GeneratedSource,
             };
-          }
+          },
         );
       });
       /*
@@ -957,7 +957,7 @@ function lowerStatement(
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
         },
-        conditionalBlock
+        conditionalBlock,
       );
       /*
        * The conditional block is empty and exists solely as conditional for
@@ -989,7 +989,7 @@ function lowerStatement(
 
       const fn = lowerValueToTemporary(
         builder,
-        lowerFunctionToValue(builder, stmt)
+        lowerFunctionToValue(builder, stmt),
       );
       lowerAssignment(
         builder,
@@ -997,7 +997,7 @@ function lowerStatement(
         InstructionKind.Let,
         id,
         fn,
-        "Assignment"
+        "Assignment",
       );
 
       return;
@@ -1044,7 +1044,7 @@ function lowerStatement(
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
         },
-        initBlock
+        initBlock,
       );
 
       /*
@@ -1065,7 +1065,7 @@ function lowerStatement(
           variant: GotoVariant.Break,
           loc: stmt.node.loc ?? GeneratedSource,
         },
-        testBlock
+        testBlock,
       );
 
       const left = stmt.get("left");
@@ -1092,7 +1092,7 @@ function lowerStatement(
           InstructionKind.Let,
           id,
           advanceIterator,
-          "Assignment"
+          "Assignment",
         );
         test = lowerValueToTemporary(builder, assign);
       } else {
@@ -1113,7 +1113,7 @@ function lowerStatement(
           alternate: continuationBlock.id,
           loc: stmt.node.loc ?? GeneratedSource,
         },
-        continuationBlock
+        continuationBlock,
       );
       return;
     }
@@ -1147,7 +1147,7 @@ function lowerStatement(
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),
         },
-        initBlock
+        initBlock,
       );
 
       /*
@@ -1178,7 +1178,7 @@ function lowerStatement(
           InstructionKind.Let,
           id,
           nextPropertyTemp,
-          "Assignment"
+          "Assignment",
         );
         test = lowerValueToTemporary(builder, assign);
       } else {
@@ -1199,7 +1199,7 @@ function lowerStatement(
           alternate: continuationBlock.id,
           loc: stmt.node.loc ?? GeneratedSource,
         },
-        continuationBlock
+        continuationBlock,
       );
       return;
     }
@@ -1281,7 +1281,7 @@ function lowerStatement(
             InstructionKind.Catch,
             handlerBinding.path,
             { ...handlerBinding.place },
-            "Assignment"
+            "Assignment",
           );
         }
         lowerStatement(builder, handlerPath.get("body"));
@@ -1319,7 +1319,7 @@ function lowerStatement(
           id: makeInstructionId(0),
           loc: stmt.node.loc ?? GeneratedSource,
         },
-        continuationBlock
+        continuationBlock,
       );
 
       return;
@@ -1373,7 +1373,7 @@ function lowerStatement(
         stmtNode,
         `Unsupported statement kind '${
           (stmtNode as any as NodePath<t.Statement>).type
-        }'`
+        }'`,
       );
     }
   }
@@ -1381,7 +1381,7 @@ function lowerStatement(
 
 function lowerObjectMethod(
   builder: HIRBuilder,
-  property: NodePath<t.ObjectMethod>
+  property: NodePath<t.ObjectMethod>,
 ): InstructionValue {
   const loc = property.node.loc ?? GeneratedSource;
   const loweredFunc = lowerFunction(builder, property);
@@ -1398,7 +1398,7 @@ function lowerObjectMethod(
 
 function lowerObjectPropertyKey(
   builder: HIRBuilder,
-  property: NodePath<t.ObjectProperty | t.ObjectMethod>
+  property: NodePath<t.ObjectProperty | t.ObjectMethod>,
 ): ObjectPropertyKey | null {
   const key = property.get("key");
   if (key.isStringLiteral()) {
@@ -1444,7 +1444,7 @@ function lowerObjectPropertyKey(
 
 function lowerExpression(
   builder: HIRBuilder,
-  exprPath: NodePath<t.Expression>
+  exprPath: NodePath<t.Expression>,
 ): InstructionValue {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
@@ -1508,7 +1508,7 @@ function lowerExpression(
         } else if (propertyPath.isSpreadElement()) {
           const place = lowerExpressionToTemporary(
             builder,
-            propertyPath.get("argument")
+            propertyPath.get("argument"),
           );
           properties.push({
             kind: "Spread",
@@ -1557,7 +1557,7 @@ function lowerExpression(
         } else if (element.isSpreadElement()) {
           const place = lowerExpressionToTemporary(
             builder,
-            element.get("argument")
+            element.get("argument"),
           );
           elements.push({ kind: "Spread", place });
         } else {
@@ -1705,7 +1705,7 @@ function lowerExpression(
           id: makeInstructionId(0),
           loc: exprLoc,
         },
-        continuationBlock
+        continuationBlock,
       );
       return { kind: "LoadLocal", place, loc: place.loc };
     }
@@ -1765,7 +1765,7 @@ function lowerExpression(
           test: testBlock.id,
           loc: exprLoc,
         },
-        testBlock
+        testBlock,
       );
       const testPlace = lowerExpressionToTemporary(builder, expr.get("test"));
       builder.terminateWithContinuation(
@@ -1777,7 +1777,7 @@ function lowerExpression(
           id: makeInstructionId(0),
           loc: exprLoc,
         },
-        continuationBlock
+        continuationBlock,
       );
       return { kind: "LoadLocal", place, loc: place.loc };
     }
@@ -1789,7 +1789,7 @@ function lowerExpression(
       const place = buildTemporaryPlace(builder, exprLoc);
       const leftPlace = buildTemporaryPlace(
         builder,
-        expr.get("left").node.loc ?? GeneratedSource
+        expr.get("left").node.loc ?? GeneratedSource,
       );
       const consequent = builder.enter("value", () => {
         lowerValueToTemporary(builder, {
@@ -1833,7 +1833,7 @@ function lowerExpression(
           operator: expr.node.operator,
           loc: exprLoc,
         },
-        testBlock
+        testBlock,
       );
       const leftValue = lowerExpressionToTemporary(builder, expr.get("left"));
       builder.push({
@@ -1855,7 +1855,7 @@ function lowerExpression(
           id: makeInstructionId(0),
           loc: exprLoc,
         },
-        continuationBlock
+        continuationBlock,
       );
       return { kind: "LoadLocal", place, loc: place.loc };
     }
@@ -1873,7 +1873,7 @@ function lowerExpression(
           lowerExpressionToTemporary(builder, expr.get("right")),
           left.isArrayPattern() || left.isObjectPattern()
             ? "Destructure"
-            : "Assignment"
+            : "Assignment",
         );
       }
 
@@ -1947,7 +1947,7 @@ function lowerExpression(
           const leftExpr = left as NodePath<t.MemberExpression>;
           const { object, property, value } = lowerMemberExpression(
             builder,
-            leftExpr
+            leftExpr,
           );
 
           // Store the previous value to a temporary
@@ -2014,7 +2014,7 @@ function lowerExpression(
         if (attribute.isJSXSpreadAttribute()) {
           const argument = lowerExpressionToTemporary(
             builder,
-            attribute.get("argument")
+            attribute.get("argument"),
           );
           props.push({ kind: "JsxSpreadAttribute", argument });
           continue;
@@ -2245,7 +2245,7 @@ function lowerExpression(
       }
 
       const subexprPlaces = subexprs.map((e) =>
-        lowerExpressionToTemporary(builder, e as NodePath<t.Expression>)
+        lowerExpressionToTemporary(builder, e as NodePath<t.Expression>),
       );
 
       return {
@@ -2354,7 +2354,7 @@ function lowerExpression(
         builder,
         argument.node.loc ?? GeneratedSource,
         InstructionKind.Reassign,
-        argument
+        argument,
       );
       if (lvalue === null) {
         /*
@@ -2422,7 +2422,7 @@ function lowerExpression(
 function lowerOptionalMemberExpression(
   builder: HIRBuilder,
   expr: NodePath<t.OptionalMemberExpression>,
-  parentAlternate: BlockId | null
+  parentAlternate: BlockId | null,
 ): { object: Place; value: Place } {
   const optional = expr.node.optional;
   const loc = expr.node.loc ?? GeneratedSource;
@@ -2467,7 +2467,7 @@ function lowerOptionalMemberExpression(
       const { value } = lowerOptionalMemberExpression(
         builder,
         objectPath,
-        alternate
+        alternate,
       );
       object = value;
     } else if (objectPath.isOptionalCallExpression()) {
@@ -2524,7 +2524,7 @@ function lowerOptionalMemberExpression(
       id: makeInstructionId(0),
       loc,
     },
-    continuationBlock
+    continuationBlock,
   );
 
   return { object, value: place };
@@ -2533,7 +2533,7 @@ function lowerOptionalMemberExpression(
 function lowerOptionalCallExpression(
   builder: HIRBuilder,
   expr: NodePath<t.OptionalCallExpression>,
-  parentAlternate: BlockId | null
+  parentAlternate: BlockId | null,
 ): InstructionValue {
   const optional = expr.node.optional;
   const calleePath = expr.get("callee");
@@ -2592,7 +2592,7 @@ function lowerOptionalCallExpression(
       const { object, value } = lowerOptionalMemberExpression(
         builder,
         calleePath,
-        alternate
+        alternate,
       );
       callee = {
         kind: "MethodCall",
@@ -2683,7 +2683,7 @@ function lowerOptionalCallExpression(
       id: makeInstructionId(0),
       loc,
     },
-    continuationBlock
+    continuationBlock,
   );
 
   return { kind: "LoadLocal", place, loc: place.loc };
@@ -2698,7 +2698,7 @@ function lowerOptionalCallExpression(
  */
 function lowerReorderableExpression(
   builder: HIRBuilder,
-  expr: NodePath<t.Expression>
+  expr: NodePath<t.Expression>,
 ): Place {
   if (!isReorderableExpression(builder, expr, true)) {
     builder.errors.push({
@@ -2714,12 +2714,12 @@ function lowerReorderableExpression(
 function isReorderableExpression(
   builder: HIRBuilder,
   expr: NodePath<t.Expression>,
-  allowLocalIdentifiers: boolean
+  allowLocalIdentifiers: boolean,
 ): boolean {
   switch (expr.node.type) {
     case "Identifier": {
       const identifier = builder.resolveIdentifier(
-        expr as NodePath<t.Identifier>
+        expr as NodePath<t.Identifier>,
       );
       if (identifier === null) {
         // global, definitely safe
@@ -2745,7 +2745,7 @@ function isReorderableExpression(
           return isReorderableExpression(
             builder,
             unary.get("argument"),
-            allowLocalIdentifiers
+            allowLocalIdentifiers,
           );
         }
         default: {
@@ -2757,7 +2757,7 @@ function isReorderableExpression(
       return isReorderableExpression(
         builder,
         (expr as NodePath<t.TypeCastExpression>).get("expression"),
-        allowLocalIdentifiers
+        allowLocalIdentifiers,
       );
     }
     case "ConditionalExpression": {
@@ -2766,17 +2766,17 @@ function isReorderableExpression(
         isReorderableExpression(
           builder,
           conditional.get("test"),
-          allowLocalIdentifiers
+          allowLocalIdentifiers,
         ) &&
         isReorderableExpression(
           builder,
           conditional.get("consequent"),
-          allowLocalIdentifiers
+          allowLocalIdentifiers,
         ) &&
         isReorderableExpression(
           builder,
           conditional.get("alternate"),
-          allowLocalIdentifiers
+          allowLocalIdentifiers,
         )
       );
     }
@@ -2786,7 +2786,7 @@ function isReorderableExpression(
         .every(
           (element) =>
             element.isExpression() &&
-            isReorderableExpression(builder, element, allowLocalIdentifiers)
+            isReorderableExpression(builder, element, allowLocalIdentifiers),
         );
     }
     case "ObjectExpression": {
@@ -2836,7 +2836,7 @@ function isReorderableExpression(
         return isReorderableExpression(
           builder,
           body,
-          /* disallow local identifiers in the body */ false
+          /* disallow local identifiers in the body */ false,
         );
       }
     }
@@ -2851,7 +2851,7 @@ function isReorderableExpression(
           .every(
             (arg) =>
               arg.isExpression() &&
-              isReorderableExpression(builder, arg, allowLocalIdentifiers)
+              isReorderableExpression(builder, arg, allowLocalIdentifiers),
           )
       );
     }
@@ -2870,7 +2870,7 @@ function lowerArguments(
       | t.JSXNamespacedName
       | t.ArgumentPlaceholder
     >
-  >
+  >,
 ): Array<Place | SpreadPattern> {
   let args: Array<Place | SpreadPattern> = [];
   for (const argPath of expr) {
@@ -2901,7 +2901,7 @@ type LoweredMemberExpression = {
 function lowerMemberExpression(
   builder: HIRBuilder,
   expr: NodePath<t.MemberExpression | t.OptionalMemberExpression>,
-  loweredObject: Place | null = null
+  loweredObject: Place | null = null,
 ): LoweredMemberExpression {
   const exprNode = expr.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
@@ -2964,7 +2964,7 @@ function lowerJsxElementName(
   builder: HIRBuilder,
   exprPath: NodePath<
     t.JSXIdentifier | t.JSXMemberExpression | t.JSXNamespacedName
-  >
+  >,
 ): Place | BuiltinTag {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
@@ -3022,7 +3022,7 @@ function lowerJsxElementName(
 
 function lowerJsxMemberExpression(
   builder: HIRBuilder,
-  exprPath: NodePath<t.JSXMemberExpression>
+  exprPath: NodePath<t.JSXMemberExpression>,
 ): Place {
   const loc = exprPath.node.loc ?? GeneratedSource;
   const object = exprPath.get("object");
@@ -3055,7 +3055,7 @@ function lowerJsxElement(
     | t.JSXSpreadChild
     | t.JSXElement
     | t.JSXFragment
-  >
+  >,
 ): Place | null {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
@@ -3166,7 +3166,7 @@ function lowerFunctionToValue(
   builder: HIRBuilder,
   expr: NodePath<
     t.FunctionExpression | t.ArrowFunctionExpression | t.FunctionDeclaration
-  >
+  >,
 ): InstructionValue {
   const exprNode = expr.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
@@ -3194,7 +3194,7 @@ function lowerFunction(
     | t.ArrowFunctionExpression
     | t.FunctionDeclaration
     | t.ObjectMethod
-  >
+  >,
 ): LoweredFunction | null {
   const componentScope: Scope = builder.parentFunction.scope;
   const captured = gatherCapturedDeps(builder, expr, componentScope);
@@ -3212,7 +3212,7 @@ function lowerFunction(
     builder.environment,
     builder.bindings,
     [...builder.context, ...captured.identifiers],
-    builder.parentFunction
+    builder.parentFunction,
   );
   let loweredFunc: HIRFunction;
   if (lowering.isErr()) {
@@ -3230,7 +3230,7 @@ function lowerFunction(
 
 function lowerExpressionToTemporary(
   builder: HIRBuilder,
-  exprPath: NodePath<t.Expression>
+  exprPath: NodePath<t.Expression>,
 ): Place {
   const value = lowerExpression(builder, exprPath);
   return lowerValueToTemporary(builder, value);
@@ -3238,7 +3238,7 @@ function lowerExpressionToTemporary(
 
 function lowerValueToTemporary(
   builder: HIRBuilder,
-  value: InstructionValue
+  value: InstructionValue,
 ): Place {
   if (value.kind === "LoadLocal" && value.place.identifier.name === null) {
     return value.place;
@@ -3255,7 +3255,7 @@ function lowerValueToTemporary(
 
 function lowerIdentifier(
   builder: HIRBuilder,
-  exprPath: NodePath<t.Identifier | t.JSXIdentifier>
+  exprPath: NodePath<t.Identifier | t.JSXIdentifier>,
 ): Place {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
@@ -3294,7 +3294,7 @@ function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
 
 function getStoreKind(
   builder: HIRBuilder,
-  identifier: NodePath<t.Identifier>
+  identifier: NodePath<t.Identifier>,
 ): "StoreLocal" | "StoreContext" {
   const isContext = builder.isContextIdentifier(identifier);
   return isContext ? "StoreContext" : "StoreLocal";
@@ -3302,7 +3302,7 @@ function getStoreKind(
 
 function getLoadKind(
   builder: HIRBuilder,
-  identifier: NodePath<t.Identifier | t.JSXIdentifier>
+  identifier: NodePath<t.Identifier | t.JSXIdentifier>,
 ): "LoadLocal" | "LoadContext" {
   const isContext = builder.isContextIdentifier(identifier);
   return isContext ? "LoadContext" : "LoadLocal";
@@ -3312,7 +3312,7 @@ function lowerIdentifierForAssignment(
   builder: HIRBuilder,
   loc: SourceLocation,
   kind: InstructionKind,
-  path: NodePath<t.Identifier>
+  path: NodePath<t.Identifier>,
 ): Place | { kind: "Global"; name: string } | null {
   const identifier = builder.resolveIdentifier(path);
   if (identifier == null) {
@@ -3346,7 +3346,7 @@ function lowerAssignment(
   kind: InstructionKind,
   lvaluePath: NodePath<t.LVal>,
   value: Place,
-  assignmentKind: "Destructure" | "Assignment"
+  assignmentKind: "Destructure" | "Assignment",
 ): InstructionValue {
   const lvalueNode = lvaluePath.node;
   switch (lvalueNode.type) {
@@ -3369,7 +3369,7 @@ function lowerAssignment(
         return { kind: "LoadLocal", place: temporary, loc: temporary.loc };
       }
       const isHoistedIdentifier = builder.environment.isHoistedIdentifier(
-        lvalue.node
+        lvalue.node,
       );
 
       let temporary;
@@ -3492,7 +3492,7 @@ function lowerAssignment(
             (element) =>
               element.isIdentifier() &&
               (getStoreKind(builder, element) !== "StoreLocal" ||
-                builder.resolveIdentifier(element) == null)
+                builder.resolveIdentifier(element) == null),
           ));
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
@@ -3514,7 +3514,7 @@ function lowerAssignment(
               builder,
               element.node.loc ?? GeneratedSource,
               kind,
-              argument
+              argument,
             );
             if (identifier === null) {
               continue;
@@ -3534,7 +3534,7 @@ function lowerAssignment(
           } else {
             const temp = buildTemporaryPlace(
               builder,
-              element.node.loc ?? GeneratedSource
+              element.node.loc ?? GeneratedSource,
             );
             promoteTemporary(temp.identifier);
             items.push({
@@ -3553,7 +3553,7 @@ function lowerAssignment(
             builder,
             element.node.loc ?? GeneratedSource,
             kind,
-            element
+            element,
           );
           if (identifier === null) {
             continue;
@@ -3570,7 +3570,7 @@ function lowerAssignment(
         } else {
           const temp = buildTemporaryPlace(
             builder,
-            element.node.loc ?? GeneratedSource
+            element.node.loc ?? GeneratedSource,
           );
           promoteTemporary(temp.identifier);
           items.push({ ...temp });
@@ -3596,7 +3596,7 @@ function lowerAssignment(
           kind,
           path,
           place,
-          assignmentKind
+          assignmentKind,
         );
       }
       return { kind: "LoadLocal", place: temporary, loc: value.loc };
@@ -3622,8 +3622,8 @@ function lowerAssignment(
             (property.isObjectProperty() &&
               (!property.get("value").isIdentifier() ||
                 builder.resolveIdentifier(
-                  property.get("value") as NodePath<t.Identifier>
-                ) == null))
+                  property.get("value") as NodePath<t.Identifier>,
+                ) == null)),
         );
       for (let i = 0; i < propertiesPaths.length; i++) {
         const property = propertiesPaths[i];
@@ -3644,7 +3644,7 @@ function lowerAssignment(
           ) {
             const temp = buildTemporaryPlace(
               builder,
-              property.node.loc ?? GeneratedSource
+              property.node.loc ?? GeneratedSource,
             );
             promoteTemporary(temp.identifier);
             properties.push({
@@ -3657,7 +3657,7 @@ function lowerAssignment(
               builder,
               property.node.loc ?? GeneratedSource,
               kind,
-              argument
+              argument,
             );
             if (identifier === null) {
               continue;
@@ -3719,7 +3719,7 @@ function lowerAssignment(
               builder,
               element.node.loc ?? GeneratedSource,
               kind,
-              element
+              element,
             );
             if (identifier === null) {
               continue;
@@ -3741,7 +3741,7 @@ function lowerAssignment(
           } else {
             const temp = buildTemporaryPlace(
               builder,
-              element.node.loc ?? GeneratedSource
+              element.node.loc ?? GeneratedSource,
             );
             promoteTemporary(temp.identifier);
             properties.push({
@@ -3773,7 +3773,7 @@ function lowerAssignment(
           kind,
           path,
           place,
-          assignmentKind
+          assignmentKind,
         );
       }
       return { kind: "LoadLocal", place: temporary, loc: value.loc };
@@ -3793,7 +3793,7 @@ function lowerAssignment(
          */
         const defaultValue = lowerReorderableExpression(
           builder,
-          lvalue.get("right")
+          lvalue.get("right"),
         );
         lowerValueToTemporary(builder, {
           kind: "StoreLocal",
@@ -3835,7 +3835,7 @@ function lowerAssignment(
           id: makeInstructionId(0),
           loc,
         },
-        testBlock
+        testBlock,
       );
       const undef = lowerValueToTemporary(builder, {
         kind: "Primitive",
@@ -3858,7 +3858,7 @@ function lowerAssignment(
           id: makeInstructionId(0),
           loc,
         },
-        continuationBlock
+        continuationBlock,
       );
 
       return lowerAssignment(
@@ -3867,7 +3867,7 @@ function lowerAssignment(
         kind,
         lvalue.get("left"),
         temp,
-        assignmentKind
+        assignmentKind,
       );
     }
     default: {
@@ -3912,7 +3912,7 @@ function gatherCapturedDeps(
     | t.FunctionDeclaration
     | t.ObjectMethod
   >,
-  componentScope: Scope
+  componentScope: Scope,
 ): { identifiers: Array<t.Identifier>; refs: Array<Place> } {
   const capturedIds: Map<t.Identifier, number> = new Map();
   const capturedRefs: Set<Place> = new Set();
@@ -3941,7 +3941,7 @@ function gatherCapturedDeps(
     path:
       | NodePath<t.MemberExpression>
       | NodePath<t.Identifier>
-      | NodePath<t.JSXOpeningElement>
+      | NodePath<t.JSXOpeningElement>,
   ): void {
     // Base context variable to depend on
     let baseIdentifier: NodePath<t.Identifier> | NodePath<t.JSXIdentifier>;
@@ -3966,7 +3966,7 @@ function gatherCapturedDeps(
       }
       invariant(
         current.isJSXIdentifier(),
-        "Invalid logic in gatherCapturedDeps"
+        "Invalid logic in gatherCapturedDeps",
       );
       baseIdentifier = current;
 

@@ -32,7 +32,7 @@ type HoistedIdentifiers = Set<Identifier>;
 class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: HoistedIdentifiers
+    state: HoistedIdentifiers,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
     if (

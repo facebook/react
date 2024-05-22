@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
 // https://github.com/reactjs/reactjs.org/blob/main/beta/src/components/Logo.tsx
 
 export default function Logo(props: JSX.IntrinsicElements["svg"]) {

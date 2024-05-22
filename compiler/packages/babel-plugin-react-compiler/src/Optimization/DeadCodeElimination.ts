@@ -47,7 +47,7 @@ export function deadCodeElimination(fn: HIRFunction): void {
       }
     }
     retainWhere(block.instructions, (instr) =>
-      state.isIdOrNameUsed(instr.lvalue.identifier)
+      state.isIdOrNameUsed(instr.lvalue.identifier),
     );
     // Rewrite retained instructions
     for (let i = 0; i < block.instructions.length; i++) {
@@ -233,7 +233,7 @@ function rewriteInstruction(instr: Instruction, state: State): void {
           instr.value.lvalue.pattern,
           `Unexpected pattern kind '${
             (instr.value.lvalue.pattern as any).kind
-          }'`
+          }'`,
         );
       }
     }
@@ -372,7 +372,7 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     default: {
       assertExhaustive(
         value,
-        `Unexepcted value kind \`${(value as any).kind}\``
+        `Unexepcted value kind \`${(value as any).kind}\``,
       );
     }
   }

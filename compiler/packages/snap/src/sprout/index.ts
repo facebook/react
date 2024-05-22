@@ -30,7 +30,7 @@ function logsEqual(a: Array<string>, b: Array<string>) {
 }
 export function runSprout(
   originalCode: string,
-  forgetCode: string
+  forgetCode: string,
 ): SproutResult {
   const nonForgetResult = doEval(originalCode);
   const forgetResult = doEval(forgetCode);
@@ -40,7 +40,7 @@ export function runSprout(
   } else if (nonForgetResult.kind === "UnexpectedError") {
     return makeError(
       "Unexpected error in non-forget runner",
-      nonForgetResult.value
+      nonForgetResult.value,
     );
   } else if (
     forgetResult.kind !== nonForgetResult.kind ||
@@ -53,7 +53,7 @@ export function runSprout(
 ${stringify(nonForgetResult)}
 Forget:
 ${stringify(forgetResult)}
-`
+`,
     );
   } else {
     return {

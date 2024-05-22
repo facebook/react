@@ -7,7 +7,7 @@ function Component(props) {
     () => {
       console.log(props);
     },
-    [props.a]
+    [props.a],
   );
   return [x, item];
 }

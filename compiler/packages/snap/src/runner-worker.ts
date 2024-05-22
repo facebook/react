@@ -38,7 +38,7 @@ function compile(
   fixturePath: string,
   compilerVersion: number,
   shouldLog: boolean,
-  includeEvaluator: boolean
+  includeEvaluator: boolean,
 ): {
   error: string | null;
   compileResult: TransformResult | null;
@@ -73,7 +73,7 @@ function compile(
       fixturePath,
       parseConfigPragma,
       BabelPluginReactCompiler,
-      includeEvaluator
+      includeEvaluator,
     );
 
     if (result.kind === "err") {
@@ -103,7 +103,7 @@ function compile(
           },
           {
             message: e.message,
-          }
+          },
         );
       } catch {
         // In case the location data isn't valid, skip printing a code frame.
@@ -131,7 +131,7 @@ export async function transformFixture(
   fixture: TestFixture,
   compilerVersion: number,
   shouldLog: boolean,
-  includeEvaluator: boolean
+  includeEvaluator: boolean,
 ): Promise<TestResult> {
   const { input, snapshot: expected, snapshotPath: outputPath } = fixture;
   const basename = getBasename(fixture);
@@ -152,7 +152,7 @@ export async function transformFixture(
     fixture.fixturePath,
     compilerVersion,
     shouldLog,
-    includeEvaluator
+    includeEvaluator,
   );
 
   let unexpectedError: string | null = null;
@@ -173,7 +173,7 @@ export async function transformFixture(
   if (compileResult?.evaluatorCode != null) {
     const sproutResult = runSprout(
       compileResult.evaluatorCode.original,
-      compileResult.evaluatorCode.forget
+      compileResult.evaluatorCode.forget,
     );
     if (sproutResult.kind === "invalid") {
       unexpectedError ??= "";
@@ -189,7 +189,7 @@ export async function transformFixture(
     input,
     snapOutput,
     sproutOutput,
-    error
+    error,
   );
 
   return {

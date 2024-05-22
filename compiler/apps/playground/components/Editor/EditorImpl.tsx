@@ -319,9 +319,7 @@ export default function Editor() {
   return (
     <>
       <div className="relative flex basis top-14">
-        <div
-          className={clsx("relative sm:basis-1/4")}
-        >
+        <div className={clsx("relative sm:basis-1/4")}>
           <Input
             errors={
               compilerOutput.kind === "err" ? compilerOutput.error.details : []
