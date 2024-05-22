@@ -11,7 +11,7 @@ function useFoo() {
       function () {
         someGlobal();
       },
-    []
+    [],
   );
   React.useEffect(() => {
     fn();

@@ -27,7 +27,7 @@ function Component(props) {
     t0 = fbt._(
       "Hello {user name}",
       [fbt._param("user name", capitalize(props.name))],
-      { hk: "2zEDKF" }
+      { hk: "2zEDKF" },
     );
     $[0] = props.name;
     $[1] = t0;
