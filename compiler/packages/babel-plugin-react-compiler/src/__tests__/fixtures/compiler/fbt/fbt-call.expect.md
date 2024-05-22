@@ -7,7 +7,7 @@ import fbt from "fbt";
 function Component(props) {
   const text = fbt(
     `${fbt.param("(key) count", props.count)} items`,
-    "(description) Number of items"
+    "(description) Number of items",
   );
   return <div>{text}</div>;
 }
@@ -32,7 +32,7 @@ function Component(props) {
     t0 = fbt._(
       "{(key) count} items",
       [fbt._param("(key) count", props.count)],
-      { hk: "3yW91j" }
+      { hk: "3yW91j" },
     );
     $[0] = props.count;
     $[1] = t0;
@@ -59,4 +59,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div>2 items</div>
+(kind: exception) A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime.

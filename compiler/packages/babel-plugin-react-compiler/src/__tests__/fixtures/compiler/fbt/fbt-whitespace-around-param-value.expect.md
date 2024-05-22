@@ -35,7 +35,7 @@ function Component(t0) {
     t1 = fbt._(
       "Before text {paramName} after text",
       [fbt._param("paramName", value)],
-      { hk: "26pxNm" }
+      { hk: "26pxNm" },
     );
     $[0] = value;
     $[1] = t1;
@@ -53,4 +53,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) Before text hello world after text
+(kind: exception) A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime.

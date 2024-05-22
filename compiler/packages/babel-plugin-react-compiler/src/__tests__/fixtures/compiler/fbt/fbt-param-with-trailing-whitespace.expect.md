@@ -56,10 +56,10 @@ function Component(props) {
             fbt._param(
               "option",
 
-              props.option
+              props.option,
             ),
           ],
-          { hk: "3Bg20a" }
+          { hk: "3Bg20a" },
         )}
         !
       </span>
@@ -91,11 +91,35 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <span>42 votes for thing!</span>
-<span>42 votes for thing!</span>
-<span>1 vote for other!</span>
-<span>1 vote for other!</span>
-<span>42 votes for thing!</span>
-<span>1 vote for other!</span>
-<span>42 votes for thing!</span>
-<span>1 vote for other!</span>
+(kind: ok) [[ (exception in render) Error: A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime. ]]
+[[ (exception in render) Error: A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime. ]]
+[[ (exception in render) Error: A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime. ]]
+[[ (exception in render) Error: A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime. ]]
+[[ (exception in render) Error: A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime. ]]
+[[ (exception in render) Error: A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime. ]]
+[[ (exception in render) Error: A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime. ]]
+[[ (exception in render) Error: A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime. ]]

@@ -17,7 +17,7 @@ function Component(props) {
     <div className="foo">
       {fbt(
         "Lorum ipsum" + fbt.param("thing", object.b) + " blah blah blah",
-        "More text"
+        "More text",
       )}
     </div>
   );
@@ -56,7 +56,7 @@ function Component(props) {
           {fbt._(
             "Lorum ipsum{thing} blah blah blah",
             [fbt._param("thing", object.b)],
-            { hk: "lwmuH" }
+            { hk: "lwmuH" },
           )}
         </div>
       );
@@ -81,4 +81,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div class="foo">Lorum ipsumvalue1 blah blah blah</div>
+(kind: exception) A React Element from an older version of React was rendered. This is not supported. It can happen if:
+- Multiple copies of the "react" package is used.
+- A library pre-bundled an old copy of "react" or "react/jsx-runtime".
+- A compiler tries to "inline" JSX instead of using the runtime.
