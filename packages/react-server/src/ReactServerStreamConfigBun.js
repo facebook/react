@@ -22,7 +22,7 @@ export opaque type Chunk = string;
 export type BinaryChunk = $ArrayBufferView;
 
 export function scheduleWork(callback: () => void) {
-  callback();
+  setTimeout(callback, 0);
 }
 
 export function flushBuffered(destination: Destination) {

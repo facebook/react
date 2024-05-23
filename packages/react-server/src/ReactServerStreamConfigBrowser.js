@@ -13,8 +13,18 @@ export type PrecomputedChunk = Uint8Array;
 export opaque type Chunk = Uint8Array;
 export type BinaryChunk = Uint8Array;
 
+const channel = new MessageChannel();
+const taskQueue = [];
+channel.port1.onmessage = () => {
+  const task = taskQueue.shift();
+  if (task) {
+    task();
+  }
+};
+
 export function scheduleWork(callback: () => void) {
-  callback();
+  taskQueue.push(callback);
+  channel.port2.postMessage(null);
 }
 
 export function flushBuffered(destination: Destination) {
