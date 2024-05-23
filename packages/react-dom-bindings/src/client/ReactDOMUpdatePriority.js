@@ -38,7 +38,7 @@ export function resolveUpdatePriority(): EventPriority {
     return updatePriority;
   }
   const currentEvent = window.event;
-  if (currentEvent === undefined) {
+  if (currentEvent === undefined || currentEvent === null) {
     return DefaultEventPriority;
   }
   return getEventPriority(currentEvent.type);
