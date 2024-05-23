@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cc5ff8fe75f7cb7812ce459378d61959>>
+ * @generated SignedSource<<a12e42d980c252cd9449b3f2a99f483a>>
  */
 
 'use strict';
@@ -44,7 +44,9 @@ var REACT_MEMO_TYPE = Symbol.for('react.memo');
 var REACT_LAZY_TYPE = Symbol.for('react.lazy');
 var REACT_OFFSCREEN_TYPE = Symbol.for('react.offscreen');
 
-var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
+var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference'); // This function is deprecated. Don't use. Only the renderer knows what a valid type is.
+// TODO: Delete this when enableOwnerStacks ships.
+
 function isValidElementType(type) {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;

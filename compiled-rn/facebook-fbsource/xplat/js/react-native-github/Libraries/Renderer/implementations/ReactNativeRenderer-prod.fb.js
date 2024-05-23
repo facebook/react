@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e0fbcf4b186a27e32632c9b934a8f928>>
+ * @generated SignedSource<<3847450e7210fcecd6638e86d2f3123b>>
  */
 
 "use strict";
@@ -10366,7 +10366,7 @@ function createFiberFromTypeAndProps(
           }
         throw Error(
           "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: " +
-            ((null == type ? type : typeof type) + ".")
+            ((null === type ? "null" : typeof type) + ".")
         );
     }
   key = createFiber(fiberTag, pendingProps, key, mode);
@@ -10747,7 +10747,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1187 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-56edf199",
+    version: "19.0.0-rc-a21ccfc5",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10790,7 +10790,7 @@ var internals$jscomp$inline_1434 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-56edf199"
+  reconcilerVersion: "19.0.0-rc-a21ccfc5"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1435 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

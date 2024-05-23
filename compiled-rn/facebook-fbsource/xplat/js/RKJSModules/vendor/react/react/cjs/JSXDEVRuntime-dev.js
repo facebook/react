@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<10a7ee496c01519458a4d512d4dc4cbf>>
+ * @generated SignedSource<<f3f0a5ed50b6bab3eafa955dec73aece>>
  */
 
 'use strict';
@@ -89,11 +89,14 @@ function printWarning(level, format, args) {
   // update consoleWithStackDev.www.js as well.
   {
     var isErrorLogger = format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
-    var stack = ReactSharedInternals.getStackAddendum();
 
-    if (stack !== '') {
-      format += '%s';
-      args = args.concat([stack]);
+    if (ReactSharedInternals.getCurrentStack) {
+      var stack = ReactSharedInternals.getCurrentStack();
+
+      if (stack !== '') {
+        format += '%s';
+        args = args.concat([stack]);
+      }
     }
 
     if (isErrorLogger) {
@@ -305,7 +308,9 @@ function checkKeyStringCoercion(value) {
   }
 }
 
-var REACT_CLIENT_REFERENCE$1 = Symbol.for('react.client.reference');
+var REACT_CLIENT_REFERENCE$1 = Symbol.for('react.client.reference'); // This function is deprecated. Don't use. Only the renderer knows what a valid type is.
+// TODO: Delete this when enableOwnerStacks ships.
+
 function isValidElementType(type) {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;
@@ -703,7 +708,8 @@ function describeFunctionComponentFrame(fn) {
 function shouldConstruct(Component) {
   var prototype = Component.prototype;
   return !!(prototype && prototype.isReactComponent);
-}
+} // TODO: Delete this once the key warning no longer uses it. I.e. when enableOwnerStacks ship.
+
 
 function describeUnknownElementTypeFrameInDEV(type) {
 
@@ -937,7 +943,7 @@ function ReactElement(type, key, _ref, self, source, owner, props, debugStack, d
       configurable: false,
       enumerable: false,
       writable: true,
-      value: false
+      value: 0
     }); // debugInfo contains Server Component debug information.
 
     Object.defineProperty(element, '_debugInfo', {
@@ -1111,29 +1117,7 @@ function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    var element = ReactElement(type, key, ref, self, source, getOwner(), props);
-
-    if (type === REACT_FRAGMENT_TYPE) {
-      validateFragmentProps(element);
-    }
-
-    return element;
-  }
-}
-
-function getDeclarationErrorAddendum() {
-  {
-    var owner = getOwner();
-
-    if (owner) {
-      var name = getComponentNameFromType(owner.type);
-
-      if (name) {
-        return '\n\nCheck the render method of `' + name + '`.';
-      }
-    }
-
-    return '';
+    return ReactElement(type, key, ref, self, source, getOwner(), props);
   }
 }
 /**
@@ -1145,7 +1129,6 @@ function getDeclarationErrorAddendum() {
  * @param {ReactNode} node Statically passed child of any type.
  * @param {*} parentType node's parent's type.
  */
-
 
 function validateChildKeys(node, parentType) {
   {
@@ -1164,7 +1147,7 @@ function validateChildKeys(node, parentType) {
     } else if (isValidElement(node)) {
       // This element was passed in a valid location.
       if (node._store) {
-        node._store.validated = true;
+        node._store.validated = 1;
       }
     } else {
       var iteratorFn = getIteratorFn(node);
@@ -1215,12 +1198,13 @@ var ownerHasKeyUseWarning = {};
  */
 
 function validateExplicitKey(element, parentType) {
+
   {
     if (!element._store || element._store.validated || element.key != null) {
       return;
     }
 
-    element._store.validated = true;
+    element._store.validated = 1;
     var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
 
     if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
@@ -1246,28 +1230,37 @@ function validateExplicitKey(element, parentType) {
       childOwner = " It was passed a child from " + ownerName + ".";
     }
 
-    setCurrentlyValidatingElement(element);
+    var prevGetCurrentStack = ReactSharedInternals.getCurrentStack;
+
+    ReactSharedInternals.getCurrentStack = function () {
+
+      var stack = describeUnknownElementTypeFrameInDEV(element.type); // Delegate to the injected renderer-specific implementation
+
+      if (prevGetCurrentStack) {
+        stack += prevGetCurrentStack() || '';
+      }
+
+      return stack;
+    };
 
     error('Each child in a list should have a unique "key" prop.' + '%s%s See https://react.dev/link/warning-keys for more information.', currentComponentErrorInfo, childOwner);
 
-    setCurrentlyValidatingElement(null);
-  }
-}
-
-function setCurrentlyValidatingElement(element) {
-  {
-    if (element) {
-      var stack = describeUnknownElementTypeFrameInDEV(element.type);
-      ReactSharedInternals.setExtraStackFrame(stack);
-    } else {
-      ReactSharedInternals.setExtraStackFrame(null);
-    }
+    ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
   }
 }
 
 function getCurrentComponentErrorInfo(parentType) {
   {
-    var info = getDeclarationErrorAddendum();
+    var info = '';
+    var owner = getOwner();
+
+    if (owner) {
+      var name = getComponentNameFromType(owner.type);
+
+      if (name) {
+        info = '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
 
     if (!info) {
       var parentName = getComponentNameFromType(parentType);
@@ -1278,31 +1271,6 @@ function getCurrentComponentErrorInfo(parentType) {
     }
 
     return info;
-  }
-}
-/**
- * Given a fragment, validate that it can only be provided with fragment props
- * @param {ReactElement} fragment
- */
-
-
-function validateFragmentProps(fragment) {
-  // TODO: Move this to render phase instead of at element creation.
-  {
-    var keys = Object.keys(fragment.props);
-
-    for (var i = 0; i < keys.length; i++) {
-      var key = keys[i];
-
-      if (key !== 'children' && key !== 'key') {
-        setCurrentlyValidatingElement(fragment);
-
-        error('Invalid prop `%s` supplied to `React.Fragment`. ' + 'React.Fragment can only have `key` and `children` props.', key);
-
-        setCurrentlyValidatingElement(null);
-        break;
-      }
-    }
   }
 }
 

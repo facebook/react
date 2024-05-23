@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<97a595a3f85a65f2977dfd3658e3254b>>
+ * @generated SignedSource<<d6ea2f2bb6c867fe595eec3f7fb8bbcd>>
  */
 
 "use strict";
@@ -11065,7 +11065,7 @@ function createFiberFromTypeAndProps(
           }
         throw Error(
           "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: " +
-            ((null == type ? type : typeof type) + ".")
+            ((null === type ? "null" : typeof type) + ".")
         );
     }
   key = createFiber(fiberTag, pendingProps, key, mode);
@@ -11453,7 +11453,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1267 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-18d64a29",
+    version: "19.0.0-rc-d95f3bff",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11509,7 +11509,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-18d64a29"
+  reconcilerVersion: "19.0.0-rc-d95f3bff"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
