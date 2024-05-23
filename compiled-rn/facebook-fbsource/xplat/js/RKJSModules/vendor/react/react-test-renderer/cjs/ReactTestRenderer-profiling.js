@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ebfa53ae43ecaabc34a7bb3185aba21e>>
+ * @generated SignedSource<<f60fad93c112dcc72285bcbbda070adc>>
  */
 
 "use strict";
@@ -8272,7 +8272,8 @@ function commitRootWhenReady(
   lanes,
   spawnedLane
 ) {
-  finishedWork.subtreeFlags & 8192 &&
+  lanes = finishedWork.subtreeFlags;
+  (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -9943,7 +9944,7 @@ var devToolsConfig$jscomp$inline_1105 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-rc-7fcc15f0",
+  version: "19.0.0-rc-e8e0cdf6",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9987,7 +9988,7 @@ var devToolsConfig$jscomp$inline_1105 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-7fcc15f0"
+  reconcilerVersion: "19.0.0-rc-e8e0cdf6"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

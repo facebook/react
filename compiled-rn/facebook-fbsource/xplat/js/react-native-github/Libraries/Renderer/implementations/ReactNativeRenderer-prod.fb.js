@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3847450e7210fcecd6638e86d2f3123b>>
+ * @generated SignedSource<<41508078d6db5680720082552b30dcb7>>
  */
 
 "use strict";
@@ -9354,7 +9354,8 @@ function commitRootWhenReady(
   lanes,
   spawnedLane
 ) {
-  finishedWork.subtreeFlags & 8192 &&
+  lanes = finishedWork.subtreeFlags;
+  (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -10747,7 +10748,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1187 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-a21ccfc5",
+    version: "19.0.0-rc-55846263",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10790,7 +10791,7 @@ var internals$jscomp$inline_1434 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-a21ccfc5"
+  reconcilerVersion: "19.0.0-rc-55846263"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1435 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3f7c609322e65db1e2ce38a0f7c72577>>
+ * @generated SignedSource<<7d577e8126a68c701e64111a9f2bbd2a>>
  */
 
 'use strict';
@@ -20119,7 +20119,10 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
 function commitRootWhenReady(root, finishedWork, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, lanes, spawnedLane) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
-  if (finishedWork.subtreeFlags & ShouldSuspendCommit) {
+  var BothVisibilityAndMaySuspendCommit = Visibility | MaySuspendCommit;
+  var subtreeFlags = finishedWork.subtreeFlags;
+
+  if (subtreeFlags & ShouldSuspendCommit || (subtreeFlags & BothVisibilityAndMaySuspendCommit) === BothVisibilityAndMaySuspendCommit) {
     // the suspensey resources. The renderer is responsible for accumulating
     // all the load events. This all happens in a single synchronous
     // transaction, so it track state in its own module scope.
@@ -23443,7 +23446,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-c6122275';
+var ReactVersion = '19.0.0-rc-c940c483';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
