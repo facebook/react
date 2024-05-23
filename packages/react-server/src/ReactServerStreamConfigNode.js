@@ -26,6 +26,8 @@ export function scheduleWork(callback: () => void) {
   setImmediate(callback);
 }
 
+export const scheduleMicrotask = queueMicrotask;
+
 export function flushBuffered(destination: Destination) {
   // If we don't have any more data to send right now.
   // Flush whatever is in the buffer to the wire.
