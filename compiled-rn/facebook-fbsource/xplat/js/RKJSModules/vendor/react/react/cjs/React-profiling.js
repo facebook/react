@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d00bc9a3e702b484a97695b57782f643>>
+ * @generated SignedSource<<9abe927796efac5ad36cba3bc74df7db>>
  */
 
 "use strict";
@@ -88,7 +88,7 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  ReactSharedInternals = { H: null, A: null, T: null },
+  ReactSharedInternals = { H: null, A: null, T: null, S: null },
   hasOwnProperty = Object.prototype.hasOwnProperty,
   enableFastJSXWithStringRefs = enableFastJSX && !0,
   enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !0;
@@ -517,18 +517,17 @@ exports.memo = function (type, compare) {
 };
 exports.startTransition = function (scope) {
   var prevTransition = ReactSharedInternals.T,
-    callbacks = new Set();
-  ReactSharedInternals.T = { _callbacks: callbacks };
-  var currentTransition = ReactSharedInternals.T;
+    transition = {};
+  ReactSharedInternals.T = transition;
   try {
-    var returnValue = scope();
+    var returnValue = scope(),
+      onStartTransitionFinish = ReactSharedInternals.S;
+    null !== onStartTransitionFinish &&
+      onStartTransitionFinish(transition, returnValue);
     "object" === typeof returnValue &&
       null !== returnValue &&
       "function" === typeof returnValue.then &&
-      (callbacks.forEach(function (callback) {
-        return callback(currentTransition, returnValue);
-      }),
-      returnValue.then(noop, reportGlobalError));
+      returnValue.then(noop, reportGlobalError);
   } catch (error) {
     reportGlobalError(error);
   } finally {
@@ -609,7 +608,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-rc-680d5437";
+exports.version = "19.0.0-rc-b23e981f";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

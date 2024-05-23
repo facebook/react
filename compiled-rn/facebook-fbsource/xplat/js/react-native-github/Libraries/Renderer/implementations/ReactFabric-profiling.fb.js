@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7d5a8059edc8c032a1e129b62535d195>>
+ * @generated SignedSource<<be1f95a9c1c616fcdba783a950a31085>>
  */
 
 "use strict";
@@ -4282,16 +4282,18 @@ function runActionStateAction(actionQueue, setPendingState, setState, payload) {
   var action = actionQueue.action,
     prevState = actionQueue.state,
     prevTransition = ReactSharedInternals.T,
-    currentTransition = { _callbacks: new Set() };
+    currentTransition = {};
   ReactSharedInternals.T = currentTransition;
   setPendingState(!0);
   try {
-    var returnValue = action(prevState, payload);
+    var returnValue = action(prevState, payload),
+      onStartTransitionFinish = ReactSharedInternals.S;
+    null !== onStartTransitionFinish &&
+      onStartTransitionFinish(currentTransition, returnValue);
     null !== returnValue &&
     "object" === typeof returnValue &&
     "function" === typeof returnValue.then
-      ? (notifyTransitionCallbacks(currentTransition, returnValue),
-        returnValue.then(
+      ? (returnValue.then(
           function (nextState) {
             actionQueue.state = nextState;
             finishRunningActionStateAction(
@@ -4556,17 +4558,19 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactSharedInternals.T,
-    currentTransition = { _callbacks: new Set() };
+    currentTransition = {};
   ReactSharedInternals.T = currentTransition;
   dispatchOptimisticSetState(fiber, !1, queue, pendingState);
   try {
-    var returnValue = callback();
+    var returnValue = callback(),
+      onStartTransitionFinish = ReactSharedInternals.S;
+    null !== onStartTransitionFinish &&
+      onStartTransitionFinish(currentTransition, returnValue);
     if (
       null !== returnValue &&
       "object" === typeof returnValue &&
       "function" === typeof returnValue.then
     ) {
-      notifyTransitionCallbacks(currentTransition, returnValue);
       var thenableForFinishedState = chainThenableValue(
         returnValue,
         finishedState
@@ -4669,7 +4673,6 @@ function dispatchSetState(fiber, queue, action) {
   markStateUpdateScheduled(fiber, lane);
 }
 function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue, action) {
-  requestCurrentTransition();
   action = {
     lane: 2,
     revertLane: requestTransitionLane(),
@@ -7239,19 +7242,15 @@ function releaseCache(cache) {
       cache.controller.abort();
     });
 }
-function requestCurrentTransition() {
-  var transition = ReactSharedInternals.T;
-  null !== transition && transition._callbacks.add(handleAsyncAction);
-  return transition;
-}
-function handleAsyncAction(transition, thenable) {
-  entangleAsyncAction(transition, thenable);
-}
-function notifyTransitionCallbacks(transition, returnValue) {
-  transition._callbacks.forEach(function (callback) {
-    return callback(transition, returnValue);
-  });
-}
+var prevOnStartTransitionFinish = ReactSharedInternals.S;
+ReactSharedInternals.S = function (transition, returnValue) {
+  "object" === typeof returnValue &&
+    null !== returnValue &&
+    "function" === typeof returnValue.then &&
+    entangleAsyncAction(transition, returnValue);
+  null !== prevOnStartTransitionFinish &&
+    prevOnStartTransitionFinish(transition, returnValue);
+};
 var resumedCache = createCursor(null);
 function peekCacheFromPool() {
   var cacheResumedFromPreviousRender = resumedCache.current;
@@ -9490,7 +9489,7 @@ function requestUpdateLane(fiber) {
     ? 2
     : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
     ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
-    : null !== requestCurrentTransition()
+    : null !== ReactSharedInternals.T
     ? ((fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane())
     : resolveUpdatePriority();
@@ -11264,7 +11263,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1199 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-f1129266",
+    version: "19.0.0-rc-7258f280",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11320,7 +11319,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-f1129266"
+  reconcilerVersion: "19.0.0-rc-7258f280"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

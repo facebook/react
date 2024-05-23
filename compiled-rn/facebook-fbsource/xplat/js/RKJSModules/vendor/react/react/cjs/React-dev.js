@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<db331c1959d408b39232e1418040edaf>>
+ * @generated SignedSource<<5b1dc62c6ba34c7e7218ad93ccffc6a0>>
  */
 
 'use strict';
@@ -24,7 +24,7 @@ if (
 }
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-rc-03d16137';
+var ReactVersion = '19.0.0-rc-f0094578';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -85,7 +85,8 @@ function getIteratorFn(maybeIterable) {
 var ReactSharedInternals = {
   H: null,
   A: null,
-  T: null
+  T: null,
+  S: null
 };
 
 {
@@ -2576,13 +2577,8 @@ reportError : function (error) {
 };
 
 function startTransition(scope, options) {
-  var prevTransition = ReactSharedInternals.T; // Each renderer registers a callback to receive the return value of
-  // the scope function. This is used to implement async actions.
-
-  var callbacks = new Set();
-  var transition = {
-    _callbacks: callbacks
-  };
+  var prevTransition = ReactSharedInternals.T;
+  var transition = {};
   ReactSharedInternals.T = transition;
   var currentTransition = ReactSharedInternals.T;
 
@@ -2593,11 +2589,13 @@ function startTransition(scope, options) {
   {
     try {
       var returnValue = scope();
+      var onStartTransitionFinish = ReactSharedInternals.S;
+
+      if (onStartTransitionFinish !== null) {
+        onStartTransitionFinish(transition, returnValue);
+      }
 
       if (typeof returnValue === 'object' && returnValue !== null && typeof returnValue.then === 'function') {
-        callbacks.forEach(function (callback) {
-          return callback(currentTransition, returnValue);
-        });
         returnValue.then(noop, reportGlobalError);
       }
     } catch (error) {
