@@ -60,7 +60,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-modern-d3cf6c2c';
+var ReactVersion = '19.0.0-www-modern-1bbec70f';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -12256,7 +12256,11 @@ function createRootErrorUpdate(root, errorInfo, lane) {
   };
 
   update.callback = function () {
+    var prevFiber = getCurrentFiber(); // should just be the root
+
+    setCurrentDebugFiberInDEV(errorInfo.source);
     logUncaughtError(root, errorInfo);
+    setCurrentDebugFiberInDEV(prevFiber);
   };
 
   return update;
@@ -12283,7 +12287,11 @@ function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
 
+      var prevFiber = getCurrentFiber(); // should be the error boundary
+
+      setCurrentDebugFiberInDEV(errorInfo.source);
       logCaughtError(root, fiber, errorInfo);
+      setCurrentDebugFiberInDEV(prevFiber);
     };
   }
 
@@ -12296,7 +12304,11 @@ function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
 
+      var prevFiber = getCurrentFiber(); // should be the error boundary
+
+      setCurrentDebugFiberInDEV(errorInfo.source);
       logCaughtError(root, fiber, errorInfo);
+      setCurrentDebugFiberInDEV(prevFiber);
 
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
@@ -23513,7 +23525,9 @@ function commitRootImpl(root, recoverableErrors, transitions, didIncludeRenderPh
     for (var i = 0; i < recoverableErrors.length; i++) {
       var recoverableError = recoverableErrors[i];
       var errorInfo = makeErrorInfo(recoverableError.stack);
+      setCurrentDebugFiberInDEV(recoverableError.source);
       onRecoverableError(recoverableError.value, errorInfo);
+      resetCurrentDebugFiberInDEV();
     }
   } // If the passive effects are the result of a discrete render, flush them
   // synchronously at the end of the current task so that the result is
