@@ -62,6 +62,11 @@ import {pushTreeFork} from './ReactFiberTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
 import {readContextDuringReconciliation} from './ReactFiberNewContext';
 
+import {
+  getCurrentFiber as getCurrentDebugFiberInDEV,
+  setCurrentFiber as setCurrentDebugFiberInDEV,
+} from './ReactCurrentFiber';
+
 // This tracks the thenables that are unwrapped during reconcilation.
 let thenableState: ThenableState | null = null;
 let thenableIndexCounter: number = 0;
@@ -109,7 +114,11 @@ if (__DEV__) {
     if (child === null || typeof child !== 'object') {
       return;
     }
-    if (!child._store || child._store.validated || child.key != null) {
+    if (
+      !child._store ||
+      ((child._store.validated || child.key != null) &&
+        child._store.validated !== 2)
+    ) {
       return;
     }
 
@@ -121,21 +130,113 @@ if (__DEV__) {
     }
 
     // $FlowFixMe[cannot-write] unable to narrow type from mixed to writable object
-    child._store.validated = true;
+    child._store.validated = 1;
 
-    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber);
 
-    if (ownerHasKeyUseWarning[componentName]) {
+    const componentKey = componentName || 'null';
+    if (ownerHasKeyUseWarning[componentKey]) {
       return;
     }
-    ownerHasKeyUseWarning[componentName] = true;
+    ownerHasKeyUseWarning[componentKey] = true;
 
+    const childOwner = child._owner;
+    const parentOwner = returnFiber._debugOwner;
+
+    let currentComponentErrorInfo = '';
+    if (parentOwner && typeof parentOwner.tag === 'number') {
+      const name = getComponentNameFromFiber((parentOwner: any));
+      if (name) {
+        currentComponentErrorInfo =
+          '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
+    if (!currentComponentErrorInfo) {
+      if (componentName) {
+        currentComponentErrorInfo = `\n\nCheck the top-level render call using <${componentName}>.`;
+      }
+    }
+
+    // Usually the current owner is the offender, but if it accepts children as a
+    // property, it may be the creator of the child that's responsible for
+    // assigning it a key.
+    let childOwnerAppendix = '';
+    if (childOwner != null && parentOwner !== childOwner) {
+      let ownerName = null;
+      if (typeof childOwner.tag === 'number') {
+        ownerName = getComponentNameFromFiber((childOwner: any));
+      } else if (typeof childOwner.name === 'string') {
+        ownerName = childOwner.name;
+      }
+      if (ownerName) {
+        // Give the component that originally created this child.
+        childOwnerAppendix = ` It was passed a child from ${ownerName}.`;
+      }
+    }
+
+    // We create a fake Fiber for the child to log the stack trace from.
+    // TODO: Refactor the warnForMissingKey calls to happen after fiber creation
+    // so that we can get access to the fiber that will eventually be created.
+    // That way the log can show up associated with the right instance in DevTools.
+    const fiber = createFiberFromElement((child: any), returnFiber.mode, 0);
+    fiber.return = returnFiber;
+
+    const prevDebugFiber = getCurrentDebugFiberInDEV();
+    setCurrentDebugFiberInDEV(fiber);
     console.error(
-      'Each child in a list should have a unique ' +
-        '"key" prop. See https://react.dev/link/warning-keys for ' +
-        'more information.',
+      'Each child in a list should have a unique "key" prop.' +
+        '%s%s See https://react.dev/link/warning-keys for more information.',
+      currentComponentErrorInfo,
+      childOwnerAppendix,
     );
+    setCurrentDebugFiberInDEV(prevDebugFiber);
   };
+}
+
+// Given a fragment, validate that it can only be provided with fragment props
+// We do this here instead of BeginWork because the Fragment fiber doesn't have
+// the whole props object, only the children and is shared with arrays.
+function validateFragmentProps(
+  element: ReactElement,
+  fiber: null | Fiber,
+  returnFiber: Fiber,
+) {
+  if (__DEV__) {
+    const keys = Object.keys(element.props);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
+      if (key !== 'children' && key !== 'key') {
+        if (fiber === null) {
+          // For unkeyed root fragments there's no Fiber. We create a fake one just for
+          // error stack handling.
+          fiber = createFiberFromElement(element, returnFiber.mode, 0);
+          fiber.return = returnFiber;
+        }
+        const prevDebugFiber = getCurrentDebugFiberInDEV();
+        setCurrentDebugFiberInDEV(fiber);
+        console.error(
+          'Invalid prop `%s` supplied to `React.Fragment`. ' +
+            'React.Fragment can only have `key` and `children` props.',
+          key,
+        );
+        setCurrentDebugFiberInDEV(prevDebugFiber);
+        break;
+      }
+    }
+
+    if (!enableRefAsProp && element.ref !== null) {
+      if (fiber === null) {
+        // For unkeyed root fragments there's no Fiber. We create a fake one just for
+        // error stack handling.
+        fiber = createFiberFromElement(element, returnFiber.mode, 0);
+        fiber.return = returnFiber;
+      }
+      const prevDebugFiber = getCurrentDebugFiberInDEV();
+      setCurrentDebugFiberInDEV(fiber);
+      console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
+      setCurrentDebugFiberInDEV(prevDebugFiber);
+    }
+  }
 }
 
 function unwrapThenable<T>(thenable: Thenable<T>): T {
@@ -416,7 +517,7 @@ function createChildReconciler(
   ): Fiber {
     const elementType = element.type;
     if (elementType === REACT_FRAGMENT_TYPE) {
-      return updateFragment(
+      const updated = updateFragment(
         returnFiber,
         current,
         element.props.children,
@@ -424,6 +525,8 @@ function createChildReconciler(
         element.key,
         debugInfo,
       );
+      validateFragmentProps(element, updated, returnFiber);
+      return updated;
     }
     if (current !== null) {
       if (
@@ -1481,6 +1584,7 @@ function createChildReconciler(
               existing._debugOwner = element._owner;
               existing._debugInfo = debugInfo;
             }
+            validateFragmentProps(element, existing, returnFiber);
             return existing;
           }
         } else {
@@ -1530,6 +1634,7 @@ function createChildReconciler(
       if (__DEV__) {
         created._debugInfo = debugInfo;
       }
+      validateFragmentProps(element, created, returnFiber);
       return created;
     } else {
       const created = createFiberFromElement(element, returnFiber.mode, lanes);
@@ -1607,6 +1712,7 @@ function createChildReconciler(
       newChild.type === REACT_FRAGMENT_TYPE &&
       newChild.key === null;
     if (isUnkeyedTopLevelFragment) {
+      validateFragmentProps(newChild, null, returnFiber);
       newChild = newChild.props.children;
     }
 

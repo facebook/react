@@ -300,6 +300,9 @@ describe('ReactJSXRuntime', () => {
       'Warning: Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://react.dev/link/warning-keys for more information.\n' +
         '    in Child (at **)\n' +
+        // TODO: Because this validates after the div has been mounted, it is part of
+        // the parent stack but since owner stacks will switch to owners this goes away again.
+        (gate(flags => flags.enableOwnerStacks) ? '    in div (at **)\n' : '') +
         '    in Parent (at **)',
     );
   });

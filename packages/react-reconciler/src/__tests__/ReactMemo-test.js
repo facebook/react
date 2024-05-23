@@ -599,7 +599,9 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
+        'Each child in a list should have a unique "key" prop. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
           '    in p (at **)',
       );
     });
@@ -616,7 +618,10 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
           '    in Inner (at **)\n' +
           '    in p (at **)',
       );
@@ -636,7 +641,10 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
           '    in Inner (at **)\n' +
           '    in p (at **)',
       );
@@ -655,7 +663,10 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
           '    in Outer (at **)\n' +
           '    in p (at **)',
       );
@@ -676,7 +687,10 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
           '    in Inner (at **)\n' +
           '    in p (at **)',
       );
