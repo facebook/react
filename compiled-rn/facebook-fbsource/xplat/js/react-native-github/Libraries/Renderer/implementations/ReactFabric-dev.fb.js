@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6e0dbc85780a10efda46829381a887c4>>
+ * @generated SignedSource<<8e6cf83f111cde978e0cd11aa9ce59ec>>
  */
 
 'use strict';
@@ -68,23 +68,33 @@ function printWarning(level, format, args) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   {
+    var isErrorLogger = format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
     var stack = ReactSharedInternals.getStackAddendum();
 
     if (stack !== '') {
       format += '%s';
       args = args.concat([stack]);
-    } // eslint-disable-next-line react-internal/safe-string-coercion
+    }
 
-
-    var argsWithFormat = args.map(function (item) {
-      return String(item);
-    }); // Careful: RN currently depends on this prefix
-
-    argsWithFormat.unshift('Warning: ' + format); // We intentionally don't use spread (or .apply) directly because it
+    if (isErrorLogger) {
+      // Don't prefix our default logging formatting in ReactFiberErrorLoggger.
+      // Don't toString the arguments.
+      args.unshift(format);
+    } else {
+      // TODO: Remove this prefix and stop toStringing in the wrapper and
+      // instead do it at each callsite as needed.
+      // Careful: RN currently depends on this prefix
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      args = args.map(function (item) {
+        return String(item);
+      });
+      args.unshift('Warning: ' + format);
+    } // We intentionally don't use spread (or .apply) directly because it
     // breaks IE9: https://github.com/facebook/react/issues/13610
     // eslint-disable-next-line react-internal/no-production-logging
 
-    Function.prototype.apply.call(console[level], console, argsWithFormat);
+
+    Function.prototype.apply.call(console[level], console, args);
   }
 }
 
@@ -14360,22 +14370,39 @@ function defaultOnUncaughtError(error, errorInfo) {
   reportGlobalError(error);
 
   {
-    var componentStack = errorInfo.componentStack != null ? errorInfo.componentStack : '';
-    var componentNameMessage = componentName ? "An error occurred in the <" + componentName + "> component:" : 'An error occurred in one of your React components:';
-    console['warn']('%s\n%s\n\n%s', componentNameMessage, componentStack || '', 'Consider adding an error boundary to your tree to customize error handling behavior.\n' + 'Visit https://react.dev/link/error-boundaries to learn more about error boundaries.');
+    var componentNameMessage = componentName ? "An error occurred in the <" + componentName + "> component." : 'An error occurred in one of your React components.';
+    var errorBoundaryMessage = 'Consider adding an error boundary to your tree to customize error handling behavior.\n' + 'Visit https://react.dev/link/error-boundaries to learn more about error boundaries.';
+
+    {
+      // The current Fiber is disconnected at this point which means that console printing
+      // cannot add a component stack since it terminates at the deletion node. This is not
+      // a problem for owner stacks which are not disconnected but for the parent component
+      // stacks we need to use the snapshot we've previously extracted.
+      var componentStack = errorInfo.componentStack != null ? errorInfo.componentStack : ''; // Don't transform to our wrapper
+
+      console['warn']('%s\n\n%s\n%s', componentNameMessage, errorBoundaryMessage, componentStack);
+    }
   }
 }
-function defaultOnCaughtError(error, errorInfo) {
+function defaultOnCaughtError(error$1, errorInfo) {
   // Overriding this can silence these warnings e.g. for tests.
   // See https://github.com/facebook/react/pull/13384
   // Caught by error boundary
   {
-    var componentStack = errorInfo.componentStack != null ? errorInfo.componentStack : '';
-    var componentNameMessage = componentName ? "The above error occurred in the <" + componentName + "> component:" : 'The above error occurred in one of your React components:'; // In development, we provide our own message which includes the component stack
+    var componentNameMessage = componentName ? "The above error occurred in the <" + componentName + "> component." : 'The above error occurred in one of your React components.'; // In development, we provide our own message which includes the component stack
     // in addition to the error.
-    // Don't transform to our wrapper
 
-    console['error']('%o\n\n%s\n%s\n\n%s', error, componentNameMessage, componentStack, "React will try to recreate this component tree from scratch " + ("using the error boundary you provided, " + (errorBoundaryName || 'Anonymous') + "."));
+    var recreateMessage = "React will try to recreate this component tree from scratch " + ("using the error boundary you provided, " + (errorBoundaryName || 'Anonymous') + ".");
+
+    {
+      // The current Fiber is disconnected at this point which means that console printing
+      // cannot add a component stack since it terminates at the deletion node. This is not
+      // a problem for owner stacks which are not disconnected but for the parent component
+      // stacks we need to use the snapshot we've previously extracted.
+      var componentStack = errorInfo.componentStack != null ? errorInfo.componentStack : ''; // Don't transform to our wrapper
+
+      console['error']('%o\n\n%s\n\n%s\n%s', error$1, componentNameMessage, recreateMessage, componentStack);
+    }
   }
 }
 function defaultOnRecoverableError(error, errorInfo) {
@@ -14447,7 +14474,11 @@ function createRootErrorUpdate(root, errorInfo, lane) {
   };
 
   update.callback = function () {
+    var prevFiber = getCurrentFiber(); // should just be the root
+
+    setCurrentDebugFiberInDEV(errorInfo.source);
     logUncaughtError(root, errorInfo);
+    setCurrentDebugFiberInDEV(prevFiber);
   };
 
   return update;
@@ -14474,7 +14505,11 @@ function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
 
+      var prevFiber = getCurrentFiber(); // should be the error boundary
+
+      setCurrentDebugFiberInDEV(errorInfo.source);
       logCaughtError(root, fiber, errorInfo);
+      setCurrentDebugFiberInDEV(prevFiber);
     };
   }
 
@@ -14487,7 +14522,11 @@ function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
 
+      var prevFiber = getCurrentFiber(); // should be the error boundary
+
+      setCurrentDebugFiberInDEV(errorInfo.source);
       logCaughtError(root, fiber, errorInfo);
+      setCurrentDebugFiberInDEV(prevFiber);
 
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
@@ -24212,7 +24251,9 @@ function commitRootImpl(root, recoverableErrors, transitions, didIncludeRenderPh
     for (var i = 0; i < recoverableErrors.length; i++) {
       var recoverableError = recoverableErrors[i];
       var errorInfo = makeErrorInfo(recoverableError.stack);
+      setCurrentDebugFiberInDEV(recoverableError.source);
       onRecoverableError(recoverableError.value, errorInfo);
+      resetCurrentDebugFiberInDEV();
     }
   } // If the passive effects are the result of a discrete render, flush them
   // synchronously at the end of the current task so that the result is
@@ -26042,7 +26083,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-477cc72f';
+var ReactVersion = '19.0.0-rc-1ca22f1f';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
