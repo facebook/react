@@ -9635,9 +9635,7 @@ function runActionStateAction(actionQueue, setPendingState, setState, payload) {
   var prevState = actionQueue.state; // This is a fork of startTransition
 
   var prevTransition = ReactSharedInternals.T;
-  var currentTransition = {
-    _callbacks: new Set()
-  };
+  var currentTransition = {};
   ReactSharedInternals.T = currentTransition;
 
   {
@@ -9650,11 +9648,15 @@ function runActionStateAction(actionQueue, setPendingState, setState, payload) {
 
   try {
     var returnValue = action(prevState, payload);
+    var onStartTransitionFinish = ReactSharedInternals.S;
+
+    if (onStartTransitionFinish !== null) {
+      onStartTransitionFinish(currentTransition, returnValue);
+    }
 
     if (returnValue !== null && typeof returnValue === 'object' && // $FlowFixMe[method-unbinding]
     typeof returnValue.then === 'function') {
-      var thenable = returnValue;
-      notifyTransitionCallbacks(currentTransition, thenable); // Attach a listener to read the return state of the action. As soon as
+      var thenable = returnValue; // Attach a listener to read the return state of the action. As soon as
       // this resolves, we can run the next action in the sequence.
 
       thenable.then(function (nextState) {
@@ -10239,9 +10241,7 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
   var previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(higherEventPriority(previousPriority, ContinuousEventPriority));
   var prevTransition = ReactSharedInternals.T;
-  var currentTransition = {
-    _callbacks: new Set()
-  };
+  var currentTransition = {};
 
   {
     // We don't really need to use an optimistic update here, because we
@@ -10267,7 +10267,12 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
 
   try {
     if (enableAsyncActions) {
-      var returnValue = callback(); // Check if we're inside an async action scope. If so, we'll entangle
+      var returnValue = callback();
+      var onStartTransitionFinish = ReactSharedInternals.S;
+
+      if (onStartTransitionFinish !== null) {
+        onStartTransitionFinish(currentTransition, returnValue);
+      } // Check if we're inside an async action scope. If so, we'll entangle
       // this new action with the existing scope.
       //
       // If we're not already inside an async action scope, and this action is
@@ -10276,9 +10281,9 @@ function startTransition(fiber, queue, pendingState, finishedState, callback, op
       // In the async case, the resulting render will suspend until the async
       // action scope has finished.
 
+
       if (returnValue !== null && typeof returnValue === 'object' && typeof returnValue.then === 'function') {
-        var thenable = returnValue;
-        notifyTransitionCallbacks(currentTransition, thenable); // Create a thenable that resolves to `finishedState` once the async
+        var thenable = returnValue; // Create a thenable that resolves to `finishedState` once the async
         // action has completed.
 
         var thenableForFinishedState = chainThenableValue(thenable, finishedState);
@@ -17329,30 +17334,42 @@ function popCacheProvider(workInProgress, cache) {
   popProvider(CacheContext, workInProgress);
 }
 
-function requestCurrentTransition() {
-  var transition = ReactSharedInternals.T;
+// the shared internals object. This is used by the isomorphic implementation of
+// startTransition to compose all the startTransitions together.
+//
+//   function startTransition(fn) {
+//     return startTransitionDOM(() => {
+//       return startTransitionART(() => {
+//         return startTransitionThreeFiber(() => {
+//           // and so on...
+//           return fn();
+//         });
+//       });
+//     });
+//   }
+//
+// Currently we only compose together the code that runs at the end of each
+// startTransition, because for now that's sufficient — the part that sets
+// isTransition=true on the stack uses a separate shared internal field. But
+// really we should delete the shared field and track isTransition per
+// reconciler. Leaving this for a future PR.
 
-  if (transition !== null) {
-    // Whenever a transition update is scheduled, register a callback on the
-    // transition object so we can get the return value of the scope function.
-    transition._callbacks.add(handleAsyncAction);
-  }
+var prevOnStartTransitionFinish = ReactSharedInternals.S;
 
-  return transition;
-}
-
-function handleAsyncAction(transition, thenable) {
-  {
-    // This is an async action.
+ReactSharedInternals.S = function onStartTransitionFinishForReconciler(transition, returnValue) {
+  if (typeof returnValue === 'object' && returnValue !== null && typeof returnValue.then === 'function') {
+    // This is an async action
+    var thenable = returnValue;
     entangleAsyncAction(transition, thenable);
   }
-}
 
-function notifyTransitionCallbacks(transition, returnValue) {
-  var callbacks = transition._callbacks;
-  callbacks.forEach(function (callback) {
-    return callback(transition, returnValue);
-  });
+  if (prevOnStartTransitionFinish !== null) {
+    prevOnStartTransitionFinish(transition, returnValue);
+  }
+};
+
+function requestCurrentTransition() {
+  return ReactSharedInternals.T;
 } // When retrying a Suspense/Offscreen boundary, we restore the cache that was
 // used during the previous render by placing it here, on the stack.
 
@@ -28063,7 +28080,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-8a76092c';
+var ReactVersion = '19.0.0-www-modern-62a5edf0';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

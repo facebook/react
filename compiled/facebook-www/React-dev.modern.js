@@ -22,7 +22,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-var ReactVersion = '19.0.0-www-modern-005a649e';
+var ReactVersion = '19.0.0-www-modern-7638663c';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
@@ -564,7 +564,8 @@ function getComponentNameFromType(type) {
 var ReactSharedInternals = {
   H: null,
   A: null,
-  T: null
+  T: null,
+  S: null
 };
 
 {
@@ -2959,13 +2960,8 @@ reportError : function (error) {
 };
 
 function startTransition(scope, options) {
-  var prevTransition = ReactSharedInternals.T; // Each renderer registers a callback to receive the return value of
-  // the scope function. This is used to implement async actions.
-
-  var callbacks = new Set();
-  var transition = {
-    _callbacks: callbacks
-  };
+  var prevTransition = ReactSharedInternals.T;
+  var transition = {};
   ReactSharedInternals.T = transition;
   var currentTransition = ReactSharedInternals.T;
 
@@ -2985,11 +2981,13 @@ function startTransition(scope, options) {
   {
     try {
       var returnValue = scope();
+      var onStartTransitionFinish = ReactSharedInternals.S;
+
+      if (onStartTransitionFinish !== null) {
+        onStartTransitionFinish(transition, returnValue);
+      }
 
       if (typeof returnValue === 'object' && returnValue !== null && typeof returnValue.then === 'function') {
-        callbacks.forEach(function (callback) {
-          return callback(currentTransition, returnValue);
-        });
         returnValue.then(noop, reportGlobalError);
       }
     } catch (error) {

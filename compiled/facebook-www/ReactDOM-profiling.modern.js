@@ -3667,16 +3667,18 @@ function runActionStateAction(actionQueue, setPendingState, setState, payload) {
   var action = actionQueue.action,
     prevState = actionQueue.state,
     prevTransition = ReactSharedInternals.T,
-    currentTransition = { _callbacks: new Set() };
+    currentTransition = {};
   ReactSharedInternals.T = currentTransition;
   setPendingState(!0);
   try {
-    var returnValue = action(prevState, payload);
+    var returnValue = action(prevState, payload),
+      onStartTransitionFinish = ReactSharedInternals.S;
+    null !== onStartTransitionFinish &&
+      onStartTransitionFinish(currentTransition, returnValue);
     null !== returnValue &&
     "object" === typeof returnValue &&
     "function" === typeof returnValue.then
-      ? (notifyTransitionCallbacks(currentTransition, returnValue),
-        returnValue.then(
+      ? (returnValue.then(
           function (nextState) {
             actionQueue.state = nextState;
             finishRunningActionStateAction(
@@ -4020,7 +4022,7 @@ function startTransition(
   Internals.p =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactSharedInternals.T,
-    currentTransition = { _callbacks: new Set() };
+    currentTransition = {};
   ReactSharedInternals.T = currentTransition;
   dispatchOptimisticSetState(fiber, !1, queue, pendingState);
   enableTransitionTracing &&
@@ -4029,13 +4031,15 @@ function startTransition(
     ((currentTransition.name = options.name),
     (currentTransition.startTime = now$1()));
   try {
-    var returnValue = callback();
+    var returnValue = callback(),
+      onStartTransitionFinish = ReactSharedInternals.S;
+    null !== onStartTransitionFinish &&
+      onStartTransitionFinish(currentTransition, returnValue);
     if (
       null !== returnValue &&
       "object" === typeof returnValue &&
       "function" === typeof returnValue.then
     ) {
-      notifyTransitionCallbacks(currentTransition, returnValue);
       var thenableForFinishedState = chainThenableValue(
         returnValue,
         finishedState
@@ -4105,7 +4109,6 @@ function ensureFormComponentIsStateful(formFiber) {
   return existingStateHook;
 }
 function requestFormReset$1(formFiber) {
-  requestCurrentTransition();
   var resetStateQueue = ensureFormComponentIsStateful(formFiber).next.queue;
   dispatchSetState(formFiber, resetStateQueue, {});
 }
@@ -4198,7 +4201,6 @@ function dispatchSetState(fiber, queue, action) {
   enableSchedulingProfiler && markStateUpdateScheduled(fiber, lane);
 }
 function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue, action) {
-  requestCurrentTransition();
   action = {
     lane: 2,
     revertLane: requestTransitionLane(),
@@ -7308,19 +7310,15 @@ function releaseCache(cache) {
       cache.controller.abort();
     });
 }
-function requestCurrentTransition() {
-  var transition = ReactSharedInternals.T;
-  null !== transition && transition._callbacks.add(handleAsyncAction);
-  return transition;
-}
-function handleAsyncAction(transition, thenable) {
-  entangleAsyncAction(transition, thenable);
-}
-function notifyTransitionCallbacks(transition, returnValue) {
-  transition._callbacks.forEach(function (callback) {
-    return callback(transition, returnValue);
-  });
-}
+var prevOnStartTransitionFinish = ReactSharedInternals.S;
+ReactSharedInternals.S = function (transition, returnValue) {
+  "object" === typeof returnValue &&
+    null !== returnValue &&
+    "function" === typeof returnValue.then &&
+    entangleAsyncAction(transition, returnValue);
+  null !== prevOnStartTransitionFinish &&
+    prevOnStartTransitionFinish(transition, returnValue);
+};
 var resumedCache = createCursor(null),
   transitionStack = createCursor(null);
 function peekCacheFromPool() {
@@ -10918,7 +10916,7 @@ var legacyErrorBoundariesThatAlreadyFailed = null,
 function requestUpdateLane() {
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== requestCurrentTransition()) {
+  if (null !== ReactSharedInternals.T) {
     var actionScopeLane = currentEntangledLane;
     return 0 !== actionScopeLane ? actionScopeLane : requestTransitionLane();
   }
@@ -17180,7 +17178,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1799 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-261a4fd2",
+  version: "19.0.0-www-modern-86c3ea22",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17224,7 +17222,7 @@ var devToolsConfig$jscomp$inline_1799 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-261a4fd2"
+  reconcilerVersion: "19.0.0-www-modern-86c3ea22"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -17585,7 +17583,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-261a4fd2";
+exports.version = "19.0.0-www-modern-86c3ea22";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
