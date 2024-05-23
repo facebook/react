@@ -154,10 +154,7 @@ import {
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
-import {
-  notifyTransitionCallbacks,
-  requestCurrentTransition,
-} from './ReactFiberTransition';
+import {requestCurrentTransition} from './ReactFiberTransition';
 
 export type Update<S, A> = {
   lane: Lane,
@@ -2020,9 +2017,7 @@ function runActionStateAction<S, P>(
 
   // This is a fork of startTransition
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: BatchConfigTransition = {
-    _callbacks: new Set<(BatchConfigTransition, mixed) => mixed>(),
-  };
+  const currentTransition: BatchConfigTransition = {};
   ReactSharedInternals.T = currentTransition;
   if (__DEV__) {
     ReactSharedInternals.T._updatedFibers = new Set();
@@ -2034,6 +2029,10 @@ function runActionStateAction<S, P>(
 
   try {
     const returnValue = action(prevState, payload);
+    const onStartTransitionFinish = ReactSharedInternals.S;
+    if (onStartTransitionFinish !== null) {
+      onStartTransitionFinish(currentTransition, returnValue);
+    }
     if (
       returnValue !== null &&
       typeof returnValue === 'object' &&
@@ -2041,7 +2040,6 @@ function runActionStateAction<S, P>(
       typeof returnValue.then === 'function'
     ) {
       const thenable = ((returnValue: any): Thenable<Awaited<S>>);
-      notifyTransitionCallbacks(currentTransition, thenable);
 
       // Attach a listener to read the return state of the action. As soon as
       // this resolves, we can run the next action in the sequence.
@@ -2843,9 +2841,7 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: BatchConfigTransition = {
-    _callbacks: new Set<(BatchConfigTransition, mixed) => mixed>(),
-  };
+  const currentTransition: BatchConfigTransition = {};
 
   if (enableAsyncActions) {
     // We don't really need to use an optimistic update here, because we
@@ -2876,6 +2872,10 @@ function startTransition<S>(
   try {
     if (enableAsyncActions) {
       const returnValue = callback();
+      const onStartTransitionFinish = ReactSharedInternals.S;
+      if (onStartTransitionFinish !== null) {
+        onStartTransitionFinish(currentTransition, returnValue);
+      }
 
       // Check if we're inside an async action scope. If so, we'll entangle
       // this new action with the existing scope.
@@ -2891,7 +2891,6 @@ function startTransition<S>(
         typeof returnValue.then === 'function'
       ) {
         const thenable = ((returnValue: any): Thenable<mixed>);
-        notifyTransitionCallbacks(currentTransition, thenable);
         // Create a thenable that resolves to `finishedState` once the async
         // action has completed.
         const thenableForFinishedState = chainThenableValue(

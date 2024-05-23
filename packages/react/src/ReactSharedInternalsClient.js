@@ -15,6 +15,7 @@ export type SharedStateClient = {
   H: null | Dispatcher, // ReactCurrentDispatcher for Hooks
   A: null | AsyncDispatcher, // ReactCurrentCache for Cache
   T: null | BatchConfigTransition, // ReactCurrentBatchConfig for Transitions
+  S: null | ((BatchConfigTransition, mixed) => void), // onStartTransitionFinish
 
   // DEV-only
 
@@ -43,6 +44,7 @@ const ReactSharedInternals: SharedStateClient = ({
   H: null,
   A: null,
   T: null,
+  S: null,
 }: any);
 
 if (__DEV__) {
