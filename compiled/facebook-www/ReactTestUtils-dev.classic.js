@@ -101,6 +101,13 @@ var Hydrating =
 /*                    */
 4096; // You can change the rest (and add more).
 
+var assign = Object.assign;
+
+{
+  var PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+  new PossiblyWeakMap();
+}
+
 function getNearestMountedFiber(fiber) {
   var node = fiber;
   var nearestMounted = fiber;
@@ -304,8 +311,6 @@ function findCurrentFiberUsingSlowPath(fiber) {
 
   return alternate;
 }
-
-var assign = Object.assign;
 
 /**
  * `charCode` represents the actual "character code" and is safe to use with
