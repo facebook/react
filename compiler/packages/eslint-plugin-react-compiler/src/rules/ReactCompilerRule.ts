@@ -137,7 +137,9 @@ const rule: Rule.RuleModule = {
         transformFromAstSync(babelAST, sourceCode, {
           // Avoid having conflicting configs between our config using `[PluginProposalPrivateMethods, { loose: true }]`
           // and the user config (that can have a different config for @babel/plugin-transform-class-properties, @babel/plugin-transform-private-methods, or @babel/plugin-transform-private-property-in-object)
-          configFile: false,
+          configFile: false, // for babel.config.*
+          babelrc: false, // for .babelrc
+
           filename,
           highlightCode: false,
           retainLines: true,
