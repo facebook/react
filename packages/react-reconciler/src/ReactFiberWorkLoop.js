@@ -3038,7 +3038,9 @@ function commitRootImpl(
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
       const errorInfo = makeErrorInfo(recoverableError.stack);
+      setCurrentDebugFiberInDEV(recoverableError.source);
       onRecoverableError(recoverableError.value, errorInfo);
+      resetCurrentDebugFiberInDEV();
     }
   }
 

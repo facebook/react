@@ -2586,16 +2586,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
           [root]
-              <ErrorBoundary> ✕
+              <ErrorBoundary>
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
           [root]
-          →    <ErrorBoundary> ✕
+               <ErrorBoundary>
         `);
 
         utils.act(() => unmount());
@@ -2648,16 +2646,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
           [root]
-              <ErrorBoundary> ✕
+              <ErrorBoundary>
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 0
           [root]
-          →    <ErrorBoundary> ✕
+               <ErrorBoundary>
         `);
 
         utils.act(() => unmount());
@@ -2705,18 +2701,18 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 0
+          ✕ 1, ⚠ 0
           [root]
-            ▾ <ErrorBoundary> ✕
+            ▾ <ErrorBoundary>
                 <Child> ✕
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 0
+          ✕ 1, ⚠ 0
           [root]
-          →  ▾ <ErrorBoundary> ✕
-                 <Child> ✕
+             ▾ <ErrorBoundary>
+          →      <Child> ✕
         `);
       });
     });
