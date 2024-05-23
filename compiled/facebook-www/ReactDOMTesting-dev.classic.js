@@ -27891,7 +27891,10 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
 function commitRootWhenReady(root, finishedWork, recoverableErrors, transitions, didIncludeRenderPhaseUpdate, lanes, spawnedLane) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
-  if (finishedWork.subtreeFlags & ShouldSuspendCommit) {
+  var BothVisibilityAndMaySuspendCommit = Visibility | MaySuspendCommit;
+  var subtreeFlags = finishedWork.subtreeFlags;
+
+  if (subtreeFlags & ShouldSuspendCommit || (subtreeFlags & BothVisibilityAndMaySuspendCommit) === BothVisibilityAndMaySuspendCommit) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
     startSuspendingCommit(); // This will walk the completed fiber tree and attach listeners to all
@@ -31562,7 +31565,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-8d698026';
+var ReactVersion = '19.0.0-www-classic-fa9aeb29';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {

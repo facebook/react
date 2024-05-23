@@ -9624,25 +9624,26 @@ module.exports = function ($$$config) {
     lanes,
     spawnedLane
   ) {
-    if (
-      finishedWork.subtreeFlags & 8192 &&
-      (startSuspendingCommit(),
-      accumulateSuspenseyCommitOnFiber(finishedWork),
-      (finishedWork = waitForCommitToBeReady()),
-      null !== finishedWork)
-    ) {
-      root.cancelPendingCommit = finishedWork(
-        commitRoot.bind(
-          null,
-          root,
-          recoverableErrors,
-          transitions,
-          didIncludeRenderPhaseUpdate
-        )
-      );
-      markRootSuspended(root, lanes, spawnedLane);
-      return;
-    }
+    var subtreeFlags = finishedWork.subtreeFlags;
+    if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+      if (
+        (startSuspendingCommit(),
+        accumulateSuspenseyCommitOnFiber(finishedWork),
+        (finishedWork = waitForCommitToBeReady()),
+        null !== finishedWork)
+      ) {
+        root.cancelPendingCommit = finishedWork(
+          commitRoot.bind(
+            null,
+            root,
+            recoverableErrors,
+            transitions,
+            didIncludeRenderPhaseUpdate
+          )
+        );
+        markRootSuspended(root, lanes, spawnedLane);
+        return;
+      }
     commitRoot(
       root,
       recoverableErrors,
@@ -12158,7 +12159,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-d82cd544"
+      reconcilerVersion: "19.0.0-www-modern-b311bf05"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

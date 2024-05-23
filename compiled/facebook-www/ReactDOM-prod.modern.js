@@ -10569,25 +10569,26 @@ function commitRootWhenReady(
   lanes,
   spawnedLane
 ) {
-  if (
-    finishedWork.subtreeFlags & 8192 &&
-    ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
-    accumulateSuspenseyCommitOnFiber(finishedWork),
-    (finishedWork = waitForCommitToBeReady()),
-    null !== finishedWork)
-  ) {
-    root.cancelPendingCommit = finishedWork(
-      commitRoot.bind(
-        null,
-        root,
-        recoverableErrors,
-        transitions,
-        didIncludeRenderPhaseUpdate
-      )
-    );
-    markRootSuspended(root, lanes, spawnedLane);
-    return;
-  }
+  var subtreeFlags = finishedWork.subtreeFlags;
+  if (subtreeFlags & 8192 || 16785408 === (subtreeFlags & 16785408))
+    if (
+      ((suspendedState = { stylesheets: null, count: 0, unsuspend: noop }),
+      accumulateSuspenseyCommitOnFiber(finishedWork),
+      (finishedWork = waitForCommitToBeReady()),
+      null !== finishedWork)
+    ) {
+      root.cancelPendingCommit = finishedWork(
+        commitRoot.bind(
+          null,
+          root,
+          recoverableErrors,
+          transitions,
+          didIncludeRenderPhaseUpdate
+        )
+      );
+      markRootSuspended(root, lanes, spawnedLane);
+      return;
+    }
   commitRoot(
     root,
     recoverableErrors,
@@ -16432,7 +16433,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1713 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-3717c12a",
+  version: "19.0.0-www-modern-33a180b8",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2182 = {
@@ -16462,7 +16463,7 @@ var internals$jscomp$inline_2182 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-3717c12a"
+  reconcilerVersion: "19.0.0-www-modern-33a180b8"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2183 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16836,4 +16837,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-3717c12a";
+exports.version = "19.0.0-www-modern-33a180b8";

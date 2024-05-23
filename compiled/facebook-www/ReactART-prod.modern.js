@@ -8787,7 +8787,8 @@ function commitRootWhenReady(
   lanes,
   spawnedLane
 ) {
-  finishedWork.subtreeFlags & 8192 &&
+  lanes = finishedWork.subtreeFlags;
+  (lanes & 8192 || 16785408 === (lanes & 16785408)) &&
     accumulateSuspenseyCommitOnFiber(finishedWork);
   commitRoot(
     root,
@@ -10123,7 +10124,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-0d2856c7",
+    version: "19.0.0-www-modern-4c2dd93a",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1345 = {
@@ -10154,7 +10155,7 @@ var internals$jscomp$inline_1345 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-0d2856c7"
+  reconcilerVersion: "19.0.0-www-modern-4c2dd93a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1346 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
