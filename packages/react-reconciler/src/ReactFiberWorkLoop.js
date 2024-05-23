@@ -126,6 +126,7 @@ import {
   MountLayoutDev,
   DidDefer,
   ShouldSuspendCommit,
+  MaySuspendCommit,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -1185,7 +1186,13 @@ function commitRootWhenReady(
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
-  if (finishedWork.subtreeFlags & ShouldSuspendCommit) {
+  const BothVisibilityAndMaySuspendCommit = Visibility | MaySuspendCommit;
+  const subtreeFlags = finishedWork.subtreeFlags;
+  if (
+    subtreeFlags & ShouldSuspendCommit ||
+    (subtreeFlags & BothVisibilityAndMaySuspendCommit) ===
+      BothVisibilityAndMaySuspendCommit
+  ) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
     startSuspendingCommit();
