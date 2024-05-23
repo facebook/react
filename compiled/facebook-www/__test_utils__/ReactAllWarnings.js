@@ -129,7 +129,6 @@ export default [
   "Directly setting property `innerHTML` is not permitted. For more information, lookup documentation on `dangerouslySetInnerHTML`.",
   "Dispatching inst must not be null",
   "Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. You can only call Hooks at the top level of your React function. For more information, see https://react.dev/link/rules-of-hooks",
-  "Each child in a list should have a unique \"key\" prop. See https://react.dev/link/warning-keys for more information.",
   "Each child in a list should have a unique \"key\" prop.%s%s See https://react.dev/link/warning-keys for more information.",
   "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).",
   "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.",

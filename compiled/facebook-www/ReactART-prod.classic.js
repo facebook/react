@@ -10324,7 +10324,7 @@ function createFiberFromTypeAndProps(
               break a;
           }
         throw Error(
-          formatProdErrorMessage(130, null == type ? type : typeof type, "")
+          formatProdErrorMessage(130, null === type ? "null" : typeof type, "")
         );
     }
   pendingProps = createFiber(fiberTag, pendingProps, key, mode);
@@ -10648,7 +10648,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-a5d5fa11",
+    version: "19.0.0-www-classic-5df18b01",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1358 = {
@@ -10679,7 +10679,7 @@ var internals$jscomp$inline_1358 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-a5d5fa11"
+  reconcilerVersion: "19.0.0-www-classic-5df18b01"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1359 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

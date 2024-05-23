@@ -10768,7 +10768,11 @@ module.exports = function ($$$config) {
                 break a;
             }
           throw Error(
-            formatProdErrorMessage(130, null == type ? type : typeof type, "")
+            formatProdErrorMessage(
+              130,
+              null === type ? "null" : typeof type,
+              ""
+            )
           );
       }
     pendingProps = createFiber(fiberTag, pendingProps, key, mode);
@@ -12154,7 +12158,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-24c867c9"
+      reconcilerVersion: "19.0.0-www-modern-d82cd544"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

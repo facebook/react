@@ -12960,7 +12960,7 @@ function createFiberFromTypeAndProps(
               break a;
           }
         throw Error(
-          formatProdErrorMessage(130, null == type ? type : typeof type, "")
+          formatProdErrorMessage(130, null === type ? "null" : typeof type, "")
         );
     }
   pendingProps = createFiber(fiberTag, pendingProps, key, mode);
@@ -17833,7 +17833,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1832 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-97671a1d",
+  version: "19.0.0-www-classic-2c907cc2",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17877,7 +17877,7 @@ var devToolsConfig$jscomp$inline_1832 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-97671a1d"
+  reconcilerVersion: "19.0.0-www-classic-2c907cc2"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -18368,7 +18368,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-97671a1d";
+exports.version = "19.0.0-www-classic-2c907cc2";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

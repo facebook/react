@@ -49,7 +49,9 @@ var REACT_OFFSCREEN_TYPE = Symbol.for('react.offscreen');
 var REACT_LEGACY_HIDDEN_TYPE = Symbol.for('react.legacy_hidden');
 var REACT_TRACING_MARKER_TYPE = Symbol.for('react.tracing_marker');
 
-var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
+var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference'); // This function is deprecated. Don't use. Only the renderer knows what a valid type is.
+// TODO: Delete this when enableOwnerStacks ships.
+
 function isValidElementType(type) {
   if (typeof type === 'string' || typeof type === 'function') {
     return true;

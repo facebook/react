@@ -51,8 +51,8 @@ function printWarning(level, format, args) {
 
     var ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE; // Defensive in case this is fired before React is initialized.
 
-    if (ReactSharedInternals != null) {
-      var stack = ReactSharedInternals.getStackAddendum();
+    if (ReactSharedInternals != null && ReactSharedInternals.getCurrentStack) {
+      var stack = ReactSharedInternals.getCurrentStack();
 
       if (stack !== '') {
         format += '%s';
@@ -5395,7 +5395,7 @@ var warnForMissingKey = function (child, returnFiber) {};
       return;
     }
 
-    if (!child._store || child._store.validated || child.key != null) {
+    if (!child._store || (child._store.validated || child.key != null) && child._store.validated !== 2) {
       return;
     }
 
@@ -5404,17 +5404,113 @@ var warnForMissingKey = function (child, returnFiber) {};
     } // $FlowFixMe[cannot-write] unable to narrow type from mixed to writable object
 
 
-    child._store.validated = true;
-    var componentName = getComponentNameFromFiber(returnFiber) || 'Component';
+    child._store.validated = 1;
+    var componentName = getComponentNameFromFiber(returnFiber);
+    var componentKey = componentName || 'null';
 
-    if (ownerHasKeyUseWarning[componentName]) {
+    if (ownerHasKeyUseWarning[componentKey]) {
       return;
     }
 
-    ownerHasKeyUseWarning[componentName] = true;
+    ownerHasKeyUseWarning[componentKey] = true;
+    var childOwner = child._owner;
+    var parentOwner = returnFiber._debugOwner;
+    var currentComponentErrorInfo = '';
 
-    error('Each child in a list should have a unique ' + '"key" prop. See https://react.dev/link/warning-keys for ' + 'more information.');
+    if (parentOwner && typeof parentOwner.tag === 'number') {
+      var name = getComponentNameFromFiber(parentOwner);
+
+      if (name) {
+        currentComponentErrorInfo = '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
+
+    if (!currentComponentErrorInfo) {
+      if (componentName) {
+        currentComponentErrorInfo = "\n\nCheck the top-level render call using <" + componentName + ">.";
+      }
+    } // Usually the current owner is the offender, but if it accepts children as a
+    // property, it may be the creator of the child that's responsible for
+    // assigning it a key.
+
+
+    var childOwnerAppendix = '';
+
+    if (childOwner != null && parentOwner !== childOwner) {
+      var ownerName = null;
+
+      if (typeof childOwner.tag === 'number') {
+        ownerName = getComponentNameFromFiber(childOwner);
+      } else if (typeof childOwner.name === 'string') {
+        ownerName = childOwner.name;
+      }
+
+      if (ownerName) {
+        // Give the component that originally created this child.
+        childOwnerAppendix = " It was passed a child from " + ownerName + ".";
+      }
+    } // We create a fake Fiber for the child to log the stack trace from.
+    // TODO: Refactor the warnForMissingKey calls to happen after fiber creation
+    // so that we can get access to the fiber that will eventually be created.
+    // That way the log can show up associated with the right instance in DevTools.
+
+
+    var fiber = createFiberFromElement(child, returnFiber.mode, 0);
+    fiber.return = returnFiber;
+    var prevDebugFiber = getCurrentFiber();
+    setCurrentFiber(fiber);
+
+    error('Each child in a list should have a unique "key" prop.' + '%s%s See https://react.dev/link/warning-keys for more information.', currentComponentErrorInfo, childOwnerAppendix);
+
+    setCurrentFiber(prevDebugFiber);
   };
+} // Given a fragment, validate that it can only be provided with fragment props
+// We do this here instead of BeginWork because the Fragment fiber doesn't have
+// the whole props object, only the children and is shared with arrays.
+
+
+function validateFragmentProps(element, fiber, returnFiber) {
+  {
+    var keys = Object.keys(element.props);
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+
+      if (key !== 'children' && key !== 'key') {
+        if (fiber === null) {
+          // For unkeyed root fragments there's no Fiber. We create a fake one just for
+          // error stack handling.
+          fiber = createFiberFromElement(element, returnFiber.mode, 0);
+          fiber.return = returnFiber;
+        }
+
+        var prevDebugFiber = getCurrentFiber();
+        setCurrentFiber(fiber);
+
+        error('Invalid prop `%s` supplied to `React.Fragment`. ' + 'React.Fragment can only have `key` and `children` props.', key);
+
+        setCurrentFiber(prevDebugFiber);
+        break;
+      }
+    }
+
+    if (element.ref !== null) {
+      if (fiber === null) {
+        // For unkeyed root fragments there's no Fiber. We create a fake one just for
+        // error stack handling.
+        fiber = createFiberFromElement(element, returnFiber.mode, 0);
+        fiber.return = returnFiber;
+      }
+
+      var _prevDebugFiber = getCurrentFiber();
+
+      setCurrentFiber(fiber);
+
+      error('Invalid attribute `ref` supplied to `React.Fragment`.');
+
+      setCurrentFiber(_prevDebugFiber);
+    }
+  }
 }
 
 function unwrapThenable(thenable) {
@@ -5632,7 +5728,9 @@ function createChildReconciler(shouldTrackSideEffects) {
     var elementType = element.type;
 
     if (elementType === REACT_FRAGMENT_TYPE) {
-      return updateFragment(returnFiber, current, element.props.children, lanes, element.key, debugInfo);
+      var updated = updateFragment(returnFiber, current, element.props.children, lanes, element.key, debugInfo);
+      validateFragmentProps(element, updated, returnFiber);
+      return updated;
     }
 
     if (current !== null) {
@@ -6376,6 +6474,7 @@ function createChildReconciler(shouldTrackSideEffects) {
               existing._debugInfo = debugInfo;
             }
 
+            validateFragmentProps(element, existing, returnFiber);
             return existing;
           }
         } else {
@@ -6419,6 +6518,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         created._debugInfo = debugInfo;
       }
 
+      validateFragmentProps(element, created, returnFiber);
       return created;
     } else {
       var _created4 = createFiberFromElement(element, returnFiber.mode, lanes);
@@ -6481,6 +6581,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     var isUnkeyedTopLevelFragment = typeof newChild === 'object' && newChild !== null && newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null;
 
     if (isUnkeyedTopLevelFragment) {
+      validateFragmentProps(newChild, null, returnFiber);
       newChild = newChild.props.children;
     } // Handle object types
 
@@ -22923,10 +23024,22 @@ key, pendingProps, owner, mode, lanes) {
           }
 
           var info = '';
+          var typeString;
 
           {
             if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
-              info += ' You likely forgot to export your component from the file ' + "it's defined in, or you might have mixed up default and " + 'named imports.';
+              info += ' You likely forgot to export your component from the file ' + "it's defined in, or you might have mixed up default and named imports.";
+            }
+
+            if (type === null) {
+              typeString = 'null';
+            } else if (isArray(type)) {
+              typeString = 'array';
+            } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+              typeString = "<" + (getComponentNameFromType(type.type) || 'Unknown') + " />";
+              info = ' Did you accidentally export a JSX literal instead of a component?';
+            } else {
+              typeString = typeof type;
             }
 
             var ownerName = owner ? getComponentNameFromOwner(owner) : null;
@@ -22936,7 +23049,7 @@ key, pendingProps, owner, mode, lanes) {
             }
           }
 
-          throw new Error('Element type is invalid: expected a string (for built-in ' + 'components) or a class/function (for composite components) ' + ("but got: " + (type == null ? type : typeof type) + "." + info));
+          throw new Error('Element type is invalid: expected a string (for built-in ' + 'components) or a class/function (for composite components) ' + ("but got: " + typeString + "." + info));
         }
     }
   }
@@ -23161,7 +23274,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-9eaf1ccb';
+var ReactVersion = '19.0.0-www-classic-d66ba86c';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
