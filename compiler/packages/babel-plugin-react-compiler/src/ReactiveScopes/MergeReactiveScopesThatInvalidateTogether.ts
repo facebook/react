@@ -13,7 +13,6 @@ import {
   Place,
   ReactiveBlock,
   ReactiveFunction,
-  ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeBlock,
   ReactiveScopeDependencies,
@@ -515,64 +514,7 @@ function scopeIsEligibleForMerging(scopeBlock: ReactiveScopeBlock): boolean {
      */
     return true;
   }
-  const visitor = new DeclarationTypeVisitor(scopeBlock.scope);
-  visitor.visitScope(scopeBlock, undefined);
-  return visitor.alwaysInvalidatesOnInputChange;
-}
-
-class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
-  scope: ReactiveScope;
-  alwaysInvalidatesOnInputChange: boolean = false;
-
-  constructor(scope: ReactiveScope) {
-    super();
-    this.scope = scope;
-  }
-
-  override visitScope(scopeBlock: ReactiveScopeBlock, state: void): void {
-    if (scopeBlock.scope.id !== this.scope.id) {
-      return;
-    }
-    this.traverseScope(scopeBlock, state);
-  }
-
-  override visitInstruction(
-    instruction: ReactiveInstruction,
-    state: void
-  ): void {
-    this.traverseInstruction(instruction, state);
-    if (
-      instruction.lvalue === null ||
-      !this.scope.declarations.has(instruction.lvalue.identifier.id)
-    ) {
-      /*
-       * no lvalue or this instruction isn't directly constructing a
-       * scope output value, skip
-       */
-      log(
-        `    skip instruction lvalue=${
-          instruction.lvalue?.identifier.id
-        } declaration?=${
-          instruction.lvalue != null &&
-          this.scope.declarations.has(instruction.lvalue.identifier.id)
-        } scope=${printReactiveScopeSummary(this.scope)}`
-      );
-      return;
-    }
-    switch (instruction.value.kind) {
-      case "FunctionExpression":
-      case "ArrayExpression":
-      case "JsxExpression":
-      case "JsxFragment":
-      case "ObjectExpression": {
-        /*
-         * These instruction types *always* allocate. If they execute
-         * they will produce a new value, triggering downstream reactive
-         * updates
-         */
-        this.alwaysInvalidatesOnInputChange = true;
-        break;
-      }
-    }
-  }
+  return [...scopeBlock.scope.declarations].some(([, decl]) =>
+    isAlwaysInvalidatingType(decl.identifier.type)
+  );
 }
