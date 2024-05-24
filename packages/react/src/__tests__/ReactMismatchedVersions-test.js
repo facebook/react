@@ -15,16 +15,22 @@ describe('ReactMismatchedVersions-test', () => {
     require('web-streams-polyfill/ponyfill/es6').ReadableStream;
   global.TextEncoder = require('util').TextEncoder;
 
-  jest.mock('react', () => {
-    const actualReact = jest.requireActual('react');
-    return {
-      ...actualReact,
-      version: '18.0.0-whoa-this-aint-the-right-react',
-      __actualVersion: actualReact.version,
-    };
+  let React;
+  let actualReactVersion;
+
+  beforeEach(() => {
+    jest.resetModules();
+    jest.mock('react', () => {
+      const actualReact = jest.requireActual('react');
+      return {
+        ...actualReact,
+        version: '18.0.0-whoa-this-aint-the-right-react',
+        __actualVersion: actualReact.version,
+      };
+    });
+    React = require('react');
+    actualReactVersion = React.__actualVersion;
   });
-  const React = require('react');
-  const actualReactVersion = React.__actualVersion;
 
   test('importing "react-dom/client" throws if version does not match React version', async () => {
     expect(() => require('react-dom/client')).toThrow(
@@ -122,6 +128,16 @@ describe('ReactMismatchedVersions-test', () => {
         'must have the exact same version. Instead got:\n' +
         '  - react:      18.0.0-whoa-this-aint-the-right-react\n' +
         `  - react-dom:  ${actualReactVersion}`,
+    );
+  });
+
+  // @gate source
+  test('importing "react-native-renderer" throws if version does not match React version', async () => {
+    expect(() => require('react-native-renderer')).toThrow(
+      'Incompatible React versions: The "react" and "react-native-renderer" packages ' +
+        'must have the exact same version. Instead got:\n' +
+        '  - react:                  18.0.0-whoa-this-aint-the-right-react\n' +
+        `  - react-native-renderer:  ${actualReactVersion}`,
     );
   });
 });
