@@ -2412,6 +2412,10 @@ function lowerExpression(
         loc: expr.node.loc ?? GeneratedSource,
       };
     }
+    case "TSNonNullExpression": {
+      let expr = exprPath as NodePath<t.TSNonNullExpression>;
+      return lowerExpression(builder, expr.get("expression"));
+    }
     default: {
       builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,

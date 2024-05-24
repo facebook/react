@@ -22,12 +22,10 @@ export const {
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses,
-  disableStringRefs,
   enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask,
   enableFastJSX,
   enableInfiniteRenderLoopDetection,
-  enableRefAsProp,
   passChildrenWhenCloningPersistedNodes,
 } = dynamicFlags;
 
@@ -94,6 +92,9 @@ export const enableUseDeferredValueInitialArg = true;
 export const disableClientCache = true;
 
 export const enableServerComponentLogs = true;
+
+export const enableRefAsProp = true;
+export const disableStringRefs = true;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;

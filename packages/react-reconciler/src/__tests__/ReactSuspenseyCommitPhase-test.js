@@ -44,6 +44,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     return (
       <suspensey-thing
         src={src}
+        timeout={100}
         onLoadStart={() => Scheduler.log(`Image requested [${src}]`)}
       />
     );
@@ -104,7 +105,49 @@ describe('ReactSuspenseyCommitPhase', () => {
     expect(root).toMatchRenderedOutput(<suspensey-thing src="B" />);
   });
 
-  test('does not suspend commit during urgent update', async () => {
+  test('suspend commit during initial mount at the root', async () => {
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<SuspenseyImage src="A" />);
+      });
+    });
+    assertLog(['Image requested [A]']);
+    expect(getSuspenseyThingStatus('A')).toBe('pending');
+    expect(root).toMatchRenderedOutput(null);
+
+    resolveSuspenseyThing('A');
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+  });
+
+  test('suspend commit during update at the root', async () => {
+    const root = ReactNoop.createRoot();
+    await act(() => resolveSuspenseyThing('A'));
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(null);
+    await act(async () => {
+      startTransition(() => {
+        root.render(<SuspenseyImage src="A" />);
+      });
+    });
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(<SuspenseyImage src="B" />);
+      });
+    });
+    assertLog(['Image requested [B]']);
+    expect(getSuspenseyThingStatus('B')).toBe('pending');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+
+    resolveSuspenseyThing('B');
+    expect(getSuspenseyThingStatus('B')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="B" />);
+  });
+
+  test('suspend commit during urgent initial mount', async () => {
     const root = ReactNoop.createRoot();
     await act(async () => {
       root.render(
@@ -113,14 +156,139 @@ describe('ReactSuspenseyCommitPhase', () => {
         </Suspense>,
       );
     });
-    // We intentionally don't preload during an urgent update because the
-    // resource will be inserted synchronously, anyway.
-    // TODO: Maybe we should, though? Could be that the browser is able to start
-    // the preload in background even though the main thread is blocked. Likely
-    // a micro-optimization either way because typically new content is loaded
-    // during a transition, not an urgent render.
-    expect(getSuspenseyThingStatus('A')).toBe(null);
+    assertLog(['Image requested [A]', 'Loading...']);
+    expect(getSuspenseyThingStatus('A')).toBe('pending');
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    resolveSuspenseyThing('A');
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
     expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+  });
+
+  test('suspend commit during urgent update', async () => {
+    const root = ReactNoop.createRoot();
+    await act(() => resolveSuspenseyThing('A'));
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <SuspenseyImage src="A" />
+        </Suspense>,
+      );
+    });
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+
+    resolveSuspenseyThing('A');
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <SuspenseyImage src="B" />
+        </Suspense>,
+      );
+    });
+    assertLog(['Image requested [B]', 'Loading...']);
+    expect(getSuspenseyThingStatus('B')).toBe('pending');
+    expect(root).toMatchRenderedOutput(
+      <>
+        <suspensey-thing src="A" hidden={true} />
+        {'Loading...'}
+      </>,
+    );
+
+    resolveSuspenseyThing('B');
+    expect(getSuspenseyThingStatus('B')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="B" />);
+  });
+
+  test('suspends commit during urgent initial mount at the root', async () => {
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<SuspenseyImage src="A" />);
+    });
+    assertLog(['Image requested [A]']);
+    expect(getSuspenseyThingStatus('A')).toBe('pending');
+    expect(root).toMatchRenderedOutput(null);
+
+    resolveSuspenseyThing('A');
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+  });
+
+  test('suspends commit during urgent update at the root', async () => {
+    const root = ReactNoop.createRoot();
+    await act(() => resolveSuspenseyThing('A'));
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(null);
+    await act(async () => {
+      root.render(<SuspenseyImage src="A" />);
+    });
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+
+    await act(async () => {
+      root.render(<SuspenseyImage src="B" />);
+    });
+    assertLog(['Image requested [B]']);
+    expect(getSuspenseyThingStatus('B')).toBe('pending');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+
+    resolveSuspenseyThing('B');
+    expect(getSuspenseyThingStatus('B')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="B" />);
+  });
+
+  // @TODO This isn't actually ideal behavior. We would really want the commit to suspend
+  // even if it is forced to be sync because we don't want to FOUC but refactoring the sync
+  // pathway is too risky to land right now so we just accept that we can still FOUC in this
+  // very specific case.
+  test('does not suspend commit during urgent initial mount at the root when sync rendering', async () => {
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      ReactNoop.flushSync(() => {
+        root.render(<SuspenseyImage src="A" />);
+      });
+    });
+    assertLog(['Image requested [A]']);
+    expect(getSuspenseyThingStatus('A')).toBe('pending');
+    // We would expect this to be null if we did in fact suspend this commit
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+
+    resolveSuspenseyThing('A');
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+  });
+
+  // @TODO This isn't actually ideal behavior. We would really want the commit to suspend
+  // even if it is forced to be sync because we don't want to FOUC but refactoring the sync
+  // pathway is too risky to land right now so we just accept that we can still FOUC in this
+  // very specific case.
+  test('does not suspend commit during urgent update at the root when sync rendering', async () => {
+    const root = ReactNoop.createRoot();
+    await act(() => resolveSuspenseyThing('A'));
+    expect(getSuspenseyThingStatus('A')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(null);
+    await act(async () => {
+      ReactNoop.flushSync(() => {
+        root.render(<SuspenseyImage src="A" />);
+      });
+    });
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="A" />);
+
+    await act(async () => {
+      ReactNoop.flushSync(() => {
+        root.render(<SuspenseyImage src="B" />);
+      });
+    });
+    assertLog(['Image requested [B]']);
+    expect(getSuspenseyThingStatus('B')).toBe('pending');
+    // We would expect this to be hidden if we did in fact suspend this commit
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="B" />);
+
+    resolveSuspenseyThing('B');
+    expect(getSuspenseyThingStatus('B')).toBe('fulfilled');
+    expect(root).toMatchRenderedOutput(<suspensey-thing src="B" />);
   });
 
   test('an urgent update interrupts a suspended commit', async () => {
