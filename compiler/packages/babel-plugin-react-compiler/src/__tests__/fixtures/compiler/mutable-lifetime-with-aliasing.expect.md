@@ -68,15 +68,15 @@ function mutate(x, y) {
 
 function Component(props) {
   const $ = _c(1);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a = {};
+
+    const x = {};
     const b = [a];
+    x.b = b;
     const c = {};
     const d = { c };
-
-    x = {};
-    x.b = b;
     const y = mutate(x, d);
     if (a) {
     }
@@ -89,12 +89,13 @@ function Component(props) {
     if (y) {
     }
 
+    t0 = x;
     mutate(x, null);
-    $[0] = x;
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
-  return x;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

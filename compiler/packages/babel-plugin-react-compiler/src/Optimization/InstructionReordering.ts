@@ -95,11 +95,10 @@ function reorderBlock(
         dependencies: [],
       }
     );
-    if (
-      getReorderingLevel(instr) === ReorderingLevel.None &&
-      previousIdentifier !== null
-    ) {
-      node.dependencies.push(previousIdentifier);
+    if (getReorderingLevel(instr) === ReorderingLevel.None) {
+      if (previousIdentifier !== null) {
+        node.dependencies.push(previousIdentifier);
+      }
       previousIdentifier = instr.lvalue.identifier.id;
     }
     for (const operand of eachInstructionValueOperand(instr.value)) {

@@ -49,10 +49,10 @@ import {
 
 const MyContext = createContext("my context value");
 function Component(t0) {
-  const $ = _c(4);
+  const $ = _c(5);
   try {
     $dispatcherGuard(0);
-    const { value } = t0;
+    print(identity(CONST_STRING0));
     let t1;
     if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
       t1 = getNumber();
@@ -60,6 +60,7 @@ function Component(t0) {
     } else {
       t1 = $[0];
     }
+    const { value } = t0;
     const [state, setState] = (function () {
       try {
         $dispatcherGuard(2);
@@ -68,23 +69,26 @@ function Component(t0) {
         $dispatcherGuard(3);
       }
     })();
-
-    print(identity(value + state));
+    print(value, state);
     let t2;
-    let t3;
     if ($[1] !== state) {
       t2 = () => {
         if (state === 4) {
           setState(5);
         }
       };
-      t3 = [state];
       $[1] = state;
       $[2] = t2;
-      $[3] = t3;
     } else {
       t2 = $[2];
-      t3 = $[3];
+    }
+    let t3;
+    if ($[3] !== state) {
+      t3 = [state];
+      $[3] = state;
+      $[4] = t3;
+    } else {
+      t3 = $[4];
     }
     (function () {
       try {
@@ -94,8 +98,7 @@ function Component(t0) {
         $dispatcherGuard(3);
       }
     })();
-    print(value, state);
-    print(identity(CONST_STRING0));
+    print(identity(value + state));
     return (function () {
       try {
         $dispatcherGuard(2);

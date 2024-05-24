@@ -35,17 +35,17 @@ import { c as _c } from "react/compiler-runtime"; // Here, element should not be
 function CaptureNotMutate(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props.el || $[1] !== props.x) {
+  if ($[0] !== props.x) {
+    t0 = foo(props.x);
+    $[0] = props.x;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  let t1;
+  if ($[2] !== props.el || $[3] !== t0) {
     const element = bar(props.el);
-    let t1;
-    if ($[3] !== props.x) {
-      t1 = foo(props.x);
-      $[3] = props.x;
-      $[4] = t1;
-    } else {
-      t1 = $[4];
-    }
-    const idx = t1;
+    const idx = t0;
 
     const fn = function () {
       const arr = { element };
@@ -54,15 +54,15 @@ function CaptureNotMutate(props) {
 
     const aliasedElement = fn();
 
-    t0 = aliasedElement;
+    t1 = aliasedElement;
     mutate(aliasedElement);
-    $[0] = props.el;
-    $[1] = props.x;
-    $[2] = t0;
+    $[2] = props.el;
+    $[3] = t0;
+    $[4] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[4];
   }
-  return t0;
+  return t1;
 }
 
 ```

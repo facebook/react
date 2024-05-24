@@ -33,6 +33,7 @@ function Component(props) {
     t0 = $[0];
   }
   const item = useFragment(FRAGMENT, props.item);
+  useFreeze(item);
   let t1;
   if ($[1] !== item) {
     const count = new MaybeMutable(item);
@@ -57,7 +58,6 @@ function Component(props) {
   } else {
     t2 = $[4];
   }
-  useFreeze(item);
   return t2;
 }
 

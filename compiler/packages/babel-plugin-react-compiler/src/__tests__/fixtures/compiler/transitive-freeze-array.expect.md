@@ -37,8 +37,8 @@ function Component(props) {
     const items = [x, y];
 
     t0 = [x, y, items];
-    mutate(y);
     items.pop();
+    mutate(y);
     $[0] = t0;
   } else {
     t0 = $[0];

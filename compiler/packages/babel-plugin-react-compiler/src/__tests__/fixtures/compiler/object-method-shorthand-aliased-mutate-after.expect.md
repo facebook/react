@@ -31,21 +31,21 @@ function useHook(t0) {
   const { value } = t0;
   let t1;
   if ($[0] !== value) {
-    t1 = {
+    const obj = {
       getValue() {
         return value;
       },
     };
+
+    t1 = obj;
+    const x = mutateAndReturn({ value });
+    mutate(x);
     $[0] = value;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
-  const obj = t1;
-  const x = mutateAndReturn({ value });
-
-  mutate(x);
-  return obj;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

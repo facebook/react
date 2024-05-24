@@ -55,8 +55,8 @@ function Foo(props) {
   } else {
     t1 = $[3];
   }
-  x;
   const cb = t1;
+  x;
   return cb;
 }
 

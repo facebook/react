@@ -20,23 +20,19 @@ function foo(x) {}
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component() {
-  const $ = _c(2);
-  let a;
+  const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a = [];
-    const b = a;
-
-    t0 = b;
-    foo(b);
-    $[0] = a;
-    $[1] = t0;
+    t0 = [];
+    $[0] = t0;
   } else {
-    a = $[0];
-    t0 = $[1];
+    t0 = $[0];
   }
+  const a = t0;
+  const b = a;
   useFreeze(a);
-  return t0;
+  foo(b);
+  return b;
 }
 
 function useFreeze() {}

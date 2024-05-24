@@ -36,8 +36,8 @@ function Component(props) {
     x = [];
     switch (props.p0) {
       case true: {
-        x.push(props.p3);
         x.push(props.p2);
+        x.push(props.p3);
       }
       case false: {
         y = x;

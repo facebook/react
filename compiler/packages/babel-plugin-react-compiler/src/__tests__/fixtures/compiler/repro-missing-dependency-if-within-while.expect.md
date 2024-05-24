@@ -48,8 +48,8 @@ export default function Component(props) {
     const { b } = props;
     while (i < 10) {
       if (someGlobal) {
-        i++;
         items.push(<div key={i}>{b}</div>);
+        i++;
       }
     }
 

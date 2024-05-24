@@ -38,8 +38,8 @@ import { useMemo } from "react";
 // propagated values
 function useFoo() {
   const $ = _c(1);
-  let t0;
   const constVal = 0;
+  let t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = [0];

@@ -20,25 +20,30 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(1);
-  const start = performance.now();
-
-  const time = performance.now() - start;
+  const $ = _c(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const now = Date.now();
-
-    t0 = (
+    t0 = Date.now();
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  const start = performance.now();
+  const time = performance.now() - start;
+  const now = t0;
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = (
       <div>
         rendering took
         {time} at {now}
       </div>
     );
-    $[0] = t0;
+    $[1] = t1;
   } else {
-    t0 = $[0];
+    t1 = $[1];
   }
-  return t0;
+  return t1;
 }
 
 ```

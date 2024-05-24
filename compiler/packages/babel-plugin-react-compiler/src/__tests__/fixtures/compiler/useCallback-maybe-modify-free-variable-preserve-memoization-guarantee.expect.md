@@ -45,32 +45,42 @@ import {
 } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(4);
   let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = makeObject_Primitives();
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
   let t1;
-  if ($[0] !== props.value) {
-    const free = makeObject_Primitives();
-    const free2 = makeObject_Primitives();
-    const part = free2.part;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = makeObject_Primitives();
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const free2 = t1;
 
-    t0 = () => {
+  useHook();
+  const free = t0;
+  const part = free2.part;
+  let t2;
+  if ($[2] !== props.value) {
+    t2 = () => {
       const x = makeObject_Primitives();
       x.value = props.value;
       mutate(x, free, part);
     };
-    const callback = t0;
-
-    t1 = callback;
-    mutate(free, part);
-    $[0] = props.value;
-    $[1] = t0;
-    $[2] = t1;
+    $[2] = props.value;
+    $[3] = t2;
   } else {
-    t0 = $[1];
-    t1 = $[2];
+    t2 = $[3];
   }
-  useHook();
-  return t1;
+  const callback = t2;
+
+  mutate(free, part);
+  return callback;
 }
 
 export const FIXTURE_ENTRYPOINT = {

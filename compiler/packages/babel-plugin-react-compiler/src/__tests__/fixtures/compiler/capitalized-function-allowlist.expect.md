@@ -32,12 +32,12 @@ import * as React from "react";
 const React$useState = React.useState;
 const THIS_IS_A_CONSTANT = () => {};
 function Component() {
-  THIS_IS_A_CONSTANT();
-  React.useState(1);
-  React$useState(0);
-  String("foo");
-  Number(3);
   Boolean(true);
+  Number(3);
+  String("foo");
+  React$useState(0);
+  React.useState(1);
+  THIS_IS_A_CONSTANT();
   return 3;
 }
 

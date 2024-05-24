@@ -25,8 +25,8 @@ function Component(props) {
     const { length: y } = x;
 
     t0 = [x, y];
-    foo(y);
     x.push(props.value);
+    foo(y);
     $[0] = props.value;
     $[1] = t0;
   } else {

@@ -47,14 +47,13 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(1);
 
-  const a = [];
-
-  const c = [a];
-
-  let x;
-  a.push(null);
   const b = [];
   b.push(props.cond);
+  const a = [];
+  a.push(null);
+
+  let x;
+  const c = [a];
   bb0: switch (c[0][0]) {
     case true: {
       x = 1;

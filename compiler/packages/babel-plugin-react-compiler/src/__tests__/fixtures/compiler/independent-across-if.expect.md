@@ -60,15 +60,15 @@ function Component(props) {
   const $ = _c(8);
   let a;
   let b;
-  if ($[0] !== props.b || $[1] !== props.a || $[2] !== props.c) {
+  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.c) {
     b = compute(props.b);
     a = compute(props.a);
     if (props.c) {
-      mutate(b);
       mutate(a);
+      mutate(b);
     }
-    $[0] = props.b;
-    $[1] = props.a;
+    $[0] = props.a;
+    $[1] = props.b;
     $[2] = props.c;
     $[3] = a;
     $[4] = b;

@@ -30,8 +30,8 @@ import { useMemo } from "react";
 
 function Component(t0) {
   const $ = _c(2);
-  let t1;
   const { propA, propB } = t0;
+  let t1;
   bb0: {
     if (propA) {
       let t2;

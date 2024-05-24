@@ -31,9 +31,9 @@ function component() {
 
     t0 = x;
     const y = {};
-    x.y = y;
     const z = [];
     y.z = z;
+    x.y = y;
     $[0] = t0;
   } else {
     t0 = $[0];

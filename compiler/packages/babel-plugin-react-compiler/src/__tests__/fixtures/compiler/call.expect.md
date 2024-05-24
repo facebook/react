@@ -46,8 +46,8 @@ function Component(props) {
   } else {
     t2 = $[2];
   }
-  foo(b);
   foo(a, b);
+  foo(b);
   return t2;
 }
 

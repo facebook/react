@@ -27,9 +27,9 @@ function foo() {
     const y = a;
 
     t0 = y;
-    mutate(a);
     const x = [];
     y.x = x;
+    mutate(a);
     $[0] = t0;
   } else {
     t0 = $[0];

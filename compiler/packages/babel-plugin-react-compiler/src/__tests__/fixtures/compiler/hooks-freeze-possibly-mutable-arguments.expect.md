@@ -45,9 +45,9 @@ function Component(props) {
     a = t0;
   }
 
+  useFreeze(a);
+  useFreeze(a);
   call(a);
-  useFreeze(a);
-  useFreeze(a);
   return a;
 }
 

@@ -14,9 +14,9 @@ function useHook(a, b) {
 
 ```
   1 | function useHook(a, b) {
-  2 |   b.test = 1;
-> 3 |   a.test = 2;
-    |   ^ InvalidReact: Mutating component props or hook arguments is not allowed. Consider using a local variable instead (3:3)
+> 2 |   b.test = 1;
+    |   ^ InvalidReact: Mutating component props or hook arguments is not allowed. Consider using a local variable instead (2:2)
+  3 |   a.test = 2;
   4 | }
   5 |
 ```

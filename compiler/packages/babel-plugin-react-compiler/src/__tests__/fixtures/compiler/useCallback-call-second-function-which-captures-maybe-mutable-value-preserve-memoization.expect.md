@@ -57,6 +57,8 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
+
+  useHook();
   const object = t0;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
@@ -84,7 +86,6 @@ function Component(props) {
     t3 = $[3];
   }
   identity(object);
-  useHook();
   return t3;
 }
 

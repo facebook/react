@@ -34,27 +34,19 @@ import { identity } from "shared-runtime";
 
 // and promote it to an unconditional dependency.
 function usePromoteUnconditionalAccessToDependency(props, other) {
-  const $ = _c(5);
-  let t0;
-  if ($[0] !== other) {
-    t0 = identity(other);
-    $[0] = other;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
+  const $ = _c(3);
   let x;
-  if ($[2] !== props.a || $[3] !== t0) {
+  if ($[0] !== props.a || $[1] !== other) {
     x = {};
     x.a = props.a.a.a;
-    if (t0) {
+    if (identity(other)) {
       x.c = props.a.b.c;
     }
-    $[2] = props.a;
-    $[3] = t0;
-    $[4] = x;
+    $[0] = props.a;
+    $[1] = other;
+    $[2] = x;
   } else {
-    x = $[4];
+    x = $[2];
   }
   return x;
 }

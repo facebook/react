@@ -26,8 +26,8 @@ function foo(a, b, c) {
   const y = [];
   const x = [];
   while (c) {
-    x.push(a);
     y.push(b);
+    x.push(a);
   }
 }
 

@@ -29,10 +29,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function useFoo(setOne) {
   const $ = _c(4);
-
-  let z;
-  let y;
   let x;
+  let y;
+  let z;
   if (setOne) {
     x = y = z = 1;
   } else {

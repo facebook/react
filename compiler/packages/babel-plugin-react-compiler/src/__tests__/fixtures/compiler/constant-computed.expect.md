@@ -29,8 +29,8 @@ function Component(props) {
     const x = {};
 
     t0 = x;
-    x.foo(props.foo);
     x.foo = x.foo + x.bar;
+    x.foo(props.foo);
     $[0] = props.foo;
     $[1] = t0;
   } else {

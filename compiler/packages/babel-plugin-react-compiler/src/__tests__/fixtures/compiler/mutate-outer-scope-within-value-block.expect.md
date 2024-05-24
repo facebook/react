@@ -67,26 +67,19 @@ import { CONST_TRUE, identity, shallowCopy } from "shared-runtime";
  * should be merged.
  */
 function useFoo(t0) {
-  const $ = _c(3);
-  let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = identity(false);
-    $[0] = t1;
-  } else {
-    t1 = $[0];
-  }
-  const cond = t1;
+  const $ = _c(2);
   const { input } = t0;
-  let t2;
-  if ($[1] !== input) {
+  let t1;
+  if ($[0] !== input) {
+    const cond = identity(false);
     const arr = shallowCopy(input);
-    t2 = cond ? { val: CONST_TRUE } : mutate(arr);
-    $[1] = input;
-    $[2] = t2;
+    t1 = cond ? { val: CONST_TRUE } : mutate(arr);
+    $[0] = input;
+    $[1] = t1;
   } else {
-    t2 = $[2];
+    t1 = $[1];
   }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -25,11 +25,11 @@ function component() {
     const x = {};
 
     t0 = x;
-    mutate(x.y.z);
     const y = {};
-    x.y = y;
     const z = [];
     y.z = z;
+    x.y = y;
+    mutate(x.y.z);
     $[0] = t0;
   } else {
     t0 = $[0];

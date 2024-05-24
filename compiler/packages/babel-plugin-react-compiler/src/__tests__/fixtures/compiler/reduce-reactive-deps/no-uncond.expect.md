@@ -55,8 +55,8 @@ function useOnlyConditionalDependencies(t0) {
   if ($[2] !== t1 || $[3] !== props) {
     x = {};
     if (t1) {
-      x.c = props.a.b.c;
       x.b = props.a.b;
+      x.c = props.a.b.c;
     }
     $[2] = t1;
     $[3] = props;

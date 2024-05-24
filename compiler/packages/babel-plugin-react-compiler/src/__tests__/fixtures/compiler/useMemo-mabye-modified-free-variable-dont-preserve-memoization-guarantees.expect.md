@@ -51,18 +51,18 @@ import {
 } from "shared-runtime";
 
 function Component(props) {
-  let t0;
-
-  const free = makeObject_Primitives();
   const free2 = makeObject_Primitives();
-  const part = free2.part;
 
   useHook();
+  let t0;
+  const part = free2.part;
+  const free = makeObject_Primitives();
 
   const x = makeObject_Primitives();
+
+  t0 = x;
   x.value = props.value;
   mutate(x, free, part);
-  t0 = x;
   const object = t0;
 
   identity(free);

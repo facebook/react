@@ -21,18 +21,18 @@ function component(a) {
   const $ = _c(2);
   let t0;
   if ($[0] !== a) {
-    t0 = { a };
+    const x = { a };
+
+    t0 = x;
+    const y = {};
+    y.x = x.a;
+    mutate(y);
     $[0] = a;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const x = t0;
-  const y = {};
-
-  mutate(y);
-  y.x = x.a;
-  return x;
+  return t0;
 }
 
 ```

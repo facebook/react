@@ -29,8 +29,8 @@ function bar(a) {
   const $ = _c(2);
   let y;
   if ($[0] !== a) {
-    const x = [a];
     y = {};
+    const x = [a];
     const f0 = function () {
       y = x[0].a[1];
     };

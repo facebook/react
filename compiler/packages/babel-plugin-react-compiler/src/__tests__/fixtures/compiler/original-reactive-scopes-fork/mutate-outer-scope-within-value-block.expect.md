@@ -69,6 +69,7 @@ import { CONST_TRUE, identity, shallowCopy } from "shared-runtime";
  */
 function useFoo(t0) {
   const $ = _c(3);
+  const { input } = t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = identity(false);
@@ -77,7 +78,6 @@ function useFoo(t0) {
     t1 = $[0];
   }
   const cond = t1;
-  const { input } = t0;
   const arr = shallowCopy(input);
   let t2;
   if ($[1] !== arr) {

@@ -17,10 +17,9 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(1);
-
-  let y;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    let y;
     const x = mutate();
 
     t0 = [y, x];

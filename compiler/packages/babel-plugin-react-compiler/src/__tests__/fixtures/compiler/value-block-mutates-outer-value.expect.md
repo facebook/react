@@ -47,10 +47,6 @@ import { makeArray, useHook } from "shared-runtime";
  */
 function Foo(t0) {
   const $ = _c(1);
-
-  useHook();
-  const customList = makeArray(1, 5, 2);
-  useHook();
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = (a, b) => a - b;
@@ -58,6 +54,10 @@ function Foo(t0) {
   } else {
     t1 = $[0];
   }
+  useHook();
+
+  useHook();
+  const customList = makeArray(1, 5, 2);
   const comparator = t1;
   const { defaultList, cond } = t0;
   const result = cond

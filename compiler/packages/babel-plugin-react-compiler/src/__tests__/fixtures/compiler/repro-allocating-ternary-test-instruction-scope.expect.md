@@ -33,8 +33,6 @@ import { identity, makeObject_Primitives } from "shared-runtime";
 
 function useTest(t0) {
   const $ = _c(3);
-
-  useHook();
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = makeObject_Primitives();
@@ -42,6 +40,8 @@ function useTest(t0) {
   } else {
     t1 = $[0];
   }
+
+  useHook();
   const val = t1;
   const { cond } = t0;
   let t2;

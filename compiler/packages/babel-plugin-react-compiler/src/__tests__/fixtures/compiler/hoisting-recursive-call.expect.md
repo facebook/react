@@ -27,9 +27,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Foo(t0) {
   const $ = _c(2);
-  const { value } = t0;
   let t1;
-  if ($[0] !== value) {
+  if ($[0] !== t0) {
     const factorial = (x) => {
       if (x <= 1) {
         return 1;
@@ -37,9 +36,10 @@ function Foo(t0) {
         return x * factorial(x - 1);
       }
     };
+    const { value } = t0;
 
     t1 = factorial(value);
-    $[0] = value;
+    $[0] = t0;
     $[1] = t1;
   } else {
     t1 = $[1];

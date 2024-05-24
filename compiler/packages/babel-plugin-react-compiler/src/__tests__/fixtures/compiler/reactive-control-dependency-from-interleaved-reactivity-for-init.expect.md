@@ -41,12 +41,13 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(1);
 
-  let x;
-  const a = [];
-  const c = [a];
-  a.push(0);
   const b = [];
   b.push(props.cond);
+  const a = [];
+  a.push(0);
+
+  let x;
+  const c = [a];
   for (let i = c[0][0]; i < 10; i++) {
     x = 1;
   }

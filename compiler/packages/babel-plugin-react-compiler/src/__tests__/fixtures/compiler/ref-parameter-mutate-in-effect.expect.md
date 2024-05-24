@@ -28,28 +28,31 @@ import { useEffect } from "react";
 function Foo(props, ref) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.bar) {
-    t0 = <div>{props.bar}</div>;
-    $[0] = props.bar;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  let t1;
-  let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = () => {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = () => {
       ref.current = 2;
     };
-    t2 = [];
-    $[2] = t1;
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = [];
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  useEffect(t0, t1);
+  let t2;
+  if ($[2] !== props.bar) {
+    t2 = <div>{props.bar}</div>;
+    $[2] = props.bar;
     $[3] = t2;
   } else {
-    t1 = $[2];
     t2 = $[3];
   }
-  useEffect(t1, t2);
-  return t0;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

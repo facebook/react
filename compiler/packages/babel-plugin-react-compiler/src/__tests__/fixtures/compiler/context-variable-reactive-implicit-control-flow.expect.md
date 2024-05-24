@@ -35,16 +35,16 @@ import { conditionalInvoke } from "shared-runtime";
 
 function Component(t0) {
   const $ = _c(2);
-  const { shouldReassign } = t0;
   let x;
-  if ($[0] !== shouldReassign) {
+  if ($[0] !== t0) {
     x = null;
+    const { shouldReassign } = t0;
     const reassign = () => {
       x = 2;
     };
 
     conditionalInvoke(shouldReassign, reassign);
-    $[0] = shouldReassign;
+    $[0] = t0;
     $[1] = x;
   } else {
     x = $[1];

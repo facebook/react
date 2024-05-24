@@ -28,13 +28,13 @@ function Component(props) {
     const x = [];
 
     t0 = x;
+    debugger;
     x.push(props.value);
     $[0] = props.value;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  debugger;
   return t0;
 }
 

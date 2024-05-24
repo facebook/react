@@ -45,23 +45,15 @@ import { identity, mutate, setProperty } from "shared-runtime";
 
 //   - y depends on either bar(props.b) or bar(props.b) + 1
 function AllocatingPrimitiveAsDepNested(props) {
-  const $ = _c(5);
+  const $ = _c(3);
   let t0;
   if ($[0] !== props.b || $[1] !== props.a) {
     const x = {};
     mutate(x);
-    const t1 = identity(props.b) + 1;
-    let t2;
-    if ($[3] !== t1) {
-      t2 = identity(t1);
-      $[3] = t1;
-      $[4] = t2;
-    } else {
-      t2 = $[4];
-    }
-    const y = t2;
-    setProperty(x, props.a);
+    const y = identity(identity(props.b) + 1);
+
     t0 = [x, y];
+    setProperty(x, props.a);
     $[0] = props.b;
     $[1] = props.a;
     $[2] = t0;

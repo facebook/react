@@ -30,8 +30,8 @@ function Component(props) {
   const x = {};
 
   const y = { x };
-  x.value = props.value;
   useHook();
+  x.value = props.value;
   return { y };
 }
 

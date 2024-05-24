@@ -30,30 +30,28 @@ import { useMemo } from "react";
 import { Stringify } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(4);
-  let t0;
+  const $ = _c(3);
   let Component;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     Component = Stringify;
 
     Component;
+    let t0;
     t0 = Component;
     Component = t0;
     $[0] = Component;
-    $[1] = t0;
   } else {
     Component = $[0];
-    t0 = $[1];
   }
-  let t1;
-  if ($[2] !== props) {
-    t1 = <Component {...props} />;
-    $[2] = props;
-    $[3] = t1;
+  let t0;
+  if ($[1] !== props) {
+    t0 = <Component {...props} />;
+    $[1] = props;
+    $[2] = t0;
   } else {
-    t1 = $[3];
+    t0 = $[2];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

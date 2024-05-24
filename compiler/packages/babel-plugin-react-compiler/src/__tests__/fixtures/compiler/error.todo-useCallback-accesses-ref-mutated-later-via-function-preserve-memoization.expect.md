@@ -45,7 +45,7 @@ export const FIXTURE_ENTRYPOINT = {
 > 10 |     ref.current.inner = event.target.value;
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 11 |   });
-     | ^^^^ Invariant: Unexpected mismatch between StartMemoize and FinishMemoize. Encountered StartMemoize id=undefined followed by FinishMemoize id=0 (7:11)
+     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly (7:11)
   12 |
   13 |   // The ref is modified later, extending its range and preventing memoization of onChange
   14 |   const reset = () => {

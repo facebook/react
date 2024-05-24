@@ -26,12 +26,12 @@ function component(a) {
     const y = {};
 
     t0 = y;
-    mutate(y);
     const x = { a };
     const f0 = function () {
       y.x = x;
     };
     f0();
+    mutate(y);
     $[0] = a;
     $[1] = t0;
   } else {

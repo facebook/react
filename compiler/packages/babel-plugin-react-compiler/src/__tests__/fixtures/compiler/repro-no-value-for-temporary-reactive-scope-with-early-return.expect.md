@@ -38,38 +38,27 @@ import { identity, makeObject_Primitives } from "shared-runtime";
 import fbt from "fbt";
 
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(1);
 
   const cond = makeObject_Primitives();
+  const object = makeObject_Primitives();
+  if (!cond) {
+    return null;
+  }
   let t0;
-  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = Symbol.for("react.early_return_sentinel");
-    bb0: {
-      const object = makeObject_Primitives();
-      if (!cond) {
-        t1 = null;
-        break bb0;
-      }
-
-      t0 = (
-        <div className="foo">
-          {fbt._(
-            "Lorum ipsum{thing} blah blah blah",
-            [fbt._param("thing", object.b)],
-            { hk: "lwmuH" }
-          )}
-        </div>
-      );
-    }
+    t0 = (
+      <div className="foo">
+        {fbt._(
+          "Lorum ipsum{thing} blah blah blah",
+          [fbt._param("thing", object.b)],
+          { hk: "lwmuH" }
+        )}
+      </div>
+    );
     $[0] = t0;
-    $[1] = t1;
   } else {
     t0 = $[0];
-    t1 = $[1];
-  }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
-    return t1;
   }
   return t0;
 }

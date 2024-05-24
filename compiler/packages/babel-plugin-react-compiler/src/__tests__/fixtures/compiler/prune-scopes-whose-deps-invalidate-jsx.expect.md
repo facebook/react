@@ -56,9 +56,9 @@ function Component(props) {
   } else {
     t2 = $[5];
   }
+  useHook();
   const o = {};
   o.value = props.value;
-  useHook();
   return t2;
 }
 

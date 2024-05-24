@@ -43,9 +43,8 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
-  const item = useMutable(props.itemId);
-  maybeMutate(item);
   const dispatch = useDispatch();
+  useFreeze(dispatch);
   let t1;
   if ($[1] !== dispatch) {
     t1 = () => {
@@ -56,6 +55,7 @@ function Component(props) {
   } else {
     t1 = $[2];
   }
+  const item = useMutable(props.itemId);
   const exit = t1;
   let t2;
   if ($[3] !== item.value || $[4] !== exit) {
@@ -83,7 +83,7 @@ function Component(props) {
     t3 = $[8];
   }
   useEffect(t2, t3);
-  useFreeze(dispatch);
+  maybeMutate(item);
   return t0;
 }
 

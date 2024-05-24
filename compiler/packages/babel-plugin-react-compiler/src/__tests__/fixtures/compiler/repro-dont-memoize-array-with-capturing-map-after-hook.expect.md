@@ -41,16 +41,30 @@ import { mutate } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.value) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = () => {};
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = [];
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  useEffect(t0, t1);
+  let t2;
+  if ($[2] !== props.value) {
     const x = [{ ...props.value }];
-
     const onClick = () => {
       console.log(x.length);
     };
 
     let y;
 
-    t0 = (
+    t2 = (
       <div onClick={onClick}>
         {x.map((item) => {
           y = item;
@@ -59,24 +73,12 @@ function Component(props) {
         {mutate(y)}
       </div>
     );
-    $[0] = props.value;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  let t1;
-  let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = () => {};
-    t2 = [];
-    $[2] = t1;
+    $[2] = props.value;
     $[3] = t2;
   } else {
-    t1 = $[2];
     t2 = $[3];
   }
-  useEffect(t1, t2);
-  return t0;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -27,15 +27,15 @@ import { c as _c } from "react/compiler-runtime"; // Test that we can track non-
 function TestNonOverlappingDescendantTracked(props) {
   const $ = _c(4);
   let t0;
-  if ($[0] !== props.a.c.x.y.z || $[1] !== props.a.x.y || $[2] !== props.b) {
+  if ($[0] !== props.a.x.y || $[1] !== props.a.c.x.y.z || $[2] !== props.b) {
     const x = {};
 
     t0 = x;
-    x.c = props.a.c.x.y.z;
-    x.b = props.b;
     x.a = props.a.x.y;
-    $[0] = props.a.c.x.y.z;
-    $[1] = props.a.x.y;
+    x.b = props.b;
+    x.c = props.a.c.x.y.z;
+    $[0] = props.a.x.y;
+    $[1] = props.a.c.x.y.z;
     $[2] = props.b;
     $[3] = t0;
   } else {

@@ -24,8 +24,8 @@ function foo() {
 
     t0 = y;
     const x = [];
-    mutate(x);
     y.x = x;
+    mutate(x);
     $[0] = t0;
   } else {
     t0 = $[0];

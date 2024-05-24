@@ -27,8 +27,6 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(4);
-
-  const pathname_0 = props.wat;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {};
@@ -36,6 +34,8 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
+
+  const pathname_0 = props.wat;
   const wat = t0;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {

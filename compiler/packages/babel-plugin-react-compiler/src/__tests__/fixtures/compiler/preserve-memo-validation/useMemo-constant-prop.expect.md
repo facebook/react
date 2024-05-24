@@ -35,8 +35,8 @@ import { identity } from "shared-runtime";
 
 function useFoo(cond) {
   const $ = _c(5);
-  let t0;
   const sourceDep = 0;
+  let t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = identity(0);

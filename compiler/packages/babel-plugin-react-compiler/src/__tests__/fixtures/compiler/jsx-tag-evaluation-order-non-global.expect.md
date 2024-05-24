@@ -57,11 +57,11 @@ function Component(props) {
   let T0;
   let t0;
   if ($[0] !== props.component || $[1] !== props.alternateComponent) {
-    const maybeMutable = new MaybeMutable();
     Tag = props.component;
 
     T0 = Tag;
-    t0 = ((Tag = props.alternateComponent), maybeMutate(maybeMutable));
+    const maybeMutable = new MaybeMutable();
+    Tag = ((t0 = maybeMutate(maybeMutable)), props.alternateComponent);
     $[0] = props.component;
     $[1] = props.alternateComponent;
     $[2] = Tag;

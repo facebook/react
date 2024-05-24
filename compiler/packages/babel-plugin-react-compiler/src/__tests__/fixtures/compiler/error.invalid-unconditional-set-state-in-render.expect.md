@@ -19,15 +19,15 @@ function Component(props) {
 ## Error
 
 ```
-   5 |
-   6 |   setX(1);
->  7 |   aliased(2);
-     |   ^^^^^^^ InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (7:7)
+  4 |   const aliased = setX;
+  5 |
+> 6 |   setX(1);
+    |   ^^^^ InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (6:6)
 
-InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (6:6)
-   8 |
-   9 |   return x;
-  10 | }
+InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (7:7)
+  7 |   aliased(2);
+  8 |
+  9 |   return x;
 ```
           
       

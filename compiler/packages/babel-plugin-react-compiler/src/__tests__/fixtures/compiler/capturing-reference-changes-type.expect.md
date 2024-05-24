@@ -20,23 +20,21 @@ function component(a) {
 import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(2);
-  let t0;
+  let y;
   if ($[0] !== a) {
-    const x = { a };
-    let y;
     y = 1;
 
     y;
+    const x = { a };
     y = x;
 
-    t0 = y;
     mutate(y);
     $[0] = a;
-    $[1] = t0;
+    $[1] = y;
   } else {
-    t0 = $[1];
+    y = $[1];
   }
-  return t0;
+  return y;
 }
 
 ```

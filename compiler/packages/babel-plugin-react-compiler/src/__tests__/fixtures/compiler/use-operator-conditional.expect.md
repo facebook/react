@@ -84,10 +84,10 @@ function Inner(props) {
   if (props.cond) {
     input = use(FooContext);
   }
-  let t0;
 
   input;
   input;
+  let t0;
   const t1 = input;
   let t2;
   if ($[0] !== t1) {

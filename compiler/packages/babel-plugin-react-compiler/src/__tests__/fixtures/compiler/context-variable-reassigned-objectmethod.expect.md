@@ -32,9 +32,8 @@ import { invoke } from "shared-runtime";
 
 function Component(t0) {
   const $ = _c(2);
-  const { cond } = t0;
   let x;
-  if ($[0] !== cond) {
+  if ($[0] !== t0) {
     x = 2;
     const obj = {
       method(cond_0) {
@@ -43,9 +42,10 @@ function Component(t0) {
         }
       },
     };
+    const { cond } = t0;
 
     invoke(obj.method, cond);
-    $[0] = cond;
+    $[0] = t0;
     $[1] = x;
   } else {
     x = $[1];

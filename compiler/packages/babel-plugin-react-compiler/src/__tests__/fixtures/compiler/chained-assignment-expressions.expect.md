@@ -30,10 +30,10 @@ function foo() {
     const z = { z: 0 };
 
     t0 = z;
-    const y = { z: 0 };
     const x = { x: 0 };
-    z.z = z.z + (y.y = y.y * (x.x = x.x & 3));
+    const y = { z: 0 };
     x.x = x.x + (y.y = y.y * 1);
+    z.z = z.z + (y.y = y.y * (x.x = x.x & 3));
     $[0] = t0;
   } else {
     t0 = $[0];

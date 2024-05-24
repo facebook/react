@@ -24,28 +24,16 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function hoisting() {
-  const $ = _c(3);
-  let bar;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    bar = 3;
-    $[0] = bar;
-  } else {
-    bar = $[0];
-  }
-  let baz;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    baz = 2;
-    $[1] = baz;
-  } else {
-    baz = $[1];
-  }
+  const $ = _c(1);
   let t0;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const bar = 3;
+    const baz = 2;
     const foo = () => bar + baz;
     t0 = foo();
-    $[2] = t0;
+    $[0] = t0;
   } else {
-    t0 = $[2];
+    t0 = $[0];
   }
   return t0;
 }

@@ -27,6 +27,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(4);
+
+  let x;
   let t0;
   if ($[0] !== a) {
     t0 = { a };
@@ -46,7 +48,7 @@ function component(a) {
   } else {
     t1 = $[3];
   }
-  const x = t1;
+  x = t1;
   return x;
 }
 

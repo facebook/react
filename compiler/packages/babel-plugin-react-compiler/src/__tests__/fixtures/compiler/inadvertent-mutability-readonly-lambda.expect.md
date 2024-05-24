@@ -34,9 +34,9 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
+  useOtherHook();
   const onChange = t0;
   foo(x, onChange);
-  useOtherHook();
   return x;
 }
 

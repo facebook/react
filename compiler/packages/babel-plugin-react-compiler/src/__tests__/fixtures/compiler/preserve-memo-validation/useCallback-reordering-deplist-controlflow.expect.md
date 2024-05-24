@@ -46,8 +46,6 @@ function Foo(t0) {
   if ($[0] !== t0) {
     let y;
     y = [];
-
-    t1 = () => [y];
     let t2;
     if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
       t2 = () => ({ x: 2 });
@@ -55,6 +53,8 @@ function Foo(t0) {
     } else {
       t2 = $[3];
     }
+
+    t1 = () => [y];
     getVal1 = t2;
     const { arr1, arr2, foo } = t0;
     let t3;

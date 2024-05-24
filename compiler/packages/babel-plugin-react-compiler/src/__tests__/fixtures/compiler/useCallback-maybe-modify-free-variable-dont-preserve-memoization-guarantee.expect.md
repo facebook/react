@@ -36,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false
+// @enablePreserveExistingMemoizationGuarantees:false
 import { useCallback } from "react";
 import {
   identity,
@@ -46,28 +46,19 @@ import {
 } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(2);
-  let t0;
-  if ($[0] !== props.value) {
-    const free = makeObject_Primitives();
-    const free2 = makeObject_Primitives();
-    const part = free2.part;
+  const free2 = makeObject_Primitives();
 
-    const callback = () => {
-      const x = makeObject_Primitives();
-      x.value = props.value;
-      mutate(x, free, part);
-    };
-
-    t0 = callback;
-    mutate(free, part);
-    $[0] = props.value;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
   useHook();
-  return t0;
+  const free = makeObject_Primitives();
+  const part = free2.part;
+  const callback = () => {
+    const x = makeObject_Primitives();
+    x.value = props.value;
+    mutate(x, free, part);
+  };
+
+  mutate(free, part);
+  return callback;
 }
 
 export const FIXTURE_ENTRYPOINT = {

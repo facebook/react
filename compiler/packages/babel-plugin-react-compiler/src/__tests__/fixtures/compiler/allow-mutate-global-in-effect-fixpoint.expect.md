@@ -47,25 +47,28 @@ let someGlobal = { value: null };
 
 function Component() {
   const $ = _c(6);
-  const [state, setState] = useState(someGlobal);
 
   let x = someGlobal;
+  const [state, setState] = useState(someGlobal);
   while (x == null) {
     x = someGlobal;
   }
 
   const y = x;
   let t0;
-  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       y.value = "hello";
     };
-    t1 = [];
     $[0] = t0;
-    $[1] = t1;
   } else {
     t0 = $[0];
+  }
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = [];
+    $[1] = t1;
+  } else {
     t1 = $[1];
   }
   useEffect(t0, t1);

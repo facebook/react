@@ -23,35 +23,35 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(7);
   let t0;
-  let f;
-  if ($[0] !== props.items) {
-    let t1;
-    if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = (item) => item;
-      $[3] = t1;
-    } else {
-      t1 = $[3];
-    }
-    f = t1;
-    t0 = [...props.items].map(f);
-    $[0] = props.items;
-    $[1] = t0;
-    $[2] = f;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = (item) => item;
+    $[0] = t0;
   } else {
-    t0 = $[1];
-    f = $[2];
+    t0 = $[0];
   }
-  const x = t0;
   let t1;
+  let f;
+  if ($[1] !== props.items) {
+    f = t0;
+    t1 = [...props.items].map(f);
+    $[1] = props.items;
+    $[2] = t1;
+    $[3] = f;
+  } else {
+    t1 = $[2];
+    f = $[3];
+  }
+  const x = t1;
+  let t2;
   if ($[4] !== x || $[5] !== f) {
-    t1 = [x, f];
+    t2 = [x, f];
     $[4] = x;
     $[5] = f;
-    $[6] = t1;
+    $[6] = t2;
   } else {
-    t1 = $[6];
+    t2 = $[6];
   }
-  return t1;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

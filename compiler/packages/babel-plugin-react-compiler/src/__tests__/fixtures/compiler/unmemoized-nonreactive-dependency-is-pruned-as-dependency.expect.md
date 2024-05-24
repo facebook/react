@@ -45,8 +45,8 @@ function Component(props) {
   } else {
     t1 = $[1];
   }
-  mutate(x);
   useNoAlias();
+  mutate(x);
   return t1;
 }
 

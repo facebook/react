@@ -92,38 +92,33 @@ import { identity, mutate } from "shared-runtime";
  *
  */
 function useFoo(t0) {
-  const $ = _c(6);
-  let a;
-  let t1;
-  let z;
-  if ($[0] !== t0) {
-    const y = {};
-    const { a: t2, b } = t0;
-    a = t2;
-    let t3;
-    if ($[4] !== b) {
-      t3 = [identity(y), b];
-      $[4] = b;
-      $[5] = t3;
-    } else {
-      t3 = $[5];
-    }
-    z = t3;
-
-    t1 = z[0] !== y;
-    mutate(y);
-    $[0] = t0;
-    $[1] = a;
-    $[2] = t1;
-    $[3] = z;
-  } else {
-    a = $[1];
-    t1 = $[2];
-    z = $[3];
-  }
+  const $ = _c(4);
+  const { a, b } = t0;
   const x = { a };
+
   mutate(x);
-  if (t1) {
+  let t1;
+  let y;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    y = {};
+    t1 = identity(y);
+    mutate(y);
+    $[0] = t1;
+    $[1] = y;
+  } else {
+    t1 = $[0];
+    y = $[1];
+  }
+  let t2;
+  if ($[2] !== b) {
+    t2 = [t1, b];
+    $[2] = b;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  const z = t2;
+  if (z[0] !== y) {
     throw new Error("oh no!");
   }
   return z;

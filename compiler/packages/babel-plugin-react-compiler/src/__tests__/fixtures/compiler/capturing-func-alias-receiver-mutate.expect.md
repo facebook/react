@@ -27,13 +27,13 @@ function component(a) {
     const y = {};
 
     t0 = y;
-    mutate(y);
     const x = { a };
     const f0 = function () {
       const a_0 = y;
       a_0.x = x;
     };
     f0();
+    mutate(y);
     $[0] = a;
     $[1] = t0;
   } else {

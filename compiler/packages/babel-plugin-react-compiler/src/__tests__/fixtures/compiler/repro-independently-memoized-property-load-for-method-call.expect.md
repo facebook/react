@@ -55,43 +55,44 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(t0) {
   const $ = _c(8);
-  const serverTime = useServerTime();
-
-  const time = serverTime.get();
+  const t1 = useServerTime();
   const { label, highlightedItem } = t0;
-  let t1;
   let t2;
-  if ($[0] !== highlightedItem || $[1] !== time || $[2] !== label) {
+  let t3;
+  if ($[0] !== highlightedItem || $[1] !== t1 || $[2] !== label) {
+    const serverTime = t1;
+
+    const time = serverTime.get();
     const highlight = new Highlight(highlightedItem);
 
-    t1 = time / 1000 || label;
+    t2 = time / 1000 || label;
 
-    t2 = highlight.render();
+    t3 = highlight.render();
     $[0] = highlightedItem;
-    $[1] = time;
+    $[1] = t1;
     $[2] = label;
-    $[3] = t1;
-    $[4] = t2;
+    $[3] = t2;
+    $[4] = t3;
   } else {
-    t1 = $[3];
-    t2 = $[4];
+    t2 = $[3];
+    t3 = $[4];
   }
-  const timestampLabel = t1;
-  let t3;
-  if ($[5] !== t2 || $[6] !== timestampLabel) {
-    t3 = (
+  const timestampLabel = t2;
+  let t4;
+  if ($[5] !== t3 || $[6] !== timestampLabel) {
+    t4 = (
       <>
-        {t2}
+        {t3}
         {timestampLabel}
       </>
     );
-    $[5] = t2;
+    $[5] = t3;
     $[6] = timestampLabel;
-    $[7] = t3;
+    $[7] = t4;
   } else {
-    t3 = $[7];
+    t4 = $[7];
   }
-  return t3;
+  return t4;
 }
 
 function useServerTime() {

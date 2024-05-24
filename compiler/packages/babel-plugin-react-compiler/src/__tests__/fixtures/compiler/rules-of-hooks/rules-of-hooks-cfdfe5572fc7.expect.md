@@ -15,8 +15,8 @@ function useHook() {
 ```javascript
 // Valid because hooks can call hooks.
 function useHook() {
-  useHook2();
   useHook1();
+  useHook2();
 }
 
 ```

@@ -53,6 +53,10 @@ import { mutate } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(2);
   const { a, b } = t0;
+
+  const x = { a };
+
+  mutate(x);
   let t1;
   if ($[0] !== b) {
     const y = [b];
@@ -66,8 +70,6 @@ function useFoo(t0) {
   } else {
     t1 = $[1];
   }
-  const x = { a };
-  mutate(x);
   return t1;
 }
 

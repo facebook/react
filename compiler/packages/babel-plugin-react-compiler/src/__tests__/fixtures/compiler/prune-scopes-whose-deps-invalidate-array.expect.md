@@ -30,8 +30,8 @@ function Component(props) {
   const x = [];
 
   const y = [x];
-  x.push(props.value);
   useHook();
+  x.push(props.value);
   return [y];
 }
 

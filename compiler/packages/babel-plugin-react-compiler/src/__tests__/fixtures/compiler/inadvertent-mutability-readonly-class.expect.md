@@ -26,9 +26,9 @@ class Mutator {}
 function Component(props) {
   const x = {};
   const env = useRelayEnvironment();
+  useOtherHook();
   const mutator = new Mutator(env);
   foo(x, mutator);
-  useOtherHook();
   return x;
 }
 
