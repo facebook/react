@@ -464,7 +464,12 @@ export function createLogAssertion(
       function printDiff() {
         return `${diff(
           expectedMessages
-            .map(message => message.replace('\n', ' '))
+            .map(messageOrTuple => {
+              const message = Array.isArray(messageOrTuple)
+                ? messageOrTuple[0]
+                : messageOrTuple;
+              return message.replace('\n', ' ');
+            })
             .join('\n'),
           receivedLogs.map(message => message.replace('\n', ' ')).join('\n'),
           {

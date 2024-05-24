@@ -10,8 +10,8 @@
 import type {Fiber} from './ReactInternalTypes';
 
 import {
-  resetCurrentFiber as resetCurrentDebugFiberInDEV,
-  setCurrentFiber as setCurrentDebugFiberInDEV,
+  resetCurrentDebugFiberInDEV,
+  setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {StrictLegacyMode} from './ReactTypeOfMode';

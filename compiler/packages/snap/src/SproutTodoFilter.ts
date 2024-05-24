@@ -220,7 +220,6 @@ const skipFilter = new Set([
    * Tests with one or more params, with external references.
    */
   "alias-computed-load",
-  "allocating-primitive-as-dep-nested-scope",
   "allocating-primitive-as-dep",
   "allow-passing-refs-as-props",
   "array-at-closure",
@@ -309,7 +308,6 @@ const skipFilter = new Set([
   "optional-receiver-method-call",
   "optional-receiver-optional-method",
   "primitive-alias-mutate",
-  "primitive-as-dep-nested-scope",
   "primitive-as-dep",
   "property-assignment",
   "property-call-spread",

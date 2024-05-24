@@ -294,7 +294,7 @@ export function unpatch(): void {
 
 let unpatchForStrictModeFn: null | (() => void) = null;
 
-// NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialRenderInStrictMode
+// NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialCommitInStrictMode
 export function patchForStrictMode() {
   if (consoleManagedByDevToolsDuringStrictMode) {
     const overrideConsoleMethods = [
@@ -359,7 +359,7 @@ export function patchForStrictMode() {
   }
 }
 
-// NOTE: KEEP IN SYNC with src/hook.js:unpatchConsoleForInitialRenderInStrictMode
+// NOTE: KEEP IN SYNC with src/hook.js:unpatchConsoleForInitialCommitInStrictMode
 export function unpatchForStrictMode(): void {
   if (consoleManagedByDevToolsDuringStrictMode) {
     if (unpatchForStrictModeFn !== null) {
