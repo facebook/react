@@ -78,8 +78,8 @@ import {
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
-  resetCurrentFiber as resetCurrentDebugFiberInDEV,
-  setCurrentFiber as setCurrentDebugFiberInDEV,
+  resetCurrentDebugFiberInDEV,
+  setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {

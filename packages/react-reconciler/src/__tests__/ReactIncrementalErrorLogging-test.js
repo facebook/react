@@ -85,7 +85,11 @@ describe('ReactIncrementalErrorLogging', () => {
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('%s'),
         expect.stringContaining(
-          'An error occurred in the <ErrorThrowingComponent> component:',
+          'An error occurred in the <ErrorThrowingComponent> component.',
+        ),
+        expect.stringContaining(
+          'Consider adding an error boundary to your tree ' +
+            'to customize error handling behavior.',
         ),
         expect.stringMatching(
           new RegExp(
@@ -93,10 +97,6 @@ describe('ReactIncrementalErrorLogging', () => {
               '\\s+(in|at) span(.*)\n' +
               '\\s+(in|at) div(.*)',
           ),
-        ),
-        expect.stringContaining(
-          'Consider adding an error boundary to your tree ' +
-            'to customize error handling behavior.',
         ),
       );
     }
@@ -131,7 +131,11 @@ describe('ReactIncrementalErrorLogging', () => {
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('%s'),
         expect.stringContaining(
-          'An error occurred in the <ErrorThrowingComponent> component:',
+          'An error occurred in the <ErrorThrowingComponent> component.',
+        ),
+        expect.stringContaining(
+          'Consider adding an error boundary to your tree ' +
+            'to customize error handling behavior.',
         ),
         expect.stringMatching(
           new RegExp(
@@ -139,10 +143,6 @@ describe('ReactIncrementalErrorLogging', () => {
               '\\s+(in|at) span(.*)\n' +
               '\\s+(in|at) div(.*)',
           ),
-        ),
-        expect.stringContaining(
-          'Consider adding an error boundary to your tree ' +
-            'to customize error handling behavior.',
         ),
       );
     }
@@ -189,7 +189,11 @@ describe('ReactIncrementalErrorLogging', () => {
           message: 'render error',
         }),
         expect.stringContaining(
-          'The above error occurred in the <ErrorThrowingComponent> component:',
+          'The above error occurred in the <ErrorThrowingComponent> component.',
+        ),
+        expect.stringContaining(
+          'React will try to recreate this component tree from scratch ' +
+            'using the error boundary you provided, ErrorBoundary.',
         ),
         expect.stringMatching(
           new RegExp(
@@ -198,10 +202,6 @@ describe('ReactIncrementalErrorLogging', () => {
               '\\s+(in|at) ErrorBoundary(.*)\n' +
               '\\s+(in|at) div(.*)',
           ),
-        ),
-        expect.stringContaining(
-          'React will try to recreate this component tree from scratch ' +
-            'using the error boundary you provided, ErrorBoundary.',
         ),
       );
     } else {
@@ -270,16 +270,20 @@ describe('ReactIncrementalErrorLogging', () => {
           message: 'oops',
         }),
         expect.stringContaining(
-          'The above error occurred in the <Foo> component:',
-        ),
-        expect.stringMatching(
-          new RegExp(
-            '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
-          ),
+          'The above error occurred in the <Foo> component.',
         ),
         expect.stringContaining(
           'React will try to recreate this component tree from scratch ' +
             'using the error boundary you provided, ErrorBoundary.',
+        ),
+        expect.stringMatching(
+          gate(flag => flag.enableOwnerStacks)
+            ? // With owner stacks the return path is cut off but in this case
+              // this is also what the owner stack looks like.
+              new RegExp('\\s+(in|at) Foo (.*)')
+            : new RegExp(
+                '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
+              ),
         ),
       );
     } else {

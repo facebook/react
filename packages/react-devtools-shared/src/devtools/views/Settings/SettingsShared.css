@@ -141,7 +141,7 @@
   border-radius: 0.25rem;
 }
 
-.ReleaseNotesLink {
+.ReleaseNotesLink, .StrictModeLink {
   color: var(--color-button-active);
 }
 
