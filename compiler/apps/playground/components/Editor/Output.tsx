@@ -177,7 +177,7 @@ function getSourceMapUrl(code: string, map: string): string | null {
 }
 
 function Output({ store, compilerOutput }: Props) {
-  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set());
+  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set(['JS']));
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
     () => new Map(),
   );

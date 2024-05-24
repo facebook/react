@@ -146,6 +146,12 @@ describe('ReactInternalTestUtils', () => {
   test('assertLog', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
+      React.useEffect(() => {
+        Scheduler.log(`create effect ${id}`);
+        return () => {
+          Scheduler.log(`cleanup effect ${id}`);
+        };
+      });
       return id;
     };
 
@@ -161,9 +167,26 @@ describe('ReactInternalTestUtils', () => {
 
     const root = ReactNoop.createRoot();
     await act(() => {
-      root.render(<App />);
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
     });
-    assertLog(['A', 'B', 'C']);
+    assertLog([
+      'A',
+      'B',
+      'C',
+      'create effect A',
+      'create effect B',
+      'create effect C',
+    ]);
+
+    await act(() => {
+      root.render(null);
+    });
+
+    assertLog(['cleanup effect A', 'cleanup effect B', 'cleanup effect C']);
   });
 });
 
@@ -2411,6 +2434,32 @@ describe('ReactInternalTestUtils console assertions', () => {
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
+        `);
+      });
+
+      // @gate __DEV__
+      it('fails with a helpful error message if the expected error message mismatches', () => {
+        const message = expectToThrowFailure(() => {
+          console.error('Bye\n    in div');
+          assertConsoleErrorDev([
+            [
+              'Hello',
+              {
+                withoutStack: true,
+              },
+            ],
+          ]);
+        });
+        expect(message).toMatchInlineSnapshot(`
+          "assertConsoleErrorDev(expected)
+
+          Unexpected error(s) recorded.
+
+          - Expected errors
+          + Received errors
+
+          - Hello
+          + Bye <component stack>"
         `);
       });
     });

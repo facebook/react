@@ -75,7 +75,14 @@ export default function DebuggingSettings(_: {}): React.Node {
               setHideConsoleLogsInStrictMode(currentTarget.checked)
             }
           />{' '}
-          Hide logs during second render in Strict Mode
+          Hide logs during additional invocations in{' '}
+          <a
+            className={styles.StrictModeLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://react.dev/reference/react/StrictMode">
+            Strict Mode
+          </a>
         </label>
       </div>
     </div>

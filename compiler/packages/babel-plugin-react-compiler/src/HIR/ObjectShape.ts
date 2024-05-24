@@ -188,6 +188,8 @@ export type ObjectShape = {
  */
 export type ShapeRegistry = Map<string, ObjectShape>;
 export const BuiltInArrayId = "BuiltInArray";
+export const BuiltInFunctionId = "BuiltInFunction";
+export const BuiltInJsxId = "BuiltInJsx";
 export const BuiltInObjectId = "BuiltInObject";
 export const BuiltInUseStateId = "BuiltInUseState";
 export const BuiltInSetStateId = "BuiltInSetState";

@@ -41,21 +41,33 @@ function getCurrentFiberStackInDev(): string {
   return '';
 }
 
+export function resetCurrentDebugFiberInDEV() {
+  if (__DEV__) {
+    resetCurrentFiber();
+  }
+}
+
+export function setCurrentDebugFiberInDEV(fiber: Fiber | null) {
+  if (__DEV__) {
+    setCurrentFiber(fiber);
+  }
+}
+
 export function resetCurrentFiber() {
   if (__DEV__) {
     ReactSharedInternals.getCurrentStack = null;
-    current = null;
     isRendering = false;
   }
+  current = null;
 }
 
 export function setCurrentFiber(fiber: Fiber | null) {
   if (__DEV__) {
     ReactSharedInternals.getCurrentStack =
       fiber === null ? null : getCurrentFiberStackInDev;
-    current = fiber;
     isRendering = false;
   }
+  current = fiber;
 }
 
 export function getCurrentFiber(): Fiber | null {

@@ -20,6 +20,8 @@ import {
 } from "../HIR/HIR";
 import {
   BuiltInArrayId,
+  BuiltInFunctionId,
+  BuiltInJsxId,
   BuiltInObjectId,
   BuiltInUseRefId,
 } from "../HIR/ObjectShape";
@@ -313,6 +315,7 @@ function* generateInstructionTypes(
 
     case "FunctionExpression": {
       yield* generate(value.loweredFunc.func);
+      yield equation(left, { kind: "Object", shapeId: BuiltInFunctionId });
       break;
     }
 
@@ -327,10 +330,13 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "JsxExpression":
+    case "JsxFragment": {
+      yield equation(left, { kind: "Object", shapeId: BuiltInJsxId });
+      break;
+    }
     case "DeclareLocal":
     case "NewExpression":
-    case "JsxExpression":
-    case "JsxFragment":
     case "RegExpLiteral":
     case "PropertyStore":
     case "ComputedStore":

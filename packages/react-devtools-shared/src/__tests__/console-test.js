@@ -625,6 +625,168 @@ describe('console', () => {
     expect(mockGroupCollapsed.mock.calls[0][0]).toBe('groupCollapsed');
   });
 
+  it('should double log from Effects if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      React.useEffect(() => {
+        fakeConsole.log('log effect create');
+        fakeConsole.warn('warn effect create');
+        fakeConsole.error('error effect create');
+        fakeConsole.info('info effect create');
+        fakeConsole.group('group effect create');
+        fakeConsole.groupCollapsed('groupCollapsed effect create');
+
+        return () => {
+          fakeConsole.log('log effect cleanup');
+          fakeConsole.warn('warn effect cleanup');
+          fakeConsole.error('error effect cleanup');
+          fakeConsole.info('info effect cleanup');
+          fakeConsole.group('group effect cleanup');
+          fakeConsole.groupCollapsed('groupCollapsed effect cleanup');
+        };
+      });
+
+      return <div />;
+    }
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+    expect(mockLog.mock.calls).toEqual([
+      ['log effect create'],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+        'log effect cleanup',
+      ],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+        'log effect create',
+      ],
+    ]);
+    expect(mockWarn.mock.calls).toEqual([
+      ['warn effect create'],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_WARNING_COLOR}`,
+        'warn effect cleanup',
+      ],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_WARNING_COLOR}`,
+        'warn effect create',
+      ],
+    ]);
+    expect(mockError.mock.calls).toEqual([
+      ['error effect create'],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+        'error effect cleanup',
+      ],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+        'error effect create',
+      ],
+    ]);
+    expect(mockInfo.mock.calls).toEqual([
+      ['info effect create'],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+        'info effect cleanup',
+      ],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+        'info effect create',
+      ],
+    ]);
+    expect(mockGroup.mock.calls).toEqual([
+      ['group effect create'],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+        'group effect cleanup',
+      ],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+        'group effect create',
+      ],
+    ]);
+    expect(mockGroupCollapsed.mock.calls).toEqual([
+      ['groupCollapsed effect create'],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+        'groupCollapsed effect cleanup',
+      ],
+      [
+        '%c%s',
+        `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+        'groupCollapsed effect create',
+      ],
+    ]);
+  });
+
+  it('should not double log from Effects if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = true;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      React.useEffect(() => {
+        fakeConsole.log('log effect create');
+        fakeConsole.warn('warn effect create');
+        fakeConsole.error('error effect create');
+        fakeConsole.info('info effect create');
+        fakeConsole.group('group effect create');
+        fakeConsole.groupCollapsed('groupCollapsed effect create');
+
+        return () => {
+          fakeConsole.log('log effect cleanup');
+          fakeConsole.warn('warn effect cleanup');
+          fakeConsole.error('error effect cleanup');
+          fakeConsole.info('info effect cleanup');
+          fakeConsole.group('group effect cleanup');
+          fakeConsole.groupCollapsed('groupCollapsed effect cleanup');
+        };
+      });
+
+      return <div />;
+    }
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+    expect(mockLog.mock.calls).toEqual([['log effect create']]);
+    expect(mockWarn.mock.calls).toEqual([['warn effect create']]);
+    expect(mockError.mock.calls).toEqual([['error effect create']]);
+    expect(mockInfo.mock.calls).toEqual([['info effect create']]);
+    expect(mockGroup.mock.calls).toEqual([['group effect create']]);
+    expect(mockGroupCollapsed.mock.calls).toEqual([
+      ['groupCollapsed effect create'],
+    ]);
+  });
+
   it('should double log from useMemo if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
     global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
     global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
