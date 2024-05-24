@@ -588,7 +588,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "LoadGlobal": {
-      value = `LoadGlobal ${instrValue.name}`;
+      value = `LoadGlobal ${instrValue.binding.name}`;
       break;
     }
     case "StoreGlobal": {

@@ -23,6 +23,7 @@ import {
   Instruction,
   Place,
   Terminal,
+  VariableBinding,
   makeBlockId,
   makeIdentifierName,
   makeInstructionId,
@@ -212,12 +213,6 @@ export default class HIRBuilder {
     if (binding == null) {
       return null;
     }
-    // Check if the binding is from module scope, if so return null
-    const outerBinding =
-      this.parentFunction.scope.parent.getBinding(originalName);
-    if (binding === outerBinding) {
-      return null;
-    }
     return binding;
   }
 
@@ -253,22 +248,71 @@ export default class HIRBuilder {
    */
   resolveIdentifier(
     path: NodePath<t.Identifier | t.JSXIdentifier>
-  ): Identifier | null {
+  ): VariableBinding {
     const originalName = path.node.name;
     const babelBinding = this.#resolveBabelBinding(path);
     if (babelBinding == null) {
-      return null;
+      return { kind: "Global", name: originalName };
     }
+
+    // Check if the binding is from module scope
+    const outerBinding =
+      this.parentFunction.scope.parent.getBinding(originalName);
+    if (babelBinding === outerBinding) {
+      const path = babelBinding.path;
+      if (path.isImportDefaultSpecifier()) {
+        const importDeclaration =
+          path.parentPath as NodePath<t.ImportDeclaration>;
+        return {
+          kind: "ImportDefault",
+          name: originalName,
+          module: importDeclaration.node.source.value,
+        };
+      } else if (path.isImportSpecifier()) {
+        const importDeclaration =
+          path.parentPath as NodePath<t.ImportDeclaration>;
+        return {
+          kind: "ImportSpecifier",
+          name: originalName,
+          module: importDeclaration.node.source.value,
+          imported:
+            path.node.imported.type === "Identifier"
+              ? path.node.imported.name
+              : path.node.imported.value,
+        };
+      } else if (path.isImportNamespaceSpecifier()) {
+        const importDeclaration =
+          path.parentPath as NodePath<t.ImportDeclaration>;
+        return {
+          kind: "ImportNamespace",
+          name: originalName,
+          module: importDeclaration.node.source.value,
+        };
+      } else {
+        return {
+          kind: "ModuleLocal",
+          name: originalName,
+        };
+      }
+    }
+
     const resolvedBinding = this.resolveBinding(babelBinding.identifier);
     if (resolvedBinding.name && resolvedBinding.name.value !== originalName) {
       babelBinding.scope.rename(originalName, resolvedBinding.name.value);
     }
-    return resolvedBinding;
+    return { kind: "Identifier", identifier: resolvedBinding };
   }
 
   isContextIdentifier(path: NodePath<t.Identifier | t.JSXIdentifier>): boolean {
     const binding = this.#resolveBabelBinding(path);
     if (binding) {
+      // Check if the binding is from module scope, if so return null
+      const outerBinding = this.parentFunction.scope.parent.getBinding(
+        path.node.name
+      );
+      if (binding === outerBinding) {
+        return false;
+      }
       return this.#env.isContextIdentifier(binding.identifier);
     } else {
       return false;

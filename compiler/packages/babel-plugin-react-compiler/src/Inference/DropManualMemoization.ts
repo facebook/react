@@ -58,7 +58,7 @@ export function collectMaybeMemoDependencies(
       return {
         root: {
           kind: "Global",
-          identifierName: value.name,
+          identifierName: value.binding.name,
         },
         path: [],
       };
@@ -127,7 +127,7 @@ function collectTemporaries(
       break;
     }
     case "LoadGlobal": {
-      const global = env.getGlobalDeclaration(value.name);
+      const global = env.getGlobalDeclaration(value.binding.name);
       const hookKind = global !== null ? getHookKindForType(env, global) : null;
       const lvalId = instr.lvalue.identifier.id;
       if (hookKind === "useMemo" || hookKind === "useCallback") {
@@ -135,7 +135,7 @@ function collectTemporaries(
           kind: hookKind,
           loadInstr: instr as TInstruction<LoadGlobal>,
         });
-      } else if (value.name === "React") {
+      } else if (value.binding.name === "React") {
         sidemap.react.add(lvalId);
       }
       break;

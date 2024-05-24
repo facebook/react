@@ -199,7 +199,7 @@ function* generateInstructionTypes(
     }
 
     case "LoadGlobal": {
-      const globalType = env.getGlobalDeclaration(value.name);
+      const globalType = env.getGlobalDeclaration(value.binding.name);
       if (globalType) {
         yield equation(left, globalType);
       }
