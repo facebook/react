@@ -31,26 +31,17 @@ import { useState as _useState, useCallback, useEffect } from "react";
 import { ValidateMemoization } from "shared-runtime";
 
 function useState(value) {
-  const $ = _c(5);
+  const $ = _c(2);
+  const [state, setState] = _useState(value);
   let t0;
-  if ($[0] !== value) {
-    t0 = _useState(value);
-    $[0] = value;
+  if ($[0] !== state) {
+    t0 = [state, setState];
+    $[0] = state;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const [state, setState] = t0;
-  let t1;
-  if ($[2] !== state || $[3] !== setState) {
-    t1 = [state, setState];
-    $[2] = state;
-    $[3] = setState;
-    $[4] = t1;
-  } else {
-    t1 = $[4];
-  }
-  return t1;
+  return t0;
 }
 
 function Component() {

@@ -514,10 +514,8 @@ export class Environment {
   }
 
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {
-    const name = binding.name;
-
     if (this.config.hookPattern != null) {
-      const match = new RegExp(this.config.hookPattern).exec(name);
+      const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
         match != null &&
         typeof match[1] === "string" &&
@@ -528,40 +526,66 @@ export class Environment {
       }
     }
 
-    let global: Global | null = null;
     switch (binding.kind) {
       case "ModuleLocal": {
         // don't resolve module locals
-        break;
+        return isHookName(binding.name) ? this.#getCustomHookType() : null;
       }
       case "Global": {
-        global = this.#globals.get(name) ?? null;
-        break;
+        return (
+          this.#globals.get(binding.name) ??
+          (isHookName(binding.name) ? this.#getCustomHookType() : null)
+        );
+      }
+      case "ImportSpecifier": {
+        if (this.#isKnownReactModule(binding.module)) {
+          /**
+           * For `import {imported as name} from "..."` form, we use the `imported`
+           * name rather than the local alias. Because we don't have definitions for
+           * every React builtin hook yet, we also check to see if the imported name
+           * is hook-like (whereas the fall-through below is checking if the aliased
+           * name is hook-like)
+           */
+          return (
+            this.#globals.get(binding.imported) ??
+            (isHookName(binding.imported) ? this.#getCustomHookType() : null)
+          );
+        } else {
+          /**
+           * For modules we don't own, we look at whether the original name or import alias
+           * are hook-like. Both of the following are likely hooks so we would return a hook
+           * type for both:
+           *
+           * `import {useHook as foo} ...`
+           * `import {foo as useHook} ...`
+           */
+          return isHookName(binding.imported) || isHookName(binding.name)
+            ? this.#getCustomHookType()
+            : null;
+        }
       }
       case "ImportDefault":
-      case "ImportNamespace":
-      case "ImportSpecifier": {
-        if (
-          binding.module.toLowerCase() === "react" ||
-          binding.module.toLowerCase() === "react-dom" ||
-          (this.config.enableSharedRuntime__testonly &&
-            binding.module === "shared-runtime")
-        ) {
+      case "ImportNamespace": {
+        if (this.#isKnownReactModule(binding.module)) {
           // only resolve imports to modules we know about
-          global = this.#globals.get(name) ?? null;
+          return (
+            this.#globals.get(binding.name) ??
+            (isHookName(binding.name) ? this.#getCustomHookType() : null)
+          );
+        } else {
+          return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }
-        break;
       }
     }
+  }
 
-    if (global === null && isHookName(name)) {
-      /**
-       * Type inference relies on all hooks being resolved as such, so if we don't have
-       * a global declaration and its a hook name, return the default custom hook type.
-       */
-      return this.#getCustomHookType();
-    }
-    return global;
+  #isKnownReactModule(moduleName: string): boolean {
+    return (
+      moduleName.toLowerCase() === "react" ||
+      moduleName.toLowerCase() === "react-dom" ||
+      (this.config.enableSharedRuntime__testonly &&
+        moduleName === "shared-runtime")
+    );
   }
 
   getPropertyType(

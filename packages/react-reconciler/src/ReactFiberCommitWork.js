@@ -101,8 +101,8 @@ import {
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
-  resetCurrentFiber as resetCurrentDebugFiberInDEV,
-  setCurrentFiber as setCurrentDebugFiberInDEV,
+  resetCurrentDebugFiberInDEV,
+  setCurrentDebugFiberInDEV,
   getCurrentFiber as getCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import {resolveClassComponentProps} from './ReactFiberClassComponent';
@@ -2486,7 +2486,7 @@ export function commitMutationEffects(
 
   setCurrentDebugFiberInDEV(finishedWork);
   commitMutationEffectsOnFiber(finishedWork, root, committedLanes);
-  setCurrentDebugFiberInDEV(finishedWork);
+  resetCurrentDebugFiberInDEV();
 
   inProgressLanes = null;
   inProgressRoot = null;
@@ -3125,8 +3125,10 @@ export function commitLayoutEffects(
   inProgressLanes = committedLanes;
   inProgressRoot = root;
 
+  setCurrentDebugFiberInDEV(finishedWork);
   const current = finishedWork.alternate;
   commitLayoutEffectOnFiber(root, current, finishedWork, committedLanes);
+  resetCurrentDebugFiberInDEV();
 
   inProgressLanes = null;
   inProgressRoot = null;

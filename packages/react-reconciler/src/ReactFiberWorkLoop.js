@@ -23,6 +23,7 @@ import type {
 } from './ReactFiberTracingMarkerComponent';
 import type {OffscreenInstance} from './ReactFiberActivityComponent';
 import type {RenderTaskFn} from './ReactFiberRootScheduler';
+import type {Resource} from './ReactFiberConfig';
 
 import {
   enableCreateEventHandleAPI,
@@ -75,6 +76,7 @@ import {
   startSuspendingCommit,
   waitForCommitToBeReady,
   preloadInstance,
+  preloadResource,
   supportsHydration,
   setCurrentUpdatePriority,
   getCurrentUpdatePriority,
@@ -123,6 +125,7 @@ import {
   MountPassiveDev,
   MountLayoutDev,
   DidDefer,
+  ShouldSuspendCommit,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -151,7 +154,6 @@ import {
   movePendingFibersToMemoized,
   addTransitionToLanesMap,
   getTransitionsForLanes,
-  includesOnlyNonUrgentLanes,
   includesSomeLane,
   OffscreenLane,
   SyncUpdateLanes,
@@ -204,7 +206,6 @@ import {
   ContextOnlyDispatcher,
 } from './ReactFiberHooks';
 import {DefaultAsyncDispatcher} from './ReactFiberAsyncDispatcher';
-import {setCurrentOwner} from './ReactFiberCurrentOwner';
 import {
   createCapturedValueAtFiber,
   type CapturedValue,
@@ -230,8 +231,9 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
   current as ReactCurrentFiberCurrent,
-  resetCurrentFiber as resetCurrentDebugFiberInDEV,
-  setCurrentFiber as setCurrentDebugFiberInDEV,
+  resetCurrentDebugFiberInDEV,
+  setCurrentDebugFiberInDEV,
+  resetCurrentFiber,
 } from './ReactCurrentFiber';
 import {
   isDevToolsPresent,
@@ -249,6 +251,7 @@ import {
   markRenderStopped,
   onCommitRoot as onCommitRootDevTools,
   onPostCommitRoot as onPostCommitRootDevTools,
+  setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 import {releaseCache} from './ReactFiberCacheComponent';
@@ -1182,7 +1185,7 @@ function commitRootWhenReady(
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
-  if (includesOnlyNonUrgentLanes(lanes)) {
+  if (finishedWork.subtreeFlags & ShouldSuspendCommit) {
     // Before committing, ask the renderer whether the host tree is ready.
     // If it's not, we'll wait until it notifies us.
     startSuspendingCommit();
@@ -1683,9 +1686,8 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
   // These should be reset immediately because they're only supposed to be set
   // when React is executing user code.
   resetHooksAfterThrow();
-  resetCurrentDebugFiberInDEV();
   if (__DEV__ || !disableStringRefs) {
-    setCurrentOwner(null);
+    resetCurrentFiber();
   }
 
   if (thrownValue === SuspenseException) {
@@ -2219,9 +2221,13 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             break;
           }
           case SuspendedOnInstanceAndReadyToContinue: {
+            let resource: null | Resource = null;
             switch (workInProgress.tag) {
+              case HostHoistable: {
+                resource = workInProgress.memoizedState;
+              }
+              // intentional fallthrough
               case HostComponent:
-              case HostHoistable:
               case HostSingleton: {
                 // Before unwinding the stack, check one more time if the
                 // instance is ready. It may have loaded when React yielded to
@@ -2232,7 +2238,9 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
                 const hostFiber = workInProgress;
                 const type = hostFiber.type;
                 const props = hostFiber.pendingProps;
-                const isReady = preloadInstance(type, props);
+                const isReady = resource
+                  ? preloadResource(resource)
+                  : preloadInstance(type, props);
                 if (isReady) {
                   // The data resolved. Resume the work loop as if nothing
                   // suspended. Unlike when a user component suspends, we don't
@@ -2377,17 +2385,15 @@ function performUnitOfWork(unitOfWork: Fiber): void {
     next = beginWork(current, unitOfWork, entangledRenderLanes);
   }
 
-  resetCurrentDebugFiberInDEV();
+  if (__DEV__ || !disableStringRefs) {
+    resetCurrentFiber();
+  }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
     completeUnitOfWork(unitOfWork);
   } else {
     workInProgress = next;
-  }
-
-  if (__DEV__ || !disableStringRefs) {
-    setCurrentOwner(null);
   }
 }
 
@@ -2399,7 +2405,6 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
-  setCurrentDebugFiberInDEV(unitOfWork);
   const isProfilingMode =
     enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode;
   if (isProfilingMode) {
@@ -2492,17 +2497,15 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   // The begin phase finished successfully without suspending. Return to the
   // normal work loop.
 
-  resetCurrentDebugFiberInDEV();
+  if (__DEV__ || !disableStringRefs) {
+    resetCurrentFiber();
+  }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
     completeUnitOfWork(unitOfWork);
   } else {
     workInProgress = next;
-  }
-
-  if (__DEV__ || !disableStringRefs) {
-    setCurrentOwner(null);
   }
 }
 
@@ -2893,11 +2896,6 @@ function commitRootImpl(
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
 
-    // Reset this to null before calling lifecycles
-    if (__DEV__ || !disableStringRefs) {
-      setCurrentOwner(null);
-    }
-
     // The commit phase is broken into several sub-phases. We do a separate pass
     // of the effect list for each phase: all mutation effects come before all
     // layout effects, and so on.
@@ -3040,7 +3038,9 @@ function commitRootImpl(
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
       const errorInfo = makeErrorInfo(recoverableError.stack);
+      setCurrentDebugFiberInDEV(recoverableError.source);
       onRecoverableError(recoverableError.value, errorInfo);
+      resetCurrentDebugFiberInDEV();
     }
   }
 
@@ -3667,6 +3667,7 @@ function doubleInvokeEffectsOnFiber(
   fiber: Fiber,
   shouldDoubleInvokePassiveEffects: boolean = true,
 ) {
+  setIsStrictModeForDevtools(true);
   disappearLayoutEffects(fiber);
   if (shouldDoubleInvokePassiveEffects) {
     disconnectPassiveEffect(fiber);
@@ -3675,6 +3676,7 @@ function doubleInvokeEffectsOnFiber(
   if (shouldDoubleInvokePassiveEffects) {
     reconnectPassiveEffects(root, fiber, NoLanes, null, false);
   }
+  setIsStrictModeForDevtools(false);
 }
 
 function doubleInvokeEffectsInDEVIfNecessary(
