@@ -29,10 +29,11 @@ import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
 
 function Component(t0) {
-  const $ = _c(4);
-  const { name, data, icon } = t0;
+  const $ = _c(2);
   let t1;
-  if ($[0] !== name || $[1] !== icon || $[2] !== data) {
+  if ($[0] !== t0) {
+    const { name, data, icon } = t0;
+
     t1 = (
       <Text type="body4">
         {fbt._(
@@ -61,12 +62,10 @@ function Component(t0) {
         )}
       </Text>
     );
-    $[0] = name;
-    $[1] = icon;
-    $[2] = data;
-    $[3] = t1;
+    $[0] = t0;
+    $[1] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[1];
   }
   return t1;
 }

@@ -40,21 +40,19 @@ import { useState } from "react";
 function Component(props) {
   const $ = _c(1);
   const [_state, setState] = useState();
+
+  const onClick = (value) => {
+    setState(value);
+  };
+  const b = () => (
+    <>
+      <div onClick={() => onClick(true)}>a</div>
+      <div onClick={() => onClick(false)}>b</div>
+    </>
+  );
+  const a = () => b();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const a = () => b();
-
-    const b = () => (
-      <>
-        <div onClick={() => onClick(true)}>a</div>
-        <div onClick={() => onClick(false)}>b</div>
-      </>
-    );
-
-    const onClick = (value) => {
-      setState(value);
-    };
-
     t0 = <div>{a()}</div>;
     $[0] = t0;
   } else {

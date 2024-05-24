@@ -72,24 +72,30 @@ import { identity, mutate } from "shared-runtime";
  */
 function useFoo(t0) {
   const $ = _c(4);
-  const { a, b } = t0;
+  let a;
+  let t1;
   let z;
-  let y;
-  if ($[0] !== a || $[1] !== b) {
-    const x = { a };
-    y = {};
-    mutate(x);
+  if ($[0] !== t0) {
+    const y = {};
+    const { a: t2, b } = t0;
+    a = t2;
+
     z = [identity(y), b];
+
+    t1 = z[0] !== y;
     mutate(y);
-    $[0] = a;
-    $[1] = b;
-    $[2] = z;
-    $[3] = y;
+    $[0] = t0;
+    $[1] = a;
+    $[2] = t1;
+    $[3] = z;
   } else {
-    z = $[2];
-    y = $[3];
+    a = $[1];
+    t1 = $[2];
+    z = $[3];
   }
-  if (z[0] !== y) {
+  const x = { a };
+  mutate(x);
+  if (t1) {
     throw new Error("oh no!");
   }
   return z;

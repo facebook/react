@@ -30,20 +30,30 @@ import { makeArray } from "shared-runtime";
 
 // @flow
 function Component() {
-  const $ = _c(1);
-  let t0;
+  const $ = _c(4);
+
+  let item;
+  let sum = 0;
+  let items;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const items = makeArray(0, 1, 2);
-    let item;
-    let sum = 0;
+    items = makeArray(0, 1, 2);
     while ((item = items.pop())) {
       sum = sum + item;
     }
-
-    t0 = [items, sum];
-    $[0] = t0;
+    $[0] = items;
+    $[1] = item;
+    $[2] = sum;
   } else {
-    t0 = $[0];
+    items = $[0];
+    item = $[1];
+    sum = $[2];
+  }
+  let t0;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = [items, sum];
+    $[3] = t0;
+  } else {
+    t0 = $[3];
   }
   return t0;
 }

@@ -53,11 +53,10 @@ function Component(props) {
 
   const z = [y];
 
-  y.push(props.input);
-
   const a = [z];
 
   let b = 0;
+  y.push(props.input);
   if (a[0][0][0] === 42) {
     b = 1;
   }

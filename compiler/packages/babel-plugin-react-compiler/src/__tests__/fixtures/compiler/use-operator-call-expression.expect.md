@@ -68,8 +68,8 @@ function Component(props) {
 
 function Inner(props) {
   const $ = _c(7);
-  const input = use(FooContext);
   let t0;
+  const input = use(FooContext);
   let t1;
   if ($[0] !== input) {
     t1 = [input];
@@ -79,7 +79,6 @@ function Inner(props) {
     t1 = $[1];
   }
   t0 = t1;
-  const output = t0;
   let t2;
   if ($[2] !== input) {
     t2 = [input];
@@ -88,6 +87,7 @@ function Inner(props) {
   } else {
     t2 = $[3];
   }
+  const output = t0;
   let t3;
   if ($[4] !== t2 || $[5] !== output) {
     t3 = <ValidateMemoization inputs={t2} output={output} />;

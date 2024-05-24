@@ -33,11 +33,11 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function useFoo(t0) {
-  const $ = _c(3);
-  const { obj, objIsNull } = t0;
+  const $ = _c(2);
   let x;
-  if ($[0] !== objIsNull || $[1] !== obj) {
+  if ($[0] !== t0) {
     x = [];
+    const { obj, objIsNull } = t0;
     for (let i = 0; i < 5; i++) {
       if (objIsNull) {
         continue;
@@ -45,11 +45,10 @@ function useFoo(t0) {
 
       x.push(obj.a);
     }
-    $[0] = objIsNull;
-    $[1] = obj;
-    $[2] = x;
+    $[0] = t0;
+    $[1] = x;
   } else {
-    x = $[2];
+    x = $[1];
   }
   return x;
 }

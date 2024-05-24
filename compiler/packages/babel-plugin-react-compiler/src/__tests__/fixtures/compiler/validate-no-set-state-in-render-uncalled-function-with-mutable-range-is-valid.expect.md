@@ -36,8 +36,9 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
 function Component(props) {
   const $ = _c(7);
-  const logEvent = useLogging(props.appId);
+
   const [currentStep, setCurrentStep] = useState(0);
+  const logEvent = useLogging(props.appId);
   let t0;
   if ($[0] !== logEvent) {
     t0 = (errorEvent) => {
@@ -80,7 +81,6 @@ function Component(props) {
       return t2;
     }
     default: {
-      logEvent("Invalid step");
       let t1;
       if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
         t1 = <OtherComponent data={null} />;
@@ -88,6 +88,7 @@ function Component(props) {
       } else {
         t1 = $[6];
       }
+      logEvent("Invalid step");
       return t1;
     }
   }

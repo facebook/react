@@ -48,8 +48,6 @@ function Component(props) {
   const primitiveVal1 = Math.max(props.a, neverAliasedOrMutated);
 
   const primitiveVal3 = globalThis.globalThis.NaN;
-
-  sum(primitiveVal1, Infinity, primitiveVal3);
   let t1;
   if ($[2] !== primitiveVal1) {
     t1 = { primitiveVal1, primitiveVal2: Infinity, primitiveVal3 };
@@ -58,6 +56,7 @@ function Component(props) {
   } else {
     t1 = $[3];
   }
+  sum(primitiveVal1, Infinity, primitiveVal3);
   return t1;
 }
 

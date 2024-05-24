@@ -25,6 +25,8 @@ function component(a, b) {
 import { c as _c } from "react/compiler-runtime"; // @debug
 function component(a, b) {
   const $ = _c(5);
+
+  const y = b;
   let t0;
   if ($[0] !== a) {
     t0 = { a };
@@ -34,7 +36,6 @@ function component(a, b) {
     t0 = $[1];
   }
   const z = t0;
-  const y = b;
   let t1;
   if ($[2] !== y || $[3] !== z) {
     t1 = function () {

@@ -18,7 +18,6 @@ import { c as _c } from "react/compiler-runtime"; // Valid because hooks can be 
 // memo.
 const MemoizedFunction = memo(function (props) {
   const $ = _c(2);
-  useHook();
   let t0;
   if ($[0] !== props) {
     t0 = <button {...props} />;
@@ -27,6 +26,7 @@ const MemoizedFunction = memo(function (props) {
   } else {
     t0 = $[1];
   }
+  useHook();
   return t0;
 });
 

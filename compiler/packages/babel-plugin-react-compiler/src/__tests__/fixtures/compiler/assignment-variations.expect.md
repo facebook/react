@@ -22,9 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function f() {
-  let x;
-
-  x = 3 >>> 1;
+  const x = 3 >>> 1;
   return x;
 }
 

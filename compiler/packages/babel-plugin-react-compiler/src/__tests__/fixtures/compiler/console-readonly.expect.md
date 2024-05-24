@@ -42,12 +42,12 @@ function Component(props) {
   }
   const x = t0;
 
-  console.log(x);
-  console.info(x);
-  console.warn(x);
-  console.error(x);
-  console.trace(x);
   console.table(x);
+  console.trace(x);
+  console.error(x);
+  console.warn(x);
+  console.info(x);
+  console.log(x);
   return x;
 }
 

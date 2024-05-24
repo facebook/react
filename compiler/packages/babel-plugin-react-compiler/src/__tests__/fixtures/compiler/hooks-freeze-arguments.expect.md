@@ -20,19 +20,27 @@ function call(x) {}
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component() {
-  const $ = _c(1);
+  const $ = _c(3);
+  let a;
   let t0;
+  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = [];
-    $[0] = t0;
+    a = [];
+    t0 = a;
+
+    t1 = a;
+    call(a);
+    $[0] = a;
+    $[1] = t0;
+    $[2] = t1;
   } else {
-    t0 = $[0];
+    a = $[0];
+    t0 = $[1];
+    t1 = $[2];
   }
-  const a = t0;
   useFreeze(a);
-  useFreeze(a);
-  call(a);
-  return a;
+  useFreeze(t0);
+  return t1;
 }
 
 function useFreeze(x) {}

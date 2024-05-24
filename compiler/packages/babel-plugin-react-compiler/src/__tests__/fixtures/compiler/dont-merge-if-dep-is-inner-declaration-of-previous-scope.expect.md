@@ -52,8 +52,9 @@ import { ValidateMemoization } from "shared-runtime";
 // @disableNonForgetInSprout
 function Component(t0) {
   const $ = _c(25);
-  const { a, b, c } = t0;
+
   let y;
+  const { a, b, c } = t0;
   let x;
   if ($[0] !== a || $[1] !== b || $[2] !== c) {
     x = [];
@@ -73,11 +74,11 @@ function Component(t0) {
     $[0] = a;
     $[1] = b;
     $[2] = c;
-    $[3] = y;
-    $[4] = x;
+    $[3] = x;
+    $[4] = y;
   } else {
-    y = $[3];
-    x = $[4];
+    x = $[3];
+    y = $[4];
   }
   let t1;
   if ($[7] !== y) {

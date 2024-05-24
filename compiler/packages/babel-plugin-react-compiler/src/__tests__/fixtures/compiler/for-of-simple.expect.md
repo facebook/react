@@ -27,8 +27,8 @@ function Component() {
   const $ = _c(1);
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = [];
     const items = [0, 1, 2];
+    x = [];
     for (const ii of items) {
       x.push(ii * 2);
     }

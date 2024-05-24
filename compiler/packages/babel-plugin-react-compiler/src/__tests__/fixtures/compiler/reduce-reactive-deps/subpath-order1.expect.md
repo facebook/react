@@ -38,19 +38,27 @@ import { identity } from "shared-runtime";
 
 // ordering of accesses should not matter
 function useConditionalSubpath1(props, cond) {
-  const $ = _c(3);
+  const $ = _c(5);
+  let t0;
+  if ($[0] !== cond) {
+    t0 = identity(cond);
+    $[0] = cond;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
   let x;
-  if ($[0] !== props.a || $[1] !== cond) {
+  if ($[2] !== props.a || $[3] !== t0) {
     x = {};
     x.b = props.a.b;
-    if (identity(cond)) {
+    if (t0) {
       x.a = props.a;
     }
-    $[0] = props.a;
-    $[1] = cond;
-    $[2] = x;
+    $[2] = props.a;
+    $[3] = t0;
+    $[4] = x;
   } else {
-    x = $[2];
+    x = $[4];
   }
   return x;
 }

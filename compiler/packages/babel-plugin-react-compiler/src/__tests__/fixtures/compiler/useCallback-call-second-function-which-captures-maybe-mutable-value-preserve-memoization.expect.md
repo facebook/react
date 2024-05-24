@@ -58,8 +58,6 @@ function Component(props) {
     t0 = $[0];
   }
   const object = t0;
-
-  useHook();
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
@@ -71,24 +69,22 @@ function Component(props) {
   }
   const log = t1;
   let t2;
+  let t3;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => {
       log();
     };
-    $[2] = t2;
-  } else {
-    t2 = $[2];
-  }
-  const onClick = t2;
+    const onClick = t2;
 
-  identity(object);
-  let t3;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = <div onClick={onClick} />;
+    $[2] = t2;
     $[3] = t3;
   } else {
+    t2 = $[2];
     t3 = $[3];
   }
+  identity(object);
+  useHook();
   return t3;
 }
 

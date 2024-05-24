@@ -40,8 +40,8 @@ function ComponentA(props) {
   let a;
   let b;
   if ($[0] !== props) {
-    a = [];
     b = [];
+    a = [];
     if (b) {
       a.push(props.p0);
     }
@@ -72,8 +72,8 @@ function ComponentB(props) {
   let a;
   let b;
   if ($[0] !== props) {
-    a = [];
     b = [];
+    a = [];
     if (mayMutate(b)) {
       a.push(props.p0);
     }

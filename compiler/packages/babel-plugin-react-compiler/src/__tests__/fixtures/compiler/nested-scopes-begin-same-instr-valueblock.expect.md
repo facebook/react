@@ -33,17 +33,18 @@ import { identity, mutate } from "shared-runtime";
 function Foo(t0) {
   const $ = _c(2);
   const { cond } = t0;
-  let x;
+  let t1;
   if ($[0] !== cond) {
-    x = identity(identity(cond)) ? { a: 2 } : { b: 2 };
+    const x = identity(identity(cond)) ? { a: 2 } : { b: 2 };
 
+    t1 = x;
     mutate(x);
     $[0] = cond;
-    $[1] = x;
+    $[1] = t1;
   } else {
-    x = $[1];
+    t1 = $[1];
   }
-  return x;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

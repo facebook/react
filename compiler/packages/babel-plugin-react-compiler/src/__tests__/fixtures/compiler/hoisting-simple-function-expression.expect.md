@@ -29,9 +29,8 @@ function hoisting() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const foo = () => bar();
-
     const bar = () => 1;
+    const foo = () => bar();
 
     t0 = foo();
     $[0] = t0;

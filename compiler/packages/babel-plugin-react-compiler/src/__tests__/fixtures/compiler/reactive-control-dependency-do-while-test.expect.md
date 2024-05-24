@@ -43,8 +43,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
-  let x;
+
   let i = 0;
+  let x;
   do {
     if (i > 10) {
       x = 10;

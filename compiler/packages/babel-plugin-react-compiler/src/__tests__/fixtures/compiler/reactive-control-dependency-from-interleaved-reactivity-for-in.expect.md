@@ -42,13 +42,13 @@ function Component(props) {
   const $ = _c(1);
 
   const a = [];
-  const b = [];
-  b.push(props.cond);
-  a.push({ a: false });
 
   const c = [a];
 
   let x;
+  a.push({ a: false });
+  const b = [];
+  b.push(props.cond);
   for (const i in c[0][0]) {
     x = 1;
   }

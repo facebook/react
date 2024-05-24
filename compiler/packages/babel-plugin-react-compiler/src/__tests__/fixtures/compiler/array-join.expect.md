@@ -45,7 +45,6 @@ function Component(props) {
     t3 = $[4];
   }
   const y = x.join(t3);
-  foo(y);
   let t4;
   if ($[5] !== x || $[6] !== y) {
     t4 = [x, y];
@@ -55,6 +54,7 @@ function Component(props) {
   } else {
     t4 = $[7];
   }
+  foo(y);
   return t4;
 }
 

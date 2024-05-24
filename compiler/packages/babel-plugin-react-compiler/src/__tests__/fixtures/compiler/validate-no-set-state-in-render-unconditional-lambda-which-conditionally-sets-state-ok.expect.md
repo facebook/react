@@ -43,22 +43,6 @@ import { useState } from "react";
 function Component(props) {
   const $ = _c(2);
   const [x, setX] = useState(0);
-
-  const foo = () => {
-    setX(1);
-  };
-
-  const bar = () => {
-    if (props.cond) {
-      foo();
-    }
-  };
-
-  const baz = () => {
-    bar();
-  };
-
-  baz();
   let t0;
   if ($[0] !== x) {
     t0 = [x];
@@ -67,6 +51,18 @@ function Component(props) {
   } else {
     t0 = $[1];
   }
+  const foo = () => {
+    setX(1);
+  };
+  const bar = () => {
+    if (props.cond) {
+      foo();
+    }
+  };
+  const baz = () => {
+    bar();
+  };
+  baz();
   return t0;
 }
 

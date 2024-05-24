@@ -39,30 +39,35 @@ import { c as _c } from "react/compiler-runtime";
  */
 function Component(props) {
   const $ = _c(7);
-  let a;
-  let b;
-  if ($[0] !== props.a || $[1] !== props.b) {
-    a = compute(props.a);
-    b = compute(props.b);
-    foo(a, b);
-    $[0] = props.a;
-    $[1] = props.b;
-    $[2] = a;
-    $[3] = b;
-  } else {
-    a = $[2];
-    b = $[3];
-  }
   let t0;
+  if ($[0] !== props.a) {
+    t0 = compute(props.a);
+    $[0] = props.a;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const a = t0;
+  let t1;
+  if ($[2] !== props.b) {
+    t1 = compute(props.b);
+    $[2] = props.b;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  const b = t1;
+  let t2;
   if ($[4] !== a || $[5] !== b) {
-    t0 = <Foo a={a} b={b} />;
+    t2 = <Foo a={a} b={b} />;
     $[4] = a;
     $[5] = b;
-    $[6] = t0;
+    $[6] = t2;
   } else {
-    t0 = $[6];
+    t2 = $[6];
   }
-  return t0;
+  foo(a, b);
+  return t2;
 }
 
 function compute() {}

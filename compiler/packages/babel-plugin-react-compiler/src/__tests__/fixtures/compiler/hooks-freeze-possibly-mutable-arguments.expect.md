@@ -29,8 +29,9 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(1);
   const cond = props.cond;
-  const x = props.x;
+
   let a;
+  const x = props.x;
   if (cond) {
     a = x;
   } else {
@@ -44,9 +45,9 @@ function Component(props) {
     a = t0;
   }
 
-  useFreeze(a);
-  useFreeze(a);
   call(a);
+  useFreeze(a);
+  useFreeze(a);
   return a;
 }
 

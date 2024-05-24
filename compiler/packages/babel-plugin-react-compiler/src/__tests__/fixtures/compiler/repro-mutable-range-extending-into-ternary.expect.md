@@ -55,8 +55,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { useState } from "react";
 
 function Component(props) {
-  const items = props.items ? props.items.slice() : [];
   const [state] = useState("");
+  const items = props.items ? props.items.slice() : [];
   return props.cond ? (
     <div>{state}</div>
   ) : (

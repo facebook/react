@@ -20,13 +20,13 @@ function useHook() {
 ## Error
 
 ```
+   6 | function useHook() {
    7 |   try {
-   8 |     f();
->  9 |     useState();
-     |     ^^^^^^^^ InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (9:9)
+>  8 |     f();
+     |     ^ Invariant: [Codegen] No value found for temporary. Value for 'mutate? $5[0:4]:TFunction' was not set in the codegen context (8:8)
+   9 |     useState();
   10 |   } catch {}
   11 | }
-  12 |
 ```
           
       

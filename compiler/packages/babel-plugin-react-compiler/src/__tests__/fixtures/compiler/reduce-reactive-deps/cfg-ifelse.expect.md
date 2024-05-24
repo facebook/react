@@ -35,20 +35,28 @@ import { c as _c } from "react/compiler-runtime"; // props.a.b should be added a
 import { identity } from "shared-runtime";
 
 function useCondDepInDirectIfElse(props, cond) {
-  const $ = _c(3);
+  const $ = _c(5);
+  let t0;
+  if ($[0] !== cond) {
+    t0 = identity(cond);
+    $[0] = cond;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
   let x;
-  if ($[0] !== cond || $[1] !== props.a.b) {
+  if ($[2] !== t0 || $[3] !== props.a.b) {
     x = {};
-    if (identity(cond)) {
+    if (t0) {
       x.b = props.a.b;
     } else {
       x.c = props.a.b;
     }
-    $[0] = cond;
-    $[1] = props.a.b;
-    $[2] = x;
+    $[2] = t0;
+    $[3] = props.a.b;
+    $[4] = x;
   } else {
-    x = $[2];
+    x = $[4];
   }
   return x;
 }

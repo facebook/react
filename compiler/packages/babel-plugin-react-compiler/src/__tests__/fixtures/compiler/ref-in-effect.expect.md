@@ -35,24 +35,24 @@ function Component(props) {
   }
   const onChange = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = () => {
+  if ($[1] !== onChange) {
+    t1 = <Foo onChange={onChange} />;
+    $[1] = onChange;
+    $[2] = t1;
+  } else {
+    t1 = $[2];
+  }
+  let t2;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = () => {
       console.log(ref.current);
     };
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  useEffect(t1);
-  let t2;
-  if ($[2] !== onChange) {
-    t2 = <Foo onChange={onChange} />;
-    $[2] = onChange;
     $[3] = t2;
   } else {
     t2 = $[3];
   }
-  return t2;
+  useEffect(t2);
+  return t1;
 }
 
 ```

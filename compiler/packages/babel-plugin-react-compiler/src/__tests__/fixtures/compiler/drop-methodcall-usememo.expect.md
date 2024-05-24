@@ -29,16 +29,16 @@ import * as React from "react";
 function Component(props) {
   const $ = _c(2);
   let t0;
-  let x;
   if ($[0] !== props.value) {
-    x = [];
+    const x = [];
+
+    t0 = x;
     x.push(props.value);
     $[0] = props.value;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
-  t0 = x;
   const x_0 = t0;
   return x_0;
 }

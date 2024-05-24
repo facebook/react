@@ -97,8 +97,9 @@ import {
 function useFoo(t0) {
   const $ = _c(5);
   const { data } = t0;
-  let obj;
+
   let myDiv = null;
+  let obj;
   if (data.cond) {
     if ($[0] !== data.cond1) {
       obj = makeObject_Primitives();

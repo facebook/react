@@ -30,8 +30,8 @@ function foo(a, b, c) {
   if (x) {
   }
 
-  y.push(a);
   x.push(b);
+  y.push(a);
 }
 
 export const FIXTURE_ENTRYPOINT = {

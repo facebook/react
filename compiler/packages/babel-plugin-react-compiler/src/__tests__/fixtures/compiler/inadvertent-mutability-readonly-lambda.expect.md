@@ -23,7 +23,9 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(1);
+
+  const x = {};
   const [value, setValue] = useState(null);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -33,16 +35,8 @@ function Component(props) {
     t0 = $[0];
   }
   const onChange = t0;
-
+  foo(x, onChange);
   useOtherHook();
-  let x;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    x = {};
-    foo(x, onChange);
-    $[1] = x;
-  } else {
-    x = $[1];
-  }
   return x;
 }
 

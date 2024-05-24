@@ -48,13 +48,13 @@ function Component(props) {
   const $ = _c(1);
 
   const a = [];
-  const b = [];
-  b.push(props.cond);
-  a.push(null);
 
   const c = [a];
 
   let x;
+  a.push(null);
+  const b = [];
+  b.push(props.cond);
   bb0: switch (c[0][0]) {
     case true: {
       x = 1;

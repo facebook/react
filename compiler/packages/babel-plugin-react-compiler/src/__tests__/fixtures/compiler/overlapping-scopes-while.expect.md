@@ -23,11 +23,11 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function foo(a, b, c) {
-  const x = [];
   const y = [];
+  const x = [];
   while (c) {
-    y.push(b);
     x.push(a);
+    y.push(b);
   }
 }
 

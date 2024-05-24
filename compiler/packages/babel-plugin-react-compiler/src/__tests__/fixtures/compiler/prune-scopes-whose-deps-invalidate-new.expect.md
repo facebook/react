@@ -26,15 +26,26 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+import { c as _c } from "react/compiler-runtime";
 import { useHook } from "shared-runtime";
 
 function Component(props) {
-  const x = new Foo();
-  useHook();
-  x.value = props.value;
+  const $ = _c(2);
+  let t0;
+  if ($[0] !== props.value) {
+    const x = new Foo();
 
-  const y = { x };
-  return { y };
+    const y = { x };
+
+    t0 = { y };
+    x.value = props.value;
+    $[0] = props.value;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  useHook();
+  return t0;
 }
 
 class Foo {}

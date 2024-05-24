@@ -34,8 +34,8 @@ function Component(props) {
   const $ = _c(1);
   let items;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    let lastItem = {};
     items = [makeObject_Primitives(), makeObject_Primitives()];
+    let lastItem = {};
     for (const x of items) {
       lastItem = x;
     }

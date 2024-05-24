@@ -40,6 +40,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+import { c as _c } from "react/compiler-runtime";
 import {
   CONST_TRUE,
   identity,
@@ -57,14 +58,25 @@ import {
  * (3) mergeOverlappingScopes should merge the scopes of the above two instructions
  */
 function Component(t0) {
-  const value = makeObject_Primitives();
+  const $ = _c(1);
+
   useHook();
-  const mutatedValue =
-    identity(1) && CONST_TRUE ? mutateAndReturn(value) : null;
-  const result = [];
+  let t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const value = makeObject_Primitives();
+
+    const result = [];
+
+    t1 = result;
+    const mutatedValue =
+      identity(1) && CONST_TRUE ? mutateAndReturn(value) : null;
+    result.push(value, mutatedValue);
+    $[0] = t1;
+  } else {
+    t1 = $[0];
+  }
   useHook();
-  result.push(value, mutatedValue);
-  return result;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

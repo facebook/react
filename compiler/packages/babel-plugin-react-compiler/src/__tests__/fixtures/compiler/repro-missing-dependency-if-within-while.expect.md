@@ -40,20 +40,21 @@ import { c as _c } from "react/compiler-runtime";
 const someGlobal = true;
 export default function Component(props) {
   const $ = _c(2);
-  const { b } = props;
+
+  let i = 0;
   let t0;
-  if ($[0] !== b) {
+  if ($[0] !== props) {
     const items = [];
-    let i = 0;
+    const { b } = props;
     while (i < 10) {
       if (someGlobal) {
-        items.push(<div key={i}>{b}</div>);
         i++;
+        items.push(<div key={i}>{b}</div>);
       }
     }
 
     t0 = <>{items}</>;
-    $[0] = b;
+    $[0] = props;
     $[1] = t0;
   } else {
     t0 = $[1];

@@ -36,7 +36,6 @@ function component(a) {
     t0 = $[1];
   }
   const z = t0;
-  let x;
   let t1;
   if ($[2] !== z) {
     t1 = function () {
@@ -47,7 +46,7 @@ function component(a) {
   } else {
     t1 = $[3];
   }
-  x = t1;
+  const x = t1;
   return x;
 }
 

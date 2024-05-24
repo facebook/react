@@ -30,7 +30,6 @@ import { useHook } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(6);
-  const o = {};
   let t0;
   if ($[0] !== props.value) {
     t0 = <div>{props.value}</div>;
@@ -40,8 +39,6 @@ function Component(props) {
     t0 = $[1];
   }
   const x = t0;
-  useHook();
-  o.value = props.value;
   let t1;
   if ($[2] !== x) {
     t1 = <div>{x}</div>;
@@ -59,6 +56,9 @@ function Component(props) {
   } else {
     t2 = $[5];
   }
+  const o = {};
+  o.value = props.value;
+  useHook();
   return t2;
 }
 

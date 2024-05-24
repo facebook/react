@@ -21,22 +21,24 @@ function component(a) {
 import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(2);
-  let y;
+  let t0;
   if ($[0] !== a) {
-    const x = { a };
+    let y;
     y = {};
+
+    t0 = y;
+    mutate(y);
+    const x = { a };
     const f0 = function () {
       y = x;
     };
-
     f0();
-    mutate(y);
     $[0] = a;
-    $[1] = y;
+    $[1] = t0;
   } else {
-    y = $[1];
+    t0 = $[1];
   }
-  return y;
+  return t0;
 }
 
 ```

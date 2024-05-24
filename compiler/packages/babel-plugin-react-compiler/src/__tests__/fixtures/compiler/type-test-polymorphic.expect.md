@@ -25,22 +25,21 @@ function component() {
 import { c as _c } from "react/compiler-runtime";
 function component() {
   const $ = _c(1);
-  const p = makePrimitive();
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const x = {};
+
+    const y = x.t;
+    t0 = y;
     const o = {};
-
-    x = {};
-
-    x.t = p;
-
     x.t = o;
-    $[0] = x;
+    const p = makePrimitive();
+    x.t = p;
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
-  const y = x.t;
-  return y;
+  return t0;
 }
 
 ```

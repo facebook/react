@@ -45,20 +45,28 @@ import { identity } from "shared-runtime";
 
 // ordering of accesses should not matter
 function useConditionalSuperpath1(t0) {
-  const $ = _c(3);
+  const $ = _c(5);
   const { props, cond } = t0;
+  let t1;
+  if ($[0] !== cond) {
+    t1 = identity(cond);
+    $[0] = cond;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
   let x;
-  if ($[0] !== props.a || $[1] !== cond) {
+  if ($[2] !== props.a || $[3] !== t1) {
     x = {};
     x.a = props.a;
-    if (identity(cond)) {
+    if (t1) {
       x.b = props.a.b;
     }
-    $[0] = props.a;
-    $[1] = cond;
-    $[2] = x;
+    $[2] = props.a;
+    $[3] = t1;
+    $[4] = x;
   } else {
-    x = $[2];
+    x = $[4];
   }
   return x;
 }

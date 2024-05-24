@@ -29,26 +29,19 @@ import { c as _c } from "react/compiler-runtime";
 import { addOne, shallowCopy } from "shared-runtime";
 
 function foo(a, b, c) {
-  const $ = _c(5);
+  const $ = _c(3);
   let t0;
-  if ($[0] !== a) {
-    t0 = shallowCopy(a);
+  if ($[0] !== a || $[1] !== b) {
+    const x = shallowCopy(a);
+
+    t0 = x.foo(b);
     $[0] = a;
-    $[1] = t0;
+    $[1] = b;
+    $[2] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[2];
   }
-  const x = t0;
-  let t1;
-  if ($[2] !== x || $[3] !== b) {
-    t1 = x.foo(b);
-    $[2] = x;
-    $[3] = b;
-    $[4] = t1;
-  } else {
-    t1 = $[4];
-  }
-  const y = t1;
+  const y = t0;
   return y;
 }
 

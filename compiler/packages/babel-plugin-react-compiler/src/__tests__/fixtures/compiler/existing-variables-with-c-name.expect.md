@@ -34,6 +34,7 @@ import { ValidateMemoization } from "shared-runtime";
 
 function Component(props) {
   const $ = _c2(7);
+  let t0;
   const [state] = useState(0);
 
   const c = state;
@@ -41,7 +42,6 @@ function Component(props) {
   const __c = _c;
   const c1 = __c;
   const $c = c1;
-  let t0;
   let t1;
   if ($[0] !== $c) {
     t1 = [$c];
@@ -51,7 +51,6 @@ function Component(props) {
     t1 = $[1];
   }
   t0 = t1;
-  const array = t0;
   let t2;
   if ($[2] !== state) {
     t2 = [state];
@@ -60,6 +59,7 @@ function Component(props) {
   } else {
     t2 = $[3];
   }
+  const array = t0;
   let t3;
   if ($[4] !== t2 || $[5] !== array) {
     t3 = <ValidateMemoization inputs={t2} output={array} />;

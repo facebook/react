@@ -29,19 +29,19 @@ import { Stringify } from "shared-runtime";
 
 function hoisting() {
   const $ = _c(2);
-  let onClick;
+  let bar;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    onClick = function onClick(x) {
-      return x + bar.baz;
-    };
-
-    const bar = { baz: 1 };
-    $[0] = onClick;
+    bar = { baz: 1 };
+    $[0] = bar;
   } else {
-    onClick = $[0];
+    bar = $[0];
   }
   let t0;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    const onClick = function onClick(x) {
+      return x + bar.baz;
+    };
+
     t0 = <Stringify onClick={onClick} />;
     $[1] = t0;
   } else {

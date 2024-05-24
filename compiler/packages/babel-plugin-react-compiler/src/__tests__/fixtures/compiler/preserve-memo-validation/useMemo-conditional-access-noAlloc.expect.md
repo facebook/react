@@ -29,8 +29,8 @@ import { useMemo } from "react";
 
 function Component(t0) {
   const $ = _c(3);
-  const { propA, propB } = t0;
   let t1;
+  const { propA, propB } = t0;
 
   const t2 = propB?.x.y;
   let t3;

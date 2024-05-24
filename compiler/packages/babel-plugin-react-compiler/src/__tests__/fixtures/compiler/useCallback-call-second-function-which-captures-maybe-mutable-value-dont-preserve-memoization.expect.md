@@ -50,26 +50,25 @@ import {
 
 function Component(props) {
   const $ = _c(1);
-  const object = makeObject_Primitives();
-
-  useHook();
-
-  const log = () => {
-    logValue(object);
-  };
-
-  const onClick = () => {
-    log();
-  };
-
-  identity(object);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const object = makeObject_Primitives();
+
+    const log = () => {
+      logValue(object);
+    };
+
+    const onClick = () => {
+      log();
+    };
+
     t0 = <div onClick={onClick} />;
+    identity(object);
     $[0] = t0;
   } else {
     t0 = $[0];
   }
+  useHook();
   return t0;
 }
 

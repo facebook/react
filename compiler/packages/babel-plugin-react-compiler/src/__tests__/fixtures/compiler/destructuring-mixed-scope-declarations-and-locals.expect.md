@@ -30,49 +30,37 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(8);
+  const $ = _c(5);
   const post = useFragment(graphql`...`, props.post);
-  let media;
-  let onClick;
-  if ($[0] !== post) {
-    const allUrls = [];
 
-    const { media: t0, comments, urls } = post;
-    media = t0;
-    let t1;
-    if ($[3] !== comments.length) {
-      t1 = (e) => {
-        if (!comments.length) {
-          return;
-        }
-
-        console.log(comments.length);
-      };
-      $[3] = comments.length;
-      $[4] = t1;
-    } else {
-      t1 = $[4];
-    }
-    onClick = t1;
-
-    allUrls.push(...urls);
-    $[0] = post;
-    $[1] = media;
-    $[2] = onClick;
-  } else {
-    media = $[1];
-    onClick = $[2];
-  }
+  const { media, comments, urls } = post;
   let t0;
-  if ($[5] !== media || $[6] !== onClick) {
-    t0 = <Media media={media} onClick={onClick} />;
-    $[5] = media;
-    $[6] = onClick;
-    $[7] = t0;
+  if ($[0] !== comments.length) {
+    t0 = (e) => {
+      if (!comments.length) {
+        return;
+      }
+
+      console.log(comments.length);
+    };
+    $[0] = comments.length;
+    $[1] = t0;
   } else {
-    t0 = $[7];
+    t0 = $[1];
   }
-  return t0;
+  const onClick = t0;
+  let t1;
+  if ($[2] !== media || $[3] !== onClick) {
+    t1 = <Media media={media} onClick={onClick} />;
+    $[2] = media;
+    $[3] = onClick;
+    $[4] = t1;
+  } else {
+    t1 = $[4];
+  }
+  const allUrls = [];
+  allUrls.push(...urls);
+  return t1;
 }
 
 ```

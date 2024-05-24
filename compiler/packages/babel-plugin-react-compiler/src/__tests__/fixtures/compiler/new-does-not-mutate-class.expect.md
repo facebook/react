@@ -28,42 +28,35 @@ import { identity } from "shared-runtime";
 
 class Foo {}
 function Component(t0) {
-  const $ = _c(6);
+  const $ = _c(5);
   const { val } = t0;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = identity(Foo);
-    $[0] = t1;
+  if ($[0] !== val) {
+    t1 = [val];
+    $[0] = val;
+    $[1] = t1;
   } else {
-    t1 = $[0];
+    t1 = $[1];
   }
-  const MyClass = t1;
+  const x = t1;
   let t2;
-  if ($[1] !== val) {
-    t2 = [val];
-    $[1] = val;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    const MyClass = identity(Foo);
+    t2 = new MyClass();
     $[2] = t2;
   } else {
     t2 = $[2];
   }
-  const x = t2;
+  const y = t2;
   let t3;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = new MyClass();
-    $[3] = t3;
+  if ($[3] !== x) {
+    t3 = [x, y];
+    $[3] = x;
+    $[4] = t3;
   } else {
-    t3 = $[3];
+    t3 = $[4];
   }
-  const y = t3;
-  let t4;
-  if ($[4] !== x) {
-    t4 = [x, y];
-    $[4] = x;
-    $[5] = t4;
-  } else {
-    t4 = $[5];
-  }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

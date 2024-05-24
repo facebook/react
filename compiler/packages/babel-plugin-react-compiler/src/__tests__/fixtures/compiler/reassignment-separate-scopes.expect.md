@@ -41,60 +41,63 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c) {
-  const $ = _c(10);
+  const $ = _c(11);
   let x;
-  let t0;
   if ($[0] !== a) {
     x = [];
     if (a) {
       x.push(a);
     }
-
-    t0 = <div>{x}</div>;
     $[0] = a;
     $[1] = x;
-    $[2] = t0;
   } else {
     x = $[1];
-    t0 = $[2];
+  }
+  let t0;
+  if ($[2] !== x) {
+    t0 = <div>{x}</div>;
+    $[2] = x;
+    $[3] = t0;
+  } else {
+    t0 = $[3];
   }
   const y = t0;
   bb0: switch (b) {
     case 0: {
-      if ($[3] !== b) {
+      if ($[4] !== b) {
         x = [];
         x.push(b);
-        $[3] = b;
-        $[4] = x;
+        $[4] = b;
+        $[5] = x;
       } else {
-        x = $[4];
+        x = $[5];
       }
       break bb0;
     }
     default: {
-      if ($[5] !== c) {
+      if ($[6] !== c) {
         x = [];
         x.push(c);
-        $[5] = c;
-        $[6] = x;
+        $[6] = c;
+        $[7] = x;
       } else {
-        x = $[6];
+        x = $[7];
       }
     }
   }
   let t1;
-  if ($[7] !== y || $[8] !== x) {
+  if ($[8] !== y || $[9] !== x) {
     t1 = (
       <div>
         {y}
         {x}
       </div>
     );
-    $[7] = y;
-    $[8] = x;
-    $[9] = t1;
+    $[8] = y;
+    $[9] = x;
+    $[10] = t1;
   } else {
-    t1 = $[9];
+    t1 = $[10];
   }
   return t1;
 }

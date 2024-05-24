@@ -15,31 +15,26 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(6);
+  const $ = _c(3);
+
+  const x = props.value;
   let t0;
-  let t1;
-  if ($[0] !== props.value) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const maybeMutable = new MaybeMutable();
-    const x = props.value;
-    t0 = x;
-    t1 = maybeMutate(maybeMutable);
-    $[0] = props.value;
-    $[1] = t0;
+    t0 = maybeMutate(maybeMutable);
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  let t1;
+  if ($[1] !== x) {
+    t1 = [x, t0];
+    $[1] = x;
     $[2] = t1;
   } else {
-    t0 = $[1];
     t1 = $[2];
   }
-  let t2;
-  if ($[3] !== t0 || $[4] !== t1) {
-    t2 = [t0, t1];
-    $[3] = t0;
-    $[4] = t1;
-    $[5] = t2;
-  } else {
-    t2 = $[5];
-  }
-  return t2;
+  return t1;
 }
 
 ```

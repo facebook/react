@@ -27,8 +27,8 @@ import { identity } from "shared-runtime";
 
 function useHook(t0) {
   const $ = _c(7);
-  const { a, b } = t0;
   let t1;
+  const { a, b } = t0;
   let t2;
   if ($[0] !== a) {
     t2 = identity({ a });
@@ -38,8 +38,8 @@ function useHook(t0) {
     t2 = $[1];
   }
   t1 = t2;
-  const valA = t1;
   let t3;
+  const valA = t1;
   let t4;
   if ($[2] !== b) {
     t4 = identity([b]);

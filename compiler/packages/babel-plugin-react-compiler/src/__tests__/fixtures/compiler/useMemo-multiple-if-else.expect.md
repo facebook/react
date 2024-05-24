@@ -33,29 +33,24 @@ import { c as _c } from "react/compiler-runtime";
 import { useMemo } from "react";
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(2);
   let t0;
-  bb0: {
-    let y;
-    if ($[0] !== props) {
-      y = [];
-      if (props.cond) {
-        y.push(props.a);
-      }
-      if (props.cond2) {
-        t0 = y;
-        break bb0;
-      }
-
-      y.push(props.b);
-      $[0] = props;
-      $[1] = y;
-      $[2] = t0;
-    } else {
-      y = $[1];
-      t0 = $[2];
+  bb0: if ($[0] !== props) {
+    const y = [];
+    if (props.cond) {
+      y.push(props.a);
     }
+    if (props.cond2) {
+      t0 = y;
+      break bb0;
+    }
+
     t0 = y;
+    y.push(props.b);
+    $[0] = props;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
   }
   const x = t0;
   return x;

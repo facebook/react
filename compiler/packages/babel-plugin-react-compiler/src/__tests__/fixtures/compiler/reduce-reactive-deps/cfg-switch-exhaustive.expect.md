@@ -40,11 +40,19 @@ import { c as _c } from "react/compiler-runtime"; // props.a.b should be added a
 import { identity } from "shared-runtime";
 
 function useCondDepInSwitch(props, other) {
-  const $ = _c(3);
+  const $ = _c(5);
+  let t0;
+  if ($[0] !== other) {
+    t0 = identity(other);
+    $[0] = other;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
   let x;
-  if ($[0] !== other || $[1] !== props.a.b) {
+  if ($[2] !== t0 || $[3] !== props.a.b) {
     x = {};
-    bb0: switch (identity(other)) {
+    bb0: switch (t0) {
       case 1: {
         x.a = props.a.b;
         break bb0;
@@ -57,11 +65,11 @@ function useCondDepInSwitch(props, other) {
         x.c = props.a.b;
       }
     }
-    $[0] = other;
-    $[1] = props.a.b;
-    $[2] = x;
+    $[2] = t0;
+    $[3] = props.a.b;
+    $[4] = x;
   } else {
-    x = $[2];
+    x = $[4];
   }
   return x;
 }

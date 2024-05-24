@@ -41,6 +41,7 @@ import {
   deadCodeElimination,
   pruneMaybeThrows,
 } from "../Optimization";
+import { instructionReordering } from "../Optimization/InstructionReordering";
 import {
   CodegenFunction,
   alignObjectMethodScopes,
@@ -176,6 +177,9 @@ function* runWithEnvironment(
 
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
+
+  instructionReordering(hir);
+  yield log({ kind: "hir", name: "InstructionReordering", value: hir });
 
   if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);

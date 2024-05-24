@@ -25,11 +25,11 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(6);
-  const item = props.item;
   let baseVideos;
   let thumbnails;
-  if ($[0] !== item) {
+  if ($[0] !== props.item) {
     thumbnails = [];
+    const item = props.item;
     baseVideos = getBaseVideos(item);
 
     baseVideos.forEach((video) => {
@@ -38,7 +38,7 @@ function Component(props) {
         thumbnails.push({ extraVideo: true });
       }
     });
-    $[0] = item;
+    $[0] = props.item;
     $[1] = baseVideos;
     $[2] = thumbnails;
   } else {

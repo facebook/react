@@ -25,13 +25,14 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(6);
-  let x;
+
   let y;
+  let x;
   if ($[0] !== props) {
     x = [];
     if (props.p0) {
-      x.push(props.p1);
       y = x;
+      x.push(props.p1);
     }
     $[0] = props;
     $[1] = x;

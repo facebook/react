@@ -27,19 +27,22 @@ import { useMemo } from "react";
 import { identity, makeObject_Primitives, mutate } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(1);
+  const $ = _c(2);
   let t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = makeObject_Primitives();
+    t0 = makeObject_Primitives();
+    const object = t0;
+
+    t1 = object;
+    identity(object);
     $[0] = t1;
+    $[1] = t0;
   } else {
     t1 = $[0];
+    t0 = $[1];
   }
-  t0 = t1;
-  const object = t0;
-  identity(object);
-  return object;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

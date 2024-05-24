@@ -30,9 +30,9 @@ const FooContext = React.createContext({ current: null });
 
 function Component(props) {
   const $ = _c(6);
-  React.useContext(FooContext);
-  const ref = React.useRef();
+
   const [x, setX] = React.useState(false);
+  const ref = React.useRef();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
@@ -61,6 +61,7 @@ function Component(props) {
   } else {
     t2 = $[5];
   }
+  React.useContext(FooContext);
   return t2;
 }
 

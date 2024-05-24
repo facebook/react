@@ -31,37 +31,37 @@ import { useMemo } from "react";
 
 function useFoo(arr1, arr2) {
   const $ = _c(7);
-  let t0;
-  if ($[0] !== arr1) {
-    t0 = [arr1];
-    $[0] = arr1;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  const x = t0;
   let y;
-  if ($[2] !== x || $[3] !== arr2) {
+  if ($[0] !== arr1 || $[1] !== arr2) {
     y;
+    let t0;
+    if ($[3] !== arr1) {
+      t0 = [arr1];
+      $[3] = arr1;
+      $[4] = t0;
+    } else {
+      t0 = $[4];
+    }
+    const x = t0;
     (y = x.concat(arr2)), y;
-    $[2] = x;
-    $[3] = arr2;
-    $[4] = y;
+    $[0] = arr1;
+    $[1] = arr2;
+    $[2] = y;
   } else {
-    y = $[4];
+    y = $[2];
   }
-  let t1;
-  const t2 = y;
-  let t3;
-  if ($[5] !== t2) {
-    t3 = { y: t2 };
-    $[5] = t2;
-    $[6] = t3;
+  let t0;
+  const t1 = y;
+  let t2;
+  if ($[5] !== t1) {
+    t2 = { y: t1 };
+    $[5] = t1;
+    $[6] = t2;
   } else {
-    t3 = $[6];
+    t2 = $[6];
   }
-  t1 = t3;
-  return t1;
+  t0 = t2;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -37,35 +37,48 @@ import { arrayPush } from "shared-runtime";
 // useMemo-produced values can exist in nested reactive blocks, as long
 // as their reactive dependencies are a subset of depslist from source
 function useFoo(minWidth, otherProp) {
-  const $ = _c(6);
-  const [width] = useState(1);
+  const $ = _c(11);
   let t0;
-  if ($[0] !== width || $[1] !== minWidth || $[2] !== otherProp) {
-    const x = [];
-    let t1;
+  const [width] = useState(1);
+  let style;
+  let x;
+  if ($[0] !== minWidth || $[1] !== width || $[2] !== otherProp) {
+    x = [];
 
-    const t2 = Math.max(minWidth, width);
-    let t3;
-    if ($[4] !== t2) {
-      t3 = { width: t2 };
-      $[4] = t2;
-      $[5] = t3;
+    const t1 = Math.max(minWidth, width);
+    let t2;
+    if ($[6] !== t1) {
+      t2 = { width: t1 };
+      $[6] = t1;
+      $[7] = t2;
     } else {
-      t3 = $[5];
+      t2 = $[7];
     }
-    t1 = t3;
-    const style = t1;
+    t0 = t2;
+    style = t0;
 
     arrayPush(x, otherProp);
-    t0 = [style, x];
-    $[0] = width;
-    $[1] = minWidth;
+    $[0] = minWidth;
+    $[1] = width;
     $[2] = otherProp;
-    $[3] = t0;
+    $[3] = style;
+    $[4] = x;
+    $[5] = t0;
   } else {
-    t0 = $[3];
+    style = $[3];
+    x = $[4];
+    t0 = $[5];
   }
-  return t0;
+  let t1;
+  if ($[8] !== style || $[9] !== x) {
+    t1 = [style, x];
+    $[8] = style;
+    $[9] = x;
+    $[10] = t1;
+  } else {
+    t1 = $[10];
+  }
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

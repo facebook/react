@@ -25,42 +25,44 @@ import { c as _c } from "react/compiler-runtime"; // arrayInstance.push should h
 function Component(props) {
   const $ = _c(8);
   let t0;
-  if ($[0] !== props.x) {
-    t0 = foo(props.x);
-    $[0] = props.x;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  const x = t0;
-  let t1;
-  if ($[2] !== props.y) {
-    t1 = { y: props.y };
-    $[2] = props.y;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  const y = t1;
-  let arr;
-  if ($[4] !== x || $[5] !== y) {
-    arr = [];
-    let t2;
-    if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
-      t2 = {};
-      $[7] = t2;
+  if ($[0] !== props.x || $[1] !== props.y) {
+    const arr = [];
+
+    t0 = arr;
+    let t1;
+    if ($[3] !== props.x) {
+      t1 = foo(props.x);
+      $[3] = props.x;
+      $[4] = t1;
     } else {
-      t2 = $[7];
+      t1 = $[4];
     }
-    arr.push(t2);
+    const x = t1;
+    let t2;
+    if ($[5] !== props.y) {
+      t2 = { y: props.y };
+      $[5] = props.y;
+      $[6] = t2;
+    } else {
+      t2 = $[6];
+    }
+    const y = t2;
     arr.push(x, y);
-    $[4] = x;
-    $[5] = y;
-    $[6] = arr;
+    let t3;
+    if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
+      t3 = {};
+      $[7] = t3;
+    } else {
+      t3 = $[7];
+    }
+    arr.push(t3);
+    $[0] = props.x;
+    $[1] = props.y;
+    $[2] = t0;
   } else {
-    arr = $[6];
+    t0 = $[2];
   }
-  return arr;
+  return t0;
 }
 
 ```

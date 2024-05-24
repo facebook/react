@@ -28,8 +28,8 @@ function Component(props) {
   const $ = _c(2);
   let ret;
   if ($[0] !== props) {
-    const x = [1, 2, 3];
     ret = [];
+    const x = [1, 2, 3];
     do {
       const item = x.pop();
       ret.push(item * 2);

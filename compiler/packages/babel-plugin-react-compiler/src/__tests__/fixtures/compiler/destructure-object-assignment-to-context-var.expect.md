@@ -28,31 +28,24 @@ import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(4);
-  let x;
+  const $ = _c(2);
+  let t0;
   if ($[0] !== props) {
-    const { x: t0 } = props;
-    x = t0;
+    let x;
+    const { x: t1 } = props;
+    x = t1;
+
+    t0 = { x };
     const foo = () => {
       x = identity(props.x);
     };
-
     foo();
     $[0] = props;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
-  const t0 = x;
-  let t1;
-  if ($[2] !== t0) {
-    t1 = { x: t0 };
-    $[2] = t0;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

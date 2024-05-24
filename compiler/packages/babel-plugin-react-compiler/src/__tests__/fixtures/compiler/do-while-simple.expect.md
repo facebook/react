@@ -28,8 +28,8 @@ function Component() {
   const $ = _c(1);
   let ret;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const x = [1, 2, 3];
     ret = [];
+    const x = [1, 2, 3];
     do {
       const item = x.pop();
       ret.push(item * 2);

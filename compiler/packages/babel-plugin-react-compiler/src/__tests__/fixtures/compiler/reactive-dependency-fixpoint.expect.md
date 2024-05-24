@@ -31,11 +31,12 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
-  let x = 0;
+
   let y = 0;
+  let x = 0;
   while (x === 0) {
-    x = y;
     y = props.value;
+    x = y;
   }
   let t0;
   if ($[0] !== x) {

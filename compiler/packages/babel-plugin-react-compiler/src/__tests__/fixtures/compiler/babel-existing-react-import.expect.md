@@ -28,8 +28,8 @@ import { useState, useMemo } from "react";
 
 function Component(props) {
   const $ = _c(4);
-  const [x] = useState(0);
   let t0;
+  const [x] = useState(0);
   let t1;
   if ($[0] !== x) {
     t1 = calculateExpensiveNumber(x);
@@ -53,8 +53,8 @@ function Component(props) {
 
 function Component2(props) {
   const $ = _c(4);
-  const [x] = useState(0);
   let t0;
+  const [x] = useState(0);
   let t1;
   if ($[0] !== x) {
     t1 = calculateExpensiveNumber(x);

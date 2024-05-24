@@ -32,7 +32,6 @@ import { Stringify } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(7);
-  let x;
   let t0;
   if ($[0] !== props.count) {
     t0 = [props.count];
@@ -42,7 +41,6 @@ function Component(props) {
     t0 = $[1];
   }
   const array = t0;
-  x = array;
   let t1;
   if ($[2] !== array) {
     t1 = <div>{array}</div>;
@@ -52,6 +50,7 @@ function Component(props) {
     t1 = $[3];
   }
   const element = t1;
+  const x = array;
   let t2;
   if ($[4] !== element || $[5] !== x) {
     t2 = (

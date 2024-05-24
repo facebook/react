@@ -26,12 +26,11 @@ function get2() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const x = 2;
     const callbk = () => {
       const copy = x;
       return copy;
     };
-
-    const x = 2;
     t0 = callbk();
     $[0] = t0;
   } else {

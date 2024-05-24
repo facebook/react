@@ -14,11 +14,10 @@ function Component(props) {
 ## Error
 
 ```
-  1 | function Component(props) {
   2 |   let x = makeObject();
-> 3 |   x.foo(([[x]] = makeObject()));
-    |          ^^^^^ Invariant: Const declaration cannot be referenced as an expression (3:3)
-  4 |   return x;
+  3 |   x.foo(([[x]] = makeObject()));
+> 4 |   return x;
+    |          ^ Invariant: [hoisting] Expected value for identifier to be initialized. x$26 (4:4)
   5 | }
   6 |
 ```

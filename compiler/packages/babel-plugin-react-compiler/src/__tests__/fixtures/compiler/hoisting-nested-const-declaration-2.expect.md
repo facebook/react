@@ -32,11 +32,10 @@ function hoisting(cond) {
   if ($[0] !== cond) {
     items = [];
     if (cond) {
+      const bar = () => true;
       const foo = () => {
         items.push(bar());
       };
-
-      const bar = () => true;
       foo();
     }
     $[0] = cond;

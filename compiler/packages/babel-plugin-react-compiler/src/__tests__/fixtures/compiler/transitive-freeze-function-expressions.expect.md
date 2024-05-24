@@ -37,57 +37,55 @@ function Component(props) {
   const { data, loadNext, isLoadingNext } =
     usePaginationFragment(props.key).items ?? [];
   let t0;
-  if ($[0] !== data.length || $[1] !== loadNext) {
-    t0 = () => {
+  if ($[0] !== data) {
+    let t1;
+    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+      t1 = (x) => x;
+      $[2] = t1;
+    } else {
+      t1 = $[2];
+    }
+    t0 = data.map(t1);
+    $[0] = data;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const items = t0;
+  let t1;
+  if ($[3] !== data.length || $[4] !== loadNext) {
+    t1 = () => {
       if (data.length === 0) {
         return;
       }
-
       loadNext();
     };
-    $[0] = data.length;
-    $[1] = loadNext;
-    $[2] = t0;
+    $[3] = data.length;
+    $[4] = loadNext;
+    $[5] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[5];
   }
-  const loadMoreWithTiming = t0;
-  let t1;
+  const loadMoreWithTiming = t1;
   let t2;
-  if ($[3] !== isLoadingNext || $[4] !== loadMoreWithTiming) {
-    t1 = () => {
+  let t3;
+  if ($[6] !== isLoadingNext || $[7] !== loadMoreWithTiming) {
+    t2 = () => {
       if (isLoadingNext) {
         return;
       }
-
       loadMoreWithTiming();
     };
-    t2 = [isLoadingNext, loadMoreWithTiming];
-    $[3] = isLoadingNext;
-    $[4] = loadMoreWithTiming;
-    $[5] = t1;
-    $[6] = t2;
+    t3 = [isLoadingNext, loadMoreWithTiming];
+    $[6] = isLoadingNext;
+    $[7] = loadMoreWithTiming;
+    $[8] = t2;
+    $[9] = t3;
   } else {
-    t1 = $[5];
-    t2 = $[6];
+    t2 = $[8];
+    t3 = $[9];
   }
-  useEffect(t1, t2);
-  let t3;
-  if ($[7] !== data) {
-    let t4;
-    if ($[9] === Symbol.for("react.memo_cache_sentinel")) {
-      t4 = (x) => x;
-      $[9] = t4;
-    } else {
-      t4 = $[9];
-    }
-    t3 = data.map(t4);
-    $[7] = data;
-    $[8] = t3;
-  } else {
-    t3 = $[8];
-  }
-  const items = t3;
+  useEffect(t2, t3);
   return items;
 }
 

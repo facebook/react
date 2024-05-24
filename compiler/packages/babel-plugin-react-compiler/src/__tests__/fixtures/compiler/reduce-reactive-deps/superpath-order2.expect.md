@@ -45,23 +45,32 @@ import { identity } from "shared-runtime";
 
 // ordering of accesses should not matter
 function useConditionalSuperpath2(t0) {
-  const $ = _c(3);
+  const $ = _c(5);
   const { props, cond } = t0;
-  let x;
-  if ($[0] !== cond || $[1] !== props.a) {
-    x = {};
-    if (identity(cond)) {
+  let t1;
+  if ($[0] !== cond) {
+    t1 = identity(cond);
+    $[0] = cond;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  let t2;
+  if ($[2] !== t1 || $[3] !== props.a) {
+    const x = {};
+    if (t1) {
       x.b = props.a.b;
     }
 
+    t2 = x;
     x.a = props.a;
-    $[0] = cond;
-    $[1] = props.a;
-    $[2] = x;
+    $[2] = t1;
+    $[3] = props.a;
+    $[4] = t2;
   } else {
-    x = $[2];
+    t2 = $[4];
   }
-  return x;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

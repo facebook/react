@@ -35,8 +35,8 @@ function Component(props) {
     setX(1);
   };
   if (props.cond) {
-    setX(2);
     foo();
+    setX(2);
   }
   return x;
 }

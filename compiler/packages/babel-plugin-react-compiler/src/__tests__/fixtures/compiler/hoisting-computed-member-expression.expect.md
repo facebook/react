@@ -33,36 +33,45 @@ import { c as _c } from "react/compiler-runtime";
 import { Stringify } from "shared-runtime";
 
 function hoisting() {
-  const $ = _c(3);
-  let onClick;
-  let onClick2;
+  const $ = _c(4);
+  let bar;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    onClick = function onClick() {
+    bar = { baz: 1 };
+    $[0] = bar;
+  } else {
+    bar = $[0];
+  }
+  let t0;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = function onClick() {
       return bar.baz;
     };
-
-    onClick2 = function onClick2() {
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const onClick = t0;
+  let baz;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    baz = "baz";
+    $[2] = baz;
+  } else {
+    baz = $[2];
+  }
+  let t1;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    const onClick2 = function onClick2() {
       return bar[baz];
     };
 
-    const baz = "baz";
-    const bar = { baz: 1 };
-    $[0] = onClick;
-    $[1] = onClick2;
-  } else {
-    onClick = $[0];
-    onClick2 = $[1];
-  }
-  let t0;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = (
+    t1 = (
       <Stringify onClick={onClick} onClick2={onClick2} shouldInvokeFns={true} />
     );
-    $[2] = t0;
+    $[3] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[3];
   }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -45,7 +45,6 @@ import { Stringify } from "shared-runtime";
 // By avoiding JSX we eliminate extraneous instructions and more accurately test the merging.
 function Component(props) {
   const $ = _c(11);
-  const [state, setState] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = { component: Stringify, props: { text: "Counter" } };
@@ -53,6 +52,7 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
+  const [state, setState] = useState(0);
   let t1;
   if ($[1] !== state) {
     t1 = { component: "span", props: { children: [state] } };

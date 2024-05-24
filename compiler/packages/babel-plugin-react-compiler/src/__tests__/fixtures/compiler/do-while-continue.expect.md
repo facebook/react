@@ -32,8 +32,8 @@ function Component() {
   const $ = _c(1);
   let ret;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const x = [0, 1, 2, 3];
     ret = [];
+    const x = [0, 1, 2, 3];
     do {
       const item = x.pop();
       if (item === 0) {

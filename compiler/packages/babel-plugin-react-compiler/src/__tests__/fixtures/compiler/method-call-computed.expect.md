@@ -23,36 +23,20 @@ function foo(a, b, c) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c) {
-  const $ = _c(8);
+  const $ = _c(3);
   let t0;
-  if ($[0] !== a) {
-    t0 = makeObject(a);
+  if ($[0] !== a || $[1] !== b) {
+    const x = makeObject(a);
+    const y = makeObject(a);
+
+    t0 = x[y.method](b);
     $[0] = a;
-    $[1] = t0;
+    $[1] = b;
+    $[2] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[2];
   }
-  const x = t0;
-  let t1;
-  if ($[2] !== a) {
-    t1 = makeObject(a);
-    $[2] = a;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  const y = t1;
-  let t2;
-  if ($[4] !== x || $[5] !== y.method || $[6] !== b) {
-    t2 = x[y.method](b);
-    $[4] = x;
-    $[5] = y.method;
-    $[6] = b;
-    $[7] = t2;
-  } else {
-    t2 = $[7];
-  }
-  const z = t2;
+  const z = t0;
   return z;
 }
 

@@ -39,13 +39,14 @@ import fbt from "fbt";
 
 function Component(props) {
   const $ = _c(2);
+
+  const cond = makeObject_Primitives();
   let t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const object = makeObject_Primitives();
-      const cond = makeObject_Primitives();
       if (!cond) {
         t1 = null;
         break bb0;

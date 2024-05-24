@@ -34,8 +34,9 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(9);
-  let x;
+
   let y;
+  let x;
   if ($[0] !== props) {
     x = [];
     bb0: switch (props.p0) {
@@ -43,7 +44,6 @@ function Component(props) {
         break bb0;
       }
       case true: {
-        x.push(props.p2);
         let t0;
         if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
           t0 = [];
@@ -52,6 +52,7 @@ function Component(props) {
           t0 = $[3];
         }
         y = t0;
+        x.push(props.p2);
       }
       default: {
         break bb0;
@@ -76,7 +77,6 @@ function Component(props) {
     t0 = $[5];
   }
   const child = t0;
-  y.push(props.p4);
   let t1;
   if ($[6] !== y || $[7] !== child) {
     t1 = <Component data={y}>{child}</Component>;
@@ -86,6 +86,7 @@ function Component(props) {
   } else {
     t1 = $[8];
   }
+  y.push(props.p4);
   return t1;
 }
 

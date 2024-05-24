@@ -39,17 +39,16 @@ function Component(props) {
   const $ = _c(2);
   let t0;
   if ($[0] !== props) {
-    const x = {};
     let y;
+    const x = {};
     if (props.cond) {
       y = [props.value];
     } else {
       y = [];
     }
 
-    y.push(x);
-
     t0 = [x, y];
+    y.push(x);
     $[0] = props;
     $[1] = t0;
   } else {

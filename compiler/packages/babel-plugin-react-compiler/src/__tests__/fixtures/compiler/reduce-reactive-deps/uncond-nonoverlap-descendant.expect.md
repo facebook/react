@@ -26,20 +26,22 @@ import { c as _c } from "react/compiler-runtime"; // Test that we can track non-
 // (not needed for correctness but for dependency granularity)
 function TestNonOverlappingDescendantTracked(props) {
   const $ = _c(4);
-  let x;
-  if ($[0] !== props.a.x.y || $[1] !== props.a.c.x.y.z || $[2] !== props.b) {
-    x = {};
-    x.a = props.a.x.y;
-    x.b = props.b;
+  let t0;
+  if ($[0] !== props.a.c.x.y.z || $[1] !== props.a.x.y || $[2] !== props.b) {
+    const x = {};
+
+    t0 = x;
     x.c = props.a.c.x.y.z;
-    $[0] = props.a.x.y;
-    $[1] = props.a.c.x.y.z;
+    x.b = props.b;
+    x.a = props.a.x.y;
+    $[0] = props.a.c.x.y.z;
+    $[1] = props.a.x.y;
     $[2] = props.b;
-    $[3] = x;
+    $[3] = t0;
   } else {
-    x = $[3];
+    t0 = $[3];
   }
-  return x;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

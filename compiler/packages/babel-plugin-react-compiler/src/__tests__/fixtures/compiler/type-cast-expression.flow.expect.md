@@ -26,18 +26,20 @@ import { c as _c } from "react/compiler-runtime";
 type Foo = { bar: string };
 function Component(props) {
   const $ = _c(2);
-  let y;
+  let t0;
   if ($[0] !== props.bar) {
     const x = { bar: props.bar };
-    y = (x: Foo);
+    const y = (x: Foo);
+
+    const z = (y: Foo);
+    t0 = z;
     y.bar = "hello";
     $[0] = props.bar;
-    $[1] = y;
+    $[1] = t0;
   } else {
-    y = $[1];
+    t0 = $[1];
   }
-  const z = (y: Foo);
-  return z;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

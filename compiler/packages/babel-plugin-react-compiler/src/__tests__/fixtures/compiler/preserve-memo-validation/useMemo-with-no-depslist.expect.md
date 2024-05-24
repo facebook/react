@@ -31,8 +31,8 @@ import { useMemo } from "react";
 // source listed no memo deps
 function Component(t0) {
   const $ = _c(2);
-  const { propA } = t0;
   let t1;
+  const { propA } = t0;
   let t2;
   if ($[0] !== propA) {
     t2 = [propA];

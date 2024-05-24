@@ -33,49 +33,51 @@ import { identity } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(9);
   const { input, hasAB, returnNull } = t0;
+
+  const t1 = !hasAB;
   let x;
-  let t1;
-  if ($[0] !== hasAB || $[1] !== input.a || $[2] !== returnNull) {
-    t1 = Symbol.for("react.early_return_sentinel");
+  let t2;
+  if ($[0] !== t1 || $[1] !== returnNull || $[2] !== input.a) {
+    t2 = Symbol.for("react.early_return_sentinel");
     bb0: {
       x = [];
-      if (!hasAB) {
-        let t2;
+      if (t1) {
+        let t3;
         if ($[5] !== input.a) {
-          t2 = identity(input.a);
+          t3 = identity(input.a);
           $[5] = input.a;
-          $[6] = t2;
+          $[6] = t3;
         } else {
-          t2 = $[6];
+          t3 = $[6];
         }
-        x.push(t2);
+        x.push(t3);
         if (!returnNull) {
-          t1 = null;
+          t2 = null;
           break bb0;
         }
       } else {
-        let t2;
+        let t3;
         if ($[7] !== input.a.b) {
-          t2 = identity(input.a.b);
+          t3 = identity(input.a.b);
           $[7] = input.a.b;
-          $[8] = t2;
+          $[8] = t3;
         } else {
-          t2 = $[8];
+          t3 = $[8];
         }
-        x.push(t2);
+        x.push(t3);
       }
     }
-    $[0] = hasAB;
-    $[1] = input.a;
-    $[2] = returnNull;
+    $[0] = t1;
+    $[1] = returnNull;
+    $[2] = input.a;
     $[3] = x;
-    $[4] = t1;
+    $[4] = t2;
   } else {
     x = $[3];
-    t1 = $[4];
+    t2 = $[4];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
-    return t1;
+  if (t2 !== Symbol.for("react.early_return_sentinel")) {
+    return t2;
   }
   return x;
 }

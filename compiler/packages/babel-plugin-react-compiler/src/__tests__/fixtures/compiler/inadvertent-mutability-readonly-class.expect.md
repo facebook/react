@@ -24,14 +24,11 @@ class Mutator {}
 
 ```javascript
 function Component(props) {
-  const env = useRelayEnvironment();
-
-  const mutator = new Mutator(env);
-
-  useOtherHook();
-
   const x = {};
+  const env = useRelayEnvironment();
+  const mutator = new Mutator(env);
   foo(x, mutator);
+  useOtherHook();
   return x;
 }
 

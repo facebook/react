@@ -29,9 +29,9 @@ import { sum } from "shared-runtime";
 
 function Component(t0) {
   const $ = _c(3);
+  let t1;
   const { propA, propB } = t0;
   const x = propB.x.y;
-  let t1;
   let t2;
   if ($[0] !== propA.x || $[1] !== x) {
     t2 = sum(propA.x, x);

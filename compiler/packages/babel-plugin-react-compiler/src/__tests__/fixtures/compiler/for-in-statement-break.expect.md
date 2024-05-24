@@ -28,7 +28,6 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
-  let x;
   let t0;
   if ($[0] !== props.value) {
     t0 = { ...props.value };
@@ -38,6 +37,7 @@ function Component(props) {
     t0 = $[1];
   }
   const object = t0;
+  let x;
   for (const y in object) {
     if (y === "break") {
       break;

@@ -21,55 +21,47 @@ function Component(a, b) {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @debug
 function Component(a, b) {
-  const $ = _c(11);
+  const $ = _c(7);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = [];
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  let x = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = [];
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  let y = t1;
-  if ($[2] !== a || $[3] !== b) {
+  if ($[0] !== a || $[1] !== b) {
     const z = foo(a);
-    if (FLAG) {
-      x = bar(z);
-      let t2;
-      if ($[6] !== b) {
-        t2 = baz(b);
-        $[6] = b;
-        $[7] = t2;
-      } else {
-        t2 = $[7];
-      }
-      y = t2;
+    let t1;
+    if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+      t1 = [];
+      $[3] = t1;
+    } else {
+      t1 = $[3];
     }
-    $[2] = a;
-    $[3] = b;
-    $[4] = x;
-    $[5] = y;
+    let y = t1;
+    let t2;
+    if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+      t2 = [];
+      $[4] = t2;
+    } else {
+      t2 = $[4];
+    }
+    let x = t2;
+    if (FLAG) {
+      let t3;
+      if ($[5] !== b) {
+        t3 = baz(b);
+        $[5] = b;
+        $[6] = t3;
+      } else {
+        t3 = $[6];
+      }
+      y = t3;
+      x = bar(z);
+    }
+
+    t0 = [x, y];
+    $[0] = a;
+    $[1] = b;
+    $[2] = t0;
   } else {
-    x = $[4];
-    y = $[5];
+    t0 = $[2];
   }
-  let t2;
-  if ($[8] !== x || $[9] !== y) {
-    t2 = [x, y];
-    $[8] = x;
-    $[9] = y;
-    $[10] = t2;
-  } else {
-    t2 = $[10];
-  }
-  return t2;
+  return t0;
 }
 
 ```

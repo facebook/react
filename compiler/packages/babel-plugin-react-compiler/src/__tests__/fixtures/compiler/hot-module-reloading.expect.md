@@ -37,8 +37,8 @@ function Component(props) {
     }
     $[0] = "bb6936608c0afe8e313aa547ca09fbc8451f24664284368812127c7e9bc2bca9";
   }
-  const [state] = useState(0);
   let t0;
+  const [state] = useState(0);
   const t1 = state * 2;
   let t2;
   if ($[1] !== t1) {
@@ -49,7 +49,6 @@ function Component(props) {
     t2 = $[2];
   }
   t0 = t2;
-  const doubled = t0;
   let t3;
   if ($[3] !== state) {
     t3 = [state];
@@ -58,6 +57,7 @@ function Component(props) {
   } else {
     t3 = $[4];
   }
+  const doubled = t0;
   let t4;
   if ($[5] !== t3 || $[6] !== doubled) {
     t4 = <ValidateMemoization inputs={t3} output={doubled} />;

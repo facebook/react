@@ -53,7 +53,6 @@ function Component(t0) {
   try {
     $dispatcherGuard(0);
     const { value } = t0;
-    print(identity(CONST_STRING0));
     let t1;
     if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
       t1 = getNumber();
@@ -69,7 +68,8 @@ function Component(t0) {
         $dispatcherGuard(3);
       }
     })();
-    print(value, state);
+
+    print(identity(value + state));
     let t2;
     let t3;
     if ($[1] !== state) {
@@ -78,7 +78,6 @@ function Component(t0) {
           setState(5);
         }
       };
-
       t3 = [state];
       $[1] = state;
       $[2] = t2;
@@ -95,7 +94,8 @@ function Component(t0) {
         $dispatcherGuard(3);
       }
     })();
-    print(identity(value + state));
+    print(value, state);
+    print(identity(CONST_STRING0));
     return (function () {
       try {
         $dispatcherGuard(2);

@@ -30,8 +30,6 @@ function Component(props) {
   const x = t0;
 
   const y = useFoo(x);
-
-  bar(x, y);
   let t1;
   if ($[1] !== y) {
     t1 = [x, y];
@@ -40,6 +38,7 @@ function Component(props) {
   } else {
     t1 = $[2];
   }
+  bar(x, y);
   return t1;
 }
 

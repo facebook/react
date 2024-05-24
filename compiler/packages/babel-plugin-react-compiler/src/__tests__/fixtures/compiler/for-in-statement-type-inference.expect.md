@@ -27,8 +27,8 @@ export const FIXTURE_ENTRYPOINT = {
 const { identity, mutate } = require("shared-runtime");
 
 function Component(props) {
-  let x;
   const object = { ...props.value };
+  let x;
   for (const y in object) {
     x = y;
   }

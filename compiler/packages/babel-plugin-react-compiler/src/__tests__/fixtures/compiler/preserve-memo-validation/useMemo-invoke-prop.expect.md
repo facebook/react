@@ -33,8 +33,8 @@ import { useMemo } from "react";
 
 function useFoo(t0) {
   const $ = _c(2);
-  const { callback } = t0;
   let t1;
+  const { callback } = t0;
   let t2;
   if ($[0] !== callback) {
     t2 = new Array(callback());

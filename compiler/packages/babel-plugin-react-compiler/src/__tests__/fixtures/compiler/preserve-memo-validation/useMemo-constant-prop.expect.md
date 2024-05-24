@@ -35,8 +35,8 @@ import { identity } from "shared-runtime";
 
 function useFoo(cond) {
   const $ = _c(5);
-  const sourceDep = 0;
   let t0;
+  const sourceDep = 0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = identity(0);
@@ -46,9 +46,9 @@ function useFoo(cond) {
   }
   t0 = t1;
   const derived1 = t0;
+  let t2;
 
   const derived2 = cond ?? Math.min(0, 1) ? 1 : 2;
-  let t2;
   let t3;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = identity(0);

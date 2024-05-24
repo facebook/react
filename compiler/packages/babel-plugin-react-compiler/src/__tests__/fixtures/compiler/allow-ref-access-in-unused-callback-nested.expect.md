@@ -45,47 +45,47 @@ import { useEffect, useRef, useState } from "react";
 
 function Component() {
   const $ = _c(7);
-  const ref = useRef(null);
-  const [state, setState] = useState(false);
-  let t0;
-  let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {};
 
-    t1 = [];
+  const [state, setState] = useState(false);
+
+  const t0 = String(state);
+  const ref = useRef(null);
+  let t1;
+  if ($[0] !== t0 || $[1] !== ref) {
+    t1 = <Child key={t0} ref={ref} />;
     $[0] = t0;
-    $[1] = t1;
+    $[1] = ref;
+    $[2] = t1;
   } else {
-    t0 = $[0];
-    t1 = $[1];
+    t1 = $[2];
   }
-  useEffect(t0, t1);
   let t2;
   let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => {
       setState(true);
     };
     t3 = [];
-    $[2] = t2;
-    $[3] = t3;
+    $[3] = t2;
+    $[4] = t3;
   } else {
-    t2 = $[2];
-    t3 = $[3];
+    t2 = $[3];
+    t3 = $[4];
   }
   useEffect(t2, t3);
-
-  const t4 = String(state);
+  let t4;
   let t5;
-  if ($[4] !== t4 || $[5] !== ref) {
-    t5 = <Child key={t4} ref={ref} />;
-    $[4] = t4;
-    $[5] = ref;
+  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+    t4 = () => {};
+    t5 = [];
+    $[5] = t4;
     $[6] = t5;
   } else {
+    t4 = $[5];
     t5 = $[6];
   }
-  return t5;
+  useEffect(t4, t5);
+  return t1;
 }
 
 function Child(t0) {

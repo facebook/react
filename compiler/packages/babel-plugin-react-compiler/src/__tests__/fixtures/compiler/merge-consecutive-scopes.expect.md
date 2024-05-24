@@ -34,7 +34,6 @@ import { Stringify } from "shared-runtime";
 
 function Component() {
   const $ = _c(8);
-  const [state, setState] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = <Stringify text="Counter" />;
@@ -42,6 +41,7 @@ function Component() {
   } else {
     t0 = $[0];
   }
+  const [state, setState] = useState(0);
   let t1;
   if ($[1] !== state) {
     t1 = <span>{state}</span>;

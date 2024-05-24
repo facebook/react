@@ -29,8 +29,9 @@ function Component(props) {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const x = [{}];
     const y = x.map((item) => item);
-    y[0].flag = true;
+
     t0 = [x, y];
+    y[0].flag = true;
     $[0] = t0;
   } else {
     t0 = $[0];

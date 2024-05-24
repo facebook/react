@@ -29,21 +29,22 @@ import { createHookWrapper, mutate, mutateAndReturn } from "shared-runtime";
 function useHook(t0) {
   const $ = _c(2);
   const { value } = t0;
-  let obj;
+  let t1;
   if ($[0] !== value) {
-    const x = mutateAndReturn({ value });
-    obj = {
+    t1 = {
       getValue() {
         return value;
       },
     };
-
-    mutate(x);
     $[0] = value;
-    $[1] = obj;
+    $[1] = t1;
   } else {
-    obj = $[1];
+    t1 = $[1];
   }
+  const obj = t1;
+  const x = mutateAndReturn({ value });
+
+  mutate(x);
   return obj;
 }
 

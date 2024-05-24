@@ -46,47 +46,39 @@ const React$useMemo = React.useMemo;
 const Internal$Reassigned$useHook = useHook;
 
 function Component() {
-  const $ = _c(8);
+  const $ = _c(6);
+  let t0;
   const [state] = React$useState(0);
   const object = Internal$Reassigned$useHook();
-  let t0;
-  if ($[0] !== object) {
-    t0 = JSON.stringify(object);
-    $[0] = object;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  const json = t0;
+  const json = JSON.stringify(object);
   let t1;
-  let t2;
-  if ($[2] !== state) {
-    t1 = makeArray(state);
-    const doubledArray = t1;
+  if ($[0] !== state) {
+    t0 = makeArray(state);
+    const doubledArray = t0;
 
-    t2 = doubledArray.join("");
-    $[2] = state;
-    $[3] = t2;
-    $[4] = t1;
+    t1 = doubledArray.join("");
+    $[0] = state;
+    $[1] = t1;
+    $[2] = t0;
   } else {
-    t2 = $[3];
-    t1 = $[4];
+    t1 = $[1];
+    t0 = $[2];
   }
-  let t3;
-  if ($[5] !== t2 || $[6] !== json) {
-    t3 = (
+  let t2;
+  if ($[3] !== t1 || $[4] !== json) {
+    t2 = (
       <div>
-        {t2}
+        {t1}
         {json}
       </div>
     );
+    $[3] = t1;
+    $[4] = json;
     $[5] = t2;
-    $[6] = json;
-    $[7] = t3;
   } else {
-    t3 = $[7];
+    t2 = $[5];
   }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -36,39 +36,24 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function useFoo(props) {
-  const $ = _c(9);
-
-  let x = null;
-  let y = null;
-  let z;
-  let myList;
+  const $ = _c(2);
+  let t0;
   if ($[0] !== props) {
-    myList = [];
+    const myList = [];
+    let z;
+    let y = null;
+    let x = null;
     if (props.doDestructure) {
       ({ x, y, z } = props);
 
       myList.push(z);
     }
-    $[0] = props;
-    $[1] = myList;
-    $[2] = x;
-    $[3] = y;
-    $[4] = z;
-  } else {
-    myList = $[1];
-    x = $[2];
-    y = $[3];
-    z = $[4];
-  }
-  let t0;
-  if ($[5] !== x || $[6] !== y || $[7] !== myList) {
+
     t0 = { x, y, myList };
-    $[5] = x;
-    $[6] = y;
-    $[7] = myList;
-    $[8] = t0;
+    $[0] = props;
+    $[1] = t0;
   } else {
-    t0 = $[8];
+    t0 = $[1];
   }
   return t0;
 }

@@ -27,6 +27,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(4);
+
+  const pathname_0 = props.wat;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {};
@@ -35,9 +37,6 @@ function Component(props) {
     t0 = $[0];
   }
   const wat = t0;
-
-  const pathname_0 = props.wat;
-  const deeplinkItemId = pathname_0 ? props.itemID : null;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => wat();
@@ -45,6 +44,7 @@ function Component(props) {
   } else {
     t1 = $[1];
   }
+  const deeplinkItemId = pathname_0 ? props.itemID : null;
   let t2;
   if ($[2] !== deeplinkItemId) {
     t2 = <button onClick={t1}>{deeplinkItemId}</button>;

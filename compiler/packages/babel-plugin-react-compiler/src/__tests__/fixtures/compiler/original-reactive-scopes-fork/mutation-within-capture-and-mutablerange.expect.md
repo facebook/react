@@ -52,33 +52,33 @@ import { mutate } from "shared-runtime";
  * values in a subsequent render.
  */
 function useFoo(t0) {
-  const $ = _c(5);
+  const $ = _c(4);
   const { a, b } = t0;
-  let z;
-  if ($[0] !== a || $[1] !== b) {
-    const x = { a };
+  let t1;
+  if ($[0] !== b) {
     const y = [b];
-    mutate(x);
 
-    const t1 = mutate(y);
-    let t2;
-    if ($[3] !== t1) {
-      t2 = [t1];
-      $[3] = t1;
-      $[4] = t2;
+    const t2 = mutate(y);
+    let t3;
+    if ($[2] !== t2) {
+      t3 = [t2];
+      $[2] = t2;
+      $[3] = t3;
     } else {
-      t2 = $[4];
+      t3 = $[3];
     }
-    z = t2;
+    const z = t3;
 
+    t1 = z;
     mutate(y);
-    $[0] = a;
-    $[1] = b;
-    $[2] = z;
+    $[0] = b;
+    $[1] = t1;
   } else {
-    z = $[2];
+    t1 = $[1];
   }
-  return z;
+  const x = { a };
+  mutate(x);
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

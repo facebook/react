@@ -40,8 +40,8 @@ function Component() {
 import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 function Component() {
   const $ = _c(9);
-  const items = useItems();
   let t0;
+  const items = useItems();
   let t1;
   let t2;
   if ($[0] !== items) {

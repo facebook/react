@@ -21,16 +21,15 @@ function component() {
 
 ```javascript
 function component() {
-  const x = {};
-  const p = {};
   const q = {};
-  const y = {};
-
-  x.y = y;
-  p.y = x.y;
-  q.y = p.y;
 
   mutate(q);
+  const p = {};
+  q.y = p.y;
+  const x = {};
+  p.y = x.y;
+  const y = {};
+  x.y = y;
 }
 
 ```

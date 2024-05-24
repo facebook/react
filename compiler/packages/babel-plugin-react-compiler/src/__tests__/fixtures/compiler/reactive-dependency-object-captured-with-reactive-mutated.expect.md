@@ -31,11 +31,11 @@ function Component(props) {
   let t0;
   if ($[0] !== props.y) {
     const x = {};
+
+    t0 = [x];
     const y = props.y;
     const z = [x, y];
     mutate(z);
-
-    t0 = [x];
     $[0] = props.y;
     $[1] = t0;
   } else {

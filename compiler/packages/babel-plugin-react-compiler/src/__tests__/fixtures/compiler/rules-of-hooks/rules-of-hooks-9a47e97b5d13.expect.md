@@ -18,7 +18,6 @@ import { c as _c } from "react/compiler-runtime"; // Valid because hooks can be 
 // forwardRef.
 const FancyButton = React.forwardRef(function (props, ref) {
   const $ = _c(3);
-  useHook();
   let t0;
   if ($[0] !== props || $[1] !== ref) {
     t0 = <button {...props} ref={ref} />;
@@ -28,6 +27,7 @@ const FancyButton = React.forwardRef(function (props, ref) {
   } else {
     t0 = $[2];
   }
+  useHook();
   return t0;
 });
 

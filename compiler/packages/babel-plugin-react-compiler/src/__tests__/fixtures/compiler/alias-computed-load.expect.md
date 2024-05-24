@@ -19,18 +19,19 @@ function component(a) {
 import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(2);
-  let x;
+  let t0;
   if ($[0] !== a) {
-    x = { a };
-    const y = {};
-
-    y.x = x.a;
-    mutate(y);
+    t0 = { a };
     $[0] = a;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
+  const x = t0;
+  const y = {};
+
+  mutate(y);
+  y.x = x.a;
   return x;
 }
 

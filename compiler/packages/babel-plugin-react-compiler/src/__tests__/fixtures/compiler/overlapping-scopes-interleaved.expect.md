@@ -21,10 +21,11 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function foo(a, b) {
-  const x = [];
   const y = [];
-  x.push(a);
+
   y.push(b);
+  const x = [];
+  x.push(a);
 }
 
 export const FIXTURE_ENTRYPOINT = {

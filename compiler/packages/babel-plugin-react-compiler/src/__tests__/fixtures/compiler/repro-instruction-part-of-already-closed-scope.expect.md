@@ -35,74 +35,81 @@ import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRul
 import { Stringify, identity, useHook } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(17);
-  const { index } = t0;
+  const $ = _c(19);
   const data = useHook();
-  let T0;
+  const { index } = t0;
   let t1;
-  let t2;
-  let t3;
   if ($[0] !== data || $[1] !== index) {
-    const a = identity(data, index);
     const b = identity(data, index);
-    const c = identity(data, index);
 
-    const t4 = identity(b);
-    if ($[6] !== t4) {
-      t2 = <Stringify value={t4} />;
-      $[6] = t4;
-      $[7] = t2;
-    } else {
-      t2 = $[7];
-    }
-    const t5 = identity(a);
-    if ($[8] !== t5) {
-      t3 = <Stringify value={t5} />;
-      $[8] = t5;
-      $[9] = t3;
-    } else {
-      t3 = $[9];
-    }
-    T0 = Stringify;
-    t1 = identity(c);
+    t1 = identity(b);
     $[0] = data;
     $[1] = index;
-    $[2] = T0;
+    $[2] = t1;
+  } else {
+    t1 = $[2];
+  }
+  let t2;
+  if ($[3] !== t1) {
+    t2 = <Stringify value={t1} />;
     $[3] = t1;
     $[4] = t2;
-    $[5] = t3;
   } else {
-    T0 = $[2];
-    t1 = $[3];
     t2 = $[4];
-    t3 = $[5];
+  }
+  let t3;
+  if ($[5] !== data || $[6] !== index) {
+    const a = identity(data, index);
+    t3 = identity(a);
+    $[5] = data;
+    $[6] = index;
+    $[7] = t3;
+  } else {
+    t3 = $[7];
   }
   let t4;
-  if ($[10] !== T0 || $[11] !== t1) {
-    t4 = <T0 value={t1} />;
-    $[10] = T0;
-    $[11] = t1;
-    $[12] = t4;
+  if ($[8] !== t3) {
+    t4 = <Stringify value={t3} />;
+    $[8] = t3;
+    $[9] = t4;
   } else {
-    t4 = $[12];
+    t4 = $[9];
   }
   let t5;
-  if ($[13] !== t2 || $[14] !== t3 || $[15] !== t4) {
-    t5 = (
+  if ($[10] !== data || $[11] !== index) {
+    const c = identity(data, index);
+    t5 = identity(c);
+    $[10] = data;
+    $[11] = index;
+    $[12] = t5;
+  } else {
+    t5 = $[12];
+  }
+  let t6;
+  if ($[13] !== t5) {
+    t6 = <Stringify value={t5} />;
+    $[13] = t5;
+    $[14] = t6;
+  } else {
+    t6 = $[14];
+  }
+  let t7;
+  if ($[15] !== t2 || $[16] !== t4 || $[17] !== t6) {
+    t7 = (
       <div>
         {t2}
-        {t3}
         {t4}
+        {t6}
       </div>
     );
-    $[13] = t2;
-    $[14] = t3;
-    $[15] = t4;
-    $[16] = t5;
+    $[15] = t2;
+    $[16] = t4;
+    $[17] = t6;
+    $[18] = t7;
   } else {
-    t5 = $[16];
+    t7 = $[18];
   }
-  return t5;
+  return t7;
 }
 
 export const FIXTURE_ENTRYPOINT = {

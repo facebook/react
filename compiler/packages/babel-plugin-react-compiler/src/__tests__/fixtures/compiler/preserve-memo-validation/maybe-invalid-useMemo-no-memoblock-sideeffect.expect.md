@@ -35,8 +35,8 @@ import { useMemo } from "react";
 // instruction within manual memoization gets assigned to a reactive scope
 // (i.e. inferred non-mutable or non-escaping values don't get memoized)
 function useFoo(t0) {
-  const { minWidth, styles, setStyles } = t0;
   let t1;
+  const { minWidth, styles, setStyles } = t0;
   if (styles.width > minWidth) {
     setStyles(styles);
   }
