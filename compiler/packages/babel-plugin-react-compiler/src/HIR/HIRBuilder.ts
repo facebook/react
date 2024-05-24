@@ -9,7 +9,6 @@ import { Binding, NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { CompilerError } from "../CompilerError";
 import { Environment } from "./Environment";
-import { Global } from "./Globals";
 import {
   BasicBlock,
   BlockId,
@@ -184,25 +183,6 @@ export default class HIRBuilder {
       scope: null,
       type: makeType(),
     };
-  }
-
-  resolveGlobal(
-    path: NodePath<t.Identifier | t.JSXIdentifier>
-  ): (Global & { name: string }) | null {
-    const name = path.node.name;
-    const resolvedGlobal = this.#env.getGlobalDeclaration(name);
-    if (resolvedGlobal) {
-      return {
-        ...resolvedGlobal,
-        name,
-      };
-    } else {
-      // if env records no global with the given name, load it as an unknown type
-      return {
-        kind: "Poly",
-        name,
-      };
-    }
   }
 
   #resolveBabelBinding(
