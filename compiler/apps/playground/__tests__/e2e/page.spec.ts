@@ -28,7 +28,6 @@ test("editor should compile successfully", async ({ page }) => {
   });
 
   // User input from hash compiles
-  await page.getByRole("button", { name: /JS/ }).click();
   await page.screenshot({
     fullPage: true,
     path: "test-results/01-show-js-before.png",

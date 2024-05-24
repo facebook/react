@@ -32,33 +32,35 @@ export function runSprout(
   originalCode: string,
   forgetCode: string
 ): SproutResult {
-  const nonForgetResult = doEval(originalCode);
   const forgetResult = doEval(forgetCode);
-
   if (forgetResult.kind === "UnexpectedError") {
     return makeError("Unexpected error in Forget runner", forgetResult.value);
-  } else if (nonForgetResult.kind === "UnexpectedError") {
-    return makeError(
-      "Unexpected error in non-forget runner",
-      nonForgetResult.value
-    );
-  } else if (
-    forgetResult.kind !== nonForgetResult.kind ||
-    forgetResult.value !== nonForgetResult.value ||
-    !logsEqual(forgetResult.logs, nonForgetResult.logs)
-  ) {
-    return makeError(
-      "Found differences in evaluator results",
-      `Non-forget (expected):
+  }
+  if (originalCode.indexOf("@disableNonForgetInSprout") === -1) {
+    const nonForgetResult = doEval(originalCode);
+
+    if (nonForgetResult.kind === "UnexpectedError") {
+      return makeError(
+        "Unexpected error in non-forget runner",
+        nonForgetResult.value
+      );
+    } else if (
+      forgetResult.kind !== nonForgetResult.kind ||
+      forgetResult.value !== nonForgetResult.value ||
+      !logsEqual(forgetResult.logs, nonForgetResult.logs)
+    ) {
+      return makeError(
+        "Found differences in evaluator results",
+        `Non-forget (expected):
 ${stringify(nonForgetResult)}
 Forget:
 ${stringify(forgetResult)}
 `
-    );
-  } else {
-    return {
-      kind: "success",
-      value: stringify(forgetResult),
-    };
+      );
+    }
   }
+  return {
+    kind: "success",
+    value: stringify(forgetResult),
+  };
 }

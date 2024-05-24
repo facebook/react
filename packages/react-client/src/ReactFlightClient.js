@@ -320,8 +320,24 @@ function wakeChunkIfInitialized<T>(
     case PENDING:
     case BLOCKED:
     case CYCLIC:
-      chunk.value = resolveListeners;
-      chunk.reason = rejectListeners;
+      if (chunk.value) {
+        for (let i = 0; i < resolveListeners.length; i++) {
+          chunk.value.push(resolveListeners[i]);
+        }
+      } else {
+        chunk.value = resolveListeners;
+      }
+
+      if (chunk.reason) {
+        if (rejectListeners) {
+          for (let i = 0; i < rejectListeners.length; i++) {
+            chunk.reason.push(rejectListeners[i]);
+          }
+        }
+      } else {
+        chunk.reason = rejectListeners;
+      }
+
       break;
     case ERRORED:
       if (rejectListeners) {
@@ -506,8 +522,6 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       // We have to go the BLOCKED state until they're resolved.
       const blockedChunk: BlockedChunk<T> = (chunk: any);
       blockedChunk.status = BLOCKED;
-      blockedChunk.value = null;
-      blockedChunk.reason = null;
     } else {
       const resolveListeners = cyclicChunk.value;
       const initializedChunk: InitializedChunk<T> = (chunk: any);
