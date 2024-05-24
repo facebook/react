@@ -588,7 +588,38 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "LoadGlobal": {
-      value = `LoadGlobal ${instrValue.binding.name}`;
+      switch (instrValue.binding.kind) {
+        case "Global": {
+          value = `LoadGlobal(global) ${instrValue.binding.name}`;
+          break;
+        }
+        case "ModuleLocal": {
+          value = `LoadGlobal(module) ${instrValue.binding.name}`;
+          break;
+        }
+        case "ImportDefault": {
+          value = `LoadGlobal import ${instrValue.binding.name} from '${instrValue.binding.module}'`;
+          break;
+        }
+        case "ImportNamespace": {
+          value = `LoadGlobal import * as ${instrValue.binding.name} from '${instrValue.binding.module}'`;
+          break;
+        }
+        case "ImportSpecifier": {
+          if (instrValue.binding.imported !== instrValue.binding.name) {
+            value = `LoadGlobal import { ${instrValue.binding.imported} as ${instrValue.binding.name} } from '${instrValue.binding.module}'`;
+          } else {
+            value = `LoadGlobal import { ${instrValue.binding.name} } from '${instrValue.binding.module}'`;
+          }
+          break;
+        }
+        default: {
+          assertExhaustive(
+            instrValue.binding,
+            `Unexpected binding kind \`${(instrValue.binding as any).kind}\``
+          );
+        }
+      }
       break;
     }
     case "StoreGlobal": {
