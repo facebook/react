@@ -10,8 +10,12 @@
 import type {Fiber} from './ReactInternalTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
+import {
+  getStackByFiberInDevAndProd,
+  getOwnerStackByFiberInDev,
+} from './ReactFiberComponentStack';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
 export let current: Fiber | null = null;
 export let isRendering: boolean = false;
@@ -29,6 +33,17 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   return null;
 }
 
+export function getCurrentParentStackInDev(): string {
+  // This is used to get the parent stack even with owner stacks turned on.
+  if (__DEV__) {
+    if (current === null) {
+      return '';
+    }
+    return getStackByFiberInDevAndProd(current);
+  }
+  return '';
+}
+
 function getCurrentFiberStackInDev(): string {
   if (__DEV__) {
     if (current === null) {
@@ -36,21 +51,39 @@ function getCurrentFiberStackInDev(): string {
     }
     // Safe because if current fiber exists, we are reconciling,
     // and it is guaranteed to be the work-in-progress version.
+    // TODO: The above comment is not actually true. We might be
+    // in a commit phase or preemptive set state callback.
+    if (enableOwnerStacks) {
+      return getOwnerStackByFiberInDev(current);
+    }
     return getStackByFiberInDevAndProd(current);
   }
   return '';
 }
 
-export function resetCurrentDebugFiberInDEV() {
+export function runWithFiberInDEV<A0, A1, A2, A3, A4, T>(
+  fiber: null | Fiber,
+  callback: (A0, A1, A2, A3, A4) => T,
+  arg0: A0,
+  arg1: A1,
+  arg2: A2,
+  arg3: A3,
+  arg4: A4,
+): T {
   if (__DEV__) {
-    resetCurrentFiber();
-  }
-}
-
-export function setCurrentDebugFiberInDEV(fiber: Fiber | null) {
-  if (__DEV__) {
+    const previousFiber = current;
     setCurrentFiber(fiber);
+    try {
+      return callback(arg0, arg1, arg2, arg3, arg4);
+    } finally {
+      current = previousFiber;
+    }
   }
+  // These errors should never make it into a build so we don't need to encode them in codes.json
+  // eslint-disable-next-line react-internal/prod-error-codes
+  throw new Error(
+    'runWithFiberInDEV should never be called in production. This is a bug in React.',
+  );
 }
 
 export function resetCurrentFiber() {
@@ -68,13 +101,6 @@ export function setCurrentFiber(fiber: Fiber | null) {
     isRendering = false;
   }
   current = fiber;
-}
-
-export function getCurrentFiber(): Fiber | null {
-  if (__DEV__) {
-    return current;
-  }
-  return null;
 }
 
 export function setIsRendering(rendering: boolean) {

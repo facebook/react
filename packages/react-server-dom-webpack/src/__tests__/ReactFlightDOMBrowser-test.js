@@ -746,6 +746,10 @@ describe('ReactFlightDOMBrowser', () => {
     }
     const Parent = clientExports(ParentClient);
     const ParentModule = clientExports({Parent: ParentClient});
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
     await expect(async () => {
       const stream = ReactServerDOMServer.renderToReadableStream(
         <>
@@ -756,11 +760,12 @@ describe('ReactFlightDOMBrowser', () => {
         </>,
         webpackMap,
       );
-      await ReactServerDOMClient.createFromReadableStream(stream);
-    }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. ' +
-        'See https://react.dev/link/warning-keys for more information.',
-    );
+      const result =
+        await ReactServerDOMClient.createFromReadableStream(stream);
+      await act(() => {
+        root.render(result);
+      });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('basic use(promise)', async () => {

@@ -399,6 +399,7 @@ export type Request = {
   onPostpone: (reason: string) => void,
   // DEV-only
   environmentName: string,
+  didWarnForKey: null | WeakSet<ReactComponentInfo>,
 };
 
 const {
@@ -500,6 +501,7 @@ export function createRequest(
   if (__DEV__) {
     request.environmentName =
       environmentName === undefined ? 'Server' : environmentName;
+    request.didWarnForKey = null;
   }
   const rootTask = createTask(request, model, null, false, abortSet);
   pingedTasks.push(rootTask);
@@ -965,6 +967,7 @@ function renderFunctionComponent<Props>(
   props: Props,
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
+  validated: number, // DEV-only
 ): ReactJSONValue {
   // Reset the task's thenable state before continuing, so that if a later
   // component suspends we can reuse the same task object. If the same
@@ -1005,6 +1008,10 @@ function renderFunctionComponent<Props>(
       // being no references to this as an owner.
       outlineModel(request, componentDebugInfo);
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
+
+      if (enableOwnerStacks) {
+        warnForMissingKey(request, key, validated, componentDebugInfo);
+      }
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
     result = callComponentInDEV(Component, props, componentDebugInfo);
@@ -1019,6 +1026,23 @@ function renderFunctionComponent<Props>(
       // When the return value is in children position we can resolve it immediately,
       // to its value without a wrapper if it's synchronously available.
       const thenable: Thenable<any> = result;
+      if (__DEV__) {
+        // If the thenable resolves to an element, then it was in a static position,
+        // the return value of a Server Component. That doesn't need further validation
+        // of keys. The Server Component itself would have had a key.
+        thenable.then(
+          resolvedValue => {
+            if (
+              typeof resolvedValue === 'object' &&
+              resolvedValue !== null &&
+              resolvedValue.$$typeof === REACT_ELEMENT_TYPE
+            ) {
+              resolvedValue._store.validated = 1;
+            }
+          },
+          () => {},
+        );
+      }
       if (thenable.status === 'fulfilled') {
         return thenable.value;
       }
@@ -1102,6 +1126,11 @@ function renderFunctionComponent<Props>(
       if (__DEV__) {
         (result: any)._debugInfo = iterableChild._debugInfo;
       }
+    } else if (__DEV__ && (result: any).$$typeof === REACT_ELEMENT_TYPE) {
+      // If the server component renders to an element, then it was in a static position.
+      // That doesn't need further validation of keys. The Server Component itself would
+      // have had a key.
+      (result: any)._store.validated = 1;
     }
   }
   // Track this element's key on the Server Component on the keyPath context..
@@ -1124,11 +1153,68 @@ function renderFunctionComponent<Props>(
   return json;
 }
 
+function warnForMissingKey(
+  request: Request,
+  key: null | string,
+  validated: number,
+  componentDebugInfo: ReactComponentInfo,
+): void {
+  if (__DEV__) {
+    if (validated !== 2) {
+      return;
+    }
+
+    let didWarnForKey = request.didWarnForKey;
+    if (didWarnForKey == null) {
+      didWarnForKey = request.didWarnForKey = new WeakSet();
+    }
+    const parentOwner = componentDebugInfo.owner;
+    if (parentOwner != null) {
+      if (didWarnForKey.has(parentOwner)) {
+        // We already warned for other children in this parent.
+        return;
+      }
+      didWarnForKey.add(parentOwner);
+    }
+
+    // Call with the server component as the currently rendering component
+    // for context.
+    callComponentInDEV(
+      () => {
+        console.error(
+          'Each child in a list should have a unique "key" prop.' +
+            '%s%s See https://react.dev/link/warning-keys for more information.',
+          '',
+          '',
+        );
+      },
+      null,
+      componentDebugInfo,
+    );
+  }
+}
+
 function renderFragment(
   request: Request,
   task: Task,
   children: $ReadOnlyArray<ReactClientValue>,
 ): ReactJSONValue {
+  if (__DEV__) {
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (
+        child !== null &&
+        typeof child === 'object' &&
+        child.$$typeof === REACT_ELEMENT_TYPE
+      ) {
+        const element: ReactElement = (child: any);
+        if (element.key === null && !element._store.validated) {
+          element._store.validated = 2;
+        }
+      }
+    }
+  }
+
   if (task.keyPath !== null) {
     // We have a Server Component that specifies a key but we're now splitting
     // the tree using a fragment.
@@ -1231,6 +1317,7 @@ function renderClientElement(
   props: any,
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
+  validated: number, // DEV-only
 ): ReactJSONValue {
   // We prepend the terminal client element that actually gets serialized with
   // the keys of any Server Components which are not serialized.
@@ -1242,7 +1329,7 @@ function renderClientElement(
   }
   const element = __DEV__
     ? enableOwnerStacks
-      ? [REACT_ELEMENT_TYPE, type, key, props, owner, stack]
+      ? [REACT_ELEMENT_TYPE, type, key, props, owner, stack, validated]
       : [REACT_ELEMENT_TYPE, type, key, props, owner]
     : [REACT_ELEMENT_TYPE, type, key, props];
   if (task.implicitSlot && key !== null) {
@@ -1292,6 +1379,7 @@ function renderElement(
   props: any,
   owner: null | ReactComponentInfo, // DEV only
   stack: null | string, // DEV only
+  validated: number, // DEV only
 ): ReactJSONValue {
   if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
@@ -1312,7 +1400,15 @@ function renderElement(
   if (typeof type === 'function') {
     if (isClientReference(type) || isOpaqueTemporaryReference(type)) {
       // This is a reference to a Client Component.
-      return renderClientElement(task, type, key, props, owner, stack);
+      return renderClientElement(
+        task,
+        type,
+        key,
+        props,
+        owner,
+        stack,
+        validated,
+      );
     }
     // This is a Server Component.
     return renderFunctionComponent(
@@ -1323,10 +1419,11 @@ function renderElement(
       props,
       owner,
       stack,
+      validated,
     );
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    return renderClientElement(task, type, key, props, owner, stack);
+    return renderClientElement(task, type, key, props, owner, stack, validated);
   } else if (typeof type === 'symbol') {
     if (type === REACT_FRAGMENT_TYPE && key === null) {
       // For key-less fragments, we add a small optimization to avoid serializing
@@ -1347,11 +1444,19 @@ function renderElement(
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
-    return renderClientElement(task, type, key, props, owner, stack);
+    return renderClientElement(task, type, key, props, owner, stack, validated);
   } else if (type != null && typeof type === 'object') {
     if (isClientReference(type)) {
       // This is a reference to a Client Component.
-      return renderClientElement(task, type, key, props, owner, stack);
+      return renderClientElement(
+        task,
+        type,
+        key,
+        props,
+        owner,
+        stack,
+        validated,
+      );
     }
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
@@ -1372,6 +1477,7 @@ function renderElement(
           props,
           owner,
           stack,
+          validated,
         );
       }
       case REACT_FORWARD_REF_TYPE: {
@@ -1383,6 +1489,7 @@ function renderElement(
           props,
           owner,
           stack,
+          validated,
         );
       }
       case REACT_MEMO_TYPE: {
@@ -1395,6 +1502,7 @@ function renderElement(
           props,
           owner,
           stack,
+          validated,
         );
       }
     }
@@ -1963,8 +2071,11 @@ function renderModelDestructive(
           props,
           __DEV__ ? element._owner : null,
           __DEV__ && enableOwnerStacks
-            ? filterDebugStack(element._debugStack)
+            ? !element._debugStack || typeof element._debugStack === 'string'
+              ? element._debugStack
+              : filterDebugStack(element._debugStack)
             : null,
+          __DEV__ && enableOwnerStacks ? element._store.validated : 0,
         );
       }
       case REACT_LAZY_TYPE: {

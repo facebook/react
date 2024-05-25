@@ -594,6 +594,7 @@ describe('create-react-class-integration', () => {
         return null;
       },
     });
+    Component.displayName = 'Component';
 
     await expect(async () => {
       await expect(async () => {
@@ -643,6 +644,7 @@ describe('create-react-class-integration', () => {
         return null;
       },
     });
+    Component.displayName = 'Component';
 
     await expect(async () => {
       await expect(async () => {

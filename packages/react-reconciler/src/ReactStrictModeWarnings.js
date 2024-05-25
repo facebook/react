@@ -9,10 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
-import {
-  resetCurrentDebugFiberInDEV,
-  setCurrentDebugFiberInDEV,
-} from './ReactCurrentFiber';
+import {runWithFiberInDEV} from './ReactCurrentFiber';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 
@@ -339,8 +336,7 @@ if (__DEV__) {
 
         const sortedNames = setToSortedString(uniqueNames);
 
-        try {
-          setCurrentDebugFiberInDEV(firstFiber);
+        runWithFiberInDEV(firstFiber, () => {
           console.error(
             'Legacy context API has been detected within a strict-mode tree.' +
               '\n\nThe old API will be supported in all 16.x releases, but applications ' +
@@ -349,9 +345,7 @@ if (__DEV__) {
               '\n\nLearn more about this warning here: https://react.dev/link/legacy-context',
             sortedNames,
           );
-        } finally {
-          resetCurrentDebugFiberInDEV();
-        }
+        });
       },
     );
   };

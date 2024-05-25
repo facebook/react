@@ -35,13 +35,13 @@ export function validateNoCapitalizedCalls(fn: HIRFunction): void {
       switch (value.kind) {
         case "LoadGlobal": {
           if (
-            value.name != "" &&
-            /^[A-Z]/.test(value.name) &&
+            value.binding.name != "" &&
+            /^[A-Z]/.test(value.binding.name) &&
             // We don't want to flag CONSTANTS()
-            !(value.name.toUpperCase() === value.name) &&
-            !isAllowed(value.name)
+            !(value.binding.name.toUpperCase() === value.binding.name) &&
+            !isAllowed(value.binding.name)
           ) {
-            capitalLoadGlobals.set(lvalue.identifier.id, value.name);
+            capitalLoadGlobals.set(lvalue.identifier.id, value.binding.name);
           }
 
           break;

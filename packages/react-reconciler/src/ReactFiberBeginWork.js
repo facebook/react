@@ -110,6 +110,7 @@ import {
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   disableStringRefs,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -124,7 +125,6 @@ import {
 } from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
-  setIsRendering,
   setCurrentFiber,
 } from './ReactCurrentFiber';
 import {
@@ -297,6 +297,11 @@ import {
   pushRootMarkerInstance,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
+import {
+  callLazyInitInDEV,
+  callComponentInDEV,
+  callRenderInDEV,
+} from './ReactFiberCallUserSpace';
 
 // A special exception that's used to unwind the stack when an update flows
 // into a dehydrated boundary.
@@ -432,7 +437,6 @@ function updateForwardRef(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -442,7 +446,6 @@ function updateForwardRef(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -1149,7 +1152,6 @@ function updateFunctionComponent(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -1159,7 +1161,6 @@ function updateFunctionComponent(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -1393,20 +1394,18 @@ function finishClassComponent(
       markComponentRenderStarted(workInProgress);
     }
     if (__DEV__) {
-      setIsRendering(true);
-      nextChildren = instance.render();
+      nextChildren = callRenderInDEV(instance);
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
         setIsStrictModeForDevtools(true);
         try {
-          instance.render();
+          callRenderInDEV(instance);
         } finally {
           setIsStrictModeForDevtools(false);
         }
       }
-      setIsRendering(false);
     } else {
       nextChildren = instance.render();
     }
@@ -1766,9 +1765,14 @@ function mountLazyComponent(
 
   const props = workInProgress.pendingProps;
   const lazyComponent: LazyComponentType<any, any> = elementType;
-  const payload = lazyComponent._payload;
-  const init = lazyComponent._init;
-  let Component = init(payload);
+  let Component;
+  if (__DEV__) {
+    Component = callLazyInitInDEV(lazyComponent);
+  } else {
+    const payload = lazyComponent._payload;
+    const init = lazyComponent._init;
+    Component = init(payload);
+  }
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
 
@@ -3417,9 +3421,7 @@ function updateContextConsumer(
   }
   let newChildren;
   if (__DEV__) {
-    setIsRendering(true);
-    newChildren = render(newValue);
-    setIsRendering(false);
+    newChildren = callComponentInDEV(render, newValue, undefined);
   } else {
     newChildren = render(newValue);
   }
@@ -3831,18 +3833,19 @@ function beginWork(
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
-      return remountFiber(
-        current,
-        workInProgress,
-        createFiberFromTypeAndProps(
-          workInProgress.type,
-          workInProgress.key,
-          workInProgress.pendingProps,
-          workInProgress._debugOwner || null,
-          workInProgress.mode,
-          workInProgress.lanes,
-        ),
+      const copiedFiber = createFiberFromTypeAndProps(
+        workInProgress.type,
+        workInProgress.key,
+        workInProgress.pendingProps,
+        workInProgress._debugOwner || null,
+        workInProgress.mode,
+        workInProgress.lanes,
       );
+      if (enableOwnerStacks) {
+        copiedFiber._debugStack = workInProgress._debugStack;
+        copiedFiber._debugTask = workInProgress._debugTask;
+      }
+      return remountFiber(current, workInProgress, copiedFiber);
     }
   }
 
