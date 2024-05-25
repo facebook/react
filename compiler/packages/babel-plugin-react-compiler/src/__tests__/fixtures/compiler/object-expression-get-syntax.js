@@ -1,16 +1,14 @@
-function Component(props) {
-  let value;
+function Component({ value }) {
   const object = {
-    set value(v) {
-      value = v;
+    get value() {
+      return value;
     },
   };
-  object.value = props.value;
-  return <div>{value}</div>;
+  return <div>{object.value}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: foo,
+  fn: Component,
   params: [{ value: 0 }],
   sequentialRenders: [{ value: 1 }, { value: 2 }],
 };

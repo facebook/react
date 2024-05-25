@@ -1617,7 +1617,7 @@ function codegenInstructionValue(
                * https://github.com/babel/babel/blob/v7.7.4/packages/babel-types/src/definitions/core.js#L599-L603
                */
               const babelNode = t.objectMethod(
-                "method",
+                method.methodKind,
                 key,
                 fn.params,
                 fn.body,
