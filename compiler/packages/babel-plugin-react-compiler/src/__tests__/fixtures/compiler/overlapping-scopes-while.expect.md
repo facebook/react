@@ -23,8 +23,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function foo(a, b, c) {
-  const y = [];
   const x = [];
+  const y = [];
   while (c) {
     y.push(b);
     x.push(a);

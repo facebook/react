@@ -71,12 +71,12 @@ function Component(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a = {};
-
-    const x = {};
     const b = [a];
-    x.b = b;
     const c = {};
     const d = { c };
+
+    const x = {};
+    x.b = b;
     const y = mutate(x, d);
     if (a) {
     }

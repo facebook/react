@@ -27,12 +27,12 @@ function component() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const z = [];
+    const y = {};
+    y.z = z;
     const x = {};
 
     t0 = x;
-    const y = {};
-    const z = [];
-    y.z = z;
     x.y = y;
     $[0] = t0;
   } else {

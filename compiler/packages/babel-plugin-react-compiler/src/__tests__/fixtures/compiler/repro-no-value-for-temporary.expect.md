@@ -21,8 +21,8 @@ function Component(listItem, thread) {
   let t0;
   let t1;
   if ($[0] !== thread.threadType || $[1] !== listItem) {
-    t1 = listItem;
     const isFoo = isFooThread(thread.threadType);
+    t1 = listItem;
     t0 = getBadgeText(listItem, isFoo);
     $[0] = thread.threadType;
     $[1] = listItem;

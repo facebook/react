@@ -24,21 +24,23 @@ function mutate() {}
 function foo() {
   const $ = _c(2);
   let a;
-  let c;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     let b = {};
-    c = {};
+    let c = {};
     a = b;
     b = c;
     c = a;
+
+    t0 = c;
     mutate(a, b);
-    $[0] = c;
+    $[0] = t0;
     $[1] = a;
   } else {
-    c = $[0];
+    t0 = $[0];
     a = $[1];
   }
-  return c;
+  return t0;
 }
 
 ```

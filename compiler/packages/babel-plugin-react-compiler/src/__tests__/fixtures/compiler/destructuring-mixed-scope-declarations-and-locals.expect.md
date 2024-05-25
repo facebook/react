@@ -32,6 +32,7 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(5);
   const post = useFragment(graphql`...`, props.post);
+  const allUrls = [];
 
   const { media, comments, urls } = post;
   let t0;
@@ -58,7 +59,6 @@ function Component(props) {
   } else {
     t1 = $[4];
   }
-  const allUrls = [];
   allUrls.push(...urls);
   return t1;
 }

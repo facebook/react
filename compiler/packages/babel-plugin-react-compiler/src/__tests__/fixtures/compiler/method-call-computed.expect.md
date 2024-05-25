@@ -26,8 +26,8 @@ function foo(a, b, c) {
   const $ = _c(3);
   let t0;
   if ($[0] !== a || $[1] !== b) {
-    const y = makeObject(a);
     const x = makeObject(a);
+    const y = makeObject(a);
 
     t0 = x[y.method](b);
     $[0] = a;

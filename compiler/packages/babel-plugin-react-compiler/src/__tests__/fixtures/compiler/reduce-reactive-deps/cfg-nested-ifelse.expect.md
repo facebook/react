@@ -41,19 +41,11 @@ import { c as _c } from "react/compiler-runtime"; // props.a.b should be added a
 import { getNull, identity } from "shared-runtime";
 
 function useCondDepInNestedIfElse(props, cond) {
-  const $ = _c(6);
-  let t0;
-  if ($[0] !== cond) {
-    t0 = identity(cond);
-    $[0] = cond;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
+  const $ = _c(3);
   let x;
-  if ($[2] !== t0 || $[3] !== props.a.b || $[4] !== cond) {
+  if ($[0] !== cond || $[1] !== props.a.b) {
     x = {};
-    if (t0) {
+    if (identity(cond)) {
       if (getNull()) {
         x.a = props.a.b;
       } else {
@@ -66,12 +58,11 @@ function useCondDepInNestedIfElse(props, cond) {
         x.d = props.a.b;
       }
     }
-    $[2] = t0;
-    $[3] = props.a.b;
-    $[4] = cond;
-    $[5] = x;
+    $[0] = cond;
+    $[1] = props.a.b;
+    $[2] = x;
   } else {
-    x = $[5];
+    x = $[2];
   }
   return x;
 }

@@ -48,6 +48,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 function Component() {
   const $ = _c(9);
   const ref = useRef(null);
+  const [state, setState] = useState(false);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
@@ -76,21 +77,17 @@ function Component() {
     t2 = $[3];
   }
   useEffect(t1, t2);
-  const [state, setState] = useState(false);
   let t3;
+  let t4;
   if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = () => {
       setState(true);
     };
-    $[4] = t3;
-  } else {
-    t3 = $[4];
-  }
-  let t4;
-  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
     t4 = [];
+    $[4] = t3;
     $[5] = t4;
   } else {
+    t3 = $[4];
     t4 = $[5];
   }
   useEffect(t3, t4);

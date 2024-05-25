@@ -64,6 +64,7 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
+  const free = t0;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = makeObject_Primitives();
@@ -72,22 +73,21 @@ function Component(props) {
     t1 = $[1];
   }
   const free2 = t1;
+  const part = free2.part;
 
   useHook();
-  const free = t0;
-  const part = free2.part;
   let t2;
+  let x;
   if ($[2] !== props.value) {
-    const x = makeObject_Primitives();
-
-    t2 = x;
+    x = makeObject_Primitives();
     x.value = props.value;
     mutate(x, free, part);
     $[2] = props.value;
-    $[3] = t2;
+    $[3] = x;
   } else {
-    t2 = $[3];
+    x = $[3];
   }
+  t2 = x;
   const object = t2;
 
   identity(free);

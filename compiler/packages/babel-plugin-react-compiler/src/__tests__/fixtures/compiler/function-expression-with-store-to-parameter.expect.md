@@ -30,12 +30,12 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
+  const mutate = t0;
   let t1;
   if ($[1] !== props) {
     const x = makeObject(props);
 
     t1 = x;
-    const mutate = t0;
     mutate(x);
     $[1] = props;
     $[2] = t1;

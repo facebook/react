@@ -20,10 +20,10 @@ function foo() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const x = [];
     const y = {};
 
     t0 = y;
-    const x = [];
     y.x = x;
     mutate(y);
     $[0] = t0;

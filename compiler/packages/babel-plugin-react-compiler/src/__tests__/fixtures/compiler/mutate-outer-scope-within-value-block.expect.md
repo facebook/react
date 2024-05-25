@@ -71,8 +71,9 @@ function useFoo(t0) {
   const { input } = t0;
   let t1;
   if ($[0] !== input) {
-    const cond = identity(false);
     const arr = shallowCopy(input);
+
+    const cond = identity(false);
     t1 = cond ? { val: CONST_TRUE } : mutate(arr);
     $[0] = input;
     $[1] = t1;

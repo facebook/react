@@ -22,10 +22,10 @@ function component(a) {
   const $ = _c(2);
   let y;
   if ($[0] !== a) {
+    const x = { a };
     y = 1;
 
     y;
-    const x = { a };
     y = x;
 
     mutate(y);

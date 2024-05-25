@@ -45,8 +45,8 @@ import { ValidateMemoization } from "shared-runtime";
 
 function Component(t0) {
   const $ = _c(19);
-  let t1;
   const { a, b } = t0;
+  let t1;
   let t2;
   if ($[0] !== a) {
     t2 = [a];
@@ -56,8 +56,8 @@ function Component(t0) {
     t2 = $[1];
   }
   t1 = t2;
-  let t3;
   const x = t1;
+  let t3;
   let items;
   if ($[2] !== b || $[3] !== x) {
     items = [b];

@@ -31,6 +31,7 @@ function useHook(t0) {
   const { value } = t0;
   let t1;
   if ($[0] !== value) {
+    const x = mutateAndReturn({ value });
     const obj = {
       getValue() {
         return value;
@@ -38,7 +39,6 @@ function useHook(t0) {
     };
 
     t1 = obj;
-    const x = mutateAndReturn({ value });
     mutate(x);
     $[0] = value;
     $[1] = t1;

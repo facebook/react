@@ -29,9 +29,8 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(1);
   const cond = props.cond;
-
-  let a;
   const x = props.x;
+  let a;
   if (cond) {
     a = x;
   } else {

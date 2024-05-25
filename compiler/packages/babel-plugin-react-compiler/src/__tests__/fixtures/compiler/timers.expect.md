@@ -21,6 +21,7 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
+  const start = performance.now();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = Date.now();
@@ -28,9 +29,8 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
-  const start = performance.now();
-  const time = performance.now() - start;
   const now = t0;
+  const time = performance.now() - start;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = (

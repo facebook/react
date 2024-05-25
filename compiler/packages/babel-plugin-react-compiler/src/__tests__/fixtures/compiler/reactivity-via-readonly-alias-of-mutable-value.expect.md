@@ -51,8 +51,9 @@ function Component(props) {
   const x = [];
   const y = x;
 
-  y.push(props.input);
   const z = [y];
+
+  y.push(props.input);
 
   const a = [z];
 

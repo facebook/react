@@ -31,7 +31,6 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(4);
-
   let y;
   let t0;
   if ($[0] !== props) {
@@ -58,11 +57,11 @@ function Component(props) {
       }
     }
     $[0] = props;
-    $[1] = t0;
-    $[2] = y;
+    $[1] = y;
+    $[2] = t0;
   } else {
-    t0 = $[1];
-    y = $[2];
+    y = $[1];
+    t0 = $[2];
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;

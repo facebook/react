@@ -737,6 +737,12 @@ class InferenceState {
    * For debugging purposes, dumps the state to a plain
    * object so that it can printed as JSON.
    */
+  inspect(): any {
+    return {
+      values: this.#values,
+      variables: this.#variables,
+    };
+  }
   debug(): any {
     const result: any = { values: {}, variables: {} };
     const objects: Map<InstructionValue, number> = new Map();

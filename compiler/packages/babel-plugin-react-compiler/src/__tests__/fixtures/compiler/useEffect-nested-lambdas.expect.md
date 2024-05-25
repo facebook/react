@@ -43,6 +43,7 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
+  const item = useMutable(props.itemId);
   const dispatch = useDispatch();
   useFreeze(dispatch);
   let t1;
@@ -55,7 +56,6 @@ function Component(props) {
   } else {
     t1 = $[2];
   }
-  const item = useMutable(props.itemId);
   const exit = t1;
   let t2;
   if ($[3] !== item.value || $[4] !== exit) {

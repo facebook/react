@@ -52,33 +52,32 @@ import { mutate } from "shared-runtime";
  * values in a subsequent render.
  */
 function useFoo(t0) {
-  const $ = _c(4);
+  const $ = _c(5);
   const { a, b } = t0;
-
-  const x = { a };
-
-  mutate(x);
   let t1;
-  if ($[0] !== b) {
+  if ($[0] !== a || $[1] !== b) {
+    const x = { a };
     const y = [b];
+    mutate(x);
 
     const t2 = mutate(y);
     let t3;
-    if ($[2] !== t2) {
+    if ($[3] !== t2) {
       t3 = [t2];
-      $[2] = t2;
-      $[3] = t3;
+      $[3] = t2;
+      $[4] = t3;
     } else {
-      t3 = $[3];
+      t3 = $[4];
     }
     const z = t3;
 
     t1 = z;
     mutate(y);
-    $[0] = b;
-    $[1] = t1;
+    $[0] = a;
+    $[1] = b;
+    $[2] = t1;
   } else {
-    t1 = $[1];
+    t1 = $[2];
   }
   return t1;
 }

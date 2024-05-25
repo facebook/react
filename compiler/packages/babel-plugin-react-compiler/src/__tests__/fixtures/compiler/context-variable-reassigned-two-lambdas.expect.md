@@ -39,16 +39,17 @@ function Component(t0) {
   const $ = _c(2);
   let x;
   if ($[0] !== t0) {
-    x = {};
     const { doReassign1, doReassign2 } = t0;
+    x = {};
     const reassign1 = () => {
       x = 2;
     };
 
-    conditionalInvoke(doReassign1, reassign1);
     const reassign2 = () => {
       x = 3;
     };
+
+    conditionalInvoke(doReassign1, reassign1);
     conditionalInvoke(doReassign2, reassign2);
     $[0] = t0;
     $[1] = x;

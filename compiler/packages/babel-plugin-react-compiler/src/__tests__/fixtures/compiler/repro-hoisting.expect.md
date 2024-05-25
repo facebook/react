@@ -34,9 +34,10 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
+  const wat = t0;
 
   const pathname_0 = props.wat;
-  const wat = t0;
+  const deeplinkItemId = pathname_0 ? props.itemID : null;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => wat();
@@ -44,7 +45,6 @@ function Component(props) {
   } else {
     t1 = $[1];
   }
-  const deeplinkItemId = pathname_0 ? props.itemID : null;
   let t2;
   if ($[2] !== deeplinkItemId) {
     t2 = <button onClick={t1}>{deeplinkItemId}</button>;

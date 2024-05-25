@@ -64,8 +64,8 @@ function useJoinCondDepsInUncondScopes(props) {
   const $ = _c(2);
   let t0;
   if ($[0] !== props.a.b) {
-    const x = {};
     const y = {};
+    const x = {};
     if (CONST_TRUE) {
       setProperty(x, props.a.b);
     }

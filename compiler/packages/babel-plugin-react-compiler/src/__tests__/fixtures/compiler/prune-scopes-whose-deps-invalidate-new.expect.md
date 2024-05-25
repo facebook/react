@@ -30,10 +30,10 @@ import { useHook } from "shared-runtime";
 
 function Component(props) {
   const x = new Foo();
-
-  const y = { x };
   useHook();
   x.value = props.value;
+
+  const y = { x };
   return { y };
 }
 

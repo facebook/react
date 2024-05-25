@@ -92,32 +92,32 @@ import { identity, mutate } from "shared-runtime";
  *
  */
 function useFoo(t0) {
-  const $ = _c(4);
+  const $ = _c(6);
   const { a, b } = t0;
-  const x = { a };
-
-  mutate(x);
-  let t1;
+  let z;
   let y;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== a || $[1] !== b) {
+    const x = { a };
     y = {};
-    t1 = identity(y);
+    mutate(x);
+    let t1;
+    if ($[4] !== b) {
+      t1 = [identity(y), b];
+      $[4] = b;
+      $[5] = t1;
+    } else {
+      t1 = $[5];
+    }
+    z = t1;
     mutate(y);
-    $[0] = t1;
-    $[1] = y;
+    $[0] = a;
+    $[1] = b;
+    $[2] = z;
+    $[3] = y;
   } else {
-    t1 = $[0];
-    y = $[1];
+    z = $[2];
+    y = $[3];
   }
-  let t2;
-  if ($[2] !== b) {
-    t2 = [t1, b];
-    $[2] = b;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
-  const z = t2;
   if (z[0] !== y) {
     throw new Error("oh no!");
   }

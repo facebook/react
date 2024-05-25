@@ -16,8 +16,8 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const obj2 = makeObject();
   const obj = makeObject();
+  const obj2 = makeObject();
   (obj.a ?? obj2.b) || props.c;
   return null;
 }

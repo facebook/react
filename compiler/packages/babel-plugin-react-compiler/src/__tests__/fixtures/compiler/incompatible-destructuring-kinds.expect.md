@@ -28,28 +28,31 @@ import { useMemo } from "react";
 import { Stringify } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(3);
-  let a;
+  const $ = _c(4);
   let t1;
+  let a;
+  let b;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     a = "a";
 
     const [t2, t3] = [null, null];
     t1 = t3;
     a = t2;
-    $[0] = a;
-    $[1] = t1;
+    $[0] = t1;
+    $[1] = a;
+    $[2] = b;
   } else {
-    a = $[0];
-    t1 = $[1];
+    t1 = $[0];
+    a = $[1];
+    b = $[2];
   }
-  const b = t1;
+  b = t1;
   let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = <Stringify a={a} b={b} onClick={() => a} />;
-    $[2] = t2;
+    $[3] = t2;
   } else {
-    t2 = $[2];
+    t2 = $[3];
   }
   return t2;
 }

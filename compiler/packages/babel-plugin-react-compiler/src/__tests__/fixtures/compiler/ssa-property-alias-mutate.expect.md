@@ -23,11 +23,12 @@ function foo() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const a = {};
+    const x = a;
+
     const y = {};
 
     t0 = y;
-    const a = {};
-    const x = a;
     y.x = x;
     mutate(a);
     $[0] = t0;

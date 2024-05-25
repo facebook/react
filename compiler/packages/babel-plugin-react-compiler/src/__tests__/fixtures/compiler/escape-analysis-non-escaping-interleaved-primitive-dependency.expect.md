@@ -36,11 +36,12 @@ function Component(props) {
   const $ = _c(4);
   let t0;
   if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.c) {
+    const a = props.a + props.b;
+
     const b = [];
 
     t0 = b;
     const c = {};
-    const a = props.a + props.b;
     c.a = a;
     b.push(props.c);
     $[0] = props.a;

@@ -27,11 +27,11 @@ function foo() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const x = { x: 0 };
+    const y = { z: 0 };
     const z = { z: 0 };
 
     t0 = z;
-    const x = { x: 0 };
-    const y = { z: 0 };
     x.x = x.x + (y.y = y.y * 1);
     z.z = z.z + (y.y = y.y * (x.x = x.x & 3));
     $[0] = t0;

@@ -35,8 +35,8 @@ function Component(props) {
   const $ = _c(2);
   let t0;
   if ($[0] !== props) {
-    let y;
     const x = {};
+    let y;
     if (props.cond) {
       y = {};
     } else {

@@ -32,62 +32,58 @@ import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 function useFoo(t0) {
-  const $ = _c(11);
-  const { input, inputHasAB, inputHasABC } = t0;
-
-  const t1 = !inputHasABC;
+  const $ = _c(9);
   let x;
-  let t2;
-  if ($[0] !== t1 || $[1] !== input.a || $[2] !== inputHasAB) {
-    t2 = Symbol.for("react.early_return_sentinel");
+  let t1;
+  if ($[0] !== t0) {
+    t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
+      const { input, inputHasAB, inputHasABC } = t0;
       x = [];
-      if (t1) {
+      if (!inputHasABC) {
+        let t2;
+        if ($[3] !== input.a) {
+          t2 = identity(input.a);
+          $[3] = input.a;
+          $[4] = t2;
+        } else {
+          t2 = $[4];
+        }
+        x.push(t2);
+        if (!inputHasAB) {
+          t1 = null;
+          break bb0;
+        }
         let t3;
-        if ($[5] !== input.a) {
-          t3 = identity(input.a);
-          $[5] = input.a;
+        if ($[5] !== input.a.b) {
+          t3 = identity(input.a.b);
+          $[5] = input.a.b;
           $[6] = t3;
         } else {
           t3 = $[6];
         }
         x.push(t3);
-        if (!inputHasAB) {
-          t2 = null;
-          break bb0;
-        }
-        let t4;
-        if ($[7] !== input.a.b) {
-          t4 = identity(input.a.b);
-          $[7] = input.a.b;
-          $[8] = t4;
-        } else {
-          t4 = $[8];
-        }
-        x.push(t4);
       } else {
-        let t3;
-        if ($[9] !== input.a.b.c) {
-          t3 = identity(input.a.b.c);
-          $[9] = input.a.b.c;
-          $[10] = t3;
+        let t2;
+        if ($[7] !== input.a.b.c) {
+          t2 = identity(input.a.b.c);
+          $[7] = input.a.b.c;
+          $[8] = t2;
         } else {
-          t3 = $[10];
+          t2 = $[8];
         }
-        x.push(t3);
+        x.push(t2);
       }
     }
-    $[0] = t1;
-    $[1] = input.a;
-    $[2] = inputHasAB;
-    $[3] = x;
-    $[4] = t2;
+    $[0] = t0;
+    $[1] = x;
+    $[2] = t1;
   } else {
-    x = $[3];
-    t2 = $[4];
+    x = $[1];
+    t1 = $[2];
   }
-  if (t2 !== Symbol.for("react.early_return_sentinel")) {
-    return t2;
+  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+    return t1;
   }
   return x;
 }

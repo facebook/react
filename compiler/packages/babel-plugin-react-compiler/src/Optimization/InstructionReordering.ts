@@ -1,16 +1,18 @@
 import {
   BasicBlock,
+  Environment,
   HIRFunction,
   IdentifierId,
   Instruction,
   markInstructionIds,
 } from "../HIR";
-import { printInstruction } from "../HIR/PrintHIR";
+import { printFunction, printInstruction } from "../HIR/PrintHIR";
 import {
   eachInstructionValueLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
+import { mayAllocate } from "../ReactiveScopes/InferReactiveScopeVariables";
 import { getOrInsertDefault } from "../Utils/utils";
 
 /**
@@ -66,23 +68,30 @@ import { getOrInsertDefault } from "../Utils/utils";
  * - Probably more things.
  */
 export function instructionReordering(fn: HIRFunction): void {
+  DEBUG && console.log(printFunction(fn));
   const globalDependencies: Dependencies = new Map();
   for (const [, block] of fn.body.blocks) {
-    reorderBlock(block, globalDependencies);
+    reorderBlock(fn.env, block, globalDependencies);
   }
   markInstructionIds(fn.body);
+  DEBUG && console.log(printFunction(fn));
 }
+
+const DEBUG = false;
 
 type Dependencies = Map<IdentifierId, Node>;
 type Node = {
   instruction: Instruction | null;
   dependencies: Array<IdentifierId>;
+  depth: number | null;
 };
 
 function reorderBlock(
+  env: Environment,
   block: BasicBlock,
   globalDependencies: Dependencies
 ): void {
+  DEBUG && console.log(`bb${block.id}`);
   const dependencies: Dependencies = new Map();
   const locals = new Map<string, IdentifierId>();
   let previousIdentifier: IdentifierId | null = null;
@@ -93,6 +102,7 @@ function reorderBlock(
       {
         instruction: instr,
         dependencies: [],
+        depth: null,
       }
     );
     if (getReorderingLevel(instr) === ReorderingLevel.None) {
@@ -109,10 +119,8 @@ function reorderBlock(
         const previous = locals.get(operand.identifier.name.value);
         if (previous !== undefined) {
           node.dependencies.push(previous);
-        } else {
-          locals.set(operand.identifier.name.value, instr.lvalue.identifier.id);
-          node.dependencies.push(operand.identifier.id);
         }
+        locals.set(operand.identifier.name.value, instr.lvalue.identifier.id);
       } else {
         if (dependencies.has(operand.identifier.id)) {
           node.dependencies.push(operand.identifier.id);
@@ -128,6 +136,7 @@ function reorderBlock(
         {
           instruction: null,
           dependencies: [],
+          depth: null,
         }
       );
       lvalueNode.dependencies.push(instr.lvalue.identifier.id);
@@ -139,11 +148,61 @@ function reorderBlock(
         if (previous !== undefined) {
           node.dependencies.push(previous);
         }
+        locals.set(lvalue.identifier.name.value, instr.lvalue.identifier.id);
       }
     }
   }
 
+  function getDepth(env: Environment, id: IdentifierId): number {
+    const node = dependencies.get(id);
+    if (node == null) {
+      return 0;
+    }
+    if (node.depth !== null) {
+      return node.depth;
+    }
+    node.depth = 0;
+    let depth =
+      node.instruction != null && mayAllocate(env, node.instruction) ? 1 : 0;
+    for (const dep of node.dependencies) {
+      depth += getDepth(env, dep);
+    }
+    node.depth = depth;
+    return depth;
+  }
+
   const instructions: Array<Instruction> = [];
+
+  function print(
+    id: IdentifierId,
+    seen: Set<IdentifierId>,
+    depth: number = 0
+  ): void {
+    const node = dependencies.get(id) ?? globalDependencies.get(id);
+    if (node == null || seen.has(id)) {
+      DEBUG && console.log(`${"\t|".repeat(depth)} skip $${id}`);
+      return;
+    }
+    seen.add(id);
+    node.dependencies.sort((a, b) => {
+      const aDepth = getDepth(env, a);
+      const bDepth = getDepth(env, b);
+      return bDepth - aDepth;
+    });
+    for (const dep of node.dependencies) {
+      print(dep, seen, depth + 1);
+    }
+    DEBUG && console.log(`${"\t|".repeat(depth)} ${printNode(id, node)}`);
+  }
+  const seen = new Set<IdentifierId>();
+  if (DEBUG) {
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      print(operand.identifier.id, seen);
+    }
+    for (const id of Array.from(dependencies.keys()).reverse()) {
+      print(id, seen);
+    }
+  }
 
   function emit(id: IdentifierId): void {
     const node = dependencies.get(id) ?? globalDependencies.get(id);
@@ -152,6 +211,11 @@ function reorderBlock(
     }
     dependencies.delete(id);
     globalDependencies.delete(id);
+    node.dependencies.sort((a, b) => {
+      const aDepth = getDepth(env, a);
+      const bDepth = getDepth(env, b);
+      return bDepth - aDepth;
+    });
     for (const dep of node.dependencies) {
       emit(dep);
     }
@@ -161,6 +225,7 @@ function reorderBlock(
   }
 
   for (const operand of eachTerminalOperand(block.terminal)) {
+    DEBUG && console.log(`terminal operand: $${operand.identifier.id}`);
     emit(operand.identifier.id);
   }
   for (const id of Array.from(dependencies.keys()).reverse()) {
@@ -174,25 +239,38 @@ function reorderBlock(
     ) {
       globalDependencies.set(id, node);
     } else {
+      DEBUG && console.log(`other: $${id}`);
       emit(id);
     }
   }
   block.instructions = instructions;
+  DEBUG && console.log();
 }
 
 function printDeps(deps: Dependencies): string {
   return (
     "[\n" +
     Array.from(deps)
-      .map(
-        ([id, dep]) =>
-          `$${id} ${
-            dep.instruction != null ? printInstruction(dep.instruction) : ""
-          } deps=[${dep.dependencies.map((x) => `$${x}`).join(", ")}]`
-      )
+      .map(([id, dep]) => printNode(id, dep))
       .join("\n") +
     "\n]"
   );
+}
+
+function printNode(id: number, node: Node): string {
+  if (
+    node.instruction != null &&
+    node.instruction.value.kind === "FunctionExpression"
+  ) {
+    return `$${id} FunctionExpression deps=[${node.dependencies
+      .map((x) => `$${x}`)
+      .join(", ")}]`;
+  }
+  return `$${id} ${
+    node.instruction != null ? printInstruction(node.instruction) : ""
+  } deps=[${node.dependencies.map((x) => `$${x}`).join(", ")}] depth=${
+    node.depth
+  }`;
 }
 
 enum ReorderingLevel {
@@ -212,9 +290,9 @@ function getReorderingLevel(instr: Instruction): ReorderingLevel {
     }
     case "ArrayExpression":
     case "ObjectExpression":
-    case "LoadLocal":
-    case "Destructure":
-    case "StoreLocal": {
+    // case "Destructure":
+    // case "StoreLocal":
+    case "LoadLocal": {
       return ReorderingLevel.Local;
     }
     default: {

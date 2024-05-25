@@ -30,29 +30,29 @@ import { makeArray } from "shared-runtime";
 function Component() {
   const $ = _c(3);
   let x;
-  let t0;
+  let y;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const y = (x = {});
+    y = x = {};
 
-    t0 = y;
     const foo = () => {
       x = makeArray();
     };
+
     foo();
     $[0] = x;
-    $[1] = t0;
+    $[1] = y;
   } else {
     x = $[0];
-    t0 = $[1];
+    y = $[1];
   }
-  let t1;
+  let t0;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = [t0, x];
-    $[2] = t1;
+    t0 = [y, x];
+    $[2] = t0;
   } else {
-    t1 = $[2];
+    t0 = $[2];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

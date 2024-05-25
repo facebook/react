@@ -66,9 +66,9 @@ import {
 
 function Foo() {
   const $ = _c(1);
+  const obj = makeObject_Primitives();
 
   useNoAlias();
-  const obj = makeObject_Primitives();
 
   const shouldCaptureObj = obj != null && CONST_TRUE;
   let t0;

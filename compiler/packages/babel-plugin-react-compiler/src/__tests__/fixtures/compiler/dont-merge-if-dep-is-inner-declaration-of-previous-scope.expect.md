@@ -51,96 +51,105 @@ import { ValidateMemoization } from "shared-runtime";
 // without significantly altering the code, so disable the non-Forget evaluation of this fixture.
 // @disableNonForgetInSprout
 function Component(t0) {
-  const $ = _c(25);
-
-  let y;
+  const $ = _c(28);
   const { a, b, c } = t0;
+  let t1;
+  let t2;
+  let t3;
+  let t4;
   let x;
   if ($[0] !== a || $[1] !== b || $[2] !== c) {
     x = [];
+    let y;
     if (a) {
-      let t1;
-      if ($[5] !== b) {
-        t1 = [b];
-        $[5] = b;
-        $[6] = t1;
+      let t5;
+      if ($[8] !== b) {
+        t5 = [b];
+        $[8] = b;
+        $[9] = t5;
       } else {
-        t1 = $[6];
+        t5 = $[9];
       }
-      y = t1;
+      y = t5;
     }
 
+    t3 = a;
+    t4 = b;
+    if ($[10] !== a || $[11] !== b) {
+      t2 = [a, b];
+      $[10] = a;
+      $[11] = b;
+      $[12] = t2;
+    } else {
+      t2 = $[12];
+    }
+    if ($[13] !== y) {
+      t1 = [y];
+      $[13] = y;
+      $[14] = t1;
+    } else {
+      t1 = $[14];
+    }
     x.push(c);
     $[0] = a;
     $[1] = b;
     $[2] = c;
-    $[3] = x;
-    $[4] = y;
+    $[3] = t1;
+    $[4] = t2;
+    $[5] = t3;
+    $[6] = t4;
+    $[7] = x;
   } else {
-    x = $[3];
-    y = $[4];
-  }
-  let t1;
-  if ($[7] !== y) {
-    t1 = [y];
-    $[7] = y;
-    $[8] = t1;
-  } else {
-    t1 = $[8];
+    t1 = $[3];
+    t2 = $[4];
+    t3 = $[5];
+    t4 = $[6];
+    x = $[7];
   }
   const z = t1;
-  let t2;
-  if ($[9] !== a || $[10] !== b || $[11] !== c) {
-    t2 = [a, b, c];
-    $[9] = a;
-    $[10] = b;
-    $[11] = c;
-    $[12] = t2;
-  } else {
-    t2 = $[12];
-  }
-  let t3;
-  if ($[13] !== t2 || $[14] !== x) {
-    t3 = <ValidateMemoization inputs={t2} output={x} />;
-    $[13] = t2;
-    $[14] = x;
-    $[15] = t3;
-  } else {
-    t3 = $[15];
-  }
-  let t4;
-  if ($[16] !== a || $[17] !== b) {
-    t4 = [a, b];
-    $[16] = a;
-    $[17] = b;
-    $[18] = t4;
-  } else {
-    t4 = $[18];
-  }
   let t5;
-  if ($[19] !== t4 || $[20] !== z) {
-    t5 = <ValidateMemoization inputs={t4} output={z} />;
-    $[19] = t4;
-    $[20] = z;
-    $[21] = t5;
+  if ($[15] !== t2 || $[16] !== z) {
+    t5 = <ValidateMemoization inputs={t2} output={z} />;
+    $[15] = t2;
+    $[16] = z;
+    $[17] = t5;
   } else {
-    t5 = $[21];
+    t5 = $[17];
   }
   let t6;
-  if ($[22] !== t3 || $[23] !== t5) {
-    t6 = (
+  if ($[18] !== t3 || $[19] !== t4 || $[20] !== c) {
+    t6 = [t3, t4, c];
+    $[18] = t3;
+    $[19] = t4;
+    $[20] = c;
+    $[21] = t6;
+  } else {
+    t6 = $[21];
+  }
+  let t7;
+  if ($[22] !== t6 || $[23] !== x) {
+    t7 = <ValidateMemoization inputs={t6} output={x} />;
+    $[22] = t6;
+    $[23] = x;
+    $[24] = t7;
+  } else {
+    t7 = $[24];
+  }
+  let t8;
+  if ($[25] !== t7 || $[26] !== t5) {
+    t8 = (
       <>
-        {t3}
+        {t7}
         {t5}
       </>
     );
-    $[22] = t3;
-    $[23] = t5;
-    $[24] = t6;
+    $[25] = t7;
+    $[26] = t5;
+    $[27] = t8;
   } else {
-    t6 = $[24];
+    t8 = $[27];
   }
-  return t6;
+  return t8;
 }
 
 export const FIXTURE_ENTRYPOINT = {

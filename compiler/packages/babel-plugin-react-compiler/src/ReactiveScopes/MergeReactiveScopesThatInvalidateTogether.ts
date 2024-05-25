@@ -29,7 +29,10 @@ import {
 } from "../HIR/ObjectShape";
 import { eachInstructionLValue } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
-import { printReactiveScopeSummary } from "./PrintReactiveFunction";
+import {
+  printReactiveFunction,
+  printReactiveScopeSummary,
+} from "./PrintReactiveFunction";
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
@@ -84,9 +87,16 @@ import {
 export function mergeReactiveScopesThatInvalidateTogether(
   fn: ReactiveFunction
 ): void {
+  if (DEBUG) {
+    console.log(printReactiveFunction(fn));
+  }
   const lastUsageVisitor = new FindLastUsageVisitor();
   visitReactiveFunction(fn, lastUsageVisitor, undefined);
   visitReactiveFunction(fn, new Transform(lastUsageVisitor.lastUsage), null);
+
+  if (DEBUG) {
+    console.log(printReactiveFunction(fn));
+  }
 }
 
 const DEBUG: boolean = false;
@@ -176,6 +186,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
         }
         case "instruction": {
           switch (instr.instruction.value.kind) {
+            case "LoadGlobal":
             case "ComputedLoad":
             case "JSXText":
             case "LoadLocal":

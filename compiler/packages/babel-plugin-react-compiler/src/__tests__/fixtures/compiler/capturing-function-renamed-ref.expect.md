@@ -20,27 +20,20 @@ function component(a, b) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function component(a, b) {
-  const $ = _c(5);
-  let z;
-  if ($[0] !== b || $[1] !== a) {
-    const z_0 = { b };
-    let t0;
-    if ($[3] !== a) {
-      t0 = { a };
-      $[3] = a;
-      $[4] = t0;
-    } else {
-      t0 = $[4];
-    }
-    z = t0;
-
-    mutate(z_0);
-    $[0] = b;
-    $[1] = a;
-    $[2] = z;
+  const $ = _c(2);
+  let t0;
+  if ($[0] !== a) {
+    t0 = { a };
+    $[0] = a;
+    $[1] = t0;
   } else {
-    z = $[2];
+    t0 = $[1];
   }
+  const z = t0;
+
+  const z_0 = { b };
+
+  mutate(z_0);
   return z;
 }
 

@@ -37,8 +37,8 @@ function Component(props) {
     }
     $[0] = "bb6936608c0afe8e313aa547ca09fbc8451f24664284368812127c7e9bc2bca9";
   }
-  let t0;
   const [state] = useState(0);
+  let t0;
   const t1 = state * 2;
   let t2;
   if ($[1] !== t1) {

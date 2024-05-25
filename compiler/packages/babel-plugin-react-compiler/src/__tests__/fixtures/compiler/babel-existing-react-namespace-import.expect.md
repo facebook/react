@@ -28,8 +28,8 @@ import { calculateExpensiveNumber } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(4);
-  let t0;
   const [x] = React.useState(0);
+  let t0;
   let t1;
   if ($[0] !== x) {
     t1 = calculateExpensiveNumber(x);

@@ -61,10 +61,9 @@ import { useState } from "react";
 
 function Component(props) {
   const $ = _c(5);
-
-  let setState;
-  const [y, setY] = useState(false);
   const [x, setX] = useState(false);
+  const [y, setY] = useState(false);
+  let setState;
   if (props.cond) {
     setState = setX;
   } else {

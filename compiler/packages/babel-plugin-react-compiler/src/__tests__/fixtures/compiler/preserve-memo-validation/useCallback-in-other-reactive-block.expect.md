@@ -40,29 +40,29 @@ function useFoo(minWidth, otherProp) {
   const $ = _c(7);
   const [width] = useState(1);
   let t0;
-  if ($[0] !== minWidth || $[1] !== width) {
-    t0 = () => ({ width: Math.max(minWidth, width) });
-    $[0] = minWidth;
-    $[1] = width;
-    $[2] = t0;
-  } else {
-    t0 = $[2];
-  }
-  const style = t0;
-  let t1;
-  if ($[3] !== style || $[4] !== t0 || $[5] !== otherProp) {
+  if ($[0] !== width || $[1] !== minWidth || $[2] !== otherProp) {
     const x = [];
+    let t1;
+    if ($[4] !== minWidth || $[5] !== width) {
+      t1 = () => ({ width: Math.max(minWidth, width) });
+      $[4] = minWidth;
+      $[5] = width;
+      $[6] = t1;
+    } else {
+      t1 = $[6];
+    }
+    const style = t1;
 
-    t1 = [style, x];
+    t0 = [style, x];
     arrayPush(x, otherProp);
-    $[3] = style;
-    $[4] = t0;
-    $[5] = otherProp;
-    $[6] = t1;
+    $[0] = width;
+    $[1] = minWidth;
+    $[2] = otherProp;
+    $[3] = t0;
   } else {
-    t1 = $[6];
+    t0 = $[3];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

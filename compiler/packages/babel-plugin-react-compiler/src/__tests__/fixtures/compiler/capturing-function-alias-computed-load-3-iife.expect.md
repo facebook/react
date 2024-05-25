@@ -32,13 +32,13 @@ function bar(a, b) {
   const $ = _c(3);
   let y;
   if ($[0] !== a || $[1] !== b) {
+    const x = [a, b];
     y = {};
     let t;
     t = {};
 
     y;
     t;
-    const x = [a, b];
     y = x[0][1];
     t = x[1][0];
     $[0] = a;

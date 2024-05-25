@@ -46,10 +46,9 @@ import { Stringify, identity, makeArray, toJSON } from "shared-runtime";
 import { useMemo } from "react";
 
 function Component(props) {
-  const $ = _c(17);
+  const $ = _c(15);
   let t0;
   let t1;
-  let T0;
   let t2;
   if ($[0] !== props) {
     t2 = Symbol.for("react.early_return_sentinel");
@@ -61,77 +60,80 @@ function Component(props) {
         break bb0;
       }
 
-      T0 = Stringify;
       t1 = identity(propsString);
     }
     $[0] = props;
     $[1] = t1;
-    $[2] = T0;
-    $[3] = t2;
-    $[4] = t0;
+    $[2] = t2;
+    $[3] = t0;
   } else {
     t1 = $[1];
-    T0 = $[2];
-    t2 = $[3];
-    t0 = $[4];
+    t2 = $[2];
+    t0 = $[3];
   }
   if (t2 !== Symbol.for("react.early_return_sentinel")) {
     return t2;
   }
   let t3;
-  if ($[5] !== t1) {
+  if ($[4] !== t1) {
     t3 = { url: t1 };
-    $[5] = t1;
-    $[6] = t3;
+    $[4] = t1;
+    $[5] = t3;
   } else {
-    t3 = $[6];
+    t3 = $[5];
   }
   const linkProps = t3;
   let t4;
+  if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+    const x = {};
+
+    t4 = makeArray(x, 2);
+    $[6] = t4;
+  } else {
+    t4 = $[6];
+  }
   let t5;
   let t6;
   let t7;
   let t8;
-  if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
-    t4 = [1];
-    t5 = [2];
-    t6 = [3];
-    t7 = [4];
-    t8 = [5];
-    $[7] = t4;
-    $[8] = t5;
-    $[9] = t6;
-    $[10] = t7;
-    $[11] = t8;
-  } else {
-    t4 = $[7];
-    t5 = $[8];
-    t6 = $[9];
-    t7 = $[10];
-    t8 = $[11];
-  }
   let t9;
-  if ($[12] === Symbol.for("react.memo_cache_sentinel")) {
-    const x = {};
-
-    t9 = makeArray(x, 2);
-    $[12] = t9;
+  if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
+    t5 = [1];
+    t6 = [2];
+    t7 = [3];
+    t8 = [4];
+    t9 = [5];
+    $[7] = t5;
+    $[8] = t6;
+    $[9] = t7;
+    $[10] = t8;
+    $[11] = t9;
   } else {
-    t9 = $[12];
+    t5 = $[7];
+    t6 = $[8];
+    t7 = $[9];
+    t8 = $[10];
+    t9 = $[11];
   }
   let t10;
-  if ($[13] !== T0 || $[14] !== linkProps || $[15] !== t9) {
+  if ($[12] !== linkProps || $[13] !== t4) {
     t10 = (
-      <T0 link={linkProps} val1={t4} val2={t5} val3={t6} val4={t7} val5={t8}>
-        {t9}
-      </T0>
+      <Stringify
+        link={linkProps}
+        val1={t5}
+        val2={t6}
+        val3={t7}
+        val4={t8}
+        val5={t9}
+      >
+        {t4}
+      </Stringify>
     );
-    $[13] = T0;
-    $[14] = linkProps;
-    $[15] = t9;
-    $[16] = t10;
+    $[12] = linkProps;
+    $[13] = t4;
+    $[14] = t10;
   } else {
-    t10 = $[16];
+    t10 = $[14];
   }
   return t10;
 }

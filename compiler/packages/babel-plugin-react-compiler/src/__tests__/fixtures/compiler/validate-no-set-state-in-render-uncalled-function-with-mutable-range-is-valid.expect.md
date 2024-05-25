@@ -36,9 +36,8 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
 function Component(props) {
   const $ = _c(7);
-
-  const [currentStep, setCurrentStep] = useState(0);
   const logEvent = useLogging(props.appId);
+  const [currentStep, setCurrentStep] = useState(0);
   let t0;
   if ($[0] !== logEvent) {
     t0 = (errorEvent) => {

@@ -34,8 +34,8 @@ function Component(props) {
   const $ = _c(2);
   let t0;
   if ($[0] !== props) {
-    const values = [];
     let x = 0;
+    const values = [];
     const y = props.a || props.b;
     values.push(y);
     if (props.c) {

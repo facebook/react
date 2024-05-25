@@ -39,10 +39,10 @@ function useFoo(props) {
   const $ = _c(2);
   let t0;
   if ($[0] !== props) {
-    const myList = [];
-    let z;
-    let y = null;
     let x = null;
+    let y = null;
+    let z;
+    const myList = [];
     if (props.doDestructure) {
       ({ x, y, z } = props);
 

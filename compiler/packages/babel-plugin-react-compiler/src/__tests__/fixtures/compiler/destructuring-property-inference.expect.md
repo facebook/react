@@ -17,21 +17,27 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(2);
-  let t0;
+  const $ = _c(5);
+  let x;
   if ($[0] !== props.value) {
-    const x = [];
-
-    const { length: y } = x;
-
-    t0 = [x, y];
+    x = [];
     x.push(props.value);
-    foo(y);
     $[0] = props.value;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
+  const { length: y } = x;
+  let t0;
+  if ($[2] !== x || $[3] !== y) {
+    t0 = [x, y];
+    $[2] = x;
+    $[3] = y;
+    $[4] = t0;
+  } else {
+    t0 = $[4];
+  }
+  foo(y);
   return t0;
 }
 

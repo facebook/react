@@ -47,48 +47,46 @@ const Internal$Reassigned$useHook = useHook;
 
 function Component() {
   const $ = _c(8);
-
-  const t0 = Internal$Reassigned$useHook();
-  let t1;
-  if ($[0] !== t0) {
-    const object = t0;
-    t1 = JSON.stringify(object);
-    $[0] = t0;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  let t2;
   const [state] = React$useState(0);
-  const json = t1;
-  let t3;
-  if ($[2] !== state) {
-    t2 = makeArray(state);
-    const doubledArray = t2;
-
-    t3 = doubledArray.join("");
-    $[2] = state;
-    $[3] = t3;
-    $[4] = t2;
+  const object = Internal$Reassigned$useHook();
+  let t0;
+  if ($[0] !== object) {
+    t0 = JSON.stringify(object);
+    $[0] = object;
+    $[1] = t0;
   } else {
-    t3 = $[3];
-    t2 = $[4];
+    t0 = $[1];
   }
-  let t4;
-  if ($[5] !== t3 || $[6] !== json) {
-    t4 = (
+  const json = t0;
+  let t1;
+  let t2;
+  if ($[2] !== state) {
+    t1 = makeArray(state);
+    const doubledArray = t1;
+
+    t2 = doubledArray.join("");
+    $[2] = state;
+    $[3] = t2;
+    $[4] = t1;
+  } else {
+    t2 = $[3];
+    t1 = $[4];
+  }
+  let t3;
+  if ($[5] !== t2 || $[6] !== json) {
+    t3 = (
       <div>
-        {t3}
+        {t2}
         {json}
       </div>
     );
-    $[5] = t3;
+    $[5] = t2;
     $[6] = json;
-    $[7] = t4;
+    $[7] = t3;
   } else {
-    t4 = $[7];
+    t3 = $[7];
   }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

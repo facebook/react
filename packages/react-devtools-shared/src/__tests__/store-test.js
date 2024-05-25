@@ -1932,9 +1932,8 @@ describe('Store', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-        ✕ 1, ⚠ 0
         [root]
-          ▾ <Example> ✕
+          ▾ <Example>
               <Child>
       `);
     });

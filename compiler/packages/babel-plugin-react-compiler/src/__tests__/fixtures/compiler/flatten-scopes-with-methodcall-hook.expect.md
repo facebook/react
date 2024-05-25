@@ -24,8 +24,8 @@ export const FIXTURE_ENTRYPOINT = {
 const { ObjectWithHooks } = require("shared-runtime");
 
 function Component(props) {
-  const [y] = ObjectWithHooks.useMakeArray();
   const x = [];
+  const [y] = ObjectWithHooks.useMakeArray();
   x.push(y);
   return y;
 }

@@ -27,10 +27,10 @@ function bar(a) {
   const $ = _c(2);
   let y;
   if ($[0] !== a) {
+    const x = [a];
     y = {};
 
     y;
-    const x = [a];
     y = x[0];
     $[0] = a;
     $[1] = y;

@@ -38,36 +38,36 @@ import { Stringify } from "shared-runtime";
 function useFoo(arr1, arr2) {
   const $ = _c(7);
   let t0;
-  if ($[0] !== arr1 || $[1] !== arr2) {
+  if ($[0] !== arr1) {
+    t0 = [arr1];
+    $[0] = arr1;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const x = t0;
+  let t1;
+  if ($[2] !== x || $[3] !== arr2) {
     let y;
-    t0 = () => ({ y });
-    let t1;
-    if ($[3] !== arr1) {
-      t1 = [arr1];
-      $[3] = arr1;
-      $[4] = t1;
-    } else {
-      t1 = $[4];
-    }
-    const x = t1;
+    t1 = () => ({ y });
 
     (y = x.concat(arr2)), y;
-    $[0] = arr1;
-    $[1] = arr2;
-    $[2] = t0;
+    $[2] = x;
+    $[3] = arr2;
+    $[4] = t1;
   } else {
-    t0 = $[2];
+    t1 = $[4];
   }
-  const getVal = t0;
-  let t1;
+  const getVal = t1;
+  let t2;
   if ($[5] !== getVal) {
-    t1 = <Stringify getVal={getVal} shouldInvokeFns={true} />;
+    t2 = <Stringify getVal={getVal} shouldInvokeFns={true} />;
     $[5] = getVal;
-    $[6] = t1;
+    $[6] = t2;
   } else {
-    t1 = $[6];
+    t2 = $[6];
   }
-  return t1;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

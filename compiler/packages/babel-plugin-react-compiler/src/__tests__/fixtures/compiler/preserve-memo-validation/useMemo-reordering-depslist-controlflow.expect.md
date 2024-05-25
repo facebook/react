@@ -41,53 +41,48 @@ import { Stringify } from "shared-runtime";
 
 function Foo(t0) {
   const $ = _c(11);
+  const { arr1, arr2, foo } = t0;
   let t1;
-  let T0;
+  if ($[0] !== arr1) {
+    t1 = [arr1];
+    $[0] = arr1;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const x = t1;
   let t2;
-  if ($[0] !== t0) {
+  let val1;
+  if ($[2] !== foo || $[3] !== x || $[4] !== arr2) {
     let y;
     y = [];
     let t3;
-    const { arr1, arr2, foo } = t0;
     let t4;
-    if ($[4] !== arr1) {
-      t4 = [arr1];
-      $[4] = arr1;
-      $[5] = t4;
+    if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
+      t4 = { x: 2 };
+      $[7] = t4;
     } else {
-      t4 = $[5];
+      t4 = $[7];
     }
-    const x = t4;
-    let t5;
-    if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
-      t5 = { x: 2 };
-      $[6] = t5;
-    } else {
-      t5 = $[6];
-    }
-    t3 = t5;
-    const val1 = t3;
+    t3 = t4;
+    val1 = t3;
 
     foo ? (y = x.concat(arr2)) : y;
-
-    T0 = Stringify;
-    t2 = val1;
-    t1 = (() => [y])();
-    $[0] = t0;
-    $[1] = t1;
-    $[2] = T0;
-    $[3] = t2;
+    t2 = (() => [y])();
+    $[2] = foo;
+    $[3] = x;
+    $[4] = arr2;
+    $[5] = t2;
+    $[6] = val1;
   } else {
-    t1 = $[1];
-    T0 = $[2];
-    t2 = $[3];
+    t2 = $[5];
+    val1 = $[6];
   }
-  const val2 = t1;
+  const val2 = t2;
   let t3;
-  if ($[7] !== T0 || $[8] !== t2 || $[9] !== val2) {
-    t3 = <T0 val1={t2} val2={val2} />;
-    $[7] = T0;
-    $[8] = t2;
+  if ($[8] !== val1 || $[9] !== val2) {
+    t3 = <Stringify val1={val1} val2={val2} />;
+    $[8] = val1;
     $[9] = val2;
     $[10] = t3;
   } else {

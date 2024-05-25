@@ -28,19 +28,16 @@ import { useEffect } from "react";
 function Foo(props, ref) {
   const $ = _c(4);
   let t0;
+  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       ref.current = 2;
     };
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = [];
+    $[0] = t0;
     $[1] = t1;
   } else {
+    t0 = $[0];
     t1 = $[1];
   }
   useEffect(t0, t1);

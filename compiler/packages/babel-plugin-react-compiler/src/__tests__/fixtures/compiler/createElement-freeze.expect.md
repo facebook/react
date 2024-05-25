@@ -27,36 +27,32 @@ import React from "react";
 import { shallowCopy } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(6);
+  const $ = _c(5);
   let t0;
-  let childProps;
   if ($[0] !== props.width) {
-    const t1 = { width: props.width };
+    t0 = { style: { width: props.width } };
+    $[0] = props.width;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const childProps = t0;
+  let t1;
+  if ($[2] !== childProps) {
     let t2;
-    if ($[3] !== t1) {
-      t2 = { style: t1 };
-      $[3] = t1;
+    if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+      t2 = ["hello world"];
       $[4] = t2;
     } else {
       t2 = $[4];
     }
-    childProps = t2;
-    let t3;
-    if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-      t3 = ["hello world"];
-      $[5] = t3;
-    } else {
-      t3 = $[5];
-    }
-    t0 = React.createElement("div", childProps, t3);
-    $[0] = props.width;
-    $[1] = t0;
+    t1 = React.createElement("div", childProps, t2);
     $[2] = childProps;
+    $[3] = t1;
   } else {
-    t0 = $[1];
-    childProps = $[2];
+    t1 = $[3];
   }
-  const element = t0;
+  const element = t1;
   shallowCopy(childProps);
   return element;
 }

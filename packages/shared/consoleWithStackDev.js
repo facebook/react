@@ -43,10 +43,12 @@ function printWarning(level, format, args) {
     const isErrorLogger =
       format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
 
-    const stack = ReactSharedInternals.getStackAddendum();
-    if (stack !== '') {
-      format += '%s';
-      args = args.concat([stack]);
+    if (ReactSharedInternals.getCurrentStack) {
+      const stack = ReactSharedInternals.getCurrentStack();
+      if (stack !== '') {
+        format += '%s';
+        args = args.concat([stack]);
+      }
     }
 
     if (isErrorLogger) {

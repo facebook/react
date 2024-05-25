@@ -22,13 +22,12 @@ function component() {
 ```javascript
 function component() {
   const x = {};
-
+  const p = {};
+  const q = {};
   const y = {};
 
   x.y = y;
-  const p = {};
   p.y = x.y;
-  const q = {};
   q.y = p.y;
 
   mutate(q);

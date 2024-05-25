@@ -26,12 +26,13 @@ function MyComponentName(props) {
   const $ = _c(3);
   let t0;
   if ($[0] !== props.a || $[1] !== props.b) {
-    const y = [];
-
-    t0 = y;
     const x = {};
     foo(x, props.a);
     foo(x, props.b);
+
+    const y = [];
+
+    t0 = y;
     y.push(x);
     $[0] = props.a;
     $[1] = props.b;

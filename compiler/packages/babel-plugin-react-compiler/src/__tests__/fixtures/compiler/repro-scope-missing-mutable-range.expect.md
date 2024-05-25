@@ -20,38 +20,32 @@ function HomeDiscoStoreItemTileRating(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function HomeDiscoStoreItemTileRating(props) {
-  const $ = _c(6);
-  const t0 = useFragment();
+  const $ = _c(4);
+  const item = useFragment();
   let count;
-  let T0;
-  if ($[0] !== t0) {
+  if ($[0] !== item) {
     count = 0;
-    const item = t0;
-
-    T0 = Text;
     const aggregates = item?.aggregates || [];
     aggregates.forEach((aggregate) => {
       count = count + (aggregate.count || 0);
       count;
     });
-    $[0] = t0;
+    $[0] = item;
     $[1] = count;
-    $[2] = T0;
   } else {
     count = $[1];
-    T0 = $[2];
   }
-  const t1 = count;
-  let t2;
-  if ($[3] !== T0 || $[4] !== t1) {
-    t2 = <T0>{t1}</T0>;
-    $[3] = T0;
-    $[4] = t1;
-    $[5] = t2;
+
+  const t0 = count;
+  let t1;
+  if ($[2] !== t0) {
+    t1 = <Text>{t0}</Text>;
+    $[2] = t0;
+    $[3] = t1;
   } else {
-    t2 = $[5];
+    t1 = $[3];
   }
-  return t2;
+  return t1;
 }
 
 ```

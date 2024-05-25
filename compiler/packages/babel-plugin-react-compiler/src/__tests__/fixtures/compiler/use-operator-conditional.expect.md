@@ -98,6 +98,7 @@ function Inner(props) {
     t2 = $[1];
   }
   t0 = t2;
+  const output = t0;
   const t3 = input;
   let t4;
   if ($[2] !== t3) {
@@ -107,7 +108,6 @@ function Inner(props) {
   } else {
     t4 = $[3];
   }
-  const output = t0;
   let t5;
   if ($[4] !== t4 || $[5] !== output) {
     t5 = <ValidateMemoization inputs={t4} output={output} />;

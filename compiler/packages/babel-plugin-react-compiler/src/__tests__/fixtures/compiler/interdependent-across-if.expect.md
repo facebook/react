@@ -50,8 +50,8 @@ function Component(props) {
   let a;
   let b;
   if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.c) {
-    b = compute(props.b);
     a = compute(props.a);
+    b = compute(props.b);
     if (props.c) {
       foo(a, b);
     }

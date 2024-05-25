@@ -21,9 +21,9 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function foo(a, b) {
+  const x = [];
   const y = [];
   y.push(b);
-  const x = [];
   x.push(a);
 }
 

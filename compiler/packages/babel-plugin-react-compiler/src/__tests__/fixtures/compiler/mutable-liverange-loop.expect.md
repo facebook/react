@@ -41,10 +41,10 @@ function mutate() {}
 function cond() {}
 
 function Component(props) {
-  const d = {};
-  const c = {};
-  const b = {};
   const a = {};
+  const b = {};
+  const c = {};
+  const d = {};
   while (true) {
     mutate(a, b);
     if (cond(a)) {

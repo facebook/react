@@ -68,8 +68,8 @@ function Component(props) {
 
 function Inner(props) {
   const $ = _c(7);
-  let t0;
   const input = use(FooContext);
+  let t0;
   let t1;
   if ($[0] !== input) {
     t1 = [input];

@@ -52,9 +52,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
+  let x = 0;
 
   let value = null;
-  let x = 0;
   for (let i = 0; i < 10; i++) {
     switch (value) {
       case true: {

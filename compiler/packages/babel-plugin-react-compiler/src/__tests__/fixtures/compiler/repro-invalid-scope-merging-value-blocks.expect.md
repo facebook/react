@@ -57,13 +57,12 @@ import {
  * (3) mergeOverlappingScopes should merge the scopes of the above two instructions
  */
 function Component(t0) {
-  useHook();
   const value = makeObject_Primitives();
-
-  const result = [];
   useHook();
   const mutatedValue =
     identity(1) && CONST_TRUE ? mutateAndReturn(value) : null;
+  const result = [];
+  useHook();
   result.push(value, mutatedValue);
   return result;
 }

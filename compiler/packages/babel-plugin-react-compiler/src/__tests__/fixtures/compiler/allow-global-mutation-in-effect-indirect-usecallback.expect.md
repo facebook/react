@@ -41,6 +41,7 @@ let someGlobal = {};
 
 function Component() {
   const $ = _c(7);
+  const [state, setState] = useState(someGlobal);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
@@ -52,37 +53,30 @@ function Component() {
   }
   const setGlobal = t0;
   let t1;
+  let t2;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => {
       setGlobal();
     };
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = [];
+    $[1] = t1;
     $[2] = t2;
   } else {
+    t1 = $[1];
     t2 = $[2];
   }
   useEffect(t1, t2);
-  const [state, setState] = useState(someGlobal);
   let t3;
+  let t4;
   if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = () => {
       setState(someGlobal.value);
     };
-    $[3] = t3;
-  } else {
-    t3 = $[3];
-  }
-  let t4;
-  if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
     t4 = [someGlobal];
+    $[3] = t3;
     $[4] = t4;
   } else {
+    t3 = $[3];
     t4 = $[4];
   }
   useEffect(t3, t4);

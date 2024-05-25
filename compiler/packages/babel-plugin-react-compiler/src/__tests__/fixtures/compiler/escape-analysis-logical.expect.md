@@ -26,14 +26,14 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(6);
   let t0;
-  if ($[0] !== props.c) {
-    t0 = [props.c];
-    $[0] = props.c;
+  if ($[0] !== props.a) {
+    t0 = [props.a];
+    $[0] = props.a;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const c = t0;
+  const a = t0;
   let t1;
   if ($[2] !== props.b) {
     t1 = [props.b];
@@ -44,14 +44,14 @@ function Component(props) {
   }
   const b = t1;
   let t2;
-  if ($[4] !== props.a) {
-    t2 = [props.a];
-    $[4] = props.a;
+  if ($[4] !== props.c) {
+    t2 = [props.c];
+    $[4] = props.c;
     $[5] = t2;
   } else {
     t2 = $[5];
   }
-  const a = t2;
+  const c = t2;
   return (a && b) || c;
 }
 

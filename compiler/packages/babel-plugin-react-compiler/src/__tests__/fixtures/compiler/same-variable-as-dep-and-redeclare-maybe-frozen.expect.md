@@ -52,7 +52,7 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime"; // note: comments are for the ideal scopes, not what is currently
 // emitted
 function foo(props) {
-  const $ = _c(16);
+  const $ = _c(18);
   let x;
   if ($[0] !== props.a) {
     x = [];
@@ -71,50 +71,55 @@ function foo(props) {
   } else {
     t0 = $[4];
   }
-  const header = t0;
   let y;
-  if ($[5] !== x || $[6] !== props.b || $[7] !== props.c) {
+  let header;
+  if ($[5] !== x || $[6] !== t0 || $[7] !== props.b || $[8] !== props.c) {
+    header = t0;
+
     y = [x];
     x = [];
     y.push(props.b);
     x.push(props.c);
     $[5] = x;
-    $[6] = props.b;
-    $[7] = props.c;
-    $[8] = y;
-    $[9] = x;
+    $[6] = t0;
+    $[7] = props.b;
+    $[8] = props.c;
+    $[9] = y;
+    $[10] = header;
+    $[11] = x;
   } else {
-    y = $[8];
-    x = $[9];
+    y = $[9];
+    header = $[10];
+    x = $[11];
   }
   let t1;
-  if ($[10] !== x || $[11] !== y) {
+  if ($[12] !== x || $[13] !== y) {
     t1 = (
       <div>
         {x}
         {y}
       </div>
     );
-    $[10] = x;
-    $[11] = y;
-    $[12] = t1;
+    $[12] = x;
+    $[13] = y;
+    $[14] = t1;
   } else {
-    t1 = $[12];
+    t1 = $[14];
   }
   const content = t1;
   let t2;
-  if ($[13] !== header || $[14] !== content) {
+  if ($[15] !== header || $[16] !== content) {
     t2 = (
       <>
         {header}
         {content}
       </>
     );
-    $[13] = header;
-    $[14] = content;
-    $[15] = t2;
+    $[15] = header;
+    $[16] = content;
+    $[17] = t2;
   } else {
-    t2 = $[15];
+    t2 = $[17];
   }
   return t2;
 }

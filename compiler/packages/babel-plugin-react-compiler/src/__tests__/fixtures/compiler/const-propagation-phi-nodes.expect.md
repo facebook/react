@@ -35,9 +35,9 @@ function useFoo(setOne) {
   if (setOne) {
     x = y = z = 1;
   } else {
-    z = 5;
-    y = 3;
     x = 2;
+    y = 3;
+    z = 5;
   }
   let t0;
   if ($[0] !== x || $[1] !== y || $[2] !== z) {

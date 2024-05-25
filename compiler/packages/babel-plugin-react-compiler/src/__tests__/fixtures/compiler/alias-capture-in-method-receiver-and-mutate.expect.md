@@ -34,8 +34,9 @@ function Component() {
   const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const x = [];
     const a = makeObject_Primitives();
+
+    const x = [];
 
     t0 = [x, a];
     x.push(a);

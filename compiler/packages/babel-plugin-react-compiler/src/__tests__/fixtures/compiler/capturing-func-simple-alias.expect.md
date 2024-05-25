@@ -23,8 +23,8 @@ function component(a) {
   const $ = _c(2);
   let y;
   if ($[0] !== a) {
-    y = {};
     const x = { a };
+    y = {};
     const f0 = function () {
       y = x;
     };

@@ -42,6 +42,7 @@ function Component(props) {
     t0 = $[1];
   }
   const array = t0;
+  x = array;
   let t1;
   if ($[2] !== array) {
     t1 = <div>{array}</div>;
@@ -51,7 +52,6 @@ function Component(props) {
     t1 = $[3];
   }
   const element = t1;
-  x = array;
   let t2;
   if ($[4] !== element || $[5] !== x) {
     t2 = (

@@ -46,8 +46,8 @@ import { ValidateMemoization, identity } from "shared-runtime";
 
 function Component(t0) {
   const $ = _c(7);
-  let t1;
   const { value } = t0;
+  let t1;
   bb0: {
     if (value == null) {
       t1 = null;
@@ -65,7 +65,6 @@ function Component(t0) {
       t1 = t3;
     } catch (t2) {
       t1 = null;
-      const e = t2;
     }
   }
   let t2;

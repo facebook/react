@@ -49,8 +49,9 @@ import {
 } from "shared-runtime";
 
 function Component(props) {
-  useHook();
   const object = makeObject_Primitives();
+
+  useHook();
 
   const log = () => {
     logValue(object);

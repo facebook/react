@@ -39,19 +39,11 @@ import { c as _c } from "react/compiler-runtime"; // props.a.b should NOT be add
 import { identity } from "shared-runtime";
 
 function useCondDepInSwitchMissingCase(props, other) {
-  const $ = _c(5);
-  let t0;
-  if ($[0] !== other) {
-    t0 = identity(other);
-    $[0] = other;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
+  const $ = _c(3);
   let x;
-  if ($[2] !== t0 || $[3] !== props) {
+  if ($[0] !== other || $[1] !== props) {
     x = {};
-    bb0: switch (t0) {
+    bb0: switch (identity(other)) {
       case 1: {
         x.a = props.a.b;
         break bb0;
@@ -64,11 +56,11 @@ function useCondDepInSwitchMissingCase(props, other) {
         x.c = props.a.b;
       }
     }
-    $[2] = t0;
-    $[3] = props;
-    $[4] = x;
+    $[0] = other;
+    $[1] = props;
+    $[2] = x;
   } else {
-    x = $[4];
+    x = $[2];
   }
   return x;
 }

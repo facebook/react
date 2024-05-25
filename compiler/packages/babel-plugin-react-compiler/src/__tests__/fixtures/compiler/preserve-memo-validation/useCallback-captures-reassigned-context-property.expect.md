@@ -57,6 +57,7 @@ function Foo(props) {
   } else {
     t1 = $[3];
   }
+  contextVar;
   const cb = t1;
   let t2;
   if ($[4] !== cb) {
@@ -66,7 +67,6 @@ function Foo(props) {
   } else {
     t2 = $[5];
   }
-  contextVar;
   return t2;
 }
 

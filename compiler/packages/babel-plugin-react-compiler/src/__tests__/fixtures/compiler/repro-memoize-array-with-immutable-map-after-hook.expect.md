@@ -36,29 +36,26 @@ import { useEffect, useState } from "react";
 function Component(props) {
   const $ = _c(11);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {};
-    $[0] = t0;
+  if ($[0] !== props.value) {
+    t0 = [props.value];
+    $[0] = props.value;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
+  const x = t0;
   let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = [];
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  useEffect(t0, t1);
   let t2;
-  if ($[2] !== props.value) {
-    t2 = [props.value];
-    $[2] = props.value;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = () => {};
+    t2 = [];
+    $[2] = t1;
     $[3] = t2;
   } else {
+    t1 = $[2];
     t2 = $[3];
   }
-  const x = t2;
+  useEffect(t1, t2);
   let t3;
   if ($[4] !== x.length) {
     t3 = () => {

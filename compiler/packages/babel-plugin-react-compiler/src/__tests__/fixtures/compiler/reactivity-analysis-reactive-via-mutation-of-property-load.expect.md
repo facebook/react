@@ -18,41 +18,37 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(8);
+  const $ = _c(7);
   let items;
-  let t0;
   if ($[0] !== props.a) {
     items = bar();
-
-    t0 = items;
     mutate(items.a, props.a);
     $[0] = props.a;
     $[1] = items;
-    $[2] = t0;
   } else {
     items = $[1];
-    t0 = $[2];
   }
-  const t1 = items.length + 1;
-  let t2;
-  if ($[3] !== t1) {
-    t2 = foo(t1);
+
+  const t0 = items.length + 1;
+  let t1;
+  if ($[2] !== t0) {
+    t1 = foo(t0);
+    $[2] = t0;
     $[3] = t1;
-    $[4] = t2;
   } else {
-    t2 = $[4];
+    t1 = $[3];
   }
-  const count = t2;
-  let t3;
-  if ($[5] !== t0 || $[6] !== count) {
-    t3 = { items: t0, count };
-    $[5] = t0;
-    $[6] = count;
-    $[7] = t3;
+  const count = t1;
+  let t2;
+  if ($[4] !== items || $[5] !== count) {
+    t2 = { items, count };
+    $[4] = items;
+    $[5] = count;
+    $[6] = t2;
   } else {
-    t3 = $[7];
+    t2 = $[6];
   }
-  return t3;
+  return t2;
 }
 
 ```

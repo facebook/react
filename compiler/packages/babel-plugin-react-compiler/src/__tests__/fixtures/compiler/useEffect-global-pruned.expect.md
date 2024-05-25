@@ -50,19 +50,16 @@ function useFoo() {
   t0 = t1;
   const fn = t0;
   let t2;
+  let t3;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => {
       fn();
     };
-    $[1] = t2;
-  } else {
-    t2 = $[1];
-  }
-  let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = [fn];
+    $[1] = t2;
     $[2] = t3;
   } else {
+    t2 = $[1];
     t3 = $[2];
   }
   useEffect(t2, t3);

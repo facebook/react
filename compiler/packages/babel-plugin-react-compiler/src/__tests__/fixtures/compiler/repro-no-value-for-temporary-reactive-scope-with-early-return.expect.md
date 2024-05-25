@@ -39,9 +39,8 @@ import fbt from "fbt";
 
 function Component(props) {
   const $ = _c(1);
-
-  const cond = makeObject_Primitives();
   const object = makeObject_Primitives();
+  const cond = makeObject_Primitives();
   if (!cond) {
     return null;
   }

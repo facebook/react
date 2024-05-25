@@ -93,9 +93,11 @@ describe('ReactIncrementalErrorLogging', () => {
         ),
         expect.stringMatching(
           new RegExp(
-            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-              '\\s+(in|at) span(.*)\n' +
-              '\\s+(in|at) div(.*)',
+            gate(flags => flags.enableOwnerStacks)
+              ? '\\s+(in|at) ErrorThrowingComponent'
+              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) div(.*)',
           ),
         ),
       );
@@ -139,9 +141,11 @@ describe('ReactIncrementalErrorLogging', () => {
         ),
         expect.stringMatching(
           new RegExp(
-            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-              '\\s+(in|at) span(.*)\n' +
-              '\\s+(in|at) div(.*)',
+            gate(flags => flags.enableOwnerStacks)
+              ? '\\s+(in|at) ErrorThrowingComponent'
+              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) div(.*)',
           ),
         ),
       );
@@ -197,10 +201,12 @@ describe('ReactIncrementalErrorLogging', () => {
         ),
         expect.stringMatching(
           new RegExp(
-            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-              '\\s+(in|at) span(.*)\n' +
-              '\\s+(in|at) ErrorBoundary(.*)\n' +
-              '\\s+(in|at) div(.*)',
+            gate(flags => flags.enableOwnerStacks)
+              ? '\\s+(in|at) ErrorThrowingComponent'
+              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) ErrorBoundary(.*)\n' +
+                '\\s+(in|at) div(.*)',
           ),
         ),
       );
@@ -278,9 +284,7 @@ describe('ReactIncrementalErrorLogging', () => {
         ),
         expect.stringMatching(
           gate(flag => flag.enableOwnerStacks)
-            ? // With owner stacks the return path is cut off but in this case
-              // this is also what the owner stack looks like.
-              new RegExp('\\s+(in|at) Foo (.*)')
+            ? new RegExp('\\s+(in|at) Foo')
             : new RegExp(
                 '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
               ),

@@ -579,6 +579,7 @@ function createElement(
   props: mixed,
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
+  validated: number, // DEV-only
 ): React$Element<any> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
@@ -624,13 +625,13 @@ function createElement(
     // Unfortunately, _store is enumerable in jest matchers so for equality to
     // work, I need to keep it or make _store non-enumerable in the other file.
     element._store = ({}: {
-      validated?: boolean,
+      validated?: number,
     });
     Object.defineProperty(element._store, 'validated', {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: true, // This element has already been validated on the server.
+      value: enableOwnerStacks ? validated : 1, // Whether the element has already been validated on the server.
     });
     // debugInfo contains Server Component debug information.
     Object.defineProperty(element, '_debugInfo', {
@@ -644,7 +645,7 @@ function createElement(
         configurable: false,
         enumerable: false,
         writable: true,
-        value: {stack: stack},
+        value: stack,
       });
       Object.defineProperty(element, '_debugTask', {
         configurable: false,
@@ -1053,6 +1054,7 @@ function parseModelTuple(
       tuple[3],
       __DEV__ ? (tuple: any)[4] : null,
       __DEV__ && enableOwnerStacks ? (tuple: any)[5] : null,
+      __DEV__ && enableOwnerStacks ? (tuple: any)[6] : 0,
     );
   }
   return value;

@@ -22,7 +22,7 @@ function useHook(x) {
    7 |   const aliasedProp = x.y.z;
    8 |
 >  9 |   return useCallback(() => [aliasedX, x.y.z], [x, aliasedProp]);
-     |                      ^^^^^^^^^^^^^^^^^^^^^^^ Invariant: Unexpected mismatch between StartMemoize and FinishMemoize. Encountered StartMemoize id=undefined followed by FinishMemoize id=0 (9:9)
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected (9:9)
   10 | }
   11 |
 ```

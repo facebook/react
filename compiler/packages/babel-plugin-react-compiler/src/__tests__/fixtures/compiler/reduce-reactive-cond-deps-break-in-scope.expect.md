@@ -34,8 +34,8 @@ function useFoo(t0) {
   const $ = _c(2);
   let x;
   if ($[0] !== t0) {
-    x = [];
     const { obj, objIsNull } = t0;
+    x = [];
     bb0: {
       if (objIsNull) {
         break bb0;

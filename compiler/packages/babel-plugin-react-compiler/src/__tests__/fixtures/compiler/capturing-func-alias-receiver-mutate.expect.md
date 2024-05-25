@@ -24,10 +24,10 @@ function component(a) {
   const $ = _c(2);
   let t0;
   if ($[0] !== a) {
+    const x = { a };
     const y = {};
 
     t0 = y;
-    const x = { a };
     const f0 = function () {
       const a_0 = y;
       a_0.x = x;

@@ -31,10 +31,10 @@ import { invoke } from "shared-runtime";
 
 function Component(t0) {
   const $ = _c(2);
+  const { shouldReassign } = t0;
   let x;
-  if ($[0] !== t0) {
+  if ($[0] !== shouldReassign) {
     x = null;
-    const { shouldReassign } = t0;
     const reassign = () => {
       if (shouldReassign) {
         x = 2;
@@ -42,7 +42,7 @@ function Component(t0) {
     };
 
     invoke(reassign);
-    $[0] = t0;
+    $[0] = shouldReassign;
     $[1] = x;
   } else {
     x = $[1];

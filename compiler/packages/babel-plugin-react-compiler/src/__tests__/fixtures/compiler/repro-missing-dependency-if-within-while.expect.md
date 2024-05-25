@@ -40,12 +40,11 @@ import { c as _c } from "react/compiler-runtime";
 const someGlobal = true;
 export default function Component(props) {
   const $ = _c(2);
-
-  let i = 0;
   let t0;
   if ($[0] !== props) {
-    const items = [];
     const { b } = props;
+    const items = [];
+    let i = 0;
     while (i < 10) {
       if (someGlobal) {
         items.push(<div key={i}>{b}</div>);

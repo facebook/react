@@ -99,8 +99,8 @@ export function lower(
   const params: Array<Place | SpreadPattern> = [];
   func.get("params").forEach((param) => {
     if (param.isIdentifier()) {
-      const identifier = builder.resolveIdentifier(param);
-      if (identifier === null) {
+      const binding = builder.resolveIdentifier(param);
+      if (binding.kind !== "Identifier") {
         builder.errors.push({
           reason: `(BuildHIR::lower) Could not find binding for param \`${param.node.name}\``,
           severity: ErrorSeverity.Invariant,
@@ -111,7 +111,7 @@ export function lower(
       }
       const place: Place = {
         kind: "Identifier",
-        identifier,
+        identifier: binding.identifier,
         effect: Effect.Unknown,
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
@@ -449,10 +449,15 @@ function lowerStatement(
             });
             continue;
           }
-          const identifier = builder.resolveIdentifier(id)!;
+          const identifier = builder.resolveIdentifier(id);
+          CompilerError.invariant(identifier.kind === "Identifier", {
+            reason:
+              "Expected hoisted binding to be a local identifier, not a global",
+            loc: id.node.loc ?? GeneratedSource,
+          });
           const place: Place = {
             effect: Effect.Unknown,
-            identifier,
+            identifier: identifier.identifier,
             kind: "Identifier",
             reactive: false,
             loc: id.node.loc ?? GeneratedSource,
@@ -836,8 +841,8 @@ function lowerStatement(
               : "Assignment"
           );
         } else if (id.isIdentifier()) {
-          const identifier = builder.resolveIdentifier(id);
-          if (identifier == null) {
+          const binding = builder.resolveIdentifier(id);
+          if (binding.kind !== "Identifier") {
             builder.errors.push({
               reason: `(BuildHIR::lowerAssignment) Could not find binding for declaration.`,
               severity: ErrorSeverity.Invariant,
@@ -847,7 +852,7 @@ function lowerStatement(
           } else {
             const place: Place = {
               effect: Effect.Unknown,
-              identifier,
+              identifier: binding.identifier,
               kind: "Identifier",
               reactive: false,
               loc: id.node.loc ?? GeneratedSource,
@@ -2094,7 +2099,7 @@ function lowerExpression(
         const tagIdentifier = openingIdentifier.isJSXIdentifier()
           ? builder.resolveIdentifier(openingIdentifier)
           : null;
-        if (tagIdentifier != null) {
+        if (tagIdentifier != null && tagIdentifier.kind === "Identifier") {
           CompilerError.throwTodo({
             reason: `Support <${tagName}> tags where '${tagName}' is a local variable instead of a global`,
             loc: openingIdentifier.node.loc ?? GeneratedSource,
@@ -2722,14 +2727,12 @@ function isReorderableExpression(
 ): boolean {
   switch (expr.node.type) {
     case "Identifier": {
-      const identifier = builder.resolveIdentifier(
-        expr as NodePath<t.Identifier>
-      );
-      if (identifier === null) {
+      const binding = builder.resolveIdentifier(expr as NodePath<t.Identifier>);
+      if (binding.kind === "Identifier") {
+        return allowLocalIdentifiers;
+      } else {
         // global, definitely safe
         return true;
-      } else {
-        return allowLocalIdentifiers;
       }
     }
     case "RegExpLiteral":
@@ -2821,7 +2824,7 @@ function isReorderableExpression(
       }
       if (
         innerObject.isIdentifier() &&
-        builder.resolveIdentifier(innerObject) === null // null means global
+        builder.resolveIdentifier(innerObject).kind !== "Identifier"
       ) {
         // This is a property/computed load from a global, that's safe to reorder
         return true;
@@ -3263,25 +3266,26 @@ function lowerIdentifier(
 ): Place {
   const exprNode = exprPath.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
-  const identifier = builder.resolveIdentifier(exprPath);
-  if (identifier === null) {
-    const global = builder.resolveGlobal(exprPath);
-    let value: InstructionValue;
-    if (global !== null) {
-      value = { kind: "LoadGlobal", name: global.name, loc: exprLoc };
-    } else {
-      value = { kind: "UnsupportedNode", node: exprPath.node, loc: exprLoc };
+  const binding = builder.resolveIdentifier(exprPath);
+  switch (binding.kind) {
+    case "Identifier": {
+      const place: Place = {
+        kind: "Identifier",
+        identifier: binding.identifier,
+        effect: Effect.Unknown,
+        reactive: false,
+        loc: exprLoc,
+      };
+      return place;
     }
-    return lowerValueToTemporary(builder, value);
+    default: {
+      return lowerValueToTemporary(builder, {
+        kind: "LoadGlobal",
+        binding,
+        loc: exprLoc,
+      });
+    }
   }
-  const place: Place = {
-    kind: "Identifier",
-    identifier: identifier,
-    effect: Effect.Unknown,
-    reactive: false,
-    loc: exprLoc,
-  };
-  return place;
 }
 
 // Creates a temporary Identifier and Place referencing that identifier.
@@ -3318,8 +3322,8 @@ function lowerIdentifierForAssignment(
   kind: InstructionKind,
   path: NodePath<t.Identifier>
 ): Place | { kind: "Global"; name: string } | null {
-  const identifier = builder.resolveIdentifier(path);
-  if (identifier == null) {
+  const binding = builder.resolveIdentifier(path);
+  if (binding.kind !== "Identifier") {
     if (kind === InstructionKind.Reassign) {
       return { kind: "Global", name: path.node.name };
     } else {
@@ -3336,7 +3340,7 @@ function lowerIdentifierForAssignment(
 
   const place: Place = {
     kind: "Identifier",
-    identifier: identifier,
+    identifier: binding.identifier,
     effect: Effect.Unknown,
     reactive: false,
     loc,
@@ -3496,7 +3500,7 @@ function lowerAssignment(
             (element) =>
               element.isIdentifier() &&
               (getStoreKind(builder, element) !== "StoreLocal" ||
-                builder.resolveIdentifier(element) == null)
+                builder.resolveIdentifier(element).kind !== "Identifier")
           ));
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
@@ -3627,7 +3631,7 @@ function lowerAssignment(
               (!property.get("value").isIdentifier() ||
                 builder.resolveIdentifier(
                   property.get("value") as NodePath<t.Identifier>
-                ) == null))
+                ).kind !== "Identifier"))
         );
       for (let i = 0; i < propertiesPaths.length; i++) {
         const property = propertiesPaths[i];

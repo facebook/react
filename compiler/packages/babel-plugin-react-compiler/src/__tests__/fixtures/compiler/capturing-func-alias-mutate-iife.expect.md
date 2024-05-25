@@ -31,8 +31,8 @@ function component(a) {
   const $ = _c(2);
   let t0;
   if ($[0] !== a) {
-    const y = {};
     const x = { a };
+    const y = {};
 
     y.x = x;
 

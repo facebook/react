@@ -81,17 +81,20 @@ async function renderApp(res, returnValue, formState) {
     ).main.css;
   }
   const App = m.default.default || m.default;
-  const root = [
+  const root = React.createElement(
+    React.Fragment,
+    null,
     // Prepend the App's tree with stylesheets required for this entrypoint.
     mainCSSChunks.map(filename =>
       React.createElement('link', {
         rel: 'stylesheet',
         href: filename,
         precedence: 'default',
+        key: filename,
       })
     ),
-    React.createElement(App),
-  ];
+    React.createElement(App)
+  );
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
   const {pipe} = renderToPipeableStream(payload, moduleMap);

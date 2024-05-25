@@ -31,42 +31,36 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react-forget-runtime"; // @runtimeModule="react-forget-runtime"
 function Component(props) {
-  const $ = _c(7);
-  const t0 = useState(1);
+  const $ = _c(5);
+  const [x, setX] = useState(1);
   let y;
-  let setX;
-  if ($[0] !== t0 || $[1] !== props.cond) {
-    const [x, t1] = t0;
-    setX = t1;
+  if ($[0] !== props.cond || $[1] !== x) {
     if (props.cond) {
       y = x * 2;
     }
-    $[0] = t0;
-    $[1] = props.cond;
+    $[0] = props.cond;
+    $[1] = x;
     $[2] = y;
-    $[3] = setX;
   } else {
     y = $[2];
-    setX = $[3];
   }
 
-  const t1 = y;
-  let t2;
-  if ($[4] !== setX || $[5] !== t1) {
-    t2 = (
+  const t0 = y;
+  let t1;
+  if ($[3] !== t0) {
+    t1 = (
       <Button
         onClick={() => {
           setX(10 * y);
         }}
       />
     );
-    $[4] = setX;
-    $[5] = t1;
-    $[6] = t2;
+    $[3] = t0;
+    $[4] = t1;
   } else {
-    t2 = $[6];
+    t1 = $[4];
   }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

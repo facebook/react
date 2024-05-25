@@ -38,38 +38,29 @@ import { c as _c } from "react/compiler-runtime";
 import { useState } from "react";
 
 function Component(props) {
-  const $ = _c(4);
-  const t0 = useState();
-  let t1;
-  if ($[0] !== t0) {
+  const $ = _c(1);
+  const [_state, setState] = useState();
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const a = () => b();
+
     const b = () => (
       <>
         <div onClick={() => onClick(true)}>a</div>
         <div onClick={() => onClick(false)}>b</div>
       </>
     );
-    const [_state, setState] = t0;
 
     const onClick = (value) => {
       setState(value);
     };
-    const a = () => b();
 
-    t1 = a();
+    t0 = <div>{a()}</div>;
     $[0] = t0;
-    $[1] = t1;
   } else {
-    t1 = $[1];
+    t0 = $[0];
   }
-  let t2;
-  if ($[2] !== t1) {
-    t2 = <div>{t1}</div>;
-    $[2] = t1;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
-  return t2;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

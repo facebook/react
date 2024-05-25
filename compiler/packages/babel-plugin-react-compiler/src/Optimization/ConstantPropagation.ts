@@ -209,7 +209,7 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
         });
 
         // different global values, can't constant propogate
-        if (operandValue.name !== value.name) {
+        if (operandValue.binding.name !== value.binding.name) {
           return null;
         }
         break;
@@ -420,7 +420,7 @@ function evaluateInstruction(
     }
     case "LoadLocal": {
       const placeValue = read(constants, value.place);
-      if (placeValue !== null) {
+      if (placeValue != null) {
         instr.value = placeValue;
       }
       return placeValue;

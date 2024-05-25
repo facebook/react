@@ -27,62 +27,38 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function component(a) {
-  const $ = _c(14);
-  let t0;
-  let t;
-  let t1;
-  let t2;
-  let t3;
-  if ($[0] !== a) {
-    t = { t: a };
-    const z = +t.t;
-
-    t1 = z;
-    const p = void t.t;
-    t2 = p;
-    const q = -t.t;
-    t3 = q;
-    t0 = delete t.t;
-    $[0] = a;
-    $[1] = t0;
-    $[2] = t;
-    $[3] = t1;
-    $[4] = t2;
-    $[5] = t3;
-  } else {
-    t0 = $[1];
-    t = $[2];
-    t1 = $[3];
-    t2 = $[4];
-    t3 = $[5];
-  }
-  const n = t0;
+  const $ = _c(8);
+  const t = { t: a };
+  const z = +t.t;
+  const q = -t.t;
+  const p = void t.t;
+  const n = delete t.t;
   const m = !t.t;
   const e = ~t.t;
   const f = typeof t.t;
-  let t4;
+  let t0;
   if (
-    $[6] !== t1 ||
-    $[7] !== t2 ||
-    $[8] !== t3 ||
-    $[9] !== n ||
-    $[10] !== m ||
-    $[11] !== e ||
-    $[12] !== f
+    $[0] !== z ||
+    $[1] !== p ||
+    $[2] !== q ||
+    $[3] !== n ||
+    $[4] !== m ||
+    $[5] !== e ||
+    $[6] !== f
   ) {
-    t4 = { z: t1, p: t2, q: t3, n, m, e, f };
-    $[6] = t1;
-    $[7] = t2;
-    $[8] = t3;
-    $[9] = n;
-    $[10] = m;
-    $[11] = e;
-    $[12] = f;
-    $[13] = t4;
+    t0 = { z, p, q, n, m, e, f };
+    $[0] = z;
+    $[1] = p;
+    $[2] = q;
+    $[3] = n;
+    $[4] = m;
+    $[5] = e;
+    $[6] = f;
+    $[7] = t0;
   } else {
-    t4 = $[13];
+    t0 = $[7];
   }
-  return t4;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

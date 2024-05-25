@@ -42,8 +42,8 @@ function useFoo(t0) {
   const $ = _c(4);
   let x;
   if ($[0] !== t0) {
-    x = [];
     const { input, cond } = t0;
+    x = [];
     bb0: {
       if (cond) {
         break bb0;
