@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f3f0a5ed50b6bab3eafa955dec73aece>>
+ * @generated SignedSource<<498b38ab8fbbf44800642c8dc0009e44>>
  */
 
 'use strict';
@@ -970,6 +970,10 @@ var didWarnAboutKeySpread = {};
  */
 
 function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
+  return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
+}
+
+function jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self, debugStack, debugTask) {
   {
     if (!isValidElementType(type)) {
       // This is an invalid element type.

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<be9a4664c4a5b016c4fa96badfe343af>>
+ * @generated SignedSource<<c509e223f9d7af94afc9e9d4e451b2ae>>
  */
 
 "use strict";
@@ -3246,7 +3246,8 @@ function createChildReconciler(shouldTrackSideEffects) {
           );
         case REACT_LAZY_TYPE:
           var init = newChild._init;
-          return createChild(returnFiber, init(newChild._payload), lanes);
+          newChild = init(newChild._payload);
+          return createChild(returnFiber, newChild, lanes);
       }
       if (isArrayImpl(newChild) || getIteratorFn(newChild))
         return (
@@ -3294,7 +3295,8 @@ function createChildReconciler(shouldTrackSideEffects) {
         case REACT_LAZY_TYPE:
           return (
             (key = newChild._init),
-            updateSlot(returnFiber, oldFiber, key(newChild._payload), lanes)
+            (newChild = key(newChild._payload)),
+            updateSlot(returnFiber, oldFiber, newChild, lanes)
           );
       }
       if (isArrayImpl(newChild) || getIteratorFn(newChild))
@@ -3355,11 +3357,12 @@ function createChildReconciler(shouldTrackSideEffects) {
           );
         case REACT_LAZY_TYPE:
           var init = newChild._init;
+          newChild = init(newChild._payload);
           return updateFromMap(
             existingChildren,
             returnFiber,
             newIdx,
-            init(newChild._payload),
+            newChild,
             lanes
           );
       }
@@ -11453,7 +11456,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1267 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-49a80322",
+    version: "19.0.0-rc-ada09fe8",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11509,7 +11512,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-49a80322"
+  reconcilerVersion: "19.0.0-rc-ada09fe8"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

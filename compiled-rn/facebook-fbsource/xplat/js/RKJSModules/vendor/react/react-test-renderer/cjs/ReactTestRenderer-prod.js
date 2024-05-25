@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e0bd67bfbe6ced8b6e410eb3974b80d7>>
+ * @generated SignedSource<<e2dd990512e58f23e127175cf13f6c55>>
  */
 
 "use strict";
@@ -1723,7 +1723,8 @@ function createChildReconciler(shouldTrackSideEffects) {
           );
         case REACT_LAZY_TYPE:
           var init = newChild._init;
-          return createChild(returnFiber, init(newChild._payload), lanes);
+          newChild = init(newChild._payload);
+          return createChild(returnFiber, newChild, lanes);
       }
       if (isArrayImpl(newChild) || getIteratorFn(newChild))
         return (
@@ -1771,7 +1772,8 @@ function createChildReconciler(shouldTrackSideEffects) {
         case REACT_LAZY_TYPE:
           return (
             (key = newChild._init),
-            updateSlot(returnFiber, oldFiber, key(newChild._payload), lanes)
+            (newChild = key(newChild._payload)),
+            updateSlot(returnFiber, oldFiber, newChild, lanes)
           );
       }
       if (isArrayImpl(newChild) || getIteratorFn(newChild))
@@ -1832,11 +1834,12 @@ function createChildReconciler(shouldTrackSideEffects) {
           );
         case REACT_LAZY_TYPE:
           var init = newChild._init;
+          newChild = init(newChild._payload);
           return updateFromMap(
             existingChildren,
             returnFiber,
             newIdx,
-            init(newChild._payload),
+            newChild,
             lanes
           );
       }
@@ -9300,7 +9303,7 @@ var devToolsConfig$jscomp$inline_1042 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-rc-9c2862e7",
+  version: "19.0.0-rc-c9fc27c4",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1229 = {
@@ -9331,7 +9334,7 @@ var internals$jscomp$inline_1229 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-9c2862e7"
+  reconcilerVersion: "19.0.0-rc-c9fc27c4"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1230 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

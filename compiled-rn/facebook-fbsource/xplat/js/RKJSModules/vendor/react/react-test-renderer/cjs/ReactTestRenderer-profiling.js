@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cd5cd2d51aad2dcc6d485f9a9bc90b90>>
+ * @generated SignedSource<<f18d6d4dff134392d4dfcaa89af16bb0>>
  */
 
 "use strict";
@@ -1811,7 +1811,8 @@ function createChildReconciler(shouldTrackSideEffects) {
           );
         case REACT_LAZY_TYPE:
           var init = newChild._init;
-          return createChild(returnFiber, init(newChild._payload), lanes);
+          newChild = init(newChild._payload);
+          return createChild(returnFiber, newChild, lanes);
       }
       if (isArrayImpl(newChild) || getIteratorFn(newChild))
         return (
@@ -1859,7 +1860,8 @@ function createChildReconciler(shouldTrackSideEffects) {
         case REACT_LAZY_TYPE:
           return (
             (key = newChild._init),
-            updateSlot(returnFiber, oldFiber, key(newChild._payload), lanes)
+            (newChild = key(newChild._payload)),
+            updateSlot(returnFiber, oldFiber, newChild, lanes)
           );
       }
       if (isArrayImpl(newChild) || getIteratorFn(newChild))
@@ -1920,11 +1922,12 @@ function createChildReconciler(shouldTrackSideEffects) {
           );
         case REACT_LAZY_TYPE:
           var init = newChild._init;
+          newChild = init(newChild._payload);
           return updateFromMap(
             existingChildren,
             returnFiber,
             newIdx,
-            init(newChild._payload),
+            newChild,
             lanes
           );
       }
@@ -9943,7 +9946,7 @@ var devToolsConfig$jscomp$inline_1105 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-rc-6cf53e9c",
+  version: "19.0.0-rc-77c04414",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9987,7 +9990,7 @@ var devToolsConfig$jscomp$inline_1105 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-6cf53e9c"
+  reconcilerVersion: "19.0.0-rc-77c04414"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5b1dc62c6ba34c7e7218ad93ccffc6a0>>
+ * @generated SignedSource<<43472d2aa5457c3ff87b82ad5ff89a40>>
  */
 
 'use strict';
@@ -24,7 +24,7 @@ if (
 }
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-rc-f0094578';
+var ReactVersion = '19.0.0-rc-28be327b';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -1244,13 +1244,13 @@ function ReactElement(type, key, _ref, self, source, owner, props, debugStack, d
 function jsxProdSignatureRunningInDevWithDynamicChildren(type, config, maybeKey, source, self) {
   {
     var isStaticChildren = false;
-    return jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
   }
 }
 function jsxProdSignatureRunningInDevWithStaticChildren(type, config, maybeKey, source, self) {
   {
     var isStaticChildren = true;
-    return jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
   }
 }
 var didWarnAboutKeySpread = {};
@@ -1262,6 +1262,10 @@ var didWarnAboutKeySpread = {};
  */
 
 function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
+  return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
+}
+
+function jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self, debugStack, debugTask) {
   {
     if (!isValidElementType(type)) {
       // This is an invalid element type.
@@ -1416,6 +1420,7 @@ function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
  * Create and return a new ReactElement of the given type.
  * See https://reactjs.org/docs/react-api.html#createelement
  */
+
 
 function createElement(type, config, children) {
   {
@@ -2351,7 +2356,9 @@ function forwardRef(render) {
         // This kind of inner function is not used elsewhere so the side effect is okay.
 
         if (!render.name && !render.displayName) {
-          render.displayName = name;
+          Object.defineProperty(render, 'name', {
+            value: name
+          });
         }
       }
     });
@@ -2391,7 +2398,9 @@ function memo(type, compare) {
         // This kind of inner function is not used elsewhere so the side effect is okay.
 
         if (!type.name && !type.displayName) {
-          type.displayName = name;
+          Object.defineProperty(type, 'name', {
+            value: name
+          });
         }
       }
     });

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d21ecf53697b7bc854cc117890d53e11>>
+ * @generated SignedSource<<0a367e8c426be018f37ef2a753bebe30>>
  */
 
 'use strict';
@@ -976,24 +976,18 @@ function ReactElement(type, key, _ref, self, source, owner, props, debugStack, d
 function jsxProdSignatureRunningInDevWithDynamicChildren(type, config, maybeKey, source, self) {
   {
     var isStaticChildren = false;
-    return jsxDEV(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
   }
 }
 function jsxProdSignatureRunningInDevWithStaticChildren(type, config, maybeKey, source, self) {
   {
     var isStaticChildren = true;
-    return jsxDEV(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
   }
 }
 var didWarnAboutKeySpread = {};
-/**
- * https://github.com/reactjs/rfcs/pull/107
- * @param {*} type
- * @param {object} props
- * @param {string} key
- */
 
-function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
+function jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self, debugStack, debugTask) {
   {
     if (!isValidElementType(type)) {
       // This is an invalid element type.
