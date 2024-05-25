@@ -1811,7 +1811,8 @@ module.exports = function ($$$config) {
             );
           case REACT_LAZY_TYPE:
             var init = newChild._init;
-            return createChild(returnFiber, init(newChild._payload), lanes);
+            newChild = init(newChild._payload);
+            return createChild(returnFiber, newChild, lanes);
         }
         if (isArrayImpl(newChild) || getIteratorFn(newChild))
           return (
@@ -1859,7 +1860,8 @@ module.exports = function ($$$config) {
           case REACT_LAZY_TYPE:
             return (
               (key = newChild._init),
-              updateSlot(returnFiber, oldFiber, key(newChild._payload), lanes)
+              (newChild = key(newChild._payload)),
+              updateSlot(returnFiber, oldFiber, newChild, lanes)
             );
         }
         if (isArrayImpl(newChild) || getIteratorFn(newChild))
@@ -1920,11 +1922,12 @@ module.exports = function ($$$config) {
             );
           case REACT_LAZY_TYPE:
             var init = newChild._init;
+            newChild = init(newChild._payload);
             return updateFromMap(
               existingChildren,
               returnFiber,
               newIdx,
-              init(newChild._payload),
+              newChild,
               lanes
             );
         }
@@ -12645,7 +12648,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-dfc73dd2"
+      reconcilerVersion: "19.0.0-www-classic-d931df93"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

@@ -1187,6 +1187,10 @@ var didWarnAboutKeySpread = {};
  */
 
 function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
+  return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
+}
+
+function jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self, debugStack, debugTask) {
   {
     if (!isValidElementType(type)) {
       // This is an invalid element type.

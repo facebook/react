@@ -60,7 +60,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-modern-601320d5';
+var ReactVersion = '19.0.0-www-modern-aa8749b8';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -1003,6 +1003,32 @@ function describeFunctionComponentFrame(fn) {
   }
 }
 
+// TODO: Consider marking the whole bundle instead of these boundaries.
+
+/** @noinline */
+
+function callComponentInDEV(Component, props, secondArg) {
+  setIsRendering(true);
+  var result = Component(props, secondArg);
+  setIsRendering(false);
+  return result;
+}
+/** @noinline */
+
+function callRenderInDEV(instance) {
+  setIsRendering(true);
+  var result = instance.render();
+  setIsRendering(false);
+  return result;
+}
+/** @noinline */
+
+function callLazyInitInDEV(lazy) {
+  var payload = lazy._payload;
+  var init = lazy._init;
+  return init(payload);
+}
+
 function describeFiber(fiber) {
   switch (fiber.tag) {
     case HostHoistable:
@@ -1090,8 +1116,6 @@ function getCurrentFiberStackInDev() {
     if (current === null) {
       return '';
     } // Safe because if current fiber exists, we are reconciling,
-    // and it is guaranteed to be the work-in-progress version.
-
 
     return getStackByFiberInDevAndProd(current);
   }
@@ -6215,9 +6239,9 @@ function warnOnSymbolType(returnFiber, invalidChild) {
 }
 
 function resolveLazy(lazyType) {
-  var payload = lazyType._payload;
-  var init = lazyType._init;
-  return init(payload);
+  {
+    return callLazyInitInDEV(lazyType);
+  }
 } // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
@@ -6489,9 +6513,13 @@ function createChildReconciler(shouldTrackSideEffects) {
 
         case REACT_LAZY_TYPE:
           {
-            var payload = newChild._payload;
-            var init = newChild._init;
-            return createChild(returnFiber, init(payload), lanes, mergeDebugInfo(debugInfo, newChild._debugInfo) // call merge after init
+            var resolvedChild;
+
+            {
+              resolvedChild = callLazyInitInDEV(newChild);
+            }
+
+            return createChild(returnFiber, resolvedChild, lanes, mergeDebugInfo(debugInfo, newChild._debugInfo) // call merge after init
             );
           }
       }
@@ -6575,9 +6603,13 @@ function createChildReconciler(shouldTrackSideEffects) {
 
         case REACT_LAZY_TYPE:
           {
-            var payload = newChild._payload;
-            var init = newChild._init;
-            return updateSlot(returnFiber, oldFiber, init(payload), lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
+            var resolvedChild;
+
+            {
+              resolvedChild = callLazyInitInDEV(newChild);
+            }
+
+            return updateSlot(returnFiber, oldFiber, resolvedChild, lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
           }
       }
 
@@ -6644,9 +6676,15 @@ function createChildReconciler(shouldTrackSideEffects) {
           }
 
         case REACT_LAZY_TYPE:
-          var payload = newChild._payload;
-          var init = newChild._init;
-          return updateFromMap(existingChildren, returnFiber, newIdx, init(payload), lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
+          {
+            var resolvedChild;
+
+            {
+              resolvedChild = callLazyInitInDEV(newChild);
+            }
+
+            return updateFromMap(existingChildren, returnFiber, newIdx, resolvedChild, lanes, mergeDebugInfo(debugInfo, newChild._debugInfo));
+          }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild) || enableAsyncIterableChildren ) {
@@ -6720,10 +6758,16 @@ function createChildReconciler(shouldTrackSideEffects) {
           break;
 
         case REACT_LAZY_TYPE:
-          var payload = child._payload;
-          var init = child._init;
-          warnOnInvalidKey(init(payload), knownKeys, returnFiber);
-          break;
+          {
+            var resolvedChild;
+
+            {
+              resolvedChild = callLazyInitInDEV(child);
+            }
+
+            warnOnInvalidKey(resolvedChild, knownKeys, returnFiber);
+            break;
+          }
       }
     }
 
@@ -7870,7 +7914,7 @@ function renderWithHooks(current, workInProgress, Component, props, secondArg, n
 
   var shouldDoubleRenderDEV = (workInProgress.mode & StrictLegacyMode) !== NoMode;
   shouldDoubleInvokeUserFnsInHooksDEV = shouldDoubleRenderDEV;
-  var children = Component(props, secondArg);
+  var children = callComponentInDEV(Component, props, secondArg) ;
   shouldDoubleInvokeUserFnsInHooksDEV = false; // Check if there was a render phase update
 
   if (didScheduleRenderPhaseUpdateDuringThisPass) {
@@ -8040,7 +8084,7 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
     }
 
     ReactSharedInternals.H = HooksDispatcherOnRerenderInDEV ;
-    children = Component(props, secondArg);
+    children = callComponentInDEV(Component, props, secondArg) ;
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
 
   return children;
@@ -13008,9 +13052,7 @@ function updateForwardRef(current, workInProgress, Component, nextProps, renderL
   }
 
   {
-    setIsRendering(true);
     nextChildren = renderWithHooks(current, workInProgress, render, propsWithoutRef, ref, renderLanes);
-    setIsRendering(false);
   }
 
   if (enableSchedulingProfiler) {
@@ -13534,9 +13576,7 @@ function updateFunctionComponent(current, workInProgress, Component, nextProps, 
   }
 
   {
-    setIsRendering(true);
     nextChildren = renderWithHooks(current, workInProgress, Component, nextProps, context, renderLanes);
-    setIsRendering(false);
   }
 
   if (enableSchedulingProfiler) {
@@ -13701,20 +13741,17 @@ function finishClassComponent(current, workInProgress, Component, shouldUpdate, 
     }
 
     {
-      setIsRendering(true);
-      nextChildren = instance.render();
+      nextChildren = callRenderInDEV(instance);
 
       if (workInProgress.mode & StrictLegacyMode) {
         setIsStrictModeForDevtools(true);
 
         try {
-          instance.render();
+          callRenderInDEV(instance);
         } finally {
           setIsStrictModeForDevtools(false);
         }
       }
-
-      setIsRendering(false);
     }
 
     if (enableSchedulingProfiler) {
@@ -13876,9 +13913,12 @@ function updateHostText$1(current, workInProgress) {
 function mountLazyComponent(_current, workInProgress, elementType, renderLanes) {
   var props = workInProgress.pendingProps;
   var lazyComponent = elementType;
-  var payload = lazyComponent._payload;
-  var init = lazyComponent._init;
-  var Component = init(payload); // Store the unwrapped component in the type.
+  var Component;
+
+  {
+    Component = callLazyInitInDEV(lazyComponent);
+  } // Store the unwrapped component in the type.
+
 
   workInProgress.type = Component;
 
@@ -14996,9 +15036,7 @@ function updateContextConsumer(current, workInProgress, renderLanes) {
   var newChildren;
 
   {
-    setIsRendering(true);
-    newChildren = render(newValue);
-    setIsRendering(false);
+    newChildren = callComponentInDEV(render, newValue, undefined);
   }
 
   if (enableSchedulingProfiler) {
@@ -15377,7 +15415,9 @@ function beginWork(current, workInProgress, renderLanes) {
   {
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
-      return remountFiber(current, workInProgress, createFiberFromTypeAndProps(workInProgress.type, workInProgress.key, workInProgress.pendingProps, workInProgress._debugOwner || null, workInProgress.mode, workInProgress.lanes));
+      var copiedFiber = createFiberFromTypeAndProps(workInProgress.type, workInProgress.key, workInProgress.pendingProps, workInProgress._debugOwner || null, workInProgress.mode, workInProgress.lanes);
+
+      return remountFiber(current, workInProgress, copiedFiber);
     }
   }
 
@@ -24886,6 +24926,7 @@ function FiberNode(tag, pendingProps, key, mode) {
     // This isn't directly used but is handy for debugging internals:
     this._debugInfo = null;
     this._debugOwner = null;
+
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
 
@@ -24942,6 +24983,7 @@ function createWorkInProgress(current, pendingProps) {
     {
       // DEV-only fields
       workInProgress._debugOwner = current._debugOwner;
+
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
 

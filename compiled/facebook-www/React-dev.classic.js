@@ -22,7 +22,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-var ReactVersion = '19.0.0-www-classic-f3d67148';
+var ReactVersion = '19.0.0-www-classic-5a597884';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
@@ -1448,13 +1448,13 @@ function ReactElement(type, key, _ref, self, source, owner, props, debugStack, d
 function jsxProdSignatureRunningInDevWithDynamicChildren(type, config, maybeKey, source, self) {
   {
     var isStaticChildren = false;
-    return jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
   }
 }
 function jsxProdSignatureRunningInDevWithStaticChildren(type, config, maybeKey, source, self) {
   {
     var isStaticChildren = true;
-    return jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
   }
 }
 var didWarnAboutKeySpread = {};
@@ -1466,6 +1466,10 @@ var didWarnAboutKeySpread = {};
  */
 
 function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
+  return jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self);
+}
+
+function jsxDEVImpl(type, config, maybeKey, isStaticChildren, source, self, debugStack, debugTask) {
   {
     if (!isValidElementType(type)) {
       // This is an invalid element type.
@@ -1638,6 +1642,7 @@ function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
  * Create and return a new ReactElement of the given type.
  * See https://reactjs.org/docs/react-api.html#createelement
  */
+
 
 function createElement(type, config, children) {
   {
@@ -2731,7 +2736,9 @@ function forwardRef(render) {
         // This kind of inner function is not used elsewhere so the side effect is okay.
 
         if (!render.name && !render.displayName) {
-          render.displayName = name;
+          Object.defineProperty(render, 'name', {
+            value: name
+          });
         }
       }
     });
@@ -2771,7 +2778,9 @@ function memo(type, compare) {
         // This kind of inner function is not used elsewhere so the side effect is okay.
 
         if (!type.name && !type.displayName) {
-          type.displayName = name;
+          Object.defineProperty(type, 'name', {
+            value: name
+          });
         }
       }
     });

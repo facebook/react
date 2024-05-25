@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var ReactVersion = '19.0.0-www-classic-6febc8c5';
+var ReactVersion = '19.0.0-www-classic-d677c24a';
 
 // This refers to a WWW module.
 var warningWWW = require('warning');
@@ -9551,7 +9551,8 @@ function getCurrentStackInDEV() {
   {
     if (currentTaskInDEV === null || currentTaskInDEV.componentStack === null) {
       return '';
-    }
+    } // TODO: Support owner based stacks for logs during SSR.
+
 
     return getStackByComponentStackNode(currentTaskInDEV.componentStack);
   }
