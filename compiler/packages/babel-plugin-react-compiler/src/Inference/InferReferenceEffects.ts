@@ -1103,13 +1103,56 @@ function inferBlock(
         break;
       }
       case "JsxExpression": {
-        valueKind = {
+        if (instrValue.tag.kind === "Identifier") {
+          state.referenceAndRecordEffects(
+            instrValue.tag,
+            Effect.Freeze,
+            ValueReason.JsxCaptured,
+            functionEffects
+          );
+        }
+        if (instrValue.children !== null) {
+          for (const child of instrValue.children) {
+            state.referenceAndRecordEffects(
+              child,
+              Effect.Freeze,
+              ValueReason.JsxCaptured,
+              functionEffects
+            );
+          }
+        }
+        for (const attr of instrValue.props) {
+          if (attr.kind === "JsxSpreadAttribute") {
+            state.referenceAndRecordEffects(
+              attr.argument,
+              Effect.Freeze,
+              ValueReason.JsxCaptured,
+              functionEffects
+            );
+          } else {
+            const propEffects: Array<FunctionEffect> = [];
+            state.referenceAndRecordEffects(
+              attr.place,
+              Effect.Freeze,
+              ValueReason.JsxCaptured,
+              propEffects
+            );
+            functionEffects.push(
+              ...propEffects.filter(
+                (propEffect) => propEffect.kind !== "GlobalMutation"
+              )
+            );
+          }
+        }
+
+        state.initialize(instrValue, {
           kind: ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
-        };
-        effect = { kind: Effect.Freeze, reason: ValueReason.JsxCaptured };
-        break;
+        });
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.ConditionallyMutate;
+        continue;
       }
       case "JsxFragment": {
         valueKind = {
