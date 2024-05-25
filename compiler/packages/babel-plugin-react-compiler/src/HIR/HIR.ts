@@ -686,6 +686,7 @@ export type LoweredFunction = {
 export type ObjectMethod = {
   kind: "ObjectMethod";
   loc: SourceLocation;
+  methodKind: "method" | "get" | "set";
   loweredFunc: LoweredFunction;
 };
 
