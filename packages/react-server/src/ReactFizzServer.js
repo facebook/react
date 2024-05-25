@@ -752,6 +752,7 @@ function getCurrentStackInDEV(): string {
     if (currentTaskInDEV === null || currentTaskInDEV.componentStack === null) {
       return '';
     }
+    // TODO: Support owner based stacks for logs during SSR.
     return getStackByComponentStackNode(currentTaskInDEV.componentStack);
   }
   return '';

@@ -61,6 +61,7 @@ import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
 import {readContextDuringReconciliation} from './ReactFiberNewContext';
+import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
 
 import {
   getCurrentFiber as getCurrentDebugFiberInDEV,
@@ -362,6 +363,9 @@ function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
 }
 
 function resolveLazy(lazyType: any) {
+  if (__DEV__) {
+    return callLazyInitInDEV(lazyType);
+  }
   const payload = lazyType._payload;
   const init = lazyType._init;
   return init(payload);
@@ -683,11 +687,17 @@ function createChildReconciler(
           return created;
         }
         case REACT_LAZY_TYPE: {
-          const payload = newChild._payload;
-          const init = newChild._init;
+          let resolvedChild;
+          if (__DEV__) {
+            resolvedChild = callLazyInitInDEV(newChild);
+          } else {
+            const payload = newChild._payload;
+            const init = newChild._init;
+            resolvedChild = init(payload);
+          }
           return createChild(
             returnFiber,
-            init(payload),
+            resolvedChild,
             lanes,
             mergeDebugInfo(debugInfo, newChild._debugInfo), // call merge after init
           );
@@ -811,12 +821,18 @@ function createChildReconciler(
           }
         }
         case REACT_LAZY_TYPE: {
-          const payload = newChild._payload;
-          const init = newChild._init;
+          let resolvedChild;
+          if (__DEV__) {
+            resolvedChild = callLazyInitInDEV(newChild);
+          } else {
+            const payload = newChild._payload;
+            const init = newChild._init;
+            resolvedChild = init(payload);
+          }
           return updateSlot(
             returnFiber,
             oldFiber,
-            init(payload),
+            resolvedChild,
             lanes,
             mergeDebugInfo(debugInfo, newChild._debugInfo),
           );
@@ -937,17 +953,24 @@ function createChildReconciler(
             debugInfo,
           );
         }
-        case REACT_LAZY_TYPE:
-          const payload = newChild._payload;
-          const init = newChild._init;
+        case REACT_LAZY_TYPE: {
+          let resolvedChild;
+          if (__DEV__) {
+            resolvedChild = callLazyInitInDEV(newChild);
+          } else {
+            const payload = newChild._payload;
+            const init = newChild._init;
+            resolvedChild = init(payload);
+          }
           return updateFromMap(
             existingChildren,
             returnFiber,
             newIdx,
-            init(payload),
+            resolvedChild,
             lanes,
             mergeDebugInfo(debugInfo, newChild._debugInfo),
           );
+        }
       }
 
       if (
@@ -1047,11 +1070,18 @@ function createChildReconciler(
             key,
           );
           break;
-        case REACT_LAZY_TYPE:
-          const payload = child._payload;
-          const init = (child._init: any);
-          warnOnInvalidKey(init(payload), knownKeys, returnFiber);
+        case REACT_LAZY_TYPE: {
+          let resolvedChild;
+          if (__DEV__) {
+            resolvedChild = callLazyInitInDEV((child: any));
+          } else {
+            const payload = child._payload;
+            const init = (child._init: any);
+            resolvedChild = init(payload);
+          }
+          warnOnInvalidKey(resolvedChild, knownKeys, returnFiber);
           break;
+        }
         default:
           break;
       }

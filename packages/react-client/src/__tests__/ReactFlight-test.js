@@ -1123,10 +1123,11 @@ describe('ReactFlight', () => {
     }
 
     function App() {
-      return (
-        <Indirection>
-          <ClientComponent />
-        </Indirection>
+      // We use the ReactServer runtime here to get the Server owner.
+      return ReactServer.createElement(
+        Indirection,
+        null,
+        ReactServer.createElement(ClientComponent),
       );
     }
 
@@ -1143,11 +1144,10 @@ describe('ReactFlight', () => {
         '\n' +
         'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        // TODO: Because this validates after the div has been mounted, it is part of
-        // the parent stack but since owner stacks will switch to owners this goes away again.
-        (gate(flags => flags.enableOwnerStacks) ? '    in div (at **)\n' : '') +
         '    in Component (at **)\n' +
-        '    in Indirection (at **)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in Indirection (at **)\n') +
         '    in App (at **)',
     );
   });

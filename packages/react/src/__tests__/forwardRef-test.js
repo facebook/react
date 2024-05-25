@@ -197,7 +197,7 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <ForwardRef>. It was passed a child from ForwardRef. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in p (at **)',
+        '    in ',
     );
   });
 
@@ -217,16 +217,16 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <ForwardRef(Inner)>. It was passed a child from ForwardRef(Inner). ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)\n' +
-        '    in p (at **)',
+        '    in Inner (at **)' +
+        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
     );
   });
 
-  it('should use the inner displayName in the stack', async () => {
+  it('should use the inner name in the stack', async () => {
     const fn = (props, ref) => {
       return [<span />];
     };
-    fn.displayName = 'Inner';
+    Object.defineProperty(fn, 'name', {value: 'Inner'});
     const RefForwardingComponent = React.forwardRef(fn);
     ReactNoop.render(
       <p>
@@ -240,8 +240,8 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <ForwardRef(Inner)>. It was passed a child from ForwardRef(Inner). ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)\n' +
-        '    in p (at **)',
+        '    in Inner (at **)' +
+        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
     );
   });
 
@@ -262,16 +262,16 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Outer (at **)\n' +
-        '    in p (at **)',
+        '    in Outer (at **)' +
+        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
     );
   });
 
-  it('should prefer the inner to the outer displayName in the stack', async () => {
+  it('should prefer the inner name to the outer displayName in the stack', async () => {
     const fn = (props, ref) => {
       return [<span />];
     };
-    fn.displayName = 'Inner';
+    Object.defineProperty(fn, 'name', {value: 'Inner'});
     const RefForwardingComponent = React.forwardRef(fn);
     RefForwardingComponent.displayName = 'Outer';
     ReactNoop.render(
@@ -286,8 +286,8 @@ describe('forwardRef', () => {
         '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
-        '    in Inner (at **)\n' +
-        '    in p (at **)',
+        '    in Inner (at **)' +
+        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
     );
   });
 

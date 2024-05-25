@@ -10,8 +10,12 @@
 import type {Fiber} from './ReactInternalTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
+import {
+  getStackByFiberInDevAndProd,
+  getOwnerStackByFiberInDev,
+} from './ReactFiberComponentStack';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
 export let current: Fiber | null = null;
 export let isRendering: boolean = false;
@@ -29,6 +33,17 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   return null;
 }
 
+export function getCurrentParentStackInDev(): string {
+  // This is used to get the parent stack even with owner stacks turned on.
+  if (__DEV__) {
+    if (current === null) {
+      return '';
+    }
+    return getStackByFiberInDevAndProd(current);
+  }
+  return '';
+}
+
 function getCurrentFiberStackInDev(): string {
   if (__DEV__) {
     if (current === null) {
@@ -36,6 +51,11 @@ function getCurrentFiberStackInDev(): string {
     }
     // Safe because if current fiber exists, we are reconciling,
     // and it is guaranteed to be the work-in-progress version.
+    // TODO: The above comment is not actually true. We might be
+    // in a commit phase or preemptive set state callback.
+    if (enableOwnerStacks) {
+      return getOwnerStackByFiberInDev(current);
+    }
     return getStackByFiberInDevAndProd(current);
   }
   return '';
