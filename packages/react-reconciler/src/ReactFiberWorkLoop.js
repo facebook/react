@@ -231,10 +231,8 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
-  current as ReactCurrentFiberCurrent,
-  resetCurrentDebugFiberInDEV,
-  setCurrentDebugFiberInDEV,
   resetCurrentFiber,
+  runWithFiberInDEV,
 } from './ReactCurrentFiber';
 import {
   isDevToolsPresent,
@@ -2381,18 +2379,37 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   // nothing should rely on this, but relying on it here means that we don't
   // need an additional field on the work in progress.
   const current = unitOfWork.alternate;
-  setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
   if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
-    next = beginWork(current, unitOfWork, entangledRenderLanes);
+    if (__DEV__) {
+      next = runWithFiberInDEV(
+        unitOfWork,
+        beginWork,
+        current,
+        unitOfWork,
+        entangledRenderLanes,
+      );
+    } else {
+      next = beginWork(current, unitOfWork, entangledRenderLanes);
+    }
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
-    next = beginWork(current, unitOfWork, entangledRenderLanes);
+    if (__DEV__) {
+      next = runWithFiberInDEV(
+        unitOfWork,
+        beginWork,
+        current,
+        unitOfWork,
+        entangledRenderLanes,
+      );
+    } else {
+      next = beginWork(current, unitOfWork, entangledRenderLanes);
+    }
   }
 
-  if (__DEV__ || !disableStringRefs) {
+  if (!disableStringRefs) {
     resetCurrentFiber();
   }
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
@@ -2407,9 +2424,32 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   // This is a fork of performUnitOfWork specifcally for replaying a fiber that
   // just suspended.
-  //
+  let next;
+  if (__DEV__) {
+    next = runWithFiberInDEV(unitOfWork, replayBeginWork, unitOfWork);
+  } else {
+    next = replayBeginWork(unitOfWork);
+  }
+
+  // The begin phase finished successfully without suspending. Return to the
+  // normal work loop.
+  if (!disableStringRefs) {
+    resetCurrentFiber();
+  }
+  unitOfWork.memoizedProps = unitOfWork.pendingProps;
+  if (next === null) {
+    // If this doesn't spawn new work, complete the current work.
+    completeUnitOfWork(unitOfWork);
+  } else {
+    workInProgress = next;
+  }
+}
+
+function replayBeginWork(unitOfWork: Fiber): null | Fiber {
+  // This is a fork of beginWork specifcally for replaying a fiber that
+  // just suspended.
+
   const current = unitOfWork.alternate;
-  setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
   const isProfilingMode =
@@ -2501,19 +2541,7 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   }
 
-  // The begin phase finished successfully without suspending. Return to the
-  // normal work loop.
-
-  if (__DEV__ || !disableStringRefs) {
-    resetCurrentFiber();
-  }
-  unitOfWork.memoizedProps = unitOfWork.pendingProps;
-  if (next === null) {
-    // If this doesn't spawn new work, complete the current work.
-    completeUnitOfWork(unitOfWork);
-  } else {
-    workInProgress = next;
-  }
+  return next;
 }
 
 function throwAndUnwindWorkLoop(
@@ -2612,17 +2640,35 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     const current = completedWork.alternate;
     const returnFiber = completedWork.return;
 
-    setCurrentDebugFiberInDEV(completedWork);
     let next;
     if (!enableProfilerTimer || (completedWork.mode & ProfileMode) === NoMode) {
-      next = completeWork(current, completedWork, entangledRenderLanes);
+      if (__DEV__) {
+        next = runWithFiberInDEV(
+          completedWork,
+          completeWork,
+          current,
+          completedWork,
+          entangledRenderLanes,
+        );
+      } else {
+        next = completeWork(current, completedWork, entangledRenderLanes);
+      }
     } else {
       startProfilerTimer(completedWork);
-      next = completeWork(current, completedWork, entangledRenderLanes);
+      if (__DEV__) {
+        next = runWithFiberInDEV(
+          completedWork,
+          completeWork,
+          current,
+          completedWork,
+          entangledRenderLanes,
+        );
+      } else {
+        next = completeWork(current, completedWork, entangledRenderLanes);
+      }
       // Update render duration assuming we didn't error.
       stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
     }
-    resetCurrentDebugFiberInDEV();
 
     if (next !== null) {
       // Completing this fiber spawned new work. Work on that next.
@@ -3045,9 +3091,16 @@ function commitRootImpl(
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
       const errorInfo = makeErrorInfo(recoverableError.stack);
-      setCurrentDebugFiberInDEV(recoverableError.source);
-      onRecoverableError(recoverableError.value, errorInfo);
-      resetCurrentDebugFiberInDEV();
+      if (__DEV__) {
+        runWithFiberInDEV(
+          recoverableError.source,
+          onRecoverableError,
+          recoverableError.value,
+          errorInfo,
+        );
+      } else {
+        onRecoverableError(recoverableError.value, errorInfo);
+      }
     }
   }
 
@@ -3698,15 +3751,15 @@ function doubleInvokeEffectsInDEVIfNecessary(
   // special rules apply to double invoking effects.
   if (fiber.tag !== OffscreenComponent) {
     if (fiber.flags & PlacementDEV) {
-      setCurrentDebugFiberInDEV(fiber);
       if (isInStrictMode) {
-        doubleInvokeEffectsOnFiber(
+        runWithFiberInDEV(
+          fiber,
+          doubleInvokeEffectsOnFiber,
           root,
           fiber,
           (fiber.mode & NoStrictPassiveEffectsMode) === NoMode,
         );
       }
-      resetCurrentDebugFiberInDEV();
     } else {
       recursivelyTraverseAndDoubleInvokeEffectsInDEV(
         root,
@@ -3722,21 +3775,21 @@ function doubleInvokeEffectsInDEVIfNecessary(
   if (fiber.memoizedState === null) {
     // Only consider Offscreen that is visible.
     // TODO (Offscreen) Handle manual mode.
-    setCurrentDebugFiberInDEV(fiber);
     if (isInStrictMode && fiber.flags & Visibility) {
       // Double invoke effects on Offscreen's subtree only
       // if it is visible and its visibility has changed.
-      doubleInvokeEffectsOnFiber(root, fiber);
+      runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber);
     } else if (fiber.subtreeFlags & PlacementDEV) {
       // Something in the subtree could have been suspended.
       // We need to continue traversal and find newly inserted fibers.
-      recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      runWithFiberInDEV(
+        fiber,
+        recursivelyTraverseAndDoubleInvokeEffectsInDEV,
         root,
         fiber,
         isInStrictMode,
       );
     }
-    resetCurrentDebugFiberInDEV();
   }
 }
 
@@ -3760,7 +3813,13 @@ function commitDoubleInvokeEffectsInDEV(
         doubleInvokeEffects,
       );
     } else {
-      legacyCommitDoubleInvokeEffectsInDEV(root.current, hasPassiveEffects);
+      // TODO: Is this runWithFiberInDEV needed since the other effect functions do it too?
+      runWithFiberInDEV(
+        root.current,
+        legacyCommitDoubleInvokeEffectsInDEV,
+        root.current,
+        hasPassiveEffects,
+      );
     }
   }
 }
@@ -3773,7 +3832,6 @@ function legacyCommitDoubleInvokeEffectsInDEV(
   // so we don't traverse unnecessarily? similar to subtreeFlags but just at the root level.
   // Maybe not a big deal since this is DEV only behavior.
 
-  setCurrentDebugFiberInDEV(fiber);
   invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
   if (hasPassiveEffects) {
     invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectUnmountInDEV);
@@ -3783,7 +3841,6 @@ function legacyCommitDoubleInvokeEffectsInDEV(
   if (hasPassiveEffects) {
     invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectMountInDEV);
   }
-  resetCurrentDebugFiberInDEV();
 }
 
 function invokeEffectsInDev(
@@ -3853,22 +3910,14 @@ export function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber: Fiber) {
       didWarnStateUpdateForNotYetMountedComponent = new Set([componentName]);
     }
 
-    const previousFiber = ReactCurrentFiberCurrent;
-    try {
-      setCurrentDebugFiberInDEV(fiber);
+    runWithFiberInDEV(fiber, () => {
       console.error(
         "Can't perform a React state update on a component that hasn't mounted yet. " +
           'This indicates that you have a side-effect in your render function that ' +
           'asynchronously later calls tries to update the component. Move this work to ' +
           'useEffect instead.',
       );
-    } finally {
-      if (previousFiber) {
-        setCurrentDebugFiberInDEV(fiber);
-      } else {
-        resetCurrentDebugFiberInDEV();
-      }
-    }
+    });
   }
 }
 
@@ -3990,9 +4039,7 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
     }
 
     if (ReactSharedInternals.actQueue === null) {
-      const previousFiber = ReactCurrentFiberCurrent;
-      try {
-        setCurrentDebugFiberInDEV(fiber);
+      runWithFiberInDEV(fiber, () => {
         console.error(
           'An update to %s inside a test was not wrapped in act(...).\n\n' +
             'When testing, code that causes React state updates should be ' +
@@ -4006,13 +4053,7 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
             ' Learn more at https://react.dev/link/wrap-tests-with-act',
           getComponentNameFromFiber(fiber),
         );
-      } finally {
-        if (previousFiber) {
-          setCurrentDebugFiberInDEV(fiber);
-        } else {
-          resetCurrentDebugFiberInDEV();
-        }
-      }
+      });
     }
   }
 }

@@ -78,8 +78,7 @@ import {
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
-  resetCurrentDebugFiberInDEV,
-  setCurrentDebugFiberInDEV,
+  runWithFiberInDEV,
 } from './ReactCurrentFiber';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
@@ -202,10 +201,7 @@ function findHostInstanceWithWarning(
       const componentName = getComponentNameFromFiber(fiber) || 'Component';
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
-
-        const previousFiber = ReactCurrentFiberCurrent;
-        try {
-          setCurrentDebugFiberInDEV(hostFiber);
+        runWithFiberInDEV(hostFiber, () => {
           if (fiber.mode & StrictLegacyMode) {
             console.error(
               '%s is deprecated in StrictMode. ' +
@@ -229,15 +225,7 @@ function findHostInstanceWithWarning(
               componentName,
             );
           }
-        } finally {
-          // Ideally this should reset to previous but this shouldn't be called in
-          // render and there's another warning for that anyway.
-          if (previousFiber) {
-            setCurrentDebugFiberInDEV(previousFiber);
-          } else {
-            resetCurrentDebugFiberInDEV();
-          }
-        }
+        });
       }
     }
     return getPublicInstance(hostFiber.stateNode);
