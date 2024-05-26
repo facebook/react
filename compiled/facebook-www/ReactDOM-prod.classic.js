@@ -11518,24 +11518,24 @@ function performUnitOfWork(unitOfWork) {
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
-  var current$jscomp$0 = unitOfWork.alternate;
-  switch (unitOfWork.tag) {
+  var next = unitOfWork;
+  var current$jscomp$0 = next.alternate;
+  switch (next.tag) {
     case 15:
     case 0:
-      var Component = unitOfWork.type,
-        unresolvedProps = unitOfWork.pendingProps;
+      var Component = next.type,
+        unresolvedProps = next.pendingProps;
       unresolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        unitOfWork.elementType === Component
+        disableDefaultPropsExceptForClasses || next.elementType === Component
           ? unresolvedProps
           : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       var context = isContextProvider(Component)
         ? previousContext
         : contextStackCursor.current;
-      context = getMaskedContext(unitOfWork, context);
-      current$jscomp$0 = replayFunctionComponent(
+      context = getMaskedContext(next, context);
+      next = replayFunctionComponent(
         current$jscomp$0,
-        unitOfWork,
+        next,
         unresolvedProps,
         Component,
         context,
@@ -11543,39 +11543,32 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     case 11:
-      Component = unitOfWork.type.render;
-      unresolvedProps = unitOfWork.pendingProps;
+      Component = next.type.render;
+      unresolvedProps = next.pendingProps;
       unresolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        unitOfWork.elementType === Component
+        disableDefaultPropsExceptForClasses || next.elementType === Component
           ? unresolvedProps
           : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
-      current$jscomp$0 = replayFunctionComponent(
+      next = replayFunctionComponent(
         current$jscomp$0,
-        unitOfWork,
+        next,
         unresolvedProps,
         Component,
-        unitOfWork.ref,
+        next.ref,
         workInProgressRootRenderLanes
       );
       break;
     case 5:
-      resetHooksOnUnwind(unitOfWork);
+      resetHooksOnUnwind(next);
     default:
-      unwindInterruptedWork(current$jscomp$0, unitOfWork),
-        (unitOfWork = workInProgress =
-          resetWorkInProgress(unitOfWork, entangledRenderLanes)),
-        (current$jscomp$0 = beginWork(
-          current$jscomp$0,
-          unitOfWork,
-          entangledRenderLanes
-        ));
+      unwindInterruptedWork(current$jscomp$0, next),
+        (next = workInProgress =
+          resetWorkInProgress(next, entangledRenderLanes)),
+        (next = beginWork(current$jscomp$0, next, entangledRenderLanes));
   }
   current = null;
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
-  null === current$jscomp$0
-    ? completeUnitOfWork(unitOfWork)
-    : (workInProgress = current$jscomp$0);
+  null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -13106,14 +13099,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$370;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1527 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1527) {
-      var element$jscomp$inline_1528 = document.createElement("div");
-      element$jscomp$inline_1528.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1527 =
-        "function" === typeof element$jscomp$inline_1528.oninput;
+    var isSupported$jscomp$inline_1539 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1539) {
+      var element$jscomp$inline_1540 = document.createElement("div");
+      element$jscomp$inline_1540.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1539 =
+        "function" === typeof element$jscomp$inline_1540.oninput;
     }
-    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1527;
+    JSCompiler_inline_result$jscomp$370 = isSupported$jscomp$inline_1539;
   } else JSCompiler_inline_result$jscomp$370 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$370 &&
@@ -13525,20 +13518,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1568 = 0;
-  i$jscomp$inline_1568 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1568++
+  var i$jscomp$inline_1580 = 0;
+  i$jscomp$inline_1580 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1580++
 ) {
-  var eventName$jscomp$inline_1569 =
-      simpleEventPluginEvents[i$jscomp$inline_1568],
-    domEventName$jscomp$inline_1570 =
-      eventName$jscomp$inline_1569.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1571 =
-      eventName$jscomp$inline_1569[0].toUpperCase() +
-      eventName$jscomp$inline_1569.slice(1);
+  var eventName$jscomp$inline_1581 =
+      simpleEventPluginEvents[i$jscomp$inline_1580],
+    domEventName$jscomp$inline_1582 =
+      eventName$jscomp$inline_1581.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1583 =
+      eventName$jscomp$inline_1581[0].toUpperCase() +
+      eventName$jscomp$inline_1581.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1570,
-    "on" + capitalizedEvent$jscomp$inline_1571
+    domEventName$jscomp$inline_1582,
+    "on" + capitalizedEvent$jscomp$inline_1583
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17068,17 +17061,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1746 = {
+var devToolsConfig$jscomp$inline_1758 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-5570ad6d",
+  version: "19.0.0-www-classic-9f6bd68c",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2190 = {
-  bundleType: devToolsConfig$jscomp$inline_1746.bundleType,
-  version: devToolsConfig$jscomp$inline_1746.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1746.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1746.rendererConfig,
+var internals$jscomp$inline_2202 = {
+  bundleType: devToolsConfig$jscomp$inline_1758.bundleType,
+  version: devToolsConfig$jscomp$inline_1758.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1758.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1758.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17094,26 +17087,26 @@ var internals$jscomp$inline_2190 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1746.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1758.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-5570ad6d"
+  reconcilerVersion: "19.0.0-www-classic-9f6bd68c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2191 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2203 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2191.isDisabled &&
-    hook$jscomp$inline_2191.supportsFiber
+    !hook$jscomp$inline_2203.isDisabled &&
+    hook$jscomp$inline_2203.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2191.inject(
-        internals$jscomp$inline_2190
+      (rendererID = hook$jscomp$inline_2203.inject(
+        internals$jscomp$inline_2202
       )),
-        (injectedHook = hook$jscomp$inline_2191);
+        (injectedHook = hook$jscomp$inline_2203);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17605,4 +17598,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-5570ad6d";
+exports.version = "19.0.0-www-classic-9f6bd68c";

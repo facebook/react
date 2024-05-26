@@ -128,6 +128,7 @@ var enableAsyncIterableChildren = false;
 var enableSuspenseCallback = true;
 var passChildrenWhenCloningPersistedNodes = false;
 var disableLegacyMode = true;
+var enableOwnerStacks = false; // Flow magic to verify the exports of this file match the original version.
 
 var FunctionComponent = 0;
 var ClassComponent = 1;
@@ -1082,15 +1083,23 @@ function getCurrentFiberStackInDev() {
   }
 }
 
-function resetCurrentDebugFiberInDEV() {
+function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
   {
-    resetCurrentFiber();
-  }
-}
-function setCurrentDebugFiberInDEV(fiber) {
-  {
+    var previousFiber = current;
     setCurrentFiber(fiber);
-  }
+
+    try {
+      if (enableOwnerStacks) ;
+
+      return callback(arg0, arg1, arg2, arg3, arg4);
+    } finally {
+      current = previousFiber;
+    }
+  } // These errors should never make it into a build so we don't need to encode them in codes.json
+  // eslint-disable-next-line react-internal/prod-error-codes
+
+
+  throw new Error('runWithFiberInDEV should never be called in production. This is a bug in React.');
 }
 function resetCurrentFiber() {
   {
@@ -1107,11 +1116,6 @@ function setCurrentFiber(fiber) {
   }
 
   current = fiber;
-}
-function getCurrentFiber() {
-  {
-    return current;
-  }
 }
 function setIsRendering(rendering) {
   {
@@ -6270,14 +6274,9 @@ var ReactStrictModeWarnings = {
         didWarnAboutLegacyContext.add(fiber.type);
       });
       var sortedNames = setToSortedString(uniqueNames);
-
-      try {
-        setCurrentDebugFiberInDEV(firstFiber);
-
+      runWithFiberInDEV(firstFiber, function () {
         error('Legacy context API has been detected within a strict-mode tree.' + '\n\nThe old API will be supported in all 16.x releases, but applications ' + 'using it should migrate to the new version.' + '\n\nPlease update the following components: %s' + '\n\nLearn more about this warning here: https://react.dev/link/legacy-context', sortedNames);
-      } finally {
-        resetCurrentDebugFiberInDEV();
-      }
+      });
     });
   };
 
@@ -6640,12 +6639,9 @@ var warnForMissingKey = function (child, returnFiber) {};
 
     var fiber = createFiberFromElement(child, returnFiber.mode, 0);
     fiber.return = returnFiber;
-    var prevDebugFiber = getCurrentFiber();
-    setCurrentFiber(fiber);
-
-    error('Each child in a list should have a unique "key" prop.' + '%s%s See https://react.dev/link/warning-keys for more information.', currentComponentErrorInfo, childOwnerAppendix);
-
-    setCurrentFiber(prevDebugFiber);
+    runWithFiberInDEV(fiber, function () {
+      error('Each child in a list should have a unique "key" prop.' + '%s%s See https://react.dev/link/warning-keys for more information.', currentComponentErrorInfo, childOwnerAppendix);
+    });
   };
 } // Given a fragment, validate that it can only be provided with fragment props
 // We do this here instead of BeginWork because the Fragment fiber doesn't have
@@ -6667,12 +6663,9 @@ function validateFragmentProps(element, fiber, returnFiber) {
           fiber.return = returnFiber;
         }
 
-        var prevDebugFiber = getCurrentFiber();
-        setCurrentFiber(fiber);
-
-        error('Invalid prop `%s` supplied to `React.Fragment`. ' + 'React.Fragment can only have `key` and `children` props.', key);
-
-        setCurrentFiber(prevDebugFiber);
+        runWithFiberInDEV(fiber, function (erroredKey) {
+          error('Invalid prop `%s` supplied to `React.Fragment`. ' + 'React.Fragment can only have `key` and `children` props.', erroredKey);
+        }, key);
         break;
       }
     }
@@ -6685,13 +6678,9 @@ function validateFragmentProps(element, fiber, returnFiber) {
         fiber.return = returnFiber;
       }
 
-      var _prevDebugFiber = getCurrentFiber();
-
-      setCurrentFiber(fiber);
-
-      error('Invalid attribute `ref` supplied to `React.Fragment`.');
-
-      setCurrentFiber(_prevDebugFiber);
+      runWithFiberInDEV(fiber, function () {
+        error('Invalid attribute `ref` supplied to `React.Fragment`.');
+      });
     }
   }
 }
@@ -13196,11 +13185,9 @@ function createRootErrorUpdate(root, errorInfo, lane) {
   };
 
   update.callback = function () {
-    var prevFiber = getCurrentFiber(); // should just be the root
-
-    setCurrentDebugFiberInDEV(errorInfo.source);
-    logUncaughtError(root, errorInfo);
-    setCurrentDebugFiberInDEV(prevFiber);
+    {
+      runWithFiberInDEV(errorInfo.source, logUncaughtError, root, errorInfo);
+    }
   };
 
   return update;
@@ -13227,11 +13214,9 @@ function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
 
-      var prevFiber = getCurrentFiber(); // should be the error boundary
-
-      setCurrentDebugFiberInDEV(errorInfo.source);
-      logCaughtError(root, fiber, errorInfo);
-      setCurrentDebugFiberInDEV(prevFiber);
+      {
+        runWithFiberInDEV(errorInfo.source, logCaughtError, root, fiber, errorInfo);
+      }
     };
   }
 
@@ -13244,11 +13229,9 @@ function initializeClassErrorUpdate(update, root, fiber, errorInfo) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
 
-      var prevFiber = getCurrentFiber(); // should be the error boundary
-
-      setCurrentDebugFiberInDEV(errorInfo.source);
-      logCaughtError(root, fiber, errorInfo);
-      setCurrentDebugFiberInDEV(prevFiber);
+      {
+        runWithFiberInDEV(errorInfo.source, logCaughtError, root, fiber, errorInfo);
+      }
 
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
@@ -19627,15 +19610,15 @@ function commitBeforeMutationEffects_begin() {
 function commitBeforeMutationEffects_complete() {
   while (nextEffect !== null) {
     var fiber = nextEffect;
-    setCurrentDebugFiberInDEV(fiber);
 
     try {
-      commitBeforeMutationEffectsOnFiber(fiber);
+      if (true) {
+        runWithFiberInDEV(fiber, commitBeforeMutationEffectsOnFiber, fiber);
+      }
     } catch (error) {
       captureCommitPhaseError(fiber, fiber.return, error);
     }
 
-    resetCurrentDebugFiberInDEV();
     var sibling = fiber.sibling;
 
     if (sibling !== null) {
@@ -19662,10 +19645,6 @@ function commitBeforeMutationEffectsOnFiber(finishedWork) {
         beforeActiveInstanceBlur(finishedWork);
       }
     }
-  }
-
-  if ((flags & Snapshot) !== NoFlags$1) {
-    setCurrentDebugFiberInDEV(finishedWork);
   }
 
   switch (finishedWork.tag) {
@@ -19754,10 +19733,6 @@ function commitBeforeMutationEffectsOnFiber(finishedWork) {
           throw new Error('This unit of work tag should not have side-effects. This error is ' + 'likely caused by a bug in React. Please file an issue.');
         }
       }
-  }
-
-  if ((flags & Snapshot) !== NoFlags$1) {
-    resetCurrentDebugFiberInDEV();
   }
 }
 
@@ -20175,7 +20150,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
     case ForwardRef:
     case SimpleMemoComponent:
       {
-        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes);
 
         if (flags & Update) {
           commitHookLayoutEffects(finishedWork, Layout | HasEffect);
@@ -20186,7 +20161,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
 
     case ClassComponent:
       {
-        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes);
 
         if (flags & Update) {
           commitClassLayoutLifecycles(finishedWork, current);
@@ -20205,7 +20180,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
 
     case HostRoot:
       {
-        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes);
 
         if (flags & Callback) {
           // TODO: I think this is now always non-null by the time it reaches the
@@ -20242,7 +20217,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
     case HostHoistable:
       {
         if (supportsResources) {
-          recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+          recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes);
 
           if (flags & Ref) {
             safelyAttachRef(finishedWork, finishedWork.return);
@@ -20256,7 +20231,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
     case HostSingleton:
     case HostComponent:
       {
-        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork); // Renderers may schedule work to be done after host components are mounted
+        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes); // Renderers may schedule work to be done after host components are mounted
         // (eg DOM renderer may schedule auto-focus for inputs and form controls).
         // These effects should only be committed when components are first mounted,
         // aka when there is no current/alternate.
@@ -20274,7 +20249,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
 
     case Profiler:
       {
-        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork); // TODO: Should this fire inside an offscreen tree? Or should it wait to
+        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes); // TODO: Should this fire inside an offscreen tree? Or should it wait to
         // fire when the tree becomes visible again.
 
         if (flags & Update) {
@@ -20286,7 +20261,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
 
     case SuspenseComponent:
       {
-        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes);
 
         if (flags & Update) {
           commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
@@ -20320,14 +20295,14 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
               var includeWorkInProgressEffects = (finishedWork.subtreeFlags & LayoutMask) !== NoFlags$1;
               recursivelyTraverseReappearLayoutEffects(finishedRoot, finishedWork, includeWorkInProgressEffects);
             } else {
-              recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+              recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes);
             }
 
             offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
             offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
           }
         } else {
-          recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+          recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes);
         }
 
         if (flags & Ref) {
@@ -20345,7 +20320,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork, committe
 
     default:
       {
-        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
+        recursivelyTraverseLayoutEffects(finishedRoot, finishedWork, committedLanes);
         break;
       }
   }
@@ -21433,9 +21408,11 @@ function isSuspenseBoundaryBeingHidden(current, finishedWork) {
 function commitMutationEffects(root, finishedWork, committedLanes) {
   inProgressLanes = committedLanes;
   inProgressRoot = root;
-  setCurrentDebugFiberInDEV(finishedWork);
-  commitMutationEffectsOnFiber(finishedWork, root);
-  resetCurrentDebugFiberInDEV();
+
+  {
+    runWithFiberInDEV(finishedWork, commitMutationEffectsOnFiber, finishedWork, root, committedLanes);
+  }
+
   inProgressLanes = null;
   inProgressRoot = null;
 }
@@ -21457,19 +21434,17 @@ function recursivelyTraverseMutationEffects(root, parentFiber, lanes) {
     }
   }
 
-  var prevDebugFiber = getCurrentFiber();
-
   if (parentFiber.subtreeFlags & MutationMask) {
     var child = parentFiber.child;
 
     while (child !== null) {
-      setCurrentDebugFiberInDEV(child);
-      commitMutationEffectsOnFiber(child, root);
+      {
+        runWithFiberInDEV(child, commitMutationEffectsOnFiber, child, root, lanes);
+      }
+
       child = child.sibling;
     }
   }
-
-  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 var currentHoistableRoot = null;
@@ -21486,7 +21461,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
     case MemoComponent:
     case SimpleMemoComponent:
       {
-        recursivelyTraverseMutationEffects(root, finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
 
         if (flags & Update) {
@@ -21525,7 +21500,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
 
     case ClassComponent:
       {
-        recursivelyTraverseMutationEffects(root, finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
 
         if (flags & Ref) {
@@ -21551,7 +21526,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           // We cast because we always set the root at the React root and so it cannot be
           // null while we are processing mutation effects
           var hoistableRoot = currentHoistableRoot;
-          recursivelyTraverseMutationEffects(root, finishedWork);
+          recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
 
           if (flags & Ref) {
@@ -21626,7 +21601,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
 
     case HostComponent:
       {
-        recursivelyTraverseMutationEffects(root, finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
 
         if (flags & Ref) {
@@ -21690,7 +21665,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
 
     case HostText:
       {
-        recursivelyTraverseMutationEffects(root, finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
 
         if (flags & Update) {
@@ -21723,11 +21698,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           prepareToCommitHoistables();
           var previousHoistableRoot = currentHoistableRoot;
           currentHoistableRoot = getHoistableRoot(root.containerInfo);
-          recursivelyTraverseMutationEffects(root, finishedWork);
+          recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           currentHoistableRoot = previousHoistableRoot;
           commitReconciliationEffects(finishedWork);
         } else {
-          recursivelyTraverseMutationEffects(root, finishedWork);
+          recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
         }
 
@@ -21780,11 +21755,11 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
         if (supportsResources) {
           var _previousHoistableRoot = currentHoistableRoot;
           currentHoistableRoot = getHoistableRoot(finishedWork.stateNode.containerInfo);
-          recursivelyTraverseMutationEffects(root, finishedWork);
+          recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
           currentHoistableRoot = _previousHoistableRoot;
         } else {
-          recursivelyTraverseMutationEffects(root, finishedWork);
+          recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
         }
 
@@ -21807,7 +21782,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
 
     case SuspenseComponent:
       {
-        recursivelyTraverseMutationEffects(root, finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork); // TODO: We should mark a flag on the Suspense fiber itself, rather than
         // relying on the Offscreen fiber having a flag also being marked. The
         // reason is that this offscreen fiber might not be part of the work-in-
@@ -21879,7 +21854,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
           var prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden || isHidden;
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden || wasHidden;
-          recursivelyTraverseMutationEffects(root, finishedWork);
+          recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
           offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
         }
@@ -21944,7 +21919,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
 
     case SuspenseListComponent:
       {
-        recursivelyTraverseMutationEffects(root, finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
 
         if (flags & Update) {
@@ -21962,7 +21937,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
     case ScopeComponent:
       {
         {
-          recursivelyTraverseMutationEffects(root, finishedWork);
+          recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork); // TODO: This is a temporary solution that allowed us to transition away
           // from React Flare on www.
 
@@ -21985,7 +21960,7 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
 
     default:
       {
-        recursivelyTraverseMutationEffects(root, finishedWork);
+        recursivelyTraverseMutationEffects(root, finishedWork, lanes);
         commitReconciliationEffects(finishedWork);
         return;
       }
@@ -22040,29 +22015,30 @@ function resetFormOnFiber(fiber) {
 function commitLayoutEffects(finishedWork, root, committedLanes) {
   inProgressLanes = committedLanes;
   inProgressRoot = root;
-  setCurrentDebugFiberInDEV(finishedWork);
   var current = finishedWork.alternate;
-  commitLayoutEffectOnFiber(root, current, finishedWork);
-  resetCurrentDebugFiberInDEV();
+
+  {
+    runWithFiberInDEV(finishedWork, commitLayoutEffectOnFiber, root, current, finishedWork, committedLanes);
+  }
+
   inProgressLanes = null;
   inProgressRoot = null;
 }
 
 function recursivelyTraverseLayoutEffects(root, parentFiber, lanes) {
-  var prevDebugFiber = getCurrentFiber();
-
   if (parentFiber.subtreeFlags & LayoutMask) {
     var child = parentFiber.child;
 
     while (child !== null) {
-      setCurrentDebugFiberInDEV(child);
       var current = child.alternate;
-      commitLayoutEffectOnFiber(root, current, child);
+
+      {
+        runWithFiberInDEV(child, commitLayoutEffectOnFiber, root, current, child, lanes);
+      }
+
       child = child.sibling;
     }
   }
-
-  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function disappearLayoutEffects(finishedWork) {
@@ -22268,16 +22244,17 @@ function recursivelyTraverseReappearLayoutEffects(finishedRoot, parentFiber, inc
   // node was reused.
   var childShouldIncludeWorkInProgressEffects = includeWorkInProgressEffects && (parentFiber.subtreeFlags & LayoutMask) !== NoFlags$1; // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
 
-  var prevDebugFiber = getCurrentFiber();
   var child = parentFiber.child;
 
   while (child !== null) {
     var current = child.alternate;
-    reappearLayoutEffects(finishedRoot, current, child, childShouldIncludeWorkInProgressEffects);
+
+    {
+      runWithFiberInDEV(child, reappearLayoutEffects, finishedRoot, current, child, childShouldIncludeWorkInProgressEffects);
+    }
+
     child = child.sibling;
   }
-
-  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function commitHookPassiveMountEffects(finishedWork, hookFlags) {
@@ -22436,25 +22413,23 @@ function commitTracingMarkerPassiveMountEffect(finishedWork) {
 }
 
 function commitPassiveMountEffects(root, finishedWork, committedLanes, committedTransitions) {
-  setCurrentDebugFiberInDEV(finishedWork);
-  commitPassiveMountOnFiber(root, finishedWork, committedLanes, committedTransitions);
-  resetCurrentDebugFiberInDEV();
+  {
+    runWithFiberInDEV(finishedWork, commitPassiveMountOnFiber, root, finishedWork, committedLanes, committedTransitions);
+  }
 }
 
 function recursivelyTraversePassiveMountEffects(root, parentFiber, committedLanes, committedTransitions) {
-  var prevDebugFiber = getCurrentFiber();
-
   if (parentFiber.subtreeFlags & PassiveMask) {
     var child = parentFiber.child;
 
     while (child !== null) {
-      setCurrentDebugFiberInDEV(child);
-      commitPassiveMountOnFiber(root, child, committedLanes, committedTransitions);
+      {
+        runWithFiberInDEV(child, commitPassiveMountOnFiber, root, child, committedLanes, committedTransitions);
+      }
+
       child = child.sibling;
     }
   }
-
-  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function commitPassiveMountOnFiber(finishedRoot, finishedWork, committedLanes, committedTransitions) {
@@ -22570,7 +22545,7 @@ function commitPassiveMountOnFiber(finishedRoot, finishedWork, committedLanes, c
                 // "Atomic" effects are ones that need to fire on every commit,
                 // even during pre-rendering. An example is updating the reference
                 // count on cache instances.
-                recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
+                recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, committedTransitions);
               }
             }
           }
@@ -22638,15 +22613,15 @@ function recursivelyTraverseReconnectPassiveEffects(finishedRoot, parentFiber, c
   // node was reused.
   var childShouldIncludeWorkInProgressEffects = includeWorkInProgressEffects && (parentFiber.subtreeFlags & PassiveMask) !== NoFlags$1; // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
 
-  var prevDebugFiber = getCurrentFiber();
   var child = parentFiber.child;
 
   while (child !== null) {
-    reconnectPassiveEffects(finishedRoot, child, committedLanes, committedTransitions, childShouldIncludeWorkInProgressEffects);
+    {
+      runWithFiberInDEV(child, reconnectPassiveEffects, finishedRoot, child, committedLanes, committedTransitions, childShouldIncludeWorkInProgressEffects);
+    }
+
     child = child.sibling;
   }
-
-  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function reconnectPassiveEffects(finishedRoot, finishedWork, committedLanes, committedTransitions, // This function visits both newly finished work and nodes that were re-used
@@ -22706,7 +22681,7 @@ includeWorkInProgressEffects) {
                 // "Atomic" effects are ones that need to fire on every commit,
                 // even during pre-rendering. An example is updating the reference
                 // count on cache instances.
-                recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
+                recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, committedTransitions);
               }
             }
           }
@@ -22769,19 +22744,18 @@ function recursivelyTraverseAtomicPassiveEffects(finishedRoot, parentFiber, comm
   // "Atomic" effects are ones that need to fire on every commit, even during
   // pre-rendering. We call this function when traversing a hidden tree whose
   // regular effects are currently disconnected.
-  var prevDebugFiber = getCurrentFiber(); // TODO: Add special flag for atomic effects
-
+  // TODO: Add special flag for atomic effects
   if (parentFiber.subtreeFlags & PassiveMask) {
     var child = parentFiber.child;
 
     while (child !== null) {
-      setCurrentDebugFiberInDEV(child);
-      commitAtomicPassiveEffects(finishedRoot, child);
+      {
+        runWithFiberInDEV(child, commitAtomicPassiveEffects, finishedRoot, child, committedLanes, committedTransitions);
+      }
+
       child = child.sibling;
     }
   }
-
-  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function commitAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, committedTransitions) {
@@ -22793,7 +22767,7 @@ function commitAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, 
   switch (finishedWork.tag) {
     case OffscreenComponent:
       {
-        recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
+        recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, committedTransitions);
 
         if (flags & Passive$1) {
           // TODO: Pass `current` as argument to this function
@@ -22807,7 +22781,7 @@ function commitAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, 
 
     case CacheComponent:
       {
-        recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
+        recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, committedTransitions);
 
         if (flags & Passive$1) {
           // TODO: Pass `current` as argument to this function
@@ -22820,16 +22794,16 @@ function commitAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, 
 
     default:
       {
-        recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork);
+        recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork, committedLanes, committedTransitions);
         break;
       }
   }
 }
 
 function commitPassiveUnmountEffects(finishedWork) {
-  setCurrentDebugFiberInDEV(finishedWork);
-  commitPassiveUnmountOnFiber(finishedWork);
-  resetCurrentDebugFiberInDEV();
+  {
+    runWithFiberInDEV(finishedWork, commitPassiveUnmountOnFiber, finishedWork);
+  }
 } // If we're inside a brand new tree, or a tree that was already visible, then we
 // should only suspend host components that have a ShouldSuspendCommit flag.
 // Components without it haven't changed since the last commit, so we can skip
@@ -22992,21 +22966,20 @@ function recursivelyTraversePassiveUnmountEffects(parentFiber) {
     }
 
     detachAlternateSiblings(parentFiber);
-  }
+  } // TODO: Split PassiveMask into separate masks for mount and unmount?
 
-  var prevDebugFiber = getCurrentFiber(); // TODO: Split PassiveMask into separate masks for mount and unmount?
 
   if (parentFiber.subtreeFlags & PassiveMask) {
     var child = parentFiber.child;
 
     while (child !== null) {
-      setCurrentDebugFiberInDEV(child);
-      commitPassiveUnmountOnFiber(child);
+      {
+        runWithFiberInDEV(child, commitPassiveUnmountOnFiber, child);
+      }
+
       child = child.sibling;
     }
   }
-
-  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function commitPassiveUnmountOnFiber(finishedWork) {
@@ -23070,19 +23043,18 @@ function recursivelyTraverseDisconnectPassiveEffects(parentFiber) {
     }
 
     detachAlternateSiblings(parentFiber);
-  }
+  } // TODO: Check PassiveStatic flag
 
-  var prevDebugFiber = getCurrentFiber(); // TODO: Check PassiveStatic flag
 
   var child = parentFiber.child;
 
   while (child !== null) {
-    setCurrentDebugFiberInDEV(child);
-    disconnectPassiveEffect(child);
+    {
+      runWithFiberInDEV(child, disconnectPassiveEffect, child);
+    }
+
     child = child.sibling;
   }
-
-  setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
 function disconnectPassiveEffect(finishedWork) {
@@ -23124,9 +23096,10 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(deletedSubtreeRoot
     var fiber = nextEffect; // Deletion effects fire in parent -> child order
     // TODO: Check if fiber has a PassiveStatic flag
 
-    setCurrentDebugFiberInDEV(fiber);
-    commitPassiveUnmountInsideDeletedTreeOnFiber(fiber, nearestMountedAncestor);
-    resetCurrentDebugFiberInDEV();
+    {
+      runWithFiberInDEV(fiber, commitPassiveUnmountInsideDeletedTreeOnFiber, fiber, nearestMountedAncestor);
+    }
+
     var child = fiber.child; // TODO: Only traverse subtree if it has a PassiveStatic flag.
 
     if (child !== null) {
@@ -25592,15 +25565,20 @@ function performUnitOfWork(unitOfWork) {
   // nothing should rely on this, but relying on it here means that we don't
   // need an additional field on the work in progress.
   var current = unitOfWork.alternate;
-  setCurrentDebugFiberInDEV(unitOfWork);
   var next;
 
   if ((unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
-    next = beginWork(current, unitOfWork, entangledRenderLanes);
+
+    {
+      next = runWithFiberInDEV(unitOfWork, beginWork, current, unitOfWork, entangledRenderLanes);
+    }
+
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
-    next = beginWork(current, unitOfWork, entangledRenderLanes);
+    {
+      next = runWithFiberInDEV(unitOfWork, beginWork, current, unitOfWork, entangledRenderLanes);
+    }
   }
 
   {
@@ -25620,9 +25598,32 @@ function performUnitOfWork(unitOfWork) {
 function replaySuspendedUnitOfWork(unitOfWork) {
   // This is a fork of performUnitOfWork specifcally for replaying a fiber that
   // just suspended.
-  //
+  var next;
+
+  {
+    next = runWithFiberInDEV(unitOfWork, replayBeginWork, unitOfWork);
+  } // The begin phase finished successfully without suspending. Return to the
+  // normal work loop.
+
+
+  {
+    resetCurrentFiber();
+  }
+
+  unitOfWork.memoizedProps = unitOfWork.pendingProps;
+
+  if (next === null) {
+    // If this doesn't spawn new work, complete the current work.
+    completeUnitOfWork(unitOfWork);
+  } else {
+    workInProgress = next;
+  }
+}
+
+function replayBeginWork(unitOfWork) {
+  // This is a fork of beginWork specifcally for replaying a fiber that
+  // just suspended.
   var current = unitOfWork.alternate;
-  setCurrentDebugFiberInDEV(unitOfWork);
   var next;
   var isProfilingMode = (unitOfWork.mode & ProfileMode) !== NoMode;
 
@@ -25692,22 +25693,9 @@ function replaySuspendedUnitOfWork(unitOfWork) {
 
   if (isProfilingMode) {
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
-  } // The begin phase finished successfully without suspending. Return to the
-  // normal work loop.
-
-
-  {
-    resetCurrentFiber();
   }
 
-  unitOfWork.memoizedProps = unitOfWork.pendingProps;
-
-  if (next === null) {
-    // If this doesn't spawn new work, complete the current work.
-    completeUnitOfWork(unitOfWork);
-  } else {
-    workInProgress = next;
-  }
+  return next;
 }
 
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
@@ -25794,19 +25782,22 @@ function completeUnitOfWork(unitOfWork) {
 
     var current = completedWork.alternate;
     var returnFiber = completedWork.return;
-    setCurrentDebugFiberInDEV(completedWork);
     var next = void 0;
 
     if ((completedWork.mode & ProfileMode) === NoMode) {
-      next = completeWork(current, completedWork, entangledRenderLanes);
+      {
+        next = runWithFiberInDEV(completedWork, completeWork, current, completedWork, entangledRenderLanes);
+      }
     } else {
       startProfilerTimer(completedWork);
-      next = completeWork(current, completedWork, entangledRenderLanes); // Update render duration assuming we didn't error.
+
+      {
+        next = runWithFiberInDEV(completedWork, completeWork, current, completedWork, entangledRenderLanes);
+      } // Update render duration assuming we didn't error.
+
 
       stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
     }
-
-    resetCurrentDebugFiberInDEV();
 
     if (next !== null) {
       // Completing this fiber spawned new work. Work on that next.
@@ -26184,9 +26175,10 @@ function commitRootImpl(root, recoverableErrors, transitions, didIncludeRenderPh
     for (var i = 0; i < recoverableErrors.length; i++) {
       var recoverableError = recoverableErrors[i];
       var errorInfo = makeErrorInfo(recoverableError.stack);
-      setCurrentDebugFiberInDEV(recoverableError.source);
-      onRecoverableError(recoverableError.value, errorInfo);
-      resetCurrentDebugFiberInDEV();
+
+      {
+        runWithFiberInDEV(recoverableError.source, onRecoverableError, recoverableError.value, errorInfo);
+      }
     }
   } // If the passive effects are the result of a discrete render, flush them
   // synchronously at the end of the current task so that the result is
@@ -26762,13 +26754,9 @@ function doubleInvokeEffectsInDEVIfNecessary(root, fiber, parentIsInStrictMode) 
 
   if (fiber.tag !== OffscreenComponent) {
     if (fiber.flags & PlacementDEV) {
-      setCurrentDebugFiberInDEV(fiber);
-
       if (isInStrictMode) {
-        doubleInvokeEffectsOnFiber(root, fiber, (fiber.mode & NoStrictPassiveEffectsMode) === NoMode);
+        runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber, (fiber.mode & NoStrictPassiveEffectsMode) === NoMode);
       }
-
-      resetCurrentDebugFiberInDEV();
     } else {
       recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, fiber, isInStrictMode);
     }
@@ -26781,19 +26769,15 @@ function doubleInvokeEffectsInDEVIfNecessary(root, fiber, parentIsInStrictMode) 
   if (fiber.memoizedState === null) {
     // Only consider Offscreen that is visible.
     // TODO (Offscreen) Handle manual mode.
-    setCurrentDebugFiberInDEV(fiber);
-
     if (isInStrictMode && fiber.flags & Visibility) {
       // Double invoke effects on Offscreen's subtree only
       // if it is visible and its visibility has changed.
-      doubleInvokeEffectsOnFiber(root, fiber);
+      runWithFiberInDEV(fiber, doubleInvokeEffectsOnFiber, root, fiber);
     } else if (fiber.subtreeFlags & PlacementDEV) {
       // Something in the subtree could have been suspended.
       // We need to continue traversal and find newly inserted fibers.
-      recursivelyTraverseAndDoubleInvokeEffectsInDEV(root, fiber, isInStrictMode);
+      runWithFiberInDEV(fiber, recursivelyTraverseAndDoubleInvokeEffectsInDEV, root, fiber, isInStrictMode);
     }
-
-    resetCurrentDebugFiberInDEV();
   }
 }
 
@@ -26841,19 +26825,9 @@ function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
       didWarnStateUpdateForNotYetMountedComponent = new Set([componentName]);
     }
 
-    var previousFiber = current;
-
-    try {
-      setCurrentDebugFiberInDEV(fiber);
-
+    runWithFiberInDEV(fiber, function () {
       error("Can't perform a React state update on a component that hasn't mounted yet. " + 'This indicates that you have a side-effect in your render function that ' + 'asynchronously later calls tries to update the component. Move this work to ' + 'useEffect instead.');
-    } finally {
-      if (previousFiber) {
-        setCurrentDebugFiberInDEV(fiber);
-      } else {
-        resetCurrentDebugFiberInDEV();
-      }
-    }
+    });
   }
 }
 var didWarnAboutUpdateInRender = false;
@@ -26944,19 +26918,9 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber) {
     }
 
     if (ReactSharedInternals.actQueue === null) {
-      var previousFiber = current;
-
-      try {
-        setCurrentDebugFiberInDEV(fiber);
-
+      runWithFiberInDEV(fiber, function () {
         error('An update to %s inside a test was not wrapped in act(...).\n\n' + 'When testing, code that causes React state updates should be ' + 'wrapped into act(...):\n\n' + 'act(() => {\n' + '  /* fire events that update state */\n' + '});\n' + '/* assert on the output */\n\n' + "This ensures that you're testing the behavior the user would see " + 'in the browser.' + ' Learn more at https://react.dev/link/wrap-tests-with-act', getComponentNameFromFiber(fiber));
-      } finally {
-        if (previousFiber) {
-          setCurrentDebugFiberInDEV(fiber);
-        } else {
-          resetCurrentDebugFiberInDEV();
-        }
-      }
+      });
     }
   }
 }
@@ -28122,7 +28086,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-b4e39258';
+var ReactVersion = '19.0.0-www-modern-986e0542';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -28284,25 +28248,13 @@ function findHostInstanceWithWarning(component, methodName) {
 
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
-        var previousFiber = current;
-
-        try {
-          setCurrentDebugFiberInDEV(hostFiber);
-
+        runWithFiberInDEV(hostFiber, function () {
           if (fiber.mode & StrictLegacyMode) {
             error('%s is deprecated in StrictMode. ' + '%s was passed an instance of %s which is inside StrictMode. ' + 'Instead, add a ref directly to the element you want to reference. ' + 'Learn more about using refs safely here: ' + 'https://react.dev/link/strict-mode-find-node', methodName, methodName, componentName);
           } else {
             error('%s is deprecated in StrictMode. ' + '%s was passed an instance of %s which renders StrictMode children. ' + 'Instead, add a ref directly to the element you want to reference. ' + 'Learn more about using refs safely here: ' + 'https://react.dev/link/strict-mode-find-node', methodName, methodName, componentName);
           }
-        } finally {
-          // Ideally this should reset to previous but this shouldn't be called in
-          // render and there's another warning for that anyway.
-          if (previousFiber) {
-            setCurrentDebugFiberInDEV(previousFiber);
-          } else {
-            resetCurrentDebugFiberInDEV();
-          }
-        }
+        });
       }
     }
 

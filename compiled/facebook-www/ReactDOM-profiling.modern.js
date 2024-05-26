@@ -11653,22 +11653,22 @@ function performUnitOfWork(unitOfWork) {
     : (workInProgress = current$jscomp$0);
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
-  var current$jscomp$0 = unitOfWork.alternate,
-    isProfilingMode = 0 !== (unitOfWork.mode & 2);
-  isProfilingMode && startProfilerTimer(unitOfWork);
-  switch (unitOfWork.tag) {
+  var next = unitOfWork;
+  var current$jscomp$0 = next.alternate,
+    isProfilingMode = 0 !== (next.mode & 2);
+  isProfilingMode && startProfilerTimer(next);
+  switch (next.tag) {
     case 15:
     case 0:
-      var Component = unitOfWork.type,
-        unresolvedProps = unitOfWork.pendingProps;
+      var Component = next.type,
+        unresolvedProps = next.pendingProps;
       unresolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        unitOfWork.elementType === Component
+        disableDefaultPropsExceptForClasses || next.elementType === Component
           ? unresolvedProps
           : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       current$jscomp$0 = replayFunctionComponent(
         current$jscomp$0,
-        unitOfWork,
+        next,
         unresolvedProps,
         Component,
         void 0,
@@ -11676,40 +11676,38 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     case 11:
-      Component = unitOfWork.type.render;
-      unresolvedProps = unitOfWork.pendingProps;
+      Component = next.type.render;
+      unresolvedProps = next.pendingProps;
       unresolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        unitOfWork.elementType === Component
+        disableDefaultPropsExceptForClasses || next.elementType === Component
           ? unresolvedProps
           : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       current$jscomp$0 = replayFunctionComponent(
         current$jscomp$0,
-        unitOfWork,
+        next,
         unresolvedProps,
         Component,
-        unitOfWork.ref,
+        next.ref,
         workInProgressRootRenderLanes
       );
       break;
     case 5:
-      resetHooksOnUnwind(unitOfWork);
+      resetHooksOnUnwind(next);
     default:
-      unwindInterruptedWork(current$jscomp$0, unitOfWork),
-        (unitOfWork = workInProgress =
-          resetWorkInProgress(unitOfWork, entangledRenderLanes)),
+      unwindInterruptedWork(current$jscomp$0, next),
+        (next = workInProgress =
+          resetWorkInProgress(next, entangledRenderLanes)),
         (current$jscomp$0 = beginWork(
           current$jscomp$0,
-          unitOfWork,
+          next,
           entangledRenderLanes
         ));
   }
-  isProfilingMode && stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0);
+  isProfilingMode && stopProfilerTimerIfRunningAndRecordDelta(next, !0);
+  next = current$jscomp$0;
   current = null;
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
-  null === current$jscomp$0
-    ? completeUnitOfWork(unitOfWork)
-    : (workInProgress = current$jscomp$0);
+  null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -13236,14 +13234,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$378;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1585 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1585) {
-      var element$jscomp$inline_1586 = document.createElement("div");
-      element$jscomp$inline_1586.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1585 =
-        "function" === typeof element$jscomp$inline_1586.oninput;
+    var isSupported$jscomp$inline_1597 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1597) {
+      var element$jscomp$inline_1598 = document.createElement("div");
+      element$jscomp$inline_1598.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1597 =
+        "function" === typeof element$jscomp$inline_1598.oninput;
     }
-    JSCompiler_inline_result$jscomp$378 = isSupported$jscomp$inline_1585;
+    JSCompiler_inline_result$jscomp$378 = isSupported$jscomp$inline_1597;
   } else JSCompiler_inline_result$jscomp$378 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$378 &&
@@ -13655,20 +13653,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1626 = 0;
-  i$jscomp$inline_1626 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1626++
+  var i$jscomp$inline_1638 = 0;
+  i$jscomp$inline_1638 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1638++
 ) {
-  var eventName$jscomp$inline_1627 =
-      simpleEventPluginEvents[i$jscomp$inline_1626],
-    domEventName$jscomp$inline_1628 =
-      eventName$jscomp$inline_1627.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1629 =
-      eventName$jscomp$inline_1627[0].toUpperCase() +
-      eventName$jscomp$inline_1627.slice(1);
+  var eventName$jscomp$inline_1639 =
+      simpleEventPluginEvents[i$jscomp$inline_1638],
+    domEventName$jscomp$inline_1640 =
+      eventName$jscomp$inline_1639.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1641 =
+      eventName$jscomp$inline_1639[0].toUpperCase() +
+      eventName$jscomp$inline_1639.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1628,
-    "on" + capitalizedEvent$jscomp$inline_1629
+    domEventName$jscomp$inline_1640,
+    "on" + capitalizedEvent$jscomp$inline_1641
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17178,10 +17176,10 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1799 = {
+var devToolsConfig$jscomp$inline_1811 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-f3b3106d",
+  version: "19.0.0-www-modern-d69be7d1",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17199,10 +17197,10 @@ var devToolsConfig$jscomp$inline_1799 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1799.bundleType,
-  version: devToolsConfig$jscomp$inline_1799.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1799.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1799.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1811.bundleType,
+  version: devToolsConfig$jscomp$inline_1811.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1811.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1811.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17218,14 +17216,14 @@ var devToolsConfig$jscomp$inline_1799 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1799.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1811.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-f3b3106d"
+  reconcilerVersion: "19.0.0-www-modern-d69be7d1"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -17586,7 +17584,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-f3b3106d";
+exports.version = "19.0.0-www-modern-d69be7d1";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

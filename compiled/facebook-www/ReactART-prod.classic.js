@@ -9673,24 +9673,24 @@ function performUnitOfWork(unitOfWork) {
   null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
 }
 function replaySuspendedUnitOfWork(unitOfWork) {
-  var current$jscomp$0 = unitOfWork.alternate;
-  switch (unitOfWork.tag) {
+  var next = unitOfWork;
+  var current$jscomp$0 = next.alternate;
+  switch (next.tag) {
     case 15:
     case 0:
-      var Component = unitOfWork.type,
-        unresolvedProps = unitOfWork.pendingProps;
+      var Component = next.type,
+        unresolvedProps = next.pendingProps;
       unresolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        unitOfWork.elementType === Component
+        disableDefaultPropsExceptForClasses || next.elementType === Component
           ? unresolvedProps
           : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       var context = isContextProvider(Component)
         ? previousContext
         : contextStackCursor$1.current;
-      context = getMaskedContext(unitOfWork, context);
-      current$jscomp$0 = replayFunctionComponent(
+      context = getMaskedContext(next, context);
+      next = replayFunctionComponent(
         current$jscomp$0,
-        unitOfWork,
+        next,
         unresolvedProps,
         Component,
         context,
@@ -9698,39 +9698,32 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       );
       break;
     case 11:
-      Component = unitOfWork.type.render;
-      unresolvedProps = unitOfWork.pendingProps;
+      Component = next.type.render;
+      unresolvedProps = next.pendingProps;
       unresolvedProps =
-        disableDefaultPropsExceptForClasses ||
-        unitOfWork.elementType === Component
+        disableDefaultPropsExceptForClasses || next.elementType === Component
           ? unresolvedProps
           : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
-      current$jscomp$0 = replayFunctionComponent(
+      next = replayFunctionComponent(
         current$jscomp$0,
-        unitOfWork,
+        next,
         unresolvedProps,
         Component,
-        unitOfWork.ref,
+        next.ref,
         workInProgressRootRenderLanes
       );
       break;
     case 5:
-      resetHooksOnUnwind(unitOfWork);
+      resetHooksOnUnwind(next);
     default:
-      unwindInterruptedWork(current$jscomp$0, unitOfWork),
-        (unitOfWork = workInProgress =
-          resetWorkInProgress(unitOfWork, entangledRenderLanes)),
-        (current$jscomp$0 = beginWork(
-          current$jscomp$0,
-          unitOfWork,
-          entangledRenderLanes
-        ));
+      unwindInterruptedWork(current$jscomp$0, next),
+        (next = workInProgress =
+          resetWorkInProgress(next, entangledRenderLanes)),
+        (next = beginWork(current$jscomp$0, next, entangledRenderLanes));
   }
   current = null;
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
-  null === current$jscomp$0
-    ? completeUnitOfWork(unitOfWork)
-    : (workInProgress = current$jscomp$0);
+  null === next ? completeUnitOfWork(unitOfWork) : (workInProgress = next);
 }
 function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
   resetContextDependencies();
@@ -10646,19 +10639,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1146 = {
+  devToolsConfig$jscomp$inline_1158 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-f92fa0c7",
+    version: "19.0.0-www-classic-720dabbc",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1358 = {
-  bundleType: devToolsConfig$jscomp$inline_1146.bundleType,
-  version: devToolsConfig$jscomp$inline_1146.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1146.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1146.rendererConfig,
+var internals$jscomp$inline_1370 = {
+  bundleType: devToolsConfig$jscomp$inline_1158.bundleType,
+  version: devToolsConfig$jscomp$inline_1158.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1158.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1158.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10675,26 +10668,26 @@ var internals$jscomp$inline_1358 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1146.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1158.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-f92fa0c7"
+  reconcilerVersion: "19.0.0-www-classic-720dabbc"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1359 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1371 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1359.isDisabled &&
-    hook$jscomp$inline_1359.supportsFiber
+    !hook$jscomp$inline_1371.isDisabled &&
+    hook$jscomp$inline_1371.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1359.inject(
-        internals$jscomp$inline_1358
+      (rendererID = hook$jscomp$inline_1371.inject(
+        internals$jscomp$inline_1370
       )),
-        (injectedHook = hook$jscomp$inline_1359);
+        (injectedHook = hook$jscomp$inline_1371);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
