@@ -181,8 +181,9 @@ if (__DEV__) {
 
     runWithFiberInDEV(fiber, () => {
       console.error(
-        'Each child in a list should have a unique "key" prop.' +
+        'Each child in a list should have a unique "key" prop, but the key "%s" was seen at least twice.' +
           '%s%s See https://react.dev/link/warning-keys for more information.',
+        child.key,
         currentComponentErrorInfo,
         childOwnerAppendix,
       );
@@ -1030,9 +1031,9 @@ function createChildReconciler(
     return null;
   }
 
-  /**
-   * Warns if there is a duplicate or missing key
-   */
+ /**
+ * Warns if there is a duplicate or missing key
+ */
   function warnOnInvalidKey(
     child: mixed,
     knownKeys: Set<string> | null,
@@ -1060,7 +1061,7 @@ function createChildReconciler(
             break;
           }
           console.error(
-            'Encountered two children with the same key, `%s`. ' +
+            'Each child in a list should have a unique "key" prop, but the key "%s" was seen at least twice. ' +
               'Keys should be unique so that components maintain their identity ' +
               'across updates. Non-unique keys may cause children to be ' +
               'duplicated and/or omitted — the behavior is unsupported and ' +
