@@ -98,3 +98,10 @@ export function getStackByFiberInDevAndProd(
     return '\nError generating stack: ' + x.message + '\n' + x.stack;
   }
 }
+
+export function supportsNativeConsoleTasks(fiber: Fiber): boolean {
+  // If this Fiber supports native console.createTask then we are already running
+  // inside a native async stack trace if it's active - meaning the DevTools is open.
+  // Ideally we'd detect if this task was created while the DevTools was open or not.
+  return !!fiber._debugTask;
+}
