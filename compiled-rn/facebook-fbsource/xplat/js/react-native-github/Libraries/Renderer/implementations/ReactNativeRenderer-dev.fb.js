@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3d4cf8990ac0b10f2ad4552e0a0fc75f>>
+ * @generated SignedSource<<3dbcb35ed104bc31d027dfdf6f5f8da0>>
  */
 
 'use strict';
@@ -29,6 +29,29 @@ var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 var Scheduler = require('scheduler');
 
 var ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+
+// Re-export dynamic flags from the internal module.
+var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
+// the exports object every time a flag is read.
+
+var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+    consoleManagedByDevToolsDuringStrictMode = dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
+    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses,
+    enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
+    enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection;
+ // The rest of the flags are static for better dead code elimination.
+var enableAsyncActions = true;
+var enableSchedulingProfiler = true;
+var enableProfilerTimer = true;
+var enableProfilerCommitHooks = true;
+var enableProfilerNestedUpdatePhase = true;
+var enableAsyncIterableChildren = false;
+var syncLaneExpirationMs = 250;
+var transitionLaneExpirationMs = 5000;
+var enableLazyContextPropagation = false;
+var enableLegacyHidden = false;
+var disableLegacyMode = false;
+var enableOwnerStacks = false; // Flow magic to verify the exports of this file match the original version.
 
 var suppressWarning = false;
 function setSuppressWarning(newSuppressWarning) {
@@ -62,7 +85,7 @@ function error(format) {
       printWarning('error', format, args);
     }
   }
-}
+} // eslint-disable-next-line react-internal/no-production-logging
 
 function printWarning(level, format, args) {
   // When changing this logic, you might want to also
@@ -71,6 +94,9 @@ function printWarning(level, format, args) {
     var isErrorLogger = format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
 
     if (ReactSharedInternals.getCurrentStack) {
+      // We only add the current stack to the console when createTask is not supported.
+      // Since createTask requires DevTools to be open to work, this means that stacks
+      // can be lost while DevTools isn't open but we can't detect this.
       var stack = ReactSharedInternals.getCurrentStack();
 
       if (stack !== '') {
@@ -2346,28 +2372,6 @@ function set(key, value) {
   key._reactInternals = value;
 }
 
-// Re-export dynamic flags from the internal module.
-var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
-// the exports object every time a flag is read.
-
-var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
-    consoleManagedByDevToolsDuringStrictMode = dynamicFlags.consoleManagedByDevToolsDuringStrictMode,
-    disableDefaultPropsExceptForClasses = dynamicFlags.disableDefaultPropsExceptForClasses,
-    enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
-    enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection;
- // The rest of the flags are static for better dead code elimination.
-var enableAsyncActions = true;
-var enableSchedulingProfiler = true;
-var enableProfilerTimer = true;
-var enableProfilerCommitHooks = true;
-var enableProfilerNestedUpdatePhase = true;
-var enableAsyncIterableChildren = false;
-var syncLaneExpirationMs = 250;
-var transitionLaneExpirationMs = 5000;
-var enableLazyContextPropagation = false;
-var enableLegacyHidden = false;
-var disableLegacyMode = false;
-
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
 // The Symbol used to tag the ReactElement-like types.
@@ -3244,6 +3248,8 @@ function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
     setCurrentFiber(fiber);
 
     try {
+      if (enableOwnerStacks) ;
+
       return callback(arg0, arg1, arg2, arg3, arg4);
     } finally {
       current = previousFiber;
@@ -26547,7 +26553,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-3589e53b';
+var ReactVersion = '19.0.0-rc-7e1b1d14';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

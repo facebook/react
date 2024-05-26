@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<43472d2aa5457c3ff87b82ad5ff89a40>>
+ * @generated SignedSource<<a504442f74a5c97d4fa7e8c91e8156f4>>
  */
 
 'use strict';
@@ -24,7 +24,7 @@ if (
 }
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-rc-28be327b';
+var ReactVersion = '19.0.0-rc-86d4e19f';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -125,7 +125,7 @@ function error(format) {
       printWarning('error', format, args);
     }
   }
-}
+} // eslint-disable-next-line react-internal/no-production-logging
 
 function printWarning(level, format, args) {
   // When changing this logic, you might want to also
@@ -134,6 +134,9 @@ function printWarning(level, format, args) {
     var isErrorLogger = format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
 
     if (ReactSharedInternals.getCurrentStack) {
+      // We only add the current stack to the console when createTask is not supported.
+      // Since createTask requires DevTools to be open to work, this means that stacks
+      // can be lost while DevTools isn't open but we can't detect this.
       var stack = ReactSharedInternals.getCurrentStack();
 
       if (stack !== '') {

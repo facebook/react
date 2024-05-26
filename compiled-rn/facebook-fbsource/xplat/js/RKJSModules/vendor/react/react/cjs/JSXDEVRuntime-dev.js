@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<498b38ab8fbbf44800642c8dc0009e44>>
+ * @generated SignedSource<<d10d18b906d5290962ea3f530139aefd>>
  */
 
 'use strict';
@@ -82,7 +82,7 @@ function error(format) {
       printWarning('error', format, args);
     }
   }
-}
+} // eslint-disable-next-line react-internal/no-production-logging
 
 function printWarning(level, format, args) {
   // When changing this logic, you might want to also
@@ -91,6 +91,9 @@ function printWarning(level, format, args) {
     var isErrorLogger = format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
 
     if (ReactSharedInternals.getCurrentStack) {
+      // We only add the current stack to the console when createTask is not supported.
+      // Since createTask requires DevTools to be open to work, this means that stacks
+      // can be lost while DevTools isn't open but we can't detect this.
       var stack = ReactSharedInternals.getCurrentStack();
 
       if (stack !== '') {

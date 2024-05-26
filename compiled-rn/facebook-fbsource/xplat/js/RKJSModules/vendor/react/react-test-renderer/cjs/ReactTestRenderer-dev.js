@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1b15d797a9023201acc95022ba001e0f>>
+ * @generated SignedSource<<5d2de112982cec5eac69c9d1f8e71fe5>>
  */
 
 'use strict';
@@ -21,6 +21,20 @@ var Scheduler = require('scheduler/unstable_mock');
 var Scheduler$1 = require('scheduler');
 
 var ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+
+var debugRenderPhaseSideEffectsForStrictMode = false;
+var enableSchedulingProfiler = true;
+var enableProfilerTimer = true;
+var enableProfilerCommitHooks = true;
+var enableProfilerNestedUpdatePhase = true;
+var enableAsyncIterableChildren = false;
+var syncLaneExpirationMs = 250;
+var transitionLaneExpirationMs = 5000;
+var enableLazyContextPropagation = false;
+var enableLegacyHidden = false;
+var enableAsyncActions = true;
+var disableLegacyMode = false;
+var enableOwnerStacks = false; // Flow magic to verify the exports of this file match the original version.
 
 // by calls to these methods by a Babel plugin.
 //
@@ -48,7 +62,7 @@ function error(format) {
       printWarning('error', format, args);
     }
   }
-}
+} // eslint-disable-next-line react-internal/no-production-logging
 
 function printWarning(level, format, args) {
   // When changing this logic, you might want to also
@@ -57,6 +71,9 @@ function printWarning(level, format, args) {
     var isErrorLogger = format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
 
     if (ReactSharedInternals.getCurrentStack) {
+      // We only add the current stack to the console when createTask is not supported.
+      // Since createTask requires DevTools to be open to work, this means that stacks
+      // can be lost while DevTools isn't open but we can't detect this.
       var stack = ReactSharedInternals.getCurrentStack();
 
       if (stack !== '') {
@@ -138,19 +155,6 @@ function get(key) {
 function set(key, value) {
   key._reactInternals = value;
 }
-
-var debugRenderPhaseSideEffectsForStrictMode = false;
-var enableSchedulingProfiler = true;
-var enableProfilerTimer = true;
-var enableProfilerCommitHooks = true;
-var enableProfilerNestedUpdatePhase = true;
-var enableAsyncIterableChildren = false;
-var syncLaneExpirationMs = 250;
-var transitionLaneExpirationMs = 5000;
-var enableLazyContextPropagation = false;
-var enableLegacyHidden = false;
-var enableAsyncActions = true;
-var disableLegacyMode = false;
 
 var FunctionComponent = 0;
 var ClassComponent = 1;
@@ -1058,6 +1062,8 @@ function runWithFiberInDEV(fiber, callback, arg0, arg1, arg2, arg3, arg4) {
     setCurrentFiber(fiber);
 
     try {
+      if (enableOwnerStacks) ;
+
       return callback(arg0, arg1, arg2, arg3, arg4);
     } finally {
       current = previousFiber;
@@ -23456,7 +23462,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-aa7289e4';
+var ReactVersion = '19.0.0-rc-44b67cc6';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
