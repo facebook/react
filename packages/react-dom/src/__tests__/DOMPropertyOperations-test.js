@@ -322,28 +322,61 @@ describe('DOMPropertyOperations', () => {
     it('custom elements shouldnt have non-functions for on* attributes treated as event listeners', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
+      // First render with nothing
+      await act(() => {
+        root.render(<my-custom-element />);
+      });
+      const customElement = container.querySelector('my-custom-element');
+      // Install a setter to activate the `in` heuristic
+      Object.defineProperty(customElement, 'onobj', {
+        set: function (x) {
+          this._onobj = x;
+        },
+        get: function () {
+          return this._onobj;
+        },
+      });
+      Object.defineProperty(customElement, 'onarray', {
+        set: function (x) {
+          this._onarray = x;
+        },
+        get: function () {
+          return this._onarray;
+        },
+      });
+      Object.defineProperty(customElement, 'ondate', {
+        set: function (x) {
+          this._ondate = x;
+        },
+        get: function () {
+          return this._ondate;
+        },
+      });
+      const onobj = {hello: 'world'};
+      const onarray = ['one', 'two'];
+      const ondate = new Date();
       await act(() => {
         root.render(
           <my-custom-element
             onstring={'hello'}
-            onobj={{hello: 'world'}}
-            onarray={['one', 'two']}
+            onobj={onobj}
+            onarray={onarray}
+            ondate={ondate}
             ontrue={true}
-            onfalse={false}
           />,
         );
       });
-      const customElement = container.querySelector('my-custom-element');
       expect(customElement.getAttribute('onstring')).toBe('hello');
-      expect(customElement.getAttribute('onobj')).toBe('[object Object]');
-      expect(customElement.getAttribute('onarray')).toBe('one,two');
+      expect(customElement.onobj).toStrictEqual(onobj);
+      expect(customElement.onarray).toStrictEqual(onarray);
+      expect(customElement.ondate).toStrictEqual(ondate);
       expect(customElement.getAttribute('ontrue')).toBe('');
-      expect(customElement.getAttribute('onfalse')).toBe(null);
 
       // Dispatch the corresponding event names to make sure that nothing crashes.
       customElement.dispatchEvent(new Event('string'));
       customElement.dispatchEvent(new Event('obj'));
       customElement.dispatchEvent(new Event('array'));
+      customElement.dispatchEvent(new Event('date'));
       customElement.dispatchEvent(new Event('true'));
       customElement.dispatchEvent(new Event('false'));
     });
@@ -1233,6 +1266,77 @@ describe('DOMPropertyOperations', () => {
       expect(oncustomevent).toHaveBeenCalledTimes(2);
       expect(customelement.oncustomevent).toBe(undefined);
       expect(customelement.getAttribute('oncustomevent')).toBe(null);
+    });
+
+    it('should only set complex values as properties', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      const obj = {hello: 'world'};
+      const array = ['one', 'two'];
+      const date = new Date();
+
+      // First render before props are defined
+      await act(() => {
+        root.render(<my-custom-element obj={obj} array={array} date={date} />);
+      });
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('obj')).toBe(null);
+      expect(customElement.getAttribute('array')).toBe(null);
+      expect(customElement.getAttribute('date')).toBe(null);
+      // Install a setter to activate the `in` heuristic
+      Object.defineProperty(customElement, 'obj', {
+        set: function (x) {
+          this._obj = x;
+        },
+        get: function () {
+          return this._obj;
+        },
+      });
+      Object.defineProperty(customElement, 'array', {
+        set: function (x) {
+          this._array = x;
+        },
+        get: function () {
+          return this._array;
+        },
+      });
+      Object.defineProperty(customElement, 'date', {
+        set: function (x) {
+          this._date = x;
+        },
+        get: function () {
+          return this._date;
+        },
+      });
+
+      const obj2 = {hello: 'world'};
+      const array2 = ['one', 'two'];
+      const date2 = new Date();
+      await act(() => {
+        root.render(
+          <my-custom-element obj={obj2} array={array2} date={date2} />,
+        );
+      });
+      expect(customElement.obj).toStrictEqual(obj2);
+      expect(customElement.array).toStrictEqual(array2);
+      expect(customElement.date).toStrictEqual(date2);
+    });
+
+    it('should set null as attribute when no property exists', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      // First render to set as non-null attribute for comparison
+      await act(() => {
+        root.render(<my-custom-element foo={'bar'} />);
+      });
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('foo')).toBe('bar');
+
+      await act(() => {
+        root.render(<my-custom-element foo={null} />);
+      });
+      expect(customElement.getAttribute('foo')).toBe(null);
     });
 
     it('assigning to a custom element property should not remove attributes', async () => {
