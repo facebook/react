@@ -596,7 +596,11 @@ export function laneToLanes(lane: Lane): Lanes {
 
 export function higherPriorityLane(a: Lane, b: Lane): Lane {
   // This works because the bit ranges decrease in priority as you go left.
-  return a !== NoLane && a < b ? a : b;
+  if (a !== NoLane && b !== NoLane) {
+    return a < b ? a : b;
+  } else {
+    return a !== NoLane ? a : b;
+  }
 }
 
 export function createLaneMap<T>(initial: T): LaneMap<T> {
