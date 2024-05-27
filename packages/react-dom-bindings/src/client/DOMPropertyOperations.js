@@ -226,6 +226,12 @@ export function setValueForPropertyOnCustomComponent(
     return;
   }
 
+  // Since setValueForAttribute() is shared by "built in"
+  // elements, bail early here for web components.
+  if (typeof value === 'object' && value !== null) {
+    return;
+  }
+
   // From here, it's the same as any attribute
   setValueForAttribute(node, name, value);
 }
