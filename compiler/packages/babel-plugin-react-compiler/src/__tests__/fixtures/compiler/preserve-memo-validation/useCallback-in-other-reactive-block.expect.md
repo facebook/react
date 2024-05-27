@@ -37,41 +37,30 @@ import { arrayPush } from "shared-runtime";
 // useCallback-produced values can exist in nested reactive blocks, as long
 // as their reactive dependencies are a subset of depslist from source
 function useFoo(minWidth, otherProp) {
-  const $ = _c(11);
+  const $ = _c(7);
   const [width] = useState(1);
-  let style;
-  let x;
+  let t0;
   if ($[0] !== width || $[1] !== minWidth || $[2] !== otherProp) {
-    x = [];
-    let t0;
-    if ($[5] !== minWidth || $[6] !== width) {
-      t0 = () => ({ width: Math.max(minWidth, width) });
-      $[5] = minWidth;
-      $[6] = width;
-      $[7] = t0;
+    const x = [];
+    let t1;
+    if ($[4] !== minWidth || $[5] !== width) {
+      t1 = () => ({ width: Math.max(minWidth, width) });
+      $[4] = minWidth;
+      $[5] = width;
+      $[6] = t1;
     } else {
-      t0 = $[7];
+      t1 = $[6];
     }
-    style = t0;
+    const style = t1;
 
     arrayPush(x, otherProp);
+    t0 = [style, x];
     $[0] = width;
     $[1] = minWidth;
     $[2] = otherProp;
-    $[3] = style;
-    $[4] = x;
+    $[3] = t0;
   } else {
-    style = $[3];
-    x = $[4];
-  }
-  let t0;
-  if ($[8] !== style || $[9] !== x) {
-    t0 = [style, x];
-    $[8] = style;
-    $[9] = x;
-    $[10] = t0;
-  } else {
-    t0 = $[10];
+    t0 = $[3];
   }
   return t0;
 }

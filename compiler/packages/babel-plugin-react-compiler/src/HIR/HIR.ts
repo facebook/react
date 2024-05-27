@@ -1075,7 +1075,7 @@ export type PropertyLoad = {
 
 export type LoadGlobal = {
   kind: "LoadGlobal";
-  name: string;
+  binding: NonLocalBinding;
   loc: SourceLocation;
 };
 
@@ -1102,6 +1102,29 @@ export type MutableRange = {
   start: InstructionId;
   end: InstructionId;
 };
+
+export type VariableBinding =
+  // let, const, etc declared within the current component/hook
+  | { kind: "Identifier"; identifier: Identifier }
+  // bindings declard outside the current component/hook
+  | NonLocalBinding;
+
+export type NonLocalBinding =
+  // `import Foo from 'foo'`: name=Foo, module=foo
+  | { kind: "ImportDefault"; name: string; module: string }
+  // `import * as Foo from 'foo'`: name=Foo, module=foo
+  | { kind: "ImportNamespace"; name: string; module: string }
+  // `import {bar as baz} from 'foo'`: name=baz, module=foo, imported=bar
+  | {
+      kind: "ImportSpecifier";
+      name: string;
+      module: string;
+      imported: string;
+    }
+  // let, const, function, etc declared in the module but outside the current component/hook
+  | { kind: "ModuleLocal"; name: string }
+  // an unresolved binding
+  | { kind: "Global"; name: string };
 
 // Represents a user-defined variable (has a name) or a temporary variable (no name).
 export type Identifier = {

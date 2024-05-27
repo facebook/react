@@ -727,7 +727,7 @@ describe('ReactErrorBoundaries', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.mock.calls[0][2]).toContain(
-        'The above error occurred in the <BrokenRender> component:',
+        'The above error occurred in the <BrokenRender> component',
       );
     }
 

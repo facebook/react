@@ -61,7 +61,10 @@ import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
-import {currentOwner} from 'react-reconciler/src/ReactFiberCurrentOwner';
+import {
+  current as currentOwner,
+  isRendering,
+} from 'react-reconciler/src/ReactCurrentFiber';
 
 import assign from 'shared/assign';
 
@@ -343,7 +346,7 @@ export function findDOMNode(
 ): null | Element | Text {
   if (__DEV__) {
     const owner = currentOwner;
-    if (owner !== null && owner.stateNode !== null) {
+    if (owner !== null && isRendering && owner.stateNode !== null) {
       const warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
       if (!warnedAboutRefsInRender) {
         console.error(
