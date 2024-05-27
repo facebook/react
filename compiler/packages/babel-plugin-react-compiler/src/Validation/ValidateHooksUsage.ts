@@ -444,9 +444,9 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
           if (hookKind != null) {
             errors.pushErrorDetail(
               new CompilerErrorDetail({
-                severity: ErrorSeverity.InvalidReact,
+                severity: ErrorSeverity.Todo,
                 reason:
-                  "Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
+                  "Nested Components are not yet supported. Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
                 loc: callee.loc,
                 description: `Cannot call ${hookKind} within a function component`,
                 suggestions: null,

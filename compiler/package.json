@@ -29,7 +29,9 @@
     "postinstall": "perl -p -i -e 's/react\\.element/react.transitional.element/' packages/snap/node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' packages/babel-plugin-react-compiler/node_modules/react-dom/cjs/react-dom-test-utils.development.js",
     "npm:publish": "node scripts/release/publish-manual"
   },
-  "dependencies": {},
+  "dependencies": {
+    "glob": "^10.4.1"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
