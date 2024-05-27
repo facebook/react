@@ -30,7 +30,7 @@ export function writeOutputToString(
 ## Input
 
 ${wrapWithTripleBackticks(input, "javascript")}
-`; // trailing newline + space internional
+`; // trailing newline + space intentional
 
   if (compilerOutput != null) {
     result += `
