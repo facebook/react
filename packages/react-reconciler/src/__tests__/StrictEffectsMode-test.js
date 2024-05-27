@@ -989,7 +989,7 @@ describe('StrictEffectsMode', () => {
           Scheduler.log('passive destroy ' + props.name + ': ' + state);
           log.push('passive destroy ' + props.name + ': ' + state);
         };
-      }, []);
+      }, [props.name, state]);
       log.push('PassiveEffect rendered ' + props.name + ': ' + state);
       Scheduler.log('PassiveEffect rendered ' + props.name + ': ' + state);
     }
@@ -1045,6 +1045,10 @@ describe('StrictEffectsMode', () => {
     assertLog([
       'PassiveEffect rendered first: 1',
       'PassiveEffect rendered second: 1',
+      'passive destroy first: 0',
+      'passive destroy second: 0',
+      'passive create first: 1',
+      'passive create second: 1',
     ]);
     if (__DEV__) {
       expect(log).toMatchInlineSnapshot(`
@@ -1053,6 +1057,10 @@ describe('StrictEffectsMode', () => {
           "PassiveEffect rendered first: 1",
           "PassiveEffect rendered second: 1",
           "PassiveEffect rendered second: 1",
+          "passive destroy first: 0",
+          "passive destroy second: 0",
+          "passive create first: 1",
+          "passive create second: 1",
         ]
       `);
     } else {
@@ -1060,6 +1068,10 @@ describe('StrictEffectsMode', () => {
         [
           "PassiveEffect rendered first: 1",
           "PassiveEffect rendered second: 1",
+          "passive destroy first: 0",
+          "passive destroy second: 0",
+          "passive create first: 1",
+          "passive create second: 1",
         ]
       `);
     }
@@ -1085,6 +1097,10 @@ describe('StrictEffectsMode', () => {
     assertLog([
       'PassiveEffect rendered first: 1',
       'PassiveEffect rendered second: 1',
+      'passive destroy second: 1',
+      'passive destroy first: 1',
+      'passive create first: 1',
+      'passive create second: 1',
     ]);
     if (__DEV__) {
       expect(log).toMatchInlineSnapshot(`
@@ -1093,7 +1109,11 @@ describe('StrictEffectsMode', () => {
           "PassiveEffect rendered first: 1",
           "PassiveEffect rendered second: 1",
           "PassiveEffect rendered second: 1",
-          "passive destroy first: 0",
+          "passive destroy second: 1",
+          "passive destroy first: 1",
+          "passive create first: 1",
+          "passive create second: 1",
+          "passive destroy second: 1",
           "passive create second: 1",
         ]
       `);
@@ -1102,6 +1122,10 @@ describe('StrictEffectsMode', () => {
         [
           "PassiveEffect rendered first: 1",
           "PassiveEffect rendered second: 1",
+          "passive destroy second: 1",
+          "passive destroy first: 1",
+          "passive create first: 1",
+          "passive create second: 1",
         ]
       `);
     }
