@@ -18,8 +18,6 @@ describe('ReactFiberLane', () => {
     ReactFiberLane = require('../ReactFiberLane');
   });
 
-  
-
   describe('includesNonIdleWork', () => {
     const nonIdleLaneNames = [
       'DefaultHydrationLane',
