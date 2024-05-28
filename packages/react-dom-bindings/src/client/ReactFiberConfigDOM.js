@@ -2573,7 +2573,7 @@ export function acquireResource(
   hoistableRoot: HoistableRoot,
   resource: Resource,
   props: any,
-): null | Instance {
+): void {
   resource.count++;
   if (resource.instance === null) {
     switch (resource.type) {
@@ -2587,7 +2587,7 @@ export function acquireResource(
         if (instance) {
           resource.instance = instance;
           markNodeAsHoistable(instance);
-          return instance;
+          return;
         }
 
         const styleProps = styleTagPropsFromRawProps(props);
@@ -2604,7 +2604,7 @@ export function acquireResource(
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
 
-        return instance;
+        return;
       }
       case 'stylesheet': {
         // This typing is enforce by `getResource`. If we change the logic
@@ -2621,7 +2621,7 @@ export function acquireResource(
           resource.state.loading |= Inserted;
           resource.instance = instance;
           markNodeAsHoistable(instance);
-          return instance;
+          return;
         }
 
         const stylesheetProps = stylesheetPropsFromRawProps(props);
@@ -2644,7 +2644,7 @@ export function acquireResource(
         insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
         resource.instance = instance;
 
-        return instance;
+        return;
       }
       case 'script': {
         // This typing is enforce by `getResource`. If we change the logic
@@ -2660,7 +2660,7 @@ export function acquireResource(
         if (instance) {
           resource.instance = instance;
           markNodeAsHoistable(instance);
-          return instance;
+          return;
         }
 
         let scriptProps = borrowedScriptProps;
@@ -2678,10 +2678,10 @@ export function acquireResource(
         (ownerDocument.head: any).appendChild(instance);
         resource.instance = instance;
 
-        return instance;
+        return;
       }
       case 'void': {
-        return null;
+        return;
       }
       default: {
         throw new Error(
@@ -2712,7 +2712,7 @@ export function acquireResource(
       insertStylesheet(instance, qualifiedProps.precedence, hoistableRoot);
     }
   }
-  return resource.instance;
+  return;
 }
 
 export function releaseResource(resource: Resource): void {

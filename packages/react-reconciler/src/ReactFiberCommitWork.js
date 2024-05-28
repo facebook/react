@@ -1506,12 +1506,20 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
     while (true) {
       if (
         node.tag === HostComponent ||
-        (supportsResources ? node.tag === HostHoistable : false) ||
+        (supportsResources
+          ? // HostHoistables don't have stateNodes when they represent
+            // Resources. We only want to unhide instances, not Resources
+            // because only instances are semantically bound to the tree
+            node.tag === HostHoistable && node.stateNode
+          : false) ||
         (supportsSingletons ? node.tag === HostSingleton : false)
       ) {
         if (hostSubtreeRoot === null) {
           hostSubtreeRoot = node;
           try {
+            // If we did not guard HostHoistable above this instance could
+            // be null. We don't do the check here to avoid adding overhead
+            // when traversing HostComponent and HostSingleton fibers
             const instance = node.stateNode;
             if (isHidden) {
               hideInstance(instance);
@@ -2628,69 +2636,80 @@ function commitMutationEffectsOnFiber(
         }
 
         if (flags & Update) {
-          const currentResource =
-            current !== null ? current.memoizedState : null;
-          const newResource = finishedWork.memoizedState;
-          if (current === null) {
-            // We are mounting a new HostHoistable Fiber. We fork the mount
-            // behavior based on whether this instance is a Hoistable Instance
-            // or a Hoistable Resource
-            if (newResource === null) {
-              if (finishedWork.stateNode === null) {
-                finishedWork.stateNode = hydrateHoistable(
+          const resource = finishedWork.memoizedState;
+          try {
+            if (current === null) {
+              // We are mounting a new HostHoistable Fiber. We fork the mount
+              // behavior based on whether this instance is a Hoistable Instance
+              // or a Hoistable Resource
+              if (resource === null) {
+                if (finishedWork.stateNode === null) {
+                  finishedWork.stateNode = hydrateHoistable(
+                    hoistableRoot,
+                    finishedWork.type,
+                    finishedWork.memoizedProps,
+                    finishedWork,
+                  );
+                } else {
+                  mountHoistable(
+                    hoistableRoot,
+                    finishedWork.type,
+                    finishedWork.stateNode,
+                  );
+                }
+              } else {
+                acquireResource(
                   hoistableRoot,
-                  finishedWork.type,
+                  resource,
                   finishedWork.memoizedProps,
-                  finishedWork,
+                );
+              }
+            } else {
+              // We are updating
+              if (resource) {
+                // We are a Resource
+                if (current.stateNode !== null) {
+                  // We used to be an Instance and need to clean up
+                  unmountHoistable(current.stateNode);
+                } else if (current.memoizedState) {
+                  // We used to be a different resource and need to release
+                  releaseResource(current.memoizedState);
+                }
+
+                acquireResource(
+                  hoistableRoot,
+                  resource,
+                  finishedWork.memoizedProps,
                 );
               } else {
-                mountHoistable(
-                  hoistableRoot,
-                  finishedWork.type,
-                  finishedWork.stateNode,
-                );
+                // We are an Instance
+                if (current.memoizedState) {
+                  // we used to be a Resource and need to release
+                  releaseResource(current.memoizedState);
+                }
+
+                if (current.memoizedState) {
+                  // While this is an update the finishedWork stateNode has not
+                  // yet ever been inserted so we mount it now
+                  mountHoistable(
+                    hoistableRoot,
+                    finishedWork.type,
+                    finishedWork.stateNode,
+                  );
+                } else {
+                  // update the instance
+                  commitUpdate(
+                    finishedWork.stateNode,
+                    finishedWork.type,
+                    current.memoizedProps,
+                    finishedWork.memoizedProps,
+                    finishedWork,
+                  );
+                }
               }
-            } else {
-              finishedWork.stateNode = acquireResource(
-                hoistableRoot,
-                newResource,
-                finishedWork.memoizedProps,
-              );
             }
-          } else if (currentResource !== newResource) {
-            // We are moving to or from Hoistable Resource, or between different Hoistable Resources
-            if (currentResource === null) {
-              if (current.stateNode !== null) {
-                unmountHoistable(current.stateNode);
-              }
-            } else {
-              releaseResource(currentResource);
-            }
-            if (newResource === null) {
-              mountHoistable(
-                hoistableRoot,
-                finishedWork.type,
-                finishedWork.stateNode,
-              );
-            } else {
-              acquireResource(
-                hoistableRoot,
-                newResource,
-                finishedWork.memoizedProps,
-              );
-            }
-          } else if (newResource === null && finishedWork.stateNode !== null) {
-            try {
-              commitUpdate(
-                finishedWork.stateNode,
-                finishedWork.type,
-                current.memoizedProps,
-                finishedWork.memoizedProps,
-                finishedWork,
-              );
-            } catch (error) {
-              captureCommitPhaseError(finishedWork, finishedWork.return, error);
-            }
+          } catch (error) {
+            captureCommitPhaseError(finishedWork, finishedWork.return, error);
           }
         }
         return;

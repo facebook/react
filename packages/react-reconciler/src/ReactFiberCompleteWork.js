@@ -1039,9 +1039,6 @@ function completeWork(
           markUpdate(workInProgress);
           if (nextResource !== null) {
             // This is a Hoistable Resource
-
-            // This must come at the very end of the complete phase.
-            bubbleProperties(workInProgress);
             preloadResourceAndSuspendIfNeeded(
               workInProgress,
               nextResource,
@@ -1049,36 +1046,26 @@ function completeWork(
               newProps,
               renderLanes,
             );
-            return null;
           } else {
             // This is a Hoistable Instance
-
-            // This must come at the very end of the complete phase.
-            bubbleProperties(workInProgress);
             preloadInstanceAndSuspendIfNeeded(
               workInProgress,
               type,
               newProps,
               renderLanes,
             );
-            return null;
           }
         } else {
           // We are updating.
-          const currentResource = current.memoizedState;
-          if (nextResource !== currentResource) {
-            // We are transitioning to, from, or between Hoistable Resources
-            // and require an update
-            markUpdate(workInProgress);
-          }
           if (nextResource !== null) {
             // This is a Hoistable Resource
-            // This must come at the very end of the complete phase.
+            const currentResource = current.memoizedState;
 
-            bubbleProperties(workInProgress);
+            // This must come at the very end of the complete phase.
             if (nextResource === currentResource) {
               workInProgress.flags &= ~MaySuspendCommit;
             } else {
+              markUpdate(workInProgress);
               preloadResourceAndSuspendIfNeeded(
                 workInProgress,
                 nextResource,
@@ -1087,9 +1074,9 @@ function completeWork(
                 renderLanes,
               );
             }
-            return null;
           } else {
             // This is a Hoistable Instance
+
             // We may have props to update on the Hoistable instance.
             if (supportsMutation) {
               const oldProps = current.memoizedProps;
@@ -1108,17 +1095,17 @@ function completeWork(
               );
             }
 
-            // This must come at the very end of the complete phase.
-            bubbleProperties(workInProgress);
             preloadInstanceAndSuspendIfNeeded(
               workInProgress,
               type,
               newProps,
               renderLanes,
             );
-            return null;
           }
         }
+        // This must come at the very end of the complete phase.
+        bubbleProperties(workInProgress);
+        return null;
       }
       // Fall through
     }

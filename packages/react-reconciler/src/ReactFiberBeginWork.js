@@ -1705,6 +1705,27 @@ function updateHostHoistable(
         workInProgress,
       );
     }
+  } else {
+    // we're updating
+    if (current.memoizedState) {
+      if (resource === null) {
+        // we must be transitioning to the instance mode and need to create
+        // an instance
+        workInProgress.stateNode = createHoistableInstance(
+          workInProgress.type,
+          workInProgress.pendingProps,
+          getRootHostContainer(),
+          workInProgress,
+        );
+      }
+    } else {
+      if (resource) {
+        // we must be transitioning to the instance mode and need to void
+        // the previous stateNode. It will be unmounted during the commit
+        // we just null it on the workInProgress so it doesn't carry over
+        workInProgress.stateNode = null;
+      }
+    }
   }
 
   // Resources never have reconciler managed children. It is possible for

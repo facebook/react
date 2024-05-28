@@ -5230,6 +5230,103 @@ body {
     );
   });
 
+  it('can update link tags from Resource to instance and back', async () => {
+    const root = ReactDOMClient.createRoot(container);
+
+    root.render(
+      <div>
+        hello
+        <link rel="inst" href="a" />
+        <link rel="inst" href="b" />
+        <link rel="stylesheet" href="c" precedence="default" />
+      </div>,
+    );
+    await waitForAll([]);
+    loadPreloads();
+    loadStylesheets();
+    await assertLog(['load preload: c', 'load stylesheet: c']);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="c" data-precedence="default" />
+          <link rel="preload" href="c" as="style" />
+          <link rel="inst" href="a" />
+          <link rel="inst" href="b" />
+        </head>
+        <body>
+          <div id="container">
+            <div>hello</div>
+          </div>
+        </body>
+      </html>,
+    );
+
+    root.render(
+      <div>
+        hello
+        <link rel="stylesheet" href="d" precedence="default" />
+        <link rel="inst" href="e" />
+        <link rel="inst" href="f" />
+      </div>,
+    );
+    await waitForAll([]);
+    loadPreloads();
+    loadStylesheets();
+    await assertLog(['load preload: d', 'load stylesheet: d']);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="c" data-precedence="default" />
+          <link rel="stylesheet" href="d" data-precedence="default" />
+          <link rel="preload" href="c" as="style" />
+          <link rel="inst" href="e" />
+          <link rel="preload" href="d" as="style" />
+          <link rel="inst" href="f" />
+        </head>
+        <body>
+          <div id="container">
+            <div>hello</div>
+          </div>
+        </body>
+      </html>,
+    );
+
+    root.render(
+      <div>
+        hello
+        <link rel="inst" href="g" />
+        <link rel="inst" href="h" />
+        <link rel="stylesheet" href="i" precedence="default" />
+      </div>,
+    );
+    await waitForAll([]);
+    loadPreloads();
+    loadStylesheets();
+    await assertLog(['load preload: i', 'load stylesheet: i']);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="c" data-precedence="default" />
+          <link rel="stylesheet" href="d" data-precedence="default" />
+          <link rel="stylesheet" href="i" data-precedence="default" />
+          <link rel="preload" href="c" as="style" />
+          <link rel="inst" href="h" />
+          <link rel="preload" href="d" as="style" />
+          <link rel="preload" href="i" as="style" />
+          <link rel="inst" href="g" />
+        </head>
+        <body>
+          <div id="container">
+            <div>hello</div>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
