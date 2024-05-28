@@ -21,41 +21,19 @@ describe('ReactNativeAttributePayload.create', () => {
   });
 
   it('should ignore fields that are set to undefined', () => {
+    expect(create({}, {a: true})).toEqual(null);
+    expect(create({a: undefined}, {a: true})).toEqual(null);
+    expect(create({a: undefined, b: undefined}, {a: true, b: true})).toEqual(
+      null,
+    );
     expect(
-      create(
-        {},
-        {a: true},
-      ),
+      create({a: undefined, b: undefined, c: 1}, {a: true, b: true}),
     ).toEqual(null);
     expect(
-      create(
-        {a: undefined},
-        {a: true},
-      ),
-    ).toEqual(null);
-    expect(
-      create(
-        {a: undefined, b: undefined},
-        {a: true, b: true},
-      ),
-    ).toEqual(null);
-    expect(
-      create(
-        {a: undefined, b: undefined, c: 1},
-        {a: true, b: true},
-      ),
-    ).toEqual(null);
-    expect(
-      create(
-        {a: undefined, b: undefined, c: 1},
-        {a: true, b: true, c: true},
-      ),
+      create({a: undefined, b: undefined, c: 1}, {a: true, b: true, c: true}),
     ).toEqual({c: 1});
     expect(
-      create(
-        {a: 1, b: undefined, c: 2},
-        {a: true, b: true, c: true},
-      ),
+      create({a: 1, b: undefined, c: 2}, {a: true, b: true, c: true}),
     ).toEqual({a: 1, c: 2});
   });
 
@@ -65,33 +43,21 @@ describe('ReactNativeAttributePayload.create', () => {
 
   it('should not use the diff attribute', () => {
     const diffA = jest.fn();
-    expect(
-      create({a: [2]}, {a: {diff: diffA}}),
-    ).toEqual({a: [2]});
+    expect(create({a: [2]}, {a: {diff: diffA}})).toEqual({a: [2]});
     expect(diffA).not.toBeCalled();
   });
 
   it('should use the process attribute', () => {
-    const processA = jest.fn((a) => a + 1);
-    expect(
-      create({a: 2}, {a: {process: processA}}),
-    ).toEqual({a: 3});
+    const processA = jest.fn(a => a + 1);
+    expect(create({a: 2}, {a: {process: processA}})).toEqual({a: 3});
     expect(processA).toBeCalledWith(2);
   });
 
   it('should work with undefined styles', () => {
-    expect(
-      create(
-        {style: undefined},
-        {style: {b: true}},
-      ),
-    ).toEqual(null);
-    expect(
-      create(
-        {style: {a: '#ffffff', b: 1}},
-        {style: {b: true}},
-      ),
-    ).toEqual({b: 1});
+    expect(create({style: undefined}, {style: {b: true}})).toEqual(null);
+    expect(create({style: {a: '#ffffff', b: 1}}, {style: {b: true}})).toEqual({
+      b: 1,
+    });
   });
 
   it('should flatten nested styles and predefined styles', () => {
@@ -99,9 +65,7 @@ describe('ReactNativeAttributePayload.create', () => {
     expect(
       create({someStyle: [{foo: 1}, {bar: 2}]}, validStyleAttribute),
     ).toEqual({foo: 1, bar: 2});
-    expect(
-      create({}, validStyleAttribute),
-    ).toEqual(null);
+    expect(create({}, validStyleAttribute)).toEqual(null);
     const barStyle = {
       bar: 3,
     };
@@ -114,17 +78,17 @@ describe('ReactNativeAttributePayload.create', () => {
   });
 
   it('should not flatten nested props if attribute config is a primitive or only has diff/process', () => {
+    expect(create({a: {foo: 1, bar: 2}}, {a: true})).toEqual({
+      a: {foo: 1, bar: 2},
+    });
+    expect(create({a: [{foo: 1}, {bar: 2}]}, {a: true})).toEqual({
+      a: [{foo: 1}, {bar: 2}],
+    });
+    expect(create({a: {foo: 1, bar: 2}}, {a: {diff: a => a}})).toEqual({
+      a: {foo: 1, bar: 2},
+    });
     expect(
-      create({a: {foo: 1, bar: 2}}, {a: true}),
-    ).toEqual({a: {foo: 1, bar: 2}});
-    expect(
-      create({a: [{foo: 1}, {bar: 2}]}, {a: true}),
-    ).toEqual({a: [{foo: 1}, {bar: 2}]});
-    expect(
-      create({a: {foo: 1, bar: 2}}, {a: {diff: (a) => a}}),
-    ).toEqual({a: {foo: 1, bar: 2}});
-    expect(
-      create({a: [{foo: 1}, {bar: 2}]}, {a: {diff: (a) => a, process: (a) => a}}),
+      create({a: [{foo: 1}, {bar: 2}]}, {a: {diff: a => a, process: a => a}}),
     ).toEqual({a: [{foo: 1}, {bar: 2}]});
   });
 
@@ -142,7 +106,9 @@ describe('ReactNativeAttributePayload.create', () => {
     expect(create({foo: 4, style: {foo: null}}, validAttributes)).toEqual({
       foo: null, // this should ideally be null.
     });
-    expect(create({foo: 4, style: [{foo: null}, {foo: 5}]}, validAttributes)).toEqual({
+    expect(
+      create({foo: 4, style: [{foo: null}, {foo: 5}]}, validAttributes),
+    ).toEqual({
       foo: 5,
     });
   });
