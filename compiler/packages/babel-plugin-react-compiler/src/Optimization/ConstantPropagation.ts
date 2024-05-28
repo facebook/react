@@ -327,6 +327,8 @@ function evaluateInstruction(
           case "+": {
             if (typeof lhs === "number" && typeof rhs === "number") {
               result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
+            } else if (typeof lhs === "string" && typeof rhs === "string") {
+              result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
             }
             break;
           }
