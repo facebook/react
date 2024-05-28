@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<253a44e83fba3348fd4685279485108a>>
+ * @generated SignedSource<<c874312993c7138b93be21b5b2efadd0>>
  */
 
 "use strict";
@@ -11406,6 +11406,13 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     "number" === typeof instance.tag &&
     traverseOwnerTreeUp(hierarchy, instance);
 }
+var isomorphicReactPackageVersion = React.version;
+if ("19.0.0-rc-3983b44c" !== isomorphicReactPackageVersion)
+  throw Error(
+    'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
+      (isomorphicReactPackageVersion +
+        "\n  - react-native-renderer:  19.0.0-rc-3983b44c\nLearn more: https://react.dev/warnings/version-mismatch")
+  );
 if (
   "function" !==
   typeof ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog
@@ -11454,7 +11461,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1273 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-d745ad21",
+    version: "19.0.0-rc-3983b44c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11510,7 +11517,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-d745ad21"
+  reconcilerVersion: "19.0.0-rc-3983b44c"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

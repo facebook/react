@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3dbcb35ed104bc31d027dfdf6f5f8da0>>
+ * @generated SignedSource<<99a2a7f7d6e7d571646aa72aabedfaa0>>
  */
 
 'use strict';
@@ -26553,7 +26553,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-7e1b1d14';
+var ReactVersion = '19.0.0-rc-c2f0c7bb';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -27465,6 +27465,12 @@ function getInspectorDataForViewAtPoint(findNodeHandle, inspectedView, locationX
       return;
     }
   }
+}
+
+var isomorphicReactPackageVersion = React.version;
+
+if (isomorphicReactPackageVersion !== ReactVersion) {
+  throw new Error('Incompatible React versions: The "react" and "react-native-renderer" packages must ' + 'have the exact same version. Instead got:\n' + ("  - react:                  " + isomorphicReactPackageVersion + "\n") + ("  - react-native-renderer:  " + ReactVersion + "\n") + 'Learn more: https://react.dev/warnings/version-mismatch');
 }
 
 if (typeof ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog !== 'function') {
