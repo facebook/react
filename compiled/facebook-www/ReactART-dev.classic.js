@@ -60,7 +60,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-classic-1c397ec5';
+var ReactVersion = '19.0.0-www-classic-15a88fe3';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -9255,26 +9255,26 @@ function dispatchActionState(fiber, actionQueue, setPendingState, setState, payl
     // it immediately.
     var newLast = {
       payload: payload,
+      action: actionQueue.action,
       next: null // circular
 
     };
     newLast.next = actionQueue.pending = newLast;
-    runActionStateAction(actionQueue, setPendingState, setState, payload);
+    runActionStateAction(actionQueue, setPendingState, setState, newLast);
   } else {
     // There's already an action running. Add to the queue.
     var first = last.next;
     var _newLast = {
       payload: payload,
+      action: actionQueue.action,
       next: first
     };
     actionQueue.pending = last.next = _newLast;
   }
 }
 
-function runActionStateAction(actionQueue, setPendingState, setState, payload) {
-  var action = actionQueue.action;
-  var prevState = actionQueue.state; // This is a fork of startTransition
-
+function runActionStateAction(actionQueue, setPendingState, setState, node) {
+  // This is a fork of startTransition
   var prevTransition = ReactSharedInternals.T;
   var currentTransition = {};
   ReactSharedInternals.T = currentTransition;
@@ -9285,7 +9285,16 @@ function runActionStateAction(actionQueue, setPendingState, setState, payload) {
   // This will be reverted automatically when all actions are finished.
 
 
-  setPendingState(true);
+  setPendingState(true); // `node.action` represents the action function at the time it was dispatched.
+  // If this action was queued, it might be stale, i.e. it's not necessarily the
+  // most current implementation of the action, stored on `actionQueue`. This is
+  // intentional. The conceptual model for queued actions is that they are
+  // queued in a remote worker; the dispatch happens immediately, only the
+  // execution is delayed.
+
+  var action = node.action;
+  var payload = node.payload;
+  var prevState = actionQueue.state;
 
   try {
     var returnValue = action(prevState, payload);
@@ -9358,7 +9367,7 @@ function finishRunningActionStateAction(actionQueue, setPendingState, setState) 
       var next = first.next;
       last.next = next; // Run the next action.
 
-      runActionStateAction(actionQueue, setPendingState, setState, next.payload);
+      runActionStateAction(actionQueue, setPendingState, setState, next);
     }
   }
 }

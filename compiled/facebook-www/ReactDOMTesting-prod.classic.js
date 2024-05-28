@@ -3822,21 +3822,22 @@ function dispatchActionState(
   if (isRenderPhaseUpdate(fiber)) throw Error(formatProdErrorMessage(485));
   fiber = actionQueue.pending;
   null === fiber
-    ? ((fiber = { payload: payload, next: null }),
-      (fiber.next = actionQueue.pending = fiber),
+    ? ((payload = { payload: payload, action: actionQueue.action, next: null }),
+      (payload.next = actionQueue.pending = payload),
       runActionStateAction(actionQueue, setPendingState, setState, payload))
     : (actionQueue.pending = fiber.next =
-        { payload: payload, next: fiber.next });
+        { payload: payload, action: actionQueue.action, next: fiber.next });
 }
-function runActionStateAction(actionQueue, setPendingState, setState, payload) {
-  var action = actionQueue.action,
-    prevState = actionQueue.state,
-    prevTransition = ReactSharedInternals.T,
+function runActionStateAction(actionQueue, setPendingState, setState, node) {
+  var prevTransition = ReactSharedInternals.T,
     currentTransition = {};
   ReactSharedInternals.T = currentTransition;
   setPendingState(!0);
+  var action = node.action;
+  node = node.payload;
+  var prevState = actionQueue.state;
   try {
-    var returnValue = action(prevState, payload),
+    var returnValue = action(prevState, node),
       onStartTransitionFinish = ReactSharedInternals.S;
     null !== onStartTransitionFinish &&
       onStartTransitionFinish(currentTransition, returnValue);
@@ -3883,12 +3884,7 @@ function finishRunningActionStateAction(
       ? (actionQueue.pending = null)
       : ((first = first.next),
         (last.next = first),
-        runActionStateAction(
-          actionQueue,
-          setPendingState,
-          setState,
-          first.payload
-        ));
+        runActionStateAction(actionQueue, setPendingState, setState, first));
   }
 }
 function actionStateReducer(oldState, newState) {
@@ -17378,12 +17374,12 @@ function getCrossOriginStringAs(as, input) {
     return "use-credentials" === input ? input : "";
 }
 var isomorphicReactPackageVersion$jscomp$inline_1783 = React.version;
-if ("19.0.0-www-classic-94a3ba7f" !== isomorphicReactPackageVersion$jscomp$inline_1783)
+if ("19.0.0-www-classic-1dd981af" !== isomorphicReactPackageVersion$jscomp$inline_1783)
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1783,
-      "19.0.0-www-classic-94a3ba7f"
+      "19.0.0-www-classic-1dd981af"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17402,7 +17398,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1790 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-94a3ba7f",
+  version: "19.0.0-www-classic-1dd981af",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2239 = {
@@ -17432,7 +17428,7 @@ var internals$jscomp$inline_2239 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-94a3ba7f"
+  reconcilerVersion: "19.0.0-www-classic-1dd981af"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2240 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18087,4 +18083,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-94a3ba7f";
+exports.version = "19.0.0-www-classic-1dd981af";
