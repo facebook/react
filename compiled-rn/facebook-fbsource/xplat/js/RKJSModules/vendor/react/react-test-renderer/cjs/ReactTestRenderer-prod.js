@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c50a413ebb22fd09d88e5c0cbdee55c9>>
+ * @generated SignedSource<<b82ab7c9a033e33f8860c7aed3aa5cae>>
  */
 
 "use strict";
@@ -2773,21 +2773,22 @@ function dispatchActionState(
     throw Error("Cannot update form state while rendering.");
   fiber = actionQueue.pending;
   null === fiber
-    ? ((fiber = { payload: payload, next: null }),
-      (fiber.next = actionQueue.pending = fiber),
+    ? ((payload = { payload: payload, action: actionQueue.action, next: null }),
+      (payload.next = actionQueue.pending = payload),
       runActionStateAction(actionQueue, setPendingState, setState, payload))
     : (actionQueue.pending = fiber.next =
-        { payload: payload, next: fiber.next });
+        { payload: payload, action: actionQueue.action, next: fiber.next });
 }
-function runActionStateAction(actionQueue, setPendingState, setState, payload) {
-  var action = actionQueue.action,
-    prevState = actionQueue.state,
-    prevTransition = ReactSharedInternals.T,
+function runActionStateAction(actionQueue, setPendingState, setState, node) {
+  var prevTransition = ReactSharedInternals.T,
     currentTransition = {};
   ReactSharedInternals.T = currentTransition;
   setPendingState(!0);
+  var action = node.action;
+  node = node.payload;
+  var prevState = actionQueue.state;
   try {
-    var returnValue = action(prevState, payload),
+    var returnValue = action(prevState, node),
       onStartTransitionFinish = ReactSharedInternals.S;
     null !== onStartTransitionFinish &&
       onStartTransitionFinish(currentTransition, returnValue);
@@ -2834,12 +2835,7 @@ function finishRunningActionStateAction(
       ? (actionQueue.pending = null)
       : ((first = first.next),
         (last.next = first),
-        runActionStateAction(
-          actionQueue,
-          setPendingState,
-          setState,
-          first.payload
-        ));
+        runActionStateAction(actionQueue, setPendingState, setState, first));
   }
 }
 function actionStateReducer(oldState, newState) {
@@ -9302,7 +9298,7 @@ var devToolsConfig$jscomp$inline_1047 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-rc-96bb2a1a",
+  version: "19.0.0-rc-135fcf29",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1234 = {
@@ -9333,7 +9329,7 @@ var internals$jscomp$inline_1234 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-96bb2a1a"
+  reconcilerVersion: "19.0.0-rc-135fcf29"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1235 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

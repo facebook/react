@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8bf9b34548f4c8e979ea4fc8b49091e3>>
+ * @generated SignedSource<<f9a5a11486f200f08e59ce3e06fc28a3>>
  */
 
 "use strict";
@@ -4275,21 +4275,22 @@ function dispatchActionState(
     throw Error("Cannot update form state while rendering.");
   fiber = actionQueue.pending;
   null === fiber
-    ? ((fiber = { payload: payload, next: null }),
-      (fiber.next = actionQueue.pending = fiber),
+    ? ((payload = { payload: payload, action: actionQueue.action, next: null }),
+      (payload.next = actionQueue.pending = payload),
       runActionStateAction(actionQueue, setPendingState, setState, payload))
     : (actionQueue.pending = fiber.next =
-        { payload: payload, next: fiber.next });
+        { payload: payload, action: actionQueue.action, next: fiber.next });
 }
-function runActionStateAction(actionQueue, setPendingState, setState, payload) {
-  var action = actionQueue.action,
-    prevState = actionQueue.state,
-    prevTransition = ReactSharedInternals.T,
+function runActionStateAction(actionQueue, setPendingState, setState, node) {
+  var prevTransition = ReactSharedInternals.T,
     currentTransition = {};
   ReactSharedInternals.T = currentTransition;
   setPendingState(!0);
+  var action = node.action;
+  node = node.payload;
+  var prevState = actionQueue.state;
   try {
-    var returnValue = action(prevState, payload),
+    var returnValue = action(prevState, node),
       onStartTransitionFinish = ReactSharedInternals.S;
     null !== onStartTransitionFinish &&
       onStartTransitionFinish(currentTransition, returnValue);
@@ -4336,12 +4337,7 @@ function finishRunningActionStateAction(
       ? (actionQueue.pending = null)
       : ((first = first.next),
         (last.next = first),
-        runActionStateAction(
-          actionQueue,
-          setPendingState,
-          setState,
-          first.payload
-        ));
+        runActionStateAction(actionQueue, setPendingState, setState, first));
   }
 }
 function actionStateReducer(oldState, newState) {
@@ -11264,7 +11260,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1205 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-30caa758",
+    version: "19.0.0-rc-1abc9c11",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11320,7 +11316,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-30caa758"
+  reconcilerVersion: "19.0.0-rc-1abc9c11"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

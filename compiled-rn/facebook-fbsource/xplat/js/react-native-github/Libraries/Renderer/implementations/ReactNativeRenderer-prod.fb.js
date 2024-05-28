@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<247c643cf9a4130707253f9a40761f49>>
+ * @generated SignedSource<<d07de192b2df40db5d44ec6c2d08edb2>>
  */
 
 "use strict";
@@ -4176,21 +4176,22 @@ function dispatchActionState(
     throw Error("Cannot update form state while rendering.");
   fiber = actionQueue.pending;
   null === fiber
-    ? ((fiber = { payload: payload, next: null }),
-      (fiber.next = actionQueue.pending = fiber),
+    ? ((payload = { payload: payload, action: actionQueue.action, next: null }),
+      (payload.next = actionQueue.pending = payload),
       runActionStateAction(actionQueue, setPendingState, setState, payload))
     : (actionQueue.pending = fiber.next =
-        { payload: payload, next: fiber.next });
+        { payload: payload, action: actionQueue.action, next: fiber.next });
 }
-function runActionStateAction(actionQueue, setPendingState, setState, payload) {
-  var action = actionQueue.action,
-    prevState = actionQueue.state,
-    prevTransition = ReactSharedInternals.T,
+function runActionStateAction(actionQueue, setPendingState, setState, node) {
+  var prevTransition = ReactSharedInternals.T,
     currentTransition = {};
   ReactSharedInternals.T = currentTransition;
   setPendingState(!0);
+  var action = node.action;
+  node = node.payload;
+  var prevState = actionQueue.state;
   try {
-    var returnValue = action(prevState, payload),
+    var returnValue = action(prevState, node),
       onStartTransitionFinish = ReactSharedInternals.S;
     null !== onStartTransitionFinish &&
       onStartTransitionFinish(currentTransition, returnValue);
@@ -4237,12 +4238,7 @@ function finishRunningActionStateAction(
       ? (actionQueue.pending = null)
       : ((first = first.next),
         (last.next = first),
-        runActionStateAction(
-          actionQueue,
-          setPendingState,
-          setState,
-          first.payload
-        ));
+        runActionStateAction(actionQueue, setPendingState, setState, first));
   }
 }
 function actionStateReducer(oldState, newState) {
@@ -10700,11 +10696,11 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     traverseOwnerTreeUp(hierarchy, instance);
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-rc-28c9760f" !== isomorphicReactPackageVersion)
+if ("19.0.0-rc-1573a96d" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-rc-28c9760f\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-rc-1573a96d\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -10754,7 +10750,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1192 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-28c9760f",
+    version: "19.0.0-rc-1573a96d",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10797,7 +10793,7 @@ var internals$jscomp$inline_1439 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-28c9760f"
+  reconcilerVersion: "19.0.0-rc-1573a96d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1440 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
