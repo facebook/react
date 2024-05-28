@@ -1966,13 +1966,15 @@ type ActionStateQueue<S, P> = {
   action: (Awaited<S>, P) => S,
   // This is a circular linked list of pending action payloads. It incudes the
   // action that is currently running.
-  pending: ActionStateQueueNode<P> | null,
+  pending: ActionStateQueueNode<S, P> | null,
 };
 
-type ActionStateQueueNode<P> = {
+type ActionStateQueueNode<S, P> = {
   payload: P,
+  // This is the action implementation at the time it was dispatched.
+  action: (Awaited<S>, P) => S,
   // This is never null because it's part of a circular linked list.
-  next: ActionStateQueueNode<P>,
+  next: ActionStateQueueNode<S, P>,
 };
 
 function dispatchActionState<S, P>(
@@ -1989,8 +1991,9 @@ function dispatchActionState<S, P>(
   if (last === null) {
     // There are no pending actions; this is the first one. We can run
     // it immediately.
-    const newLast: ActionStateQueueNode<P> = {
+    const newLast: ActionStateQueueNode<S, P> = {
       payload,
+      action: actionQueue.action,
       next: (null: any), // circular
     };
     newLast.next = actionQueue.pending = newLast;
@@ -1999,13 +2002,14 @@ function dispatchActionState<S, P>(
       actionQueue,
       (setPendingState: any),
       (setState: any),
-      payload,
+      newLast,
     );
   } else {
     // There's already an action running. Add to the queue.
     const first = last.next;
-    const newLast: ActionStateQueueNode<P> = {
+    const newLast: ActionStateQueueNode<S, P> = {
       payload,
+      action: actionQueue.action,
       next: first,
     };
     actionQueue.pending = last.next = newLast;
@@ -2016,11 +2020,8 @@ function runActionStateAction<S, P>(
   actionQueue: ActionStateQueue<S, P>,
   setPendingState: boolean => void,
   setState: Dispatch<S | Awaited<S>>,
-  payload: P,
+  node: ActionStateQueueNode<S, P>,
 ) {
-  const action = actionQueue.action;
-  const prevState = actionQueue.state;
-
   // This is a fork of startTransition
   const prevTransition = ReactSharedInternals.T;
   const currentTransition: BatchConfigTransition = {};
@@ -2033,6 +2034,15 @@ function runActionStateAction<S, P>(
   // This will be reverted automatically when all actions are finished.
   setPendingState(true);
 
+  // `node.action` represents the action function at the time it was dispatched.
+  // If this action was queued, it might be stale, i.e. it's not necessarily the
+  // most current implementation of the action, stored on `actionQueue`. This is
+  // intentional. The conceptual model for queued actions is that they are
+  // queued in a remote worker; the dispatch happens immediately, only the
+  // execution is delayed.
+  const action = node.action;
+  const payload = node.payload;
+  const prevState = actionQueue.state;
   try {
     const returnValue = action(prevState, payload);
     const onStartTransitionFinish = ReactSharedInternals.S;
@@ -2136,7 +2146,7 @@ function finishRunningActionStateAction<S, P>(
         actionQueue,
         (setPendingState: any),
         (setState: any),
-        next.payload,
+        next,
       );
     }
   }
