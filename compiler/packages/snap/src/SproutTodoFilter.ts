@@ -486,6 +486,8 @@ const skipFilter = new Set([
 
   // bugs
   "bug-invalid-reactivity-value-block",
+  "bug-invalid-pruned-scope-leaks-value",
+  "bug-invalid-hoisting-functionexpr",
   "original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block",
   "original-reactive-scopes-fork/bug-hoisted-declaration-with-scope",
 
