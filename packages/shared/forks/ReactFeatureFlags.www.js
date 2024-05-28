@@ -120,7 +120,7 @@ export const disableStringRefs = false;
 
 export const disableLegacyMode = __EXPERIMENTAL__;
 
-export const disableDOMTestUtils = false;
+export const disableDOMTestUtils = true;
 
 export const enableOwnerStacks = false;
 

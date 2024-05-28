@@ -85,7 +85,7 @@ export const enableFastJSX = true;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
-export const disableDOMTestUtils = false;
+export const disableDOMTestUtils = true;
 
 export const disableDefaultPropsExceptForClasses = false;
 export const enableAddPropertiesFastPath = false;
