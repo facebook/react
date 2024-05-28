@@ -11,8 +11,161 @@
 const ReactNativeAttributePayload = require('../ReactNativeAttributePayload');
 
 const diff = ReactNativeAttributePayload.diff;
+const create = ReactNativeAttributePayload.create;
 
-describe('ReactNativeAttributePayload', () => {
+describe('ReactNativeAttributePayload.create', () => {
+  it('should work with simple example', () => {
+    expect(create({b: 2, c: 3}, {a: true, b: true})).toEqual({
+      b: 2,
+    });
+  });
+
+  it('should ignore fields that are set to undefined', () => {
+    expect(
+      create(
+        {},
+        {a: true},
+      ),
+    ).toEqual(null);
+    expect(
+      create(
+        {a: undefined},
+        {a: true},
+      ),
+    ).toEqual(null);
+    expect(
+      create(
+        {a: undefined, b: undefined},
+        {a: true, b: true},
+      ),
+    ).toEqual(null);
+    expect(
+      create(
+        {a: undefined, b: undefined, c: 1},
+        {a: true, b: true},
+      ),
+    ).toEqual(null);
+    expect(
+      create(
+        {a: undefined, b: undefined, c: 1},
+        {a: true, b: true, c: true},
+      ),
+    ).toEqual({c: 1});
+    expect(
+      create(
+        {a: 1, b: undefined, c: 2},
+        {a: true, b: true, c: true},
+      ),
+    ).toEqual({a: 1, c: 2});
+  });
+
+  it('should ignore invalid fields', () => {
+    expect(create({b: 2}, {})).toEqual(null);
+  });
+
+  it('should not use the diff attribute', () => {
+    const diffA = jest.fn();
+    expect(
+      create({a: [2]}, {a: {diff: diffA}}),
+    ).toEqual({a: [2]});
+    expect(diffA).not.toBeCalled();
+  });
+
+  it('should use the process attribute', () => {
+    const processA = jest.fn((a) => a + 1);
+    expect(
+      create({a: 2}, {a: {process: processA}}),
+    ).toEqual({a: 3});
+    expect(processA).toBeCalledWith(2);
+  });
+
+  it('should work with undefined styles', () => {
+    expect(
+      create(
+        {style: undefined},
+        {style: {b: true}},
+      ),
+    ).toEqual(null);
+    expect(
+      create(
+        {style: {a: '#ffffff', b: 1}},
+        {style: {b: true}},
+      ),
+    ).toEqual({b: 1});
+  });
+
+  it('should flatten nested styles and predefined styles', () => {
+    const validStyleAttribute = {someStyle: {foo: true, bar: true}};
+    expect(
+      create({someStyle: [{foo: 1}, {bar: 2}]}, validStyleAttribute),
+    ).toEqual({foo: 1, bar: 2});
+    expect(
+      create({}, validStyleAttribute),
+    ).toEqual(null);
+    const barStyle = {
+      bar: 3,
+    };
+    expect(
+      create(
+        {someStyle: [[{foo: 1}, {foo: 2}], barStyle]},
+        validStyleAttribute,
+      ),
+    ).toEqual({foo: 2, bar: 3});
+  });
+
+  it('should not flatten nested props if attribute config is a primitive or only has diff/process', () => {
+    expect(
+      create({a: {foo: 1, bar: 2}}, {a: true}),
+    ).toEqual({a: {foo: 1, bar: 2}});
+    expect(
+      create({a: [{foo: 1}, {bar: 2}]}, {a: true}),
+    ).toEqual({a: [{foo: 1}, {bar: 2}]});
+    expect(
+      create({a: {foo: 1, bar: 2}}, {a: {diff: (a) => a}}),
+    ).toEqual({a: {foo: 1, bar: 2}});
+    expect(
+      create({a: [{foo: 1}, {bar: 2}]}, {a: {diff: (a) => a, process: (a) => a}}),
+    ).toEqual({a: [{foo: 1}, {bar: 2}]});
+  });
+
+  it('handles attributes defined multiple times', () => {
+    const validAttributes = {foo: true, style: {foo: true}};
+    expect(create({foo: 4, style: {foo: 2}}, validAttributes)).toEqual({
+      foo: 2,
+    });
+    expect(create({style: {foo: 2}}, validAttributes)).toEqual({
+      foo: 2,
+    });
+    expect(create({style: {foo: 2}, foo: 4}, validAttributes)).toEqual({
+      foo: 4,
+    });
+    expect(create({foo: 4, style: {foo: null}}, validAttributes)).toEqual({
+      foo: null, // this should ideally be null.
+    });
+    expect(create({foo: 4, style: [{foo: null}, {foo: 5}]}, validAttributes)).toEqual({
+      foo: 5,
+    });
+  });
+
+  // Function properties are just markers to native that events should be sent.
+  it('should convert functions to booleans', () => {
+    expect(
+      create(
+        {
+          a: function () {
+            return 9;
+          },
+          b: function () {
+            return 3;
+          },
+        },
+        {a: true, b: true},
+      ),
+    ).toEqual({a: true, b: true});
+  });
+});
+
+describe('ReactNativeAttributePayload.diff', () => {
   it('should work with simple example', () => {
     expect(diff({a: 1, c: 3}, {b: 2, c: 3}, {a: true, b: true})).toEqual({
       a: null,
