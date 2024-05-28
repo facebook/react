@@ -17377,6 +17377,15 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
+var isomorphicReactPackageVersion$jscomp$inline_1783 = React.version;
+if ("19.0.0-www-classic-94a3ba7f" !== isomorphicReactPackageVersion$jscomp$inline_1783)
+  throw Error(
+    formatProdErrorMessage(
+      527,
+      isomorphicReactPackageVersion$jscomp$inline_1783,
+      "19.0.0-www-classic-94a3ba7f"
+    )
+  );
 Internals.findDOMNode = function (componentOrElement) {
   return findHostInstance(componentOrElement);
 };
@@ -17390,17 +17399,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1788 = {
+var devToolsConfig$jscomp$inline_1790 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-96989544",
+  version: "19.0.0-www-classic-94a3ba7f",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2237 = {
-  bundleType: devToolsConfig$jscomp$inline_1788.bundleType,
-  version: devToolsConfig$jscomp$inline_1788.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1788.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1788.rendererConfig,
+var internals$jscomp$inline_2239 = {
+  bundleType: devToolsConfig$jscomp$inline_1790.bundleType,
+  version: devToolsConfig$jscomp$inline_1790.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1790.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1790.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17416,26 +17425,26 @@ var internals$jscomp$inline_2237 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1788.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1790.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-96989544"
+  reconcilerVersion: "19.0.0-www-classic-94a3ba7f"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2238 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2240 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2238.isDisabled &&
-    hook$jscomp$inline_2238.supportsFiber
+    !hook$jscomp$inline_2240.isDisabled &&
+    hook$jscomp$inline_2240.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2238.inject(
-        internals$jscomp$inline_2237
+      (rendererID = hook$jscomp$inline_2240.inject(
+        internals$jscomp$inline_2239
       )),
-        (injectedHook = hook$jscomp$inline_2238);
+        (injectedHook = hook$jscomp$inline_2240);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18078,4 +18087,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-96989544";
+exports.version = "19.0.0-www-classic-94a3ba7f";

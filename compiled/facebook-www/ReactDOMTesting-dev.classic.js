@@ -31616,7 +31616,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-deb17ee3';
+var ReactVersion = '19.0.0-www-classic-d6a63bda';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -41974,6 +41974,14 @@ function createEventHandle(type, options) {
   }
 }
 
+function ensureCorrectIsomorphicReactVersion() {
+  var isomorphicReactPackageVersion = React.version;
+
+  if (isomorphicReactPackageVersion !== ReactVersion) {
+    throw new Error('Incompatible React versions: The "react" and "react-dom" packages must ' + 'have the exact same version. Instead got:\n' + ("  - react:      " + isomorphicReactPackageVersion + "\n") + ("  - react-dom:  " + ReactVersion + "\n") + 'Learn more: https://react.dev/warnings/version-mismatch');
+  }
+}
+
 function getCrossOriginString(input) {
   if (typeof input === 'string') {
     return input === 'use-credentials' ? input : '';
@@ -42242,6 +42250,8 @@ function getValueDescriptorExpectingObjectForWarning(thing) {
 function getValueDescriptorExpectingEnumForWarning(thing) {
   return thing === null ? '`null`' : thing === undefined ? '`undefined`' : thing === '' ? 'an empty string' : typeof thing === 'string' ? JSON.stringify(thing) : typeof thing === 'number' ? '`' + thing + '`' : "something with type \"" + typeof thing + "\"";
 }
+
+ensureCorrectIsomorphicReactVersion();
 
 {
   if (typeof Map !== 'function' || // $FlowFixMe[prop-missing] Flow incorrectly thinks Map has no prototype
