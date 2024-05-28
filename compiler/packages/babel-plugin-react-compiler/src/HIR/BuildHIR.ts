@@ -3336,6 +3336,20 @@ function lowerIdentifierForAssignment(
       });
       return null;
     }
+  } else if (
+    binding.bindingKind === "const" &&
+    kind === InstructionKind.Reassign
+  ) {
+    builder.errors.push({
+      reason: `Cannot reassign a \`const\` variable`,
+      severity: ErrorSeverity.InvalidJS,
+      loc: path.node.loc ?? null,
+      description:
+        binding.identifier.name != null
+          ? `\`${binding.identifier.name.value}\` is declared as const`
+          : null,
+    });
+    return null;
   }
 
   const place: Place = {
