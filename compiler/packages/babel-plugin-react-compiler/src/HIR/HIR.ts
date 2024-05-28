@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BindingKind } from "@babel/traverse";
 import * as t from "@babel/types";
 import { CompilerError, CompilerErrorDetailOptions } from "../CompilerError";
 import { assertExhaustive } from "../Utils/utils";
@@ -1105,7 +1106,7 @@ export type MutableRange = {
 
 export type VariableBinding =
   // let, const, etc declared within the current component/hook
-  | { kind: "Identifier"; identifier: Identifier }
+  | { kind: "Identifier"; identifier: Identifier; bindingKind: BindingKind }
   // bindings declard outside the current component/hook
   | NonLocalBinding;
 
