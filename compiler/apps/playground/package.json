@@ -33,6 +33,7 @@
     "notistack": "^3.0.0-alpha.7",
     "prettier": "3.0.3",
     "pretty-format": "^29.3.1",
+    "re-resizable": "^6.9.16",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-compiler-runtime": "*"
@@ -47,7 +48,7 @@
     "eslint": "^8.28.0",
     "eslint-config-next": "^13.5.6",
     "monaco-editor-webpack-plugin": "^7.1.0",
-    "postcss": "^8.4.19",
+    "postcss": "^8.4.31",
     "tailwindcss": "^3.2.4"
   },
   "resolutions": {

@@ -142,8 +142,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             // Addendum by React:
             expect.stringContaining('%s'),
             expect.stringContaining('An error occurred in the <Foo> component'),
-            expect.stringContaining('Foo'),
             expect.stringContaining('Consider adding an error boundary'),
+            expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -207,8 +207,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
-            expect.stringContaining('Foo'),
             expect.stringContaining('ErrorBoundary'),
+            expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -273,8 +273,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             // Addendum by React:
             expect.stringContaining('%s'),
             expect.stringContaining('An error occurred in the <Foo> component'),
-            expect.stringContaining('Foo'),
             expect.stringContaining('Consider adding an error boundary'),
+            expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -343,8 +343,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
-            expect.stringContaining('Foo'),
             expect.stringContaining('ErrorBoundary'),
+            expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -409,8 +409,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             // Addendum by React:
             expect.stringContaining('%s'),
             expect.stringContaining('An error occurred in the <Foo> component'),
-            expect.stringContaining('Foo'),
             expect.stringContaining('Consider adding an error boundary'),
+            expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -477,8 +477,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
-            expect.stringContaining('Foo'),
             expect.stringContaining('ErrorBoundary'),
+            expect.stringContaining('Foo'),
           ],
         ]);
       } else {

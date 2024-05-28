@@ -16,12 +16,13 @@ describe('DOMPropertyOperations', () => {
   let React;
   let ReactDOMClient;
   let act;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ({act} = require('internal-test-utils'));
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   // Sets a value in a way that React doesn't see,
@@ -1316,6 +1317,33 @@ describe('DOMPropertyOperations', () => {
         root.render(<my-custom-element foo={undefined} />);
       });
       expect(customElement.foo).toBe(undefined);
+    });
+
+    it('warns when using popoverTarget={HTMLElement}', async () => {
+      const popoverTarget = document.createElement('div');
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <button key="one" popoverTarget={popoverTarget}>
+            Toggle popover
+          </button>,
+        );
+      });
+
+      assertConsoleErrorDev([
+        'The `popoverTarget` prop expects the ID of an Element as a string. Received [object HTMLDivElement] instead.',
+      ]);
+
+      // Dedupe warning
+      await act(() => {
+        root.render(
+          <button key="two" popoverTarget={popoverTarget}>
+            Toggle popover
+          </button>,
+        );
+      });
     });
   });
 

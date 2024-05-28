@@ -320,8 +320,24 @@ function wakeChunkIfInitialized<T>(
     case PENDING:
     case BLOCKED:
     case CYCLIC:
-      chunk.value = resolveListeners;
-      chunk.reason = rejectListeners;
+      if (chunk.value) {
+        for (let i = 0; i < resolveListeners.length; i++) {
+          chunk.value.push(resolveListeners[i]);
+        }
+      } else {
+        chunk.value = resolveListeners;
+      }
+
+      if (chunk.reason) {
+        if (rejectListeners) {
+          for (let i = 0; i < rejectListeners.length; i++) {
+            chunk.reason.push(rejectListeners[i]);
+          }
+        }
+      } else {
+        chunk.reason = rejectListeners;
+      }
+
       break;
     case ERRORED:
       if (rejectListeners) {
@@ -506,8 +522,6 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       // We have to go the BLOCKED state until they're resolved.
       const blockedChunk: BlockedChunk<T> = (chunk: any);
       blockedChunk.status = BLOCKED;
-      blockedChunk.value = null;
-      blockedChunk.reason = null;
     } else {
       const resolveListeners = cyclicChunk.value;
       const initializedChunk: InitializedChunk<T> = (chunk: any);
@@ -565,6 +579,7 @@ function createElement(
   props: mixed,
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
+  validated: number, // DEV-only
 ): React$Element<any> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
@@ -610,13 +625,13 @@ function createElement(
     // Unfortunately, _store is enumerable in jest matchers so for equality to
     // work, I need to keep it or make _store non-enumerable in the other file.
     element._store = ({}: {
-      validated?: boolean,
+      validated?: number,
     });
     Object.defineProperty(element._store, 'validated', {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: true, // This element has already been validated on the server.
+      value: enableOwnerStacks ? validated : 1, // Whether the element has already been validated on the server.
     });
     // debugInfo contains Server Component debug information.
     Object.defineProperty(element, '_debugInfo', {
@@ -630,7 +645,7 @@ function createElement(
         configurable: false,
         enumerable: false,
         writable: true,
-        value: {stack: stack},
+        value: stack,
       });
       Object.defineProperty(element, '_debugTask', {
         configurable: false,
@@ -641,7 +656,12 @@ function createElement(
     }
     // TODO: We should be freezing the element but currently, we might write into
     // _debugInfo later. We could move it into _store which remains mutable.
-    Object.freeze(element.props);
+    if (initializingChunkBlockedModel !== null) {
+      const freeze = Object.freeze.bind(Object, element.props);
+      initializingChunk.then(freeze, freeze);
+    } else {
+      Object.freeze(element.props);
+    }
   }
   return element;
 }
@@ -1034,6 +1054,7 @@ function parseModelTuple(
       tuple[3],
       __DEV__ ? (tuple: any)[4] : null,
       __DEV__ && enableOwnerStacks ? (tuple: any)[5] : null,
+      __DEV__ && enableOwnerStacks ? (tuple: any)[6] : 0,
     );
   }
   return value;

@@ -6,6 +6,7 @@
  */
 
 import * as t from "@babel/types";
+import { createHmac } from "crypto";
 import { pruneHoistedContexts, pruneUnusedLValues, pruneUnusedLabels } from ".";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Environment, EnvironmentConfig, ExternalFunction } from "../HIR";
@@ -43,7 +44,6 @@ import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
 import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtOperandsInSameScope";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
-import { createHmac } from "crypto";
 
 export const MEMO_CACHE_SENTINEL = "react.memo_cache_sentinel";
 export const EARLY_RETURN_SENTINEL = "react.early_return_sentinel";
@@ -1928,7 +1928,7 @@ function codegenInstructionValue(
       break;
     }
     case "LoadGlobal": {
-      value = t.identifier(instrValue.name);
+      value = t.identifier(instrValue.binding.name);
       break;
     }
     case "RegExpLiteral": {
@@ -2018,6 +2018,11 @@ function codegenInstructionValue(
   return value;
 }
 
+/**
+ * Due to a bug in earlier Babel versions, JSX string attributes with double quotes or with unicode characters
+ * may be escaped unnecessarily. To avoid trigger this Babel bug, we use a JsxExpressionContainer for such strings.
+ */
+const STRING_REQUIRES_EXPR_CONTAINER_PATTERN = /[\u{0080}-\u{FFFF}]|"/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute
@@ -2040,7 +2045,7 @@ function codegenJsxAttribute(
       switch (innerValue.type) {
         case "StringLiteral": {
           value = innerValue;
-          if (value.value.indexOf('"') !== -1) {
+          if (STRING_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value)) {
             value = createJsxExpressionContainer(value.loc, value);
           }
           break;
@@ -2072,6 +2077,7 @@ function codegenJsxAttribute(
   }
 }
 
+const JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN = /[<>&]/;
 function codegenJsxElement(
   cx: Context,
   place: Place
@@ -2084,6 +2090,12 @@ function codegenJsxElement(
   const value = codegenPlace(cx, place);
   switch (value.type) {
     case "JSXText": {
+      if (JSX_TEXT_CHILD_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value)) {
+        return createJsxExpressionContainer(
+          place.loc,
+          createStringLiteral(place.loc, value.value)
+        );
+      }
       return createJsxText(place.loc, value.value);
     }
     case "JSXElement":

@@ -19,6 +19,7 @@ import {
   eachTerminalOperand,
 } from "../HIR/visitors";
 import { Err, Ok, Result } from "../Utils/Result";
+import { isEffectHook } from "./ValidateMemoizedEffectDependencies";
 
 /**
  * Validates that a function does not access a ref value during render. This includes a partial check
@@ -113,27 +114,37 @@ function validateNoRefAccessInRenderImpl(
           }
           break;
         }
+        case "MethodCall": {
+          if (!isEffectHook(instr.value.property.identifier)) {
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+              validateNoRefAccess(errors, refAccessingFunctions, operand);
+            }
+          }
+          break;
+        }
         case "CallExpression": {
           const callee = instr.value.callee;
-          // Report a more precise error when calling a local function that accesses a ref
-          if (refAccessingFunctions.has(callee.identifier.id)) {
-            errors.push({
-              severity: ErrorSeverity.InvalidReact,
-              reason:
-                "This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)",
-              loc: callee.loc,
-              description: `Function ${printPlace(callee)} accesses a ref`,
-              suggestions: null,
-            });
-          }
-          for (const operand of eachInstructionValueOperand(instr.value)) {
-            validateNoRefAccess(errors, refAccessingFunctions, operand);
+          const isUseEffect = isEffectHook(callee.identifier);
+          if (!isUseEffect) {
+            // Report a more precise error when calling a local function that accesses a ref
+            if (refAccessingFunctions.has(callee.identifier.id)) {
+              errors.push({
+                severity: ErrorSeverity.InvalidReact,
+                reason:
+                  "This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)",
+                loc: callee.loc,
+                description: `Function ${printPlace(callee)} accesses a ref`,
+                suggestions: null,
+              });
+            }
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+              validateNoRefAccess(errors, refAccessingFunctions, operand);
+            }
           }
           break;
         }
         case "ObjectExpression":
-        case "ArrayExpression":
-        case "MethodCall": {
+        case "ArrayExpression": {
           for (const operand of eachInstructionValueOperand(instr.value)) {
             validateNoRefAccess(errors, refAccessingFunctions, operand);
           }

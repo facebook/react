@@ -82,6 +82,7 @@ let didWarnFormActionName = false;
 let didWarnFormActionTarget = false;
 let didWarnFormActionMethod = false;
 let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
+let didWarnPopoverTargetObject = false;
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
   didWarnForNewBooleanPropsWithEmptyValue = {};
@@ -770,6 +771,11 @@ function setProp(
       }
       break;
     }
+    case 'popover':
+      listenToNonDelegatedEvent('beforetoggle', domElement);
+      listenToNonDelegatedEvent('toggle', domElement);
+      setValueForAttribute(domElement, 'popover', value);
+      break;
     case 'xlinkActuate':
       setValueForNamespacedAttribute(
         domElement,
@@ -861,6 +867,20 @@ function setProp(
     case 'innerText':
     case 'textContent':
       break;
+    case 'popoverTarget':
+      if (__DEV__) {
+        if (
+          !didWarnPopoverTargetObject &&
+          value != null &&
+          typeof value === 'object'
+        ) {
+          didWarnPopoverTargetObject = true;
+          console.error(
+            'The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.',
+            value,
+          );
+        }
+      }
     // Fall through
     default: {
       if (
@@ -2951,6 +2971,13 @@ export function hydrateProperties(
     ) {
       return false;
     }
+  }
+
+  if (props.popover != null) {
+    // We listen to this event in case to ensure emulated bubble
+    // listeners still fire for the toggle event.
+    listenToNonDelegatedEvent('beforetoggle', domElement);
+    listenToNonDelegatedEvent('toggle', domElement);
   }
 
   if (props.onScroll != null) {

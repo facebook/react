@@ -198,6 +198,156 @@ describe('ReactFlightDOMBrowser', () => {
     });
   });
 
+  it('should resolve client components (with async chunks) when referenced in props', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientOuter = clientExports(function ClientOuter({
+      Component,
+      children,
+    }) {
+      return <Component>{children}</Component>;
+    });
+
+    const ClientInner = clientExports(
+      function ClientInner({children}) {
+        return <span>{children}</span>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function Server() {
+      return <ClientOuter Component={ClientInner}>Hello, World!</ClientOuter>;
+    }
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Server />,
+      webpackMap,
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<span>Hello, World!</span>');
+  });
+
+  it('should resolve deduped objects within the same model root when it is blocked', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientOuter = clientExports(function ClientOuter({Component, value}) {
+      return <Component value={value} />;
+    });
+
+    const ClientInner = clientExports(
+      function ClientInner({value}) {
+        return <pre>{JSON.stringify(value)}</pre>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function Server({value}) {
+      return <ClientOuter Component={ClientInner} value={value} />;
+    }
+
+    const shared = [1, 2, 3];
+    const value = [shared, shared];
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Server value={value} />,
+      webpackMap,
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<pre>[[1,2,3],[1,2,3]]</pre>');
+  });
+
+  it('should resolve deduped objects within the same model root when it is blocked and there is a listener attached to the root', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientOuter = clientExports(function ClientOuter({Component, value}) {
+      return <Component value={value} />;
+    });
+
+    const ClientInner = clientExports(
+      function ClientInner({value}) {
+        return <pre>{JSON.stringify(value)}</pre>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function Server({value}) {
+      return <ClientOuter Component={ClientInner} value={value} />;
+    }
+
+    const shared = [1, 2, 3];
+    const value = [shared, shared];
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Server value={value} />,
+      webpackMap,
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    // make sure we have a listener so that `resolveModelChunk` initializes the chunk eagerly
+    response.then(() => {});
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<pre>[[1,2,3],[1,2,3]]</pre>');
+  });
+
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 
@@ -596,6 +746,10 @@ describe('ReactFlightDOMBrowser', () => {
     }
     const Parent = clientExports(ParentClient);
     const ParentModule = clientExports({Parent: ParentClient});
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
     await expect(async () => {
       const stream = ReactServerDOMServer.renderToReadableStream(
         <>
@@ -606,11 +760,12 @@ describe('ReactFlightDOMBrowser', () => {
         </>,
         webpackMap,
       );
-      await ReactServerDOMClient.createFromReadableStream(stream);
-    }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. ' +
-        'See https://react.dev/link/warning-keys for more information.',
-    );
+      const result =
+        await ReactServerDOMClient.createFromReadableStream(stream);
+      await act(() => {
+        root.render(result);
+      });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('basic use(promise)', async () => {

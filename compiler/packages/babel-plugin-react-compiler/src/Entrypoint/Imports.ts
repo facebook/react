@@ -94,7 +94,7 @@ function hasExistingNonNamespacedImportOfModule(
 }
 
 /*
- * If an existing import of React exists (ie `import {useMemo} from 'react'`), inject useMemoCache
+ * If an existing import of React exists (ie `import { ... } from '<moduleName>'`), inject useMemoCache
  * into the list of destructured variables.
  */
 function addMemoCacheFunctionSpecifierToExistingImport(

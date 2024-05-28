@@ -28,7 +28,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<string>> {
     if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
       this.visitHirFunction(value.loweredFunc.func, state);
     } else if (value.kind === "LoadGlobal") {
-      state.add(value.name);
+      state.add(value.binding.name);
     }
   }
 
