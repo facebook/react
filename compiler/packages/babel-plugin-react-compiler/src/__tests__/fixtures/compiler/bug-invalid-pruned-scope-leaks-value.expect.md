@@ -3,14 +3,19 @@
 
 ```javascript
 import invariant from "invariant";
-import { makeObject_Primitives, mutate, sum, useIdentity } from "shared-runtime";
+import {
+  makeObject_Primitives,
+  mutate,
+  sum,
+  useIdentity,
+} from "shared-runtime";
 
 /**
  * Exposes fundamental issue with pruning 'non-reactive' dependencies + flattening
  * those scopes. Here, `z`'s original memo block is removed due to the inner hook call.
- * However, we also infer that `z` is non-reactive and does not need to be a memo 
+ * However, we also infer that `z` is non-reactive and does not need to be a memo
  * dependency.
- * 
+ *
  * Current evaluator error:
  *  Found differences in evaluator results
  *  Non-forget (expected):
@@ -37,9 +42,10 @@ function MyApp({ count }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: MyApp,
-  params: [{count: 2}],
-  sequentialRenders: [{count: 2}, {count: 2}, {count: 3}]
-}
+  params: [{ count: 2 }],
+  sequentialRenders: [{ count: 2 }, { count: 2 }, { count: 3 }],
+};
+
 ```
 
 ## Code

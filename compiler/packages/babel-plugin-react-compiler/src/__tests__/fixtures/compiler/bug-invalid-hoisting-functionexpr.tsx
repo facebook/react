@@ -5,7 +5,7 @@ import { Stringify } from "shared-runtime";
  * regardless of control flow. This is simply because we wrote support for
  * function expressions before doing a lot of work in PropagateScopeDeps
  * to handle conditionally accessed dependencies.
- * 
+ *
  * Current evaluator error:
  *  Found differences in evaluator results
  *  Non-forget (expected):
@@ -26,5 +26,5 @@ function Component({ obj, isObjNull }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{obj: null, isObjNull: true}]
-}
+  params: [{ obj: null, isObjNull: true }],
+};
