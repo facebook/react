@@ -529,8 +529,8 @@ function shouldSkipBundle(bundle, bundleType) {
     return true;
   }
   if (requestedBundleTypes.length > 0) {
-    const isAskingForDifferentType = requestedBundleTypes.every(
-      requestedType => bundleType.indexOf(requestedType) === -1
+    const isAskingForDifferentType = requestedBundleTypes.some(
+      requestedType => !bundleType.includes(requestedType)
     );
     if (isAskingForDifferentType) {
       return true;
