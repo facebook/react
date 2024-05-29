@@ -8,15 +8,55 @@
  */
 'use strict';
 
-const ReactNativeAttributePayload = require('../ReactNativeAttributePayload');
-
-const diff = ReactNativeAttributePayload.diff;
-const create = ReactNativeAttributePayload.create;
+const {diff, create} = require('../ReactNativeAttributePayloadFabric');
 
 describe('ReactNativeAttributePayload.create', () => {
   it('should work with simple example', () => {
     expect(create({b: 2, c: 3}, {a: true, b: true})).toEqual({
       b: 2,
+    });
+  });
+
+  it('should work with complex example', () => {
+    const validAttributes = {
+      style: {
+        position: true,
+        zIndex: true,
+        flexGrow: true,
+        flexShrink: true,
+        flexDirection: true,
+        overflow: true,
+        backgroundColor: true,
+      },
+    };
+
+    expect(
+      create(
+        {
+          style: [
+            {
+              flexGrow: 1,
+              flexShrink: 1,
+              flexDirection: 'row',
+              overflow: 'scroll',
+            },
+            [
+              {position: 'relative', zIndex: 2},
+              {flexGrow: 0},
+              {backgroundColor: 'red'},
+            ],
+          ],
+        },
+        validAttributes,
+      ),
+    ).toEqual({
+      flexGrow: 0,
+      flexShrink: 1,
+      flexDirection: 'row',
+      overflow: 'scroll',
+      position: 'relative',
+      zIndex: 2,
+      backgroundColor: 'red',
     });
   });
 
