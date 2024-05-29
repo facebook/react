@@ -15,7 +15,13 @@ function Component(props) {
 ## Error
 
 ```
-Cannot read properties of undefined (reading 'depth')
+  2 |   const x = [];
+  3 |   <div>{x}</div>;
+> 4 |   x.push(props.value);
+    |   ^ InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX (4:4)
+  5 |   return x;
+  6 | }
+  7 |
 ```
           
       

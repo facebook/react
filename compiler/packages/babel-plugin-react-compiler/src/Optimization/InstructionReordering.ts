@@ -122,7 +122,7 @@ function reorderBlock(
         }
         locals.set(operand.identifier.name.value, instr.lvalue.identifier.id);
       } else {
-        if (dependencies.has(operand.identifier.id)) {
+        if (dependencies.has(operand.identifier.id) || globalDependencies.has(operand.identifier.id)) {
           node.dependencies.push(operand.identifier.id);
         }
       }
@@ -228,6 +228,12 @@ function reorderBlock(
     DEBUG && console.log(`terminal operand: $${operand.identifier.id}`);
     emit(operand.identifier.id);
   }
+  /**
+   * Gross hack: for value blocks we want the terminal operand to be emitted last, since that's its value.
+   * For other blocks the exact order doesn't matter, we assume instructions whose values aren't depended
+   * upon by the block terminal are used later, so it makes sense to order them last.
+   */
+  const index = instructions.length;
   for (const id of Array.from(dependencies.keys()).reverse()) {
     const node = dependencies.get(id);
     if (node == null) {
@@ -235,13 +241,19 @@ function reorderBlock(
     }
     if (
       node.instruction !== null &&
-      getReorderingLevel(node.instruction) === ReorderingLevel.Global
+      getReorderingLevel(node.instruction) === ReorderingLevel.Global &&
+      (block.kind === 'block' || block.kind === 'catch')
     ) {
       globalDependencies.set(id, node);
+      DEBUG && console.log(`global: $${id}`);
     } else {
       DEBUG && console.log(`other: $${id}`);
       emit(id);
     }
+  }
+  if (block.kind !== 'block' && block.kind !== 'catch') {
+    const extra = instructions.splice(index);
+    instructions.splice(0, 0, ...extra);
   }
   block.instructions = instructions;
   DEBUG && console.log();
@@ -288,13 +300,21 @@ function getReorderingLevel(instr: Instruction): ReorderingLevel {
     case "TemplateLiteral": {
       return ReorderingLevel.Global;
     }
-    case "ArrayExpression":
-    case "ObjectExpression":
-    // case "Destructure":
-    // case "StoreLocal":
-    case "LoadLocal": {
-      return ReorderingLevel.Local;
-    }
+    /*
+      For locals, a simple and robust strategy is to figure out the range of instructions where the identifier may be reassigned,
+      and then allow reordering of LoadLocal instructions which occur after this range. Obviously for const, this means that all
+      LoadLocals can be reordered, so a simpler thing to start with is just to only allow reordering of loads of known-consts.
+
+      With this overall strategy we can allow global reordering of LoadLocals and remove the global/local reordering distinction
+      (all reordering can be global).
+
+      case "Destructure":
+      case "StoreLocal":
+      case "LoadLocal":
+      {
+        return ReorderingLevel.Local;
+      }
+    */
     default: {
       return ReorderingLevel.None;
     }

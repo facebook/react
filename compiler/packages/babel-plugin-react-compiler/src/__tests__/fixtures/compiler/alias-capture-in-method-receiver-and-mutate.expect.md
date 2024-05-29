@@ -37,10 +37,10 @@ function Component() {
     const a = makeObject_Primitives();
 
     const x = [];
-
-    t0 = [x, a];
     x.push(a);
+
     mutate(x);
+    t0 = [x, a];
     $[0] = t0;
   } else {
     t0 = $[0];

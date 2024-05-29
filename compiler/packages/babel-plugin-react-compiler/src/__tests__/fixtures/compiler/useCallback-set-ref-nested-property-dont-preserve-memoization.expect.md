@@ -46,6 +46,8 @@ function Component(props) {
   const onChange = (event) => {
     ref.current.inner = event.target.value;
   };
+
+  ref.current.inner = null;
   let t1;
   if ($[1] !== onChange) {
     t1 = <input onChange={onChange} />;
@@ -54,7 +56,6 @@ function Component(props) {
   } else {
     t1 = $[2];
   }
-  ref.current.inner = null;
   return t1;
 }
 

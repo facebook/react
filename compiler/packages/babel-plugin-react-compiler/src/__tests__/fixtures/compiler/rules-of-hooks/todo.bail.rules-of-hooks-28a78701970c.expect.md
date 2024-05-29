@@ -24,6 +24,7 @@ import { c as _c } from "react/compiler-runtime"; // @skip
 // React.memo.
 const MemoizedFunction = React.memo((props) => {
   const $ = _c(2);
+  useHook();
   let t0;
   if ($[0] !== props) {
     t0 = <button {...props} />;
@@ -32,7 +33,6 @@ const MemoizedFunction = React.memo((props) => {
   } else {
     t0 = $[1];
   }
-  useHook();
   return t0;
 });
 

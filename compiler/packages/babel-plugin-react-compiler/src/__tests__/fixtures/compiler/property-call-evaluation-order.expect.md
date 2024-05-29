@@ -41,17 +41,16 @@ function Component() {
     t0 = $[0];
   }
   const changeF = t0;
-  let t1;
+  let x;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    const x = { f: () => console.log("original") };
+    x = { f: () => console.log("original") };
 
-    t1 = x;
     (console.log("A"), x).f((changeF(x), console.log("arg"), 1));
-    $[1] = t1;
+    $[1] = x;
   } else {
-    t1 = $[1];
+    x = $[1];
   }
-  return t1;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

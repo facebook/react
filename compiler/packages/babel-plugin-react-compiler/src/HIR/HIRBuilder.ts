@@ -280,7 +280,11 @@ export default class HIRBuilder {
     if (resolvedBinding.name && resolvedBinding.name.value !== originalName) {
       babelBinding.scope.rename(originalName, resolvedBinding.name.value);
     }
-    return { kind: "Identifier", identifier: resolvedBinding };
+    return {
+      kind: "Identifier",
+      identifier: resolvedBinding,
+      bindingKind: babelBinding.kind,
+    };
   }
 
   isContextIdentifier(path: NodePath<t.Identifier | t.JSXIdentifier>): boolean {

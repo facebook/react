@@ -36,10 +36,10 @@ import { c as _c } from "react/compiler-runtime";
 import { conditionalInvoke } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(2);
+  const $ = _c(3);
+  const { doReassign1, doReassign2 } = t0;
   let x;
-  if ($[0] !== t0) {
-    const { doReassign1, doReassign2 } = t0;
+  if ($[0] !== doReassign1 || $[1] !== doReassign2) {
     x = {};
     const reassign1 = () => {
       x = 2;
@@ -51,10 +51,11 @@ function Component(t0) {
 
     conditionalInvoke(doReassign1, reassign1);
     conditionalInvoke(doReassign2, reassign2);
-    $[0] = t0;
-    $[1] = x;
+    $[0] = doReassign1;
+    $[1] = doReassign2;
+    $[2] = x;
   } else {
-    x = $[1];
+    x = $[2];
   }
   return x;
 }

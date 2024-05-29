@@ -29,20 +29,19 @@ import { identity, mutate, mutateAndReturnNewValue } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(2);
-  let t0;
+  let element;
   if ($[0] !== props.value) {
     const key = {};
 
-    const element = <div key={mutateAndReturnNewValue(key)}>{props.value}</div>;
+    element = <div key={mutateAndReturnNewValue(key)}>{props.value}</div>;
 
-    t0 = element;
     mutate(key);
     $[0] = props.value;
-    $[1] = t0;
+    $[1] = element;
   } else {
-    t0 = $[1];
+    element = $[1];
   }
-  return t0;
+  return element;
 }
 
 export const FIXTURE_ENTRYPOINT = {

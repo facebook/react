@@ -47,8 +47,9 @@ function Component(props) {
       y = [];
     }
 
-    t0 = [x, y];
     y.push(x);
+
+    t0 = [x, y];
     $[0] = props;
     $[1] = t0;
   } else {

@@ -20,20 +20,26 @@ function Component() {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component() {
-  const $ = _c(1);
+  const $ = _c(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const a = someObj();
-
-    const x = [];
-
-    t0 = [x, a];
-    x.push(a);
+    t0 = someObj();
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  return t0;
+  const a = t0;
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    const x = [];
+    x.push(a);
+
+    t1 = [x, a];
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  return t1;
 }
 
 ```

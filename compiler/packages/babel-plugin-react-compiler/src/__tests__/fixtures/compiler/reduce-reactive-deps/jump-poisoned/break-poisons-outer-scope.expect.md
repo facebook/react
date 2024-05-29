@@ -39,29 +39,30 @@ import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 function useFoo(t0) {
-  const $ = _c(4);
+  const $ = _c(5);
+  const { input, cond } = t0;
   let x;
-  if ($[0] !== t0) {
-    const { input, cond } = t0;
+  if ($[0] !== cond || $[1] !== input) {
     x = [];
     bb0: {
       if (cond) {
         break bb0;
       }
       let t1;
-      if ($[2] !== input.a.b) {
+      if ($[3] !== input.a.b) {
         t1 = identity(input.a.b);
-        $[2] = input.a.b;
-        $[3] = t1;
+        $[3] = input.a.b;
+        $[4] = t1;
       } else {
-        t1 = $[3];
+        t1 = $[4];
       }
       x.push(t1);
     }
-    $[0] = t0;
-    $[1] = x;
+    $[0] = cond;
+    $[1] = input;
+    $[2] = x;
   } else {
-    x = $[1];
+    x = $[2];
   }
   return x;
 }

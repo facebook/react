@@ -25,9 +25,9 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
+  const item = props.item;
   let t0;
-  if ($[0] !== props.item) {
-    const item = props.item;
+  if ($[0] !== item) {
     const thumbnails = [];
     const baseVideos = getBaseVideos(item);
 
@@ -39,7 +39,7 @@ function Component(props) {
     });
 
     t0 = <FlatList baseVideos={baseVideos} items={thumbnails} />;
-    $[0] = props.item;
+    $[0] = item;
     $[1] = t0;
   } else {
     t0 = $[1];

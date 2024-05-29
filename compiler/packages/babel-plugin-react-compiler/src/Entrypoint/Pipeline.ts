@@ -178,9 +178,6 @@ function* runWithEnvironment(
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
 
-  instructionReordering(hir);
-  yield log({ kind: "hir", name: "InstructionReordering", value: hir });
-
   if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);
   }
@@ -198,6 +195,9 @@ function* runWithEnvironment(
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
   yield log({ kind: "hir", name: "DeadCodeElimination", value: hir });
+
+  instructionReordering(hir);
+  yield log({ kind: "hir", name: "InstructionReordering", value: hir });
 
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });

@@ -35,8 +35,8 @@ function Component(props) {
     if (props.cond) {
     }
 
-    t0 = <Foo value={x} />;
     onChange();
+    t0 = <Foo value={x} />;
     $[0] = props.cond;
     $[1] = t0;
   } else {

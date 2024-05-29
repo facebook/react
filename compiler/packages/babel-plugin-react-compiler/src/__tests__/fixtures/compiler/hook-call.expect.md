@@ -37,6 +37,7 @@ function Component(props) {
   }
   const x = t0;
   const y = useFreeze(x);
+  foo(y, x);
   let t1;
   if ($[1] !== y) {
     t1 = (
@@ -50,7 +51,6 @@ function Component(props) {
   } else {
     t1 = $[2];
   }
-  foo(y, x);
   return t1;
 }
 

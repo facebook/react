@@ -43,19 +43,17 @@ import { c as _c } from "react/compiler-runtime"; // To preserve the nullthrows 
 
 function Component(props) {
   const $ = _c(2);
-  let t0;
+  let x;
   if ($[0] !== props.a) {
-    const x = [];
-
-    t0 = x;
+    x = [];
     x.push(props.a?.b);
     x.push(props.a.b.c);
     $[0] = props.a;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

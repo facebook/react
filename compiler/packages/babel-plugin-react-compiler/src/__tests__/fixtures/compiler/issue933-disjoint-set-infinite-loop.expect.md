@@ -42,19 +42,17 @@ function makeObj() {
 // This caused an infinite loop in the compiler
 function MyApp(props) {
   const $ = _c(1);
-  let t0;
+  let y;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const y = makeObj();
-
-    t0 = y;
+    y = makeObj();
     const tmp = y.a;
     const tmp2 = tmp.b;
     y.push(tmp2);
-    $[0] = t0;
+    $[0] = y;
   } else {
-    t0 = $[0];
+    y = $[0];
   }
-  return t0;
+  return y;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -1520,6 +1520,15 @@ function lowerExpression(
             place,
           });
         } else if (propertyPath.isObjectMethod()) {
+          if (propertyPath.node.kind !== "method") {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.node.kind} functions in ObjectExpression`,
+              severity: ErrorSeverity.Todo,
+              loc: propertyPath.node.loc ?? null,
+              suggestions: null,
+            });
+            continue;
+          }
           const method = lowerObjectMethod(builder, propertyPath);
           const place = lowerValueToTemporary(builder, method);
           const loweredKey = lowerObjectPropertyKey(builder, propertyPath);
@@ -3336,6 +3345,20 @@ function lowerIdentifierForAssignment(
       });
       return null;
     }
+  } else if (
+    binding.bindingKind === "const" &&
+    kind === InstructionKind.Reassign
+  ) {
+    builder.errors.push({
+      reason: `Cannot reassign a \`const\` variable`,
+      severity: ErrorSeverity.InvalidJS,
+      loc: path.node.loc ?? null,
+      description:
+        binding.identifier.name != null
+          ? `\`${binding.identifier.name.value}\` is declared as const`
+          : null,
+    });
+    return null;
   }
 
   const place: Place = {

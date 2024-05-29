@@ -29,25 +29,19 @@ import { c as _c } from "react/compiler-runtime";
 import { mutate, useNoAlias } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(1);
+
+  const x = [];
+  useNoAlias();
+  mutate(x);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = [];
+    t0 = <div>{x}</div>;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const x = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <div>{x}</div>;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  useNoAlias();
-  mutate(x);
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

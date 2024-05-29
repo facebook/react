@@ -74,6 +74,13 @@ export function runWithFiberInDEV<A0, A1, A2, A3, A4, T>(
     const previousFiber = current;
     setCurrentFiber(fiber);
     try {
+      if (enableOwnerStacks) {
+        if (fiber !== null && fiber._debugTask) {
+          return fiber._debugTask.run(
+            callback.bind(null, arg0, arg1, arg2, arg3, arg4),
+          );
+        }
+      }
       return callback(arg0, arg1, arg2, arg3, arg4);
     } finally {
       current = previousFiber;

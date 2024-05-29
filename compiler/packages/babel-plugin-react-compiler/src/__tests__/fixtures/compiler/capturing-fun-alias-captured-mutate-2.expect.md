@@ -23,26 +23,25 @@ function component(foo, bar) {
 import { c as _c } from "react/compiler-runtime";
 function component(foo, bar) {
   const $ = _c(3);
-  let t0;
+  let x;
   if ($[0] !== foo || $[1] !== bar) {
-    const x = { foo };
-
-    t0 = x;
+    x = { foo };
     const y = { bar };
     const f0 = function () {
       const a = { y };
       const b = x;
       a.x = b;
     };
+
     f0();
     mutate(y);
     $[0] = foo;
     $[1] = bar;
-    $[2] = t0;
+    $[2] = x;
   } else {
-    t0 = $[2];
+    x = $[2];
   }
-  return t0;
+  return x;
 }
 
 ```

@@ -32,22 +32,22 @@ import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 function useFoo(t0) {
-  const $ = _c(9);
+  const $ = _c(11);
+  const { input, inputHasAB, inputHasABC } = t0;
   let x;
   let t1;
-  if ($[0] !== t0) {
+  if ($[0] !== inputHasABC || $[1] !== input.a || $[2] !== inputHasAB) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      const { input, inputHasAB, inputHasABC } = t0;
       x = [];
       if (!inputHasABC) {
         let t2;
-        if ($[3] !== input.a) {
+        if ($[5] !== input.a) {
           t2 = identity(input.a);
-          $[3] = input.a;
-          $[4] = t2;
+          $[5] = input.a;
+          $[6] = t2;
         } else {
-          t2 = $[4];
+          t2 = $[6];
         }
         x.push(t2);
         if (!inputHasAB) {
@@ -55,32 +55,34 @@ function useFoo(t0) {
           break bb0;
         }
         let t3;
-        if ($[5] !== input.a.b) {
+        if ($[7] !== input.a.b) {
           t3 = identity(input.a.b);
-          $[5] = input.a.b;
-          $[6] = t3;
+          $[7] = input.a.b;
+          $[8] = t3;
         } else {
-          t3 = $[6];
+          t3 = $[8];
         }
         x.push(t3);
       } else {
         let t2;
-        if ($[7] !== input.a.b.c) {
+        if ($[9] !== input.a.b.c) {
           t2 = identity(input.a.b.c);
-          $[7] = input.a.b.c;
-          $[8] = t2;
+          $[9] = input.a.b.c;
+          $[10] = t2;
         } else {
-          t2 = $[8];
+          t2 = $[10];
         }
         x.push(t2);
       }
     }
-    $[0] = t0;
-    $[1] = x;
-    $[2] = t1;
+    $[0] = inputHasABC;
+    $[1] = input.a;
+    $[2] = inputHasAB;
+    $[3] = x;
+    $[4] = t1;
   } else {
-    x = $[1];
-    t1 = $[2];
+    x = $[3];
+    t1 = $[4];
   }
   if (t1 !== Symbol.for("react.early_return_sentinel")) {
     return t1;

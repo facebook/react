@@ -1021,7 +1021,11 @@ function renderFunctionComponent<Props>(
     const secondArg = undefined;
     result = Component(props, secondArg);
   }
-  if (typeof result === 'object' && result !== null) {
+  if (
+    typeof result === 'object' &&
+    result !== null &&
+    !isClientReference(result)
+  ) {
     if (typeof result.then === 'function') {
       // When the return value is in children position we can resolve it immediately,
       // to its value without a wrapper if it's synchronously available.

@@ -36,22 +36,21 @@ function component(a, b) {
     t0 = $[1];
   }
   const y = t0;
-  let t1;
+  let z;
   if ($[2] !== a || $[3] !== y.b) {
-    const z = { a };
-
-    t1 = z;
+    z = { a };
     const x = function () {
       z.a = 2;
     };
+
     x();
     $[2] = a;
     $[3] = y.b;
-    $[4] = t1;
+    $[4] = z;
   } else {
-    t1 = $[4];
+    z = $[4];
   }
-  return t1;
+  return z;
 }
 
 export const FIXTURE_ENTRYPOINT = {

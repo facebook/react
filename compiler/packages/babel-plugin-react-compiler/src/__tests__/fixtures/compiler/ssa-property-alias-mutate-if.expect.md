@@ -23,9 +23,9 @@ function foo(a) {
 import { c as _c } from "react/compiler-runtime";
 function foo(a) {
   const $ = _c(2);
-  let t0;
+  let x;
   if ($[0] !== a) {
-    const x = {};
+    x = {};
     if (a) {
       const y = {};
       x.y = y;
@@ -34,14 +34,13 @@ function foo(a) {
       x.z = z;
     }
 
-    t0 = x;
     mutate(x);
     $[0] = a;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  return t0;
+  return x;
 }
 
 ```

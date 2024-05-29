@@ -31,19 +31,17 @@ import { shallowCopy } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(2);
-  let t0;
+  let element;
   if ($[0] !== props.width) {
     const childprops = { style: { width: props.width } };
-    const element = _jsx("div", { childprops, children: '"hello world"' });
-
-    t0 = element;
+    element = _jsx("div", { childprops, children: '"hello world"' });
     shallowCopy(childprops);
     $[0] = props.width;
-    $[1] = t0;
+    $[1] = element;
   } else {
-    t0 = $[1];
+    element = $[1];
   }
-  return t0;
+  return element;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -46,6 +46,7 @@ function Component(props) {
     t1 = $[3];
   }
   const element = t1;
+  console.log(x);
   let t2;
   if ($[4] !== element) {
     t2 = <div>{element}</div>;
@@ -54,7 +55,6 @@ function Component(props) {
   } else {
     t2 = $[5];
   }
-  console.log(x);
   return t2;
 }
 

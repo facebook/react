@@ -25,29 +25,21 @@ import { c as _c } from "react/compiler-runtime"; // @Pass runMutableRangeAnalys
 function foo() {}
 
 function Component(props) {
-  const $ = _c(3);
-  let a;
-  let b;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a = [];
-    b = {};
-    foo(a, b);
-    $[0] = a;
-    $[1] = b;
-  } else {
-    a = $[0];
-    b = $[1];
-  }
-  if (foo()) {
-  }
+  const $ = _c(1);
   let t0;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    const a = [];
+    const b = {};
+    foo(a, b);
+    if (foo()) {
+    }
+
+    foo(a, b);
     t0 = <div a={a} b={b} />;
-    $[2] = t0;
+    $[0] = t0;
   } else {
-    t0 = $[2];
+    t0 = $[0];
   }
-  foo(a, b);
   return t0;
 }
 

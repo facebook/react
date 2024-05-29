@@ -43,6 +43,7 @@ function Component(props) {
         break bb0;
       }
       case true: {
+        x.push(props.p2);
         let t1;
         if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
           t1 = [];
@@ -50,7 +51,6 @@ function Component(props) {
         } else {
           t1 = $[3];
         }
-        x.push(props.p2);
         y = t1;
       }
       default: {
@@ -70,6 +70,7 @@ function Component(props) {
     t0 = $[2];
   }
   const child = t0;
+  y.push(props.p4);
   let t1;
   if ($[4] !== y || $[5] !== child) {
     t1 = <Component data={y}>{child}</Component>;
@@ -79,7 +80,6 @@ function Component(props) {
   } else {
     t1 = $[6];
   }
-  y.push(props.p4);
   return t1;
 }
 

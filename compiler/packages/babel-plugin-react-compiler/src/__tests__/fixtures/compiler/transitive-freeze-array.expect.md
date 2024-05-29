@@ -35,10 +35,10 @@ function Component(props) {
     const x = {};
     const y = {};
     const items = [x, y];
-
-    t0 = [x, y, items];
     items.pop();
+
     mutate(y);
+    t0 = [x, y, items];
     $[0] = t0;
   } else {
     t0 = $[0];

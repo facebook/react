@@ -67,6 +67,7 @@ function Component(t0) {
       t1 = null;
     }
   }
+  const result = t1;
   let t2;
   if ($[2] !== value) {
     t2 = [value];
@@ -75,7 +76,6 @@ function Component(t0) {
   } else {
     t2 = $[3];
   }
-  const result = t1;
   let t3;
   if ($[4] !== t2 || $[5] !== result) {
     t3 = <ValidateMemoization inputs={t2} output={result} />;

@@ -41,19 +41,20 @@ import { identity } from "shared-runtime";
 
 // track the base object as a dependency.
 function useOnlyConditionalDependencies(t0) {
-  const $ = _c(2);
+  const $ = _c(3);
+  const { props, cond } = t0;
   let x;
-  if ($[0] !== t0) {
-    const { props, cond } = t0;
+  if ($[0] !== cond || $[1] !== props) {
     x = {};
     if (identity(cond)) {
       x.b = props.a.b;
       x.c = props.a.b.c;
     }
-    $[0] = t0;
-    $[1] = x;
+    $[0] = cond;
+    $[1] = props;
+    $[2] = x;
   } else {
-    x = $[1];
+    x = $[2];
   }
   return x;
 }

@@ -6,6 +6,7 @@
  */
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
 let suppressWarning = false;
 export function setSuppressWarning(newSuppressWarning) {
@@ -36,6 +37,9 @@ export function error(format, ...args) {
   }
 }
 
+// eslint-disable-next-line react-internal/no-production-logging
+const supportsCreateTask = __DEV__ && enableOwnerStacks && !!console.createTask;
+
 function printWarning(level, format, args) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
@@ -43,7 +47,10 @@ function printWarning(level, format, args) {
     const isErrorLogger =
       format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
 
-    if (ReactSharedInternals.getCurrentStack) {
+    if (!supportsCreateTask && ReactSharedInternals.getCurrentStack) {
+      // We only add the current stack to the console when createTask is not supported.
+      // Since createTask requires DevTools to be open to work, this means that stacks
+      // can be lost while DevTools isn't open but we can't detect this.
       const stack = ReactSharedInternals.getCurrentStack();
       if (stack !== '') {
         format += '%s';

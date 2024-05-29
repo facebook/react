@@ -43,11 +43,10 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(8);
+  const items = props.items;
+  const maxItems = props.maxItems;
   let renderedItems;
-  if ($[0] !== props.items || $[1] !== props.maxItems) {
-    const items = props.items;
-    const maxItems = props.maxItems;
-
+  if ($[0] !== maxItems || $[1] !== items) {
     renderedItems = [];
     const seen = new Set();
     const max = Math.max(0, maxItems);
@@ -63,8 +62,8 @@ function Component(props) {
         break;
       }
     }
-    $[0] = props.items;
-    $[1] = props.maxItems;
+    $[0] = maxItems;
+    $[1] = items;
     $[2] = renderedItems;
   } else {
     renderedItems = $[2];
