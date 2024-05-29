@@ -259,10 +259,11 @@ export function $structuralCheck(
   newValue: any,
   variableName: string,
   fnName: string,
-  kind: string
+  kind: string,
+  loc: string
 ): void {
   function error(l: string, r: string, path: string, depth: number) {
-    const str = `${fnName}: [${kind}] ${variableName}${path} changed from ${l} to ${r} at depth ${depth}`;
+    const str = `${fnName}:${loc} [${kind}] ${variableName}${path} changed from ${l} to ${r} at depth ${depth}`;
     if (seenErrors.has(str)) {
       return;
     }
