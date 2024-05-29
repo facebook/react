@@ -11,7 +11,7 @@ function Component(props) {
       many: "bars",
       showCount: "yes",
     }),
-    "The label text",
+    "The label text"
   );
   return props.cond ? (
     <Stringify
