@@ -3154,7 +3154,6 @@ export function mayResourceSuspendCommit(resource: Resource): boolean {
 }
 
 export function preloadInstance(type: Type, props: Props): boolean {
-  // Return true to indicate it's already loaded
   return true;
 }
 
@@ -3163,10 +3162,11 @@ export function preloadResource(resource: Resource): boolean {
     resource.type === 'stylesheet' &&
     (resource.state.loading & Settled) === NotLoaded
   ) {
-    // we have not finished loading the underlying stylesheet yet.
+    // Return false to indicate this resource should suspend
     return false;
   }
-  // Return true to indicate it's already loaded
+
+  // Return true to indicate this resource should not suspend
   return true;
 }
 

@@ -33,16 +33,16 @@ export function clearRequireCache() {
   });
 }
 
-function compile(
+async function compile(
   input: string,
   fixturePath: string,
   compilerVersion: number,
   shouldLog: boolean,
   includeEvaluator: boolean
-): {
+): Promise<{
   error: string | null;
   compileResult: TransformResult | null;
-} {
+}> {
   const seenConsoleErrors: Array<string> = [];
   console.error = (...messages: Array<string>) => {
     seenConsoleErrors.push(...messages);
@@ -68,7 +68,7 @@ function compile(
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic
     toggleLogging(shouldLog);
-    const result = transformFixtureInput(
+    const result = await transformFixtureInput(
       input,
       fixturePath,
       parseConfigPragma,
@@ -147,7 +147,7 @@ export async function transformFixture(
       unexpectedError: null,
     };
   }
-  const { compileResult, error } = compile(
+  const { compileResult, error } = await compile(
     input,
     fixture.fixturePath,
     compilerVersion,

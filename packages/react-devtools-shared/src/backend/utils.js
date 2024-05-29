@@ -140,11 +140,15 @@ export function serializeToString(data: any): string {
     return 'undefined';
   }
 
+  if (typeof data === 'function') {
+    return data.toString();
+  }
+
   const cache = new Set<mixed>();
   // Use a custom replacer function to protect against circular references.
   return JSON.stringify(
     data,
-    (key, value) => {
+    (key: string, value: any) => {
       if (typeof value === 'object' && value !== null) {
         if (cache.has(value)) {
           return;

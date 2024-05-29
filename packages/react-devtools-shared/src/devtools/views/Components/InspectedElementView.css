@@ -65,10 +65,6 @@
   background-color: var(--color-background-hover);
 }
 
-.ContextMenuIcon {
-  margin-right: 0.5rem;
-}
-
 .OwnersMetaField {
   padding-left: 1.25rem;
   white-space: nowrap;

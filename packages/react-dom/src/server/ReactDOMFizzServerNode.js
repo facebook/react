@@ -41,6 +41,9 @@ import {
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
+import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
+ensureCorrectIsomorphicReactVersion();
+
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }

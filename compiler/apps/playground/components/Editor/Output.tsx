@@ -106,7 +106,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
         output={text}
         diff={lastPassOutput ?? null}
         showInfoPanel={true}
-      ></TextTabContent>,
+      ></TextTabContent>
     );
     lastPassOutput = text;
   }
@@ -122,7 +122,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
         output={code}
         diff={null}
         showInfoPanel={false}
-      ></TextTabContent>,
+      ></TextTabContent>
     );
     if (sourceMapUrl) {
       reorderedTabs.set(
@@ -133,7 +133,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
             className="w-full h-monaco_small sm:h-monaco"
             title="Generated Code"
           />
-        </>,
+        </>
       );
     }
   }
@@ -145,16 +145,16 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
 
 async function codegen(
   ast: t.Program,
-  source: string,
+  source: string
 ): Promise<{ code: any; sourceMapUrl: string | null }> {
   const generated = generate(
     ast,
     { sourceMaps: true, sourceFileName: "input.js" },
-    source,
+    source
   );
   const sourceMapUrl = getSourceMapUrl(
     generated.code,
-    JSON.stringify(generated.map),
+    JSON.stringify(generated.map)
   );
   const codegenOutput = await prettier.format(generated.code, {
     semi: true,
@@ -172,20 +172,35 @@ function getSourceMapUrl(code: string, map: string): string | null {
   code = utf16ToUTF8(code);
   map = utf16ToUTF8(map);
   return `https://evanw.github.io/source-map-visualization/#${btoa(
-    `${code.length}\0${code}${map.length}\0${map}`,
+    `${code.length}\0${code}${map.length}\0${map}`
   )}`;
 }
 
 function Output({ store, compilerOutput }: Props) {
-  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set());
+  const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set(["JS"]));
   const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
-    () => new Map(),
+    () => new Map()
   );
   useEffect(() => {
     tabify(store.source, compilerOutput).then((tabs) => {
       setTabs(tabs);
     });
   }, [store.source, compilerOutput]);
+
+  const changedPasses: Set<string> = new Set();
+  let lastResult: string = "";
+  for (const [passName, results] of compilerOutput.results) {
+    for (const result of results) {
+      let currResult = "";
+      if (result.kind === "hir" || result.kind === "reactive") {
+        currResult += `function ${result.fnName}\n\n${result.value}`;
+      }
+      if (currResult !== lastResult) {
+        changedPasses.add(passName);
+      }
+      lastResult = currResult;
+    }
+  }
 
   return (
     <>
@@ -194,6 +209,7 @@ function Output({ store, compilerOutput }: Props) {
         setTabsOpen={setTabsOpen}
         tabsOpen={tabsOpen}
         tabs={tabs}
+        changedPasses={changedPasses}
       />
       {compilerOutput.kind === "err" ? (
         <div

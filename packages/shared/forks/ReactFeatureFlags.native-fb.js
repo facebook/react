@@ -22,12 +22,10 @@ export const {
   alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses,
-  disableStringRefs,
   enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask,
   enableFastJSX,
   enableInfiniteRenderLoopDetection,
-  enableRefAsProp,
   passChildrenWhenCloningPersistedNodes,
 } = dynamicFlags;
 
@@ -95,10 +93,11 @@ export const disableClientCache = true;
 
 export const enableServerComponentLogs = true;
 
+export const enableRefAsProp = true;
+export const disableStringRefs = true;
+
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
-export const disableDOMTestUtils = false;
-
 export const enableOwnerStacks = false;
 
 // Flow magic to verify the exports of this file match the original version.

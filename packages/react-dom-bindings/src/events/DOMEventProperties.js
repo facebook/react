@@ -37,6 +37,7 @@ export const topLevelEventsToReactNames: Map<DOMEventName, string | null> =
 const simpleEventPluginEvents = [
   'abort',
   'auxClick',
+  'beforeToggle',
   'cancel',
   'canPlay',
   'canPlayThrough',

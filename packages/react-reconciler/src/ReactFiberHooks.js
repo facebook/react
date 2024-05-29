@@ -154,10 +154,9 @@ import {
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
-import {
-  notifyTransitionCallbacks,
-  requestCurrentTransition,
-} from './ReactFiberTransition';
+import {requestCurrentTransition} from './ReactFiberTransition';
+
+import {callComponentInDEV} from './ReactFiberCallUserSpace';
 
 export type Update<S, A> = {
   lane: Lane,
@@ -590,7 +589,9 @@ export function renderWithHooks<Props, SecondArg>(
     (workInProgress.mode & StrictLegacyMode) !== NoMode;
 
   shouldDoubleInvokeUserFnsInHooksDEV = shouldDoubleRenderDEV;
-  let children = Component(props, secondArg);
+  let children = __DEV__
+    ? callComponentInDEV(Component, props, secondArg)
+    : Component(props, secondArg);
   shouldDoubleInvokeUserFnsInHooksDEV = false;
 
   // Check if there was a render phase update
@@ -822,7 +823,9 @@ function renderWithHooksAgain<Props, SecondArg>(
       ? HooksDispatcherOnRerenderInDEV
       : HooksDispatcherOnRerender;
 
-    children = Component(props, secondArg);
+    children = __DEV__
+      ? callComponentInDEV(Component, props, secondArg)
+      : Component(props, secondArg);
   } while (didScheduleRenderPhaseUpdateDuringThisPass);
   return children;
 }
@@ -1963,13 +1966,15 @@ type ActionStateQueue<S, P> = {
   action: (Awaited<S>, P) => S,
   // This is a circular linked list of pending action payloads. It incudes the
   // action that is currently running.
-  pending: ActionStateQueueNode<P> | null,
+  pending: ActionStateQueueNode<S, P> | null,
 };
 
-type ActionStateQueueNode<P> = {
+type ActionStateQueueNode<S, P> = {
   payload: P,
+  // This is the action implementation at the time it was dispatched.
+  action: (Awaited<S>, P) => S,
   // This is never null because it's part of a circular linked list.
-  next: ActionStateQueueNode<P>,
+  next: ActionStateQueueNode<S, P>,
 };
 
 function dispatchActionState<S, P>(
@@ -1986,8 +1991,9 @@ function dispatchActionState<S, P>(
   if (last === null) {
     // There are no pending actions; this is the first one. We can run
     // it immediately.
-    const newLast: ActionStateQueueNode<P> = {
+    const newLast: ActionStateQueueNode<S, P> = {
       payload,
+      action: actionQueue.action,
       next: (null: any), // circular
     };
     newLast.next = actionQueue.pending = newLast;
@@ -1996,13 +2002,14 @@ function dispatchActionState<S, P>(
       actionQueue,
       (setPendingState: any),
       (setState: any),
-      payload,
+      newLast,
     );
   } else {
     // There's already an action running. Add to the queue.
     const first = last.next;
-    const newLast: ActionStateQueueNode<P> = {
+    const newLast: ActionStateQueueNode<S, P> = {
       payload,
+      action: actionQueue.action,
       next: first,
     };
     actionQueue.pending = last.next = newLast;
@@ -2013,16 +2020,11 @@ function runActionStateAction<S, P>(
   actionQueue: ActionStateQueue<S, P>,
   setPendingState: boolean => void,
   setState: Dispatch<S | Awaited<S>>,
-  payload: P,
+  node: ActionStateQueueNode<S, P>,
 ) {
-  const action = actionQueue.action;
-  const prevState = actionQueue.state;
-
   // This is a fork of startTransition
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: BatchConfigTransition = {
-    _callbacks: new Set<(BatchConfigTransition, mixed) => mixed>(),
-  };
+  const currentTransition: BatchConfigTransition = {};
   ReactSharedInternals.T = currentTransition;
   if (__DEV__) {
     ReactSharedInternals.T._updatedFibers = new Set();
@@ -2032,8 +2034,21 @@ function runActionStateAction<S, P>(
   // This will be reverted automatically when all actions are finished.
   setPendingState(true);
 
+  // `node.action` represents the action function at the time it was dispatched.
+  // If this action was queued, it might be stale, i.e. it's not necessarily the
+  // most current implementation of the action, stored on `actionQueue`. This is
+  // intentional. The conceptual model for queued actions is that they are
+  // queued in a remote worker; the dispatch happens immediately, only the
+  // execution is delayed.
+  const action = node.action;
+  const payload = node.payload;
+  const prevState = actionQueue.state;
   try {
     const returnValue = action(prevState, payload);
+    const onStartTransitionFinish = ReactSharedInternals.S;
+    if (onStartTransitionFinish !== null) {
+      onStartTransitionFinish(currentTransition, returnValue);
+    }
     if (
       returnValue !== null &&
       typeof returnValue === 'object' &&
@@ -2041,7 +2056,6 @@ function runActionStateAction<S, P>(
       typeof returnValue.then === 'function'
     ) {
       const thenable = ((returnValue: any): Thenable<Awaited<S>>);
-      notifyTransitionCallbacks(currentTransition, thenable);
 
       // Attach a listener to read the return state of the action. As soon as
       // this resolves, we can run the next action in the sequence.
@@ -2132,7 +2146,7 @@ function finishRunningActionStateAction<S, P>(
         actionQueue,
         (setPendingState: any),
         (setState: any),
-        next.payload,
+        next,
       );
     }
   }
@@ -2843,9 +2857,7 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactSharedInternals.T;
-  const currentTransition: BatchConfigTransition = {
-    _callbacks: new Set<(BatchConfigTransition, mixed) => mixed>(),
-  };
+  const currentTransition: BatchConfigTransition = {};
 
   if (enableAsyncActions) {
     // We don't really need to use an optimistic update here, because we
@@ -2876,6 +2888,10 @@ function startTransition<S>(
   try {
     if (enableAsyncActions) {
       const returnValue = callback();
+      const onStartTransitionFinish = ReactSharedInternals.S;
+      if (onStartTransitionFinish !== null) {
+        onStartTransitionFinish(currentTransition, returnValue);
+      }
 
       // Check if we're inside an async action scope. If so, we'll entangle
       // this new action with the existing scope.
@@ -2891,7 +2907,6 @@ function startTransition<S>(
         typeof returnValue.then === 'function'
       ) {
         const thenable = ((returnValue: any): Thenable<mixed>);
-        notifyTransitionCallbacks(currentTransition, thenable);
         // Create a thenable that resolves to `finishedState` once the async
         // action has completed.
         const thenableForFinishedState = chainThenableValue(

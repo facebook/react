@@ -8,16 +8,20 @@
 import chalk from "chalk";
 
 const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
+const NextConfigFileRE = /^next\.config\.(js|mjs)$/;
 const StrictModeRE = /<(React\.StrictMode|StrictMode)>/;
+const NextStrictModeRE = /reactStrictMode:\s*true/;
 let StrictModeUsage = false;
 
 export default {
   run(source: string, path: string): void {
-    if (JsFileExtensionRE.exec(path) === null) {
+    if (StrictModeUsage) {
       return;
     }
 
-    if (!StrictModeUsage) {
+    if (NextConfigFileRE.exec(path) !== null) {
+      StrictModeUsage = NextStrictModeRE.exec(source) !== null;
+    } else if (JsFileExtensionRE.exec(path) !== null) {
       StrictModeUsage = StrictModeRE.exec(source) !== null;
     }
   },

@@ -876,7 +876,7 @@ export function mapTerminalSuccessors(
 
 export function terminalHasFallthrough<
   T extends Terminal,
-  U extends T & { fallthrough: BlockId }
+  U extends T & { fallthrough: BlockId },
 >(terminal: T): terminal is U {
   switch (terminal.kind) {
     case "maybe-throw":

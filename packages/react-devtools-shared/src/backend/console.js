@@ -18,7 +18,10 @@ import type {
 import {format, formatWithStyles} from './utils';
 
 import {getInternalReactConstants, getDispatcherRef} from './renderer';
-import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
+import {
+  getStackByFiberInDevAndProd,
+  supportsNativeConsoleTasks,
+} from './DevToolsFiberComponentStack';
 import {consoleManagedByDevToolsDuringStrictMode} from 'react-devtools-feature-flags';
 import {castBool, castBrowserTheme} from '../utils';
 
@@ -235,7 +238,10 @@ export function patch({
                   }
                 }
 
-                if (shouldAppendWarningStack) {
+                if (
+                  shouldAppendWarningStack &&
+                  !supportsNativeConsoleTasks(current)
+                ) {
                   const componentStack = getStackByFiberInDevAndProd(
                     workTagMap,
                     current,
@@ -294,7 +300,7 @@ export function unpatch(): void {
 
 let unpatchForStrictModeFn: null | (() => void) = null;
 
-// NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialRenderInStrictMode
+// NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialCommitInStrictMode
 export function patchForStrictMode() {
   if (consoleManagedByDevToolsDuringStrictMode) {
     const overrideConsoleMethods = [
@@ -359,7 +365,7 @@ export function patchForStrictMode() {
   }
 }
 
-// NOTE: KEEP IN SYNC with src/hook.js:unpatchConsoleForInitialRenderInStrictMode
+// NOTE: KEEP IN SYNC with src/hook.js:unpatchConsoleForInitialCommitInStrictMode
 export function unpatchForStrictMode(): void {
   if (consoleManagedByDevToolsDuringStrictMode) {
     if (unpatchForStrictModeFn !== null) {
