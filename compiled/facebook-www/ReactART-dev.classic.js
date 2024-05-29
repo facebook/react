@@ -60,7 +60,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-classic-15a88fe3';
+var ReactVersion = '19.0.0-www-classic-e2e1fbaf';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -8665,7 +8665,7 @@ function updateReducerImpl(hook, current, reducer) {
   var queue = hook.queue;
 
   if (queue === null) {
-    throw new Error('Should have a queue. This is likely a bug in React. Please file an issue.');
+    throw new Error('Should have a queue. You are likely calling Hooks conditionally, ' + 'which is not allowed. (https://react.dev/link/invalid-hook-call)');
   }
 
   queue.lastRenderedReducer = reducer; // The last rebase update that is NOT part of the base state.
@@ -8900,7 +8900,7 @@ function rerenderReducer(reducer, initialArg, init) {
   var queue = hook.queue;
 
   if (queue === null) {
-    throw new Error('Should have a queue. This is likely a bug in React. Please file an issue.');
+    throw new Error('Should have a queue. You are likely calling Hooks conditionally, ' + 'which is not allowed. (https://react.dev/link/invalid-hook-call)');
   }
 
   queue.lastRenderedReducer = reducer; // This is a re-render. Apply the new render phase updates to the previous

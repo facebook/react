@@ -12081,7 +12081,7 @@ function updateReducerImpl(hook, current, reducer) {
   var queue = hook.queue;
 
   if (queue === null) {
-    throw new Error('Should have a queue. This is likely a bug in React. Please file an issue.');
+    throw new Error('Should have a queue. You are likely calling Hooks conditionally, ' + 'which is not allowed. (https://react.dev/link/invalid-hook-call)');
   }
 
   queue.lastRenderedReducer = reducer; // The last rebase update that is NOT part of the base state.
@@ -12316,7 +12316,7 @@ function rerenderReducer(reducer, initialArg, init) {
   var queue = hook.queue;
 
   if (queue === null) {
-    throw new Error('Should have a queue. This is likely a bug in React. Please file an issue.');
+    throw new Error('Should have a queue. You are likely calling Hooks conditionally, ' + 'which is not allowed. (https://react.dev/link/invalid-hook-call)');
   }
 
   queue.lastRenderedReducer = reducer; // This is a re-render. Apply the new render phase updates to the previous
@@ -30236,7 +30236,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-c9475fbe';
+var ReactVersion = '19.0.0-www-modern-4c2e3832';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
