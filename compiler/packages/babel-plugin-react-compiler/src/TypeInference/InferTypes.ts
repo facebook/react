@@ -98,7 +98,7 @@ function equation(left: Type, right: Type): TypeEquation {
 }
 
 function* generate(
-  func: HIRFunction,
+  func: HIRFunction
 ): Generator<TypeEquation, void, undefined> {
   if (func.env.fnType === "Component") {
     const [_, ref] = func.params;
@@ -126,7 +126,7 @@ function* generate(
 
 function* generateInstructionTypes(
   env: Environment,
-  instr: Instruction,
+  instr: Instruction
 ): Generator<TypeEquation, void, undefined> {
   const { lvalue, value } = instr;
   const left = lvalue.identifier.type;
@@ -160,7 +160,7 @@ function* generateInstructionTypes(
       if (env.config.enableUseTypeAnnotations) {
         yield equation(
           value.lvalue.place.identifier.type,
-          value.value.identifier.type,
+          value.value.identifier.type
         );
         const valueType =
           value.type === null ? makeType() : lowerType(value.type);
@@ -170,7 +170,7 @@ function* generateInstructionTypes(
         yield equation(left, value.value.identifier.type);
         yield equation(
           value.lvalue.place.identifier.type,
-          value.value.identifier.type,
+          value.value.identifier.type
         );
       }
       break;
@@ -370,7 +370,7 @@ class Unifier {
       const objectType = this.get(tB.object);
       const propertyType = this.env.getPropertyType(
         objectType,
-        tB.propertyName,
+        tB.propertyName
       );
       if (propertyType !== null) {
         this.unify(tA, propertyType);

@@ -130,7 +130,7 @@ export default class HIRBuilder {
     env: Environment,
     parentFunction: NodePath<t.Function>, // the outermost function being compiled
     bindings: Bindings | null = null,
-    context: Array<t.Identifier> | null = null,
+    context: Array<t.Identifier> | null = null
   ) {
     this.#env = env;
     this.#bindings = bindings ?? new Map();
@@ -158,7 +158,7 @@ export default class HIRBuilder {
           id: makeInstructionId(0),
           loc: instruction.loc,
         },
-        continuationBlock,
+        continuationBlock
       );
     }
   }
@@ -186,7 +186,7 @@ export default class HIRBuilder {
   }
 
   #resolveBabelBinding(
-    path: NodePath<t.Identifier | t.JSXIdentifier>,
+    path: NodePath<t.Identifier | t.JSXIdentifier>
   ): Binding | null {
     const originalName = path.node.name;
     const binding = path.scope.getBinding(originalName);
@@ -227,7 +227,7 @@ export default class HIRBuilder {
    * ```
    */
   resolveIdentifier(
-    path: NodePath<t.Identifier | t.JSXIdentifier>,
+    path: NodePath<t.Identifier | t.JSXIdentifier>
   ): VariableBinding {
     const originalName = path.node.name;
     const babelBinding = this.#resolveBabelBinding(path);
@@ -292,7 +292,7 @@ export default class HIRBuilder {
     if (binding) {
       // Check if the binding is from module scope, if so return null
       const outerBinding = this.parentFunction.scope.parent.getBinding(
-        path.node.name,
+        path.node.name
       );
       if (binding === outerBinding) {
         return false;
@@ -342,7 +342,7 @@ export default class HIRBuilder {
       if (
         !rpoBlocks.has(id) &&
         block.instructions.some(
-          (instr) => instr.value.kind === "FunctionExpression",
+          (instr) => instr.value.kind === "FunctionExpression"
         )
       ) {
         CompilerError.throwTodo({
@@ -472,7 +472,7 @@ export default class HIRBuilder {
         description: null,
         loc: null,
         suggestions: null,
-      },
+      }
     );
     return value;
   }
@@ -495,7 +495,7 @@ export default class HIRBuilder {
         description: null,
         loc: null,
         suggestions: null,
-      },
+      }
     );
     return value;
   }
@@ -510,7 +510,7 @@ export default class HIRBuilder {
     continueBlock: BlockId,
     // block following the loop. "break" jumps here.
     breakBlock: BlockId,
-    fn: () => T,
+    fn: () => T
   ): T {
     this.#scopes.push({
       kind: "loop",
@@ -531,7 +531,7 @@ export default class HIRBuilder {
         description: null,
         loc: null,
         suggestions: null,
-      },
+      }
     );
     return value;
   }

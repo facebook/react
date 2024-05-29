@@ -72,7 +72,7 @@ function runBabelPluginReactCompiler(
   text: string,
   file: string,
   language: "flow" | "typescript",
-  options: Partial<PluginOptions> | null,
+  options: Partial<PluginOptions> | null
 ): BabelCore.BabelFileResult {
   const ast = BabelParser.parse(text, {
     sourceFilename: file,
@@ -89,7 +89,7 @@ function runBabelPluginReactCompiler(
   });
   if (result?.code == null) {
     throw new Error(
-      `Expected BabelPluginReactForget to codegen successfully, got: ${result}`,
+      `Expected BabelPluginReactForget to codegen successfully, got: ${result}`
     );
   }
   return result;
@@ -101,7 +101,7 @@ function compile(sourceCode: string, filename: string) {
       sourceCode,
       filename,
       "typescript",
-      COMPILER_OPTIONS,
+      COMPILER_OPTIONS
     );
   } catch {}
 }
@@ -145,8 +145,8 @@ export default {
       countUniqueLocInEvents(ActionableFailures);
     console.log(
       chalk.green(
-        `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`,
-      ),
+        `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`
+      )
     );
   },
 };
