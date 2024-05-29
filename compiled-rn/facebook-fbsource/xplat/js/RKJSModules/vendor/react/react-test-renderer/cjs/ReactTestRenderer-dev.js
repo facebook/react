@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b01346a616a954f7e5c6aa02b898719f>>
+ * @generated SignedSource<<8e7d9cc3ad79afcba96d9e66394cca14>>
  */
 
 'use strict';
@@ -8005,7 +8005,7 @@ function updateReducerImpl(hook, current, reducer) {
   var queue = hook.queue;
 
   if (queue === null) {
-    throw new Error('Should have a queue. This is likely a bug in React. Please file an issue.');
+    throw new Error('Should have a queue. You are likely calling Hooks conditionally, ' + 'which is not allowed. (https://react.dev/link/invalid-hook-call)');
   }
 
   queue.lastRenderedReducer = reducer; // The last rebase update that is NOT part of the base state.
@@ -8240,7 +8240,7 @@ function rerenderReducer(reducer, initialArg, init) {
   var queue = hook.queue;
 
   if (queue === null) {
-    throw new Error('Should have a queue. This is likely a bug in React. Please file an issue.');
+    throw new Error('Should have a queue. You are likely calling Hooks conditionally, ' + 'which is not allowed. (https://react.dev/link/invalid-hook-call)');
   }
 
   queue.lastRenderedReducer = reducer; // This is a re-render. Apply the new render phase updates to the previous
@@ -23471,7 +23471,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-0d4b9126';
+var ReactVersion = '19.0.0-rc-f503c54f';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

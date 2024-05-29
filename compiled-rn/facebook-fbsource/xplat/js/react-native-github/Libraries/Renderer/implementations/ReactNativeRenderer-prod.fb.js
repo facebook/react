@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d07de192b2df40db5d44ec6c2d08edb2>>
+ * @generated SignedSource<<6f2aad6aeb6b6bb634ac7b24907148cf>>
  */
 
 "use strict";
@@ -3938,7 +3938,7 @@ function updateReducerImpl(hook, current, reducer) {
   var queue = hook.queue;
   if (null === queue)
     throw Error(
-      "Should have a queue. This is likely a bug in React. Please file an issue."
+      "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
     );
   queue.lastRenderedReducer = reducer;
   var baseQueue = hook.baseQueue,
@@ -4047,7 +4047,7 @@ function rerenderReducer(reducer) {
     queue = hook.queue;
   if (null === queue)
     throw Error(
-      "Should have a queue. This is likely a bug in React. Please file an issue."
+      "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
     );
   queue.lastRenderedReducer = reducer;
   var dispatch = queue.dispatch,
@@ -10696,11 +10696,11 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     traverseOwnerTreeUp(hierarchy, instance);
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-rc-1573a96d" !== isomorphicReactPackageVersion)
+if ("19.0.0-rc-2e89009b" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-rc-1573a96d\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-rc-2e89009b\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -10750,7 +10750,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1192 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-1573a96d",
+    version: "19.0.0-rc-2e89009b",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10793,7 +10793,7 @@ var internals$jscomp$inline_1439 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-1573a96d"
+  reconcilerVersion: "19.0.0-rc-2e89009b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1440 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

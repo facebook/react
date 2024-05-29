@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f9a5a11486f200f08e59ce3e06fc28a3>>
+ * @generated SignedSource<<2e682bd27fce85dbf44c7d76dad0d567>>
  */
 
 "use strict";
@@ -4037,7 +4037,7 @@ function updateReducerImpl(hook, current, reducer) {
   var queue = hook.queue;
   if (null === queue)
     throw Error(
-      "Should have a queue. This is likely a bug in React. Please file an issue."
+      "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
     );
   queue.lastRenderedReducer = reducer;
   var baseQueue = hook.baseQueue,
@@ -4146,7 +4146,7 @@ function rerenderReducer(reducer) {
     queue = hook.queue;
   if (null === queue)
     throw Error(
-      "Should have a queue. This is likely a bug in React. Please file an issue."
+      "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
     );
   queue.lastRenderedReducer = reducer;
   var dispatch = queue.dispatch,
@@ -11260,7 +11260,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1205 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-1abc9c11",
+    version: "19.0.0-rc-cefeada5",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11316,7 +11316,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-1abc9c11"
+  reconcilerVersion: "19.0.0-rc-cefeada5"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

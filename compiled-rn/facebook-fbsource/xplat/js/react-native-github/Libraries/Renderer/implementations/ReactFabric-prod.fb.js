@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<90fa919b6a227b2cc430690a633373b6>>
+ * @generated SignedSource<<e220fc857a21f1b640cba2d994902482>>
  */
 
 "use strict";
@@ -3915,7 +3915,7 @@ function updateReducerImpl(hook, current, reducer) {
   var queue = hook.queue;
   if (null === queue)
     throw Error(
-      "Should have a queue. This is likely a bug in React. Please file an issue."
+      "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
     );
   queue.lastRenderedReducer = reducer;
   var baseQueue = hook.baseQueue,
@@ -4024,7 +4024,7 @@ function rerenderReducer(reducer) {
     queue = hook.queue;
   if (null === queue)
     throw Error(
-      "Should have a queue. This is likely a bug in React. Please file an issue."
+      "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
     );
   queue.lastRenderedReducer = reducer;
   var dispatch = queue.dispatch,
@@ -10554,7 +10554,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1124 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-515f4c11",
+    version: "19.0.0-rc-a1153661",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10597,7 +10597,7 @@ var internals$jscomp$inline_1354 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-515f4c11"
+  reconcilerVersion: "19.0.0-rc-a1153661"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1355 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b303e864c1beaa1151f860061b09a0be>>
+ * @generated SignedSource<<4e21c55d45573268a0b3ae3a87517a05>>
  */
 
 "use strict";
@@ -2625,7 +2625,7 @@ function updateReducerImpl(hook, current, reducer) {
   var queue = hook.queue;
   if (null === queue)
     throw Error(
-      "Should have a queue. This is likely a bug in React. Please file an issue."
+      "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
     );
   queue.lastRenderedReducer = reducer;
   var baseQueue = hook.baseQueue,
@@ -2734,7 +2734,7 @@ function rerenderReducer(reducer) {
     queue = hook.queue;
   if (null === queue)
     throw Error(
-      "Should have a queue. This is likely a bug in React. Please file an issue."
+      "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
     );
   queue.lastRenderedReducer = reducer;
   var dispatch = queue.dispatch,
@@ -9920,7 +9920,7 @@ var devToolsConfig$jscomp$inline_1130 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-rc-17313e5b",
+  version: "19.0.0-rc-f50fffbf",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9964,7 +9964,7 @@ var devToolsConfig$jscomp$inline_1130 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-17313e5b"
+  reconcilerVersion: "19.0.0-rc-f50fffbf"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
