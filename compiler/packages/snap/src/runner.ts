@@ -62,9 +62,9 @@ const opts: RunnerOptions = yargs
     "Only run fixtures which match the contents of testfilter.txt"
   )
   .default("filter", false)
-  .boolean('verbose')
-  .describe('verbose', 'Enable additional logging')
-  .default('verbose', false)
+  .boolean("verbose")
+  .describe("verbose", "Enable additional logging")
+  .default("verbose", false)
   .help("help")
   .strict()
   .parseSync(hideBin(process.argv));
@@ -108,7 +108,7 @@ async function runFixtures(
 
     entries = await Promise.all(work);
   } else {
-    log('runFixtures() start');
+    log("runFixtures() start");
     entries = [];
     for (const [fixtureName, fixture] of fixtures) {
       log(`${fixture.inputPath} start`);
@@ -118,10 +118,10 @@ async function runFixtures(
         (filter?.debug ?? false) && isOnlyFixture,
         true
       );
-      log('...complete');
+      log("...complete");
       entries.push([fixtureName, output]);
     }
-    log('runFixtures() complete');
+    log("runFixtures() complete");
   }
 
   return new Map(entries);

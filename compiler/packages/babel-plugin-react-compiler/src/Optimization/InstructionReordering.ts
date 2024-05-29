@@ -6,7 +6,6 @@ import {
   Instruction,
   markInstructionIds,
 } from "../HIR";
-import { printFunction, printInstruction } from "../HIR/PrintHIR";
 import {
   eachInstructionValueLValue,
   eachInstructionValueOperand,
@@ -68,16 +67,12 @@ import { getOrInsertDefault } from "../Utils/utils";
  * - Probably more things.
  */
 export function instructionReordering(fn: HIRFunction): void {
-  DEBUG && console.log(printFunction(fn));
   const globalDependencies: Dependencies = new Map();
   for (const [, block] of fn.body.blocks) {
     reorderBlock(fn.env, block, globalDependencies);
   }
   markInstructionIds(fn.body);
-  DEBUG && console.log(printFunction(fn));
 }
-
-const DEBUG = false;
 
 type Dependencies = Map<IdentifierId, Node>;
 type Node = {
@@ -91,7 +86,6 @@ function reorderBlock(
   block: BasicBlock,
   globalDependencies: Dependencies
 ): void {
-  DEBUG && console.log(`bb${block.id}`);
   const dependencies: Dependencies = new Map();
   const locals = new Map<string, IdentifierId>();
   let previousIdentifier: IdentifierId | null = null;
@@ -122,7 +116,10 @@ function reorderBlock(
         }
         locals.set(operand.identifier.name.value, instr.lvalue.identifier.id);
       } else {
-        if (dependencies.has(operand.identifier.id) || globalDependencies.has(operand.identifier.id)) {
+        if (
+          dependencies.has(operand.identifier.id) ||
+          globalDependencies.has(operand.identifier.id)
+        ) {
           node.dependencies.push(operand.identifier.id);
         }
       }
@@ -173,37 +170,6 @@ function reorderBlock(
 
   const instructions: Array<Instruction> = [];
 
-  function print(
-    id: IdentifierId,
-    seen: Set<IdentifierId>,
-    depth: number = 0
-  ): void {
-    const node = dependencies.get(id) ?? globalDependencies.get(id);
-    if (node == null || seen.has(id)) {
-      DEBUG && console.log(`${"\t|".repeat(depth)} skip $${id}`);
-      return;
-    }
-    seen.add(id);
-    node.dependencies.sort((a, b) => {
-      const aDepth = getDepth(env, a);
-      const bDepth = getDepth(env, b);
-      return bDepth - aDepth;
-    });
-    for (const dep of node.dependencies) {
-      print(dep, seen, depth + 1);
-    }
-    DEBUG && console.log(`${"\t|".repeat(depth)} ${printNode(id, node)}`);
-  }
-  const seen = new Set<IdentifierId>();
-  if (DEBUG) {
-    for (const operand of eachTerminalOperand(block.terminal)) {
-      print(operand.identifier.id, seen);
-    }
-    for (const id of Array.from(dependencies.keys()).reverse()) {
-      print(id, seen);
-    }
-  }
-
   function emit(id: IdentifierId): void {
     const node = dependencies.get(id) ?? globalDependencies.get(id);
     if (node == null) {
@@ -225,7 +191,6 @@ function reorderBlock(
   }
 
   for (const operand of eachTerminalOperand(block.terminal)) {
-    DEBUG && console.log(`terminal operand: $${operand.identifier.id}`);
     emit(operand.identifier.id);
   }
   /**
@@ -242,47 +207,18 @@ function reorderBlock(
     if (
       node.instruction !== null &&
       getReorderingLevel(node.instruction) === ReorderingLevel.Global &&
-      (block.kind === 'block' || block.kind === 'catch')
+      (block.kind === "block" || block.kind === "catch")
     ) {
       globalDependencies.set(id, node);
-      DEBUG && console.log(`global: $${id}`);
     } else {
-      DEBUG && console.log(`other: $${id}`);
       emit(id);
     }
   }
-  if (block.kind !== 'block' && block.kind !== 'catch') {
+  if (block.kind !== "block" && block.kind !== "catch") {
     const extra = instructions.splice(index);
     instructions.splice(0, 0, ...extra);
   }
   block.instructions = instructions;
-  DEBUG && console.log();
-}
-
-function printDeps(deps: Dependencies): string {
-  return (
-    "[\n" +
-    Array.from(deps)
-      .map(([id, dep]) => printNode(id, dep))
-      .join("\n") +
-    "\n]"
-  );
-}
-
-function printNode(id: number, node: Node): string {
-  if (
-    node.instruction != null &&
-    node.instruction.value.kind === "FunctionExpression"
-  ) {
-    return `$${id} FunctionExpression deps=[${node.dependencies
-      .map((x) => `$${x}`)
-      .join(", ")}]`;
-  }
-  return `$${id} ${
-    node.instruction != null ? printInstruction(node.instruction) : ""
-  } deps=[${node.dependencies.map((x) => `$${x}`).join(", ")}] depth=${
-    node.depth
-  }`;
 }
 
 enum ReorderingLevel {
@@ -301,20 +237,20 @@ function getReorderingLevel(instr: Instruction): ReorderingLevel {
       return ReorderingLevel.Global;
     }
     /*
-      For locals, a simple and robust strategy is to figure out the range of instructions where the identifier may be reassigned,
-      and then allow reordering of LoadLocal instructions which occur after this range. Obviously for const, this means that all
-      LoadLocals can be reordered, so a simpler thing to start with is just to only allow reordering of loads of known-consts.
-
-      With this overall strategy we can allow global reordering of LoadLocals and remove the global/local reordering distinction
-      (all reordering can be global).
-
-      case "Destructure":
-      case "StoreLocal":
-      case "LoadLocal":
-      {
-        return ReorderingLevel.Local;
-      }
-    */
+     * For locals, a simple and robust strategy is to figure out the range of instructions where the identifier may be reassigned,
+     * and then allow reordering of LoadLocal instructions which occur after this range. Obviously for const, this means that all
+     * LoadLocals can be reordered, so a simpler thing to start with is just to only allow reordering of loads of known-consts.
+     *
+     * With this overall strategy we can allow global reordering of LoadLocals and remove the global/local reordering distinction
+     * (all reordering can be global).
+     *
+     * case "Destructure":
+     * case "StoreLocal":
+     * case "LoadLocal":
+     * {
+     *   return ReorderingLevel.Local;
+     * }
+     */
     default: {
       return ReorderingLevel.None;
     }
