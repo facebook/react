@@ -91,6 +91,7 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
+import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -370,6 +371,13 @@ function* runWithEnvironment(
   yield log({
     kind: "reactive",
     name: "PruneAlwaysInvalidatingScopes",
+    value: reactiveFunction,
+  });
+
+  pruneInitializationDependencies(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneInitializationDependencies",
     value: reactiveFunction,
   });
 
