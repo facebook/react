@@ -31,7 +31,7 @@ export default React.forwardRef(
       }
     : function notNamedLikeAComponent(props) {
         return <div />;
-      }
+      },
 );
 
 ```

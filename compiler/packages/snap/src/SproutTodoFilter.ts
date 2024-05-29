@@ -486,11 +486,15 @@ const skipFilter = new Set([
 
   // bugs
   "bug-invalid-reactivity-value-block",
+  "bug-invalid-pruned-scope-leaks-value",
+  "bug-invalid-hoisting-functionexpr",
   "original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block",
   "original-reactive-scopes-fork/bug-hoisted-declaration-with-scope",
 
   // 'react-compiler-runtime' not yet supported
   "flag-enable-emit-hook-guards",
+
+  "fast-refresh-refresh-on-const-changes-dev",
 ]);
 
 export default skipFilter;

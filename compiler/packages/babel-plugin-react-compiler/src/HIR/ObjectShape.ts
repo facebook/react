@@ -431,6 +431,9 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   ["*", { kind: "Object", shapeId: BuiltInMixedReadonlyId }],
 ]);
 
+addObject(BUILTIN_SHAPES, BuiltInJsxId, []);
+addObject(BUILTIN_SHAPES, BuiltInFunctionId, []);
+
 export const DefaultMutatingHook = addHook(
   BUILTIN_SHAPES,
   {

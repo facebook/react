@@ -1828,4 +1828,30 @@ describe('ReactFlightDOM', () => {
       );
     }
   });
+
+  it('should be able to render a client reference as return value', async () => {
+    const ClientModule = clientExports({
+      text: 'Hello World',
+    });
+
+    function ServerComponent() {
+      return ClientModule.text;
+    }
+
+    const {writable, readable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <ServerComponent />,
+      webpackMap,
+    );
+    pipe(writable);
+    const response = ReactServerDOMClient.createFromReadableStream(readable);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(response);
+    });
+    expect(container.innerHTML).toBe('Hello World');
+  });
 });
