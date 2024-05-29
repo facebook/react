@@ -166,7 +166,10 @@ class Transform extends ReactiveFunctionTransform<State> {
               lvalue: { ...symbolTemp },
               value: {
                 kind: "LoadGlobal",
-                name: "Symbol",
+                binding: {
+                  kind: "Global",
+                  name: "Symbol",
+                },
                 loc,
               },
             },

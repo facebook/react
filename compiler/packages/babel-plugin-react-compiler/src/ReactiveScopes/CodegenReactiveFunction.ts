@@ -1931,7 +1931,7 @@ function codegenInstructionValue(
       break;
     }
     case "LoadGlobal": {
-      value = t.identifier(instrValue.name);
+      value = t.identifier(instrValue.binding.name);
       break;
     }
     case "RegExpLiteral": {

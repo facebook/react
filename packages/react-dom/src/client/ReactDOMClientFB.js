@@ -25,6 +25,9 @@ import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
 
+import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
+ensureCorrectIsomorphicReactVersion();
+
 import {
   getClosestInstanceFromNode,
   getInstanceFromNode,

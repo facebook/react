@@ -67,7 +67,10 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
          * all `fbt` string literals in case they are used as a jsx tag.
          */
         fbtValues.add(lvalue.identifier.id);
-      } else if (value.kind === "LoadGlobal" && FBT_TAGS.has(value.name)) {
+      } else if (
+        value.kind === "LoadGlobal" &&
+        FBT_TAGS.has(value.binding.name)
+      ) {
         // Record references to `fbt` as a global
         fbtValues.add(lvalue.identifier.id);
       } else if (isFbtCallExpression(fbtValues, value)) {
