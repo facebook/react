@@ -449,7 +449,6 @@ function fastAddProperties(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-
   // Flatten nested style props.
   if (isArray(props)) {
     for (const nestedProps of props) {
@@ -465,7 +464,9 @@ function fastAddProperties(
       continue;
     }
 
-    const attributeConfig = ((validAttributes[propKey]: any): AttributeConfiguration);
+    const attributeConfig = ((validAttributes[
+      propKey
+    ]: any): AttributeConfiguration);
 
     if (attributeConfig == null) {
       continue;
