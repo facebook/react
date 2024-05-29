@@ -511,5 +511,6 @@
   "523": "The render was aborted due to being postponed.",
   "524": "Values cannot be passed to next() of AsyncIterables passed to Client Components.",
   "525": "A React Element from an older version of React was rendered. This is not supported. It can happen if:\n- Multiple copies of the \"react\" package is used.\n- A library pre-bundled an old copy of \"react\" or \"react/jsx-runtime\".\n- A compiler tries to \"inline\" JSX instead of using the runtime.",
-  "526": "Could not reference an opaque temporary reference. This is likely due to misconfiguring the temporaryReferences options on the server."
+  "526": "Could not reference an opaque temporary reference. This is likely due to misconfiguring the temporaryReferences options on the server.",
+  "527": "Incompatible React versions: The \"react\" and \"react-dom\" packages must have the exact same version. Instead got:\n  - react:      %s\n  - react-dom:  %s\nLearn more: https://react.dev/warnings/version-mismatch"
 }

@@ -209,7 +209,7 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
         });
 
         // different global values, can't constant propogate
-        if (operandValue.name !== value.name) {
+        if (operandValue.binding.name !== value.binding.name) {
           return null;
         }
         break;
@@ -326,6 +326,8 @@ function evaluateInstruction(
         switch (value.operator) {
           case "+": {
             if (typeof lhs === "number" && typeof rhs === "number") {
+              result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
+            } else if (typeof lhs === "string" && typeof rhs === "string") {
               result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
             }
             break;

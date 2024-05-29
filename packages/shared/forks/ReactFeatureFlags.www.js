@@ -120,8 +120,6 @@ export const disableStringRefs = false;
 
 export const disableLegacyMode = __EXPERIMENTAL__;
 
-export const disableDOMTestUtils = false;
-
 export const enableOwnerStacks = false;
 
 // Flow magic to verify the exports of this file match the original version.

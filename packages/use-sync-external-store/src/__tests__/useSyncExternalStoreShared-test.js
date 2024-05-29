@@ -43,6 +43,13 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
             : 'react-dom-17/umd/react-dom.production.min.js',
         ),
       );
+      jest.mock('react-dom/client', () =>
+        jest.requireActual(
+          __DEV__
+            ? 'react-dom-17/umd/react-dom.development.js'
+            : 'react-dom-17/umd/react-dom.production.min.js',
+        ),
+      );
       // Because React 17 prints extra logs we need to ignore them.
       originalError = console.error;
       console.error = jest.fn();
