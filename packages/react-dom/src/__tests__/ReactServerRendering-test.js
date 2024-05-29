@@ -819,7 +819,7 @@ describe('ReactDOMServer', () => {
     }
 
     function Child() {
-      return [<A key="1" />, <B key="2" />, <span ariaTypo2="no" />];
+      return [<A key="1" />, <B key="2" />, <span ariaTypo2="no" key="3" />];
     }
 
     function App() {

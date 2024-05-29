@@ -126,8 +126,13 @@ function renderToPipeableStream(
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
   moduleBasePath: ServerManifest,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
-  const response = createResponse(moduleBasePath, '');
+  const response = createResponse(
+    moduleBasePath,
+    '',
+    options ? options.temporaryReferences : undefined,
+  );
   let pendingFiles = 0;
   const queuedFields: Array<string> = [];
   busboyStream.on('field', (name, value) => {

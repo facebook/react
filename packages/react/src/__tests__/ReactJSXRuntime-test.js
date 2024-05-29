@@ -299,7 +299,9 @@ describe('ReactJSXRuntime', () => {
     }).toErrorDev(
       'Warning: Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://react.dev/link/warning-keys for more information.\n' +
-        '    in Child (at **)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in Child (at **)\n') +
         '    in Parent (at **)',
     );
   });

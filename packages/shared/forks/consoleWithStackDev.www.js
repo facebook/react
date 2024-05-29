@@ -37,8 +37,8 @@ function printWarning(level, format, args) {
     const ReactSharedInternals =
       React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     // Defensive in case this is fired before React is initialized.
-    if (ReactSharedInternals != null) {
-      const stack = ReactSharedInternals.getStackAddendum();
+    if (ReactSharedInternals != null && ReactSharedInternals.getCurrentStack) {
+      const stack = ReactSharedInternals.getCurrentStack();
       if (stack !== '') {
         format += '%s';
         args.push(stack);
