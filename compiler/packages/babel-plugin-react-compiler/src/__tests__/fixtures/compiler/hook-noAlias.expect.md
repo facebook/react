@@ -46,7 +46,7 @@ function Component(props) {
     () => {
       console.log(props);
     },
-    [props.a]
+    [props.a],
   );
   let t1;
   if ($[2] !== x || $[3] !== item) {

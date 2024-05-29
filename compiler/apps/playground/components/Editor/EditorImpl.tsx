@@ -43,7 +43,7 @@ import {
 } from "./Output";
 
 function parseFunctions(
-  source: string,
+  source: string
 ): Array<
   NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
@@ -148,7 +148,7 @@ function isHookName(s: string): boolean {
 }
 
 function getReactFunctionType(
-  id: NodePath<t.Identifier | null | undefined>,
+  id: NodePath<t.Identifier | null | undefined>
 ): ReactFunctionType {
   if (id && id.node && id.isIdentifier()) {
     if (isHookName(id.node.name)) {
@@ -189,7 +189,7 @@ function compile(source: string): CompilerOutput {
             severity: ErrorSeverity.Todo,
             loc: fn.node.loc ?? null,
             suggestions: null,
-          }),
+          })
         );
         continue;
       }
@@ -205,7 +205,7 @@ function compile(source: string): CompilerOutput {
         "_c",
         null,
         null,
-        null,
+        null
       )) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {
@@ -274,7 +274,7 @@ function compile(source: string): CompilerOutput {
           reason: `Unexpected failure when transforming input! ${err}`,
           loc: null,
           suggestions: null,
-        }),
+        })
       );
     }
   }
@@ -291,7 +291,7 @@ export default function Editor() {
   const { enqueueSnackbar } = useSnackbar();
   const compilerOutput = useMemo(
     () => compile(deferredStore.source),
-    [deferredStore.source],
+    [deferredStore.source]
   );
 
   useMountEffect(() => {
@@ -305,7 +305,7 @@ export default function Editor() {
         ...createMessage(
           "Bad URL - fell back to the default Playground.",
           MessageLevel.Info,
-          MessageSource.Playground,
+          MessageSource.Playground
         ),
       });
       mountStore = defaultStore;
@@ -319,9 +319,7 @@ export default function Editor() {
   return (
     <>
       <div className="relative flex basis top-14">
-        <div
-          className={clsx("relative sm:basis-1/4")}
-        >
+        <div className={clsx("relative sm:basis-1/4")}>
           <Input
             errors={
               compilerOutput.kind === "err" ? compilerOutput.error.details : []

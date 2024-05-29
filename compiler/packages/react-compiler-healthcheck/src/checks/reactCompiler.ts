@@ -16,7 +16,7 @@ import BabelPluginReactCompiler, {
 import { LoggerEvent as RawLoggerEvent } from "babel-plugin-react-compiler/src/Entrypoint";
 import chalk from "chalk";
 
-type LoggerEvent = RawLoggerEvent & {filename: string | null};
+type LoggerEvent = RawLoggerEvent & { filename: string | null };
 
 const SucessfulCompilation: Array<LoggerEvent> = [];
 const ActionableFailures: Array<LoggerEvent> = [];
@@ -24,7 +24,7 @@ const OtherFailures: Array<LoggerEvent> = [];
 
 const logger = {
   logEvent(filename: string | null, rawEvent: RawLoggerEvent) {
-    const event = {...rawEvent, filename};
+    const event = { ...rawEvent, filename };
     switch (event.kind) {
       case "CompileSuccess": {
         SucessfulCompilation.push(event);
@@ -140,8 +140,8 @@ export default {
   report(): void {
     const totalComponents =
       SucessfulCompilation.length +
-      countUniqueLocInEvents(OtherFailures) + 
-      countUniqueLocInEvents(ActionableFailures)
+      countUniqueLocInEvents(OtherFailures) +
+      countUniqueLocInEvents(ActionableFailures);
     console.log(
       chalk.green(
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`

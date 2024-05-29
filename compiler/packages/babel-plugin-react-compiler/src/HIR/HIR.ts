@@ -78,7 +78,7 @@ export type ReactiveInstructionStatement = {
 };
 
 export type ReactiveTerminalStatement<
-  Tterminal extends ReactiveTerminal = ReactiveTerminal
+  Tterminal extends ReactiveTerminal = ReactiveTerminal,
 > = {
   kind: "terminal";
   terminal: Tterminal;

@@ -271,7 +271,10 @@ function getEvaluatorPresets(
   );
   return presets;
 }
-async function format(inputCode: string, language: "typescript" | "flow"): Promise<string> {
+async function format(
+  inputCode: string,
+  language: "typescript" | "flow"
+): Promise<string> {
   return await prettier.format(inputCode, {
     semi: true,
     parser: language === "typescript" ? "babel-ts" : "flow",
@@ -294,7 +297,9 @@ export async function transformFixtureInput(
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
   includeEvaluator: boolean
-): Promise<{ kind: "ok"; value: TransformResult } | { kind: "err"; msg: string }> {
+): Promise<
+  { kind: "ok"; value: TransformResult } | { kind: "err"; msg: string }
+> {
   // Extract the first line to quickly check for custom test directives
   const firstLine = input.substring(0, input.indexOf("\n"));
 

@@ -257,7 +257,7 @@ export type Transformed<T> =
   | { kind: "replace-many"; value: Array<T> };
 
 export class ReactiveFunctionTransform<
-  TState = void
+  TState = void,
 > extends ReactiveFunctionVisitor<TState> {
   override traverseBlock(block: ReactiveBlock, state: TState): void {
     let nextBlock: ReactiveBlock | null = null;
