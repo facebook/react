@@ -509,11 +509,7 @@ function addProperties(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  if (enableAddPropertiesFastPath) {
-    return fastAddProperties(updatePayload, props, validAttributes);
-  } else {
-    return diffProperties(updatePayload, emptyObject, props, validAttributes);
-  }
+  return diffProperties(updatePayload, emptyObject, props, validAttributes);
 }
 
 /**
@@ -533,11 +529,11 @@ export function create(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  return addProperties(
-    null, // updatePayload
-    props,
-    validAttributes,
-  );
+  if (enableAddPropertiesFastPath) {
+    return fastAddProperties(null, props, validAttributes);
+  } else {
+    return addProperties(null, props, validAttributes);
+  }
 }
 
 export function diff(
