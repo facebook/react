@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e788833561fd15923c3878d11f308805>>
+ * @generated SignedSource<<10cfb47da57f40f3c6d1aaf8620d48a4>>
  */
 
 'use strict';
@@ -26212,7 +26212,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-e4976d97';
+var ReactVersion = '19.0.0-rc-76d74f41';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
@@ -26799,7 +26799,7 @@ function findNodeHandle(componentOrHandle) {
   {
     var owner = current;
 
-    if (owner !== null && owner.stateNode !== null) {
+    if (owner !== null && isRendering && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         error('%s is accessing findNodeHandle inside its render(). ' + 'render() should be a pure function of props and state. It should ' + 'never access something that requires stale data from the previous ' + 'render, such as refs. Move this logic to componentDidMount and ' + 'componentDidUpdate instead.', getComponentNameFromType(owner.type) || 'A component');
       }
