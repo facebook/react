@@ -90,7 +90,7 @@ export function findHostInstance_DEPRECATED<TElementType: ElementType>(
 export function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
     const owner = currentOwner;
-    if (owner !== null && owner.stateNode !== null) {
+    if (owner !== null && isRendering && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         console.error(
           '%s is accessing findNodeHandle inside its render(). ' +
