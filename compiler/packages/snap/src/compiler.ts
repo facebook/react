@@ -31,7 +31,7 @@ export function parseLanguage(source: string): "flow" | "typescript" {
 
 function makePluginOptions(
   firstLine: string,
-  parseConfigPragmaFn: typeof ParseConfigPragma,
+  parseConfigPragmaFn: typeof ParseConfigPragma
 ): PluginOptions {
   let gating = null;
   let enableEmitInstrumentForget = null;
@@ -47,14 +47,14 @@ function makePluginOptions(
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
       compilationMode === "all",
-      "Cannot set @compilationMode(..) more than once",
+      "Cannot set @compilationMode(..) more than once"
     );
     compilationMode = "annotation";
   }
   if (firstLine.indexOf("@compilationMode(infer)") !== -1) {
     assert(
       compilationMode === "all",
-      "Cannot set @compilationMode(..) more than once",
+      "Cannot set @compilationMode(..) more than once"
     );
     compilationMode = "infer";
   }
@@ -100,7 +100,7 @@ function makePluginOptions(
 
   let eslintSuppressionRules: Array<string> | null = null;
   const eslintSuppressionMatch = /@eslintSuppressionRules\(([^)]+)\)/.exec(
-    firstLine,
+    firstLine
   );
   if (eslintSuppressionMatch != null) {
     eslintSuppressionRules = eslintSuppressionMatch[1].split("|");
@@ -129,7 +129,7 @@ function makePluginOptions(
     hookPattern = hookPatternMatch[1].trim();
   } else if (firstLine.includes("@hookPattern")) {
     throw new Error(
-      'Invalid @hookPattern:"..." pragma, must contain the prefix between balanced double quotes eg @hookPattern:"pattern"',
+      'Invalid @hookPattern:"..." pragma, must contain the prefix between balanced double quotes eg @hookPattern:"pattern"'
     );
   }
 
@@ -189,7 +189,7 @@ function makePluginOptions(
 export function parseInput(
   input: string,
   filename: string,
-  language: "flow" | "typescript",
+  language: "flow" | "typescript"
 ): BabelCore.types.File {
   // Extract the first line to quickly check for custom test directives
   if (language === "flow") {
@@ -210,7 +210,7 @@ export function parseInput(
 }
 
 function getEvaluatorPresets(
-  language: "typescript" | "flow",
+  language: "typescript" | "flow"
 ): Array<BabelCore.PluginItem> {
   const presets: Array<BabelCore.PluginItem> = [
     {
@@ -232,7 +232,7 @@ function getEvaluatorPresets(
             onlyRemoveTypeImports: true,
           },
         ]
-      : "@babel/preset-flow",
+      : "@babel/preset-flow"
   );
 
   presets.push({
@@ -267,13 +267,13 @@ function getEvaluatorPresets(
           };
         },
       ],
-    },
+    }
   );
   return presets;
 }
 async function format(
   inputCode: string,
-  language: "typescript" | "flow",
+  language: "typescript" | "flow"
 ): Promise<string> {
   return await prettier.format(inputCode, {
     semi: true,
@@ -296,7 +296,7 @@ export async function transformFixtureInput(
   fixturePath: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
-  includeEvaluator: boolean,
+  includeEvaluator: boolean
 ): Promise<
   { kind: "ok"; value: TransformResult } | { kind: "err"; msg: string }
 > {
@@ -337,7 +337,7 @@ export async function transformFixtureInput(
   });
   invariant(
     forgetResult?.code != null,
-    "Expected BabelPluginReactForget to codegen successfully.",
+    "Expected BabelPluginReactForget to codegen successfully."
   );
   const forgetOutput = forgetResult.code;
   let evaluatorCode = null;
@@ -351,7 +351,7 @@ export async function transformFixtureInput(
     try {
       invariant(
         forgetResult?.ast != null,
-        "Expected BabelPluginReactForget ast.",
+        "Expected BabelPluginReactForget ast."
       );
       const result = transformFromAstSync(forgetResult.ast, forgetOutput, {
         presets,
