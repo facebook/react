@@ -82,11 +82,12 @@ module.exports = {
     ],
     "@typescript-eslint/array-type": ["error", { default: "generic" }],
     "@typescript-eslint/triple-slash-reference": "off",
+    "@typescript-eslint/no-var-requires": "off"
   },
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint"],
   root: true,
-  ignorePatterns: ["src/__tests__/**/*", "src/**/*.d.ts", "dist/**/*"],
+  ignorePatterns: ["**/__tests__/**/*", "**/*.d.ts", "**/dist/**/*"],
   env: {
     node: true,
   },
