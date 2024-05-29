@@ -333,7 +333,6 @@ export async function transformFixtureInput(
     sourceType: "module",
     ast: includeEvaluator,
     cloneInputAst: includeEvaluator,
-    configFile: false,
   });
   invariant(
     forgetResult?.code != null,
@@ -356,7 +355,6 @@ export async function transformFixtureInput(
       const result = transformFromAstSync(forgetResult.ast, forgetOutput, {
         presets,
         filename: virtualFilepath,
-        configFile: false,
       });
       if (result?.code == null) {
         return {
@@ -381,7 +379,6 @@ export async function transformFixtureInput(
       const result = transformFromAstSync(inputAst, input, {
         presets,
         filename: virtualFilepath,
-        configFile: false,
       });
 
       if (result?.code == null) {

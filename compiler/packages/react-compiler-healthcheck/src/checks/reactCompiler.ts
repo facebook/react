@@ -85,7 +85,6 @@ function runBabelPluginReactCompiler(
     retainLines: true,
     plugins: [[BabelPluginReactCompiler, options]],
     sourceType: "module",
-    configFile: false,
   });
   if (result?.code == null) {
     throw new Error(
