@@ -311,6 +311,25 @@ function evaluateInstruction(
       }
       return null;
     }
+    case "UnaryExpression": {
+      switch (value.operator) {
+        case "!": {
+          const operand = read(constants, value.value);
+          if (operand !== null && operand.kind === "Primitive") {
+            const result: Primitive = {
+              kind: "Primitive",
+              value: !operand.value,
+              loc: value.loc,
+            };
+            instr.value = result;
+            return result;
+          }
+          return null;
+        }
+        default:
+          return null;
+      }
+    }
     case "BinaryExpression": {
       const lhsValue = read(constants, value.left);
       const rhsValue = read(constants, value.right);
