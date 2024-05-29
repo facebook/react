@@ -451,8 +451,8 @@ function fastAddProperties(
 ): null | Object {
   // Flatten nested style props.
   if (isArray(props)) {
-    for (const nestedProps of props) {
-      payload = fastAddProperties(payload, nestedProps, validAttributes);
+    for (let i = 0; i < props.length; i++) {
+      payload = fastAddProperties(payload, props[i], validAttributes);
     }
     return payload;
   }
