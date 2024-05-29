@@ -17,7 +17,7 @@ function Component(props) {
     <div className="foo">
       {fbt(
         "Lorum ipsum" + fbt.param("thing", object.b) + " blah blah blah",
-        "More text",
+        "More text"
       )}
     </div>
   );
