@@ -18,7 +18,7 @@ export function runBabelPluginReactCompiler(
   file: string,
   language: "flow" | "typescript",
   options: Partial<PluginOptions> | null,
-  includeAst: boolean = false,
+  includeAst: boolean = false
 ): BabelCore.BabelFileResult {
   const ast = BabelParser.parse(text, {
     sourceFilename: file,
@@ -37,10 +37,11 @@ export function runBabelPluginReactCompiler(
     ],
     sourceType: "module",
     configFile: false,
+    babelrc: false,
   });
   invariant(
     result?.code != null,
-    `Expected BabelPluginReactForget to codegen successfully, got: ${result}`,
+    `Expected BabelPluginReactForget to codegen successfully, got: ${result}`
   );
   return result;
 }

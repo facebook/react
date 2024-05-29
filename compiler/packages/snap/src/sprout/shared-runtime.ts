@@ -224,7 +224,7 @@ export function RenderPropAsChild(props: {
     "div",
     null,
     "HigherOrderComponent",
-    props.items.map((item) => item()),
+    props.items.map((item) => item())
   );
 }
 
@@ -232,7 +232,7 @@ export function Stringify(props: any): React.ReactElement {
   return React.createElement(
     "div",
     null,
-    toJSON(props, props?.shouldInvokeFns),
+    toJSON(props, props?.shouldInvokeFns)
   );
 }
 
@@ -261,7 +261,7 @@ export function ValidateMemoization({
 }
 
 export function createHookWrapper<TProps, TRet>(
-  useMaybeHook: (props: TProps) => TRet,
+  useMaybeHook: (props: TProps) => TRet
 ): FunctionComponent<TProps> {
   return function Component(props: TProps): React.ReactElement {
     const result = useMaybeHook(props);
