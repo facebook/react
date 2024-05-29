@@ -621,16 +621,64 @@ function codegenReactiveScope(
       t.booleanLiteral(true)
     );
   }
-
   let computationBlock = codegenBlock(cx, block);
-  computationBlock.body.push(...cacheStoreStatements);
+  let memoStatement;
   const memoBlock = t.blockStatement(cacheLoadStatements);
+  if (
+    cx.env.config.enableChangeDetectionForDebugging != null &&
+    changeExpressions.length > 0
+  ) {
+    const detectionFunction =
+      cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
+    const changeDetectionStatements: Array<t.Statement> = [];
+    memoBlock.body.forEach((stmt) => {
+      if (
+        stmt.type === "ExpressionStatement" &&
+        stmt.expression.type === "AssignmentExpression" &&
+        stmt.expression.left.type === "Identifier"
+      ) {
+        const name = stmt.expression.left.name;
+        const loadName = cx.synthesizeName(`old$${name}`);
+        statements.push(
+          t.variableDeclaration("let", [
+            t.variableDeclarator(t.identifier(loadName)),
+          ])
+        );
+        stmt.expression.left = t.identifier(loadName);
+        changeDetectionStatements.push(
+          t.expressionStatement(
+            t.callExpression(t.identifier(detectionFunction), [
+              t.identifier(loadName),
+              t.identifier(name),
+              t.stringLiteral(name),
+              t.stringLiteral(cx.fnName),
+            ])
+          )
+        );
+        changeDetectionStatements.push(
+          t.expressionStatement(
+            t.assignmentExpression(
+              "=",
+              t.identifier(name),
+              t.identifier(loadName)
+            )
+          )
+        );
+      }
+    });
+    memoStatement = t.blockStatement([
+      ...computationBlock.body,
+      t.ifStatement(
+        t.unaryExpression("!", testCondition),
+        t.blockStatement([...memoBlock.body, ...changeDetectionStatements])
+      ),
+      ...cacheStoreStatements,
+    ]);
+  } else {
+    computationBlock.body.push(...cacheStoreStatements);
 
-  const memoStatement = t.ifStatement(
-    testCondition,
-    computationBlock,
-    memoBlock
-  );
+    memoStatement = t.ifStatement(testCondition, computationBlock, memoBlock);
+  }
 
   if (cx.env.config.enableMemoizationComments) {
     if (changeExpressionComments.length) {
