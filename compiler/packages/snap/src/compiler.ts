@@ -44,6 +44,7 @@ function makePluginOptions(
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
   let enablePreserveExistingManualUseMemo = false;
+  let disableMemoizationForDebugging = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -124,6 +125,9 @@ function makePluginOptions(
   if (firstLine.includes("@enablePreserveExistingManualUseMemo")) {
     enablePreserveExistingManualUseMemo = true;
   }
+  if (firstLine.includes("@disableMemoizationForDebugging")) {
+    disableMemoizationForDebugging = true;
+  }
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -178,6 +182,7 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       enablePreserveExistingManualUseMemo,
+      disableMemoizationForDebugging,
     },
     compilationMode,
     logger: null,

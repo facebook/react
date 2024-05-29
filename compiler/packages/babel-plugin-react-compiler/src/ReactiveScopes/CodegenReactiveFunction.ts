@@ -614,6 +614,12 @@ function codegenReactiveScope(
         [t.stringLiteral(MEMO_CACHE_SENTINEL)]
       )
     );
+  } else if (cx.env.config.disableMemoizationForDebugging) {
+    testCondition = t.logicalExpression(
+      "||",
+      testCondition,
+      t.booleanLiteral(true)
+    );
   }
 
   let computationBlock = codegenBlock(cx, block);

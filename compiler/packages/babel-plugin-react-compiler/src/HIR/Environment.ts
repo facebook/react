@@ -351,6 +351,15 @@ const EnvironmentConfigSchema = z.object({
   enableTreatFunctionDepsAsConditional: z.boolean().default(false),
 
   /**
+   * When true, always act as though the dependencies of a memoized value
+   * have changed. This makes the compiler not actually perform any optimizations,
+   * but is useful for debugging. Implicitly also sets
+   * @enablePreserveExistingManualUseMemo, because otherwise memoization in the
+   * original source will be disabled as well.
+   */
+  disableMemoizationForDebugging: z.boolean().default(false),
+
+  /**
    * The react native re-animated library uses custom Babel transforms that
    * requires the calls to library API remain unmodified.
    *
