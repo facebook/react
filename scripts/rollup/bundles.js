@@ -231,7 +231,7 @@ const bundles = [
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     minifyWithProdErrorCodes: false,

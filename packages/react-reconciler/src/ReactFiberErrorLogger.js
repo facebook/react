@@ -18,6 +18,8 @@ import reportGlobalError from 'shared/reportGlobalError';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+
 // Side-channel since I'm not sure we want to make this part of the public API
 let componentName: null | string = null;
 let errorBoundaryName: null | string = null;
@@ -34,20 +36,36 @@ export function defaultOnUncaughtError(
   // So we add those into a separate console.warn.
   reportGlobalError(error);
   if (__DEV__) {
-    const componentStack =
-      errorInfo.componentStack != null ? errorInfo.componentStack : '';
-
     const componentNameMessage = componentName
-      ? `An error occurred in the <${componentName}> component:`
-      : 'An error occurred in one of your React components:';
+      ? `An error occurred in the <${componentName}> component.`
+      : 'An error occurred in one of your React components.';
 
-    console['warn'](
-      '%s\n%s\n\n%s',
-      componentNameMessage,
-      componentStack || '',
+    const errorBoundaryMessage =
       'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-        'Visit https://react.dev/link/error-boundaries to learn more about error boundaries.',
-    );
+      'Visit https://react.dev/link/error-boundaries to learn more about error boundaries.';
+
+    if (enableOwnerStacks) {
+      console.warn(
+        '%s\n\n%s\n',
+        componentNameMessage,
+        errorBoundaryMessage,
+        // We let our console.error wrapper add the component stack to the end.
+      );
+    } else {
+      // The current Fiber is disconnected at this point which means that console printing
+      // cannot add a component stack since it terminates at the deletion node. This is not
+      // a problem for owner stacks which are not disconnected but for the parent component
+      // stacks we need to use the snapshot we've previously extracted.
+      const componentStack =
+        errorInfo.componentStack != null ? errorInfo.componentStack : '';
+      // Don't transform to our wrapper
+      console['warn'](
+        '%s\n\n%s\n%s',
+        componentNameMessage,
+        errorBoundaryMessage,
+        componentStack,
+      );
+    }
   }
 }
 
@@ -63,31 +81,47 @@ export function defaultOnCaughtError(
 
   // Caught by error boundary
   if (__DEV__) {
-    const componentStack =
-      errorInfo.componentStack != null ? errorInfo.componentStack : '';
-
     const componentNameMessage = componentName
-      ? `The above error occurred in the <${componentName}> component:`
-      : 'The above error occurred in one of your React components:';
+      ? `The above error occurred in the <${componentName}> component.`
+      : 'The above error occurred in one of your React components.';
 
     // In development, we provide our own message which includes the component stack
     // in addition to the error.
-    // Don't transform to our wrapper
-    console['error'](
-      '%o\n\n%s\n%s\n\n%s',
-      error,
-      componentNameMessage,
-      componentStack,
+    const recreateMessage =
       `React will try to recreate this component tree from scratch ` +
-        `using the error boundary you provided, ${
-          errorBoundaryName || 'Anonymous'
-        }.`,
-    );
+      `using the error boundary you provided, ${
+        errorBoundaryName || 'Anonymous'
+      }.`;
+
+    if (enableOwnerStacks) {
+      console.error(
+        '%o\n\n%s\n\n%s\n',
+        error,
+        componentNameMessage,
+        recreateMessage,
+        // We let our consoleWithStackDev wrapper add the component stack to the end.
+      );
+    } else {
+      // The current Fiber is disconnected at this point which means that console printing
+      // cannot add a component stack since it terminates at the deletion node. This is not
+      // a problem for owner stacks which are not disconnected but for the parent component
+      // stacks we need to use the snapshot we've previously extracted.
+      const componentStack =
+        errorInfo.componentStack != null ? errorInfo.componentStack : '';
+      // Don't transform to our wrapper
+      console['error'](
+        '%o\n\n%s\n\n%s\n%s',
+        error,
+        componentNameMessage,
+        recreateMessage,
+        componentStack,
+      );
+    }
   } else {
     // In production, we print the error directly.
     // This will include the message, the JS stack, and anything the browser wants to show.
     // We pass the error object instead of custom message so that the browser displays the error natively.
-    console['error'](error); // Don't transform to our wrapper
+    console['error'](error); // Don't transform to our wrapper, however, React DevTools can still add a stack.
   }
 }
 
