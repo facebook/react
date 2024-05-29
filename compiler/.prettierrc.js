@@ -2,7 +2,8 @@ const config = {
   requirePragma: false,
   parser: "babel-ts",
   semi: true,
-  singleQuote: false
+  singleQuote: false,
+  trailingComma: "es5"
 }
 
 module.exports = config;
