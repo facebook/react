@@ -98,8 +98,6 @@ export const disableStringRefs = true;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
-export const disableDOMTestUtils = false;
-
 export const enableOwnerStacks = false;
 
 // Flow magic to verify the exports of this file match the original version.

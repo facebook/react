@@ -1848,7 +1848,7 @@ describe('ReactUpdates', () => {
     it('warns about a deferred infinite update loop with useEffect', async () => {
       function NonTerminating() {
         const [step, setStep] = React.useState(0);
-        React.useEffect(() => {
+        React.useEffect(function myEffect() {
           setStep(x => x + 1);
         });
         return step;
@@ -1860,10 +1860,12 @@ describe('ReactUpdates', () => {
 
       let error = null;
       let stack = null;
+      let nativeStack = null;
       const originalConsoleError = console.error;
       console.error = (e, s) => {
         error = e;
         stack = s;
+        nativeStack = new Error().stack;
         Scheduler.log('stop');
       };
       try {
@@ -1876,7 +1878,14 @@ describe('ReactUpdates', () => {
       }
 
       expect(error).toContain('Maximum update depth exceeded');
-      expect(stack).toContain('at NonTerminating');
+      // The currently executing effect should be on the native stack
+      expect(nativeStack).toContain('at myEffect');
+      if (!gate(flags => flags.enableOwnerStacks)) {
+        // The currently running component's name is not in the owner
+        // stack because it's just its JSX callsite.
+        expect(stack).toContain('at NonTerminating');
+      }
+      expect(stack).toContain('at App');
     });
 
     it('can have nested updates if they do not cross the limit', async () => {

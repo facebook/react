@@ -499,8 +499,8 @@ describe('creating element with string ref in constructor', () => {
     }
   }
 
-  // @gate !disableStringRefs
-  it('throws an error', async () => {
+  // @gate !disableStringRefs && !__DEV__
+  it('throws an error in prod', async () => {
     await expect(async function () {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
