@@ -37,44 +37,33 @@ import { arrayPush } from "shared-runtime";
 // useMemo-produced values can exist in nested reactive blocks, as long
 // as their reactive dependencies are a subset of depslist from source
 function useFoo(minWidth, otherProp) {
-  const $ = _c(10);
+  const $ = _c(6);
   const [width] = useState(1);
-  let style;
-  let x;
+  let t0;
   if ($[0] !== width || $[1] !== minWidth || $[2] !== otherProp) {
-    x = [];
-    let t0;
+    const x = [];
+    let t1;
 
-    const t1 = Math.max(minWidth, width);
-    let t2;
-    if ($[5] !== t1) {
-      t2 = { width: t1 };
-      $[5] = t1;
-      $[6] = t2;
+    const t2 = Math.max(minWidth, width);
+    let t3;
+    if ($[4] !== t2) {
+      t3 = { width: t2 };
+      $[4] = t2;
+      $[5] = t3;
     } else {
-      t2 = $[6];
+      t3 = $[5];
     }
-    t0 = t2;
-    style = t0;
+    t1 = t3;
+    const style = t1;
 
     arrayPush(x, otherProp);
+    t0 = [style, x];
     $[0] = width;
     $[1] = minWidth;
     $[2] = otherProp;
-    $[3] = style;
-    $[4] = x;
+    $[3] = t0;
   } else {
-    style = $[3];
-    x = $[4];
-  }
-  let t0;
-  if ($[7] !== style || $[8] !== x) {
-    t0 = [style, x];
-    $[7] = style;
-    $[8] = x;
-    $[9] = t0;
-  } else {
-    t0 = $[9];
+    t0 = $[3];
   }
   return t0;
 }

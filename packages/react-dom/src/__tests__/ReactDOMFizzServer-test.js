@@ -1833,10 +1833,18 @@ describe('ReactDOMFizzServer', () => {
         expect(mockError).toHaveBeenCalledWith(
           'Warning: Each child in a list should have a unique "key" prop.%s%s' +
             ' See https://react.dev/link/warning-keys for more information.%s',
-          '\n\nCheck the top-level render call using <div>.',
+          gate(flags => flags.enableOwnerStacks)
+            ? // We currently don't track owners in Fizz which is responsible for this frame.
+              ''
+            : '\n\nCheck the top-level render call using <div>.',
           '',
           '\n' +
             '    in span (at **)\n' +
+            // TODO: Because this validates after the div has been mounted, it is part of
+            // the parent stack but since owner stacks will switch to owners this goes away again.
+            (gate(flags => flags.enableOwnerStacks)
+              ? '    in div (at **)\n'
+              : '') +
             '    in B (at **)\n' +
             '    in Suspense (at **)\n' +
             '    in div (at **)\n' +
@@ -1890,7 +1898,12 @@ describe('ReactDOMFizzServer', () => {
           </b>
         );
         if (this.props.prefix) {
-          return [readText(this.props.prefix), child];
+          return (
+            <>
+              {readText(this.props.prefix)}
+              {child}
+            </>
+          );
         }
         return child;
       }
@@ -1900,7 +1913,13 @@ describe('ReactDOMFizzServer', () => {
       const {pipe} = renderToPipeableStream(
         <TestProvider ctx="A">
           <div>
-            <Suspense fallback={[<Text text="Loading: " />, <TestConsumer />]}>
+            <Suspense
+              fallback={
+                <>
+                  <Text text="Loading: " />
+                  <TestConsumer />
+                </>
+              }>
               <TestProvider ctx="B">
                 <TestConsumer prefix="Hello: " />
               </TestProvider>

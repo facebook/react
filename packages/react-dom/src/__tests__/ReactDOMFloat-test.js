@@ -369,11 +369,15 @@ describe('ReactDOMFloat', () => {
   }
 
   function loadStylesheets(hrefs) {
+    loadStylesheetsFrom(document, hrefs);
+  }
+
+  function loadStylesheetsFrom(root, hrefs) {
     const event = new window.Event('load');
-    const nodes = document.querySelectorAll('link[rel="stylesheet"]');
-    resolveLoadables(hrefs, nodes, event, href =>
-      Scheduler.log('load stylesheet: ' + href),
-    );
+    const nodes = root.querySelectorAll('link[rel="stylesheet"]');
+    resolveLoadables(hrefs, nodes, event, href => {
+      Scheduler.log('load stylesheet: ' + href);
+    });
   }
 
   function errorStylesheets(hrefs) {
@@ -832,6 +836,8 @@ describe('ReactDOMFloat', () => {
       </html>,
     );
     await waitForAll([]);
+    loadPreloads();
+    await assertLog(['load preload: foo']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -849,15 +855,9 @@ describe('ReactDOMFloat', () => {
       resolveText('bar');
     });
     await act(() => {
-      const sheets = document.querySelectorAll(
-        'link[rel="stylesheet"][data-precedence]',
-      );
-      const event = document.createEvent('Event');
-      event.initEvent('load', true, true);
-      for (let i = 0; i < sheets.length; i++) {
-        sheets[i].dispatchEvent(event);
-      }
+      loadStylesheets();
     });
+    await assertLog(['load stylesheet: foo', 'load stylesheet: bar']);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -877,15 +877,9 @@ describe('ReactDOMFloat', () => {
       resolveText('foo');
     });
     await act(() => {
-      const sheets = document.querySelectorAll(
-        'link[rel="stylesheet"][data-precedence]',
-      );
-      const event = document.createEvent('Event');
-      event.initEvent('load', true, true);
-      for (let i = 0; i < sheets.length; i++) {
-        sheets[i].dispatchEvent(event);
-      }
+      loadStylesheets();
     });
+    await assertLog([]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -1128,6 +1122,30 @@ body {
       </html>,
     );
     await waitForAll([]);
+    await act(() => {
+      loadPreloads();
+      loadStylesheets();
+    });
+    await assertLog([
+      'load preload: one4',
+      'load preload: three4',
+      'load preload: seven1',
+      'load preload: one2',
+      'load preload: two2',
+      'load preload: five1',
+      'load preload: three3',
+      'load preload: four3',
+      'load stylesheet: one1',
+      'load stylesheet: one2',
+      'load stylesheet: one4',
+      'load stylesheet: two2',
+      'load stylesheet: three1',
+      'load stylesheet: three3',
+      'load stylesheet: three4',
+      'load stylesheet: four3',
+      'load stylesheet: five1',
+      'load stylesheet: seven1',
+    ]);
 
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
@@ -1806,6 +1824,16 @@ body {
       </html>,
     );
     await waitForAll([]);
+    await act(() => {
+      loadPreloads();
+      loadStylesheets();
+    });
+    await assertLog([
+      'load preload: baz',
+      'load stylesheet: foo',
+      'load stylesheet: baz',
+      'load stylesheet: bar',
+    ]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -2869,6 +2897,16 @@ body {
       </>,
     );
     await waitForAll([]);
+    await act(() => {
+      loadPreloads();
+      loadStylesheets();
+    });
+    await assertLog([
+      'load preload: third',
+      'load stylesheet: first',
+      'load stylesheet: second',
+      'load stylesheet: third',
+    ]);
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
@@ -2946,24 +2984,7 @@ body {
       <link rel="preload" as="style" href="bar" />,
     ]);
 
-    // Try just this and crash all of Jest
     errorStylesheets(['bar']);
-
-    // // Try this and it fails the test when it shouldn't
-    // await act(() => {
-    //   errorStylesheets(['bar']);
-    // });
-
-    // // Try this there is nothing throwing here which is not really surprising since
-    // // the error is bubbling up through some kind of unhandled promise rejection thingy but
-    // // still I thought it was worth confirming
-    // try {
-    //   await act(() => {
-    //     errorStylesheets(['bar']);
-    //   });
-    // } catch (e) {
-    //   console.log(e);
-    // }
 
     loadStylesheets(['foo']);
     assertLog(['load stylesheet: foo', 'error stylesheet: bar']);
@@ -3127,6 +3148,11 @@ body {
       </App>,
     );
     await waitForAll([]);
+    await act(() => {
+      loadPreloads(['bar']);
+      loadStylesheets(['bar']);
+    });
+    await assertLog(['load preload: bar', 'load stylesheet: bar']);
 
     // The bar stylesheet was inserted. There's still a "foo" preload, even
     // though that update was superseded.
@@ -3193,6 +3219,131 @@ body {
           <link rel="preload" href="bar" as="style" />
         </head>
         <body>hello3</body>
+      </html>,
+    );
+  });
+
+  it('will put a Suspense boundary into fallback if it contains a stylesheet not loaded during a sync update', async () => {
+    function App({children}) {
+      return (
+        <html>
+          <body>{children}</body>
+        </html>
+      );
+    }
+    const root = ReactDOMClient.createRoot(document);
+
+    await clientAct(() => {
+      root.render(<App />);
+    });
+    await waitForAll([]);
+
+    await clientAct(() => {
+      root.render(
+        <App>
+          <Suspense fallback="loading...">
+            <div>
+              hello
+              <link rel="stylesheet" href="foo" precedence="default" />
+            </div>
+          </Suspense>
+        </App>,
+      );
+    });
+    await waitForAll([]);
+
+    // Although the commit suspended, a preload was inserted.
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>loading...</body>
+      </html>,
+    );
+
+    loadPreloads(['foo']);
+    assertLog(['load preload: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>loading...</body>
+      </html>,
+    );
+
+    loadStylesheets(['foo']);
+    assertLog(['load stylesheet: foo']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+        </head>
+        <body>
+          <div>hello</div>
+        </body>
+      </html>,
+    );
+
+    await clientAct(() => {
+      root.render(
+        <App>
+          <Suspense fallback="loading...">
+            <div>
+              hello
+              <link rel="stylesheet" href="foo" precedence="default" />
+              <link rel="stylesheet" href="bar" precedence="default" />
+            </div>
+          </Suspense>
+        </App>,
+      );
+    });
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>
+          <div style="display: none;">hello</div>loading...
+        </body>
+      </html>,
+    );
+
+    loadPreloads(['bar']);
+    assertLog(['load preload: bar']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>
+          <div style="display: none;">hello</div>loading...
+        </body>
+      </html>,
+    );
+
+    loadStylesheets(['bar']);
+    assertLog(['load stylesheet: bar']);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          <link rel="stylesheet" href="bar" data-precedence="default" />
+          <link rel="preload" href="foo" as="style" />
+          <link rel="preload" href="bar" as="style" />
+        </head>
+        <body>
+          <div style="">hello</div>
+        </body>
       </html>,
     );
   });
@@ -6465,6 +6616,14 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: aresource',
+        'load stylesheet: aresource',
+      ]);
 
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
@@ -6556,6 +6715,22 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: bar1',
+        'load preload: foo3',
+        'load preload: default2',
+        'load stylesheet: foo1',
+        'load stylesheet: foo2',
+        'load stylesheet: foo3',
+        'load stylesheet: default1',
+        'load stylesheet: default2',
+        'load stylesheet: bar1',
+      ]);
+
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -6590,6 +6765,11 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog(['load preload: foo', 'load stylesheet: foo']);
 
       root.render(
         <html>
@@ -6640,6 +6820,17 @@ body {
         },
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: qux',
+        'load stylesheet: foo',
+        'load stylesheet: bar',
+        'load stylesheet: qux',
+      ]);
+
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -6666,6 +6857,16 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: foo',
+        'load preload: bar',
+        'load stylesheet: foo',
+        'load stylesheet: bar',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -6688,6 +6889,12 @@ body {
         </html>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog(['load preload: baz', 'load stylesheet: baz']);
+
       // The reason we do not see preloads in the head is they are inserted synchronously
       // during render and then when the new singleton mounts it resets it's content, retaining only styles
       expect(getMeaningfulChildren(document)).toEqual(
@@ -6702,6 +6909,7 @@ body {
         </html>,
       );
     });
+
     it('can support styles inside portals to a shadowRoot', async () => {
       const shadow = document.body.attachShadow({mode: 'open'});
       const root = ReactDOMClient.createRoot(container);
@@ -6724,6 +6932,16 @@ body {
         </>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+        loadStylesheetsFrom(shadow);
+      });
+      await assertLog([
+        'load preload: foo',
+        'load stylesheet: foo',
+        'load stylesheet: foo',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -6745,6 +6963,7 @@ body {
         <div>shadow</div>,
       ]);
     });
+
     it('can support styles inside portals to an element in shadowRoots', async () => {
       const template = document.createElement('template');
       template.innerHTML =
@@ -6783,6 +7002,24 @@ body {
         </>,
       );
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+        loadStylesheetsFrom(shadow);
+        loadStylesheetsFrom(shadowContainer2);
+        loadStylesheetsFrom(shadowContainer2);
+      });
+      await assertLog([
+        'load preload: foo',
+        'load preload: bar',
+        'load preload: baz',
+        'load preload: qux',
+        'load stylesheet: foo',
+        'load stylesheet: foo',
+        'load stylesheet: baz',
+        'load stylesheet: bar',
+        'load stylesheet: qux',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>
@@ -6854,6 +7091,18 @@ body {
       }
       root.render(<ClientApp />);
       await waitForAll([]);
+      await act(() => {
+        loadPreloads();
+        loadStylesheets();
+      });
+      await assertLog([
+        'load preload: preload',
+        'load preload: with\nnewline',
+        'load preload: style"][rel="stylesheet',
+        'load stylesheet: style',
+        'load stylesheet: with\\slashes',
+        'load stylesheet: style"][rel="stylesheet',
+      ]);
       expect(getMeaningfulChildren(document)).toEqual(
         <html>
           <head>

@@ -68,7 +68,9 @@ export function forwardRef<Props, ElementType: React$ElementType>(
         //   React.forwardRef((props, ref) => {...});
         // This kind of inner function is not used elsewhere so the side effect is okay.
         if (!render.name && !render.displayName) {
-          render.displayName = name;
+          Object.defineProperty(render, 'name', {
+            value: name,
+          });
         }
       },
     });
