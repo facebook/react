@@ -1677,7 +1677,7 @@ function createFakeFunction<T>(
   // eslint-disable-next-line no-eval
   const fn: FakeFunction<T> = (0, eval)(code);
   // $FlowFixMe[cannot-write]
-  Object.defineProperty(fn, 'name', {value: name});
+  Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
   // $FlowFixMe[prop-missing]
   fn.displayName = name;
   return fn;
