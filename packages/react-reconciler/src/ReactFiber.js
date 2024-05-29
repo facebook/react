@@ -38,6 +38,7 @@ import {
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableRenderableContext,
   disableLegacyMode,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -103,6 +104,7 @@ import {
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
 import {
@@ -111,6 +113,8 @@ import {
 } from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
 import type {ReactComponentInfo} from '../../shared/ReactTypes';
+import isArray from 'shared/isArray';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 export type {Fiber};
 
@@ -202,6 +206,10 @@ function FiberNode(
     // This isn't directly used but is handy for debugging internals:
     this._debugInfo = null;
     this._debugOwner = null;
+    if (enableOwnerStacks) {
+      this._debugStack = null;
+      this._debugTask = null;
+    }
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
@@ -275,6 +283,10 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // DEV-only fields
 
       workInProgress._debugOwner = current._debugOwner;
+      if (enableOwnerStacks) {
+        workInProgress._debugStack = current._debugStack;
+        workInProgress._debugTask = current._debugTask;
+      }
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
 
@@ -599,6 +611,7 @@ export function createFiberFromTypeAndProps(
           }
         }
         let info = '';
+        let typeString;
         if (__DEV__) {
           if (
             type === undefined ||
@@ -608,19 +621,38 @@ export function createFiberFromTypeAndProps(
           ) {
             info +=
               ' You likely forgot to export your component from the file ' +
-              "it's defined in, or you might have mixed up default and " +
-              'named imports.';
+              "it's defined in, or you might have mixed up default and named imports.";
           }
+
+          if (type === null) {
+            typeString = 'null';
+          } else if (isArray(type)) {
+            typeString = 'array';
+          } else if (
+            type !== undefined &&
+            type.$$typeof === REACT_ELEMENT_TYPE
+          ) {
+            typeString = `<${
+              getComponentNameFromType(type.type) || 'Unknown'
+            } />`;
+            info =
+              ' Did you accidentally export a JSX literal instead of a component?';
+          } else {
+            typeString = typeof type;
+          }
+
           const ownerName = owner ? getComponentNameFromOwner(owner) : null;
           if (ownerName) {
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
+        } else {
+          typeString = type === null ? 'null' : typeof type;
         }
 
         throw new Error(
           'Element type is invalid: expected a string (for built-in ' +
             'components) or a class/function (for composite components) ' +
-            `but got: ${type == null ? type : typeof type}.${info}`,
+            `but got: ${typeString}.${info}`,
         );
       }
     }
@@ -660,6 +692,10 @@ export function createFiberFromElement(
   );
   if (__DEV__) {
     fiber._debugOwner = element._owner;
+    if (enableOwnerStacks) {
+      fiber._debugStack = element._debugStack;
+      fiber._debugTask = element._debugTask;
+    }
   }
   return fiber;
 }

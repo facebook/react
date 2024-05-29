@@ -35,7 +35,7 @@ function Component(_props) {
     const results = [];
     for (const item of collection) {
       results.push(
-        <div key={toJSON(item)}>{toJSON(mutateAndReturn(item))}</div>
+        <div key={toJSON(item)}>{toJSON(mutateAndReturn(item))}</div>,
       );
     }
 

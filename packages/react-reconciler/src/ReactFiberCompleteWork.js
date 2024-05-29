@@ -152,7 +152,6 @@ import {
   getRenderTargetTime,
   getWorkInProgressTransitions,
   shouldRemainOnPreviousScreen,
-  getWorkInProgressRootRenderLanes,
 } from './ReactFiberWorkLoop';
 import {
   OffscreenLane,
@@ -161,7 +160,6 @@ import {
   includesSomeLane,
   mergeLanes,
   claimNextRetryLane,
-  includesOnlyNonUrgentLanes,
 } from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
@@ -534,41 +532,15 @@ function preloadInstanceAndSuspendIfNeeded(
   // loaded yet.
   workInProgress.flags |= MaySuspendCommit;
 
-  // Check if we're rendering at a "non-urgent" priority. This is the same
-  // check that `useDeferredValue` does to determine whether it needs to
-  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
-  // suspending until you opt in with startTransition or Suspense) but it
-  // also happens to be the desired behavior for the concrete use cases we've
-  // thought of so far, like CSS loading, fonts, images, etc.
-  //
-  // We check the "root" render lanes here rather than the "subtree" render
-  // because during a retry or offscreen prerender, the "subtree" render
-  // lanes may include additional "base" lanes that were deferred during
-  // a previous render.
-  // TODO: We may decide to expose a way to force a fallback even during a
-  // sync update.
-  const rootRenderLanes = getWorkInProgressRootRenderLanes();
-  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) {
-    // This is an urgent render. Don't suspend or show a fallback. Also,
-    // there's no need to preload, because we're going to commit this
-    // synchronously anyway.
-    // TODO: Could there be benefit to preloading even during a synchronous
-    // render? The main thread will be blocked until the commit phase, but
-    // maybe the browser would be able to start loading off thread anyway?
-    // Likely a micro-optimization either way because typically new content
-    // is loaded during a transition, not an urgent render.
-  } else {
-    // Preload the instance
-    const isReady = preloadInstance(type, props);
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen()) {
-        // It's OK to suspend. Mark the fiber so we know to suspend before the
-        // commit phase. Then continue rendering.
-        workInProgress.flags |= ShouldSuspendCommit;
-      } else {
-        // Trigger a fallback rather than block the render.
-        suspendCommit();
-      }
+  // preload the instance if necessary. Even if this is an urgent render there
+  // could be benefits to preloading early.
+  // @TODO we should probably do the preload in begin work
+  const isReady = preloadInstance(type, props);
+  if (!isReady) {
+    if (shouldRemainOnPreviousScreen()) {
+      workInProgress.flags |= ShouldSuspendCommit;
+    } else {
+      suspendCommit();
     }
   }
 }
@@ -588,17 +560,12 @@ function preloadResourceAndSuspendIfNeeded(
 
   workInProgress.flags |= MaySuspendCommit;
 
-  const rootRenderLanes = getWorkInProgressRootRenderLanes();
-  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) {
-    // This is an urgent render. Don't suspend or show a fallback.
-  } else {
-    const isReady = preloadResource(resource);
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen()) {
-        workInProgress.flags |= ShouldSuspendCommit;
-      } else {
-        suspendCommit();
-      }
+  const isReady = preloadResource(resource);
+  if (!isReady) {
+    if (shouldRemainOnPreviousScreen()) {
+      workInProgress.flags |= ShouldSuspendCommit;
+    } else {
+      suspendCommit();
     }
   }
 }

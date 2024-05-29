@@ -225,7 +225,7 @@ export function installHook(target: any): DevToolsHook | null {
   // React and DevTools are connecting and the renderer interface isn't avaiable
   // and we want to be able to have consistent logging behavior for double logs
   // during the initial renderer.
-  function patchConsoleForInitialRenderInStrictMode({
+  function patchConsoleForInitialCommitInStrictMode({
     hideConsoleLogsInStrictMode,
     browserTheme,
   }: {
@@ -311,7 +311,7 @@ export function installHook(target: any): DevToolsHook | null {
   }
 
   // NOTE: KEEP IN SYNC with src/backend/console.js:unpatchForStrictMode
-  function unpatchConsoleForInitialRenderInStrictMode() {
+  function unpatchConsoleForInitialCommitInStrictMode() {
     if (unpatchFn !== null) {
       unpatchFn();
       unpatchFn = null;
@@ -451,19 +451,19 @@ export function installHook(target: any): DevToolsHook | null {
         rendererInterface.unpatchConsoleForStrictMode();
       }
     } else {
-      // This should only happen during initial render in the extension before DevTools
+      // This should only happen during initial commit in the extension before DevTools
       // finishes its handshake with the injected renderer
       if (isStrictMode) {
         const hideConsoleLogsInStrictMode =
           window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
         const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
 
-        patchConsoleForInitialRenderInStrictMode({
+        patchConsoleForInitialCommitInStrictMode({
           hideConsoleLogsInStrictMode,
           browserTheme,
         });
       } else {
-        unpatchConsoleForInitialRenderInStrictMode();
+        unpatchConsoleForInitialCommitInStrictMode();
       }
     }
   }
