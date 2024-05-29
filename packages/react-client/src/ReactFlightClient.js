@@ -576,9 +576,19 @@ function nullRefGetter() {
   }
 }
 
+function getServerComponentTaskName(componentInfo: ReactComponentInfo): string {
+  return '<' + (componentInfo.name || '...') + '>';
+}
+
 function getTaskName(type: mixed): string {
   if (type === REACT_FRAGMENT_TYPE) {
     return '<>';
+  }
+  if (typeof type === 'function') {
+    // This is a function so it must have been a Client Reference that resolved to
+    // a function. We use "use client" to indicate that this is the boundary into
+    // the client. There should only be one for any given owner chain.
+    return '"use client"';
   }
   if (
     typeof type === 'object' &&
@@ -586,10 +596,10 @@ function getTaskName(type: mixed): string {
     type.$$typeof === REACT_LAZY_TYPE
   ) {
     if (type._init === readChunk) {
-      const chunk: SomeChunk<any> = (type._payload: any);
-      if (chunk.status === INITIALIZED) {
-        return getTaskName(chunk.value);
-      }
+      // This is a lazy node created by Flight. It is probably a client reference.
+      // We use the "use client" string to indicate that this is the boundary into
+      // the client. There will only be one for any given owner chain.
+      return '"use client"';
     }
     // We don't want to eagerly initialize the initializer in DEV mode so we can't
     // call it to extract the type so we don't know the type of this component.
@@ -1710,12 +1720,13 @@ function buildFakeCallStack<T>(stack: string, innerCall: () => T): () => T {
 }
 
 function initializeFakeTask(
-  componentInfo: ReactComponentInfo | ReactAsyncInfo,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): null | ConsoleTask {
-  if (taskCache === null || typeof componentInfo.stack !== 'string') {
+  if (taskCache === null || typeof debugInfo.stack !== 'string') {
     return null;
   }
-  const stack: string = componentInfo.stack;
+  const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
+  const stack: string = debugInfo.stack;
   const cachedEntry = taskCache.get((componentInfo: any));
   if (cachedEntry !== undefined) {
     return cachedEntry;
@@ -1725,11 +1736,10 @@ function initializeFakeTask(
     initializeFakeTask(owner);
   }
 
-  const componentName = componentInfo.name || '...';
   // eslint-disable-next-line react-internal/no-production-logging
   const createTaskFn = (console: any).createTask.bind(
     console,
-    '<' + componentName + '>',
+    getServerComponentTaskName(componentInfo),
   );
   const callStack = buildFakeCallStack(stack, createTaskFn);
   return callStack();
