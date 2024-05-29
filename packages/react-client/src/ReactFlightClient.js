@@ -1731,10 +1731,11 @@ function initializeFakeTask(
   if (cachedEntry !== undefined) {
     return cachedEntry;
   }
-  const owner: ?ReactComponentInfo = componentInfo.owner;
-  if (owner != null) {
-    initializeFakeTask(owner);
-  }
+
+  const ownerTask =
+    componentInfo.owner == null
+      ? null
+      : initializeFakeTask(componentInfo.owner);
 
   // eslint-disable-next-line react-internal/no-production-logging
   const createTaskFn = (console: any).createTask.bind(
@@ -1742,7 +1743,12 @@ function initializeFakeTask(
     getServerComponentTaskName(componentInfo),
   );
   const callStack = buildFakeCallStack(stack, createTaskFn);
-  return callStack();
+
+  if (ownerTask === null) {
+    return callStack();
+  } else {
+    return ownerTask.run(callStack);
+  }
 }
 
 function resolveDebugInfo(
