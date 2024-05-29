@@ -89,12 +89,11 @@ function createBridge() {
 function createBridgeAndStore() {
   createBridge();
 
-  const {isProfiling, supportsProfiling} = getProfilingFlags();
+  const {isProfiling} = getProfilingFlags();
 
   store = new Store(bridge, {
     isProfiling,
     supportsReloadAndProfile: __IS_CHROME__ || __IS_EDGE__,
-    supportsProfiling,
     // At this time, the timeline can only parse Chrome performance profiles.
     supportsTimeline: __IS_CHROME__,
     supportsTraceUpdates: true,

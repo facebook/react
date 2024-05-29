@@ -716,6 +716,7 @@ describe('ReactHooks', () => {
       useImperativeHandle(ref, () => {}, props.deps);
       return null;
     });
+    App.displayName = 'App';
 
     await expect(async () => {
       await act(() => {
@@ -846,6 +847,7 @@ describe('ReactHooks', () => {
       });
       return null;
     });
+    App.displayName = 'App';
 
     await expect(async () => {
       await act(() => {

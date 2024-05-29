@@ -9,4 +9,8 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ hello: null, world: undefined, "!": true }],
+  sequentialRenders: [
+    { a: null, b: null, c: null },
+    { lauren: true, mofei: true, sathya: true, jason: true },
+  ],
 };

@@ -170,6 +170,7 @@ function makePluginOptions(
       enableEmitInstrumentForget,
       enableEmitHookGuards,
       assertValidMutableRanges: true,
+      enableSharedRuntime__testonly: true,
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
     },

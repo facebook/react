@@ -229,7 +229,9 @@ describe('ReactMultiChild', () => {
           'could change in a future version.\n' +
           '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
-          '    in div (at **)\n' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '    in div (at **)\n') +
           '    in Parent (at **)',
       );
     });
@@ -292,7 +294,9 @@ describe('ReactMultiChild', () => {
           'could change in a future version.\n' +
           '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
-          '    in div (at **)\n' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '    in div (at **)\n') +
           '    in Parent (at **)',
       );
     });

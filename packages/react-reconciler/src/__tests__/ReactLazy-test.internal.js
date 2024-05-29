@@ -228,10 +228,18 @@ describe('ReactLazy', () => {
 
     expect(error.message).toMatch('Element type is invalid');
     assertLog(['Loading...']);
-    assertConsoleErrorDev([
-      'Expected the result of a dynamic import() call',
-      'Expected the result of a dynamic import() call',
-    ]);
+    assertConsoleErrorDev(
+      [
+        'Expected the result of a dynamic import() call',
+        'Expected the result of a dynamic import() call',
+      ],
+      gate(flags => flags.enableOwnerStacks)
+        ? {
+            // There's no owner
+            withoutStack: true,
+          }
+        : undefined,
+    );
     expect(root).not.toMatchRenderedOutput('Hi');
   });
 
@@ -995,7 +1003,10 @@ describe('ReactLazy', () => {
     await expect(async () => {
       await act(() => resolveFakeImport(Foo));
       assertLog(['A', 'B']);
-    }).toErrorDev('    in Text (at **)\n' + '    in Foo (at **)');
+    }).toErrorDev(
+      (gate(flags => flags.enableOwnerStacks) ? '' : '    in Text (at **)\n') +
+        '    in Foo (at **)',
+    );
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 

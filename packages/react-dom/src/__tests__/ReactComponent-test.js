@@ -761,7 +761,9 @@ describe('ReactComponent', () => {
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
-          '    in div (at **)\n' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '    in div (at **)\n') +
           '    in Foo (at **)',
       );
     });
@@ -820,7 +822,9 @@ describe('ReactComponent', () => {
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
-          '    in div (at **)\n' +
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '    in div (at **)\n') +
           '    in Foo (at **)',
       ]);
       await act(() => {

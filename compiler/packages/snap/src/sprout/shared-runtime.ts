@@ -176,6 +176,10 @@ export function useNoAlias(...args: Array<any>): object {
   return noAliasObject;
 }
 
+export function useIdentity<T>(arg: T): T {
+  return arg;
+}
+
 export function invoke<T extends Array<any>, ReturnType>(
   fn: (...input: T) => ReturnType,
   ...params: T

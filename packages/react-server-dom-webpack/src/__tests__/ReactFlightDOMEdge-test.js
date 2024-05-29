@@ -256,7 +256,41 @@ describe('ReactFlightDOMEdge', () => {
       return str;
     }
     const element = <ServerComponent />;
-    const children = new Array(30).fill(element);
+    // Hardcoded list to avoid the key warning
+    const children = (
+      <>
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+      </>
+    );
     const resolvedChildren = new Array(30).fill(str);
     const stream = ReactServerDOMServer.renderToReadableStream(children);
     const [stream1, stream2] = passThrough(stream).tee();
@@ -288,7 +322,41 @@ describe('ReactFlightDOMEdge', () => {
       return div;
     }
     const element = <ServerComponent />;
-    const children = new Array(30).fill(element);
+    // Hardcoded list to avoid the key warning
+    const children = (
+      <>
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+      </>
+    );
     const resolvedChildren = new Array(30).fill(
       '<div>this is a long return value</div>',
     );

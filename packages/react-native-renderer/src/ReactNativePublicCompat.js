@@ -25,14 +25,17 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {doesFiberContain} from 'react-reconciler/src/ReactFiberTreeReflection';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import {currentOwner} from 'react-reconciler/src/ReactFiberCurrentOwner';
+import {
+  current as currentOwner,
+  isRendering,
+} from 'react-reconciler/src/ReactCurrentFiber';
 
 export function findHostInstance_DEPRECATED<TElementType: ElementType>(
   componentOrHandle: ?(ElementRef<TElementType> | number),
 ): ?ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
     const owner = currentOwner;
-    if (owner !== null && owner.stateNode !== null) {
+    if (owner !== null && isRendering && owner.stateNode !== null) {
       if (!owner.stateNode._warnedAboutRefsInRender) {
         console.error(
           '%s is accessing findNodeHandle inside its render(). ' +

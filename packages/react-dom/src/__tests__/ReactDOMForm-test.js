@@ -1097,7 +1097,7 @@ describe('ReactDOMForm', () => {
   });
 
   // @gate enableAsyncActions
-  test('queues multiple actions and runs them in order', async () => {
+  test('useActionState: queues multiple actions and runs them in order', async () => {
     let action;
     function App() {
       const [state, dispatch, isPending] = useActionState(
@@ -1127,6 +1127,51 @@ describe('ReactDOMForm', () => {
     assertLog(['D']);
     expect(container.textContent).toBe('D');
   });
+
+  // @gate enableAsyncActions
+  test(
+    'useActionState: when calling a queued action, uses the implementation ' +
+      'that was current at the time it was dispatched, not the most recent one',
+    async () => {
+      let action;
+      function App({throwIfActionIsDispatched}) {
+        const [state, dispatch, isPending] = useActionState(async (s, a) => {
+          if (throwIfActionIsDispatched) {
+            throw new Error('Oops!');
+          }
+          return await getText(a);
+        }, 'Initial');
+        action = dispatch;
+        return <Text text={state + (isPending ? ' (pending)' : '')} />;
+      }
+
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => root.render(<App throwIfActionIsDispatched={false} />));
+      assertLog(['Initial']);
+
+      // Dispatch two actions. The first one is async, so it forces the second
+      // one into an async queue.
+      await act(() => action('First action'));
+      assertLog(['Initial (pending)']);
+      // This action won't run until the first one finishes.
+      await act(() => action('Second action'));
+
+      // While the first action is still pending, update a prop. This causes the
+      // inline action implementation to change, but it should not affect the
+      // behavior of the action that is already queued.
+      await act(() => root.render(<App throwIfActionIsDispatched={true} />));
+      assertLog(['Initial (pending)']);
+
+      // Finish both of the actions.
+      await act(() => resolveText('First action'));
+      await act(() => resolveText('Second action'));
+      assertLog(['Second action']);
+
+      // Confirm that if we dispatch yet another action, it uses the updated
+      // action implementation.
+      await expect(act(() => action('Third action'))).rejects.toThrow('Oops!');
+    },
+  );
 
   // @gate enableAsyncActions
   test('useActionState: works if action is sync', async () => {

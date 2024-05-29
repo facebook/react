@@ -1731,6 +1731,76 @@ describe('ReactAsyncActions', () => {
     expect(root).toMatchRenderedOutput(<span>Updated</span>);
   });
 
+  // @gate enableAsyncActions
+  test(
+    'regression: updates in an action passed to React.startTransition are batched ' +
+      'even if there were no updates before the first await',
+    async () => {
+      // Regression for a bug that occured in an older, too-clever-by-half
+      // implementation of the isomorphic startTransition API. Now, the
+      // isomorphic startTransition is literally the composition of every
+      // reconciler instance's startTransition, so the behavior is less likely
+      // to regress in the future.
+      const startTransition = React.startTransition;
+
+      let setOptimisticText;
+      function App({text: canonicalText}) {
+        const [text, _setOptimisticText] = useOptimistic(
+          canonicalText,
+          (_, optimisticText) => `${optimisticText} (loading...)`,
+        );
+        setOptimisticText = _setOptimisticText;
+        return (
+          <span>
+            <Text text={text} />
+          </span>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App text="Initial" />);
+      });
+      assertLog(['Initial']);
+      expect(root).toMatchRenderedOutput(<span>Initial</span>);
+
+      // Start an async action using the non-hook form of startTransition. The
+      // action includes an optimistic update.
+      await act(() => {
+        startTransition(async () => {
+          Scheduler.log('Async action started');
+
+          // Yield to an async task *before* any updates have occurred.
+          await getText('Yield before optimistic update');
+
+          // This optimistic update happens after an async gap. In the
+          // regression case, this update was not correctly associated with
+          // the outer async action, causing the optimistic update to be
+          // immediately reverted.
+          setOptimisticText('Updated');
+
+          await getText('Yield before updating');
+          Scheduler.log('Async action ended');
+          startTransition(() => root.render(<App text="Updated" />));
+        });
+      });
+      assertLog(['Async action started']);
+
+      // Wait for an async gap, then schedule an optimistic update.
+      await act(() => resolveText('Yield before optimistic update'));
+
+      // Because the action hasn't finished yet, the optimistic UI is shown.
+      assertLog(['Updated (loading...)']);
+      expect(root).toMatchRenderedOutput(<span>Updated (loading...)</span>);
+
+      // Finish the async action. The optimistic state is reverted and replaced
+      // by the canonical state.
+      await act(() => resolveText('Yield before updating'));
+      assertLog(['Async action ended', 'Updated']);
+      expect(root).toMatchRenderedOutput(<span>Updated</span>);
+    },
+  );
+
   test('React.startTransition captures async errors and passes them to reportError', async () => {
     // NOTE: This is gated here instead of using the pragma because the failure
     // happens asynchronously and the `gate` runtime doesn't capture it.
