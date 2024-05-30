@@ -1648,7 +1648,7 @@ const taskCache: null | WeakMap<
   ConsoleTask,
 > = supportsCreateTask ? new WeakMap() : null;
 
-type FakeFunction<T> = (FakeFunction<T>) => T;
+type FakeFunction<T> = (() => T) => T;
 const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
   ? new Map()
   : (null: any);
@@ -1684,8 +1684,18 @@ function createFakeFunction<T>(
     code += '//# sourceURL=' + filename;
   }
 
-  // eslint-disable-next-line no-eval
-  const fn: FakeFunction<T> = (0, eval)(code);
+  let fn: FakeFunction<T>;
+  try {
+    // eslint-disable-next-line no-eval
+    fn = (0, eval)(code);
+  } catch (x) {
+    // If eval fails, such as if in an environment that doesn't support it,
+    // we fallback to creating a function here. It'll still have the right
+    // name but it'll lose line/column number and file name.
+    fn = function (_) {
+      return _();
+    };
+  }
   // $FlowFixMe[cannot-write]
   Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
   // $FlowFixMe[prop-missing]
