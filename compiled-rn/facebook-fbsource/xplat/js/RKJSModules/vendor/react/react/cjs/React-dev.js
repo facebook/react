@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a504442f74a5c97d4fa7e8c91e8156f4>>
+ * @generated SignedSource<<f3b415267f0bfb7665b4338695d8d314>>
  */
 
 'use strict';
@@ -24,7 +24,7 @@ if (
 }
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-rc-86d4e19f';
+var ReactVersion = '19.0.0-rc-37e13b86';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -1562,9 +1562,16 @@ function createElement(type, config, children) {
   return ReactElement(type, key, ref, undefined, undefined, getOwner(), props);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
-  return ReactElement(oldElement.type, newKey, // When enableRefAsProp is on, this argument is ignored. This check only
+  var clonedElement = ReactElement(oldElement.type, newKey, // When enableRefAsProp is on, this argument is ignored. This check only
   // exists to avoid the `ref` access warning.
   null , undefined, undefined, oldElement._owner, oldElement.props);
+
+  {
+    // The cloned element should inherit the original element's key validation.
+    clonedElement._store.validated = oldElement._store.validated;
+  }
+
+  return clonedElement;
 }
 /**
  * Clone and return a new ReactElement using element as the starting point.
