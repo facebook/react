@@ -69,16 +69,16 @@ import { getOrInsertDefault } from "../Utils/utils";
  * - Probably more things.
  */
 export function instructionReordering(fn: HIRFunction): void {
-  const lastReassignments = findLasReassignment(fn);
+  const lastAssignments = getLastAssignments(fn);
   const globalDependencies: Dependencies = new Map();
   for (const [, block] of fn.body.blocks) {
-    reorderBlock(fn.env, block, globalDependencies, lastReassignments);
+    reorderBlock(fn.env, block, globalDependencies, lastAssignments);
   }
   markInstructionIds(fn.body);
 }
 
-function findLasReassignment(fn: HIRFunction): Reassignments {
-  const lastReassignments: Reassignments = new Map();
+function getLastAssignments(fn: HIRFunction): LastAssignments {
+  const lastAssignments: LastAssignments = new Map();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       for (const lvalue of eachInstructionValueLValue(instr.value)) {
@@ -87,23 +87,23 @@ function findLasReassignment(fn: HIRFunction): Reassignments {
           lvalue.identifier.name.kind === "named"
         ) {
           const name = lvalue.identifier.name.value;
-          const previous = lastReassignments.get(name);
+          const previous = lastAssignments.get(name);
           if (previous !== undefined) {
-            lastReassignments.set(
+            lastAssignments.set(
               name,
               makeInstructionId(Math.max(previous, instr.id))
             );
           } else {
-            lastReassignments.set(name, instr.id);
+            lastAssignments.set(name, instr.id);
           }
         }
       }
     }
   }
-  return lastReassignments;
+  return lastAssignments;
 }
 
-type Reassignments = Map<string, InstructionId>;
+type LastAssignments = Map<string, InstructionId>;
 type Dependencies = Map<IdentifierId, Node>;
 type Node = {
   instruction: Instruction | null;
@@ -121,7 +121,7 @@ function reorderBlock(
   env: Environment,
   block: BasicBlock,
   globalDependencies: Dependencies,
-  lastReassignments: Reassignments
+  lastAssignments: LastAssignments
 ): void {
   const dependencies: Dependencies = new Map();
   const locals = new Map<string, IdentifierId>();
@@ -136,7 +136,7 @@ function reorderBlock(
         depth: null,
       }
     );
-    if (getReorderingLevel(instr, lastReassignments) === ReorderingLevel.None) {
+    if (getReorderingLevel(instr, lastAssignments) === ReorderingLevel.None) {
       if (previousIdentifier !== null) {
         node.dependencies.push(previousIdentifier);
       }
@@ -243,7 +243,7 @@ function reorderBlock(
     }
     if (
       node.instruction !== null &&
-      getReorderingLevel(node.instruction, lastReassignments) ===
+      getReorderingLevel(node.instruction, lastAssignments) ===
         ReorderingLevel.Global &&
       (block.kind === "block" || block.kind === "catch")
     ) {
@@ -261,7 +261,7 @@ function reorderBlock(
 
 function getReorderingLevel(
   instr: Instruction,
-  lastReassignments: Reassignments
+  lastAssignments: LastAssignments
 ): ReorderingLevel {
   switch (instr.value.kind) {
     case "JsxExpression":
@@ -278,7 +278,7 @@ function getReorderingLevel(
         instr.value.place.identifier.name.kind === "named"
       ) {
         const name = instr.value.place.identifier.name.value;
-        const lastAssignment = lastReassignments.get(name);
+        const lastAssignment = lastAssignments.get(name);
         if (lastAssignment !== undefined && lastAssignment < instr.id) {
           return ReorderingLevel.Global;
         }
