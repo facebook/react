@@ -607,6 +607,10 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
+          const [state7, dispatch3] = useFormState();
+          const [state8, dispatch4] = ReactDOM.useFormState();
+          const [state9, dispatch5] = useActionState();
+          const [state10, dispatch6] = React.useActionState();
           const [isPending1] = useTransition();
           const [isPending2, startTransition2] = useTransition();
           const [isPending3] = React.useTransition();
@@ -624,6 +628,10 @@ const tests = {
             setState2();
             dispatch1();
             dispatch2();
+            dispatch3();
+            dispatch4();
+            dispatch5();
+            dispatch6();
             startTransition1();
             startTransition2();
             startTransition3();
@@ -646,7 +654,7 @@ const tests = {
             maybeDispatch();
           }, [
             // Dynamic
-            state1, state2, state3, state4, state5, state6,
+            state1, state2, state3, state4, state5, state6, state7, state8, state9, state10,
             maybeRef1, maybeRef2,
             isPending2, isPending4,
 
