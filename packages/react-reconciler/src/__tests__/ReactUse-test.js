@@ -19,7 +19,6 @@ let useState;
 let useTransition;
 let useMemo;
 let useEffect;
-let useOptimistic;
 let Suspense;
 let startTransition;
 let pendingTextRequests;
@@ -43,7 +42,6 @@ describe('ReactUse', () => {
     useTransition = React.useTransition;
     useMemo = React.useMemo;
     useEffect = React.useEffect;
-    useOptimistic = React.useOptimistic;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
 
