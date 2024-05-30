@@ -231,7 +231,8 @@ function mapIntoArray(
         if (__DEV__) {
           // If `child` was an element without a `key`, we need to validate if
           // it should have had a `key`, before assigning one to `mappedChild`.
-          if (nameSoFar !== '' && isValidElement(child) && child.key == null) {
+          // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
+          if (nameSoFar !== '' && child != null && isValidElement(child) && child.key == null) {
             // We check truthiness of `child._store.validated` instead of being
             // inequal to `1` to provide a bit of backward compatibility for any
             // libraries (like `fbt`) which may be hacking this property.
