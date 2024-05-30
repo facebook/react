@@ -147,7 +147,7 @@ jobs:
           mkdir -p ${BASE_FOLDER}/react-native-github/Libraries/Renderer/
           mkdir -p ${BASE_FOLDER}/RKJSModules/vendor/react/{scheduler,react,react-is,react-test-renderer}/
 
-          # Move React Native renderer 
+          # Move React Native renderer
           mv build/react-native/implementations/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
           mv build/react-native/shims/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
           mv build/facebook-react-native/scheduler/cjs/ $BASE_FOLDER/RKJSModules/vendor/react/scheduler/
@@ -161,9 +161,10 @@ jobs:
           rm $RENDERER_FOLDER/ReactNativeRenderer-{dev,prod,profiling}.js
 
           ls -R ./compiled
-      - name: Add REVISION file
+      - name: Add REVISION files
         run: |
           echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
+          cp ./compiled/facebook-www/REVISION ./compiled/facebook-www/REVISION_TRANSFORMS
           echo ${{ github.sha }} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
       - uses: actions/upload-artifact@v3
         with:
@@ -189,16 +190,7 @@ jobs:
           name: compiled
           path: compiled/
       - run: git status -u
-      - name: Check if only the REVISION file has changed
-        id: check_should_commit
-        run: |
-          if git status --porcelain | grep -qv '/REVISION$'; then
-            echo "should_commit=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_commit=false" >> "$GITHUB_OUTPUT"
-          fi
       - name: Commit changes to branch
-        if: steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
@@ -225,16 +217,7 @@ jobs:
           name: compiled-rn
           path: compiled-rn/
       - run: git status -u
-      - name: Check if only the REVISION file has changed
-        id: check_should_commit
-        run: |
-          if git status --porcelain | grep -qv '/REVISION$'; then
-            echo "should_commit=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_commit=false" >> "$GITHUB_OUTPUT"
-          fi
       - name: Commit changes to branch
-        if: steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
