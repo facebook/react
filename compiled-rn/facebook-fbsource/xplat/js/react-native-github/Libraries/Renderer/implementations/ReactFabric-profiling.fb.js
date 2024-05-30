@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2e682bd27fce85dbf44c7d76dad0d567>>
+ * @generated SignedSource<<dc3b2aaa3c81338654d45795eca7bd82>>
  */
 
 "use strict";
@@ -1089,7 +1089,12 @@ function diffNestedProperty(
 function addNestedProperty(updatePayload, nextProp, validAttributes) {
   if (!nextProp) return updatePayload;
   if (!isArrayImpl(nextProp))
-    return addProperties(updatePayload, nextProp, validAttributes);
+    return diffProperties(
+      updatePayload,
+      emptyObject$1,
+      nextProp,
+      validAttributes
+    );
   for (var i = 0; i < nextProp.length; i++)
     updatePayload = addNestedProperty(
       updatePayload,
@@ -1200,11 +1205,15 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
   return updatePayload;
 }
 function fastAddProperties(payload, props, validAttributes) {
-  var propKey;
-  for (propKey in props) {
-    var prop = props[propKey];
+  if (isArrayImpl(props)) {
+    for (var i = 0; i < props.length; i++)
+      payload = fastAddProperties(payload, props[i], validAttributes);
+    return payload;
+  }
+  for (i in props) {
+    var prop = props[i];
     if (void 0 !== prop) {
-      var attributeConfig = validAttributes[propKey];
+      var attributeConfig = validAttributes[i];
       if (null != attributeConfig) {
         var newValue = void 0;
         "function" === typeof prop
@@ -1214,25 +1223,18 @@ function fastAddProperties(payload, props, validAttributes) {
           : "function" === typeof attributeConfig.process
           ? (newValue = attributeConfig.process(prop))
           : "function" === typeof attributeConfig.diff && (newValue = prop);
-        if (void 0 !== newValue)
-          payload || (payload = {}), (payload[propKey] = newValue);
-        else if (isArrayImpl(prop))
-          for (newValue = 0; newValue < prop.length; newValue++)
-            payload = fastAddProperties(
-              payload,
-              prop[newValue],
-              attributeConfig
-            );
-        else payload = fastAddProperties(payload, prop, attributeConfig);
+        void 0 !== newValue
+          ? (payload || (payload = {}), (payload[i] = newValue))
+          : (payload = fastAddProperties(payload, prop, attributeConfig));
       }
     }
   }
   return payload;
 }
-function addProperties(updatePayload, props, validAttributes) {
+function create(props, validAttributes) {
   return enableAddPropertiesFastPath
-    ? fastAddProperties(updatePayload, props, validAttributes)
-    : diffProperties(updatePayload, emptyObject$1, props, validAttributes);
+    ? fastAddProperties(null, props, validAttributes)
+    : diffProperties(null, emptyObject$1, props, validAttributes);
 }
 function batchedUpdatesImpl(fn, bookkeeping) {
   return fn(bookkeeping);
@@ -1751,14 +1753,13 @@ function resolveUpdatePriority() {
 var scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout;
 function cloneHiddenInstance(instance) {
-  var node = instance.node;
-  var JSCompiler_inline_result = addProperties(
-    null,
-    { style: { display: "none" } },
-    instance.canonical.viewConfig.validAttributes
-  );
+  var node = instance.node,
+    updatePayload = create(
+      { style: { display: "none" } },
+      instance.canonical.viewConfig.validAttributes
+    );
   return {
-    node: cloneNodeWithNewProps(node, JSCompiler_inline_result),
+    node: cloneNodeWithNewProps(node, updatePayload),
     canonical: instance.canonical
   };
 }
@@ -7587,11 +7588,7 @@ function completeWork(current, workInProgress, renderLanes) {
         current = nextReactTag;
         nextReactTag += 2;
         renderLanes = getViewConfigForType(renderLanes);
-        newChildSet = addProperties(
-          null,
-          newProps,
-          renderLanes.validAttributes
-        );
+        newChildSet = create(newProps, renderLanes.validAttributes);
         oldProps = createNode(
           current,
           renderLanes.uiViewClassName,
@@ -11260,7 +11257,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1205 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-cefeada5",
+    version: "19.0.0-rc-ae69ed52",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11316,7 +11313,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-cefeada5"
+  reconcilerVersion: "19.0.0-rc-ae69ed52"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<715c7ff1aa207b21918f50cdc5380bf6>>
+ * @generated SignedSource<<ab8d28628a6daaeaf3d5ca2abe1262e5>>
  */
 
 'use strict';
@@ -2364,17 +2364,23 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
 }
 
 function fastAddProperties(payload, props, validAttributes) {
-  var attributeConfig;
-  var prop;
+  // Flatten nested style props.
+  if (isArray(props)) {
+    for (var i = 0; i < props.length; i++) {
+      payload = fastAddProperties(payload, props[i], validAttributes);
+    }
+
+    return payload;
+  }
 
   for (var propKey in props) {
-    prop = props[propKey];
+    var prop = props[propKey];
 
     if (prop === undefined) {
       continue;
     }
 
-    attributeConfig = validAttributes[propKey];
+    var attributeConfig = validAttributes[propKey];
 
     if (attributeConfig == null) {
       continue;
@@ -2392,7 +2398,7 @@ function fastAddProperties(payload, props, validAttributes) {
       // An atomic prop with custom processing.
       newValue = attributeConfig.process(prop);
     } else if (typeof attributeConfig.diff === 'function') {
-      // An atomic prop with custom diffing. We don't do diffing here.
+      // An atomic prop with custom diffing. We don't need to do diffing when adding props.
       newValue = prop;
     }
 
@@ -2403,18 +2409,7 @@ function fastAddProperties(payload, props, validAttributes) {
 
       payload[propKey] = newValue;
       continue;
-    } // Not-atomic prop that needs to be flattened. Likely it's the 'style' prop.
-    // It can be an array.
-
-
-    if (isArray(prop)) {
-      for (var i = 0; i < prop.length; i++) {
-        payload = fastAddProperties(payload, prop[i], attributeConfig);
-      }
-
-      continue;
-    } // Or it can be an object.
-
+    }
 
     payload = fastAddProperties(payload, prop, attributeConfig);
   }
@@ -2427,11 +2422,7 @@ function fastAddProperties(payload, props, validAttributes) {
 
 
 function addProperties(updatePayload, props, validAttributes) {
-  if (enableAddPropertiesFastPath) {
-    return fastAddProperties(updatePayload, props, validAttributes);
-  } else {
-    return diffProperties(updatePayload, emptyObject$1, props, validAttributes);
-  }
+  return diffProperties(updatePayload, emptyObject$1, props, validAttributes);
 }
 /**
  * clearProperties clears all the previous props by adding a null sentinel
@@ -2445,8 +2436,11 @@ function clearProperties(updatePayload, prevProps, validAttributes) {
 }
 
 function create(props, validAttributes) {
-  return addProperties(null, // updatePayload
-  props, validAttributes);
+  if (enableAddPropertiesFastPath) {
+    return fastAddProperties(null, props, validAttributes);
+  } else {
+    return addProperties(null, props, validAttributes);
+  }
 }
 function diff(prevProps, nextProps, validAttributes) {
   return diffProperties(null, // updatePayload
@@ -26212,7 +26206,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-6b65a277';
+var ReactVersion = '19.0.0-rc-eb8ea74f';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
