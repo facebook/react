@@ -67,7 +67,10 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_POSTPONE_TYPE,
   ASYNC_ITERATOR,
+  REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
+
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 export type {CallServerCallback, EncodeFormActionCallback};
 
@@ -573,6 +576,43 @@ function nullRefGetter() {
   }
 }
 
+function getServerComponentTaskName(componentInfo: ReactComponentInfo): string {
+  return '<' + (componentInfo.name || '...') + '>';
+}
+
+function getTaskName(type: mixed): string {
+  if (type === REACT_FRAGMENT_TYPE) {
+    return '<>';
+  }
+  if (typeof type === 'function') {
+    // This is a function so it must have been a Client Reference that resolved to
+    // a function. We use "use client" to indicate that this is the boundary into
+    // the client. There should only be one for any given owner chain.
+    return '"use client"';
+  }
+  if (
+    typeof type === 'object' &&
+    type !== null &&
+    type.$$typeof === REACT_LAZY_TYPE
+  ) {
+    if (type._init === readChunk) {
+      // This is a lazy node created by Flight. It is probably a client reference.
+      // We use the "use client" string to indicate that this is the boundary into
+      // the client. There will only be one for any given owner chain.
+      return '"use client"';
+    }
+    // We don't want to eagerly initialize the initializer in DEV mode so we can't
+    // call it to extract the type so we don't know the type of this component.
+    return '<...>';
+  }
+  try {
+    const name = getComponentNameFromType(type);
+    return name ? '<' + name + '>' : '<...>';
+  } catch (x) {
+    return '<...>';
+  }
+}
+
 function createElement(
   type: mixed,
   key: mixed,
@@ -647,11 +687,28 @@ function createElement(
         writable: true,
         value: stack,
       });
+
+      let task: null | ConsoleTask = null;
+      if (supportsCreateTask && stack !== null) {
+        const createTaskFn = (console: any).createTask.bind(
+          console,
+          getTaskName(type),
+        );
+        const callStack = buildFakeCallStack(stack, createTaskFn);
+        // This owner should ideally have already been initialized to avoid getting
+        // user stack frames on the stack.
+        const ownerTask = owner === null ? null : initializeFakeTask(owner);
+        if (ownerTask === null) {
+          task = callStack();
+        } else {
+          task = ownerTask.run(callStack);
+        }
+      }
       Object.defineProperty(element, '_debugTask', {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: null,
+        value: task,
       });
     }
     // TODO: We should be freezing the element but currently, we might write into
@@ -1582,6 +1639,118 @@ function resolveHint<Code: HintCode>(
   dispatchHint(code, hintModel);
 }
 
+// eslint-disable-next-line react-internal/no-production-logging
+const supportsCreateTask =
+  __DEV__ && enableOwnerStacks && !!(console: any).createTask;
+
+const taskCache: null | WeakMap<
+  ReactComponentInfo | ReactAsyncInfo,
+  ConsoleTask,
+> = supportsCreateTask ? new WeakMap() : null;
+
+type FakeFunction<T> = (FakeFunction<T>) => T;
+const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
+  ? new Map()
+  : (null: any);
+
+function createFakeFunction<T>(
+  name: string,
+  filename: string,
+  line: number,
+  col: number,
+): FakeFunction<T> {
+  // This creates a fake copy of a Server Module. It represents a module that has already
+  // executed on the server but we re-execute a blank copy for its stack frames on the client.
+
+  const comment =
+    '/* This module was rendered by a Server Component. Turn on Source Maps to see the server source. */';
+
+  // We generate code where the call is at the line and column of the server executed code.
+  // This allows us to use the original source map as the source map of this fake file to
+  // point to the original source.
+  let code;
+  if (line <= 1) {
+    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment + '\n';
+  } else {
+    code =
+      comment +
+      '\n'.repeat(line - 2) +
+      '_=>\n' +
+      ' '.repeat(col < 1 ? 0 : col - 1) +
+      '_()\n';
+  }
+
+  if (filename) {
+    code += '//# sourceURL=' + filename;
+  }
+
+  // eslint-disable-next-line no-eval
+  const fn: FakeFunction<T> = (0, eval)(code);
+  // $FlowFixMe[cannot-write]
+  Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
+  // $FlowFixMe[prop-missing]
+  fn.displayName = name;
+  return fn;
+}
+
+const frameRegExp =
+  /^ {3} at (?:(.+) \(([^\)]+):(\d+):(\d+)\)|([^\)]+):(\d+):(\d+))$/;
+
+function buildFakeCallStack<T>(stack: string, innerCall: () => T): () => T {
+  const frames = stack.split('\n');
+  let callStack = innerCall;
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i];
+    let fn = fakeFunctionCache.get(frame);
+    if (fn === undefined) {
+      const parsed = frameRegExp.exec(frame);
+      if (!parsed) {
+        // We assume the server returns a V8 compatible stack trace.
+        continue;
+      }
+      const name = parsed[1] || '';
+      const filename = parsed[2] || parsed[5] || '';
+      const line = +(parsed[3] || parsed[6]);
+      const col = +(parsed[4] || parsed[7]);
+      fn = createFakeFunction(name, filename, line, col);
+    }
+    callStack = fn.bind(null, callStack);
+  }
+  return callStack;
+}
+
+function initializeFakeTask(
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): null | ConsoleTask {
+  if (taskCache === null || typeof debugInfo.stack !== 'string') {
+    return null;
+  }
+  const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
+  const stack: string = debugInfo.stack;
+  const cachedEntry = taskCache.get((componentInfo: any));
+  if (cachedEntry !== undefined) {
+    return cachedEntry;
+  }
+
+  const ownerTask =
+    componentInfo.owner == null
+      ? null
+      : initializeFakeTask(componentInfo.owner);
+
+  // eslint-disable-next-line react-internal/no-production-logging
+  const createTaskFn = (console: any).createTask.bind(
+    console,
+    getServerComponentTaskName(componentInfo),
+  );
+  const callStack = buildFakeCallStack(stack, createTaskFn);
+
+  if (ownerTask === null) {
+    return callStack();
+  } else {
+    return ownerTask.run(callStack);
+  }
+}
+
 function resolveDebugInfo(
   response: Response,
   id: number,
@@ -1594,6 +1763,10 @@ function resolveDebugInfo(
       'resolveDebugInfo should never be called in production mode. This is a bug in React.',
     );
   }
+  // We eagerly initialize the fake task because this resolving happens outside any
+  // render phase so we're not inside a user space stack at this point. If we waited
+  // to initialize it when we need it, we might be inside user code.
+  initializeFakeTask(debugInfo);
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
@@ -1615,12 +1788,28 @@ function resolveConsoleEntry(
   const payload: [string, string, null | ReactComponentInfo, string, mixed] =
     parseModel(response, value);
   const methodName = payload[0];
-  // TODO: Restore the fake stack before logging.
-  // const stackTrace = payload[1];
-  // const owner = payload[2];
+  const stackTrace = payload[1];
+  const owner = payload[2];
   const env = payload[3];
   const args = payload.slice(4);
-  printToConsole(methodName, args, env);
+  if (!enableOwnerStacks) {
+    // Printing with stack isn't really limited to owner stacks but
+    // we gate it behind the same flag for now while iterating.
+    printToConsole(methodName, args, env);
+    return;
+  }
+  const callStack = buildFakeCallStack(
+    stackTrace,
+    printToConsole.bind(null, methodName, args, env),
+  );
+  if (owner != null) {
+    const task = initializeFakeTask(owner);
+    if (task !== null) {
+      task.run(callStack);
+      return;
+    }
+  }
+  callStack();
 }
 
 function mergeBuffer(
