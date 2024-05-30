@@ -868,6 +868,25 @@ describe('ReactChildren', () => {
     ]);
   });
 
+  it('does not warn for flattened positional children', async () => {
+    function ComponentRenderingFlattenedChildren({children}) {
+      return <div>{React.Children.toArray(children)}</div>;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(
+          <ComponentRenderingFlattenedChildren>
+            <div />
+            <div />
+          </ComponentRenderingFlattenedChildren>,
+        );
+      });
+    }).toErrorDev([]);
+  });
+
   it('should escape keys', () => {
     const zero = <div key="1" />;
     const one = <div key="1=::=2" />;
