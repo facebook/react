@@ -20,19 +20,21 @@ function component() {
 import { c as _c } from "react/compiler-runtime";
 function component() {
   const $ = _c(1);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const z = [];
     const y = {};
     y.z = z;
-    x = {};
+    const x = {};
+
+    t0 = x;
     x.y = y;
     mutate(x.y.z);
-    $[0] = x;
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
-  return x;
+  return t0;
 }
 
 ```

@@ -17,16 +17,18 @@ function Foo() {
 import { c as _c } from "react/compiler-runtime";
 function Foo() {
   const $ = _c(1);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = {};
+    const x = {};
+
+    t0 = x;
     const y = new Foo(x);
     y.mutate();
-    $[0] = x;
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
-  return x;
+  return t0;
 }
 
 ```

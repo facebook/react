@@ -27,9 +27,10 @@ function Component(props) {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const a = [];
     const b = {};
+
+    t0 = <div a={a} b={b} />;
     new Foo(a, b);
     new Foo(b);
-    t0 = <div a={a} b={b} />;
     $[0] = t0;
   } else {
     t0 = $[0];

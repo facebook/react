@@ -18,18 +18,20 @@ function foo(props) {
 import { c as _c } from "react/compiler-runtime";
 function foo(props) {
   const $ = _c(2);
-  let x;
+  let t0;
   if ($[0] !== props) {
-    x = [];
+    let x = [];
     x.push(props.bar);
     props.cond ? ((x = []), x.push(props.foo)) : null;
+
+    t0 = x;
     mut(x);
     $[0] = props;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
-  return x;
+  return t0;
 }
 
 ```

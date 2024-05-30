@@ -30,37 +30,37 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(4);
+  const $ = _c(5);
   const post = useFragment(graphql`...`, props.post);
+  const allUrls = [];
+
+  const { media, comments, urls } = post;
   let t0;
-  if ($[0] !== post) {
-    const allUrls = [];
+  if ($[0] !== comments.length) {
+    t0 = (e) => {
+      if (!comments.length) {
+        return;
+      }
 
-    const { media, comments, urls } = post;
-    let t1;
-    if ($[2] !== comments.length) {
-      t1 = (e) => {
-        if (!comments.length) {
-          return;
-        }
-
-        console.log(comments.length);
-      };
-      $[2] = comments.length;
-      $[3] = t1;
-    } else {
-      t1 = $[3];
-    }
-    const onClick = t1;
-
-    allUrls.push(...urls);
-    t0 = <Media media={media} onClick={onClick} />;
-    $[0] = post;
+      console.log(comments.length);
+    };
+    $[0] = comments.length;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  return t0;
+  const onClick = t0;
+  let t1;
+  if ($[2] !== media || $[3] !== onClick) {
+    t1 = <Media media={media} onClick={onClick} />;
+    $[2] = media;
+    $[3] = onClick;
+    $[4] = t1;
+  } else {
+    t1 = $[4];
+  }
+  allUrls.push(...urls);
+  return t1;
 }
 
 ```

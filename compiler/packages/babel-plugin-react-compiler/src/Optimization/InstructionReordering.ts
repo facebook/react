@@ -4,6 +4,8 @@ import {
   HIRFunction,
   IdentifierId,
   Instruction,
+  InstructionId,
+  makeInstructionId,
   markInstructionIds,
 } from "../HIR";
 import {
@@ -67,13 +69,41 @@ import { getOrInsertDefault } from "../Utils/utils";
  * - Probably more things.
  */
 export function instructionReordering(fn: HIRFunction): void {
+  const lastReassignments = findLasReassignment(fn);
   const globalDependencies: Dependencies = new Map();
   for (const [, block] of fn.body.blocks) {
-    reorderBlock(fn.env, block, globalDependencies);
+    reorderBlock(fn.env, block, globalDependencies, lastReassignments);
   }
   markInstructionIds(fn.body);
 }
 
+function findLasReassignment(fn: HIRFunction): Reassignments {
+  const lastReassignments: Reassignments = new Map();
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      for (const lvalue of eachInstructionValueLValue(instr.value)) {
+        if (
+          lvalue.identifier.name !== null &&
+          lvalue.identifier.name.kind === "named"
+        ) {
+          const name = lvalue.identifier.name.value;
+          const previous = lastReassignments.get(name);
+          if (previous !== undefined) {
+            lastReassignments.set(
+              name,
+              makeInstructionId(Math.max(previous, instr.id))
+            );
+          } else {
+            lastReassignments.set(name, instr.id);
+          }
+        }
+      }
+    }
+  }
+  return lastReassignments;
+}
+
+type Reassignments = Map<string, InstructionId>;
 type Dependencies = Map<IdentifierId, Node>;
 type Node = {
   instruction: Instruction | null;
@@ -81,10 +111,17 @@ type Node = {
   depth: number | null;
 };
 
+enum ReorderingLevel {
+  None = "none",
+  Local = "local",
+  Global = "global",
+}
+
 function reorderBlock(
   env: Environment,
   block: BasicBlock,
-  globalDependencies: Dependencies
+  globalDependencies: Dependencies,
+  lastReassignments: Reassignments
 ): void {
   const dependencies: Dependencies = new Map();
   const locals = new Map<string, IdentifierId>();
@@ -99,7 +136,7 @@ function reorderBlock(
         depth: null,
       }
     );
-    if (getReorderingLevel(instr) === ReorderingLevel.None) {
+    if (getReorderingLevel(instr, lastReassignments) === ReorderingLevel.None) {
       if (previousIdentifier !== null) {
         node.dependencies.push(previousIdentifier);
       }
@@ -206,7 +243,8 @@ function reorderBlock(
     }
     if (
       node.instruction !== null &&
-      getReorderingLevel(node.instruction) === ReorderingLevel.Global &&
+      getReorderingLevel(node.instruction, lastReassignments) ===
+        ReorderingLevel.Global &&
       (block.kind === "block" || block.kind === "catch")
     ) {
       globalDependencies.set(id, node);
@@ -221,12 +259,10 @@ function reorderBlock(
   block.instructions = instructions;
 }
 
-enum ReorderingLevel {
-  None = "none",
-  Local = "local",
-  Global = "global",
-}
-function getReorderingLevel(instr: Instruction): ReorderingLevel {
+function getReorderingLevel(
+  instr: Instruction,
+  lastReassignments: Reassignments
+): ReorderingLevel {
   switch (instr.value.kind) {
     case "JsxExpression":
     case "JsxFragment":
@@ -236,21 +272,19 @@ function getReorderingLevel(instr: Instruction): ReorderingLevel {
     case "TemplateLiteral": {
       return ReorderingLevel.Global;
     }
-    /*
-     * For locals, a simple and robust strategy is to figure out the range of instructions where the identifier may be reassigned,
-     * and then allow reordering of LoadLocal instructions which occur after this range. Obviously for const, this means that all
-     * LoadLocals can be reordered, so a simpler thing to start with is just to only allow reordering of loads of known-consts.
-     *
-     * With this overall strategy we can allow global reordering of LoadLocals and remove the global/local reordering distinction
-     * (all reordering can be global).
-     *
-     * case "Destructure":
-     * case "StoreLocal":
-     * case "LoadLocal":
-     * {
-     *   return ReorderingLevel.Local;
-     * }
-     */
+    case "LoadLocal": {
+      if (
+        instr.value.place.identifier.name !== null &&
+        instr.value.place.identifier.name.kind === "named"
+      ) {
+        const name = instr.value.place.identifier.name.value;
+        const lastAssignment = lastReassignments.get(name);
+        if (lastAssignment !== undefined && lastAssignment < instr.id) {
+          return ReorderingLevel.Global;
+        }
+      }
+      return ReorderingLevel.None;
+    }
     default: {
       return ReorderingLevel.None;
     }

@@ -37,21 +37,22 @@ import { c as _c } from "react/compiler-runtime";
 function useFoo(t0) {
   const $ = _c(3);
   const { input, cond } = t0;
-  let x;
+  let t1;
   if ($[0] !== cond || $[1] !== input.a.b) {
-    x = [];
+    const x = [];
     bb0: if (cond) {
       break bb0;
     }
 
+    t1 = x;
     x.push(input.a.b);
     $[0] = cond;
     $[1] = input.a.b;
-    $[2] = x;
+    $[2] = t1;
   } else {
-    x = $[2];
+    t1 = $[2];
   }
-  return x;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

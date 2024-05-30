@@ -29,22 +29,23 @@ import { createHookWrapper, mutate, mutateAndReturn } from "shared-runtime";
 function useHook(t0) {
   const $ = _c(2);
   const { value } = t0;
-  let obj;
+  let t1;
   if ($[0] !== value) {
     const x = mutateAndReturn({ value });
-    obj = {
+    const obj = {
       getValue() {
         return value;
       },
     };
 
+    t1 = obj;
     mutate(x);
     $[0] = value;
-    $[1] = obj;
+    $[1] = t1;
   } else {
-    obj = $[1];
+    t1 = $[1];
   }
-  return obj;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

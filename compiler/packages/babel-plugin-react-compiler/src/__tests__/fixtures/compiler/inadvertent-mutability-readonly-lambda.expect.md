@@ -35,15 +35,17 @@ function Component(props) {
   const onChange = t0;
 
   useOtherHook();
-  let x;
+  let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    x = {};
+    const x = {};
+
+    t1 = x;
     foo(x, onChange);
-    $[1] = x;
+    $[1] = t1;
   } else {
-    x = $[1];
+    t1 = $[1];
   }
-  return x;
+  return t1;
 }
 
 ```

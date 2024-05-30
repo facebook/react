@@ -39,7 +39,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingMemoizationGuarantees:false @enableTransitivelyFreezeFunctionExpressions:false
+// @enablePreserveExistingMemoizationGuarantees:false @enableTransitivelyFreezeFunctionExpressions:false
 import { useCallback } from "react";
 import {
   identity,
@@ -49,7 +49,6 @@ import {
 } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(1);
   const object = makeObject_Primitives();
 
   useHook();
@@ -63,14 +62,7 @@ function Component(props) {
   };
 
   identity(object);
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div onClick={onClick} />;
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  return t0;
+  return <div onClick={onClick} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {

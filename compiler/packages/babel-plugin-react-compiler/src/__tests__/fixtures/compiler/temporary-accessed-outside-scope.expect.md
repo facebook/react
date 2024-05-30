@@ -16,30 +16,29 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(6);
+  let x;
   let t0;
-  let t1;
   if ($[0] !== props) {
     const maybeMutable = new MaybeMutable();
-    const x = props;
-    t0 = x;
-    t1 = maybeMutate(maybeMutable);
+    x = props;
+    t0 = maybeMutate(maybeMutable);
     $[0] = props;
-    $[1] = t0;
-    $[2] = t1;
+    $[1] = x;
+    $[2] = t0;
   } else {
-    t0 = $[1];
-    t1 = $[2];
+    x = $[1];
+    t0 = $[2];
   }
-  let t2;
-  if ($[3] !== t0 || $[4] !== t1) {
-    t2 = [t0, t1];
-    $[3] = t0;
-    $[4] = t1;
-    $[5] = t2;
+  let t1;
+  if ($[3] !== x || $[4] !== t0) {
+    t1 = [x, t0];
+    $[3] = x;
+    $[4] = t0;
+    $[5] = t1;
   } else {
-    t2 = $[5];
+    t1 = $[5];
   }
-  return t2;
+  return t1;
 }
 
 ```

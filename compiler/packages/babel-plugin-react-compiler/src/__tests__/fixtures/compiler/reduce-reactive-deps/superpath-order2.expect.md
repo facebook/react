@@ -47,21 +47,22 @@ import { identity } from "shared-runtime";
 function useConditionalSuperpath2(t0) {
   const $ = _c(3);
   const { props, cond } = t0;
-  let x;
+  let t1;
   if ($[0] !== cond || $[1] !== props.a) {
-    x = {};
+    const x = {};
     if (identity(cond)) {
       x.b = props.a.b;
     }
 
+    t1 = x;
     x.a = props.a;
     $[0] = cond;
     $[1] = props.a;
-    $[2] = x;
+    $[2] = t1;
   } else {
-    x = $[2];
+    t1 = $[2];
   }
-  return x;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

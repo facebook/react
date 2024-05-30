@@ -80,8 +80,6 @@ function Component(props) {
     t2 = $[2];
   }
   const onClick = t2;
-
-  identity(object);
   let t3;
   if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = <div onClick={onClick} />;
@@ -89,6 +87,7 @@ function Component(props) {
   } else {
     t3 = $[3];
   }
+  identity(object);
   return t3;
 }
 

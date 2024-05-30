@@ -30,28 +30,28 @@ function Component() {
   const $ = _c(4);
   const [state, setState] = useState("hello");
   let t0;
+  if ($[0] !== state) {
+    t0 = <div>{state}</div>;
+    $[0] = state;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
+  let t2;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = () => {
       setState("goodbye");
     };
-    t1 = [];
-    $[0] = t0;
-    $[1] = t1;
-  } else {
-    t0 = $[0];
-    t1 = $[1];
-  }
-  useEffect(t0, t1);
-  let t2;
-  if ($[2] !== state) {
-    t2 = <div>{state}</div>;
-    $[2] = state;
+    t2 = [];
+    $[2] = t1;
     $[3] = t2;
   } else {
+    t1 = $[2];
     t2 = $[3];
   }
-  return t2;
+  useEffect(t1, t2);
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -52,7 +52,6 @@ function Component(props) {
     t0 = $[2];
   }
   const child = t0;
-  y.push(props.p4);
   let t1;
   if ($[3] !== y || $[4] !== child) {
     t1 = <Component data={y}>{child}</Component>;
@@ -62,6 +61,7 @@ function Component(props) {
   } else {
     t1 = $[5];
   }
+  y.push(props.p4);
   return t1;
 }
 

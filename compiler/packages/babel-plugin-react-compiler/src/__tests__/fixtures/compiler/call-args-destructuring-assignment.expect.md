@@ -16,15 +16,17 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(1);
-  let x;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = makeObject();
+    let x = makeObject();
+
+    t0 = x;
     x.foo(([x] = makeObject()));
-    $[0] = x;
+    $[0] = t0;
   } else {
-    x = $[0];
+    t0 = $[0];
   }
-  return x;
+  return t0;
 }
 
 ```

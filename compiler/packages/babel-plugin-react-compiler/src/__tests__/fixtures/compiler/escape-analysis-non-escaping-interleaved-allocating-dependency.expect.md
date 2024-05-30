@@ -41,19 +41,21 @@ function Component(props) {
     t0 = $[1];
   }
   const a = t0;
-  let b;
+  let t1;
   if ($[2] !== a || $[3] !== props.b) {
-    b = [];
+    const b = [];
+
+    t1 = b;
     const c = {};
     c.a = a;
     b.push(props.b);
     $[2] = a;
     $[3] = props.b;
-    $[4] = b;
+    $[4] = t1;
   } else {
-    b = $[4];
+    t1 = $[4];
   }
-  return b;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

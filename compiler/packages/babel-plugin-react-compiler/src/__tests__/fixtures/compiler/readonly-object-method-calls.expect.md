@@ -23,38 +23,39 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(4);
   const user = useFragment(
     graphql`fragment Component_user on User { ... }`,
     props.user,
   );
-  let posts;
-  if ($[0] !== user.timeline.posts.edges.nodes) {
-    posts = user.timeline.posts.edges.nodes.map((node) => <Post post={node} />);
-    let t0;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = {};
-      $[2] = t0;
-    } else {
-      t0 = $[2];
-    }
-    posts.push(t0);
-    $[0] = user.timeline.posts.edges.nodes;
-    $[1] = posts;
-  } else {
-    posts = $[1];
-  }
-  const count = posts.length;
-  foo(count);
   let t0;
-  if ($[3] !== posts) {
-    t0 = <>{posts}</>;
-    $[3] = posts;
-    $[4] = t0;
+  let t1;
+  if ($[0] !== user.timeline.posts.edges.nodes) {
+    const posts = user.timeline.posts.edges.nodes.map((node) => (
+      <Post post={node} />
+    ));
+
+    t0 = posts;
+
+    t1 = <>{posts}</>;
+    let t2;
+    if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+      t2 = {};
+      $[3] = t2;
+    } else {
+      t2 = $[3];
+    }
+    posts.push(t2);
+    $[0] = user.timeline.posts.edges.nodes;
+    $[1] = t0;
+    $[2] = t1;
   } else {
-    t0 = $[4];
+    t0 = $[1];
+    t1 = $[2];
   }
-  return t0;
+  const count = t0.length;
+  foo(count);
+  return t1;
 }
 
 ```

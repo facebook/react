@@ -25,7 +25,7 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(1);
   const x = makeObject();
   const user = useFragment(
     graphql`fragment Component_user on User { ... }`,
@@ -45,15 +45,7 @@ function Component(props) {
   posts.push(t0);
   const count = posts.length;
   foo(count);
-  let t1;
-  if ($[1] !== posts) {
-    t1 = <>{posts}</>;
-    $[1] = posts;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  return t1;
+  return <>{posts}</>;
 }
 
 ```

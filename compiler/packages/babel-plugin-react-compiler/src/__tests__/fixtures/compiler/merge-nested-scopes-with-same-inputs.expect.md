@@ -35,21 +35,21 @@ import { setProperty } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(2);
-  let y;
+  let t0;
   if ($[0] !== props.a) {
-    y = {};
+    const y = {};
 
+    t0 = y;
     const x = {};
     setProperty(x, props.a);
-
     y.a = props.a;
     y.x = x;
     $[0] = props.a;
-    $[1] = y;
+    $[1] = t0;
   } else {
-    y = $[1];
+    t0 = $[1];
   }
-  return y;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
