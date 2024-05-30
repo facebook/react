@@ -9,12 +9,7 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import assign from 'shared/assign';
-import {
-  getIteratorFn,
-  REACT_ELEMENT_TYPE,
-  REACT_FRAGMENT_TYPE,
-  REACT_LAZY_TYPE,
-} from 'shared/ReactSymbols';
+import {getIteratorFn, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
@@ -40,24 +35,22 @@ const createTask =
     : () => null;
 
 function getTaskName(type) {
-  if (type === REACT_FRAGMENT_TYPE) {
-    return '<>';
-  }
-  if (
-    typeof type === 'object' &&
-    type !== null &&
-    type.$$typeof === REACT_LAZY_TYPE
-  ) {
-    // We don't want to eagerly initialize the initializer in DEV mode so we can't
-    // call it to extract the type so we don't know the type of this component.
-    return '<...>';
-  }
-  try {
+  if (typeof type === 'symbol' || typeof type === 'string') {
+    // If we have a built-in or host component, we add its name to the task.
+    // That's because there won't be any user space stack frames that has that
+    // name in it. These only appear at the top of the stack because a built-in
+    // and host component will never be the owner of any other components.
+    // This name only appears when the error/warning is coming from the built-in
+    // itself. Such as if you pass an invalid DOM attribute.
     const name = getComponentNameFromType(type);
-    return name ? '<' + name + '>' : '<...>';
-  } catch (x) {
-    return '<...>';
+    if (name) {
+      return '<' + name + '>';
+    }
   }
+  // For anything else, we just make a blank JSX-like indicator that this is
+  // a React Task. It symbolizes JSX but the actual name of the component will
+  // be on the next stack frame. We leave it blank to avoid duplicating the name.
+  return '<>';
 }
 
 function getOwner() {

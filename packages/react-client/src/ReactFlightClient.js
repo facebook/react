@@ -67,7 +67,6 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_POSTPONE_TYPE,
   ASYNC_ITERATOR,
-  REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -576,41 +575,23 @@ function nullRefGetter() {
   }
 }
 
-function getServerComponentTaskName(componentInfo: ReactComponentInfo): string {
-  return '<' + (componentInfo.name || '...') + '>';
-}
-
-function getTaskName(type: mixed): string {
-  if (type === REACT_FRAGMENT_TYPE) {
-    return '<>';
-  }
-  if (typeof type === 'function') {
-    // This is a function so it must have been a Client Reference that resolved to
-    // a function. We use "use client" to indicate that this is the boundary into
-    // the client. There should only be one for any given owner chain.
-    return '"use client"';
-  }
-  if (
-    typeof type === 'object' &&
-    type !== null &&
-    type.$$typeof === REACT_LAZY_TYPE
-  ) {
-    if (type._init === readChunk) {
-      // This is a lazy node created by Flight. It is probably a client reference.
-      // We use the "use client" string to indicate that this is the boundary into
-      // the client. There will only be one for any given owner chain.
-      return '"use client"';
-    }
-    // We don't want to eagerly initialize the initializer in DEV mode so we can't
-    // call it to extract the type so we don't know the type of this component.
-    return '<...>';
-  }
-  try {
+function getClientTaskName(type: mixed): string {
+  if (typeof type === 'symbol' || typeof type === 'string') {
+    // If we have a built-in or host component, we add its name to the task.
+    // That's because there won't be any user space stack frames that has that
+    // name in it. These only appear at the top of the stack because a built-in
+    // and host component will never be the owner of any other components.
+    // This name only appears when the error/warning is coming from the built-in
+    // itself. Such as if you pass an invalid DOM attribute.
     const name = getComponentNameFromType(type);
-    return name ? '<' + name + '>' : '<...>';
-  } catch (x) {
-    return '<...>';
+    if (name) {
+      return '<' + name + '>';
+    }
   }
+  // For anything else that was rendered as a Client Element, it must have come
+  // from a client reference. We use "use client" to indicate that this Task is
+  // the boundary into the client. There should only be one for any given owner chain.
+  return '"use client"';
 }
 
 function createElement(
@@ -692,7 +673,7 @@ function createElement(
       if (supportsCreateTask && stack !== null) {
         const createTaskFn = (console: any).createTask.bind(
           console,
-          getTaskName(type),
+          getClientTaskName(type),
         );
         const callStack = buildFakeCallStack(stack, createTaskFn);
         // This owner should ideally have already been initialized to avoid getting
@@ -1738,10 +1719,7 @@ function initializeFakeTask(
       : initializeFakeTask(componentInfo.owner);
 
   // eslint-disable-next-line react-internal/no-production-logging
-  const createTaskFn = (console: any).createTask.bind(
-    console,
-    getServerComponentTaskName(componentInfo),
-  );
+  const createTaskFn = (console: any).createTask.bind(console, '<>');
   const callStack = buildFakeCallStack(stack, createTaskFn);
 
   if (ownerTask === null) {
