@@ -22,7 +22,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-var ReactVersion = '19.0.0-www-modern-c9630b74';
+var ReactVersion = '19.0.0-www-modern-85c20051';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
@@ -1802,9 +1802,16 @@ function createElement(type, config, children) {
   return ReactElement(type, key, ref, undefined, undefined, getOwner(), props);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
-  return ReactElement(oldElement.type, newKey, // When enableRefAsProp is on, this argument is ignored. This check only
+  var clonedElement = ReactElement(oldElement.type, newKey, // When enableRefAsProp is on, this argument is ignored. This check only
   // exists to avoid the `ref` access warning.
   enableRefAsProp ? null : oldElement.ref, undefined, undefined, oldElement._owner, oldElement.props);
+
+  {
+    // The cloned element should inherit the original element's key validation.
+    clonedElement._store.validated = oldElement._store.validated;
+  }
+
+  return clonedElement;
 }
 /**
  * Clone and return a new ReactElement using element as the starting point.
