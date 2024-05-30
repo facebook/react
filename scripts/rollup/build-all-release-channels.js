@@ -158,16 +158,18 @@ function processStable(buildDir) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
+    const hash = crypto.createHash('sha1');
     for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
+        hash.update(fs.readFileSync(filePath));
         fs.renameSync(filePath, filePath.replace('.js', '.classic.js'));
       }
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-classic-%FILEHASH%'
+      ReactVersion + '-www-classic-' + hash.digest('hex').slice(0, 8)
     );
   }
 
@@ -222,16 +224,18 @@ function processExperimental(buildDir, version) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
+    const hash = crypto.createHash('sha1');
     for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
+        hash.update(fs.readFileSync(filePath));
         fs.renameSync(filePath, filePath.replace('.js', '.modern.js'));
       }
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-modern-%FILEHASH%'
+      ReactVersion + '-www-modern-' + hash.digest('hex').slice(0, 8)
     );
   }
 
