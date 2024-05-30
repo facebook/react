@@ -284,7 +284,7 @@ export function $structuralCheck(
       if (oldValue === null && newValue !== null) {
         error("null", `type ${typeof newValue}`, path, depth);
       } else if (newValue === null) {
-        error(`type ${typeof oldValue}`, null, path, depth);
+        error(`type ${typeof oldValue}`, "null", path, depth);
       } else if (oldValue instanceof Map) {
         if (!(newValue instanceof Map)) {
           error(`Map instance`, `other value`, path, depth);
