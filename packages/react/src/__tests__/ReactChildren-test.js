@@ -868,7 +868,105 @@ describe('ReactChildren', () => {
     ]);
   });
 
-  it('should warn for flattened children lists', async () => {
+  it('warns for mapped list children without keys', async () => {
+    function ComponentRenderingMappedChildren({children}) {
+      return (
+        <div>
+          {React.Children.map(children, child => (
+            <div />
+          ))}
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(
+          <ComponentRenderingMappedChildren>
+            {[<div />]}
+          </ComponentRenderingMappedChildren>,
+        );
+      });
+    }).toErrorDev([
+      'Warning: Each child in a list should have a unique "key" prop.',
+    ]);
+  });
+
+  it('does not warn for mapped static children without keys', async () => {
+    function ComponentRenderingMappedChildren({children}) {
+      return (
+        <div>
+          {React.Children.map(children, child => (
+            <div />
+          ))}
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(
+          <ComponentRenderingMappedChildren>
+            <div />
+            <div />
+          </ComponentRenderingMappedChildren>,
+        );
+      });
+    }).toErrorDev([]);
+  });
+
+  it('warns for cloned list children without keys', async () => {
+    function ComponentRenderingClonedChildren({children}) {
+      return (
+        <div>
+          {React.Children.map(children, child => React.cloneElement(child))}
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(
+          <ComponentRenderingClonedChildren>
+            {[<div />]}
+          </ComponentRenderingClonedChildren>,
+        );
+      });
+    }).toErrorDev([
+      'Warning: Each child in a list should have a unique "key" prop.',
+    ]);
+  });
+
+  it('does not warn for cloned static children without keys', async () => {
+    function ComponentRenderingClonedChildren({children}) {
+      return (
+        <div>
+          {React.Children.map(children, child => React.cloneElement(child))}
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(
+          <ComponentRenderingClonedChildren>
+            <div />
+            <div />
+          </ComponentRenderingClonedChildren>,
+        );
+      });
+    }).toErrorDev([]);
+  });
+
+  it('warns for flattened list children without keys', async () => {
     function ComponentRenderingFlattenedChildren({children}) {
       return <div>{React.Children.toArray(children)}</div>;
     }
@@ -888,7 +986,7 @@ describe('ReactChildren', () => {
     ]);
   });
 
-  it('does not warn for flattened positional children', async () => {
+  it('does not warn for flattened static children without keys', async () => {
     function ComponentRenderingFlattenedChildren({children}) {
       return <div>{React.Children.toArray(children)}</div>;
     }
