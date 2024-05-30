@@ -2,7 +2,6 @@
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
-const crypto = require('node:crypto');
 const fs = require('fs');
 const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
@@ -41,7 +40,10 @@ if (dateString.startsWith("'")) {
 
 // Build the artifacts using a placeholder React version. We'll then do a string
 // replace to swap it with the correct version per release channel.
-const PLACEHOLDER_REACT_VERSION = ReactVersion + '-PLACEHOLDER';
+//
+// The placeholder version is the same format that the "next" channel uses
+const PLACEHOLDER_REACT_VERSION =
+  ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString;
 
 // TODO: We should inject the React version using a build-time parameter
 // instead of overwriting the source files.
@@ -158,26 +160,18 @@ function processStable(buildDir) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    const hash = crypto.createHash('sha1');
-    for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
+    for (const fileName of fs.readdirSync(buildDir + '/facebook-www')) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
-        hash.update(fs.readFileSync(filePath));
         fs.renameSync(filePath, filePath.replace('.js', '.classic.js'));
       }
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-classic-' + hash.digest('hex').slice(0, 8)
+      ReactVersion + '-www-classic-' + sha + '-' + dateString
     );
   }
-
-  // Update remaining placeholders with next channel version
-  updatePlaceholderReactVersionInCompiledArtifacts(
-    buildDir,
-    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
-  );
 
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-stable');
@@ -212,26 +206,18 @@ function processExperimental(buildDir, version) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    const hash = crypto.createHash('sha1');
-    for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
+    for (const fileName of fs.readdirSync(buildDir + '/facebook-www')) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
-        hash.update(fs.readFileSync(filePath));
         fs.renameSync(filePath, filePath.replace('.js', '.modern.js'));
       }
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-modern-' + hash.digest('hex').slice(0, 8)
+      ReactVersion + '-www-modern-' + sha + '-' + dateString
     );
   }
-
-  // Update remaining placeholders with canary channel version
-  updatePlaceholderReactVersionInCompiledArtifacts(
-    buildDir,
-    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
-  );
 
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-experimental');
