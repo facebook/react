@@ -179,6 +179,10 @@ export default {
       //               ^^^ true for this reference
       // const [state, dispatch] = useReducer() / React.useReducer()
       //               ^^^ true for this reference
+      // const [state, dispatch] = useActionState() / React.useActionState()
+      //               ^^^ true for this reference
+      // const [state, dispatch] = useFormState() / ReactDOM.useFormState()
+      //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
       // const onStuff = useEffectEvent(() => {})
@@ -232,10 +236,11 @@ export default {
           return false;
         }
         let callee = init.callee;
-        // Step into `= React.something` initializer.
+        // Step into `= React(DOM).something` initializer.
         if (
           callee.type === 'MemberExpression' &&
-          callee.object.name === 'React' &&
+          (callee.object.name === 'React' ||
+            callee.object.name === 'ReactDOM') &&
           callee.property != null &&
           !callee.computed
         ) {
@@ -260,7 +265,12 @@ export default {
           }
           // useEffectEvent() return value is always unstable.
           return true;
-        } else if (name === 'useState' || name === 'useReducer') {
+        } else if (
+          name === 'useState' ||
+          name === 'useReducer' ||
+          name === 'useFormState' ||
+          name === 'useActionState'
+        ) {
           // Only consider second value in initializing tuple stable.
           if (
             id.type === 'ArrayPattern' &&
