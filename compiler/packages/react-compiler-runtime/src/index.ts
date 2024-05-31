@@ -259,10 +259,11 @@ export function $structuralCheck(
   newValue: any,
   variableName: string,
   fnName: string,
-  kind: string
+  kind: string,
+  loc: string
 ): void {
   function error(l: string, r: string, path: string, depth: number) {
-    const str = `${fnName}: [${kind}] ${variableName}${path} changed from ${l} to ${r} at depth ${depth}`;
+    const str = `${fnName}:${loc} [${kind}] ${variableName}${path} changed from ${l} to ${r} at depth ${depth}`;
     if (seenErrors.has(str)) {
       return;
     }
@@ -283,7 +284,7 @@ export function $structuralCheck(
       if (oldValue === null && newValue !== null) {
         error("null", `type ${typeof newValue}`, path, depth);
       } else if (newValue === null) {
-        error(`type ${typeof oldValue}`, null, path, depth);
+        error(`type ${typeof oldValue}`, "null", path, depth);
       } else if (oldValue instanceof Map) {
         if (!(newValue instanceof Map)) {
           error(`Map instance`, `other value`, path, depth);

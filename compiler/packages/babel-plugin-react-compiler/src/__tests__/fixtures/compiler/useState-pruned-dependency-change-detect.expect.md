@@ -35,13 +35,13 @@ function Component(props) {
     let condition = $[1] !== x;
     if (!condition) {
       let old$t1 = $[2];
-      $structuralCheck(old$t1, t1, "t1", "Component", "cached");
+      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(6:6)");
     }
     $[1] = x;
     $[2] = t1;
     if (condition) {
       t1 = <div>{x}</div>;
-      $structuralCheck($[2], t1, "t1", "Component", "recomputed");
+      $structuralCheck($[2], t1, "t1", "Component", "recomputed", "(6:6)");
       t1 = $[2];
     }
   }

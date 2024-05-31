@@ -1144,6 +1144,7 @@ export type Identifier = {
    */
   scope: ReactiveScope | null;
   type: Type;
+  loc: SourceLocation;
 };
 
 export type IdentifierName = ValidatedIdentifier | PromotedIdentifier;
@@ -1376,6 +1377,8 @@ export type ReactiveScope = {
    * no longer exist due to being pruned.
    */
   merged: Set<ScopeId>;
+
+  loc: SourceLocation;
 };
 
 export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;

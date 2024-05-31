@@ -597,6 +597,10 @@ function codegenReactiveScope(
     cx.env.config.enableChangeDetectionForDebugging != null &&
     changeExpressions.length > 0
   ) {
+    const loc =
+      typeof scope.loc === "symbol"
+        ? "unknown location"
+        : `(${scope.loc.start.line}:${scope.loc.end.line})`;
     const detectionFunction =
       cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
     const cacheLoadOldValueStatements: Array<t.Statement> = [];
@@ -626,6 +630,7 @@ function codegenReactiveScope(
             t.stringLiteral(name.name),
             t.stringLiteral(cx.fnName),
             t.stringLiteral("cached"),
+            t.stringLiteral(loc),
           ])
         )
       );
@@ -637,6 +642,7 @@ function codegenReactiveScope(
             t.stringLiteral(name.name),
             t.stringLiteral(cx.fnName),
             t.stringLiteral("recomputed"),
+            t.stringLiteral(loc),
           ])
         )
       );

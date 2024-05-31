@@ -46,13 +46,13 @@ function Component(props) {
     let condition = $[0] !== props.x;
     if (!condition) {
       let old$t0 = $[1];
-      $structuralCheck(old$t0, t0, "t0", "Component", "cached");
+      $structuralCheck(old$t0, t0, "t0", "Component", "cached", "(8:8)");
     }
     $[0] = props.x;
     $[1] = t0;
     if (condition) {
       t0 = f(props.x);
-      $structuralCheck($[1], t0, "t0", "Component", "recomputed");
+      $structuralCheck($[1], t0, "t0", "Component", "recomputed", "(8:8)");
       t0 = $[1];
     }
   }
@@ -65,13 +65,13 @@ function Component(props) {
     let condition = $[2] !== x;
     if (!condition) {
       let old$t1 = $[3];
-      $structuralCheck(old$t1, t1, "t1", "Component", "cached");
+      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(11:11)");
     }
     $[2] = x;
     $[3] = t1;
     if (condition) {
       t1 = <div>{x}</div>;
-      $structuralCheck($[3], t1, "t1", "Component", "recomputed");
+      $structuralCheck($[3], t1, "t1", "Component", "recomputed", "(11:11)");
       t1 = $[3];
     }
   }
