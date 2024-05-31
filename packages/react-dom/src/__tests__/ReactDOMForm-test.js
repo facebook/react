@@ -1020,15 +1020,15 @@ describe('ReactDOMForm', () => {
     assertLog(['0']);
     expect(container.textContent).toBe('0');
 
-    await act(() => dispatch('increment'));
+    await act(() => startTransition(() => dispatch('increment')));
     assertLog(['Async action started [1]', 'Pending 0']);
     expect(container.textContent).toBe('Pending 0');
 
     // Dispatch a few more actions. None of these will start until the previous
     // one finishes.
-    await act(() => dispatch('increment'));
-    await act(() => dispatch('decrement'));
-    await act(() => dispatch('increment'));
+    await act(() => startTransition(() => dispatch('increment')));
+    await act(() => startTransition(() => dispatch('decrement')));
+    await act(() => startTransition(() => dispatch('increment')));
     assertLog([]);
 
     // Each action starts as soon as the previous one finishes.
@@ -1067,7 +1067,7 @@ describe('ReactDOMForm', () => {
 
     // Perform an action. This will increase the state by 1, as defined by the
     // stepSize prop.
-    await act(() => increment());
+    await act(() => startTransition(() => increment()));
     assertLog(['Pending 0', '1']);
 
     // Now increase the stepSize prop to 10. Subsequent steps will increase
@@ -1076,7 +1076,7 @@ describe('ReactDOMForm', () => {
     assertLog(['1']);
 
     // Increment again. The state should increase by 10.
-    await act(() => increment());
+    await act(() => startTransition(() => increment()));
     assertLog(['Pending 1', '11']);
   });
 
@@ -1113,11 +1113,11 @@ describe('ReactDOMForm', () => {
     await act(() => root.render(<App />));
     assertLog(['A']);
 
-    await act(() => action('B'));
+    await act(() => startTransition(() => action('B')));
     // The first dispatch will update the pending state.
     assertLog(['Pending A']);
-    await act(() => action('C'));
-    await act(() => action('D'));
+    await act(() => startTransition(() => action('C')));
+    await act(() => startTransition(() => action('D')));
     assertLog([]);
 
     await act(() => resolveText('B'));
@@ -1151,10 +1151,10 @@ describe('ReactDOMForm', () => {
 
       // Dispatch two actions. The first one is async, so it forces the second
       // one into an async queue.
-      await act(() => action('First action'));
+      await act(() => startTransition(() => action('First action')));
       assertLog(['Initial (pending)']);
       // This action won't run until the first one finishes.
-      await act(() => action('Second action'));
+      await act(() => startTransition(() => action('Second action')));
 
       // While the first action is still pending, update a prop. This causes the
       // inline action implementation to change, but it should not affect the
@@ -1169,7 +1169,9 @@ describe('ReactDOMForm', () => {
 
       // Confirm that if we dispatch yet another action, it uses the updated
       // action implementation.
-      await expect(act(() => action('Third action'))).rejects.toThrow('Oops!');
+      await expect(
+        act(() => startTransition(() => action('Third action'))),
+      ).rejects.toThrow('Oops!');
     },
   );
 
@@ -1192,7 +1194,7 @@ describe('ReactDOMForm', () => {
 
     // Perform an action. This will increase the state by 1, as defined by the
     // stepSize prop.
-    await act(() => increment());
+    await act(() => startTransition(() => increment()));
     assertLog(['Pending 0', '1']);
 
     // Now increase the stepSize prop to 10. Subsequent steps will increase
@@ -1201,7 +1203,7 @@ describe('ReactDOMForm', () => {
     assertLog(['1']);
 
     // Increment again. The state should increase by 10.
-    await act(() => increment());
+    await act(() => startTransition(() => increment()));
     assertLog(['Pending 1', '11']);
   });
 
@@ -1219,12 +1221,12 @@ describe('ReactDOMForm', () => {
     await act(() => root.render(<App />));
     assertLog(['A']);
 
-    await act(() => action(getText('B')));
+    await act(() => startTransition(() => action(getText('B'))));
     // The first dispatch will update the pending state.
     assertLog(['Pending A']);
-    await act(() => action('C'));
-    await act(() => action(getText('D')));
-    await act(() => action('E'));
+    await act(() => startTransition(() => action('C')));
+    await act(() => startTransition(() => action(getText('D'))));
+    await act(() => startTransition(() => action('E')));
     assertLog([]);
 
     await act(() => resolveText('B'));
@@ -1273,7 +1275,7 @@ describe('ReactDOMForm', () => {
     );
     assertLog(['A']);
 
-    await act(() => action('Oops!'));
+    await act(() => startTransition(() => action('Oops!')));
     assertLog([
       // Action begins, error has not thrown yet.
       'Pending A',
@@ -1290,8 +1292,8 @@ describe('ReactDOMForm', () => {
     // Trigger an error again, but this time, perform another action that
     // overrides the first one and fixes the error
     await act(() => {
-      action('Oops!');
-      action('B');
+      startTransition(() => action('Oops!'));
+      startTransition(() => action('B'));
     });
     assertLog(['Pending A', 'B']);
     expect(container.textContent).toBe('B');
@@ -1338,7 +1340,7 @@ describe('ReactDOMForm', () => {
     );
     assertLog(['A']);
 
-    await act(() => action('Oops!'));
+    await act(() => startTransition(() => action('Oops!')));
     // The first dispatch will update the pending state.
     assertLog(['Pending A']);
     await act(() => resolveText('Oops!'));
@@ -1352,8 +1354,8 @@ describe('ReactDOMForm', () => {
     // Trigger an error again, but this time, perform another action that
     // overrides the first one and fixes the error
     await act(() => {
-      action('Oops!');
-      action('B');
+      startTransition(() => action('Oops!'));
+      startTransition(() => action('B'));
     });
     assertLog(['Pending A']);
     await act(() => resolveText('B'));
@@ -1399,13 +1401,84 @@ describe('ReactDOMForm', () => {
     assertLog(['0']);
     expect(container.textContent).toBe('0');
 
-    await act(() => dispatch('increment'));
+    await act(() => startTransition(() => dispatch('increment')));
     assertLog(['Async action started [1]', 'Pending 0']);
     expect(container.textContent).toBe('Pending 0');
 
     await act(() => resolveText('Wait [1]'));
     assertLog(['1']);
     expect(container.textContent).toBe('1');
+  });
+
+  test('useActionState does not wrap action in a transition unless dispatch is in a transition', async () => {
+    let dispatch;
+    function App() {
+      const [state, _dispatch] = useActionState(() => {
+        return state + 1;
+      }, 0);
+      dispatch = _dispatch;
+      return <AsyncText text={'Count: ' + state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() =>
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
+      ),
+    );
+    assertLog(['Suspend! [Count: 0]', 'Loading...']);
+    await act(() => resolveText('Count: 0'));
+    assertLog(['Count: 0']);
+
+    // Dispatch outside of a transition. This will trigger a loading state.
+    await act(() => dispatch());
+    assertLog(['Suspend! [Count: 1]', 'Loading...']);
+    expect(container.textContent).toBe('Loading...');
+
+    await act(() => resolveText('Count: 1'));
+    assertLog(['Count: 1']);
+    expect(container.textContent).toBe('Count: 1');
+
+    // Now dispatch inside of a transition. This one does not trigger a
+    // loading state.
+    await act(() => startTransition(() => dispatch()));
+    assertLog(['Count: 1', 'Suspend! [Count: 2]', 'Loading...']);
+    expect(container.textContent).toBe('Count: 1');
+
+    await act(() => resolveText('Count: 2'));
+    assertLog(['Count: 2']);
+    expect(container.textContent).toBe('Count: 2');
+  });
+
+  test('useActionState warns if async action is dispatched outside of a transition', async () => {
+    let dispatch;
+    function App() {
+      const [state, _dispatch] = useActionState(async () => {
+        return state + 1;
+      }, 0);
+      dispatch = _dispatch;
+      return <AsyncText text={'Count: ' + state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog(['Suspend! [Count: 0]']);
+    await act(() => resolveText('Count: 0'));
+    assertLog(['Count: 0']);
+
+    // Dispatch outside of a transition.
+    await act(() => dispatch());
+    assertConsoleErrorDev([
+      [
+        'An async function was passed to useActionState, but it was ' +
+          'dispatched outside of an action context',
+        {withoutStack: true},
+      ],
+    ]);
+    assertLog(['Suspend! [Count: 1]']);
+    expect(container.textContent).toBe('Count: 0');
   });
 
   test('uncontrolled form inputs are reset after the action completes', async () => {
