@@ -39,14 +39,18 @@ function Component(props) {
   let t0;
   {
     t0 = f(props.x);
-    if (!($[0] !== props.x)) {
-      let old$t0;
-      old$t0 = $[1];
-      $structuralCheck(old$t0, t0, "t0", "Component");
-      t0 = old$t0;
+    let condition = $[0] !== props.x;
+    if (!condition) {
+      let old$t0 = $[1];
+      $structuralCheck(old$t0, t0, "t0", "Component", "cached");
     }
     $[0] = props.x;
     $[1] = t0;
+    if (condition) {
+      t0 = f(props.x);
+      $structuralCheck($[1], t0, "t0", "Component", "recomputed");
+      t0 = $[1];
+    }
   }
   const w = t0;
   const [x] = useState(w);
@@ -58,15 +62,24 @@ function Component(props) {
         {w}
       </div>
     );
-    if (!($[2] !== x || $[3] !== w)) {
-      let old$t1;
-      old$t1 = $[4];
-      $structuralCheck(old$t1, t1, "t1", "Component");
-      t1 = old$t1;
+    let condition = $[2] !== x || $[3] !== w;
+    if (!condition) {
+      let old$t1 = $[4];
+      $structuralCheck(old$t1, t1, "t1", "Component", "cached");
     }
     $[2] = x;
     $[3] = w;
     $[4] = t1;
+    if (condition) {
+      t1 = (
+        <div>
+          {x}
+          {w}
+        </div>
+      );
+      $structuralCheck($[4], t1, "t1", "Component", "recomputed");
+      t1 = $[4];
+    }
   }
   return t1;
 }

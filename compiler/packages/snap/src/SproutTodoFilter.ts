@@ -498,6 +498,7 @@ const skipFilter = new Set([
   "useState-pruned-dependency-change-detect",
   "useState-unpruned-dependency",
   "useState-and-other-hook-unpruned-dependency",
+  "change-detect-reassign",
 ]);
 
 export default skipFilter;
