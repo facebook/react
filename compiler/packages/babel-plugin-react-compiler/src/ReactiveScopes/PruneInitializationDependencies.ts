@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { CompilerError } from "../CompilerError";
 import {
   Environment,
   Identifier,
@@ -15,6 +16,7 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
+  ReactiveTerminalStatement,
   getHookKind,
   isUseRefType,
   isUseStateType,
@@ -30,6 +32,11 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  * Any subsequent times, the arguments will be evaluated but ignored. In this pass,
  * we use this fact to improve the output of the compiler by not recomputing values that
  * are only used as arguments (or inputs to arguments to) useState and useRef.
+ *
+ * This pass isn't yet stress-tested so it's not enabled by default. It's only enabled
+ * to support certain debug modes that detect non-idempotent code, since non-idempotent
+ * code can "safely" be used if its only passed to useState and useRef. We plan to rewrite
+ * this pass in HIR and enable it as an optimization in the future.
  *
  * Algorithm:
  * We take two passes over the reactive function AST. In the first pass, we gather
@@ -73,23 +80,12 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
 
   join(values: Array<CreateUpdate>): CreateUpdate {
     function join2(l: CreateUpdate, r: CreateUpdate): CreateUpdate {
-      if (l === r) {
-        return l;
-      }
-      if (l === "Unknown") {
-        return r;
-      }
-      if (r === "Unknown") {
-        return l;
-      }
-      if (l === "Create") {
-        return r;
-      }
-      if (r === "Create") {
-        return l;
-      }
-      if (r === "Update" || l === "Update") {
+      if (l === "Update" || r === "Update") {
         return "Update";
+      } else if (l === "Create" || r === "Create") {
+        return "Create";
+      } else if (l === "Unknown" || r === "Unknown") {
+        return "Unknown";
       }
       assertExhaustive(r, `Unhandled variable kind ${r}`);
     }
@@ -116,7 +112,7 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
   }
 
   override visitInstruction(instruction: ReactiveInstruction): void {
-    let state = this.join(
+    const state = this.join(
       [...eachInstructionLValue(instruction)].map(
         (operand) => this.map.get(operand.identifier.id) ?? "Unknown"
       )
@@ -163,14 +159,7 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
           );
           visitCallOrMethodNonArgs();
         } else {
-          if (isHook()) {
-            /*
-             * Values flowing into hooks that aren't create-only should be treated
-             * as Update.
-             */
-            state = "Update";
-          }
-          this.traverseInstruction(instruction, state);
+          this.traverseInstruction(instruction, isHook() ? "Update" : state);
         }
         break;
       }
@@ -198,6 +187,17 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
         scope.scope.dependencies.delete(ident);
       }
     });
+  }
+
+  override visitTerminal(
+    stmt: ReactiveTerminalStatement,
+    state: CreateUpdate
+  ): void {
+    CompilerError.invariant(state !== "Create", {
+      reason: "Visiting a terminal statement with state 'Create'",
+      loc: stmt.terminal.loc,
+    });
+    super.visitTerminal(stmt, state);
   }
 
   override visitReactiveFunctionValue(

@@ -953,7 +953,7 @@ export function createElement(type, config, children) {
 }
 
 export function cloneAndReplaceKey(oldElement, newKey) {
-  return ReactElement(
+  const clonedElement = ReactElement(
     oldElement.type,
     newKey,
     // When enableRefAsProp is on, this argument is ignored. This check only
@@ -966,6 +966,11 @@ export function cloneAndReplaceKey(oldElement, newKey) {
     __DEV__ && enableOwnerStacks ? oldElement._debugStack : undefined,
     __DEV__ && enableOwnerStacks ? oldElement._debugTask : undefined,
   );
+  if (__DEV__) {
+    // The cloned element should inherit the original element's key validation.
+    clonedElement._store.validated = oldElement._store.validated;
+  }
+  return clonedElement;
 }
 
 /**

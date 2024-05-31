@@ -241,14 +241,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // Extract the stack. Not all console logs print the full stack but they have at
         // least the line it was called from. We could optimize transfer by keeping just
         // one stack frame but keeping it simple for now and include all frames.
-        let stack = filterDebugStack(new Error('react-stack-top-frame'));
-        const firstLine = stack.indexOf('\n');
-        if (firstLine === -1) {
-          stack = '';
-        } else {
-          // Skip the console wrapper itself.
-          stack = stack.slice(firstLine + 1);
-        }
+        const stack = filterDebugStack(new Error('react-stack-top-frame'));
         request.pendingChunks++;
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
