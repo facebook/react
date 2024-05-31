@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<183c26ead26dbc699a54a97554f63097>>
+ * @generated SignedSource<<d4d79b9c46da5483403dab31cf882201>>
  */
 
 "use strict";
@@ -3857,11 +3857,16 @@ function useThenable(thenable) {
   thenableIndexCounter += 1;
   null === thenableState && (thenableState = []);
   thenable = trackUsedThenable(thenableState, thenable, index);
-  null === currentlyRenderingFiber$1.alternate &&
+  index = currentlyRenderingFiber$1;
+  null ===
     (null === workInProgressHook
-      ? null === currentlyRenderingFiber$1.memoizedState
-      : null === workInProgressHook.next) &&
-    (ReactSharedInternals.H = HooksDispatcherOnMount);
+      ? index.memoizedState
+      : workInProgressHook.next) &&
+    ((index = index.alternate),
+    (ReactSharedInternals.H =
+      null === index || null === index.memoizedState
+        ? HooksDispatcherOnMount
+        : HooksDispatcherOnUpdate));
   return thenable;
 }
 function use(usable) {
@@ -10551,7 +10556,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1124 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-5c420e3824-20240531",
+    version: "19.0.0-rc-adbec0c25a-20240531",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10594,7 +10599,7 @@ var internals$jscomp$inline_1350 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-5c420e3824-20240531"
+  reconcilerVersion: "19.0.0-rc-adbec0c25a-20240531"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1351 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

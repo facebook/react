@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0c59fb69281d1d909e6de56cf4430600>>
+ * @generated SignedSource<<905cc175856264e313ce8da1a2a4238b>>
  */
 
 "use strict";
@@ -2478,11 +2478,16 @@ function useThenable(thenable) {
   thenableIndexCounter += 1;
   null === thenableState && (thenableState = []);
   thenable = trackUsedThenable(thenableState, thenable, index);
-  null === currentlyRenderingFiber$1.alternate &&
+  index = currentlyRenderingFiber$1;
+  null ===
     (null === workInProgressHook
-      ? null === currentlyRenderingFiber$1.memoizedState
-      : null === workInProgressHook.next) &&
-    (ReactSharedInternals.H = HooksDispatcherOnMount);
+      ? index.memoizedState
+      : workInProgressHook.next) &&
+    ((index = index.alternate),
+    (ReactSharedInternals.H =
+      null === index || null === index.memoizedState
+        ? HooksDispatcherOnMount
+        : HooksDispatcherOnUpdate));
   return thenable;
 }
 function use(usable) {
@@ -9298,7 +9303,7 @@ var devToolsConfig$jscomp$inline_1047 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-rc-5c420e3824-20240531",
+  version: "19.0.0-rc-adbec0c25a-20240531",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1234 = {
@@ -9329,7 +9334,7 @@ var internals$jscomp$inline_1234 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-5c420e3824-20240531"
+  reconcilerVersion: "19.0.0-rc-adbec0c25a-20240531"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1235 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
