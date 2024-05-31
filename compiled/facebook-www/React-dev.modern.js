@@ -22,7 +22,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-var ReactVersion = '19.0.0-www-modern-aa3d6c0840-20240530';
+var ReactVersion = '19.0.0-www-modern-8fd963a1e5-20240530';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
@@ -2333,11 +2333,16 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
         ) + '/' : '') + childKey);
 
         {
-          if (nameSoFar !== '' && mappedChild.key == null) {
-            // We need to validate that this child should have had a key before assigning it one.
-            if (!newChild._store.validated) {
-              // We mark this child as having failed validation but we let the actual renderer
-              // print the warning later.
+          // If `child` was an element without a `key`, we need to validate if
+          // it should have had a `key`, before assigning one to `mappedChild`.
+          // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
+          if (nameSoFar !== '' && _child != null && isValidElement(_child) && _child.key == null) {
+            // We check truthiness of `child._store.validated` instead of being
+            // inequal to `1` to provide a bit of backward compatibility for any
+            // libraries (like `fbt`) which may be hacking this property.
+            if (_child._store && !_child._store.validated) {
+              // Mark this child as having failed validation, but let the actual
+              // renderer print the warning later.
               newChild._store.validated = 2;
             }
           }
