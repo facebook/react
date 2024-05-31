@@ -9,7 +9,7 @@
 
 import * as React from "react";
 
-const { useRef, useEffect } = React;
+const { useRef, useEffect, isValidElement } = React;
 const ReactSecretInternals =
   //@ts-ignore
   React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ??
@@ -250,4 +250,171 @@ export function useRenderCounter(name: string): void {
       }
     };
   });
+}
+
+const seenErrors = new Set();
+
+export function $structuralCheck(
+  oldValue: any,
+  newValue: any,
+  variableName: string,
+  fnName: string
+): void {
+  function error(l: string, r: string, path: string, depth: number) {
+    const str = `${fnName}: ${variableName}${path} changed from ${l} to ${r} at depth ${depth}`;
+    if (seenErrors.has(str)) {
+      return;
+    }
+    seenErrors.add(str);
+    console.error(str);
+  }
+  const depthLimit = 2;
+  function recur(oldValue: any, newValue: any, path: string, depth: number) {
+    if (depth > depthLimit) {
+      return;
+    } else if (oldValue === newValue) {
+      return;
+    } else if (typeof oldValue !== typeof newValue) {
+      error(`type ${typeof oldValue}`, `type ${typeof newValue}`, path, depth);
+    } else if (typeof oldValue === "object") {
+      const oldArray = Array.isArray(oldValue);
+      const newArray = Array.isArray(newValue);
+      if (oldValue === null && newValue !== null) {
+        error("null", `type ${typeof newValue}`, path, depth);
+      } else if (newValue === null) {
+        error(`type ${typeof oldValue}`, null, path, depth);
+      } else if (oldValue instanceof Map) {
+        if (!(newValue instanceof Map)) {
+          error(`Map instance`, `other value`, path, depth);
+        } else if (oldValue.size !== newValue.size) {
+          error(
+            `Map instance with size ${oldValue.size}`,
+            `Map instance with size ${newValue.size}`,
+            path,
+            depth
+          );
+        } else {
+          for (const [k, v] of oldValue) {
+            if (!newValue.has(k)) {
+              error(
+                `Map instance with key ${k}`,
+                `Map instance without key ${k}`,
+                path,
+                depth
+              );
+            } else {
+              recur(v, newValue.get(k), `${path}.get(${k})`, depth + 1);
+            }
+          }
+        }
+      } else if (newValue instanceof Map) {
+        error("other value", `Map instance`, path, depth);
+      } else if (oldValue instanceof Set) {
+        if (!(newValue instanceof Set)) {
+          error(`Set instance`, `other value`, path, depth);
+        } else if (oldValue.size !== newValue.size) {
+          error(
+            `Set instance with size ${oldValue.size}`,
+            `Set instance with size ${newValue.size}`,
+            path,
+            depth
+          );
+        } else {
+          for (const v of newValue) {
+            if (!oldValue.has(v)) {
+              error(
+                `Set instance without element ${v}`,
+                `Set instance with element ${v}`,
+                path,
+                depth
+              );
+            }
+          }
+        }
+      } else if (newValue instanceof Set) {
+        error("other value", `Set instance`, path, depth);
+      } else if (oldArray || newArray) {
+        if (oldArray !== newArray) {
+          error(
+            `type ${oldArray ? "array" : "object"}`,
+            `type ${newArray ? "array" : "object"}`,
+            path,
+            depth
+          );
+        } else if (oldValue.length !== newValue.length) {
+          error(
+            `array with length ${oldValue.length}`,
+            `array with length ${newValue.length}`,
+            path,
+            depth
+          );
+        } else {
+          for (let ii = 0; ii < oldValue.length; ii++) {
+            recur(oldValue[ii], newValue[ii], `${path}[${ii}]`, depth + 1);
+          }
+        }
+      } else if (isValidElement(oldValue) || isValidElement(newValue)) {
+        if (isValidElement(oldValue) !== isValidElement(newValue)) {
+          error(
+            `type ${isValidElement(oldValue) ? "React element" : "object"}`,
+            `type ${isValidElement(newValue) ? "React element" : "object"}`,
+            path,
+            depth
+          );
+        } else if (oldValue.type !== newValue.type) {
+          error(
+            `React element of type ${oldValue.type}`,
+            `React element of type ${newValue.type}`,
+            path,
+            depth
+          );
+        } else {
+          recur(
+            oldValue.props,
+            newValue.props,
+            `[props of ${path}]`,
+            depth + 1
+          );
+        }
+      } else {
+        for (const key in newValue) {
+          if (!(key in oldValue)) {
+            error(
+              `object without key ${key}`,
+              `object with key ${key}`,
+              path,
+              depth
+            );
+          }
+        }
+        for (const key in oldValue) {
+          if (!(key in newValue)) {
+            error(
+              `object with key ${key}`,
+              `object without key ${key}`,
+              path,
+              depth
+            );
+          } else {
+            recur(oldValue[key], newValue[key], `${path}.${key}`, depth + 1);
+          }
+        }
+      }
+    } else if (typeof oldValue === "function") {
+      // Bail on functions for now
+      return;
+    } else if (isNaN(oldValue) || isNaN(newValue)) {
+      if (isNaN(oldValue) !== isNaN(newValue)) {
+        error(
+          `${isNaN(oldValue) ? "NaN" : "non-NaN value"}`,
+          `${isNaN(newValue) ? "NaN" : "non-NaN value"}`,
+          path,
+          depth
+        );
+      }
+    } else if (oldValue !== newValue) {
+      error(oldValue, newValue, path, depth);
+    }
+  }
+  recur(oldValue, newValue, "", 0);
 }

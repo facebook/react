@@ -421,6 +421,13 @@ export function compileProgram(
       );
       externalFunctions.push(enableEmitHookGuards);
     }
+
+    if (options.environment?.enableChangeDetectionForDebugging != null) {
+      const enableChangeDetectionForDebugging = tryParseExternalFunction(
+        options.environment.enableChangeDetectionForDebugging
+      );
+      externalFunctions.push(enableChangeDetectionForDebugging);
+    }
   } catch (err) {
     handleError(err, pass, null);
     return;

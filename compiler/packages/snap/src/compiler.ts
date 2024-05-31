@@ -43,6 +43,7 @@ function makePluginOptions(
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
+  let enableChangeDetectionForDebugging = null;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -120,6 +121,12 @@ function makePluginOptions(
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
+  if (firstLine.includes("@enableChangeDetectionForDebugging")) {
+    enableChangeDetectionForDebugging = {
+      source: "react-compiler-runtime",
+      importSpecifierName: "$structuralCheck",
+    };
+  }
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -173,6 +180,7 @@ function makePluginOptions(
       enableSharedRuntime__testonly: true,
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
+      enableChangeDetectionForDebugging,
     },
     compilationMode,
     logger: null,
