@@ -43,8 +43,6 @@ function makePluginOptions(
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
-  let enablePreserveExistingManualUseMemo = false;
-  let disableMemoizationForDebugging = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -122,12 +120,6 @@ function makePluginOptions(
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
-  if (firstLine.includes("@enablePreserveExistingManualUseMemo")) {
-    enablePreserveExistingManualUseMemo = true;
-  }
-  if (firstLine.includes("@disableMemoizationForDebugging")) {
-    disableMemoizationForDebugging = true;
-  }
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -181,8 +173,6 @@ function makePluginOptions(
       enableSharedRuntime__testonly: true,
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
-      enablePreserveExistingManualUseMemo,
-      disableMemoizationForDebugging,
     },
     compilationMode,
     logger: null,
