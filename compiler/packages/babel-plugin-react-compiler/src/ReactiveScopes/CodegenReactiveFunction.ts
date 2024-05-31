@@ -574,7 +574,17 @@ function codegenReactiveScope(
         [t.stringLiteral(MEMO_CACHE_SENTINEL)]
       )
     );
-  } else if (cx.env.config.disableMemoizationForDebugging) {
+  }
+
+  if (cx.env.config.disableMemoizationForDebugging) {
+    CompilerError.invariant(
+      cx.env.config.enableChangeDetectionForDebugging == null,
+      {
+        reason: `Expected to not have both change detection enabled and memoization disabled`,
+        description: `Incompatible config options`,
+        loc: null,
+      }
+    );
     testCondition = t.logicalExpression(
       "||",
       testCondition,
@@ -601,18 +611,13 @@ function codegenReactiveScope(
         t.numericLiteral(index),
         true
       );
-      statements.push(
-        t.variableDeclaration("let", [
-          t.variableDeclarator(t.identifier(loadName)),
-        ])
-      );
       cacheStoreStatements.push(
         t.expressionStatement(t.assignmentExpression("=", slot, value))
       );
       cacheLoadOldValueStatements.push(
-        t.expressionStatement(
-          t.assignmentExpression("=", t.identifier(loadName), slot)
-        )
+        t.variableDeclaration("let", [
+          t.variableDeclarator(t.identifier(loadName), slot),
+        ])
       );
       changeDetectionStatements.push(
         t.expressionStatement(
