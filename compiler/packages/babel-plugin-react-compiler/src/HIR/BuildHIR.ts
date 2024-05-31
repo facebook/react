@@ -1520,6 +1520,15 @@ function lowerExpression(
             place,
           });
         } else if (propertyPath.isObjectMethod()) {
+          if (propertyPath.node.kind !== "method") {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.node.kind} functions in ObjectExpression`,
+              severity: ErrorSeverity.Todo,
+              loc: propertyPath.node.loc ?? null,
+              suggestions: null,
+            });
+            continue;
+          }
           const method = lowerObjectMethod(builder, propertyPath);
           const place = lowerValueToTemporary(builder, method);
           const loweredKey = lowerObjectPropertyKey(builder, propertyPath);

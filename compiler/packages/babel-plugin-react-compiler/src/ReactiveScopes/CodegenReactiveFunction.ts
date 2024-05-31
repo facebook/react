@@ -81,18 +81,21 @@ export function codegenFunction(
   );
 
   /**
-   * Hot-module reloading reuses component instances at runtime even as the source of the component changes.
+   * Fast Refresh reuses component instances at runtime even as the source of the component changes.
    * The generated code needs to prevent values from one version of the code being reused after a code cange.
    * If HMR detection is enabled and we know the source code of the component, assign a cache slot to track
    * the source hash, and later, emit code to check for source changes and reset the cache on source changes.
    */
-  let hotModuleReloadState: { cacheIndex: number; hash: string } | null = null;
+  let fastRefreshState: {
+    cacheIndex: number;
+    hash: string;
+  } | null = null;
   if (
     fn.env.config.enableResetCacheOnSourceFileChanges &&
     fn.env.code !== null
   ) {
     const hash = createHmac("sha256", fn.env.code).digest("hex");
-    hotModuleReloadState = {
+    fastRefreshState = {
       cacheIndex: cx.nextCacheIndex,
       hash,
     };
@@ -131,7 +134,7 @@ export function codegenFunction(
         ),
       ])
     );
-    if (hotModuleReloadState !== null) {
+    if (fastRefreshState !== null) {
       // HMR detection is enabled, emit code to reset the memo cache on source changes
       const index = cx.synthesizeName("$i");
       preface.push(
@@ -140,10 +143,10 @@ export function codegenFunction(
             "!==",
             t.memberExpression(
               t.identifier(cx.synthesizeName("$")),
-              t.numericLiteral(hotModuleReloadState.cacheIndex),
+              t.numericLiteral(fastRefreshState.cacheIndex),
               true
             ),
-            t.stringLiteral(hotModuleReloadState.hash)
+            t.stringLiteral(fastRefreshState.hash)
           ),
           t.blockStatement([
             t.forStatement(
@@ -185,10 +188,10 @@ export function codegenFunction(
                 "=",
                 t.memberExpression(
                   t.identifier(cx.synthesizeName("$")),
-                  t.numericLiteral(hotModuleReloadState.cacheIndex),
+                  t.numericLiteral(fastRefreshState.cacheIndex),
                   true
                 ),
-                t.stringLiteral(hotModuleReloadState.hash)
+                t.stringLiteral(fastRefreshState.hash)
               )
             ),
           ])
