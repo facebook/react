@@ -2,7 +2,6 @@
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
-const crypto = require('node:crypto');
 const fs = require('fs');
 const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
@@ -41,7 +40,10 @@ if (dateString.startsWith("'")) {
 
 // Build the artifacts using a placeholder React version. We'll then do a string
 // replace to swap it with the correct version per release channel.
-const PLACEHOLDER_REACT_VERSION = ReactVersion + '-PLACEHOLDER';
+//
+// The placeholder version is the same format that the "next" channel uses
+const PLACEHOLDER_REACT_VERSION =
+  ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString;
 
 // TODO: We should inject the React version using a build-time parameter
 // instead of overwriting the source files.
@@ -158,7 +160,7 @@ function processStable(buildDir) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
+    for (const fileName of fs.readdirSync(buildDir + '/facebook-www')) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
@@ -167,27 +169,9 @@ function processStable(buildDir) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-classic-%FILEHASH%'
+      ReactVersion + '-www-classic-' + sha + '-' + dateString
     );
   }
-
-  [
-    buildDir + '/react-native/implementations/',
-    buildDir + '/facebook-react-native/',
-  ].forEach(reactNativeBuildDir => {
-    if (fs.existsSync(reactNativeBuildDir)) {
-      updatePlaceholderReactVersionInCompiledArtifacts(
-        reactNativeBuildDir,
-        ReactVersion + '-' + canaryChannelLabel + '-%FILEHASH%'
-      );
-    }
-  });
-
-  // Update remaining placeholders with canary channel version
-  updatePlaceholderReactVersionInCompiledArtifacts(
-    buildDir,
-    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
-  );
 
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-stable');
@@ -222,7 +206,7 @@ function processExperimental(buildDir, version) {
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
+    for (const fileName of fs.readdirSync(buildDir + '/facebook-www')) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
@@ -231,27 +215,9 @@ function processExperimental(buildDir, version) {
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-modern-%FILEHASH%'
+      ReactVersion + '-www-modern-' + sha + '-' + dateString
     );
   }
-
-  [
-    buildDir + '/react-native/implementations/',
-    buildDir + '/facebook-react-native/',
-  ].forEach(reactNativeBuildDir => {
-    if (fs.existsSync(reactNativeBuildDir)) {
-      updatePlaceholderReactVersionInCompiledArtifacts(
-        reactNativeBuildDir,
-        ReactVersion + '-' + canaryChannelLabel + '-%FILEHASH%'
-      );
-    }
-  });
-
-  // Update remaining placeholders with canary channel version
-  updatePlaceholderReactVersionInCompiledArtifacts(
-    buildDir,
-    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
-  );
 
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-experimental');
@@ -362,11 +328,9 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
 
   for (const artifactFilename of artifactFilenames) {
     const originalText = fs.readFileSync(artifactFilename, 'utf8');
-    const fileHash = crypto.createHash('sha1');
-    fileHash.update(originalText);
     const replacedText = originalText.replaceAll(
       PLACEHOLDER_REACT_VERSION,
-      newVersion.replace(/%FILEHASH%/g, fileHash.digest('hex').slice(0, 8))
+      newVersion
     );
     fs.writeFileSync(artifactFilename, replacedText);
   }

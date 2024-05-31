@@ -305,7 +305,7 @@
   "308": "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo().",
   "309": "Function components cannot have string refs. We recommend using useRef() instead. Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref",
   "310": "Rendered more hooks than during the previous render.",
-  "311": "Should have a queue. This is likely a bug in React. Please file an issue.",
+  "311": "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)",
   "312": "Rendered more hooks than during the previous render",
   "313": "Unknown priority level. This error is likely caused by a bug in React. Please file an issue.",
   "314": "Pinged unknown suspense boundary type. This is probably a bug in React.",

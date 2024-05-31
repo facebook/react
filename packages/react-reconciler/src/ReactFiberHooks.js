@@ -1260,7 +1260,8 @@ function updateReducerImpl<S, A>(
 
   if (queue === null) {
     throw new Error(
-      'Should have a queue. This is likely a bug in React. Please file an issue.',
+      'Should have a queue. You are likely calling Hooks conditionally, ' +
+        'which is not allowed. (https://react.dev/link/invalid-hook-call)',
     );
   }
 
@@ -1506,7 +1507,8 @@ function rerenderReducer<S, I, A>(
 
   if (queue === null) {
     throw new Error(
-      'Should have a queue. This is likely a bug in React. Please file an issue.',
+      'Should have a queue. You are likely calling Hooks conditionally, ' +
+        'which is not allowed. (https://react.dev/link/invalid-hook-call)',
     );
   }
 
