@@ -614,7 +614,17 @@ function codegenReactiveScope(
         [t.stringLiteral(MEMO_CACHE_SENTINEL)]
       )
     );
-  } else if (cx.env.config.disableMemoizationForDebugging) {
+  }
+
+  if (cx.env.config.disableMemoizationForDebugging) {
+    CompilerError.invariant(
+      cx.env.config.enableChangeDetectionForDebugging == null,
+      {
+        reason: `Expected to not have both change detection enabled and memoization disabled`,
+        description: `Incompatible config options`,
+        loc: null,
+      }
+    );
     testCondition = t.logicalExpression(
       "||",
       testCondition,
@@ -631,6 +641,7 @@ function codegenReactiveScope(
     const detectionFunction =
       cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
     const changeDetectionStatements: Array<t.Statement> = [];
+    const oldVarDeclarationStatements: Array<t.Statement> = [];
     memoBlock.body.forEach((stmt) => {
       if (
         stmt.type === "ExpressionStatement" &&
@@ -639,7 +650,7 @@ function codegenReactiveScope(
       ) {
         const name = stmt.expression.left.name;
         const loadName = cx.synthesizeName(`old$${name}`);
-        statements.push(
+        oldVarDeclarationStatements.push(
           t.variableDeclaration("let", [
             t.variableDeclarator(t.identifier(loadName)),
           ])
@@ -670,7 +681,11 @@ function codegenReactiveScope(
       ...computationBlock.body,
       t.ifStatement(
         t.unaryExpression("!", testCondition),
-        t.blockStatement([...memoBlock.body, ...changeDetectionStatements])
+        t.blockStatement([
+          ...oldVarDeclarationStatements,
+          ...memoBlock.body,
+          ...changeDetectionStatements,
+        ])
       ),
       ...cacheStoreStatements,
     ]);
