@@ -30802,7 +30802,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-8bc81ca90f-20240531';
+var ReactVersion = '19.0.0-www-modern-28fe581bac-20240531';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
