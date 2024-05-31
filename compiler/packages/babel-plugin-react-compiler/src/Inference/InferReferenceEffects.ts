@@ -269,7 +269,7 @@ class InferenceState {
   #values: Map<InstructionValue, AbstractValue>;
   /*
    * The set of values pointed to by each identifier. This is a set
-   * to accomodate phi points (where a variable may have different
+   * to accommodate phi points (where a variable may have different
    * values from different control flow paths).
    */
   #variables: Map<IdentifierId, Set<InstructionValue>>;
@@ -1923,7 +1923,7 @@ function inferBlock(
         /**
          * Regardless of the effect on the iterator, the *result* of advancing the iterator
          * is to extract a value from the collection. We use a Capture effect to reflect this
-         * aliasing, and then initialize() the lvalue to the same kind as the colleciton to
+         * aliasing, and then initialize() the lvalue to the same kind as the collection to
          * ensure that the item is mutable or frozen if the collection is mutable/frozen.
          */
         state.referenceAndRecordEffects(

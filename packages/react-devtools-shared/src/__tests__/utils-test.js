@@ -187,13 +187,13 @@ describe('utils', () => {
     });
 
     // @reactVersion >= 16.0
-    it('should format string substituions', () => {
+    it('should format string substitutions', () => {
       expect(
         formatWithStyles(['%s %s %s', 'a', 'b', 'c'], 'color: gray'),
       ).toEqual(['%c%s %s %s', 'color: gray', 'a', 'b', 'c']);
 
       // The last letter isn't gray here but I think it's not a big
-      // deal, since there is a string substituion but it's incorrect
+      // deal, since there is a string substitution but it's incorrect
       expect(formatWithStyles(['%s %s', 'a', 'b', 'c'], 'color: gray')).toEqual(
         ['%c%s %s', 'color: gray', 'a', 'b', 'c'],
       );
@@ -220,7 +220,7 @@ describe('utils', () => {
     });
 
     // @reactVersion >= 16.0
-    it('should properly format escaped string substituions', () => {
+    it('should properly format escaped string substitutions', () => {
       expect(formatWithStyles(['%%s'], 'color: gray')).toEqual([
         '%c%s',
         'color: gray',

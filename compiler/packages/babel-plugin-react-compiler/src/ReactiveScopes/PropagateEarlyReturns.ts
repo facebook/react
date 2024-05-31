@@ -24,7 +24,7 @@ import { EARLY_RETURN_SENTINEL } from "./CodegenReactiveFunction";
 import { ReactiveFunctionTransform, Transformed } from "./visitors";
 
 /**
- * TODO: Actualy propagate early return information, for now we throw a Todo bailout.
+ * TODO: Actually propagate early return information, for now we throw a Todo bailout.
  *
  * This pass ensures that reactive blocks honor the control flow behavior of the
  * original code including early return semantics. Specifically, if a reactive

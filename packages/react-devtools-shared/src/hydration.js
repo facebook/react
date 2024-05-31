@@ -43,7 +43,7 @@ export type Dehydrated = {
   type: string,
 };
 
-// Typed arrays and other complex iteratable objects (e.g. Map, Set, ImmutableJS) need special handling.
+// Typed arrays and other complex iterable objects (e.g. Map, Set, ImmutableJS) need special handling.
 // These objects can't be serialized without losing type information,
 // so a "Unserializable" type wrapper is used (with meta-data keys) to send nested values-
 // while preserving the original type and name.

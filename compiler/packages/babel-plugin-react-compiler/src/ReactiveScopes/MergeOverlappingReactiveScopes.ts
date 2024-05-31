@@ -42,7 +42,7 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  * ## Detailed Walkthrough
  *
  * Two scopes overlap if there is one or more instruction that is inside the range
- * of both scopes. In general, overlapping scopes are merged togther. The only
+ * of both scopes. In general, overlapping scopes are merged together. The only
  * exception to this is when one scope *shadows* another scope. For example:
  *
  * ```javascript

@@ -1097,7 +1097,7 @@ function completeWork(
                 markUpdate(workInProgress);
               }
             } else {
-              // We use the updateHostComponent path becuase it produces
+              // We use the updateHostComponent path because it produces
               // the update queue we need for Hoistables.
               updateHostComponent(
                 current,

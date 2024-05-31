@@ -16,7 +16,7 @@ import {StoreContext} from '../context';
 import styles from './WhatChanged.css';
 
 function hookIndicesToString(indices: Array<number>): string {
-  // This is debatable but I think 1-based might ake for a nicer UX.
+  // This is debatable but I think 1-based might ache for a nicer UX.
   const numbers = indices.map(value => value + 1);
 
   switch (numbers.length) {

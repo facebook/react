@@ -963,7 +963,7 @@ function clearContainerSparingly(container: Node) {
         const element: Element = (node: any);
         clearContainerSparingly(element);
         // If these singleton instances had previously been rendered with React they
-        // may still hold on to references to the previous fiber tree. We detatch them
+        // may still hold on to references to the previous fiber tree. We detach them
         // prospectively to reset them to a baseline starting state since we cannot create
         // new instances.
         detachDeletedInstance(element);
@@ -985,7 +985,7 @@ function clearContainerSparingly(container: Node) {
       case 'STYLE': {
         continue;
       }
-      // Stylesheet tags are retained because tehy may likely come from 3rd party scripts and extensions
+      // Stylesheet tags are retained because they may likely come from 3rd party scripts and extensions
       case 'LINK': {
         if (((node: any): HTMLLinkElement).rel.toLowerCase() === 'stylesheet') {
           continue;
@@ -1115,7 +1115,7 @@ export function canHydrateInstance(
           // Scripts are a little tricky, we exclude known resources and then similar to links try to use high-entropy attributes
           // to reject poor matches. One challenge with scripts are inline scripts. We don't attempt to check text content which could
           // in theory lead to a hydration error later if a 3rd party injected an inline script before the React rendered nodes.
-          // Falling back to client rendering if this happens should be seemless though so we will try this hueristic and revisit later
+          // Falling back to client rendering if this happens should be seamless though so we will try this heuristic and revisit later
           // if we learn it is problematic
           const srcAttr = element.getAttribute('src');
           if (
@@ -1126,7 +1126,7 @@ export function canHydrateInstance(
               (anyProps.crossOrigin == null ? null : anyProps.crossOrigin)
           ) {
             // This script is for a different src/type/crossOrigin. It may be a script resource
-            // or it may just be a mistmatch
+            // or it may just be a mismatch
             if (
               srcAttr &&
               element.hasAttribute('async') &&
@@ -1140,7 +1140,7 @@ export function canHydrateInstance(
         }
         default: {
           // We have excluded the most likely cases of mismatch between hoistable tags, 3rd party script inserted tags,
-          // and browser extension inserted tags. While it is possible this is not the right match it is a decent hueristic
+          // and browser extension inserted tags. While it is possible this is not the right match it is a decent heuristic
           // that should work in the vast majority of cases.
           return element;
         }
@@ -1343,7 +1343,7 @@ export function getFirstHydratableChildWithinSuspenseInstance(
 export function describeHydratableInstanceForDevWarnings(
   instance: HydratableInstance,
 ): string | {type: string, props: $ReadOnly<Props>} {
-  // Reverse engineer a pseudo react-element from hydratable instnace
+  // Reverse engineer a pseudo react-element from hydratable instance
   if (instance.nodeType === ELEMENT_NODE) {
     // Reverse engineer a set of props that can print for dev warnings
     return {
@@ -2062,7 +2062,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           rel: 'preload',
           // There is a bug in Safari where imageSrcSet is not respected on preload links
           // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-          // This harms older browers that do not support imageSrcSet by making their preloads not work
+          // This harms older browsers that do not support imageSrcSet by making their preloads not work
           // but this population is shrinking fast and is already small so we accept this tradeoff.
           href:
             as === 'image' && options && options.imageSrcSet ? undefined : href,
@@ -3340,7 +3340,7 @@ function onUnsuspend(this: SuspendedState) {
       // If we haven't actually inserted the stylesheets yet we need to do so now before starting the commit.
       // The reason we do this after everything else has finished is because we want to have all the stylesheets
       // load synchronously right before mutating. Ideally the new styles will cause a single recalc only on the
-      // new tree. When we filled up stylesheets we only inlcuded stylesheets with matching media attributes so we
+      // new tree. When we filled up stylesheets we only included stylesheets with matching media attributes so we
       // wait for them to load before actually continuing. We expect this to increase the count above zero
       insertSuspendedStylesheets(this, this.stylesheets);
     } else if (this.unsuspend) {

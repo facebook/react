@@ -136,7 +136,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
        * indicating that all control-flow paths diverge instead of reaching the fallthrough.
        * In this case there isn't an instruction id in the program that we can point to for the
        * updated range. Since the output is correct in this case we leave it, but it would be
-       * more correct to find the maximum instuction id in the whole program and set the range.end
+       * more correct to find the maximum instruction id in the whole program and set the range.end
        * to one greater. Alternatively, we could leave in an unreachable fallthrough (with a new
        * "unreachable" terminal variant, perhaps) and use that instruction id.
        */

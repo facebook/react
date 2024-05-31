@@ -236,7 +236,7 @@ export type ResumableState = {
   nextFormID: number,
   streamingFormat: StreamingFormat,
 
-  // We carry the bootstrap intializers in resumable state in case we postpone in the shell
+  // We carry the bootstrap initializers in resumable state in case we postpone in the shell
   // of a prerender. On resume we will reinitialize the bootstrap scripts if necessary.
   // If we end up flushing the bootstrap scripts we void these on the resumable state
   bootstrapScriptContent?: string | void,
@@ -2339,7 +2339,7 @@ function pushMeta(
 
     if (isFallback) {
       // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
-      // because they are likely superceded by primary content and we want to avoid needing to clean
+      // because they are likely superseded by primary content and we want to avoid needing to clean
       // them up when the primary content is ready. They are never hydrated on the client anyway because
       // boundaries in fallback are awaited or client render, in either case there is never hydration
       return null;
@@ -2527,7 +2527,7 @@ function pushLink(
 
     if (isFallback) {
       // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
-      // because they are likely superceded by primary content and we want to avoid needing to clean
+      // because they are likely superseded by primary content and we want to avoid needing to clean
       // them up when the primary content is ready. They are never hydrated on the client anyway because
       // boundaries in fallback are awaited or client render, in either case there is never hydration
       return null;
@@ -2856,9 +2856,9 @@ function pushImg(
       if (
         headers &&
         headers.remainingCapacity > 0 &&
-        // this is a hueristic similar to capping element preloads to 10 unless explicitly
+        // this is a heuristic similar to capping element preloads to 10 unless explicitly
         // fetchPriority="high". We use length here which means it will fit fewer images when
-        // the urls are long and more when short. arguably byte size is a better hueristic because
+        // the urls are long and more when short. arguably byte size is a better heuristic because
         // it directly translates to how much we send down before content is actually seen.
         // We could unify the counts and also make it so the total is tracked regardless of
         // flushing output but since the headers are likely to be go earlier than content
@@ -2905,7 +2905,7 @@ function pushImg(
             as: 'image',
             // There is a bug in Safari where imageSrcSet is not respected on preload links
             // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-            // This harms older browers that do not support imageSrcSet by making their preloads not work
+            // This harms older browsers that do not support imageSrcSet by making their preloads not work
             // but this population is shrinking fast and is already small so we accept this tradeoff.
             href: srcSet ? undefined : src,
             imageSrcSet: srcSet,
@@ -3057,7 +3057,7 @@ function pushTitle(
   ) {
     if (isFallback) {
       // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
-      // because they are likely superceded by primary content and we want to avoid needing to clean
+      // because they are likely superseded by primary content and we want to avoid needing to clean
       // them up when the primary content is ready. They are never hydrated on the client anyway because
       // boundaries in fallback are awaited or client render, in either case there is never hydration
       return null;
@@ -4392,7 +4392,7 @@ function escapeJSStringsForInstructionScripts(input: string): string {
   const escaped = JSON.stringify(input);
   return escaped.replace(regexForJSStringsInInstructionScripts, match => {
     switch (match) {
-      // santizing breaking out of strings and script tags
+      // sanitizing breaking out of strings and script tags
       case '<':
         return '\\u003c';
       case '\u2028':
@@ -4414,7 +4414,7 @@ function escapeJSObjectForInstructionScripts(input: Object): string {
   const escaped = JSON.stringify(input);
   return escaped.replace(regexForJSStringsInScripts, match => {
     switch (match) {
-      // santizing breaking out of strings and script tags
+      // sanitizing breaking out of strings and script tags
       case '&':
         return '\\u0026';
       case '>':
@@ -4519,7 +4519,7 @@ export function writeHoistablesForBoundary(
   hoistableState.stylesheets.forEach(hasStylesToHoist);
 
   // We don't actually want to flush any hoistables until the boundary is complete so we omit
-  // any further writing here. This is becuase unlike Resources, Hoistable Elements act more like
+  // any further writing here. This is because unlike Resources, Hoistable Elements act more like
   // regular elements, each rendered element has a unique representation in the DOM. We don't want
   // these elements to appear in the DOM early, before the boundary has actually completed
 
@@ -4957,7 +4957,7 @@ function writeStyleResourceAttributeInJS(
       attributeValue = '';
       break;
     }
-    // Santized URLs
+    // Sanitized URLs
     case 'src':
     case 'href': {
       value = sanitizeURL(value);
@@ -4970,7 +4970,7 @@ function writeStyleResourceAttributeInJS(
     default: {
       if (
         // unrecognized event handlers are not SSR'd and we (apparently)
-        // use on* as hueristic for these handler props
+        // use on* as heuristic for these handler props
         name.length > 2 &&
         (name[0] === 'o' || name[0] === 'O') &&
         (name[1] === 'n' || name[1] === 'N')
@@ -5153,7 +5153,7 @@ function writeStyleResourceAttributeInAttr(
       break;
     }
 
-    // Santized URLs
+    // Sanitized URLs
     case 'src':
     case 'href': {
       value = sanitizeURL(value);
@@ -5166,7 +5166,7 @@ function writeStyleResourceAttributeInAttr(
     default: {
       if (
         // unrecognized event handlers are not SSR'd and we (apparently)
-        // use on* as hueristic for these handler props
+        // use on* as heuristic for these handler props
         name.length > 2 &&
         (name[0] === 'o' || name[0] === 'O') &&
         (name[1] === 'n' || name[1] === 'N')
@@ -5472,7 +5472,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
                 rel: 'preload',
                 // There is a bug in Safari where imageSrcSet is not respected on preload links
                 // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-                // This harms older browers that do not support imageSrcSet by making their preloads not work
+                // This harms older browsers that do not support imageSrcSet by making their preloads not work
                 // but this population is shrinking fast and is already small so we accept this tradeoff.
                 href: imageSrcSet ? undefined : href,
                 as,

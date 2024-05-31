@@ -663,7 +663,7 @@ class Context {
       currentScope.ownBlocks = currentScope.ownBlocks.pop();
 
       CompilerError.invariant(last != null && last === id, {
-        reason: "[PropagateScopeDependencies] Misformed block stack",
+        reason: "[PropagateScopeDependencies] Malformed block stack",
         loc: GeneratedSource,
       });
     }

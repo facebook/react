@@ -222,7 +222,7 @@ export function installHook(target: any): DevToolsHook | null {
   // NOTE: KEEP IN SYNC with src/backend/console.js:patchForStrictMode
   // This function hides or dims console logs during the initial double renderer
   // in Strict Mode. We need this function because during initial render,
-  // React and DevTools are connecting and the renderer interface isn't avaiable
+  // React and DevTools are connecting and the renderer interface isn't available
   // and we want to be able to have consistent logging behavior for double logs
   // during the initial renderer.
   function patchConsoleForInitialCommitInStrictMode({

@@ -2999,7 +2999,7 @@ function commitMutationEffectsOnFiber(
           const isUpdate = current !== null;
           const wasHiddenByAncestorOffscreen =
             offscreenSubtreeIsHidden || offscreenSubtreeWasHidden;
-          // Only trigger disapper layout effects if:
+          // Only trigger disappear layout effects if:
           //   - This is an update, not first mount.
           //   - This Offscreen was not hidden before.
           //   - Ancestor Offscreen was not hidden in previous commit.
@@ -4439,7 +4439,7 @@ export function disconnectPassiveEffect(finishedWork: Fiber): void {
         HookPassive,
       );
       // When disconnecting passive effects, we fire the effects in the same
-      // order as during a deletiong: parent before child
+      // order as during a deletion: parent before child
       recursivelyTraverseDisconnectPassiveEffects(finishedWork);
       break;
     }

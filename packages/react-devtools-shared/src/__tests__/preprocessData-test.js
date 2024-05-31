@@ -1755,7 +1755,7 @@ describe('Timeline profiler', () => {
 
         describe('errors thrown while rendering', () => {
           // @reactVersion >= 18.0
-          it('shoult parse Errors thrown during render', async () => {
+          it('should parse Errors thrown during render', async () => {
             jest.spyOn(console, 'error');
 
             class ErrorBoundary extends React.Component {

@@ -143,7 +143,7 @@ export type MemoizationOptions = {
   forceMemoizePrimitives: boolean;
 };
 
-// Describes how to determine whether a value should be memoized, relative to dependees and dependencies
+// Describes how to determine whether a value should be memoized, relative to dependencies and dependencies
 enum MemoizationLevel {
   // The value should be memoized if it escapes
   Memoized = "Memoized",
@@ -928,7 +928,7 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
 
     /**
      * Scopes may initially appear "empty" because the value being memoized
-     * is early-returned from within the scope. For now we intentionaly keep
+     * is early-returned from within the scope. For now we intentionally keep
      * these scopes, and let them get pruned later by PruneUnusedScopes
      * _after_ handling the early-return case in PropagateEarlyReturns.
      */

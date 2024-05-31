@@ -1427,7 +1427,7 @@ describe('ReactDOMForm', () => {
             Scheduler.log(`Async action started`);
             await getText('Wait');
 
-            // Update the app with new data. This is analagous to re-rendering
+            // Update the app with new data. This is analogous to re-rendering
             // from the root with a new RSC payload.
             startTransition(() => {
               root.render(
@@ -1541,7 +1541,7 @@ describe('ReactDOMForm', () => {
         Scheduler.log(`Async action started`);
         await getText('Wait');
 
-        // Update the app with new data. This is analagous to re-rendering
+        // Update the app with new data. This is analogous to re-rendering
         // from the root with a new RSC payload.
         startTransition(() => {
           root.render(<App promiseForUsername={getText(normalizedUsername)} />);
@@ -1631,7 +1631,7 @@ describe('ReactDOMForm', () => {
           Scheduler.log(`Async action started`);
           await getText('Wait');
 
-          // Update the app with new data. This is analagous to re-rendering
+          // Update the app with new data. This is analogous to re-rendering
           // from the root with a new RSC payload.
           startTransition(() => {
             root.render(
@@ -1718,7 +1718,7 @@ describe('ReactDOMForm', () => {
         const normalizedA = currentA.trim();
         const normalizedB = currentB.trim();
 
-        // Update the app with new data. This is analagous to re-rendering
+        // Update the app with new data. This is analogous to re-rendering
         // from the root with a new RSC payload.
         startTransition(() => {
           root.render(

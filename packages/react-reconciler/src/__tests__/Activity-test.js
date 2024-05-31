@@ -1539,7 +1539,7 @@ describe('Activity', () => {
 
       expect(offscreenRef.current).not.toBeNull();
 
-      // Activity is attached by default. State updates from offscreen are **not defered**.
+      // Activity is attached by default. State updates from offscreen are **not deferred**.
       await act(async () => {
         updateChildState(1);
         updateHighPriorityComponentState(1);
@@ -1556,7 +1556,7 @@ describe('Activity', () => {
         offscreenRef.current.detach();
       });
 
-      // Activity is detached. State updates from offscreen are **defered**.
+      // Activity is detached. State updates from offscreen are **deferred**.
       await act(async () => {
         updateChildState(2);
         updateHighPriorityComponentState(2);
@@ -1581,7 +1581,7 @@ describe('Activity', () => {
         offscreenRef.current.attach();
       });
 
-      // Activity is attached. State updates from offscreen are **not defered**.
+      // Activity is attached. State updates from offscreen are **not deferred**.
       await act(async () => {
         updateChildState(3);
         updateHighPriorityComponentState(3);
@@ -1659,7 +1659,7 @@ describe('Activity', () => {
       nextRenderTriggerDetach = true;
 
       // Activity is attached and gets detached inside useLayoutEffect.
-      // State updates from offscreen are **defered**.
+      // State updates from offscreen are **deferred**.
       await act(async () => {
         updateChildState(1);
         updateHighPriorityComponentState(1);
@@ -1686,7 +1686,7 @@ describe('Activity', () => {
 
       nextRenderTriggerAttach = true;
 
-      // Activity is detached. State updates from offscreen are **defered**.
+      // Activity is detached. State updates from offscreen are **deferred**.
       // Activity is attached inside useLayoutEffect;
       await act(async () => {
         updateChildState(3);

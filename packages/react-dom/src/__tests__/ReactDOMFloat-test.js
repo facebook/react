@@ -2702,7 +2702,7 @@ body {
       </html>,
     );
 
-    // We inject some styles, divs, scripts into the begginning, middle, and end
+    // We inject some styles, divs, scripts into the beginning, middle, and end
     // of the head / body.
     const injectedStyle = document.createElement('style');
     injectedStyle.textContent = 'body { background-color: blue; }';
@@ -2715,7 +2715,7 @@ body {
     document.head.prepend(injectedDiv);
     document.head.appendChild(injectedDiv.cloneNode(true));
     // We do not prepend a <div> in body because this will conflict with hyration
-    // We still mostly hydrate by matchign tag and <div> does not have any attributes to
+    // We still mostly hydrate by matching tag and <div> does not have any attributes to
     // differentiate between likely-inject and likely-rendered cases. If a <div> is prepended
     // in the <body> and you render a <div> as the first child of <body> there will be a conflict.
     // We consider this a rare edge case and even if it does happen the fallback to client rendering
@@ -3845,7 +3845,7 @@ body {
 
   it('uses imageSrcSet and imageSizes when keying image preloads', async () => {
     function App({isClient}) {
-      // Will key off href in absense of imageSrcSet
+      // Will key off href in absence of imageSrcSet
       ReactDOM.preload('foo', {as: 'image'});
       ReactDOM.preload('foo', {as: 'image'});
 
@@ -3865,7 +3865,7 @@ body {
         imageSizes: 'foosizes',
       });
 
-      // Will key off href in absense of imageSrcSet, imageSizes is ignored. these should match the
+      // Will key off href in absence of imageSrcSet, imageSizes is ignored. these should match the
       // first preloads not not emit a new preload tag
       ReactDOM.preload('foo', {as: 'image', imageSizes: 'foosizes'});
       ReactDOM.preload('foo', {as: 'image', imageSizes: 'foosizes'});
@@ -3884,7 +3884,7 @@ body {
       });
 
       if (isClient) {
-        // Will key off href in absense of imageSrcSet
+        // Will key off href in absence of imageSrcSet
         ReactDOM.preload('client', {as: 'image'});
         ReactDOM.preload('client', {as: 'image'});
 
@@ -3904,7 +3904,7 @@ body {
           imageSizes: 'clientsizes',
         });
 
-        // Will key off href in absense of imageSrcSet, imageSizes is ignored. these should match the
+        // Will key off href in absence of imageSrcSet, imageSizes is ignored. these should match the
         // first preloads not not emit a new preload tag
         ReactDOM.preload('client', {as: 'image', imageSizes: 'clientsizes'});
         ReactDOM.preload('client', {as: 'image', imageSizes: 'clientsizes'});

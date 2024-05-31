@@ -1432,7 +1432,7 @@ describe('Timeline profiler', () => {
                       }
                   `);
 
-          // There should be two batches of renders: Suspeneded and resolved.
+          // There should be two batches of renders: Suspended and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
           expect(timelineData.componentMeasures).toHaveLength(2);
         });
@@ -1490,7 +1490,7 @@ describe('Timeline profiler', () => {
                       }
                   `);
 
-          // There should be two batches of renders: Suspeneded and resolved.
+          // There should be two batches of renders: Suspended and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
           expect(timelineData.componentMeasures).toHaveLength(2);
         });
@@ -1675,7 +1675,7 @@ describe('Timeline profiler', () => {
                       }
                   `);
 
-          // There should be two batches of renders: Suspeneded and resolved.
+          // There should be two batches of renders: Suspended and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
           expect(timelineData.componentMeasures).toHaveLength(2);
         });
@@ -1732,7 +1732,7 @@ describe('Timeline profiler', () => {
                       }
                   `);
 
-          // There should be two batches of renders: Suspeneded and resolved.
+          // There should be two batches of renders: Suspended and resolved.
           expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
           expect(timelineData.componentMeasures).toHaveLength(2);
         });
