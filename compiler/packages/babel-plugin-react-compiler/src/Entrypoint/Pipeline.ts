@@ -147,8 +147,10 @@ function* runWithEnvironment(
   validateContextVariableLValues(hir);
   validateUseMemo(hir);
 
-  dropManualMemoization(hir);
-  yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
+  if (!env.config.enablePreserveExistingManualUseMemo) {
+    dropManualMemoization(hir);
+    yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
+  }
 
   inlineImmediatelyInvokedFunctionExpressions(hir);
   yield log({

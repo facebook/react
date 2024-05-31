@@ -165,6 +165,13 @@ const EnvironmentConfigSchema = z.object({
    */
   validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
 
+  /**
+   * When this is true, rather than pruning existing manual memoization but ensuring or validating
+   * that the memoized values remain memoized, the compiler will simply not prune existing calls to
+   * useMemo/useCallback.
+   */
+  enablePreserveExistingManualUseMemo: z.boolean().default(false),
+
   // 🌲
   enableForest: z.boolean().default(false),
 
