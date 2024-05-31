@@ -512,5 +512,7 @@
   "524": "Values cannot be passed to next() of AsyncIterables passed to Client Components.",
   "525": "A React Element from an older version of React was rendered. This is not supported. It can happen if:\n- Multiple copies of the \"react\" package is used.\n- A library pre-bundled an old copy of \"react\" or \"react/jsx-runtime\".\n- A compiler tries to \"inline\" JSX instead of using the runtime.",
   "526": "Could not reference an opaque temporary reference. This is likely due to misconfiguring the temporaryReferences options on the server.",
-  "527": "Incompatible React versions: The \"react\" and \"react-dom\" packages must have the exact same version. Instead got:\n  - react:      %s\n  - react-dom:  %s\nLearn more: https://react.dev/warnings/version-mismatch"
+  "527": "Incompatible React versions: The \"react\" and \"react-dom\" packages must have the exact same version. Instead got:\n  - react:      %s\n  - react-dom:  %s\nLearn more: https://react.dev/warnings/version-mismatch",
+  "528": "Expected <link> not to update to be updated to a stylehsheet with precedence. Check the `rel`, `href`, and `precedence` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.%s",
+  "529": "Expected stylesheet with precedence to not be updated to a different kind of <link>. Check the `rel`, `href`, and `precedence` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.%s"
 }

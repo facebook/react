@@ -2358,6 +2358,7 @@ export function getResource(
   type: string,
   currentProps: any,
   pendingProps: any,
+  currentResource: null | Resource,
 ): null | Resource {
   const resourceRoot = getCurrentResourceRoot();
   if (!resourceRoot) {
@@ -2430,9 +2431,44 @@ export function getResource(
             );
           }
         }
+        if (currentProps && currentResource === null) {
+          // This node was previously an Instance type and is becoming a Resource type
+          // For now we error because we don't support flavor changes
+          let diff = '';
+          if (__DEV__) {
+            diff = `
+
+  - ${describeLinkForResourceErrorDEV(currentProps)}
+  + ${describeLinkForResourceErrorDEV(pendingProps)}`;
+          }
+          throw new Error(
+            'Expected <link> not to update to be updated to a stylehsheet with precedence.' +
+              ' Check the `rel`, `href`, and `precedence` props of this component.' +
+              ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' +
+              diff,
+          );
+        }
         return resource;
+      } else {
+        if (currentProps && currentResource !== null) {
+          // This node was previously a Resource type and is becoming an Instance type
+          // For now we error because we don't support flavor changes
+          let diff = '';
+          if (__DEV__) {
+            diff = `
+
+  - ${describeLinkForResourceErrorDEV(currentProps)}
+  + ${describeLinkForResourceErrorDEV(pendingProps)}`;
+          }
+          throw new Error(
+            'Expected stylesheet with precedence to not be updated to a different kind of <link>.' +
+              ' Check the `rel`, `href`, and `precedence` props of this component.' +
+              ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' +
+              diff,
+          );
+        }
+        return null;
       }
-      return null;
     }
     case 'script': {
       const async = pendingProps.async;
@@ -2471,6 +2507,49 @@ export function getResource(
       );
     }
   }
+}
+
+function describeLinkForResourceErrorDEV(props: any) {
+  if (__DEV__) {
+    let describedProps = 0;
+
+    let description = '<link';
+    if (typeof props.rel === 'string') {
+      describedProps++;
+      description += ` rel="${props.rel}"`;
+    } else if (hasOwnProperty.call(props, 'rel')) {
+      describedProps++;
+      description += ` rel="${
+        props.rel === null ? 'null' : 'invalid type ' + typeof props.rel
+      }"`;
+    }
+    if (typeof props.href === 'string') {
+      describedProps++;
+      description += ` href="${props.href}"`;
+    } else if (hasOwnProperty.call(props, 'href')) {
+      describedProps++;
+      description += ` href="${
+        props.href === null ? 'null' : 'invalid type ' + typeof props.href
+      }"`;
+    }
+    if (typeof props.precedence === 'string') {
+      describedProps++;
+      description += ` precedence="${props.precedence}"`;
+    } else if (hasOwnProperty.call(props, 'precedence')) {
+      describedProps++;
+      description += ` precedence={${
+        props.precedence === null
+          ? 'null'
+          : 'invalid type ' + typeof props.precedence
+      }}`;
+    }
+    if (Object.getOwnPropertyNames(props).length > describedProps) {
+      description += ' ...';
+    }
+    description += ' />';
+    return description;
+  }
+  return '';
 }
 
 function styleTagPropsFromRawProps(
