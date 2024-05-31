@@ -22,7 +22,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-var ReactVersion = '19.0.0-www-classic-113c8e7f72-20240601';
+var ReactVersion = '19.0.0-www-classic-d77dd31a32-20240601';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
