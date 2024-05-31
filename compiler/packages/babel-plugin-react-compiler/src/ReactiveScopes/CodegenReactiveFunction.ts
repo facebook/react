@@ -545,7 +545,6 @@ function codegenReactiveScope(
     cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
   }
 
-  // (changeExpressions.length > 0) || (changeExpressions.length
   let testCondition = (changeExpressions as Array<t.Expression>).reduce(
     (acc: t.Expression | null, ident: t.Expression) => {
       if (acc == null) {
