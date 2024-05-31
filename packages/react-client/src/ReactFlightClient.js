@@ -254,6 +254,7 @@ export type Response = {
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
+  _debugRootTask?: null | ConsoleTask, // DEV-only
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -614,6 +615,7 @@ function getTaskName(type: mixed): string {
 }
 
 function createElement(
+  response: Response,
   type: mixed,
   key: mixed,
   props: mixed,
@@ -697,9 +699,15 @@ function createElement(
         const callStack = buildFakeCallStack(stack, createTaskFn);
         // This owner should ideally have already been initialized to avoid getting
         // user stack frames on the stack.
-        const ownerTask = owner === null ? null : initializeFakeTask(owner);
+        const ownerTask =
+          owner === null ? null : initializeFakeTask(response, owner);
         if (ownerTask === null) {
-          task = callStack();
+          const rootTask = response._debugRootTask;
+          if (rootTask != null) {
+            task = rootTask.run(callStack);
+          } else {
+            task = callStack();
+          }
         } else {
           task = ownerTask.run(callStack);
         }
@@ -1106,6 +1114,7 @@ function parseModelTuple(
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
     return createElement(
+      response,
       tuple[1],
       tuple[2],
       tuple[3],
@@ -1149,6 +1158,14 @@ export function createResponse(
     _buffer: [],
     _tempRefs: temporaryReferences,
   };
+  if (supportsCreateTask) {
+    // Any stacks that appear on the server need to be rooted somehow on the client
+    // so we create a root Task for this response which will be the root owner for any
+    // elements created by the server. We use the "use server" string to indicate that
+    // this is where we enter the server from the client.
+    // TODO: Make this string configurable.
+    response._debugRootTask = (console: any).createTask('"use server"');
+  }
   // Don't inline this call because it causes closure to outline the call above.
   response._fromJSON = createFromJSONCallback(response);
   return response;
@@ -1730,6 +1747,7 @@ function buildFakeCallStack<T>(stack: string, innerCall: () => T): () => T {
 }
 
 function initializeFakeTask(
+  response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): null | ConsoleTask {
   if (taskCache === null || typeof debugInfo.stack !== 'string') {
@@ -1745,7 +1763,7 @@ function initializeFakeTask(
   const ownerTask =
     componentInfo.owner == null
       ? null
-      : initializeFakeTask(componentInfo.owner);
+      : initializeFakeTask(response, componentInfo.owner);
 
   // eslint-disable-next-line react-internal/no-production-logging
   const createTaskFn = (console: any).createTask.bind(
@@ -1755,7 +1773,12 @@ function initializeFakeTask(
   const callStack = buildFakeCallStack(stack, createTaskFn);
 
   if (ownerTask === null) {
-    return callStack();
+    const rootTask = response._debugRootTask;
+    if (rootTask != null) {
+      return rootTask.run(callStack);
+    } else {
+      return callStack();
+    }
   } else {
     return ownerTask.run(callStack);
   }
@@ -1776,7 +1799,7 @@ function resolveDebugInfo(
   // We eagerly initialize the fake task because this resolving happens outside any
   // render phase so we're not inside a user space stack at this point. If we waited
   // to initialize it when we need it, we might be inside user code.
-  initializeFakeTask(debugInfo);
+  initializeFakeTask(response, debugInfo);
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
@@ -1813,11 +1836,16 @@ function resolveConsoleEntry(
     printToConsole.bind(null, methodName, args, env),
   );
   if (owner != null) {
-    const task = initializeFakeTask(owner);
+    const task = initializeFakeTask(response, owner);
     if (task !== null) {
       task.run(callStack);
       return;
     }
+  }
+  const rootTask = response._debugRootTask;
+  if (rootTask != null) {
+    rootTask.run(callStack);
+    return;
   }
   callStack();
 }
