@@ -360,6 +360,14 @@ const EnvironmentConfigSchema = z.object({
   disableMemoizationForDebugging: z.boolean().default(false),
 
   /**
+   * When true, rather using memoized values, the compiler will always re-compute
+   * values, and then use a heuristic to compare the memoized value to the newly
+   * computed one. This detects cases where rules of react violations may cause the
+   * compiled code to behave differently than the original.
+   */
+  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
+
+  /**
    * The react native re-animated library uses custom Babel transforms that
    * requires the calls to library API remain unmodified.
    *
@@ -477,6 +485,18 @@ export class Environment {
     this.useMemoCacheIdentifier = useMemoCacheIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
+
+    if (
+      config.disableMemoizationForDebugging &&
+      config.enableChangeDetectionForDebugging != null
+    ) {
+      CompilerError.throwInvalidConfig({
+        reason: `Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+    }
 
     for (const [hookName, hook] of this.config.customHooks) {
       CompilerError.invariant(!this.#globals.has(hookName), {

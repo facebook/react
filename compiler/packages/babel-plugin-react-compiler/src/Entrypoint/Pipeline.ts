@@ -149,7 +149,8 @@ function* runWithEnvironment(
 
   if (
     !env.config.enablePreserveExistingManualUseMemo &&
-    !env.config.disableMemoizationForDebugging
+    !env.config.disableMemoizationForDebugging &&
+    !env.config.enableChangeDetectionForDebugging
   ) {
     dropManualMemoization(hir);
     yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
