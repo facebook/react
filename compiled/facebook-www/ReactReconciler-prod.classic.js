@@ -2575,11 +2575,16 @@ module.exports = function ($$$config) {
     thenableIndexCounter += 1;
     null === thenableState && (thenableState = []);
     thenable = trackUsedThenable(thenableState, thenable, index);
-    null === currentlyRenderingFiber$1.alternate &&
+    index = currentlyRenderingFiber$1;
+    null ===
       (null === workInProgressHook
-        ? null === currentlyRenderingFiber$1.memoizedState
-        : null === workInProgressHook.next) &&
-      (ReactSharedInternals.H = HooksDispatcherOnMount);
+        ? index.memoizedState
+        : workInProgressHook.next) &&
+      ((index = index.alternate),
+      (ReactSharedInternals.H =
+        null === index || null === index.memoizedState
+          ? HooksDispatcherOnMount
+          : HooksDispatcherOnUpdate));
     return thenable;
   }
   function use(usable) {
@@ -12636,7 +12641,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-c69211a9df-20240531"
+      reconcilerVersion: "19.0.0-www-classic-adbec0c25a-20240531"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

@@ -12060,15 +12060,39 @@ function useThenable(thenable) {
     thenableState = createThenableState();
   }
 
-  var result = trackUsedThenable(thenableState, thenable, index);
+  var result = trackUsedThenable(thenableState, thenable, index); // When something suspends with `use`, we replay the component with the
+  // "re-render" dispatcher instead of the "mount" or "update" dispatcher.
+  //
+  // But if there are additional hooks that occur after the `use` invocation
+  // that suspended, they wouldn't have been processed during the previous
+  // attempt. So after we invoke `use` again, we may need to switch from the
+  // "re-render" dispatcher back to the "mount" or "update" dispatcher. That's
+  // what the following logic accounts for.
+  //
+  // TODO: Theoretically this logic only needs to go into the rerender
+  // dispatcher. Could optimize, but probably not be worth it.
+  // This is the same logic as in updateWorkInProgressHook.
 
-  if (currentlyRenderingFiber$1.alternate === null && (workInProgressHook === null ? currentlyRenderingFiber$1.memoizedState === null : workInProgressHook.next === null)) {
-    // Initial render, and either this is the first time the component is
-    // called, or there were no Hooks called after this use() the previous
-    // time (perhaps because it threw). Subsequent Hook calls should use the
-    // mount dispatcher.
+  var workInProgressFiber = currentlyRenderingFiber$1;
+  var nextWorkInProgressHook = workInProgressHook === null ? // We're at the beginning of the list, so read from the first hook from
+  // the fiber.
+  workInProgressFiber.memoizedState : workInProgressHook.next;
+
+  if (nextWorkInProgressHook !== null) ; else {
+    // There are no remaining hooks from the previous attempt. We're no longer
+    // in "re-render" mode. Switch to the normal mount or update dispatcher.
+    //
+    // This is the same as the logic in renderWithHooks, except we don't bother
+    // to track the hook types debug information in this case (sufficient to
+    // only do that when nothing suspends).
+    var currentFiber = workInProgressFiber.alternate;
+
     {
-      ReactSharedInternals.H = HooksDispatcherOnMountInDEV;
+      if (currentFiber !== null && currentFiber.memoizedState !== null) {
+        ReactSharedInternals.H = HooksDispatcherOnUpdateInDEV;
+      } else {
+        ReactSharedInternals.H = HooksDispatcherOnMountInDEV;
+      }
     }
   }
 
@@ -30802,7 +30826,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-c69211a9df-20240531';
+var ReactVersion = '19.0.0-www-modern-adbec0c25a-20240531';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {

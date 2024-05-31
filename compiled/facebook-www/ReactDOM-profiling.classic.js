@@ -3570,11 +3570,16 @@ function useThenable(thenable) {
   thenableIndexCounter += 1;
   null === thenableState && (thenableState = []);
   thenable = trackUsedThenable(thenableState, thenable, index);
-  null === currentlyRenderingFiber$1.alternate &&
+  index = currentlyRenderingFiber$1;
+  null ===
     (null === workInProgressHook
-      ? null === currentlyRenderingFiber$1.memoizedState
-      : null === workInProgressHook.next) &&
-    (ReactSharedInternals.H = HooksDispatcherOnMount);
+      ? index.memoizedState
+      : workInProgressHook.next) &&
+    ((index = index.alternate),
+    (ReactSharedInternals.H =
+      null === index || null === index.memoizedState
+        ? HooksDispatcherOnMount
+        : HooksDispatcherOnUpdate));
   return thenable;
 }
 function use(usable) {
@@ -17815,14 +17820,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1840 = React.version;
 if (
-  "19.0.0-www-classic-c69211a9df-20240531" !==
+  "19.0.0-www-classic-adbec0c25a-20240531" !==
   isomorphicReactPackageVersion$jscomp$inline_1840
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1840,
-      "19.0.0-www-classic-c69211a9df-20240531"
+      "19.0.0-www-classic-adbec0c25a-20240531"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17841,7 +17846,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1847 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-c69211a9df-20240531",
+  version: "19.0.0-www-classic-adbec0c25a-20240531",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17885,7 +17890,7 @@ var devToolsConfig$jscomp$inline_1847 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-c69211a9df-20240531"
+  reconcilerVersion: "19.0.0-www-classic-adbec0c25a-20240531"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -18376,7 +18381,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-c69211a9df-20240531";
+exports.version = "19.0.0-www-classic-adbec0c25a-20240531";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
