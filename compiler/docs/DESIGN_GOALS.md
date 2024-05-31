@@ -19,7 +19,7 @@ The idea of React Compiler is to allow developers to use React's familiar declar
 The following are explicitly *not* goals for React Compiler:
 
 * Provide perfectly optimal re-rendering with zero unnecessary recomputation. This is a non-goal for several reasons:
-  * The runtime overhead of the extra tracking involved can outweight the cost of recomputation in many cases.
+  * The runtime overhead of the extra tracking involved can outweigh the cost of recomputation in many cases.
   * In cases with conditional dependencies it may not be possible to avoid recomputing some/all instructions.
   * The amount of code may regress startup times, which would conflict with our goal of neutral startup performance.
 * Support code that violates React's rules. React's rules exist to help developers build robust, scalable applications and form a contract that allows us to continue improving React without breaking applications. React Compiler depends on these rules to safely transform code, and violations of rules will therefore break React Compiler's optimizations.

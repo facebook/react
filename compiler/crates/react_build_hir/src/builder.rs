@@ -107,7 +107,7 @@ impl<'e> Builder<'e> {
     }
 
     /// Completes the builder and returns the HIR if it was valid,
-    /// or a Diagnostic if a validation error occured.
+    /// or a Diagnostic if a validation error occurred.
     ///
     /// TODO: refine the type, only invariants should be possible here,
     /// not other types of errors

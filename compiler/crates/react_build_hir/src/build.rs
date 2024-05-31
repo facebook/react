@@ -25,7 +25,7 @@ use crate::context::get_context_identifiers;
 use crate::error::BuildHIRError;
 
 /// Converts a React function in ESTree format into HIR. Returns the HIR
-/// if it was constructed sucessfully, otherwise a list of diagnostics
+/// if it was constructed successfully, otherwise a list of diagnostics
 /// if the input could be not be converted to HIR.
 ///
 /// Failures generally include nonsensical input (`delete 1`) or syntax
@@ -312,7 +312,7 @@ fn lower_variable_declaration(
                 }
                 _ => {
                     return Err(Diagnostic::invalid_syntax(
-                        "Expected an identifier for variable declaration without an intializer. Destructuring requires an initial value",
+                        "Expected an identifier for variable declaration without an initializer. Destructuring requires an initial value",
                         declaration.range,
                     ));
                 }

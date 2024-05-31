@@ -10,7 +10,7 @@ import invariant from "invariant";
 import { runBabelPluginReactCompiler } from "../Babel/RunReactCompilerBabelPlugin";
 import type { Logger, LoggerEvent } from "../Entrypoint";
 
-it("logs succesful compilation", () => {
+it("logs successful compilation", () => {
   const logs: [string | null, LoggerEvent][] = [];
   const logger: Logger = {
     logEvent(filename, event) {

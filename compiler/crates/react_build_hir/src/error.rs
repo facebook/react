@@ -58,6 +58,6 @@ pub enum BuildHIRError {
     #[error("Expected function to have a body")]
     EmptyFunction,
 
-    #[error("`super` is not suppported")]
+    #[error("`super` is not supported")]
     UnsupportedSuperExpression,
 }
