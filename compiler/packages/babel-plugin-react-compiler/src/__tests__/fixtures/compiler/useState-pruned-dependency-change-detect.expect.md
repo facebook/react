@@ -30,12 +30,11 @@ function Component(props) {
   }
   const [x] = useState(t0);
   let t1;
-  let old$t1;
   {
     t1 = <div>{x}</div>;
     let condition = $[1] !== x;
     if (!condition) {
-      old$t1 = $[2];
+      let old$t1 = $[2];
       $structuralCheck(old$t1, t1, "t1", "Component", "cached");
     }
     $[1] = x;

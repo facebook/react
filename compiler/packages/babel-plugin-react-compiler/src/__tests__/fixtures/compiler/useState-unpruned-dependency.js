@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from "react"; // @enableChangeDetectionForDebugging
 
 function Component(props) {
   const w = f(props.x);
