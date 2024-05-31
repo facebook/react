@@ -1083,20 +1083,49 @@ function useThenable<T>(thenable: Thenable<T>): T {
     thenableState = createThenableState();
   }
   const result = trackUsedThenable(thenableState, thenable, index);
-  if (
-    currentlyRenderingFiber.alternate === null &&
-    (workInProgressHook === null
-      ? currentlyRenderingFiber.memoizedState === null
-      : workInProgressHook.next === null)
-  ) {
-    // Initial render, and either this is the first time the component is
-    // called, or there were no Hooks called after this use() the previous
-    // time (perhaps because it threw). Subsequent Hook calls should use the
-    // mount dispatcher.
+
+  // When something suspends with `use`, we replay the component with the
+  // "re-render" dispatcher instead of the "mount" or "update" dispatcher.
+  //
+  // But if there are additional hooks that occur after the `use` invocation
+  // that suspended, they wouldn't have been processed during the previous
+  // attempt. So after we invoke `use` again, we may need to switch from the
+  // "re-render" dispatcher back to the "mount" or "update" dispatcher. That's
+  // what the following logic accounts for.
+  //
+  // TODO: Theoretically this logic only needs to go into the rerender
+  // dispatcher. Could optimize, but probably not be worth it.
+
+  // This is the same logic as in updateWorkInProgressHook.
+  const workInProgressFiber = currentlyRenderingFiber;
+  const nextWorkInProgressHook =
+    workInProgressHook === null
+      ? // We're at the beginning of the list, so read from the first hook from
+        // the fiber.
+        workInProgressFiber.memoizedState
+      : workInProgressHook.next;
+
+  if (nextWorkInProgressHook !== null) {
+    // There are still hooks remaining from the previous attempt.
+  } else {
+    // There are no remaining hooks from the previous attempt. We're no longer
+    // in "re-render" mode. Switch to the normal mount or update dispatcher.
+    //
+    // This is the same as the logic in renderWithHooks, except we don't bother
+    // to track the hook types debug information in this case (sufficient to
+    // only do that when nothing suspends).
+    const currentFiber = workInProgressFiber.alternate;
     if (__DEV__) {
-      ReactSharedInternals.H = HooksDispatcherOnMountInDEV;
+      if (currentFiber !== null && currentFiber.memoizedState !== null) {
+        ReactSharedInternals.H = HooksDispatcherOnUpdateInDEV;
+      } else {
+        ReactSharedInternals.H = HooksDispatcherOnMountInDEV;
+      }
     } else {
-      ReactSharedInternals.H = HooksDispatcherOnMount;
+      ReactSharedInternals.H =
+        currentFiber === null || currentFiber.memoizedState === null
+          ? HooksDispatcherOnMount
+          : HooksDispatcherOnUpdate;
     }
   }
   return result;
