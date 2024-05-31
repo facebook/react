@@ -380,12 +380,14 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  pruneInitializationDependencies(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "PruneInitializationDependencies",
-    value: reactiveFunction,
-  });
+  if (env.config.enableChangeDetectionForDebugging != null) {
+    pruneInitializationDependencies(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "PruneInitializationDependencies",
+      value: reactiveFunction,
+    });
+  }
 
   propagateEarlyReturns(reactiveFunction);
   yield log({

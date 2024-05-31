@@ -486,6 +486,18 @@ export class Environment {
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
 
+    if (
+      config.disableMemoizationForDebugging &&
+      config.enableChangeDetectionForDebugging != null
+    ) {
+      CompilerError.throwInvalidConfig({
+        reason: `Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+    }
+
     for (const [hookName, hook] of this.config.customHooks) {
       CompilerError.invariant(!this.#globals.has(hookName), {
         reason: `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
