@@ -29,14 +29,14 @@ function Component(props) {
       let condition = $[0] !== props.value;
       if (!condition) {
         let old$x = $[1];
-        $structuralCheck(old$x, x, "x", "Component", "cached");
+        $structuralCheck(old$x, x, "x", "Component", "cached", "(3:6)");
       }
       $[0] = props.value;
       $[1] = x;
       if (condition) {
         x = [];
         x.push(props.value);
-        $structuralCheck($[1], x, "x", "Component", "recomputed");
+        $structuralCheck($[1], x, "x", "Component", "recomputed", "(3:6)");
         x = $[1];
       }
     }
