@@ -38,7 +38,7 @@ export type SharedStateServer = {
   // DEV-only
 
   // ReactDebugCurrentFrame
-  getCurrentStack: null | (() => string),
+  getCurrentStack: null | ((stack: Error) => string),
 };
 
 export type RendererTask = boolean => RendererTask | null;
@@ -58,7 +58,9 @@ if (enableTaint) {
 
 if (__DEV__) {
   // Stack implementation injected by the current renderer.
-  ReactSharedInternals.getCurrentStack = (null: null | (() => string));
+  ReactSharedInternals.getCurrentStack = (null:
+    | null
+    | ((stack: Error) => string));
 }
 
 export default ReactSharedInternals;
