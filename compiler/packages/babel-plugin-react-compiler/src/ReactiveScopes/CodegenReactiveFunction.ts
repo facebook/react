@@ -616,6 +616,14 @@ function codegenReactiveScope(
     );
   }
 
+  if (cx.env.config.disableMemoizationForDebugging) {
+    testCondition = t.logicalExpression(
+      "||",
+      testCondition,
+      t.booleanLiteral(true)
+    );
+  }
+
   let computationBlock = codegenBlock(cx, block);
   computationBlock.body.push(...cacheStoreStatements);
   const memoBlock = t.blockStatement(cacheLoadStatements);
