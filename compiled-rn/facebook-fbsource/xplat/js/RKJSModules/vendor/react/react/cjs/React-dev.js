@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d88d69aa4000a33e09ec957377ca26f8>>
+ * @generated SignedSource<<b0d3934d3f94c323f5dceca1027771bc>>
  */
 
 'use strict';
@@ -24,7 +24,7 @@ if (
 }
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-rc-8fd963a1e5-20240530';
+var ReactVersion = '19.0.0-rc-63d673c676-20240531';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
@@ -2374,6 +2374,7 @@ function forwardRef(render) {
           Object.defineProperty(render, 'name', {
             value: name
           });
+          render.displayName = name;
         }
       }
     });
@@ -2416,6 +2417,7 @@ function memo(type, compare) {
           Object.defineProperty(type, 'name', {
             value: name
           });
+          type.displayName = name;
         }
       }
     });
