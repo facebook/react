@@ -215,6 +215,7 @@ describe('ReactNativeAttributePayload.diff', () => {
     expect(diffB).toBeCalledWith([3], [4]);
   });
 
+  // @gate !enableShallowPropDiffing
   it('should not use the diff attribute on addition/removal', () => {
     const diffA = jest.fn();
     const diffB = jest.fn();
@@ -225,6 +226,7 @@ describe('ReactNativeAttributePayload.diff', () => {
     expect(diffB).not.toBeCalled();
   });
 
+  // @gate !enableShallowPropDiffing
   it('should do deep diffs of Objects by default', () => {
     expect(
       diff(
@@ -422,6 +424,7 @@ describe('ReactNativeAttributePayload.diff', () => {
     ).toEqual(null);
   });
 
+  // @gate !enableShallowPropDiffing
   it('should skip deeply-nested changed functions', () => {
     expect(
       diff(
