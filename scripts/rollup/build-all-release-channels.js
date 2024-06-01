@@ -167,10 +167,14 @@ function processStable(buildDir) {
         fs.renameSync(filePath, filePath.replace('.js', '.classic.js'));
       }
     }
+    const versionString =
+      ReactVersion + '-www-classic-' + sha + '-' + dateString;
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-classic-' + sha + '-' + dateString
+      versionString
     );
+    // Also save a file with the version number
+    fs.writeFileSync(buildDir + '/facebook-www/VERSION_CLASSIC', versionString);
   }
 
   if (fs.existsSync(buildDir + '/sizes')) {
@@ -213,10 +217,15 @@ function processExperimental(buildDir, version) {
         fs.renameSync(filePath, filePath.replace('.js', '.modern.js'));
       }
     }
+    const versionString =
+      ReactVersion + '-www-modern-' + sha + '-' + dateString;
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-www',
-      ReactVersion + '-www-modern-' + sha + '-' + dateString
+      versionString
     );
+
+    // Also save a file with the version number
+    fs.writeFileSync(buildDir + '/facebook-www/VERSION_MODERN', versionString);
   }
 
   if (fs.existsSync(buildDir + '/sizes')) {
