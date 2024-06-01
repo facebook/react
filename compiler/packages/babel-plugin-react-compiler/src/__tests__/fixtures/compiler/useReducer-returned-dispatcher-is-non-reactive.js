@@ -5,7 +5,7 @@ function f() {
 
   const onClick = () => {
     dispatch();
-  }
+  };
 
   return <div onClick={onClick} />;
 }

@@ -57,7 +57,10 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
       case "Destructure": {
         if (state.has(value.value.identifier.id)) {
           for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
-            if (isSetStateType(lvalue.identifier) || isDispatcherType(lvalue.identifier)) {
+            if (
+              isSetStateType(lvalue.identifier) ||
+              isDispatcherType(lvalue.identifier)
+            ) {
               continue;
             }
             state.add(lvalue.identifier.id);

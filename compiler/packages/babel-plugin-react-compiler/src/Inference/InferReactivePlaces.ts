@@ -220,7 +220,10 @@ export function inferReactivePlaces(fn: HIRFunction): void {
 
         if (hasReactiveInput) {
           for (const lvalue of eachInstructionLValue(instruction)) {
-            if (isSetStateType(lvalue.identifier)||isDispatcherType(lvalue.identifier)) {
+            if (
+              isSetStateType(lvalue.identifier) ||
+              isDispatcherType(lvalue.identifier)
+            ) {
               continue;
             }
             reactiveIdentifiers.markReactive(lvalue);
