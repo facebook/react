@@ -2427,6 +2427,10 @@ function lowerExpression(
       let expr = exprPath as NodePath<t.TSNonNullExpression>;
       return lowerExpression(builder, expr.get("expression"));
     }
+    case "TSSatisfiesExpression": {
+      const expr = exprPath as NodePath<t.TSSatisfiesExpression>;
+      return lowerExpression(builder, expr.get("expression"));
+    }
     default: {
       builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
