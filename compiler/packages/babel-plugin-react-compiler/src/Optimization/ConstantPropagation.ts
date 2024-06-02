@@ -341,66 +341,68 @@ function evaluateInstruction(
       ) {
         const lhs = lhsValue.value;
         const rhs = rhsValue.value;
+        const areOperandsNumbers = typeof lhs === "number" && typeof rhs === "number";
+        const areOperandsStrings = typeof lhs === "string" && typeof rhs === "string";
         let result: Primitive | null = null;
         switch (value.operator) {
           case "+": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
-            } else if (typeof lhs === "string" && typeof rhs === "string") {
+            } else if (areOperandsStrings) {
               result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
             }
             break;
-          }
+          }    
           case "-": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs - rhs, loc: value.loc };
             }
             break;
           }
           case "*": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs * rhs, loc: value.loc };
             }
             break;
           }
           case "/": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs / rhs, loc: value.loc };
             }
             break;
           }
           case "|": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs | rhs, loc: value.loc };
             }
             break;
           }
           case "&": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs & rhs, loc: value.loc };
             }
             break;
           }
           case "^": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs ^ rhs, loc: value.loc };
             }
             break;
           }
           case "<<": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs << rhs, loc: value.loc };
             }
             break;
           }
           case ">>": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs >> rhs, loc: value.loc };
             }
             break;
           }
           case ">>>": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = {
                 kind: "Primitive",
                 value: lhs >>> rhs,
@@ -410,37 +412,37 @@ function evaluateInstruction(
             break;
           }
           case "%": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs % rhs, loc: value.loc };
             }
             break;
           }
           case "**": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs ** rhs, loc: value.loc };
             }
             break;
           }
           case "<": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs < rhs, loc: value.loc };
             }
             break;
           }
           case "<=": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs <= rhs, loc: value.loc };
             }
             break;
           }
           case ">": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs > rhs, loc: value.loc };
             }
             break;
           }
           case ">=": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+            if (areOperandsNumbers) {
               result = { kind: "Primitive", value: lhs >= rhs, loc: value.loc };
             }
             break;
