@@ -10,9 +10,9 @@ jobs:
     outputs:
       www_branch_count: ${{ steps.check_branches.outputs.www_branch_count }}
       fbsource_branch_count: ${{ steps.check_branches.outputs.fbsource_branch_count }}
-      last_version_classic: ${{ steps.get_last_version.outputs.last_version_classic }}
-      last_version_modern: ${{ steps.get_last_version.outputs.last_version_modern }}
-      last_version_rn: ${{ steps.get_last_version.outputs.last_version_rn }}
+      last_version_classic: ${{ steps.get_last_version_www.outputs.last_version_classic }}
+      last_version_modern: ${{ steps.get_last_version_www.outputs.last_version_modern }}
+      last_version_rn: ${{ steps.get_last_version_rn.outputs.last_version_rn }}
       current_version_classic: ${{ steps.get_current_version.outputs.current_version_classic }}
       current_version_modern: ${{ steps.get_current_version.outputs.current_version_modern }}
       current_version_rn: ${{ steps.get_current_version.outputs.current_version_rn }}
@@ -20,18 +20,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: builds/facebook-www
-      - name: "Get last version string"
-        id: get_last_version
+      - name: "Get last version string for www"
+        id: get_last_version_www
         run: |
           # Empty checks only needed for backwards compatibility,can remove later.
           VERSION_CLASSIC=$( [ -f ./compiled/facebook-www/VERSION_CLASSIC ] && cat ./compiled/facebook-www/VERSION_CLASSIC || echo '' )
           VERSION_MODERN=$( [ -f ./compiled/facebook-www/VERSION_MODERN ] && cat ./compiled/facebook-www/VERSION_MODERN || echo '' )
-          VERSION_NATIVE_FB=$( [ -f ./compiled-rn/VERSION_NATIVE_FB ] && cat ./compiled-rn/VERSION_NATIVE_FB || echo '' )
           echo "Last classic version is $VERSION_CLASSIC"
           echo "Last modern version is $VERSION_MODERN"
-          echo "Last rn version is $VERSION_NATIVE_FB"
           echo "last_version_classic=$VERSION_CLASSIC" >> "$GITHUB_OUTPUT"
           echo "last_version_modern=$VERSION_MODERN" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: builds/facebook-fbsource
+      - name: "Get last version string for rn"
+        id: get_last_version_rn
+        run: |
+          # Empty checks only needed for backwards compatibility,can remove later.
+          VERSION_NATIVE_FB=$( [ -f ./compiled-rn/VERSION_NATIVE_FB ] && cat ./compiled-rn/VERSION_NATIVE_FB || echo '' )
+          echo "Last rn version is $VERSION_NATIVE_FB"
           echo "last_version_rn=$VERSION_NATIVE_FB" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
       - name: "Check branches"
@@ -235,18 +242,20 @@ jobs:
           LAST_VERSION_MODERN: ${{ needs.download_artifacts.outputs.last_version_modern }}
         run: |
           echo "Reverting $CURRENT_VERSION_CLASSIC to $LAST_VERSION_CLASSIC"
+          grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled || echo "No files found with $CURRENT_VERSION_CLASSIC"
+          grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled | xargs -r sed -i -e "s/$CURRENT_VERSION_CLASSIC/$LAST_VERSION_CLASSIC/g"
+          grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled || echo "Classic version reverted"
+          echo "===================="
           echo "Reverting $CURRENT_VERSION_MODERN to $LAST_VERSION_MODERN"
-          grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled
-          grep -rl "$CURRENT_VERSION_MODERN" ./compiled
-          grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled | xargs -r sed -i -e 's/$CURRENT_VERSION_CLASSIC/$LAST_VERSION_CLASSIC/g'
-          grep -rl "$CURRENT_VERSION_MODERN" ./compiled | xargs -r sed -i -e 's/$CURRENT_VERSION_MODERN/$LAST_VERSION_MODERN/g'
+          grep -rl "$CURRENT_VERSION_MODERN" ./compiled || echo "No files found with $CURRENT_VERSION_MODERN"
+          grep -rl "$CURRENT_VERSION_MODERN" ./compiled | xargs -r sed -i -e "s/$CURRENT_VERSION_MODERN/$LAST_VERSION_MODERN/g"
+          grep -rl "$CURRENT_VERSION_MODERN" ./compiled || echo "Modern version reverted"
       - name: Check if only the REVISION file has changed
         id: check_should_commit
         run: |
           echo "Full git status"
           git status
-          echo "Status to check"
-          git status --porcelain | grep -qv '/REVISION$'
+          echo "===================="
           if git status --porcelain | grep -qv '/REVISION'; then
             echo "Changes detected"
             echo "should_commit=true" >> "$GITHUB_OUTPUT"
@@ -263,14 +272,21 @@ jobs:
           LAST_VERSION_MODERN: ${{ needs.download_artifacts.outputs.last_version_modern }}
         run: |
           echo "Re-applying $LAST_VERSION_CLASSIC to $CURRENT_VERSION_CLASSIC"
-          echo "Re-applying $LAST_VERSION_MODERN to $CURRENT_VERSION_MODERN"
           grep -rl "$LAST_VERSION_CLASSIC" ./compiled || echo "No files found with $LAST_VERSION_CLASSIC"
+          grep -rl "$LAST_VERSION_CLASSIC" ./compiled | xargs -r sed -i -e "s/$LAST_VERSION_CLASSIC/$CURRENT_VERSION_CLASSIC/g"
+          grep -rl "$LAST_VERSION_CLASSIC" ./compiled || echo "Classic version re-applied"
+          echo "===================="
+          echo "Re-applying $LAST_VERSION_MODERN to $CURRENT_VERSION_MODERN"
           grep -rl "$LAST_VERSION_MODERN" ./compiled || echo "No files found with $LAST_VERSION_MODERN"
-          grep -rl "$LAST_VERSION_CLASSIC" ./compiled | xargs -r sed -i -e 's/$LAST_VERSION_CLASSIC/$CURRENT_VERSION_CLASSIC/g'
-          grep -rl "$LAST_VERSION_MODERN" ./compiled | xargs -r sed -i -e 's/$LAST_VERSION_MODERN/$CURRENT_VERSION_MODERN/g'
-      - run: git status -u
-      - name: Commit changes to branch
+          grep -rl "$LAST_VERSION_MODERN" ./compiled | xargs -r sed -i -e "s/$LAST_VERSION_MODERN/$CURRENT_VERSION_MODERN/g"
+          grep -rl "$LAST_VERSION_MODERN" ./compiled || echo "Classic version re-applied"
+      - name: Will commit these changes
         if: steps.check_should_commit.outputs.should_commit == 'true'
+        run: |
+          echo ":"
+          git status -u
+      - name: Commit changes to branch
+        if: false && steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
@@ -303,15 +319,16 @@ jobs:
           LAST_VERSION: ${{ needs.download_artifacts.outputs.last_version_rn }}
         run: |
           echo "Reverting $CURRENT_VERSION to $LAST_VERSION"
-          grep -rl "$CURRENT_VERSION" ./compiled-rn
-          grep -rl "$CURRENT_VERSION" ./compiled-rn | xargs -r sed -i -e 's/$CURRENT_VERSION/$LAST_VERSION/ g'
+          grep -rl "$CURRENT_VERSION" ./compiled-rn || echo "No files found with $CURRENT_VERSION"
+          grep -rl "$CURRENT_VERSION" ./compiled-rn | xargs -r sed -i -e "s/$CURRENT_VERSION/$LAST_VERSION/g"
+          grep -rl "$CURRENT_VERSION" ./compiled-rn || echo "Version reverted"
       - name: Check if only the REVISION file has changed
         id: check_should_commit
         run: |
           echo "Full git status"
           git status
-          echo "Status to check"
-          git status --porcelain | grep -qv '/REVISION$'
+          echo "===================="
+          echo "Checking for changes"
           if git status --porcelain | grep -qv '/REVISION'; then
             echo "Changes detected"
             echo "should_commit=true" >> "$GITHUB_OUTPUT"
@@ -327,8 +344,13 @@ jobs:
         run: |
           echo "Re-applying $LAST_VERSION to $CURRENT_VERSION"
           grep -rl "$LAST_VERSION" ./compiled-rn || echo "No files found with $LAST_VERSION"
-          grep -rl "$LAST_VERSION" ./compiled-rn | xargs -r sed -i -e 's/$LAST_VERSION/$CURRENT_VERSION/g'
-      - run: git status -u
+          grep -rl "$LAST_VERSION" ./compiled-rn | xargs -r sed -i -e "s/$LAST_VERSION/$CURRENT_VERSION/g"
+          grep -rl "$LAST_VERSION" ./compiled-rn || echo "Version re-applied"
+      - name: Will commit these changes
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        run: |
+          echo ":"
+          git status -u
       - name: Commit changes to branch
         if: steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
