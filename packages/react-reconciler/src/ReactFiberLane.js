@@ -625,6 +625,27 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
   // idle updates until after all the regular updates have finished; there's no
   // way it could unblock a transition.
   if (updateLane !== IdleLane) {
+    if (enableUpdaterTracking) {
+      if (isDevToolsPresent) {
+        // transfer pending updaters from pingedLanes to updateLane
+        const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+        const updaters = pendingUpdatersLaneMap[laneToIndex(updateLane)];
+        let lanes = root.pingedLanes;
+        while (lanes > 0) {
+          const index = laneToIndex(lanes);
+          const lane = 1 << index;
+
+          const pingedUpdaters = pendingUpdatersLaneMap[index];
+          pingedUpdaters.forEach(pingedUpdater => {
+            updaters.add(pingedUpdater);
+          });
+          pingedUpdaters.clear();
+
+          lanes &= ~lane;
+        }
+      }
+    }
+
     root.suspendedLanes = NoLanes;
     root.pingedLanes = NoLanes;
   }
@@ -656,7 +677,8 @@ export function markRootSuspended(
 }
 
 export function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
-  root.pingedLanes |= root.suspendedLanes & pingedLanes;
+  // TODO: When would we ever ping lanes that we aren't suspended on?
+  root.pingedLanes |= pingedLanes;
 }
 
 export function markRootFinished(

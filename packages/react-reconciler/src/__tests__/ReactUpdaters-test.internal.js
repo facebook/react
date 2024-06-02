@@ -49,6 +49,14 @@ describe('updaters', () => {
           schedulerTags.push(fiber.tag);
           schedulerTypes.push(fiber.elementType);
         });
+        fiberRoot.pendingUpdatersLaneMap.forEach((pendingUpdaters, index) => {
+          if (pendingUpdaters.size > 0) {
+            const lane = 1 << index;
+            throw new Error(
+              `Lane ${lane} has pending updaters. Either you didn't assert on all updates in your test or React is leaking updaters.`,
+            );
+          }
+        });
         allSchedulerTags.push(schedulerTags);
         allSchedulerTypes.push(schedulerTypes);
       }),
@@ -266,9 +274,6 @@ describe('updaters', () => {
     await waitForAll([]);
   });
 
-  // This test should be convertable to createRoot but the allScheduledTypes assertions are no longer the same
-  // So I'm leaving it in legacy mode for now and just disabling if legacy mode is turned off
-  // @gate !disableLegacyMode
   it('should cover suspense pings', async () => {
     let data = null;
     let resolver = null;
@@ -323,7 +328,7 @@ describe('updaters', () => {
       return promise;
     });
     assertLog(['onCommitRoot']);
-    expect(allSchedulerTypes).toEqual([[null], [Suspender], []]);
+    expect(allSchedulerTypes).toEqual([[null], [Suspender], [Suspender]]);
 
     // Verify no outstanding flushes
     await waitForAll([]);
