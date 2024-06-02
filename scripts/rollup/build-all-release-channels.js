@@ -228,6 +228,20 @@ function processExperimental(buildDir, version) {
     fs.writeFileSync(buildDir + '/facebook-www/VERSION_MODERN', versionString);
   }
 
+  if (fs.existsSync(buildDir + '/facebook-react-native')) {
+    const versionString = ReactVersion + '-native-fb-' + sha + '-' + dateString;
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      buildDir + '/facebook-react-native',
+      versionString
+    );
+
+    // Also save a file with the version number
+    fs.writeFileSync(
+      buildDir + '/facebook-react-native/VERSION_NATIVE_FB',
+      versionString
+    );
+  }
+
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-experimental');
   }
