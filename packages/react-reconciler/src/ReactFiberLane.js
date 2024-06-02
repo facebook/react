@@ -625,26 +625,7 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
   // idle updates until after all the regular updates have finished; there's no
   // way it could unblock a transition.
   if (updateLane !== IdleLane) {
-    if (enableUpdaterTracking) {
-      if (isDevToolsPresent) {
-        // transfer pending updaters from pingedLanes to updateLane
-        const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
-        const updaters = pendingUpdatersLaneMap[laneToIndex(updateLane)];
-        let lanes = root.pingedLanes;
-        while (lanes > 0) {
-          const index = laneToIndex(lanes);
-          const lane = 1 << index;
-
-          const pingedUpdaters = pendingUpdatersLaneMap[index];
-          pingedUpdaters.forEach(pingedUpdater => {
-            updaters.add(pingedUpdater);
-          });
-          pingedUpdaters.clear();
-
-          lanes &= ~lane;
-        }
-      }
-    }
+    movePendingUpdatersToLane(root, root.pingedLanes, updateLane);
 
     root.suspendedLanes = NoLanes;
     root.pingedLanes = NoLanes;
@@ -922,6 +903,35 @@ export function addFiberToLanesMap(
 
     const updaters = pendingUpdatersLaneMap[index];
     updaters.add(fiber);
+
+    lanes &= ~lane;
+  }
+}
+
+function movePendingUpdatersToLane(
+  root: FiberRoot,
+  sourceLanes: Lanes,
+  targetLane: Lane,
+) {
+  if (!enableUpdaterTracking) {
+    return;
+  }
+  if (!isDevToolsPresent) {
+    return;
+  }
+  const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+  const targetIndex = laneToIndex(targetLane);
+  const targetUpdaters = pendingUpdatersLaneMap[targetIndex];
+  let lanes = sourceLanes;
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const sourceUpdaters = pendingUpdatersLaneMap[index];
+    sourceUpdaters.forEach(sourceUpdater => {
+      targetUpdaters.add(sourceUpdater);
+    });
+    sourceUpdaters.clear();
 
     lanes &= ~lane;
   }
