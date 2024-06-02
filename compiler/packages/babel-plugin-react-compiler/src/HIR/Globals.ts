@@ -275,7 +275,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       calleeEffect: Effect.Read,
       hookKind: "useReducer",
       returnValueKind: ValueKind.Frozen,
-      returnValueReason: ValueReason.State,
+      returnValueReason: ValueReason.ReducerState,
     }),
   ],
   [

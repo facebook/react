@@ -1250,9 +1250,14 @@ export enum ValueReason {
   Context = "context",
 
   /**
-   * A value returned from `useState` or `useReducer`
+   * A value returned from `useState`
    */
   State = "state",
+
+  /**
+   * A value returned from `useReducer`
+   */
+  ReducerState = "reducer-state",
 
   /**
    * Props of a component or arguments of a hook.
