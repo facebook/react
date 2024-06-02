@@ -1586,12 +1586,40 @@ function resolveErrorDev(
       'resolveErrorDev should never be called in production mode. Use resolveErrorProd instead. This is a bug in React.',
     );
   }
-  // eslint-disable-next-line react-internal/prod-error-codes
-  const error = new Error(
-    message ||
-      'An error occurred in the Server Components render but no message was provided',
-  );
-  error.stack = stack;
+
+  let error;
+  if (!enableOwnerStacks) {
+    // Executing Error within a native stack isn't really limited to owner stacks
+    // but we gate it behind the same flag for now while iterating.
+    // eslint-disable-next-line react-internal/prod-error-codes
+    error = Error(
+      message ||
+        'An error occurred in the Server Components render but no message was provided',
+    );
+    error.stack = stack;
+  } else {
+    const callStack = buildFakeCallStack(
+      response,
+      stack,
+      // $FlowFixMe[incompatible-use]
+      Error.bind(
+        null,
+        message ||
+          'An error occurred in the Server Components render but no message was provided',
+      ),
+    );
+    const rootTask = response._debugRootTask;
+    if (rootTask != null) {
+      error = rootTask.run(callStack);
+    } else {
+      error = callStack();
+    }
+    // Overriding the stack isn't really necessary at this point and maybe we should just
+    // leave the native one. However, the native one gets printed unsource mapped with
+    // reportError. If that's fixed it might be better to use the native one.
+    error.stack = stack;
+  }
+
   (error: any).digest = digest;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
