@@ -24,6 +24,7 @@ babelRegister({
   ],
   presets: ['@babel/preset-react'],
   plugins: ['@babel/transform-modules-commonjs'],
+  sourceMaps: process.env.NODE_ENV === 'development' ? 'inline' : false,
 });
 
 if (typeof fetch === 'undefined') {
@@ -37,6 +38,8 @@ const busboy = require('busboy');
 const app = express();
 const compress = require('compression');
 const {Readable} = require('node:stream');
+
+const nodeModule = require('node:module');
 
 app.use(compress());
 
@@ -175,6 +178,69 @@ app.get('/todos', function (req, res) {
     },
   ]);
 });
+
+if (process.env.NODE_ENV === 'development') {
+  const rootDir = path.resolve(__dirname, '../');
+
+  app.get('/source-maps', async function (req, res, next) {
+    try {
+      res.set('Content-type', 'application/json');
+      let requestedFilePath = req.query.name;
+
+      if (requestedFilePath.startsWith('file://')) {
+        requestedFilePath = requestedFilePath.slice(7);
+      }
+
+      const relativePath = path.relative(rootDir, requestedFilePath);
+      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+        // This is outside the root directory of the app. Forbid it to be served.
+        res.status = 403;
+        res.write('{}');
+        res.end();
+        return;
+      }
+
+      const sourceMap = nodeModule.findSourceMap(requestedFilePath);
+      let map;
+      // There are two ways to return a source map depending on what we observe in error.stack.
+      // A real app will have a similar choice to make for which strategy to pick.
+      if (!sourceMap || Error.prepareStackTrace === undefined) {
+        // When --enable-source-maps is enabled, the error.stack that we use to track
+        // stacks will have had the source map already applied so it's pointing to the
+        // original source. We return a blank source map that just maps everything to
+        // the original source in this case.
+        const sourceContent = await readFile(requestedFilePath, 'utf8');
+        const lines = sourceContent.split('\n').length;
+        map = {
+          version: 3,
+          sources: [requestedFilePath],
+          sourcesContent: [sourceContent],
+          // Note: This approach to mapping each line only lets you jump to each line
+          // not jump to a column within a line. To do that, you need a proper source map
+          // generated for each parsed segment or add a segment for each column.
+          mappings: 'AAAA' + ';AACA'.repeat(lines - 1),
+          sourceRoot: '',
+        };
+      } else {
+        // If something has overridden prepareStackTrace it is likely not getting the
+        // natively applied source mapping to error.stack and so the line will point to
+        // the compiled output similar to how a browser works.
+        // E.g. ironically this can happen with the source-map-support library that is
+        // auto-invoked by @babel/register if external source maps are generated.
+        // In this case we just use the source map that the native source mapping would
+        // have used.
+        map = sourceMap.payload;
+      }
+      res.write(JSON.stringify(map));
+      res.end();
+    } catch (x) {
+      res.status = 500;
+      res.write('{}');
+      res.end();
+      console.error(x);
+    }
+  });
+}
 
 app.listen(3001, () => {
   console.log('Regional Flight Server listening on port 3001...');
