@@ -329,7 +329,7 @@ jobs:
           git status
           echo "===================="
           echo "Checking for changes"
-          if git status --porcelain | grep -qv '/REVISION'; then
+          if git diff -- . ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|@generated SignedSource)" | grep "^[+-]" > /dev/null; then
             echo "Changes detected"
             echo "should_commit=true" >> "$GITHUB_OUTPUT"
           else
