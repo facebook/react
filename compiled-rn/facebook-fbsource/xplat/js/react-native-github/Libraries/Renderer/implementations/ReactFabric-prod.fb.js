@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ae5ca9c7b48e2425647ab4fff458b2a0>>
+ * @generated SignedSource<<4a0728040effc09b25d8b1d148d800d7>>
  */
 
 "use strict";
@@ -893,7 +893,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_252 = {
+var injectedNamesToPlugins$jscomp$inline_253 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -939,32 +939,32 @@ var injectedNamesToPlugins$jscomp$inline_252 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_253 = !1,
-  pluginName$jscomp$inline_254;
-for (pluginName$jscomp$inline_254 in injectedNamesToPlugins$jscomp$inline_252)
+  isOrderingDirty$jscomp$inline_254 = !1,
+  pluginName$jscomp$inline_255;
+for (pluginName$jscomp$inline_255 in injectedNamesToPlugins$jscomp$inline_253)
   if (
-    injectedNamesToPlugins$jscomp$inline_252.hasOwnProperty(
-      pluginName$jscomp$inline_254
+    injectedNamesToPlugins$jscomp$inline_253.hasOwnProperty(
+      pluginName$jscomp$inline_255
     )
   ) {
-    var pluginModule$jscomp$inline_255 =
-      injectedNamesToPlugins$jscomp$inline_252[pluginName$jscomp$inline_254];
+    var pluginModule$jscomp$inline_256 =
+      injectedNamesToPlugins$jscomp$inline_253[pluginName$jscomp$inline_255];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_254) ||
-      namesToPlugins[pluginName$jscomp$inline_254] !==
-        pluginModule$jscomp$inline_255
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_255) ||
+      namesToPlugins[pluginName$jscomp$inline_255] !==
+        pluginModule$jscomp$inline_256
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_254])
+      if (namesToPlugins[pluginName$jscomp$inline_255])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_254 + "`.")
+            (pluginName$jscomp$inline_255 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_254] =
-        pluginModule$jscomp$inline_255;
-      isOrderingDirty$jscomp$inline_253 = !0;
+      namesToPlugins[pluginName$jscomp$inline_255] =
+        pluginModule$jscomp$inline_256;
+      isOrderingDirty$jscomp$inline_254 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_253 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_254 && recomputePluginOrdering();
 var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
@@ -4157,72 +4157,101 @@ function dispatchActionState(
 ) {
   if (isRenderPhaseUpdate(fiber))
     throw Error("Cannot update form state while rendering.");
+  var actionNode = {
+    payload: payload,
+    action: actionQueue.action,
+    next: null,
+    isTransition: !0,
+    status: "pending",
+    value: null,
+    reason: null,
+    listeners: [],
+    then: function (listener) {
+      actionNode.listeners.push(listener);
+    }
+  };
+  null !== ReactSharedInternals.T
+    ? setPendingState(!0)
+    : (actionNode.isTransition = !1);
+  setState(actionNode);
   fiber = actionQueue.pending;
   null === fiber
-    ? ((payload = { payload: payload, action: actionQueue.action, next: null }),
-      (payload.next = actionQueue.pending = payload),
-      runActionStateAction(actionQueue, setPendingState, setState, payload))
-    : (actionQueue.pending = fiber.next =
-        { payload: payload, action: actionQueue.action, next: fiber.next });
+    ? ((actionNode.next = actionQueue.pending = actionNode),
+      runActionStateAction(actionQueue, actionNode))
+    : ((actionNode.next = fiber.next),
+      (actionQueue.pending = fiber.next = actionNode));
 }
-function runActionStateAction(actionQueue, setPendingState, setState, node) {
-  var prevTransition = ReactSharedInternals.T,
-    currentTransition = {};
-  ReactSharedInternals.T = currentTransition;
-  setPendingState(!0);
-  var action = node.action;
-  node = node.payload;
-  var prevState = actionQueue.state;
-  try {
-    var returnValue = action(prevState, node),
-      onStartTransitionFinish = ReactSharedInternals.S;
-    null !== onStartTransitionFinish &&
-      onStartTransitionFinish(currentTransition, returnValue);
-    null !== returnValue &&
-    "object" === typeof returnValue &&
-    "function" === typeof returnValue.then
-      ? (returnValue.then(
-          function (nextState) {
-            actionQueue.state = nextState;
-            finishRunningActionStateAction(
-              actionQueue,
-              setPendingState,
-              setState
-            );
-          },
-          function () {
-            return finishRunningActionStateAction(
-              actionQueue,
-              setPendingState,
-              setState
-            );
-          }
-        ),
-        setState(returnValue))
-      : (setState(returnValue),
-        (actionQueue.state = returnValue),
-        finishRunningActionStateAction(actionQueue, setPendingState, setState));
-  } catch (error) {
-    setState({ then: function () {}, status: "rejected", reason: error }),
-      finishRunningActionStateAction(actionQueue, setPendingState, setState);
-  } finally {
-    ReactSharedInternals.T = prevTransition;
-  }
+function runActionStateAction(actionQueue, node) {
+  var action = node.action,
+    payload = node.payload,
+    prevState = actionQueue.state;
+  if (node.isTransition) {
+    var prevTransition = ReactSharedInternals.T,
+      currentTransition = {};
+    ReactSharedInternals.T = currentTransition;
+    try {
+      var returnValue = action(prevState, payload),
+        onStartTransitionFinish = ReactSharedInternals.S;
+      null !== onStartTransitionFinish &&
+        onStartTransitionFinish(currentTransition, returnValue);
+      handleActionReturnValue(actionQueue, node, returnValue);
+    } catch (error) {
+      onActionError(actionQueue, node, error);
+    } finally {
+      ReactSharedInternals.T = prevTransition;
+    }
+  } else
+    try {
+      (prevTransition = action(prevState, payload)),
+        handleActionReturnValue(actionQueue, node, prevTransition);
+    } catch (error$33) {
+      onActionError(actionQueue, node, error$33);
+    }
 }
-function finishRunningActionStateAction(
-  actionQueue,
-  setPendingState,
-  setState
-) {
-  var last = actionQueue.pending;
-  if (null !== last) {
-    var first = last.next;
-    first === last
+function handleActionReturnValue(actionQueue, node, returnValue) {
+  null !== returnValue &&
+  "object" === typeof returnValue &&
+  "function" === typeof returnValue.then
+    ? returnValue.then(
+        function (nextState) {
+          onActionSuccess(actionQueue, node, nextState);
+        },
+        function (error) {
+          return onActionError(actionQueue, node, error);
+        }
+      )
+    : onActionSuccess(actionQueue, node, returnValue);
+}
+function onActionSuccess(actionQueue, actionNode, nextState) {
+  actionNode.status = "fulfilled";
+  actionNode.value = nextState;
+  notifyActionListeners(actionNode);
+  actionQueue.state = nextState;
+  actionNode = actionQueue.pending;
+  null !== actionNode &&
+    ((nextState = actionNode.next),
+    nextState === actionNode
       ? (actionQueue.pending = null)
-      : ((first = first.next),
-        (last.next = first),
-        runActionStateAction(actionQueue, setPendingState, setState, first));
-  }
+      : ((nextState = nextState.next),
+        (actionNode.next = nextState),
+        runActionStateAction(actionQueue, nextState)));
+}
+function onActionError(actionQueue, actionNode, error) {
+  actionNode.status = "rejected";
+  actionNode.reason = error;
+  notifyActionListeners(actionNode);
+  actionNode = actionQueue.pending;
+  null !== actionNode &&
+    ((error = actionNode.next),
+    error === actionNode
+      ? (actionQueue.pending = null)
+      : ((error = error.next),
+        (actionNode.next = error),
+        runActionStateAction(actionQueue, error)));
+}
+function notifyActionListeners(actionNode) {
+  actionNode = actionNode.listeners;
+  for (var i = 0; i < actionNode.length; i++) (0, actionNode[i])();
 }
 function actionStateReducer(oldState, newState) {
   return newState;
@@ -5045,9 +5074,9 @@ function resolveClassComponentProps(
     (disableDefaultPropsExceptForClasses || !alreadyResolvedDefaultProps)
   ) {
     newProps === baseProps && (newProps = assign({}, newProps));
-    for (var propName$34 in Component)
-      void 0 === newProps[propName$34] &&
-        (newProps[propName$34] = Component[propName$34]);
+    for (var propName$35 in Component)
+      void 0 === newProps[propName$35] &&
+        (newProps[propName$35] = Component[propName$35]);
   }
   return newProps;
 }
@@ -7177,14 +7206,14 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       break;
     case "collapsed":
       lastTailNode = renderState.tail;
-      for (var lastTailNode$75 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$75 = lastTailNode),
+      for (var lastTailNode$76 = null; null !== lastTailNode; )
+        null !== lastTailNode.alternate && (lastTailNode$76 = lastTailNode),
           (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$75
+      null === lastTailNode$76
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$75.sibling = null);
+        : (lastTailNode$76.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -7194,19 +7223,19 @@ function bubbleProperties(completedWork) {
     newChildLanes = 0,
     subtreeFlags = 0;
   if (didBailout)
-    for (var child$76 = completedWork.child; null !== child$76; )
-      (newChildLanes |= child$76.lanes | child$76.childLanes),
-        (subtreeFlags |= child$76.subtreeFlags & 31457280),
-        (subtreeFlags |= child$76.flags & 31457280),
-        (child$76.return = completedWork),
-        (child$76 = child$76.sibling);
+    for (var child$77 = completedWork.child; null !== child$77; )
+      (newChildLanes |= child$77.lanes | child$77.childLanes),
+        (subtreeFlags |= child$77.subtreeFlags & 31457280),
+        (subtreeFlags |= child$77.flags & 31457280),
+        (child$77.return = completedWork),
+        (child$77 = child$77.sibling);
   else
-    for (child$76 = completedWork.child; null !== child$76; )
-      (newChildLanes |= child$76.lanes | child$76.childLanes),
-        (subtreeFlags |= child$76.subtreeFlags),
-        (subtreeFlags |= child$76.flags),
-        (child$76.return = completedWork),
-        (child$76 = child$76.sibling);
+    for (child$77 = completedWork.child; null !== child$77; )
+      (newChildLanes |= child$77.lanes | child$77.childLanes),
+        (subtreeFlags |= child$77.subtreeFlags),
+        (subtreeFlags |= child$77.flags),
+        (child$77.return = completedWork),
+        (child$77 = child$77.sibling);
   completedWork.subtreeFlags |= subtreeFlags;
   completedWork.childLanes = newChildLanes;
   return didBailout;
@@ -7744,8 +7773,8 @@ function safelyDetachRef(current, nearestMountedAncestor) {
     else if ("function" === typeof ref)
       try {
         ref(null);
-      } catch (error$98) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$98);
+      } catch (error$99) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$99);
       }
     else ref.current = null;
 }
@@ -7850,10 +7879,10 @@ function commitHookEffectListMount(flags, finishedWork) {
     var effect = (finishedWork = finishedWork.next);
     do {
       if ((effect.tag & flags) === flags) {
-        var create$99 = effect.create,
+        var create$100 = effect.create,
           inst = effect.inst;
-        create$99 = create$99();
-        inst.destroy = create$99;
+        create$100 = create$100();
+        inst.destroy = create$100;
       }
       effect = effect.next;
     } while (effect !== finishedWork);
@@ -7917,11 +7946,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
               current,
               finishedRoot.__reactInternalSnapshotBeforeUpdate
             );
-          } catch (error$100) {
+          } catch (error$101) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$100
+              error$101
             );
           }
         }
@@ -8213,8 +8242,8 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         }
         try {
           commitHookEffectListUnmount(5, finishedWork, finishedWork.return);
-        } catch (error$102) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$102);
+        } catch (error$103) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$103);
         }
       }
       break;
@@ -9439,8 +9468,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$114) {
-      handleThrow(root, thrownValue$114);
+    } catch (thrownValue$115) {
+      handleThrow(root, thrownValue$115);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -9552,8 +9581,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$116) {
-      handleThrow(root, thrownValue$116);
+    } catch (thrownValue$117) {
+      handleThrow(root, thrownValue$117);
     }
   while (1);
   resetContextDependencies();
@@ -10553,10 +10582,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1124 = {
+  devToolsConfig$jscomp$inline_1125 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-def67b9b32-20240603",
+    version: "19.0.0-rc-67b05be0d2-20240603",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10572,11 +10601,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1350 = {
-  bundleType: devToolsConfig$jscomp$inline_1124.bundleType,
-  version: devToolsConfig$jscomp$inline_1124.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1124.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1124.rendererConfig,
+var internals$jscomp$inline_1351 = {
+  bundleType: devToolsConfig$jscomp$inline_1125.bundleType,
+  version: devToolsConfig$jscomp$inline_1125.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1125.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1125.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10592,26 +10621,26 @@ var internals$jscomp$inline_1350 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1124.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1125.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-def67b9b32-20240603"
+  reconcilerVersion: "19.0.0-rc-67b05be0d2-20240603"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1351 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1352 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1351.isDisabled &&
-    hook$jscomp$inline_1351.supportsFiber
+    !hook$jscomp$inline_1352.isDisabled &&
+    hook$jscomp$inline_1352.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1351.inject(
-        internals$jscomp$inline_1350
+      (rendererID = hook$jscomp$inline_1352.inject(
+        internals$jscomp$inline_1351
       )),
-        (injectedHook = hook$jscomp$inline_1351);
+        (injectedHook = hook$jscomp$inline_1352);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
