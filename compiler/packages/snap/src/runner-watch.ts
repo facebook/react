@@ -218,7 +218,7 @@ export async function makeWatchRunner(
       action: RunnerAction.Test,
       filter: filterMode,
     },
-    filter: filterMode? await readTestFilter(): null,
+    filter: filterMode ? await readTestFilter() : null,
   };
 
   subscribeTsc(state, onChange);
