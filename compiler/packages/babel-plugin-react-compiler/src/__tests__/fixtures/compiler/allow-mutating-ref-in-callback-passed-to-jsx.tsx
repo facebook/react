@@ -1,3 +1,4 @@
+// @validateRefAccessDuringRender
 import { useRef } from "react";
 
 function Component() {

@@ -525,7 +525,28 @@ class InferenceState {
         break;
       }
       case Effect.Mutate: {
-        if (valueKind.kind === ValueKind.Context) {
+        if (
+          isRefValueType(place.identifier) ||
+          isUseRefType(place.identifier)
+        ) {
+          if (this.#env.config.validateRefAccessDuringRender) {
+            functionEffect = {
+              kind: "RefMutation",
+              error: {
+                reason:
+                  "Ref values (the `current` property) may not be modified during render. (https://react.dev/reference/react/useRef)",
+                description:
+                  place.identifier.name !== null &&
+                  place.identifier.name.kind === "named"
+                    ? `Found mutation of \`${place.identifier.name.value}\``
+                    : null,
+                loc: place.loc,
+                suggestions: null,
+                severity: ErrorSeverity.InvalidReact,
+              },
+            };
+          }
+        } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
             kind: "ContextMutation",
             loc: place.loc,
@@ -543,12 +564,10 @@ class InferenceState {
           let reason = getWriteErrorReason(valueKind);
           functionEffect = {
             kind:
-              isRefValueType(place.identifier) || isUseRefType(place.identifier)
-                ? "RefMutation"
-                : valueKind.reason.size === 1 &&
-                    valueKind.reason.has(ValueReason.Global)
-                  ? "GlobalMutation"
-                  : "ReactMutation",
+              valueKind.reason.size === 1 &&
+              valueKind.reason.has(ValueReason.Global)
+                ? "GlobalMutation"
+                : "ReactMutation",
             error: {
               reason,
               description:
@@ -566,7 +585,28 @@ class InferenceState {
         break;
       }
       case Effect.Store: {
-        if (valueKind.kind === ValueKind.Context) {
+        if (
+          isRefValueType(place.identifier) ||
+          isUseRefType(place.identifier)
+        ) {
+          if (this.#env.config.validateRefAccessDuringRender) {
+            functionEffect = {
+              kind: "RefMutation",
+              error: {
+                reason:
+                  "Ref values (the `current` property) may not be modified during render. (https://react.dev/reference/react/useRef)",
+                description:
+                  place.identifier.name !== null &&
+                  place.identifier.name.kind === "named"
+                    ? `Found mutation of \`${place.identifier.name.value}\``
+                    : null,
+                loc: place.loc,
+                suggestions: null,
+                severity: ErrorSeverity.InvalidReact,
+              },
+            };
+          }
+        } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
             kind: "ContextMutation",
             loc: place.loc,
@@ -584,12 +624,10 @@ class InferenceState {
           let reason = getWriteErrorReason(valueKind);
           functionEffect = {
             kind:
-              isRefValueType(place.identifier) || isUseRefType(place.identifier)
-                ? "RefMutation"
-                : valueKind.reason.size === 1 &&
-                    valueKind.reason.has(ValueReason.Global)
-                  ? "GlobalMutation"
-                  : "ReactMutation",
+              valueKind.reason.size === 1 &&
+              valueKind.reason.has(ValueReason.Global)
+                ? "GlobalMutation"
+                : "ReactMutation",
             error: {
               reason,
               description:

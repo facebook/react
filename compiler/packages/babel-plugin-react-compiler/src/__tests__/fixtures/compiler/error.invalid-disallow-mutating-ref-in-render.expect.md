@@ -3,10 +3,11 @@
 
 ```javascript
 // @validateRefAccessDuringRender
-function Component(props) {
+function Component() {
   const ref = useRef(null);
-  ref.current = props.value;
-  return ref.current;
+  ref.current = false;
+
+  return <button ref={ref} />;
 }
 
 ```
@@ -15,13 +16,13 @@ function Component(props) {
 ## Error
 
 ```
-  2 | function Component(props) {
+  2 | function Component() {
   3 |   const ref = useRef(null);
-> 4 |   ref.current = props.value;
+> 4 |   ref.current = false;
     |   ^^^ InvalidReact: Ref values (the `current` property) may not be modified during render. (https://react.dev/reference/react/useRef) (4:4)
-  5 |   return ref.current;
-  6 | }
-  7 |
+  5 |
+  6 |   return <button ref={ref} />;
+  7 | }
 ```
           
       
