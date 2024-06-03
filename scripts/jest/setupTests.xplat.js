@@ -7,12 +7,7 @@ jest.mock('shared/ReactFeatureFlags', () => {
       jest.requireActual('shared/forks/ReactFeatureFlags.native-fb-dynamic.js'),
     {virtual: true}
   );
-  const actual = jest.requireActual(
-    'shared/forks/ReactFeatureFlags.native-fb.js'
-  );
-
-  console.log('__VARIANT__', __VARIANT__);
-  return actual;
+  return jest.requireActual('shared/forks/ReactFeatureFlags.native-fb.js');
 });
 
 jest.mock('react-noop-renderer', () =>
