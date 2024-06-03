@@ -168,6 +168,15 @@ function processStable(buildDir) {
       );
     }
 
+    if (fs.existsSync(buildDir + '/facebook-react-native')) {
+      const versionString =
+        ReactVersion + '-native-fb-' + sha + '-' + dateString;
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        buildDir + '/facebook-react-native',
+        versionString
+      );
+    }
+
     // Now do the semver ones
     const semverVersionsMap = new Map();
     for (const moduleName in stablePackages) {
