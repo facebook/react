@@ -2006,65 +2006,87 @@ type ActionStateQueueNode<S, P> = {
   action: (Awaited<S>, P) => S,
   // This is never null because it's part of a circular linked list.
   next: ActionStateQueueNode<S, P>,
+
+  // Whether or not the action was dispatched as part of a transition. We use
+  // this to restore the transition context when the queued action is run. Once
+  // we're able to track parallel async actions, this should be updated to
+  // represent the specific transition instance the action is associated with.
+  isTransition: boolean,
+
+  // Implements the Thenable interface. We use it to suspend until the action
+  // finishes.
+  then: (listener: () => void) => void,
+  status: 'pending' | 'rejected' | 'fulfilled',
+  value: any,
+  reason: any,
+  listeners: Array<() => void>,
 };
 
 function dispatchActionState<S, P>(
   fiber: Fiber,
   actionQueue: ActionStateQueue<S, P>,
   setPendingState: boolean => void,
-  setState: Dispatch<S | Awaited<S>>,
+  setState: Dispatch<ActionStateQueueNode<S, P>>,
   payload: P,
 ): void {
   if (isRenderPhaseUpdate(fiber)) {
     throw new Error('Cannot update form state while rendering.');
   }
+
+  const actionNode: ActionStateQueueNode<S, P> = {
+    payload,
+    action: actionQueue.action,
+    next: (null: any), // circular
+
+    isTransition: true,
+
+    status: 'pending',
+    value: null,
+    reason: null,
+    listeners: [],
+    then(listener) {
+      // We know the only thing that subscribes to these promises is `use` so
+      // this implementation is simpler than a generic thenable. E.g. we don't
+      // bother to check if the thenable is still pending because `use` already
+      // does that.
+      actionNode.listeners.push(listener);
+    },
+  };
+
+  // Check if we're inside a transition. If so, we'll need to restore the
+  // transition context when the action is run.
+  const prevTransition = ReactSharedInternals.T;
+  if (prevTransition !== null) {
+    // Optimistically update the pending state, similar to useTransition.
+    // This will be reverted automatically when all actions are finished.
+    setPendingState(true);
+    // `actionNode` is a thenable that resolves to the return value of
+    // the action.
+    setState(actionNode);
+  } else {
+    // This is not a transition.
+    actionNode.isTransition = false;
+    setState(actionNode);
+  }
+
   const last = actionQueue.pending;
   if (last === null) {
     // There are no pending actions; this is the first one. We can run
     // it immediately.
-    const newLast: ActionStateQueueNode<S, P> = {
-      payload,
-      action: actionQueue.action,
-      next: (null: any), // circular
-    };
-    newLast.next = actionQueue.pending = newLast;
-
-    runActionStateAction(
-      actionQueue,
-      (setPendingState: any),
-      (setState: any),
-      newLast,
-    );
+    actionNode.next = actionQueue.pending = actionNode;
+    runActionStateAction(actionQueue, actionNode);
   } else {
     // There's already an action running. Add to the queue.
     const first = last.next;
-    const newLast: ActionStateQueueNode<S, P> = {
-      payload,
-      action: actionQueue.action,
-      next: first,
-    };
-    actionQueue.pending = last.next = newLast;
+    actionNode.next = first;
+    actionQueue.pending = last.next = actionNode;
   }
 }
 
 function runActionStateAction<S, P>(
   actionQueue: ActionStateQueue<S, P>,
-  setPendingState: boolean => void,
-  setState: Dispatch<S | Awaited<S>>,
   node: ActionStateQueueNode<S, P>,
 ) {
-  // This is a fork of startTransition
-  const prevTransition = ReactSharedInternals.T;
-  const currentTransition: BatchConfigTransition = {};
-  ReactSharedInternals.T = currentTransition;
-  if (__DEV__) {
-    ReactSharedInternals.T._updatedFibers = new Set();
-  }
-
-  // Optimistically update the pending state, similar to useTransition.
-  // This will be reverted automatically when all actions are finished.
-  setPendingState(true);
-
   // `node.action` represents the action function at the time it was dispatched.
   // If this action was queued, it might be stale, i.e. it's not necessarily the
   // most current implementation of the action, stored on `actionQueue`. This is
@@ -2074,93 +2096,106 @@ function runActionStateAction<S, P>(
   const action = node.action;
   const payload = node.payload;
   const prevState = actionQueue.state;
-  try {
-    const returnValue = action(prevState, payload);
-    const onStartTransitionFinish = ReactSharedInternals.S;
-    if (onStartTransitionFinish !== null) {
-      onStartTransitionFinish(currentTransition, returnValue);
-    }
-    if (
-      returnValue !== null &&
-      typeof returnValue === 'object' &&
-      // $FlowFixMe[method-unbinding]
-      typeof returnValue.then === 'function'
-    ) {
-      const thenable = ((returnValue: any): Thenable<Awaited<S>>);
 
-      // Attach a listener to read the return state of the action. As soon as
-      // this resolves, we can run the next action in the sequence.
-      thenable.then(
-        (nextState: Awaited<S>) => {
-          actionQueue.state = nextState;
-          finishRunningActionStateAction(
-            actionQueue,
-            (setPendingState: any),
-            (setState: any),
-          );
-        },
-        () =>
-          finishRunningActionStateAction(
-            actionQueue,
-            (setPendingState: any),
-            (setState: any),
-          ),
-      );
+  if (node.isTransition) {
+    // The original dispatch was part of a transition. We restore its
+    // transition context here.
 
-      setState((thenable: any));
-    } else {
-      setState((returnValue: any));
-
-      const nextState = ((returnValue: any): Awaited<S>);
-      actionQueue.state = nextState;
-      finishRunningActionStateAction(
-        actionQueue,
-        (setPendingState: any),
-        (setState: any),
-      );
-    }
-  } catch (error) {
-    // This is a trick to get the `useActionState` hook to rethrow the error.
-    // When it unwraps the thenable with the `use` algorithm, the error
-    // will be thrown.
-    const rejectedThenable: S = ({
-      then() {},
-      status: 'rejected',
-      reason: error,
-      // $FlowFixMe: Not sure why this doesn't work
-    }: RejectedThenable<Awaited<S>>);
-    setState(rejectedThenable);
-    finishRunningActionStateAction(
-      actionQueue,
-      (setPendingState: any),
-      (setState: any),
-    );
-  } finally {
-    ReactSharedInternals.T = prevTransition;
-
+    // This is a fork of startTransition
+    const prevTransition = ReactSharedInternals.T;
+    const currentTransition: BatchConfigTransition = {};
+    ReactSharedInternals.T = currentTransition;
     if (__DEV__) {
-      if (prevTransition === null && currentTransition._updatedFibers) {
-        const updatedFibersCount = currentTransition._updatedFibers.size;
-        currentTransition._updatedFibers.clear();
-        if (updatedFibersCount > 10) {
-          console.warn(
-            'Detected a large number of updates inside startTransition. ' +
-              'If this is due to a subscription please re-write it to use React provided hooks. ' +
-              'Otherwise concurrent mode guarantees are off the table.',
-          );
+      ReactSharedInternals.T._updatedFibers = new Set();
+    }
+    try {
+      const returnValue = action(prevState, payload);
+      const onStartTransitionFinish = ReactSharedInternals.S;
+      if (onStartTransitionFinish !== null) {
+        onStartTransitionFinish(currentTransition, returnValue);
+      }
+      handleActionReturnValue(actionQueue, node, returnValue);
+    } catch (error) {
+      onActionError(actionQueue, node, error);
+    } finally {
+      ReactSharedInternals.T = prevTransition;
+
+      if (__DEV__) {
+        if (prevTransition === null && currentTransition._updatedFibers) {
+          const updatedFibersCount = currentTransition._updatedFibers.size;
+          currentTransition._updatedFibers.clear();
+          if (updatedFibersCount > 10) {
+            console.warn(
+              'Detected a large number of updates inside startTransition. ' +
+                'If this is due to a subscription please re-write it to use React provided hooks. ' +
+                'Otherwise concurrent mode guarantees are off the table.',
+            );
+          }
         }
       }
+    }
+  } else {
+    // The original dispatch was not part of a transition.
+    try {
+      const returnValue = action(prevState, payload);
+      handleActionReturnValue(actionQueue, node, returnValue);
+    } catch (error) {
+      onActionError(actionQueue, node, error);
     }
   }
 }
 
-function finishRunningActionStateAction<S, P>(
+function handleActionReturnValue<S, P>(
   actionQueue: ActionStateQueue<S, P>,
-  setPendingState: Dispatch<S | Awaited<S>>,
-  setState: Dispatch<S | Awaited<S>>,
+  node: ActionStateQueueNode<S, P>,
+  returnValue: mixed,
 ) {
-  // The action finished running. Pop it from the queue and run the next pending
-  // action, if there are any.
+  if (
+    returnValue !== null &&
+    typeof returnValue === 'object' &&
+    // $FlowFixMe[method-unbinding]
+    typeof returnValue.then === 'function'
+  ) {
+    const thenable = ((returnValue: any): Thenable<Awaited<S>>);
+    // Attach a listener to read the return state of the action. As soon as
+    // this resolves, we can run the next action in the sequence.
+    thenable.then(
+      (nextState: Awaited<S>) => {
+        onActionSuccess(actionQueue, node, nextState);
+      },
+      (error: mixed) => onActionError(actionQueue, node, error),
+    );
+
+    if (__DEV__) {
+      if (!node.isTransition) {
+        console.error(
+          'An async function was passed to useActionState, but it was ' +
+            'dispatched outside of an action context. This is likely not ' +
+            'what you intended. Either pass the dispatch function to an ' +
+            '`action` prop, or dispatch manually inside `startTransition`',
+        );
+      }
+    }
+  } else {
+    const nextState = ((returnValue: any): Awaited<S>);
+    onActionSuccess(actionQueue, node, nextState);
+  }
+}
+
+function onActionSuccess<S, P>(
+  actionQueue: ActionStateQueue<S, P>,
+  actionNode: ActionStateQueueNode<S, P>,
+  nextState: Awaited<S>,
+) {
+  // The action finished running.
+  actionNode.status = 'fulfilled';
+  actionNode.value = nextState;
+  notifyActionListeners(actionNode);
+
+  actionQueue.state = nextState;
+
+  // Pop the action from the queue and run the next pending action, if there
+  // are any.
   const last = actionQueue.pending;
   if (last !== null) {
     const first = last.next;
@@ -2173,13 +2208,48 @@ function finishRunningActionStateAction<S, P>(
       last.next = next;
 
       // Run the next action.
-      runActionStateAction(
-        actionQueue,
-        (setPendingState: any),
-        (setState: any),
-        next,
-      );
+      runActionStateAction(actionQueue, next);
     }
+  }
+}
+
+function onActionError<S, P>(
+  actionQueue: ActionStateQueue<S, P>,
+  actionNode: ActionStateQueueNode<S, P>,
+  error: mixed,
+) {
+  actionNode.status = 'rejected';
+  actionNode.reason = error;
+  notifyActionListeners(actionNode);
+
+  // Pop the action from the queue and run the next pending action, if there
+  // are any.
+  // TODO: We should instead abort all the remaining actions in the queue.
+  const last = actionQueue.pending;
+  if (last !== null) {
+    const first = last.next;
+    if (first === last) {
+      // This was the last action in the queue.
+      actionQueue.pending = null;
+    } else {
+      // Remove the first node from the circular queue.
+      const next = first.next;
+      last.next = next;
+
+      // Run the next action.
+      runActionStateAction(actionQueue, next);
+    }
+  }
+}
+
+function notifyActionListeners<S, P>(actionNode: ActionStateQueueNode<S, P>) {
+  // Notify React that the action has finished.
+  const listeners = actionNode.listeners;
+  for (let i = 0; i < listeners.length; i++) {
+    // This is always a React internal listener, so we don't need to worry
+    // about it throwing.
+    const listener = listeners[i];
+    listener();
   }
 }
 
