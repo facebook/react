@@ -1614,10 +1614,6 @@ function resolveErrorDev(
     } else {
       error = callStack();
     }
-    // Overriding the stack isn't really necessary at this point and maybe we should just
-    // leave the native one. However, the native one gets printed unsource mapped with
-    // reportError. If that's fixed it might be better to use the native one.
-    error.stack = stack;
   }
 
   (error: any).digest = digest;
@@ -1705,6 +1701,7 @@ const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
   ? new Map()
   : (null: any);
 
+let fakeFunctionIdx = 0;
 function createFakeFunction<T>(
   name: string,
   filename: string,
@@ -1723,20 +1720,30 @@ function createFakeFunction<T>(
   // point to the original source.
   let code;
   if (line <= 1) {
-    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment + '\n';
+    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment;
   } else {
     code =
       comment +
       '\n'.repeat(line - 2) +
       '_=>\n' +
       ' '.repeat(col < 1 ? 0 : col - 1) +
-      '_()\n';
+      '_()';
+  }
+
+  if (filename.startsWith('/')) {
+    // If the filename starts with `/` we assume that it is a file system file
+    // rather than relative to the current host. Since on the server fully qualified
+    // stack traces use the file path.
+    // TODO: What does this look like on Windows?
+    filename = 'file://' + filename;
   }
 
   if (sourceMap) {
-    code += '//# sourceMappingURL=' + sourceMap;
+    code +=
+      '\n//# sourceURL=rsc://server/' + filename + '?' + fakeFunctionIdx++;
+    code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
-    code += '//# sourceURL=' + filename;
+    code += '\n//# sourceURL=' + filename;
   }
 
   let fn: FakeFunction<T>;
