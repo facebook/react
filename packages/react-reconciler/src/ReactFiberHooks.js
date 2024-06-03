@@ -1994,7 +1994,9 @@ type ActionStateQueue<S, P> = {
   dispatch: Dispatch<P>,
   // This is the most recent action function that was rendered. It's updated
   // during the commit phase.
-  action: (Awaited<S>, P) => S,
+  // If it's null, it means the action queue errored and subsequent actions
+  // should not run.
+  action: ((Awaited<S>, P) => S) | null,
   // This is a circular linked list of pending action payloads. It incudes the
   // action that is currently running.
   pending: ActionStateQueueNode<S, P> | null,
@@ -2033,9 +2035,15 @@ function dispatchActionState<S, P>(
     throw new Error('Cannot update form state while rendering.');
   }
 
+  const currentAction = actionQueue.action;
+  if (currentAction === null) {
+    // An earlier action errored. Subsequent actions should not run.
+    return;
+  }
+
   const actionNode: ActionStateQueueNode<S, P> = {
     payload,
-    action: actionQueue.action,
+    action: currentAction,
     next: (null: any), // circular
 
     isTransition: true,
@@ -2218,28 +2226,21 @@ function onActionError<S, P>(
   actionNode: ActionStateQueueNode<S, P>,
   error: mixed,
 ) {
-  actionNode.status = 'rejected';
-  actionNode.reason = error;
-  notifyActionListeners(actionNode);
-
-  // Pop the action from the queue and run the next pending action, if there
-  // are any.
-  // TODO: We should instead abort all the remaining actions in the queue.
+  // Mark all the following actions as rejected.
   const last = actionQueue.pending;
+  actionQueue.pending = null;
   if (last !== null) {
     const first = last.next;
-    if (first === last) {
-      // This was the last action in the queue.
-      actionQueue.pending = null;
-    } else {
-      // Remove the first node from the circular queue.
-      const next = first.next;
-      last.next = next;
-
-      // Run the next action.
-      runActionStateAction(actionQueue, next);
-    }
+    do {
+      actionNode.status = 'rejected';
+      actionNode.reason = error;
+      notifyActionListeners(actionNode);
+      actionNode = actionNode.next;
+    } while (actionNode !== first);
   }
+
+  // Prevent subsequent actions from being dispatched.
+  actionQueue.action = null;
 }
 
 function notifyActionListeners<S, P>(actionNode: ActionStateQueueNode<S, P>) {

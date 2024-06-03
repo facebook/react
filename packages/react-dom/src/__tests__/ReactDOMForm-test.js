@@ -1237,14 +1237,12 @@ describe('ReactDOMForm', () => {
 
   // @gate enableAsyncActions
   test('useActionState: error handling (sync action)', async () => {
-    let resetErrorBoundary;
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
         return {error};
       }
       render() {
-        resetErrorBoundary = () => this.setState({error: null});
         if (this.state.error !== null) {
           return <Text text={'Caught an error: ' + this.state.error.message} />;
         }
@@ -1284,31 +1282,16 @@ describe('ReactDOMForm', () => {
       'Caught an error: Oops!',
     ]);
     expect(container.textContent).toBe('Caught an error: Oops!');
-
-    // Reset the error boundary
-    await act(() => resetErrorBoundary());
-    assertLog(['A']);
-
-    // Trigger an error again, but this time, perform another action that
-    // overrides the first one and fixes the error
-    await act(() => {
-      startTransition(() => action('Oops!'));
-      startTransition(() => action('B'));
-    });
-    assertLog(['Pending A', 'B']);
-    expect(container.textContent).toBe('B');
   });
 
   // @gate enableAsyncActions
   test('useActionState: error handling (async action)', async () => {
-    let resetErrorBoundary;
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
         return {error};
       }
       render() {
-        resetErrorBoundary = () => this.setState({error: null});
         if (this.state.error !== null) {
           return <Text text={'Caught an error: ' + this.state.error.message} />;
         }
@@ -1346,21 +1329,65 @@ describe('ReactDOMForm', () => {
     await act(() => resolveText('Oops!'));
     assertLog(['Caught an error: Oops!', 'Caught an error: Oops!']);
     expect(container.textContent).toBe('Caught an error: Oops!');
+  });
 
-    // Reset the error boundary
-    await act(() => resetErrorBoundary());
+  test('useActionState: when an action errors, subsequent actions are canceled', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={'Caught an error: ' + this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    let action;
+    function App() {
+      const [state, dispatch, isPending] = useActionState(async (s, a) => {
+        Scheduler.log('Start action: ' + a);
+        const text = await getText(a);
+        if (text.endsWith('!')) {
+          throw new Error(text);
+        }
+        return text;
+      }, 'A');
+      action = dispatch;
+      const pending = isPending ? 'Pending ' : '';
+      return <Text text={pending + state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() =>
+      root.render(
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>,
+      ),
+    );
     assertLog(['A']);
 
-    // Trigger an error again, but this time, perform another action that
-    // overrides the first one and fixes the error
-    await act(() => {
-      startTransition(() => action('Oops!'));
-      startTransition(() => action('B'));
-    });
-    assertLog(['Pending A']);
-    await act(() => resolveText('B'));
-    assertLog(['B']);
-    expect(container.textContent).toBe('B');
+    await act(() => startTransition(() => action('Oops!')));
+    assertLog(['Start action: Oops!', 'Pending A']);
+
+    // Queue up another action after the one will error.
+    await act(() => startTransition(() => action('Should never run')));
+    assertLog([]);
+
+    // The first dispatch will update the pending state.
+    await act(() => resolveText('Oops!'));
+    assertLog(['Caught an error: Oops!', 'Caught an error: Oops!']);
+    expect(container.textContent).toBe('Caught an error: Oops!');
+
+    // Attempt to dispatch another action. This should not run either.
+    await act(() =>
+      startTransition(() => action('This also should never run')),
+    );
+    assertLog([]);
+    expect(container.textContent).toBe('Caught an error: Oops!');
   });
 
   // @gate enableAsyncActions
