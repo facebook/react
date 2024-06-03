@@ -62,14 +62,14 @@ describe('ReactDOM HostSingleton', () => {
     await waitForAll([]);
     if (__DEV__) {
       expect(errors).toEqual([
-        `Expected <link> not to update to be updated to a stylehsheet with precedence. Check the \`rel\`, \`href\`, and \`precedence\` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.
+        `Expected <link> not to update to be updated to a stylesheet with precedence. Check the \`rel\`, \`href\`, and \`precedence\` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.
 
   - <link rel=\"preload\" href=\"bar\" ... />
   + <link rel=\"stylesheet\" href=\"bar\" precedence=\"default\" />`,
       ]);
     } else {
       expect(errors).toEqual([
-        'Expected <link> not to update to be updated to a stylehsheet with precedence. Check the `rel`, `href`, and `precedence` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.',
+        'Expected <link> not to update to be updated to a stylesheet with precedence. Check the `rel`, `href`, and `precedence` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.',
       ]);
     }
   });
