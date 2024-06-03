@@ -62,10 +62,10 @@ function Component(props) {
   let t2;
   if ($[4] !== b || $[5] !== props.b) {
     const c = [];
-
-    t2 = c;
     const d = {};
     d.b = b;
+
+    t2 = c;
     c.push(props.b);
     $[4] = b;
     $[5] = props.b;

@@ -40,7 +40,7 @@ import { c as _c } from "react/compiler-runtime";
 import { mutate, setProperty, throwErrorWithMessageIf } from "shared-runtime";
 
 function useFoo(t0) {
-  const $ = _c(4);
+  const $ = _c(6);
   const { value, cond } = t0;
   let t1;
   let t2;
@@ -48,18 +48,26 @@ function useFoo(t0) {
     t2 = Symbol.for("react.early_return_sentinel");
     bb0: {
       const y = [value];
-      const x = { cond };
-      try {
-        mutate(x);
-        throwErrorWithMessageIf(x.cond, "error");
-      } catch {
-        setProperty(x, "henderson");
-        t2 = x;
-        break bb0;
+      let x;
+      if ($[4] !== cond) {
+        x = { cond };
+        try {
+          mutate(x);
+          throwErrorWithMessageIf(x.cond, "error");
+        } catch {
+          setProperty(x, "henderson");
+          t2 = x;
+          break bb0;
+        }
+
+        setProperty(x, "nevada");
+        $[4] = cond;
+        $[5] = x;
+      } else {
+        x = $[5];
       }
 
       t1 = y;
-      setProperty(x, "nevada");
       y.push(x);
     }
     $[0] = value;

@@ -45,10 +45,10 @@ function MyApp(props) {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const y = makeObj();
-
-    t0 = y;
     const tmp = y.a;
     const tmp2 = tmp.b;
+
+    t0 = y;
     y.push(tmp2);
     $[0] = t0;
   } else {

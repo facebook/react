@@ -28,8 +28,9 @@ function Component(props) {
   if ($[0] !== props.x) {
     const x = [props.x];
 
-    t0 = x;
     x[0] = x[0] * 2;
+
+    t0 = x;
     x["0"] = x["0"] + 3;
     $[0] = props.x;
     $[1] = t0;

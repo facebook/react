@@ -25,9 +25,9 @@ function Component(props) {
   let t0;
   if ($[0] !== props.b) {
     const x = [42, {}];
+    const idx = foo(props.b);
 
     t0 = x;
-    const idx = foo(props.b);
     const y = x.at(idx);
     mutate(y);
     $[0] = props.b;

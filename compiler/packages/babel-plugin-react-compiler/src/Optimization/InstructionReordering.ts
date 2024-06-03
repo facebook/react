@@ -70,11 +70,52 @@ import { getOrInsertDefault } from "../Utils/utils";
  */
 export function instructionReordering(fn: HIRFunction): void {
   const lastAssignments = getLastAssignments(fn);
+  const singleUseLoadLocals = findSingleUseLoadLocals(fn);
   const globalDependencies: Dependencies = new Map();
   for (const [, block] of fn.body.blocks) {
-    reorderBlock(fn.env, block, globalDependencies, lastAssignments);
+    reorderBlock(
+      fn.env,
+      block,
+      globalDependencies,
+      lastAssignments,
+      singleUseLoadLocals
+    );
   }
   markInstructionIds(fn.body);
+}
+
+function findSingleUseLoadLocals(fn: HIRFunction): Set<IdentifierId> {
+  const loadLocals = new Map<IdentifierId, number>();
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      if (instr.value.kind === "LoadLocal") {
+        loadLocals.set(instr.lvalue.identifier.id, 0);
+      }
+      for (const operand of eachInstructionValueOperand(instr.value)) {
+        let count = loadLocals.get(operand.identifier.id);
+        if (count !== undefined) {
+          loadLocals.set(operand.identifier.id, count + 1);
+          // Temporary hack: don't allow reordering loadlocals if they are referenced in a value block
+          if (block.kind !== "block") {
+            loadLocals.delete(operand.identifier.id);
+          }
+        }
+      }
+    }
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      let count = loadLocals.get(operand.identifier.id);
+      if (count !== undefined) {
+        loadLocals.set(operand.identifier.id, count + 1);
+        // Temporary hack: don't allow reordering loadlocals if they are referenced in a value block
+        if (block.kind !== "block") {
+          loadLocals.delete(operand.identifier.id);
+        }
+      }
+    }
+  }
+  return new Set(
+    [...loadLocals].filter(([id, count]) => count === 1).map(([id]) => id)
+  );
 }
 
 function getLastAssignments(fn: HIRFunction): LastAssignments {
@@ -121,7 +162,8 @@ function reorderBlock(
   env: Environment,
   block: BasicBlock,
   globalDependencies: Dependencies,
-  lastAssignments: LastAssignments
+  lastAssignments: LastAssignments,
+  singleUseLoadLocals: Set<IdentifierId>
 ): void {
   const dependencies: Dependencies = new Map();
   const locals = new Map<string, IdentifierId>();
@@ -136,7 +178,10 @@ function reorderBlock(
         depth: null,
       }
     );
-    if (getReorderingLevel(instr, lastAssignments) === ReorderingLevel.None) {
+    if (
+      getReorderingLevel(instr, lastAssignments, singleUseLoadLocals) ===
+      ReorderingLevel.None
+    ) {
       if (previousIdentifier !== null) {
         node.dependencies.push(previousIdentifier);
       }
@@ -243,8 +288,11 @@ function reorderBlock(
     }
     if (
       node.instruction !== null &&
-      getReorderingLevel(node.instruction, lastAssignments) ===
-        ReorderingLevel.Global &&
+      getReorderingLevel(
+        node.instruction,
+        lastAssignments,
+        singleUseLoadLocals
+      ) === ReorderingLevel.Global &&
       (block.kind === "block" || block.kind === "catch")
     ) {
       globalDependencies.set(id, node);
@@ -261,7 +309,8 @@ function reorderBlock(
 
 function getReorderingLevel(
   instr: Instruction,
-  lastAssignments: LastAssignments
+  lastAssignments: LastAssignments,
+  singleUseLoadLocals: Set<IdentifierId>
 ): ReorderingLevel {
   switch (instr.value.kind) {
     case "JsxExpression":
@@ -279,7 +328,11 @@ function getReorderingLevel(
       ) {
         const name = instr.value.place.identifier.name.value;
         const lastAssignment = lastAssignments.get(name);
-        if (lastAssignment !== undefined && lastAssignment < instr.id) {
+        if (
+          lastAssignment !== undefined &&
+          lastAssignment < instr.id &&
+          singleUseLoadLocals.has(instr.lvalue.identifier.id)
+        ) {
           return ReorderingLevel.Global;
         }
       }

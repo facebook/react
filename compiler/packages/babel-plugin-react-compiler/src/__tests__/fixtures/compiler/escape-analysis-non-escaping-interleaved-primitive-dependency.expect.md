@@ -39,10 +39,10 @@ function Component(props) {
   let t0;
   if ($[0] !== a || $[1] !== props.c) {
     const b = [];
-
-    t0 = b;
     const c = {};
     c.a = a;
+
+    t0 = b;
     b.push(props.c);
     $[0] = a;
     $[1] = props.c;

@@ -50,8 +50,9 @@ function useFoo(t0) {
       }
     }
 
-    t1 = x;
     x.push(i);
+
+    t1 = x;
     x.push(input.a.b);
     $[0] = max;
     $[1] = input.a.b;

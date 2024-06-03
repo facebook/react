@@ -44,10 +44,10 @@ function Component(props) {
   let t1;
   if ($[2] !== a || $[3] !== props.b) {
     const b = [];
-
-    t1 = b;
     const c = {};
     c.a = a;
+
+    t1 = b;
     b.push(props.b);
     $[2] = a;
     $[3] = props.b;

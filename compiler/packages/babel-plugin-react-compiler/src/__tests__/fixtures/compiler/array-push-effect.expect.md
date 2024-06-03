@@ -45,8 +45,6 @@ function Component(props) {
   let t2;
   if ($[4] !== x || $[5] !== y) {
     const arr = [];
-
-    t2 = arr;
     let t3;
     if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
       t3 = {};
@@ -55,6 +53,8 @@ function Component(props) {
       t3 = $[7];
     }
     arr.push(t3);
+
+    t2 = arr;
     arr.push(x, y);
     $[4] = x;
     $[5] = y;

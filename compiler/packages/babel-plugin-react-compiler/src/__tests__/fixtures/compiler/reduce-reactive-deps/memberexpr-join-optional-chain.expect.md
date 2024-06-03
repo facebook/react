@@ -46,9 +46,9 @@ function Component(props) {
   let t0;
   if ($[0] !== props.a) {
     const x = [];
+    x.push(props.a?.b);
 
     t0 = x;
-    x.push(props.a?.b);
     x.push(props.a.b.c);
     $[0] = props.a;
     $[1] = t0;
