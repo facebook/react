@@ -13,6 +13,7 @@ const {
   stablePackages,
   experimentalPackages,
   canaryChannelLabel,
+  rcNumber,
 } = require('../../ReactVersions');
 
 // Runs the build script for both stable and experimental release channels,
@@ -118,6 +119,13 @@ function processStable(buildDir) {
     // Identical to `oss-stable` but with real, semver versions. This is what
     // will get published to @latest.
     shell.cp('-r', buildDir + '/node_modules', buildDir + '/oss-stable-semver');
+    if (canaryChannelLabel === 'rc') {
+      // During the RC phase, we also generate an RC build that pins to exact
+      // versions but does not include a SHA, e.g. `19.0.0-rc.0`. This is purely
+      // for signaling purposes — aside from the version, it's no different from
+      // the corresponding canary.
+      shell.cp('-r', buildDir + '/node_modules', buildDir + '/oss-stable-rc');
+    }
 
     const defaultVersionIfNotFound = '0.0.0' + '-' + sha + '-' + dateString;
     const versionsMap = new Map();
@@ -141,6 +149,25 @@ function processStable(buildDir) {
       ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
     );
 
+    if (canaryChannelLabel === 'rc') {
+      const rcVersionsMap = new Map();
+      for (const moduleName in stablePackages) {
+        const version = stablePackages[moduleName];
+        rcVersionsMap.set(moduleName, version + `-rc.${rcNumber}`);
+      }
+      updatePackageVersions(
+        buildDir + '/oss-stable-rc',
+        rcVersionsMap,
+        defaultVersionIfNotFound,
+        // For RCs, we pin to exact versions, like we do for canaries.
+        true
+      );
+      updatePlaceholderReactVersionInCompiledArtifacts(
+        buildDir + '/oss-stable-rc',
+        ReactVersion
+      );
+    }
+
     // Now do the semver ones
     const semverVersionsMap = new Map();
     for (const moduleName in stablePackages) {
@@ -151,6 +178,7 @@ function processStable(buildDir) {
       buildDir + '/oss-stable-semver',
       semverVersionsMap,
       defaultVersionIfNotFound,
+      // Use ^ only for non-prerelease versions
       false
     );
     updatePlaceholderReactVersionInCompiledArtifacts(
