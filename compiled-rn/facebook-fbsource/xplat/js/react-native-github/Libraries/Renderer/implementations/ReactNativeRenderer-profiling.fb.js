@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b154bb30d74e82cd87813e1554275110>>
+ * @generated SignedSource<<cb56f905a478abc71fcf4770a481927b>>
  */
 
 "use strict";
@@ -4301,29 +4301,32 @@ function dispatchActionState(
 ) {
   if (isRenderPhaseUpdate(fiber))
     throw Error("Cannot update form state while rendering.");
-  var actionNode = {
-    payload: payload,
-    action: actionQueue.action,
-    next: null,
-    isTransition: !0,
-    status: "pending",
-    value: null,
-    reason: null,
-    listeners: [],
-    then: function (listener) {
-      actionNode.listeners.push(listener);
-    }
-  };
-  null !== ReactSharedInternals.T
-    ? setPendingState(!0)
-    : (actionNode.isTransition = !1);
-  setState(actionNode);
-  fiber = actionQueue.pending;
-  null === fiber
-    ? ((actionNode.next = actionQueue.pending = actionNode),
-      runActionStateAction(actionQueue, actionNode))
-    : ((actionNode.next = fiber.next),
-      (actionQueue.pending = fiber.next = actionNode));
+  fiber = actionQueue.action;
+  if (null !== fiber) {
+    var actionNode = {
+      payload: payload,
+      action: fiber,
+      next: null,
+      isTransition: !0,
+      status: "pending",
+      value: null,
+      reason: null,
+      listeners: [],
+      then: function (listener) {
+        actionNode.listeners.push(listener);
+      }
+    };
+    null !== ReactSharedInternals.T
+      ? setPendingState(!0)
+      : (actionNode.isTransition = !1);
+    setState(actionNode);
+    setPendingState = actionQueue.pending;
+    null === setPendingState
+      ? ((actionNode.next = actionQueue.pending = actionNode),
+        runActionStateAction(actionQueue, actionNode))
+      : ((actionNode.next = setPendingState.next),
+        (actionQueue.pending = setPendingState.next = actionNode));
+  }
 }
 function runActionStateAction(actionQueue, node) {
   var action = node.action,
@@ -4381,17 +4384,18 @@ function onActionSuccess(actionQueue, actionNode, nextState) {
         runActionStateAction(actionQueue, nextState)));
 }
 function onActionError(actionQueue, actionNode, error) {
-  actionNode.status = "rejected";
-  actionNode.reason = error;
-  notifyActionListeners(actionNode);
-  actionNode = actionQueue.pending;
-  null !== actionNode &&
-    ((error = actionNode.next),
-    error === actionNode
-      ? (actionQueue.pending = null)
-      : ((error = error.next),
-        (actionNode.next = error),
-        runActionStateAction(actionQueue, error)));
+  var last = actionQueue.pending;
+  actionQueue.pending = null;
+  if (null !== last) {
+    last = last.next;
+    do
+      (actionNode.status = "rejected"),
+        (actionNode.reason = error),
+        notifyActionListeners(actionNode),
+        (actionNode = actionNode.next);
+    while (actionNode !== last);
+  }
+  actionQueue.action = null;
 }
 function notifyActionListeners(actionNode) {
   actionNode = actionNode.listeners;
@@ -11437,11 +11441,11 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     traverseOwnerTreeUp(hierarchy, instance);
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-rc-67b05be0d2-20240603" !== isomorphicReactPackageVersion)
+if ("19.0.0-rc-9598c41a20-20240603" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-rc-67b05be0d2-20240603\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-rc-9598c41a20-20240603\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11491,7 +11495,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1274 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-67b05be0d2-20240603",
+    version: "19.0.0-rc-9598c41a20-20240603",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11547,7 +11551,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-67b05be0d2-20240603"
+  reconcilerVersion: "19.0.0-rc-9598c41a20-20240603"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

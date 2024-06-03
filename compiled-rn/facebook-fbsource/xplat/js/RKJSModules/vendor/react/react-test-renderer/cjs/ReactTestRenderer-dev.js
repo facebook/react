@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<296ca7b82c0faacaf7aac3a6e16abd82>>
+ * @generated SignedSource<<a73da489ac04975cb709c8633eb35947>>
  */
 
 'use strict';
@@ -8612,9 +8612,16 @@ function dispatchActionState(fiber, actionQueue, setPendingState, setState, payl
     throw new Error('Cannot update form state while rendering.');
   }
 
+  var currentAction = actionQueue.action;
+
+  if (currentAction === null) {
+    // An earlier action errored. Subsequent actions should not run.
+    return;
+  }
+
   var actionNode = {
     payload: payload,
-    action: actionQueue.action,
+    action: currentAction,
     next: null,
     // circular
     isTransition: true,
@@ -8773,28 +8780,23 @@ function onActionSuccess(actionQueue, actionNode, nextState) {
 }
 
 function onActionError(actionQueue, actionNode, error) {
-  actionNode.status = 'rejected';
-  actionNode.reason = error;
-  notifyActionListeners(actionNode); // Pop the action from the queue and run the next pending action, if there
-  // are any.
-  // TODO: We should instead abort all the remaining actions in the queue.
-
+  // Mark all the following actions as rejected.
   var last = actionQueue.pending;
+  actionQueue.pending = null;
 
   if (last !== null) {
     var first = last.next;
 
-    if (first === last) {
-      // This was the last action in the queue.
-      actionQueue.pending = null;
-    } else {
-      // Remove the first node from the circular queue.
-      var next = first.next;
-      last.next = next; // Run the next action.
+    do {
+      actionNode.status = 'rejected';
+      actionNode.reason = error;
+      notifyActionListeners(actionNode);
+      actionNode = actionNode.next;
+    } while (actionNode !== first);
+  } // Prevent subsequent actions from being dispatched.
 
-      runActionStateAction(actionQueue, next);
-    }
-  }
+
+  actionQueue.action = null;
 }
 
 function notifyActionListeners(actionNode) {
@@ -23568,7 +23570,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-67b05be0d2-20240603';
+var ReactVersion = '19.0.0-rc-9598c41a20-20240603';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

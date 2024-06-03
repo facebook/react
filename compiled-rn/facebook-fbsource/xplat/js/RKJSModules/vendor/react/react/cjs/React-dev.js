@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e6d0112c6fab06e092aebff7ad288f57>>
+ * @generated SignedSource<<6742f2766c9c222c207784bf460af0f4>>
  */
 
 'use strict';
@@ -24,7 +24,7 @@ if (
 }
 var dynamicFlagsUntyped = require('ReactNativeInternalFeatureFlags');
 
-var ReactVersion = '19.0.0-rc-67b05be0d2-20240603';
+var ReactVersion = '19.0.0-rc-9598c41a20-20240603';
 
 // Re-export dynamic flags from the internal module.
 var dynamicFlags = dynamicFlagsUntyped; // We destructure each value before re-exporting to avoid a dynamic look-up on
