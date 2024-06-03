@@ -29,6 +29,8 @@ import {
   isArrayType,
   isMutableEffect,
   isObjectType,
+  isRefValueType,
+  isUseRefType,
 } from "../HIR/HIR";
 import { FunctionSignature } from "../HIR/ObjectShape";
 import {
@@ -239,7 +241,8 @@ export default function inferReferenceEffects(
     functionEffects.forEach((eff) => {
       switch (eff.kind) {
         case "ReactMutation":
-        case "GlobalMutation": {
+        case "GlobalMutation":
+        case "RefMutation": {
           CompilerError.throw(eff.error);
         }
         case "ContextMutation": {
@@ -407,7 +410,8 @@ class InferenceState {
         for (const effect of value.loweredFunc.func.effects) {
           if (
             effect.kind === "GlobalMutation" ||
-            effect.kind === "ReactMutation"
+            effect.kind === "ReactMutation" ||
+            effect.kind === "RefMutation"
           ) {
             // Known effects are always propagated upwards
             functionEffects.push(effect);
@@ -539,10 +543,12 @@ class InferenceState {
           let reason = getWriteErrorReason(valueKind);
           functionEffect = {
             kind:
-              valueKind.reason.size === 1 &&
-              valueKind.reason.has(ValueReason.Global)
-                ? "GlobalMutation"
-                : "ReactMutation",
+              isRefValueType(place.identifier) || isUseRefType(place.identifier)
+                ? "RefMutation"
+                : valueKind.reason.size === 1 &&
+                    valueKind.reason.has(ValueReason.Global)
+                  ? "GlobalMutation"
+                  : "ReactMutation",
             error: {
               reason,
               description:
@@ -578,10 +584,12 @@ class InferenceState {
           let reason = getWriteErrorReason(valueKind);
           functionEffect = {
             kind:
-              valueKind.reason.size === 1 &&
-              valueKind.reason.has(ValueReason.Global)
-                ? "GlobalMutation"
-                : "ReactMutation",
+              isRefValueType(place.identifier) || isUseRefType(place.identifier)
+                ? "RefMutation"
+                : valueKind.reason.size === 1 &&
+                    valueKind.reason.has(ValueReason.Global)
+                  ? "GlobalMutation"
+                  : "ReactMutation",
             error: {
               reason,
               description:
@@ -1139,7 +1147,9 @@ function inferBlock(
             );
             functionEffects.push(
               ...propEffects.filter(
-                (propEffect) => propEffect.kind !== "GlobalMutation"
+                (propEffect) =>
+                  propEffect.kind !== "GlobalMutation" &&
+                  propEffect.kind !== "RefMutation"
               )
             );
           }
@@ -1333,7 +1343,10 @@ function inferBlock(
           functionEffects.push(
             ...argumentEffects.filter(
               (argEffect) =>
-                !isUseEffect || i !== 0 || argEffect.kind !== "GlobalMutation"
+                !isUseEffect ||
+                i !== 0 ||
+                (argEffect.kind !== "GlobalMutation" &&
+                  argEffect.kind !== "RefMutation")
             )
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
@@ -1462,7 +1475,10 @@ function inferBlock(
           functionEffects.push(
             ...argumentEffects.filter(
               (argEffect) =>
-                !isUseEffect || i !== 0 || argEffect.kind !== "GlobalMutation"
+                !isUseEffect ||
+                i !== 0 ||
+                (argEffect.kind !== "GlobalMutation" &&
+                  argEffect.kind !== "RefMutation")
             )
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;

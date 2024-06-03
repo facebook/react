@@ -292,6 +292,10 @@ export type FunctionEffect =
       error: CompilerErrorDetailOptions;
     }
   | {
+      kind: "RefMutation";
+      error: CompilerErrorDetailOptions;
+    }
+  | {
       kind: "ReactMutation";
       error: CompilerErrorDetailOptions;
     }
