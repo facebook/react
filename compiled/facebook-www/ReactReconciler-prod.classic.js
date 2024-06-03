@@ -5602,21 +5602,27 @@ module.exports = function ($$$config) {
         if (supportsResources)
           return (
             markRef(current, workInProgress),
-            (renderLanes = workInProgress.memoizedState =
-              getResource(
-                workInProgress.type,
-                null === current ? null : current.memoizedProps,
-                workInProgress.pendingProps
-              )),
-            null !== current ||
-              isHydrating ||
-              null !== renderLanes ||
-              (workInProgress.stateNode = createHoistableInstance(
-                workInProgress.type,
-                workInProgress.pendingProps,
-                rootInstanceStackCursor.current,
-                workInProgress
-              )),
+            null === current
+              ? (renderLanes = getResource(
+                  workInProgress.type,
+                  null,
+                  workInProgress.pendingProps,
+                  null
+                ))
+                ? (workInProgress.memoizedState = renderLanes)
+                : isHydrating ||
+                  (workInProgress.stateNode = createHoistableInstance(
+                    workInProgress.type,
+                    workInProgress.pendingProps,
+                    rootInstanceStackCursor.current,
+                    workInProgress
+                  ))
+              : (workInProgress.memoizedState = getResource(
+                  workInProgress.type,
+                  current.memoizedProps,
+                  workInProgress.pendingProps,
+                  current.memoizedState
+                )),
             null
           );
       case 27:
@@ -6782,8 +6788,8 @@ module.exports = function ($$$config) {
         if (supportsResources) {
           renderLanes = workInProgress.type;
           var nextResource = workInProgress.memoizedState;
-          if (null === current)
-            markUpdate(workInProgress),
+          null === current
+            ? (markUpdate(workInProgress),
               null !== nextResource
                 ? (bubbleProperties(workInProgress),
                   preloadResourceAndSuspendIfNeeded(
@@ -6795,34 +6801,29 @@ module.exports = function ($$$config) {
                     workInProgress,
                     renderLanes,
                     newProps
-                  ));
-          else {
-            var currentResource = current.memoizedState;
-            nextResource !== currentResource && markUpdate(workInProgress);
-            null !== nextResource
-              ? (bubbleProperties(workInProgress),
-                nextResource === currentResource
-                  ? (workInProgress.flags &= -16777217)
-                  : preloadResourceAndSuspendIfNeeded(
-                      workInProgress,
-                      nextResource
-                    ))
-              : (supportsMutation
-                  ? current.memoizedProps !== newProps &&
-                    markUpdate(workInProgress)
-                  : updateHostComponent(
-                      current,
-                      workInProgress,
-                      renderLanes,
-                      newProps
-                    ),
+                  )))
+            : nextResource
+            ? nextResource !== current.memoizedState
+              ? (markUpdate(workInProgress),
                 bubbleProperties(workInProgress),
-                preloadInstanceAndSuspendIfNeeded(
-                  workInProgress,
-                  renderLanes,
-                  newProps
-                ));
-          }
+                preloadResourceAndSuspendIfNeeded(workInProgress, nextResource))
+              : (bubbleProperties(workInProgress),
+                (workInProgress.flags &= -16777217))
+            : (supportsMutation
+                ? current.memoizedProps !== newProps &&
+                  markUpdate(workInProgress)
+                : updateHostComponent(
+                    current,
+                    workInProgress,
+                    renderLanes,
+                    newProps
+                  ),
+              bubbleProperties(workInProgress),
+              preloadInstanceAndSuspendIfNeeded(
+                workInProgress,
+                renderLanes,
+                newProps
+              ));
           return null;
         }
       case 27:
@@ -6991,18 +6992,19 @@ module.exports = function ($$$config) {
           return (workInProgress.lanes = renderLanes), workInProgress;
         renderLanes = null !== newProps;
         current = null !== current && null !== current.memoizedState;
-        renderLanes &&
-          ((newProps = workInProgress.child),
-          (nextResource = null),
+        if (renderLanes) {
+          newProps = workInProgress.child;
+          nextResource = null;
           null !== newProps.alternate &&
             null !== newProps.alternate.memoizedState &&
             null !== newProps.alternate.memoizedState.cachePool &&
-            (nextResource = newProps.alternate.memoizedState.cachePool.pool),
-          (currentResource = null),
+            (nextResource = newProps.alternate.memoizedState.cachePool.pool);
+          var cache$120 = null;
           null !== newProps.memoizedState &&
             null !== newProps.memoizedState.cachePool &&
-            (currentResource = newProps.memoizedState.cachePool.pool),
-          currentResource !== nextResource && (newProps.flags |= 2048));
+            (cache$120 = newProps.memoizedState.cachePool.pool);
+          cache$120 !== nextResource && (newProps.flags |= 2048);
+        }
         renderLanes !== current &&
           (enableTransitionTracing && (workInProgress.child.flags |= 2048),
           renderLanes && (workInProgress.child.flags |= 8192));
@@ -7043,8 +7045,8 @@ module.exports = function ($$$config) {
         if (null === nextResource)
           return bubbleProperties(workInProgress), null;
         newProps = 0 !== (workInProgress.flags & 128);
-        currentResource = nextResource.rendering;
-        if (null === currentResource)
+        cache$120 = nextResource.rendering;
+        if (null === cache$120)
           if (newProps) cutOffTailIfNeeded(nextResource, !1);
           else {
             if (
@@ -7052,11 +7054,11 @@ module.exports = function ($$$config) {
               (null !== current && 0 !== (current.flags & 128))
             )
               for (current = workInProgress.child; null !== current; ) {
-                currentResource = findFirstSuspended(current);
-                if (null !== currentResource) {
+                cache$120 = findFirstSuspended(current);
+                if (null !== cache$120) {
                   workInProgress.flags |= 128;
                   cutOffTailIfNeeded(nextResource, !1);
-                  current = currentResource.updateQueue;
+                  current = cache$120.updateQueue;
                   workInProgress.updateQueue = current;
                   scheduleRetryEffect(workInProgress, current);
                   workInProgress.subtreeFlags = 0;
@@ -7085,10 +7087,7 @@ module.exports = function ($$$config) {
           }
         else {
           if (!newProps)
-            if (
-              ((current = findFirstSuspended(currentResource)),
-              null !== current)
-            ) {
+            if (((current = findFirstSuspended(cache$120)), null !== current)) {
               if (
                 ((workInProgress.flags |= 128),
                 (newProps = !0),
@@ -7098,7 +7097,7 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !0),
                 null === nextResource.tail &&
                   "hidden" === nextResource.tailMode &&
-                  !currentResource.alternate &&
+                  !cache$120.alternate &&
                   !isHydrating)
               )
                 return bubbleProperties(workInProgress), null;
@@ -7111,13 +7110,13 @@ module.exports = function ($$$config) {
                 cutOffTailIfNeeded(nextResource, !1),
                 (workInProgress.lanes = 4194304));
           nextResource.isBackwards
-            ? ((currentResource.sibling = workInProgress.child),
-              (workInProgress.child = currentResource))
+            ? ((cache$120.sibling = workInProgress.child),
+              (workInProgress.child = cache$120))
             : ((current = nextResource.last),
               null !== current
-                ? (current.sibling = currentResource)
-                : (workInProgress.child = currentResource),
-              (nextResource.last = currentResource));
+                ? (current.sibling = cache$120)
+                : (workInProgress.child = cache$120),
+              (nextResource.last = cache$120));
         }
         if (null !== nextResource.tail)
           return (
@@ -12641,7 +12640,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-b421783110-20240603"
+      reconcilerVersion: "19.0.0-www-classic-47d0c30246-20240603"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

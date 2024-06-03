@@ -18033,14 +18033,22 @@ function updateHostComponent$1(current, workInProgress, renderLanes) {
 
 function updateHostHoistable(current, workInProgress, renderLanes) {
   markRef(current, workInProgress);
-  var currentProps = current === null ? null : current.memoizedProps;
-  var resource = workInProgress.memoizedState = getResource(workInProgress.type, currentProps, workInProgress.pendingProps);
 
   if (current === null) {
-    if (!getIsHydrating() && resource === null) {
-      // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
-      workInProgress.stateNode = createHoistableInstance(workInProgress.type, workInProgress.pendingProps, getRootHostContainer(), workInProgress);
+    var resource = getResource(workInProgress.type, null, workInProgress.pendingProps, null);
+
+    if (resource) {
+      workInProgress.memoizedState = resource;
+    } else {
+      if (!getIsHydrating()) {
+        // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
+        workInProgress.stateNode = createHoistableInstance(workInProgress.type, workInProgress.pendingProps, getRootHostContainer(), workInProgress);
+      }
     }
+  } else {
+    // Get Resource may or may not return a resource. either way we stash the result
+    // on memoized state.
+    workInProgress.memoizedState = getResource(workInProgress.type, current.memoizedProps, workInProgress.pendingProps, current.memoizedState);
   } // Resources never have reconciler managed children. It is possible for
   // the host implementation of getResource to consider children in the
   // resource construction but they will otherwise be discarded. In practice
@@ -21453,29 +21461,28 @@ function completeWork(current, workInProgress, renderLanes) {
               return null;
             }
           } else {
-            // We are updating.
-            var currentResource = current.memoizedState;
+            // This is an update.
+            if (nextResource) {
+              // This is a Resource
+              if (nextResource !== current.memoizedState) {
+                // we have a new Resource. we need to update
+                markUpdate(workInProgress); // This must come at the very end of the complete phase.
 
-            if (nextResource !== currentResource) {
-              // We are transitioning to, from, or between Hoistable Resources
-              // and require an update
-              markUpdate(workInProgress);
-            }
+                bubbleProperties(workInProgress); // This must come at the very end of the complete phase, because it might
+                // throw to suspend, and if the resource immediately loads, the work loop
+                // will resume rendering as if the work-in-progress completed. So it must
+                // fully complete.
 
-            if (nextResource !== null) {
-              // This is a Hoistable Resource
-              // This must come at the very end of the complete phase.
-              bubbleProperties(workInProgress);
-
-              if (nextResource === currentResource) {
-                workInProgress.flags &= ~MaySuspendCommit;
-              } else {
                 preloadResourceAndSuspendIfNeeded(workInProgress, nextResource);
+                return null;
+              } else {
+                // This must come at the very end of the complete phase.
+                bubbleProperties(workInProgress);
+                workInProgress.flags &= ~MaySuspendCommit;
+                return null;
               }
-
-              return null;
             } else {
-              // This is a Hoistable Instance
+              // This is an Instance
               // We may have props to update on the Hoistable instance.
               {
                 var oldProps = current.memoizedProps;
@@ -30826,7 +30833,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-b421783110-20240603';
+var ReactVersion = '19.0.0-www-modern-47d0c30246-20240603';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -39174,7 +39181,7 @@ function preinitModuleScript(src, options) {
 } // This function is called in begin work and we should always have a currentDocument set
 
 
-function getResource(type, currentProps, pendingProps) {
+function getResource(type, currentProps, pendingProps, currentResource) {
   var resourceRoot = getCurrentResourceRoot();
 
   if (!resourceRoot) {
@@ -39247,10 +39254,34 @@ function getResource(type, currentProps, pendingProps) {
             }
           }
 
-          return _resource;
-        }
+          if (currentProps && currentResource === null) {
+            // This node was previously an Instance type and is becoming a Resource type
+            // For now we error because we don't support flavor changes
+            var diff = '';
 
-        return null;
+            {
+              diff = "\n\n  - " + describeLinkForResourceErrorDEV(currentProps) + "\n  + " + describeLinkForResourceErrorDEV(pendingProps);
+            }
+
+            throw new Error('Expected <link> not to update to be updated to a stylehsheet with precedence.' + ' Check the `rel`, `href`, and `precedence` props of this component.' + ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' + diff);
+          }
+
+          return _resource;
+        } else {
+          if (currentProps && currentResource !== null) {
+            // This node was previously a Resource type and is becoming an Instance type
+            // For now we error because we don't support flavor changes
+            var _diff = '';
+
+            {
+              _diff = "\n\n  - " + describeLinkForResourceErrorDEV(currentProps) + "\n  + " + describeLinkForResourceErrorDEV(pendingProps);
+            }
+
+            throw new Error('Expected stylesheet with precedence to not be updated to a different kind of <link>.' + ' Check the `rel`, `href`, and `precedence` props of this component.' + ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' + _diff);
+          }
+
+          return null;
+        }
       }
 
     case 'script':
@@ -39290,6 +39321,44 @@ function getResource(type, currentProps, pendingProps) {
       {
         throw new Error("getResource encountered a type it did not expect: \"" + type + "\". this is a bug in React.");
       }
+  }
+}
+
+function describeLinkForResourceErrorDEV(props) {
+  {
+    var describedProps = 0;
+    var description = '<link';
+
+    if (typeof props.rel === 'string') {
+      describedProps++;
+      description += " rel=\"" + props.rel + "\"";
+    } else if (hasOwnProperty.call(props, 'rel')) {
+      describedProps++;
+      description += " rel=\"" + (props.rel === null ? 'null' : 'invalid type ' + typeof props.rel) + "\"";
+    }
+
+    if (typeof props.href === 'string') {
+      describedProps++;
+      description += " href=\"" + props.href + "\"";
+    } else if (hasOwnProperty.call(props, 'href')) {
+      describedProps++;
+      description += " href=\"" + (props.href === null ? 'null' : 'invalid type ' + typeof props.href) + "\"";
+    }
+
+    if (typeof props.precedence === 'string') {
+      describedProps++;
+      description += " precedence=\"" + props.precedence + "\"";
+    } else if (hasOwnProperty.call(props, 'precedence')) {
+      describedProps++;
+      description += " precedence={" + (props.precedence === null ? 'null' : 'invalid type ' + typeof props.precedence) + "}";
+    }
+
+    if (Object.getOwnPropertyNames(props).length > describedProps) {
+      description += ' ...';
+    }
+
+    description += ' />';
+    return description;
   }
 }
 

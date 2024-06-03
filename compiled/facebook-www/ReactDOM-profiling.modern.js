@@ -6684,25 +6684,31 @@ function beginWork(current, workInProgress, renderLanes) {
     case 26:
       return (
         markRef(current, workInProgress),
-        (renderLanes = workInProgress.memoizedState =
-          getResource(
-            workInProgress.type,
-            null === current ? null : current.memoizedProps,
-            workInProgress.pendingProps
-          )),
-        null !== current ||
-          isHydrating ||
-          null !== renderLanes ||
-          ((renderLanes = workInProgress.type),
-          (current = workInProgress.pendingProps),
-          (props = getOwnerDocumentFromRootContainer(
-            rootInstanceStackCursor.current
-          ).createElement(renderLanes)),
-          (props[internalInstanceKey] = workInProgress),
-          (props[internalPropsKey] = current),
-          setInitialProperties(props, renderLanes, current),
-          markNodeAsHoistable(props),
-          (workInProgress.stateNode = props)),
+        null === current
+          ? (renderLanes = getResource(
+              workInProgress.type,
+              null,
+              workInProgress.pendingProps,
+              null
+            ))
+            ? (workInProgress.memoizedState = renderLanes)
+            : isHydrating ||
+              ((renderLanes = workInProgress.type),
+              (current = workInProgress.pendingProps),
+              (props = getOwnerDocumentFromRootContainer(
+                rootInstanceStackCursor.current
+              ).createElement(renderLanes)),
+              (props[internalInstanceKey] = workInProgress),
+              (props[internalPropsKey] = current),
+              setInitialProperties(props, renderLanes, current),
+              markNodeAsHoistable(props),
+              (workInProgress.stateNode = props))
+          : (workInProgress.memoizedState = getResource(
+              workInProgress.type,
+              current.memoizedProps,
+              workInProgress.pendingProps,
+              current.memoizedState
+            )),
         null
       );
     case 27:
@@ -7618,31 +7624,31 @@ function completeWork(current, workInProgress, renderLanes) {
         (workInProgress.flags |= 2048);
       return null;
     case 26:
-      renderLanes = workInProgress.memoizedState;
-      if (null === current)
-        markUpdate(workInProgress),
-          null !== renderLanes
-            ? (bubbleProperties(workInProgress),
+      return (
+        (renderLanes = workInProgress.memoizedState),
+        null === current
+          ? (markUpdate(workInProgress),
+            null !== renderLanes
+              ? (bubbleProperties(workInProgress),
+                preloadResourceAndSuspendIfNeeded(workInProgress, renderLanes))
+              : (bubbleProperties(workInProgress),
+                (workInProgress.flags &= -16777217)))
+          : renderLanes
+          ? renderLanes !== current.memoizedState
+            ? (markUpdate(workInProgress),
+              bubbleProperties(workInProgress),
               preloadResourceAndSuspendIfNeeded(workInProgress, renderLanes))
             : (bubbleProperties(workInProgress),
-              (workInProgress.flags &= -16777217));
-      else {
-        var currentResource = current.memoizedState;
-        renderLanes !== currentResource && markUpdate(workInProgress);
-        null !== renderLanes
-          ? (bubbleProperties(workInProgress),
-            renderLanes === currentResource
-              ? (workInProgress.flags &= -16777217)
-              : preloadResourceAndSuspendIfNeeded(workInProgress, renderLanes))
+              (workInProgress.flags &= -16777217))
           : (current.memoizedProps !== newProps && markUpdate(workInProgress),
             bubbleProperties(workInProgress),
-            (workInProgress.flags &= -16777217));
-      }
-      return null;
+            (workInProgress.flags &= -16777217)),
+        null
+      );
     case 27:
       popHostContext(workInProgress);
       renderLanes = rootInstanceStackCursor.current;
-      currentResource = workInProgress.type;
+      var type = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode)
         current.memoizedProps !== newProps && markUpdate(workInProgress);
       else {
@@ -7655,11 +7661,7 @@ function completeWork(current, workInProgress, renderLanes) {
         current = contextStackCursor.current;
         popHydrationState(workInProgress)
           ? prepareToHydrateHostInstance(workInProgress, current)
-          : ((current = resolveSingletonInstance(
-              currentResource,
-              newProps,
-              renderLanes
-            )),
+          : ((current = resolveSingletonInstance(type, newProps, renderLanes)),
             (workInProgress.stateNode = current),
             markUpdate(workInProgress));
       }
@@ -7681,18 +7683,18 @@ function completeWork(current, workInProgress, renderLanes) {
         if (popHydrationState(workInProgress))
           prepareToHydrateHostInstance(workInProgress, current);
         else {
-          currentResource = getOwnerDocumentFromRootContainer(
+          type = getOwnerDocumentFromRootContainer(
             rootInstanceStackCursor.current
           );
           switch (current) {
             case 1:
-              current = currentResource.createElementNS(
+              current = type.createElementNS(
                 "http://www.w3.org/2000/svg",
                 renderLanes
               );
               break;
             case 2:
-              current = currentResource.createElementNS(
+              current = type.createElementNS(
                 "http://www.w3.org/1998/Math/MathML",
                 renderLanes
               );
@@ -7700,29 +7702,27 @@ function completeWork(current, workInProgress, renderLanes) {
             default:
               switch (renderLanes) {
                 case "svg":
-                  current = currentResource.createElementNS(
+                  current = type.createElementNS(
                     "http://www.w3.org/2000/svg",
                     renderLanes
                   );
                   break;
                 case "math":
-                  current = currentResource.createElementNS(
+                  current = type.createElementNS(
                     "http://www.w3.org/1998/Math/MathML",
                     renderLanes
                   );
                   break;
                 case "script":
-                  current = currentResource.createElement("div");
+                  current = type.createElement("div");
                   current.innerHTML = "<script>\x3c/script>";
                   current = current.removeChild(current.firstChild);
                   break;
                 case "select":
                   current =
                     "string" === typeof newProps.is
-                      ? currentResource.createElement("select", {
-                          is: newProps.is
-                        })
-                      : currentResource.createElement("select");
+                      ? type.createElement("select", { is: newProps.is })
+                      : type.createElement("select");
                   newProps.multiple
                     ? (current.multiple = !0)
                     : newProps.size && (current.size = newProps.size);
@@ -7730,41 +7730,28 @@ function completeWork(current, workInProgress, renderLanes) {
                 default:
                   current =
                     "string" === typeof newProps.is
-                      ? currentResource.createElement(renderLanes, {
-                          is: newProps.is
-                        })
-                      : currentResource.createElement(renderLanes);
+                      ? type.createElement(renderLanes, { is: newProps.is })
+                      : type.createElement(renderLanes);
               }
           }
           current[internalInstanceKey] = workInProgress;
           current[internalPropsKey] = newProps;
-          a: for (
-            currentResource = workInProgress.child;
-            null !== currentResource;
-
-          ) {
-            if (5 === currentResource.tag || 6 === currentResource.tag)
-              current.appendChild(currentResource.stateNode);
-            else if (
-              4 !== currentResource.tag &&
-              27 !== currentResource.tag &&
-              null !== currentResource.child
-            ) {
-              currentResource.child.return = currentResource;
-              currentResource = currentResource.child;
+          a: for (type = workInProgress.child; null !== type; ) {
+            if (5 === type.tag || 6 === type.tag)
+              current.appendChild(type.stateNode);
+            else if (4 !== type.tag && 27 !== type.tag && null !== type.child) {
+              type.child.return = type;
+              type = type.child;
               continue;
             }
-            if (currentResource === workInProgress) break a;
-            for (; null === currentResource.sibling; ) {
-              if (
-                null === currentResource.return ||
-                currentResource.return === workInProgress
-              )
+            if (type === workInProgress) break a;
+            for (; null === type.sibling; ) {
+              if (null === type.return || type.return === workInProgress)
                 break a;
-              currentResource = currentResource.return;
+              type = type.return;
             }
-            currentResource.sibling.return = currentResource.return;
-            currentResource = currentResource.sibling;
+            type.sibling.return = type.return;
+            type = type.sibling;
           }
           workInProgress.stateNode = current;
           a: switch (
@@ -7799,12 +7786,12 @@ function completeWork(current, workInProgress, renderLanes) {
           current = workInProgress.stateNode;
           renderLanes = workInProgress.memoizedProps;
           newProps = null;
-          currentResource = hydrationParentFiber;
-          if (null !== currentResource)
-            switch (currentResource.tag) {
+          type = hydrationParentFiber;
+          if (null !== type)
+            switch (type.tag) {
               case 27:
               case 5:
-                newProps = currentResource.memoizedProps;
+                newProps = type.memoizedProps;
             }
           current[internalInstanceKey] = workInProgress;
           current =
@@ -7833,22 +7820,20 @@ function completeWork(current, workInProgress, renderLanes) {
         (null !== current.memoizedState &&
           null !== current.memoizedState.dehydrated)
       ) {
-        currentResource = popHydrationState(workInProgress);
+        type = popHydrationState(workInProgress);
         if (null !== newProps && null !== newProps.dehydrated) {
           if (null === current) {
-            if (!currentResource) throw Error(formatProdErrorMessage(318));
-            currentResource = workInProgress.memoizedState;
-            currentResource =
-              null !== currentResource ? currentResource.dehydrated : null;
-            if (!currentResource) throw Error(formatProdErrorMessage(317));
-            currentResource[internalInstanceKey] = workInProgress;
+            if (!type) throw Error(formatProdErrorMessage(318));
+            type = workInProgress.memoizedState;
+            type = null !== type ? type.dehydrated : null;
+            if (!type) throw Error(formatProdErrorMessage(317));
+            type[internalInstanceKey] = workInProgress;
             bubbleProperties(workInProgress);
             0 !== (workInProgress.mode & 2) &&
               null !== newProps &&
-              ((currentResource = workInProgress.child),
-              null !== currentResource &&
-                (workInProgress.treeBaseDuration -=
-                  currentResource.treeBaseDuration));
+              ((type = workInProgress.child),
+              null !== type &&
+                (workInProgress.treeBaseDuration -= type.treeBaseDuration));
           } else
             resetHydrationState(),
               0 === (workInProgress.flags & 128) &&
@@ -7857,16 +7842,15 @@ function completeWork(current, workInProgress, renderLanes) {
               bubbleProperties(workInProgress),
               0 !== (workInProgress.mode & 2) &&
                 null !== newProps &&
-                ((currentResource = workInProgress.child),
-                null !== currentResource &&
-                  (workInProgress.treeBaseDuration -=
-                    currentResource.treeBaseDuration));
-          currentResource = !1;
+                ((type = workInProgress.child),
+                null !== type &&
+                  (workInProgress.treeBaseDuration -= type.treeBaseDuration));
+          type = !1;
         } else
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
-            (currentResource = !0);
-        if (!currentResource) {
+            (type = !0);
+        if (!type) {
           if (workInProgress.flags & 256)
             return popSuspenseHandler(workInProgress), workInProgress;
           popSuspenseHandler(workInProgress);
@@ -7885,16 +7869,16 @@ function completeWork(current, workInProgress, renderLanes) {
       current = null !== current && null !== current.memoizedState;
       if (renderLanes) {
         newProps = workInProgress.child;
-        currentResource = null;
+        type = null;
         null !== newProps.alternate &&
           null !== newProps.alternate.memoizedState &&
           null !== newProps.alternate.memoizedState.cachePool &&
-          (currentResource = newProps.alternate.memoizedState.cachePool.pool);
+          (type = newProps.alternate.memoizedState.cachePool.pool);
         var cache$140 = null;
         null !== newProps.memoizedState &&
           null !== newProps.memoizedState.cachePool &&
           (cache$140 = newProps.memoizedState.cachePool.pool);
-        cache$140 !== currentResource && (newProps.flags |= 2048);
+        cache$140 !== type && (newProps.flags |= 2048);
       }
       renderLanes !== current &&
         (enableTransitionTracing && (workInProgress.child.flags |= 2048),
@@ -7930,13 +7914,12 @@ function completeWork(current, workInProgress, renderLanes) {
       );
     case 19:
       pop(suspenseStackCursor);
-      currentResource = workInProgress.memoizedState;
-      if (null === currentResource)
-        return bubbleProperties(workInProgress), null;
+      type = workInProgress.memoizedState;
+      if (null === type) return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      cache$140 = currentResource.rendering;
+      cache$140 = type.rendering;
       if (null === cache$140)
-        if (newProps) cutOffTailIfNeeded(currentResource, !1);
+        if (newProps) cutOffTailIfNeeded(type, !1);
         else {
           if (
             0 !== workInProgressRootExitStatus ||
@@ -7946,7 +7929,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cache$140 = findFirstSuspended(current);
               if (null !== cache$140) {
                 workInProgress.flags |= 128;
-                cutOffTailIfNeeded(currentResource, !1);
+                cutOffTailIfNeeded(type, !1);
                 current = cache$140.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
@@ -7963,11 +7946,11 @@ function completeWork(current, workInProgress, renderLanes) {
               }
               current = current.sibling;
             }
-          null !== currentResource.tail &&
+          null !== type.tail &&
             now$1() > workInProgressRootRenderTargetTime &&
             ((workInProgress.flags |= 128),
             (newProps = !0),
-            cutOffTailIfNeeded(currentResource, !1),
+            cutOffTailIfNeeded(type, !1),
             (workInProgress.lanes = 4194304));
         }
       else {
@@ -7979,36 +7962,36 @@ function completeWork(current, workInProgress, renderLanes) {
               (current = current.updateQueue),
               (workInProgress.updateQueue = current),
               scheduleRetryEffect(workInProgress, current),
-              cutOffTailIfNeeded(currentResource, !0),
-              null === currentResource.tail &&
-                "hidden" === currentResource.tailMode &&
+              cutOffTailIfNeeded(type, !0),
+              null === type.tail &&
+                "hidden" === type.tailMode &&
                 !cache$140.alternate &&
                 !isHydrating)
             )
               return bubbleProperties(workInProgress), null;
           } else
-            2 * now$1() - currentResource.renderingStartTime >
+            2 * now$1() - type.renderingStartTime >
               workInProgressRootRenderTargetTime &&
               536870912 !== renderLanes &&
               ((workInProgress.flags |= 128),
               (newProps = !0),
-              cutOffTailIfNeeded(currentResource, !1),
+              cutOffTailIfNeeded(type, !1),
               (workInProgress.lanes = 4194304));
-        currentResource.isBackwards
+        type.isBackwards
           ? ((cache$140.sibling = workInProgress.child),
             (workInProgress.child = cache$140))
-          : ((current = currentResource.last),
+          : ((current = type.last),
             null !== current
               ? (current.sibling = cache$140)
               : (workInProgress.child = cache$140),
-            (currentResource.last = cache$140));
+            (type.last = cache$140));
       }
-      if (null !== currentResource.tail)
+      if (null !== type.tail)
         return (
-          (workInProgress = currentResource.tail),
-          (currentResource.rendering = workInProgress),
-          (currentResource.tail = workInProgress.sibling),
-          (currentResource.renderingStartTime = now$1()),
+          (workInProgress = type.tail),
+          (type.rendering = workInProgress),
+          (type.tail = workInProgress.sibling),
+          (type.renderingStartTime = now$1()),
           (workInProgress.sibling = null),
           (current = suspenseStackCursor.current),
           push(suspenseStackCursor, newProps ? (current & 1) | 2 : current & 1),
@@ -13233,7 +13216,7 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$378;
+  var JSCompiler_inline_result$jscomp$379;
   if (canUseDOM) {
     var isSupported$jscomp$inline_1597 = "oninput" in document;
     if (!isSupported$jscomp$inline_1597) {
@@ -13242,10 +13225,10 @@ if (canUseDOM) {
       isSupported$jscomp$inline_1597 =
         "function" === typeof element$jscomp$inline_1598.oninput;
     }
-    JSCompiler_inline_result$jscomp$378 = isSupported$jscomp$inline_1597;
-  } else JSCompiler_inline_result$jscomp$378 = !1;
+    JSCompiler_inline_result$jscomp$379 = isSupported$jscomp$inline_1597;
+  } else JSCompiler_inline_result$jscomp$379 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$378 &&
+    JSCompiler_inline_result$jscomp$379 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -15980,11 +15963,12 @@ function preinitModuleScript(src, options) {
       scripts.set(key, resource));
   }
 }
-function getResource(type, currentProps, pendingProps) {
-  currentProps = (currentProps = rootInstanceStackCursor.current)
-    ? getHoistableRoot(currentProps)
+function getResource(type, currentProps, pendingProps, currentResource) {
+  var JSCompiler_inline_result = (JSCompiler_inline_result =
+    rootInstanceStackCursor.current)
+    ? getHoistableRoot(JSCompiler_inline_result)
     : null;
-  if (!currentProps) throw Error(formatProdErrorMessage(446));
+  if (!JSCompiler_inline_result) throw Error(formatProdErrorMessage(446));
   switch (type) {
     case "meta":
     case "title":
@@ -15993,12 +15977,19 @@ function getResource(type, currentProps, pendingProps) {
       return "string" === typeof pendingProps.precedence &&
         "string" === typeof pendingProps.href
         ? ((pendingProps = getStyleKey(pendingProps.href)),
-          (currentProps = getResourcesFromRoot(currentProps).hoistableStyles),
-          (type = currentProps.get(pendingProps)),
-          type ||
-            ((type = { type: "style", instance: null, count: 0, state: null }),
-            currentProps.set(pendingProps, type)),
-          type)
+          (JSCompiler_inline_result = getResourcesFromRoot(
+            JSCompiler_inline_result
+          ).hoistableStyles),
+          (currentProps = JSCompiler_inline_result.get(pendingProps)),
+          currentProps ||
+            ((currentProps = {
+              type: "style",
+              instance: null,
+              count: 0,
+              state: null
+            }),
+            JSCompiler_inline_result.set(pendingProps, currentProps)),
+          currentProps)
         : { type: "void", instance: null, count: 0, state: null };
     case "link":
       if (
@@ -16007,10 +15998,13 @@ function getResource(type, currentProps, pendingProps) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$295 = getResourcesFromRoot(currentProps).hoistableStyles,
+        var styles$295 = getResourcesFromRoot(
+            JSCompiler_inline_result
+          ).hoistableStyles,
           resource$296 = styles$295.get(type);
         resource$296 ||
-          ((currentProps = currentProps.ownerDocument || currentProps),
+          ((JSCompiler_inline_result =
+            JSCompiler_inline_result.ownerDocument || JSCompiler_inline_result),
           (resource$296 = {
             type: "stylesheet",
             instance: null,
@@ -16020,7 +16014,7 @@ function getResource(type, currentProps, pendingProps) {
           styles$295.set(type, resource$296),
           preloadPropsMap.has(type) ||
             preloadStylesheet(
-              currentProps,
+              JSCompiler_inline_result,
               type,
               {
                 rel: "preload",
@@ -16034,30 +16028,35 @@ function getResource(type, currentProps, pendingProps) {
               },
               resource$296.state
             ));
+        if (currentProps && null === currentResource)
+          throw Error(formatProdErrorMessage(528, ""));
         return resource$296;
       }
+      if (currentProps && null !== currentResource)
+        throw Error(formatProdErrorMessage(529, ""));
       return null;
     case "script":
       return (
-        (type = pendingProps.async),
+        (currentProps = pendingProps.async),
         (pendingProps = pendingProps.src),
         "string" === typeof pendingProps &&
-        type &&
-        "function" !== typeof type &&
-        "symbol" !== typeof type
+        currentProps &&
+        "function" !== typeof currentProps &&
+        "symbol" !== typeof currentProps
           ? ((pendingProps = getScriptKey(pendingProps)),
-            (currentProps =
-              getResourcesFromRoot(currentProps).hoistableScripts),
-            (type = currentProps.get(pendingProps)),
-            type ||
-              ((type = {
+            (JSCompiler_inline_result = getResourcesFromRoot(
+              JSCompiler_inline_result
+            ).hoistableScripts),
+            (currentProps = JSCompiler_inline_result.get(pendingProps)),
+            currentProps ||
+              ((currentProps = {
                 type: "script",
                 instance: null,
                 count: 0,
                 state: null
               }),
-              currentProps.set(pendingProps, type)),
-            type)
+              JSCompiler_inline_result.set(pendingProps, currentProps)),
+            currentProps)
           : { type: "void", instance: null, count: 0, state: null }
       );
     default:
@@ -16130,37 +16129,37 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = instance);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$300 = hoistableRoot.querySelector(
+        var instance$301 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$300)
+        if (instance$301)
           return (
             (resource.state.loading |= 4),
-            (resource.instance = instance$300),
-            markNodeAsHoistable(instance$300),
-            instance$300
+            (resource.instance = instance$301),
+            markNodeAsHoistable(instance$301),
+            instance$301
           );
         instance = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(instance, styleProps);
-        instance$300 = (
+        instance$301 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$300);
-        var linkInstance = instance$300;
+        markNodeAsHoistable(instance$301);
+        var linkInstance = instance$301;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$300, "link", instance);
+        setInitialProperties(instance$301, "link", instance);
         resource.state.loading |= 4;
-        insertStylesheet(instance$300, props.precedence, hoistableRoot);
-        return (resource.instance = instance$300);
+        insertStylesheet(instance$301, props.precedence, hoistableRoot);
+        return (resource.instance = instance$301);
       case "script":
-        instance$300 = getScriptKey(props.src);
+        instance$301 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            getScriptSelectorFromKey(instance$300)
+            getScriptSelectorFromKey(instance$301)
           ))
         )
           return (
@@ -16169,7 +16168,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         instance = props;
-        if ((styleProps = preloadPropsMap.get(instance$300)))
+        if ((styleProps = preloadPropsMap.get(instance$301)))
           (instance = assign({}, props)),
             adoptPreloadPropsForScript(instance, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -17166,14 +17165,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1811 = React.version;
 if (
-  "19.0.0-www-modern-b421783110-20240603" !==
+  "19.0.0-www-modern-47d0c30246-20240603" !==
   isomorphicReactPackageVersion$jscomp$inline_1811
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1811,
-      "19.0.0-www-modern-b421783110-20240603"
+      "19.0.0-www-modern-47d0c30246-20240603"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17192,7 +17191,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1813 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-b421783110-20240603",
+  version: "19.0.0-www-modern-47d0c30246-20240603",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17236,7 +17235,7 @@ var devToolsConfig$jscomp$inline_1813 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-b421783110-20240603"
+  reconcilerVersion: "19.0.0-www-modern-47d0c30246-20240603"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -17597,7 +17596,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-b421783110-20240603";
+exports.version = "19.0.0-www-modern-47d0c30246-20240603";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

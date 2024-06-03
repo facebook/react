@@ -15209,14 +15209,22 @@ function updateHostComponent$1(current, workInProgress, renderLanes) {
 
 function updateHostHoistable(current, workInProgress, renderLanes) {
   markRef(current, workInProgress);
-  var currentProps = current === null ? null : current.memoizedProps;
-  var resource = workInProgress.memoizedState = getResource(workInProgress.type, currentProps, workInProgress.pendingProps);
 
   if (current === null) {
-    if (!getIsHydrating() && resource === null) {
-      // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
-      workInProgress.stateNode = createHoistableInstance(workInProgress.type, workInProgress.pendingProps, getRootHostContainer(), workInProgress);
+    var resource = getResource(workInProgress.type, null, workInProgress.pendingProps, null);
+
+    if (resource) {
+      workInProgress.memoizedState = resource;
+    } else {
+      if (!getIsHydrating()) {
+        // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
+        workInProgress.stateNode = createHoistableInstance(workInProgress.type, workInProgress.pendingProps, getRootHostContainer(), workInProgress);
+      }
     }
+  } else {
+    // Get Resource may or may not return a resource. either way we stash the result
+    // on memoized state.
+    workInProgress.memoizedState = getResource(workInProgress.type, current.memoizedProps, workInProgress.pendingProps, current.memoizedState);
   } // Resources never have reconciler managed children. It is possible for
   // the host implementation of getResource to consider children in the
   // resource construction but they will otherwise be discarded. In practice
@@ -19050,29 +19058,28 @@ function completeWork(current, workInProgress, renderLanes) {
               return null;
             }
           } else {
-            // We are updating.
-            var currentResource = current.memoizedState;
+            // This is an update.
+            if (nextResource) {
+              // This is a Resource
+              if (nextResource !== current.memoizedState) {
+                // we have a new Resource. we need to update
+                markUpdate(workInProgress); // This must come at the very end of the complete phase.
 
-            if (nextResource !== currentResource) {
-              // We are transitioning to, from, or between Hoistable Resources
-              // and require an update
-              markUpdate(workInProgress);
-            }
+                bubbleProperties(workInProgress); // This must come at the very end of the complete phase, because it might
+                // throw to suspend, and if the resource immediately loads, the work loop
+                // will resume rendering as if the work-in-progress completed. So it must
+                // fully complete.
 
-            if (nextResource !== null) {
-              // This is a Hoistable Resource
-              // This must come at the very end of the complete phase.
-              bubbleProperties(workInProgress);
-
-              if (nextResource === currentResource) {
-                workInProgress.flags &= ~MaySuspendCommit;
-              } else {
                 preloadResourceAndSuspendIfNeeded(workInProgress, nextResource);
+                return null;
+              } else {
+                // This must come at the very end of the complete phase.
+                bubbleProperties(workInProgress);
+                workInProgress.flags &= ~MaySuspendCommit;
+                return null;
               }
-
-              return null;
             } else {
-              // This is a Hoistable Instance
+              // This is an Instance
               // We may have props to update on the Hoistable instance.
               if (supportsMutation) {
                 var oldProps = current.memoizedProps;
@@ -28851,7 +28858,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-b421783110-20240603';
+var ReactVersion = '19.0.0-www-classic-47d0c30246-20240603';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
