@@ -71,7 +71,7 @@
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "dev": "concurrently \"npm run dev:region\" \"npm run dev:global\"",
     "dev:global": "NODE_ENV=development BUILD_PATH=dist node --experimental-loader ./loader/global.js server/global",
-    "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --experimental-loader ./loader/region.js --conditions=react-server server/region",
+    "dev:region": "NODE_ENV=development BUILD_PATH=dist nodemon --watch src --watch dist -- --enable-source-maps --experimental-loader ./loader/region.js --conditions=react-server server/region",
     "start": "node scripts/build.js && concurrently \"npm run start:region\" \"npm run start:global\"",
     "start:global": "NODE_ENV=production node --experimental-loader ./loader/global.js server/global",
     "start:region": "NODE_ENV=production node --experimental-loader ./loader/region.js --conditions=react-server server/region",
