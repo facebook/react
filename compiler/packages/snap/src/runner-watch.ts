@@ -153,8 +153,8 @@ function subscribeFilterFile(
     } else if (
       events.findIndex((event) => event.path.includes(FILTER_FILENAME)) !== -1
     ) {
-      state.filter = await readTestFilter();
       if (state.mode.filter) {
+        state.filter = await readTestFilter();
         state.mode.action = RunnerAction.Test;
         onChange(state);
       }
@@ -218,7 +218,7 @@ export async function makeWatchRunner(
       action: RunnerAction.Test,
       filter: filterMode,
     },
-    filter: await readTestFilter(),
+    filter: filterMode ? await readTestFilter() : null,
   };
 
   subscribeTsc(state, onChange);
