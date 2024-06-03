@@ -898,6 +898,12 @@ export type InstructionValue =
       flags: string;
       loc: SourceLocation;
     }
+  | {
+      kind: "MetaProperty";
+      meta: string;
+      property: string;
+      loc: SourceLocation;
+    }
 
   // store `object.property = value`
   | {

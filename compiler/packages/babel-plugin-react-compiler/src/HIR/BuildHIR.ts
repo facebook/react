@@ -2427,6 +2427,21 @@ function lowerExpression(
       let expr = exprPath as NodePath<t.TSNonNullExpression>;
       return lowerExpression(builder, expr.get("expression"));
     }
+    case "MetaProperty": {
+      let expr = exprPath as NodePath<t.MetaProperty>;
+      if (
+        expr.node.meta.name === "import" &&
+        expr.node.property.name === "meta"
+      ) {
+        return {
+          kind: "MetaProperty",
+          meta: expr.node.meta.name,
+          property: expr.node.property.name,
+          loc: expr.node.loc ?? GeneratedSource,
+        };
+      }
+      return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+    }
     default: {
       builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,

@@ -636,6 +636,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `RegExp /${instrValue.pattern}/${instrValue.flags}`;
       break;
     }
+    case "MetaProperty": {
+      value = `MetaProperty ${instrValue.meta}.${instrValue.property}`;
+      break;
+    }
     case "Await": {
       value = `Await ${printPlace(instrValue.value)}`;
       break;

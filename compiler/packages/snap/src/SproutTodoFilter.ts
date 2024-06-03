@@ -499,6 +499,9 @@ const skipFilter = new Set([
   "useState-unpruned-dependency",
   "useState-and-other-hook-unpruned-dependency",
   "change-detect-reassign",
+
+  // needs to be executed as a module
+  "meta-property",
 ]);
 
 export default skipFilter;

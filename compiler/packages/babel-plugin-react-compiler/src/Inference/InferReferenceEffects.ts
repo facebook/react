@@ -1216,6 +1216,7 @@ function inferBlock(
         };
         break;
       }
+      case "MetaProperty":
       case "LoadGlobal":
         valueKind = {
           kind: ValueKind.Global,
