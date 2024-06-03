@@ -15,3 +15,4 @@ jest.mock('react-noop-renderer', () =>
 );
 
 global.__PERSISTENT__ = true;
+global.__XPLAT__ = true;
