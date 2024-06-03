@@ -2442,7 +2442,7 @@ export function getResource(
   + ${describeLinkForResourceErrorDEV(pendingProps)}`;
           }
           throw new Error(
-            'Expected <link> not to update to be updated to a stylehsheet with precedence.' +
+            'Expected <link> not to update to be updated to a stylesheet with precedence.' +
               ' Check the `rel`, `href`, and `precedence` props of this component.' +
               ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' +
               diff,
