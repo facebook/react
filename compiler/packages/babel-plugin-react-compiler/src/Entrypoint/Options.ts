@@ -111,6 +111,13 @@ export type PluginOptions = {
   ignoreUseNoForget: boolean;
 
   sources?: Array<string> | ((filename: string) => boolean) | null;
+
+  /**
+   * The compiler has customized support for some popular React libraries (to provide even more optimized output).
+   * By default the compiler checks for the presence of these libraries via a `try { require(...) }` call. Set this
+   * flag to disable the automatic check.
+   */
+  disableCheckForSupportedLibraries?: boolean;
 };
 
 const CompilationModeSchema = z.enum([
