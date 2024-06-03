@@ -31,7 +31,7 @@ export default function BabelPluginReactCompiler(
       Program(prog, pass): void {
         let opts = parsePluginOptions(pass.opts);
         if (
-          opts.disableCheckForSupportedLibraries !== false &&
+          opts.enableReanimatedCheck === true &&
           pipelineUsesReanimatedPlugin(pass.file.opts.plugins)
         ) {
           opts = injectReanimatedFlag(opts);
