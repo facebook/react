@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3d96617b2e6ac5534a273a97f30cc7e4>>
+ * @generated SignedSource<<62c8680cf31ef07b7ed3df40fe102c9d>>
  */
 
 'use strict';
@@ -48,7 +48,7 @@ function warn(format) {
         args[_key - 1] = arguments[_key];
       }
 
-      printWarning('warn', format, args);
+      printWarning('warn', format, args, new Error('react-stack-top-frame'));
     }
   }
 }
@@ -59,12 +59,12 @@ function error(format) {
         args[_key2 - 1] = arguments[_key2];
       }
 
-      printWarning('error', format, args);
+      printWarning('error', format, args, new Error('react-stack-top-frame'));
     }
   }
 } // eslint-disable-next-line react-internal/no-production-logging
 
-function printWarning(level, format, args) {
+function printWarning(level, format, args, currentStack) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   {
@@ -74,7 +74,7 @@ function printWarning(level, format, args) {
       // We only add the current stack to the console when createTask is not supported.
       // Since createTask requires DevTools to be open to work, this means that stacks
       // can be lost while DevTools isn't open but we can't detect this.
-      var stack = ReactSharedInternals.getCurrentStack();
+      var stack = ReactSharedInternals.getCurrentStack(currentStack);
 
       if (stack !== '') {
         format += '%s';
@@ -958,18 +958,28 @@ function describeFunctionComponentFrame(fn) {
 /** @noinline */
 
 function callComponentInDEV(Component, props, secondArg) {
+  var wasRendering = isRendering;
   setIsRendering(true);
-  var result = Component(props, secondArg);
-  setIsRendering(false);
-  return result;
+
+  try {
+    var result = Component(props, secondArg);
+    return result;
+  } finally {
+    setIsRendering(wasRendering);
+  }
 }
 /** @noinline */
 
 function callRenderInDEV(instance) {
+  var wasRendering = isRendering;
   setIsRendering(true);
-  var result = instance.render();
-  setIsRendering(false);
-  return result;
+
+  try {
+    var result = instance.render();
+    return result;
+  } finally {
+    setIsRendering(wasRendering);
+  }
 }
 /** @noinline */
 
@@ -1046,7 +1056,7 @@ function getStackByFiberInDevAndProd(workInProgress) {
 var current = null;
 var isRendering = false;
 
-function getCurrentFiberStackInDev() {
+function getCurrentFiberStackInDev(stack) {
   {
     if (current === null) {
       return '';
@@ -23570,7 +23580,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-bf3a29d097-20240603';
+var ReactVersion = '19.0.0-rc-4dcdf21325-20240603';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

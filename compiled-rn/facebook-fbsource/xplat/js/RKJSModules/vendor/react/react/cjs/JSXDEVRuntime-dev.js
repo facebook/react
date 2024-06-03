@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d10d18b906d5290962ea3f530139aefd>>
+ * @generated SignedSource<<d51d0c3ebc8840727d2f1b37a2ad542d>>
  */
 
 'use strict';
@@ -79,12 +79,12 @@ function error(format) {
         args[_key2 - 1] = arguments[_key2];
       }
 
-      printWarning('error', format, args);
+      printWarning('error', format, args, new Error('react-stack-top-frame'));
     }
   }
 } // eslint-disable-next-line react-internal/no-production-logging
 
-function printWarning(level, format, args) {
+function printWarning(level, format, args, currentStack) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   {
@@ -94,7 +94,7 @@ function printWarning(level, format, args) {
       // We only add the current stack to the console when createTask is not supported.
       // Since createTask requires DevTools to be open to work, this means that stacks
       // can be lost while DevTools isn't open but we can't detect this.
-      var stack = ReactSharedInternals.getCurrentStack();
+      var stack = ReactSharedInternals.getCurrentStack(currentStack);
 
       if (stack !== '') {
         format += '%s';
