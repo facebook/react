@@ -286,7 +286,7 @@ jobs:
           echo ":"
           git status -u
       - name: Commit changes to branch
-        if: false && steps.check_should_commit.outputs.should_commit == 'true'
+        if: steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
