@@ -206,13 +206,22 @@ if (process.env.NODE_ENV === 'development') {
 
       const sourceMap = nodeModule.findSourceMap(requestedFilePath);
       let map;
-      // There are two ways to return a source map depending on what we observe in error.stack.
-      // A real app will have a similar choice to make for which strategy to pick.
-      if (!sourceMap || !isCompiledOutput) {
+      if (requestedFilePath.startsWith('node:')) {
+        // This is a node internal. We don't include any source code for this but we still
+        // generate a source map for it so that we can add it to an ignoreList automatically.
+        map = {
+          version: 3,
+          sources: [requestedFilePath],
+          sourcesContent: ['// Node Internals'],
+          mappings: 'AAAA',
+          ignoreList: [0],
+          sourceRoot: '',
+        };
+      } else if (!sourceMap || !isCompiledOutput) {
         // If a file doesn't have a source map, such as this file, then we generate a blank
         // source map that just contains the original content and segments pointing to the
-        // original lines.
-        // Similarly
+        // original lines. If a line number points to uncompiled output, like if source mapping
+        // was already applied we also use this path.
         const sourceContent = await readFile(requestedFilePath, 'utf8');
         const lines = sourceContent.split('\n').length;
         map = {
@@ -224,6 +233,10 @@ if (process.env.NODE_ENV === 'development') {
           // generated for each parsed segment or add a segment for each column.
           mappings: 'AAAA' + ';AACA'.repeat(lines - 1),
           sourceRoot: '',
+          // Add any node_modules to the ignore list automatically.
+          ignoreList: requestedFilePath.includes('node_modules')
+            ? [0]
+            : undefined,
         };
       } else {
         // We always set prepareStackTrace before reading the stack so that we get the stack
