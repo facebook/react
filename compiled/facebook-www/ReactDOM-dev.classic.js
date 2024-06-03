@@ -31090,7 +31090,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-47d0c30246-20240603';
+var ReactVersion = '19.0.0-www-classic-def67b9b32-20240603';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -39396,7 +39396,7 @@ function getResource(type, currentProps, pendingProps, currentResource) {
               diff = "\n\n  - " + describeLinkForResourceErrorDEV(currentProps) + "\n  + " + describeLinkForResourceErrorDEV(pendingProps);
             }
 
-            throw new Error('Expected <link> not to update to be updated to a stylehsheet with precedence.' + ' Check the `rel`, `href`, and `precedence` props of this component.' + ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' + diff);
+            throw new Error('Expected <link> not to update to be updated to a stylesheet with precedence.' + ' Check the `rel`, `href`, and `precedence` props of this component.' + ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' + diff);
           }
 
           return _resource;
