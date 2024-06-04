@@ -28,7 +28,6 @@ import {
   useCallback,
   useDebugValue,
   useMemo,
-  useActionState,
 } from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
@@ -63,6 +62,5 @@ export {
   useCallback,
   useDebugValue,
   useMemo,
-  useActionState,
   version,
 };
