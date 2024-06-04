@@ -10,11 +10,6 @@
 
 'use strict';
 
-import {
-  allowConcurrentByDefault,
-  forceConcurrentByDefaultForTesting,
-} from 'shared/forks/ReactFeatureFlags.native-fb';
-
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
