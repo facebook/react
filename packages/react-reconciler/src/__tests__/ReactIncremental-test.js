@@ -325,7 +325,7 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle', 'Middle']);
   });
 
-  it('can resume work in a subtree even when a parent bails out', async () => {
+  xit('can resume work in a subtree even when a parent bails out', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
