@@ -10,8 +10,6 @@
 
 'use strict';
 
-import {enableDeferRootSchedulingToMicrotask} from 'shared/forks/ReactFeatureFlags.native-fb-dynamic';
-
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
