@@ -7,7 +7,17 @@ jest.mock('shared/ReactFeatureFlags', () => {
       jest.requireActual('shared/forks/ReactFeatureFlags.native-fb-dynamic.js'),
     {virtual: true}
   );
-  return jest.requireActual('shared/forks/ReactFeatureFlags.native-fb.js');
+  const actual = jest.requireActual(
+    'shared/forks/ReactFeatureFlags.native-fb.js'
+  );
+
+  // Lots of tests use these, but we don't want to expose it to RN.
+  // Since the xplat tests run with the www entry points, these tests pass.
+  actual.enableLegacyCache = true;
+  actual.enableScopeAPI = true;
+  actual.enableTaint = false;
+
+  return actual;
 });
 
 jest.mock('react-noop-renderer', () =>
