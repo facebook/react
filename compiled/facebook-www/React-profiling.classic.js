@@ -18,7 +18,6 @@
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-  enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableFastJSX = dynamicFeatureFlags.enableFastJSX,
@@ -98,28 +97,23 @@ function getOwner() {
   var dispatcher = ReactSharedInternals.A;
   return null === dispatcher ? null : dispatcher.getOwner();
 }
-var enableFastJSXWithStringRefs = enableFastJSX && enableRefAsProp,
+var enableFastJSXWithStringRefs = enableFastJSX && !0,
   enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !1;
 function ReactElement(type, key, _ref, self, source, owner, props) {
-  enableRefAsProp &&
-    ((_ref = props.ref), (_ref = void 0 !== _ref ? _ref : null));
+  _ref = props.ref;
   return {
     $$typeof: REACT_LEGACY_ELEMENT_TYPE,
     type: type,
     key: key,
-    ref: _ref,
+    ref: void 0 !== _ref ? _ref : null,
     props: props,
     _owner: owner
   };
 }
 function jsxProd(type, config, maybeKey) {
-  var key = null,
-    ref = null;
+  var key = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  void 0 === config.ref ||
-    enableRefAsProp ||
-    ((ref = config.ref), (ref = coerceStringRef(ref, getOwner(), type)));
   if (
     (!enableFastJSXWithoutStringRefs &&
       (!enableFastJSXWithStringRefs || "ref" in config)) ||
@@ -127,9 +121,8 @@ function jsxProd(type, config, maybeKey) {
   ) {
     maybeKey = {};
     for (var propName in config)
-      "key" === propName ||
-        (!enableRefAsProp && "ref" === propName) ||
-        (enableRefAsProp && "ref" === propName
+      "key" !== propName &&
+        ("ref" === propName
           ? (maybeKey.ref = coerceStringRef(config[propName], getOwner(), type))
           : (maybeKey[propName] = config[propName]));
   } else maybeKey = config;
@@ -139,13 +132,13 @@ function jsxProd(type, config, maybeKey) {
       void 0 === maybeKey[propName$0] &&
         (maybeKey[propName$0] = config[propName$0]);
   }
-  return ReactElement(type, key, ref, void 0, void 0, getOwner(), maybeKey);
+  return ReactElement(type, key, null, void 0, void 0, getOwner(), maybeKey);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
   return ReactElement(
     oldElement.type,
     newKey,
-    enableRefAsProp ? null : oldElement.ref,
+    null,
     void 0,
     void 0,
     oldElement._owner,
@@ -466,14 +459,9 @@ exports.cloneElement = function (element, config, children) {
     );
   var props = assign({}, element.props),
     key = element.key,
-    ref = enableRefAsProp ? null : element.ref,
     owner = element._owner;
   if (null != config) {
-    void 0 !== config.ref &&
-      ((owner = getOwner()),
-      enableRefAsProp ||
-        ((ref = config.ref),
-        (ref = coerceStringRef(ref, owner, element.type))));
+    void 0 !== config.ref && (owner = getOwner());
     void 0 !== config.key && (key = "" + config.key);
     if (
       !disableDefaultPropsExceptForClasses &&
@@ -484,14 +472,13 @@ exports.cloneElement = function (element, config, children) {
     for (propName in config)
       !hasOwnProperty.call(config, propName) ||
         "key" === propName ||
-        (!enableRefAsProp && "ref" === propName) ||
         "__self" === propName ||
         "__source" === propName ||
-        (enableRefAsProp && "ref" === propName && void 0 === config.ref) ||
+        ("ref" === propName && void 0 === config.ref) ||
         (disableDefaultPropsExceptForClasses ||
         void 0 !== config[propName] ||
         void 0 === defaultProps
-          ? enableRefAsProp && "ref" === propName
+          ? "ref" === propName
             ? (props.ref = coerceStringRef(
                 config[propName],
                 owner,
@@ -507,7 +494,7 @@ exports.cloneElement = function (element, config, children) {
     for (var i = 0; i < propName; i++) defaultProps[i] = arguments[i + 2];
     props.children = defaultProps;
   }
-  return ReactElement(element.type, key, ref, void 0, void 0, owner, props);
+  return ReactElement(element.type, key, null, void 0, void 0, owner, props);
 };
 exports.createContext = function (defaultValue) {
   defaultValue = {
@@ -534,20 +521,14 @@ exports.createContext = function (defaultValue) {
 exports.createElement = function (type, config, children) {
   var propName,
     props = {},
-    key = null,
-    ref = null;
+    key = null;
   if (null != config)
-    for (propName in (void 0 === config.ref ||
-      enableRefAsProp ||
-      ((ref = config.ref), (ref = coerceStringRef(ref, getOwner(), type))),
-    void 0 !== config.key && (key = "" + config.key),
-    config))
+    for (propName in (void 0 !== config.key && (key = "" + config.key), config))
       hasOwnProperty.call(config, propName) &&
         "key" !== propName &&
-        (enableRefAsProp || "ref" !== propName) &&
         "__self" !== propName &&
         "__source" !== propName &&
-        (enableRefAsProp && "ref" === propName
+        ("ref" === propName
           ? (props.ref = coerceStringRef(config[propName], getOwner(), type))
           : (props[propName] = config[propName]));
   var childrenLength = arguments.length - 2;
@@ -561,7 +542,7 @@ exports.createElement = function (type, config, children) {
     for (propName in ((childrenLength = type.defaultProps), childrenLength))
       void 0 === props[propName] &&
         (props[propName] = childrenLength[propName]);
-  return ReactElement(type, key, ref, void 0, void 0, getOwner(), props);
+  return ReactElement(type, key, null, void 0, void 0, getOwner(), props);
 };
 exports.createRef = function () {
   return { current: null };
@@ -688,7 +669,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-classic-4dcdf21325-20240603";
+exports.version = "19.0.0-www-classic-a26e90c29c-20240604";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

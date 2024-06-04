@@ -81,7 +81,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableInfiniteRenderLoopDetection =
     dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-  enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
@@ -1571,11 +1570,8 @@ function unwrapThenable(thenable) {
   return trackUsedThenable(thenableState$1, thenable, index);
 }
 function coerceRef(returnFiber, current, workInProgress, element) {
-  enableRefAsProp
-    ? ((returnFiber = element.props.ref),
-      (returnFiber = void 0 !== returnFiber ? returnFiber : null))
-    : (returnFiber = element.ref);
-  workInProgress.ref = returnFiber;
+  returnFiber = element.props.ref;
+  workInProgress.ref = void 0 !== returnFiber ? returnFiber : null;
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
   if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
@@ -3714,7 +3710,7 @@ function resolveClassComponentProps(
   alreadyResolvedDefaultProps
 ) {
   var newProps = baseProps;
-  if (enableRefAsProp && "ref" in baseProps) {
+  if ("ref" in baseProps) {
     newProps = {};
     for (var propName in baseProps)
       "ref" !== propName && (newProps[propName] = baseProps[propName]);
@@ -4112,7 +4108,7 @@ function updateForwardRef(
 ) {
   Component = Component.render;
   var ref = workInProgress.ref;
-  if (enableRefAsProp && "ref" in nextProps) {
+  if ("ref" in nextProps) {
     var propsWithoutRef = {};
     for (var key in nextProps)
       "ref" !== key && (propsWithoutRef[key] = nextProps[key]);
@@ -10153,7 +10149,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-4dcdf21325-20240603",
+    version: "19.0.0-www-modern-a26e90c29c-20240604",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1357 = {
@@ -10184,7 +10180,7 @@ var internals$jscomp$inline_1357 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-4dcdf21325-20240603"
+  reconcilerVersion: "19.0.0-www-modern-a26e90c29c-20240604"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1358 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-var ReactVersion = '19.0.0-www-modern-4dcdf21325-20240603';
+var ReactVersion = '19.0.0-www-modern-a26e90c29c-20240604';
 
 // This refers to a WWW module.
 var warningWWW = require('warning');
@@ -74,7 +74,6 @@ var dynamicFeatureFlags = require('ReactFeatureFlags');
 var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
     enableUseDeferredValueInitialArg = dynamicFeatureFlags.enableUseDeferredValueInitialArg,
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-    enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
     disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
  // On WWW, true is used for a new modern build.
 
@@ -9918,7 +9917,7 @@ function finishClassComponent(request, task, keyPath, instance, Component, props
 function resolveClassComponentProps(Component, baseProps) {
   var newProps = baseProps;
 
-  if (enableRefAsProp) {
+  {
     // Remove ref from the props object, if it exists.
     if ('ref' in baseProps) {
       newProps = {};
@@ -10133,7 +10132,7 @@ function renderForwardRef(request, task, keyPath, type, props, ref) {
   task.componentStack = createFunctionComponentStack(task, type.render);
   var propsWithoutRef;
 
-  if (enableRefAsProp && 'ref' in props) {
+  if ('ref' in props) {
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
@@ -10570,14 +10569,12 @@ function renderNodeDestructive(request, task, node, childIndex) {
           var props = element.props;
           var ref;
 
-          if (enableRefAsProp) {
+          {
             // TODO: This is a temporary, intermediate step. Once the feature
             // flag is removed, we should get the ref off the props object right
             // before using it.
             var refProp = props.ref;
             ref = refProp !== undefined ? refProp : null;
-          } else {
-            ref = element.ref;
           }
 
           var name = getComponentNameFromType(type);

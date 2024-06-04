@@ -1035,21 +1035,6 @@ function getStackByFiberInDevAndProd(workInProgress) {
 
 var current = null;
 var isRendering = false;
-function getCurrentFiberOwnerNameInDevOrNull() {
-  {
-    if (current === null) {
-      return null;
-    }
-
-    var owner = current._debugOwner;
-
-    if (owner != null) {
-      return getComponentNameFromOwner(owner);
-    }
-  }
-
-  return null;
-}
 
 function getCurrentFiberStackInDev(stack) {
   {
@@ -5520,19 +5505,6 @@ function validateFragmentProps(element, fiber, returnFiber) {
         break;
       }
     }
-
-    if (element.ref !== null) {
-      if (fiber === null) {
-        // For unkeyed root fragments there's no Fiber. We create a fake one just for
-        // error stack handling.
-        fiber = createFiberFromElement(element, returnFiber.mode, 0);
-        fiber.return = returnFiber;
-      }
-
-      runWithFiberInDEV(fiber, function () {
-        error('Invalid attribute `ref` supplied to `React.Fragment`.');
-      });
-    }
   }
 }
 
@@ -5551,8 +5523,11 @@ function coerceRef(returnFiber, current, workInProgress, element) {
   var ref;
 
   {
-    // Old behavior.
-    ref = element.ref;
+    // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
+    // we should resolve the `ref` prop during the begin phase of the component
+    // it's attached to (HostComponent, ClassComponent, etc).
+    var refProp = element.props.ref;
+    ref = refProp !== undefined ? refProp : null;
   } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
   // should always read the ref from the prop.
 
@@ -11507,6 +11482,19 @@ function resolveClassComponentProps(Component, baseProps, // Only resolve defaul
 alreadyResolvedDefaultProps) {
   var newProps = baseProps;
 
+  {
+    // Remove ref from the props object, if it exists.
+    if ('ref' in baseProps) {
+      newProps = {};
+
+      for (var propName in baseProps) {
+        if (propName !== 'ref') {
+          newProps[propName] = baseProps[propName];
+        }
+      }
+    }
+  } // Resolve default props.
+
 
   var defaultProps = Component.defaultProps;
 
@@ -12134,7 +12122,6 @@ var didReceiveUpdate = false;
 var didWarnAboutBadClass;
 var didWarnAboutContextTypeOnFunctionComponent;
 var didWarnAboutGetDerivedStateOnFunctionComponent;
-var didWarnAboutFunctionRefs;
 var didWarnAboutReassigningProps;
 var didWarnAboutRevealOrder;
 var didWarnAboutTailOptions;
@@ -12144,7 +12131,6 @@ var didWarnAboutDefaultPropsOnFunctionComponent;
   didWarnAboutBadClass = {};
   didWarnAboutContextTypeOnFunctionComponent = {};
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
-  didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
   didWarnAboutRevealOrder = {};
   didWarnAboutTailOptions = {};
@@ -12193,7 +12179,21 @@ function updateForwardRef(current, workInProgress, Component, nextProps, renderL
   var ref = workInProgress.ref;
   var propsWithoutRef;
 
-  {
+  if ('ref' in nextProps) {
+    // `ref` is just a prop now, but `forwardRef` expects it to not appear in
+    // the props object. This used to happen in the JSX runtime, but now we do
+    // it here.
+    propsWithoutRef = {};
+
+    for (var key in nextProps) {
+      // Since `ref` should only appear in props via the JSX transform, we can
+      // assume that this is a plain object. So we don't need a
+      // hasOwnProperty check.
+      if (key !== 'ref') {
+        propsWithoutRef[key] = nextProps[key];
+      }
+    }
+  } else {
     propsWithoutRef = nextProps;
   } // The rest is a fork of updateFunctionComponent
 
@@ -13082,24 +13082,6 @@ function validateFunctionComponentInDev(workInProgress, Component) {
     if (Component) {
       if (Component.childContextTypes) {
         error('childContextTypes cannot be defined on a function component.\n' + '  %s.childContextTypes = ...', Component.displayName || Component.name || 'Component');
-      }
-    }
-
-    if (workInProgress.ref !== null) {
-      var info = '';
-      var componentName = getComponentNameFromType(Component) || 'Unknown';
-      var ownerName = getCurrentFiberOwnerNameInDevOrNull();
-
-      if (ownerName) {
-        info += '\n\nCheck the render method of `' + ownerName + '`.';
-      }
-
-      var warningKey = componentName + '|' + (ownerName || '');
-
-      if (!didWarnAboutFunctionRefs[warningKey]) {
-        didWarnAboutFunctionRefs[warningKey] = true;
-
-        error('Function components cannot be given refs. ' + 'Attempts to access this ref will fail. ' + 'Did you mean to use React.forwardRef()?%s', info);
       }
     }
 
@@ -23422,7 +23404,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-4dcdf21325-20240603';
+var ReactVersion = '19.0.0-www-classic-a26e90c29c-20240604';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

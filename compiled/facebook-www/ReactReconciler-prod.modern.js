@@ -1474,11 +1474,8 @@ module.exports = function ($$$config) {
     return trackUsedThenable(thenableState$1, thenable, index);
   }
   function coerceRef(returnFiber, current, workInProgress, element) {
-    enableRefAsProp
-      ? ((returnFiber = element.props.ref),
-        (returnFiber = void 0 !== returnFiber ? returnFiber : null))
-      : (returnFiber = element.ref);
-    workInProgress.ref = returnFiber;
+    returnFiber = element.props.ref;
+    workInProgress.ref = void 0 !== returnFiber ? returnFiber : null;
   }
   function throwOnInvalidObjectType(returnFiber, newChild) {
     if (newChild.$$typeof === REACT_LEGACY_ELEMENT_TYPE)
@@ -3381,7 +3378,7 @@ module.exports = function ($$$config) {
     alreadyResolvedDefaultProps
   ) {
     var newProps = baseProps;
-    if (enableRefAsProp && "ref" in baseProps) {
+    if ("ref" in baseProps) {
       newProps = {};
       for (var propName in baseProps)
         "ref" !== propName && (newProps[propName] = baseProps[propName]);
@@ -3790,7 +3787,7 @@ module.exports = function ($$$config) {
   ) {
     Component = Component.render;
     var ref = workInProgress.ref;
-    if (enableRefAsProp && "ref" in nextProps) {
+    if ("ref" in nextProps) {
       var propsWithoutRef = {};
       for (var key in nextProps)
         "ref" !== key && (propsWithoutRef[key] = nextProps[key]);
@@ -11043,7 +11040,6 @@ module.exports = function ($$$config) {
     enableInfiniteRenderLoopDetection =
       dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-    enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
     favorSafetyOverHydrationPerf =
       dynamicFeatureFlags.favorSafetyOverHydrationPerf,
     disableDefaultPropsExceptForClasses =
@@ -12178,7 +12174,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-4dcdf21325-20240603"
+      reconcilerVersion: "19.0.0-www-modern-a26e90c29c-20240604"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

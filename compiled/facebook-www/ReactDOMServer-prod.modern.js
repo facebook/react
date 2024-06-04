@@ -57,7 +57,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-  enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -3814,7 +3813,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
       var JSCompiler_inline_result = props;
-      if (enableRefAsProp && "ref" in props) {
+      if ("ref" in props) {
         JSCompiler_inline_result = {};
         for (var propName in props)
           "ref" !== propName &&
@@ -4179,7 +4178,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
             parent: task.componentStack,
             type: type.render
           };
-          if (enableRefAsProp && "ref" in props)
+          if ("ref" in props)
             for (contextType in ((defaultProps = {}), props))
               "ref" !== contextType &&
                 (defaultProps[contextType] = props[contextType]);
@@ -4279,18 +4278,15 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
           var type = node$jscomp$0.type,
             key = node$jscomp$0.key,
             props = node$jscomp$0.props;
-          enableRefAsProp
-            ? ((node$jscomp$0 = props.ref),
-              (node$jscomp$0 = void 0 !== node$jscomp$0 ? node$jscomp$0 : null))
-            : (node$jscomp$0 = node$jscomp$0.ref);
+          node$jscomp$0 = props.ref;
+          var ref = void 0 !== node$jscomp$0 ? node$jscomp$0 : null;
           var name = getComponentNameFromType(type),
             keyOrIndex =
               null == key ? (-1 === childIndex ? 0 : childIndex) : key;
           key = [task.keyPath, name, keyOrIndex];
           if (null !== task.replay)
             a: {
-              var ref = node$jscomp$0,
-                replay = task.replay;
+              var replay = task.replay;
               childIndex = replay.nodes;
               for (
                 node$jscomp$0 = 0;
@@ -4355,10 +4351,10 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                         )
                       );
                     b: {
-                      type = void 0;
-                      replay = node[5];
-                      name = node[2];
-                      ref = node[3];
+                      replay = void 0;
+                      type = node[5];
+                      ref = node[2];
+                      name = node[3];
                       keyOrIndex = null === node[4] ? [] : node[4][2];
                       node = null === node[4] ? null : node[4][3];
                       var previousComponentStack = task.componentStack,
@@ -4376,12 +4372,12 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                           fallbackAbortSet
                         );
                       resumedBoundary.parentFlushed = !0;
-                      resumedBoundary.rootSegmentID = replay;
+                      resumedBoundary.rootSegmentID = type;
                       task.blockedBoundary = resumedBoundary;
                       task.hoistableState = resumedBoundary.contentState;
                       task.replay = {
-                        nodes: name,
-                        slots: ref,
+                        nodes: ref,
+                        slots: name,
                         pendingTasks: 1
                       };
                       try {
@@ -4406,12 +4402,12 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                             request,
                             task.componentStack
                           )),
-                          (type = logRecoverableError(
+                          (replay = logRecoverableError(
                             request,
                             error,
                             childNodes
                           )),
-                          (resumedBoundary.errorDigest = type),
+                          (resumedBoundary.errorDigest = replay),
                           task.replay.pendingTasks--,
                           request.clientRenderedBoundaries.push(
                             resumedBoundary
@@ -4448,16 +4444,16 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                 }
               }
             }
-          else renderElement(request, task, key, type, props, node$jscomp$0);
+          else renderElement(request, task, key, type, props, ref);
           return;
         case REACT_PORTAL_TYPE:
           throw Error(formatProdErrorMessage(257));
         case REACT_LAZY_TYPE:
-          props = task.componentStack;
+          childNodes = task.componentStack;
           task.componentStack = createBuiltInComponentStack(task, "Lazy");
-          childNodes = node$jscomp$0._init;
-          node$jscomp$0 = childNodes(node$jscomp$0._payload);
-          task.componentStack = props;
+          props = node$jscomp$0._init;
+          node$jscomp$0 = props(node$jscomp$0._payload);
+          task.componentStack = childNodes;
           renderNodeDestructive(request, task, node$jscomp$0, childIndex);
           return;
       }
@@ -4466,20 +4462,20 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
         return;
       }
       null === node$jscomp$0 || "object" !== typeof node$jscomp$0
-        ? (props = null)
-        : ((props =
+        ? (childNodes = null)
+        : ((childNodes =
             (MAYBE_ITERATOR_SYMBOL && node$jscomp$0[MAYBE_ITERATOR_SYMBOL]) ||
             node$jscomp$0["@@iterator"]),
-          (props = "function" === typeof props ? props : null));
-      if (props && (props = props.call(node$jscomp$0))) {
-        node$jscomp$0 = props.next();
+          (childNodes = "function" === typeof childNodes ? childNodes : null));
+      if (childNodes && (childNodes = childNodes.call(node$jscomp$0))) {
+        node$jscomp$0 = childNodes.next();
         if (!node$jscomp$0.done) {
-          childNodes = [];
+          props = [];
           do
-            childNodes.push(node$jscomp$0.value),
-              (node$jscomp$0 = props.next());
+            props.push(node$jscomp$0.value),
+              (node$jscomp$0 = childNodes.next());
           while (!node$jscomp$0.done);
-          renderChildrenArray(request, task, childNodes, childIndex);
+          renderChildrenArray(request, task, props, childIndex);
         }
         return;
       }
@@ -5677,4 +5673,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-4dcdf21325-20240603";
+exports.version = "19.0.0-www-modern-a26e90c29c-20240604";

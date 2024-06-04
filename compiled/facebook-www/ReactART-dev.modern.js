@@ -60,7 +60,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = '19.0.0-www-modern-4dcdf21325-20240603';
+var ReactVersion = '19.0.0-www-modern-a26e90c29c-20240604';
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -155,7 +155,6 @@ var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
     enableInfiniteRenderLoopDetection = dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
     enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-    enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
     disableDefaultPropsExceptForClasses = dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
     enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache;
  // On WWW, true is used for a new modern build.
@@ -1106,21 +1105,6 @@ function getStackByFiberInDevAndProd(workInProgress) {
 
 var current = null;
 var isRendering = false;
-function getCurrentFiberOwnerNameInDevOrNull() {
-  {
-    if (current === null) {
-      return null;
-    }
-
-    var owner = current._debugOwner;
-
-    if (owner != null) {
-      return getComponentNameFromOwner(owner);
-    }
-  }
-
-  return null;
-}
 
 function getCurrentFiberStackInDev(stack) {
   {
@@ -6142,19 +6126,6 @@ function validateFragmentProps(element, fiber, returnFiber) {
         break;
       }
     }
-
-    if (!enableRefAsProp && element.ref !== null) {
-      if (fiber === null) {
-        // For unkeyed root fragments there's no Fiber. We create a fake one just for
-        // error stack handling.
-        fiber = createFiberFromElement(element, returnFiber.mode, 0);
-        fiber.return = returnFiber;
-      }
-
-      runWithFiberInDEV(fiber, function () {
-        error('Invalid attribute `ref` supplied to `React.Fragment`.');
-      });
-    }
   }
 }
 
@@ -6172,15 +6143,12 @@ function unwrapThenable(thenable) {
 function coerceRef(returnFiber, current, workInProgress, element) {
   var ref;
 
-  if (enableRefAsProp) {
+  {
     // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
     // we should resolve the `ref` prop during the begin phase of the component
     // it's attached to (HostComponent, ClassComponent, etc).
     var refProp = element.props.ref;
     ref = refProp !== undefined ? refProp : null;
-  } else {
-    // Old behavior.
-    ref = element.ref;
   } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
   // should always read the ref from the prop.
 
@@ -12355,7 +12323,7 @@ function resolveClassComponentProps(Component, baseProps, // Only resolve defaul
 alreadyResolvedDefaultProps) {
   var newProps = baseProps;
 
-  if (enableRefAsProp) {
+  {
     // Remove ref from the props object, if it exists.
     if ('ref' in baseProps) {
       newProps = {};
@@ -13067,7 +13035,6 @@ var didReceiveUpdate = false;
 var didWarnAboutBadClass;
 var didWarnAboutContextTypeOnFunctionComponent;
 var didWarnAboutGetDerivedStateOnFunctionComponent;
-var didWarnAboutFunctionRefs;
 var didWarnAboutReassigningProps;
 var didWarnAboutRevealOrder;
 var didWarnAboutTailOptions;
@@ -13077,7 +13044,6 @@ var didWarnAboutDefaultPropsOnFunctionComponent;
   didWarnAboutBadClass = {};
   didWarnAboutContextTypeOnFunctionComponent = {};
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
-  didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
   didWarnAboutRevealOrder = {};
   didWarnAboutTailOptions = {};
@@ -13126,7 +13092,7 @@ function updateForwardRef(current, workInProgress, Component, nextProps, renderL
   var ref = workInProgress.ref;
   var propsWithoutRef;
 
-  if (enableRefAsProp && 'ref' in nextProps) {
+  if ('ref' in nextProps) {
     // `ref` is just a prop now, but `forwardRef` expects it to not appear in
     // the props object. This used to happen in the JSX runtime, but now we do
     // it here.
@@ -14086,24 +14052,6 @@ function validateFunctionComponentInDev(workInProgress, Component) {
     if (Component) {
       if (Component.childContextTypes) {
         error('childContextTypes cannot be defined on a function component.\n' + '  %s.childContextTypes = ...', Component.displayName || Component.name || 'Component');
-      }
-    }
-
-    if (!enableRefAsProp && workInProgress.ref !== null) {
-      var info = '';
-      var componentName = getComponentNameFromType(Component) || 'Unknown';
-      var ownerName = getCurrentFiberOwnerNameInDevOrNull();
-
-      if (ownerName) {
-        info += '\n\nCheck the render method of `' + ownerName + '`.';
-      }
-
-      var warningKey = componentName + '|' + (ownerName || '');
-
-      if (!didWarnAboutFunctionRefs[warningKey]) {
-        didWarnAboutFunctionRefs[warningKey] = true;
-
-        error('Function components cannot be given refs. ' + 'Attempts to access this ref will fail. ' + 'Did you mean to use React.forwardRef()?%s', info);
       }
     }
 
