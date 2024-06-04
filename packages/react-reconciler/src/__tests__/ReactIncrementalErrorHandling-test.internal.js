@@ -289,7 +289,7 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('does not include offscreen work when retrying after an error', async () => {
     function App(props) {
       if (props.isBroken) {
