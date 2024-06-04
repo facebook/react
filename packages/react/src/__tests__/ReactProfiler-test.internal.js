@@ -10,6 +10,8 @@
 
 'use strict';
 
+import {enableDeferRootSchedulingToMicrotask} from 'shared/forks/ReactFeatureFlags.native-fb-dynamic';
+
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
@@ -170,8 +172,20 @@ describe(`onRender`, () => {
         'read current time',
         'read current time',
       ]);
+    } else if (gate(flags => !flags.enableDeferRootSchedulingToMicrotask)) {
+      assertLog([
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        'read current time',
+        // TODO: why is there one less in this case?
+      ]);
     } else {
       assertLog([
+        'read current time',
         'read current time',
         'read current time',
         'read current time',
