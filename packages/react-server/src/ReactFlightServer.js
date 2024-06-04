@@ -1215,12 +1215,25 @@ function renderFragment(
   if (task.keyPath !== null) {
     // We have a Server Component that specifies a key but we're now splitting
     // the tree using a fragment.
-    const fragment = [
-      REACT_ELEMENT_TYPE,
-      REACT_FRAGMENT_TYPE,
-      task.keyPath,
-      {children},
-    ];
+    const fragment = __DEV__
+      ? enableOwnerStacks
+        ? [
+            REACT_ELEMENT_TYPE,
+            REACT_FRAGMENT_TYPE,
+            task.keyPath,
+            {children},
+            null,
+            null,
+            0,
+          ]
+        : [
+            REACT_ELEMENT_TYPE,
+            REACT_FRAGMENT_TYPE,
+            task.keyPath,
+            {children},
+            null,
+          ]
+      : [REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE, task.keyPath, {children}];
     if (!task.implicitSlot) {
       // If this was keyed inside a set. I.e. the outer Server Component was keyed
       // then we need to handle reorders of the whole set. To do this we need to wrap
@@ -1274,12 +1287,25 @@ function renderAsyncFragment(
   if (task.keyPath !== null) {
     // We have a Server Component that specifies a key but we're now splitting
     // the tree using a fragment.
-    const fragment = [
-      REACT_ELEMENT_TYPE,
-      REACT_FRAGMENT_TYPE,
-      task.keyPath,
-      {children},
-    ];
+    const fragment = __DEV__
+      ? enableOwnerStacks
+        ? [
+            REACT_ELEMENT_TYPE,
+            REACT_FRAGMENT_TYPE,
+            task.keyPath,
+            {children},
+            null,
+            null,
+            0,
+          ]
+        : [
+            REACT_ELEMENT_TYPE,
+            REACT_FRAGMENT_TYPE,
+            task.keyPath,
+            {children},
+            null,
+          ]
+      : [REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE, task.keyPath, {children}];
     if (!task.implicitSlot) {
       // If this was keyed inside a set. I.e. the outer Server Component was keyed
       // then we need to handle reorders of the whole set. To do this we need to wrap
