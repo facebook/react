@@ -10,6 +10,11 @@
 
 'use strict';
 
+import {
+  allowConcurrentByDefault,
+  forceConcurrentByDefaultForTesting,
+} from 'shared/forks/ReactFeatureFlags.native-fb';
+
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
@@ -170,7 +175,7 @@ describe(`onRender`, () => {
         'read current time',
         'read current time',
       ]);
-    } else if (gate(flags => !flags.enableDeferRootSchedulingToMicrotask)) {
+    } else if (gate(flags => !flags.allowConcurrentByDefault)) {
       assertLog([
         'read current time',
         'read current time',
