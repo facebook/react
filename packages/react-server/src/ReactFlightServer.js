@@ -1220,6 +1220,11 @@ function renderFragment(
       REACT_FRAGMENT_TYPE,
       task.keyPath,
       {children},
+      // TODO: Pass debug stack and info?
+      __DEV__ ? null : undefined,
+      __DEV__ ? null : undefined,
+      // validated
+      __DEV__ ? 1 : undefined,
     ];
     if (!task.implicitSlot) {
       // If this was keyed inside a set. I.e. the outer Server Component was keyed
@@ -1279,6 +1284,11 @@ function renderAsyncFragment(
       REACT_FRAGMENT_TYPE,
       task.keyPath,
       {children},
+      // TODO: Pass debug stack and info?
+      __DEV__ ? null : undefined,
+      __DEV__ ? null : undefined,
+      // validated
+      __DEV__ ? 1 : undefined,
     ];
     if (!task.implicitSlot) {
       // If this was keyed inside a set. I.e. the outer Server Component was keyed
