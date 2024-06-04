@@ -31,7 +31,6 @@ export const {
   transitionLaneExpirationMs,
   enableInfiniteRenderLoopDetection,
   enableRenderableContext,
-  enableRefAsProp,
   favorSafetyOverHydrationPerf,
   disableDefaultPropsExceptForClasses,
   enableNoCloningMemoCache,
@@ -93,6 +92,8 @@ export const enableSuspenseCallback = true;
 export const enableLegacyHidden = true;
 
 export const enableComponentStackLocations = true;
+
+export const enableRefAsProp = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
