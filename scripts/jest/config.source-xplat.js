@@ -7,6 +7,7 @@ module.exports = Object.assign({}, baseConfig, {
     ...baseConfig.modulePathIgnorePatterns,
     'packages/react-devtools-extensions',
     'packages/react-devtools-shared',
+    'packages/react-dom',
     'ReactIncrementalPerf',
     'ReactIncrementalUpdatesMinimalism',
     'ReactIncrementalTriangle',
