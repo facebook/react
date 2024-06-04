@@ -9,7 +9,7 @@ function f() {
 
   const onClick = () => {
     dispatch();
-  }
+  };
 
   return <div onClick={onClick} />;
 }
@@ -52,6 +52,6 @@ export const FIXTURE_ENTRYPOINT = {
 };
 
 ```
-
+      
 ### Eval output
 (kind: ok) <div></div>
