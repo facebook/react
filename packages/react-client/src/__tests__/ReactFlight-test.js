@@ -68,10 +68,15 @@ let ErrorBoundary;
 let NoErrorExpected;
 let Scheduler;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
     jest.resetModules();
+    console.createTask = function fakeCreateTask(name) {
+      return {run: fn => fn()};
+    };
+
     jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
@@ -89,6 +94,7 @@ describe('ReactFlight', () => {
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -1133,23 +1139,20 @@ describe('ReactFlight', () => {
 
     const transport = ReactNoopFlightServer.render(<App />);
 
-    await expect(async () => {
-      await act(() => {
-        startTransition(() => {
-          ReactNoop.render(ReactNoopFlightClient.read(transport));
-        });
+    await act(() => {
+      startTransition(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
-    }).toErrorDev(
-      'Each child in a list should have a unique "key" prop.\n' +
-        '\n' +
-        'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.\n' +
-        '    in span (at **)\n' +
-        '    in Component (at **)\n' +
-        (gate(flags => flags.enableOwnerStacks)
-          ? ''
-          : '    in Indirection (at **)\n') +
-        '    in App (at **)',
-    );
+    });
+
+    assertConsoleErrorDev([
+      [
+        'Each child in a list should have a unique "key" prop.\n' +
+          '\n' +
+          'Check the render method of `Component`. See https://react.dev/link/warning-keys for more information.',
+        {withoutStack: gate(flags => flags.enableOwnerStacks)},
+      ],
+    ]);
   });
 
   it('should trigger the inner most error boundary inside a Client Component', async () => {
@@ -1408,22 +1411,27 @@ describe('ReactFlight', () => {
       return children;
     }
     const Parent = clientReference(ParentClient);
-    await expect(async () => {
-      const transport = ReactNoopFlightServer.render(
-        <Parent>{Array(6).fill(<div>no key</div>)}</Parent>,
-      );
-      ReactNoopFlightClient.read(transport);
-      await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
-      });
-    }).toErrorDev(
-      gate(flags => flags.enableOwnerStacks)
-        ? 'Each child in a list should have a unique "key" prop.' +
-            '\n\nCheck the top-level render call using <ParentClient>. ' +
-            'See https://react.dev/link/warning-keys for more information.'
-        : 'Each child in a list should have a unique "key" prop. ' +
-            'See https://react.dev/link/warning-keys for more information.',
+    const transport = ReactNoopFlightServer.render(
+      <Parent>{Array(6).fill(<div>no key</div>)}</Parent>,
     );
+    ReactNoopFlightClient.read(transport);
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+    assertConsoleErrorDev([
+      gate(flags => flags.enableOwnerStacks)
+        ? [
+            'Each child in a list should have a unique "key" prop.' +
+              '\n\nCheck the top-level render call using <ParentClient>. ' +
+              'See https://react.dev/link/warning-keys for more information.',
+            {withoutStack: true},
+          ]
+        : [
+            'Each child in a list should have a unique "key" prop. ' +
+              'See https://react.dev/link/warning-keys for more information.',
+            {withoutStack: false},
+          ],
+    ]);
   });
 
   it('should error if a class instance is passed to a host component', () => {
