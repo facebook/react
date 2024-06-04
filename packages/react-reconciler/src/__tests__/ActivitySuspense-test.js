@@ -140,7 +140,7 @@ describe('Activity Suspense', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   test('LegacyHidden does not handle suspense', async () => {
     const root = ReactNoop.createRoot();
 
