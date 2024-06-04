@@ -12,8 +12,13 @@ jest.mock('shared/ReactFeatureFlags', () => {
   );
 
   // Lots of tests use these, but we don't want to expose it to RN.
-  // Since the xplat tests run with the www entry points, these tests pass.
+  // Ideally, tests for xplat wouldn't use react-dom, but many of our tests do.
+  // Since the xplat tests run with the www entry points, some of these flags
+  // need to be set to the www value for the entrypoint, otherwise gating would
+  // fail due to the tests passing. Ideally, the www entry points for these APIs
+  // would be gated, and then these would fail correctly.
   actual.enableLegacyCache = true;
+  actual.enableLegacyHidden = true;
   actual.enableScopeAPI = true;
   actual.enableTaint = false;
 

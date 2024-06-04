@@ -13,7 +13,7 @@ module.exports = Object.assign({}, baseConfig, {
     'ReactIncrementalReflection',
     'forwardRef',
   ],
-  // RN configs should not run react-dom tests
+  // RN configs should not run react-dom tests.
   // There are many other tests that use react-dom
   // and for those we will use the www entrypoint,
   // but those tests should be migrated to Noop renderer.
