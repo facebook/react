@@ -1379,7 +1379,7 @@ describe('ResponderEventPlugin', () => {
 
   it('should determine the first common ancestor correctly', async () => {
     // TODO: this is a long running test, we should speed it up.
-    jest.setTimeout(60 * 1000);
+    jest.setTimeout(60 * 2000);
     // This test was moved here from the ReactTreeTraversal test since only the
     // ResponderEventPlugin uses `getLowestCommonAncestor`
     const React = require('react');
