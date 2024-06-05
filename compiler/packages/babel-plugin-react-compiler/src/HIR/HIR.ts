@@ -1498,12 +1498,43 @@ export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
 }
 
+export function isUseActionStateType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Object" && id.type.shapeId === "BuiltInUseActionState"
+  );
+}
+
+export function isSetActionStateType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Function" && id.type.shapeId === "BuiltInSetActionState"
+  );
+}
+
+export function isUseFormStateType(id: Identifier): boolean {
+  return id.type.kind === "Object" && id.type.shapeId === "BuiltInUseFormState";
+}
+
+export function isSetFormStateType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Function" && id.type.shapeId === "BuiltInSetFormState"
+  );
+}
+
 export function isUseReducerType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInUseReducer";
 }
 
 export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInDispatch";
+}
+
+export function isStableType(id: Identifier): boolean {
+  return (
+    isSetStateType(id) ||
+    isSetActionStateType(id) ||
+    isSetFormStateType(id) ||
+    isDispatcherType(id)
+  );
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {
