@@ -137,10 +137,41 @@ function isNotExternal(stackFrame: string): boolean {
   return !externalRegExp.test(stackFrame);
 }
 
+function prepareStackTrace(
+  error: Error,
+  structuredStackTrace: CallSite[],
+): string {
+  const name = error.name || 'Error';
+  const message = error.message || '';
+  let stack = name + ': ' + message;
+  for (let i = 0; i < structuredStackTrace.length; i++) {
+    stack += '\n    at ' + structuredStackTrace[i].toString();
+  }
+  return stack;
+}
+
+function getStack(error: Error): string {
+  // We override Error.prepareStackTrace with our own version that normalizes
+  // the stack to V8 formatting even if the server uses other formatting.
+  // It also ensures that source maps are NOT applied to this since that can
+  // be slow we're better off doing that lazily from the client instead of
+  // eagerly on the server. If the stack has already been read, then we might
+  // not get a normalized stack and it might still have been source mapped.
+  // So the client still needs to be resilient to this.
+  const previousPrepare = Error.prepareStackTrace;
+  Error.prepareStackTrace = prepareStackTrace;
+  try {
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    return String(error.stack);
+  } finally {
+    Error.prepareStackTrace = previousPrepare;
+  }
+}
+
 function initCallComponentFrame(): string {
   // Extract the stack frame of the callComponentInDEV function.
   const error = callComponentInDEV(Error, 'react-stack-top-frame', {});
-  const stack = error.stack;
+  const stack = getStack(error);
   const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
   const endIdx = stack.indexOf('\n', startIdx);
   if (endIdx === -1) {
@@ -155,7 +186,7 @@ function initCallIteratorFrame(): string {
     (callIteratorInDEV: any)({next: null});
     return '';
   } catch (error) {
-    const stack = error.stack;
+    const stack = getStack(error);
     const startIdx = stack.startsWith('TypeError: ')
       ? stack.indexOf('\n') + 1
       : 0;
@@ -174,7 +205,7 @@ function initCallLazyInitFrame(): string {
     _init: Error,
     _payload: 'react-stack-top-frame',
   });
-  const stack = error.stack;
+  const stack = getStack(error);
   const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
   const endIdx = stack.indexOf('\n', startIdx);
   if (endIdx === -1) {
@@ -188,7 +219,7 @@ function filterDebugStack(error: Error): string {
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
   // the DevTools or framework's ignore lists to filter them out.
-  let stack = error.stack;
+  let stack = getStack(error);
   if (stack.startsWith('Error: react-stack-top-frame\n')) {
     // V8's default formatting prefixes with the error message which we
     // don't want/need.
@@ -2601,8 +2632,7 @@ function emitPostponeChunk(
     try {
       // eslint-disable-next-line react-internal/safe-string-coercion
       reason = String(postponeInstance.message);
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      stack = String(postponeInstance.stack);
+      stack = getStack(postponeInstance);
     } catch (x) {}
     row = serializeRowHeader('P', id) + stringify({reason, stack}) + '\n';
   } else {
@@ -2627,8 +2657,7 @@ function emitErrorChunk(
       if (error instanceof Error) {
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
-        // eslint-disable-next-line react-internal/safe-string-coercion
-        stack = String(error.stack);
+        stack = getStack(error);
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
       } else {
