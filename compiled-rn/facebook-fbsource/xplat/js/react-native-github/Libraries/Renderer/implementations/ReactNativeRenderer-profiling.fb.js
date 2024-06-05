@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<03d441a2dc0b0281f69675b3507dc5a9>>
+ * @generated SignedSource<<5a4862d7f4f304ebd64732220dea56c6>>
  */
 
 "use strict";
@@ -11441,11 +11441,11 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     traverseOwnerTreeUp(hierarchy, instance);
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-rc-d2767c96e8-20240604" !== isomorphicReactPackageVersion)
+if ("19.0.0-rc-1df34bdf62-20240605" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-rc-d2767c96e8-20240604\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-rc-1df34bdf62-20240605\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11495,7 +11495,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1274 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-rc-d2767c96e8-20240604",
+    version: "19.0.0-rc-1df34bdf62-20240605",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11551,7 +11551,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-d2767c96e8-20240604"
+  reconcilerVersion: "19.0.0-rc-1df34bdf62-20240605"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
