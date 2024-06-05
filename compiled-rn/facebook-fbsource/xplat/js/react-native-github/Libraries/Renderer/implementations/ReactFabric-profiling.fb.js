@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5618516a88154482ba6491c354793ce2>>
+ * @generated SignedSource<<fcfb86ff11e1edbd7f3bbf8964624064>>
  */
 
 "use strict";
@@ -979,6 +979,7 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
     dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
   enableInfiniteRenderLoopDetection =
     dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
+  enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   emptyObject$1 = {},
@@ -1147,14 +1148,15 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
               (updatePayload[propKey] = attributeConfig);
         }
       else if (prevProp !== nextProp)
-        if ("object" !== typeof attributeConfig)
-          defaultDiffer(prevProp, nextProp) &&
-            ((updatePayload || (updatePayload = {}))[propKey] = nextProp);
-        else if (
+        if ("object" !== typeof attributeConfig) {
+          if (enableShallowPropDiffing || defaultDiffer(prevProp, nextProp))
+            (updatePayload || (updatePayload = {}))[propKey] = nextProp;
+        } else if (
           "function" === typeof attributeConfig.diff ||
           "function" === typeof attributeConfig.process
         ) {
           if (
+            enableShallowPropDiffing ||
             void 0 === prevProp ||
             ("function" === typeof attributeConfig.diff
               ? attributeConfig.diff(prevProp, nextProp)
@@ -11295,7 +11297,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1206 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-8d87e374ac-20240605",
+    version: "19.0.0-rc-eb259b5d3b-20240605",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11351,7 +11353,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-8d87e374ac-20240605"
+  reconcilerVersion: "19.0.0-rc-eb259b5d3b-20240605"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

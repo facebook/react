@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<082338327f5d8b3d9083c45ada0fc89f>>
+ * @generated SignedSource<<d52db7df4a1972dcf0d2e7369a62a18b>>
  */
 
 "use strict";
@@ -975,6 +975,7 @@ var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
     dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
   enableInfiniteRenderLoopDetection =
     dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
+  enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
   emptyObject$1 = {},
@@ -1143,14 +1144,15 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
               (updatePayload[propKey] = attributeConfig);
         }
       else if (prevProp !== nextProp)
-        if ("object" !== typeof attributeConfig)
-          defaultDiffer(prevProp, nextProp) &&
-            ((updatePayload || (updatePayload = {}))[propKey] = nextProp);
-        else if (
+        if ("object" !== typeof attributeConfig) {
+          if (enableShallowPropDiffing || defaultDiffer(prevProp, nextProp))
+            (updatePayload || (updatePayload = {}))[propKey] = nextProp;
+        } else if (
           "function" === typeof attributeConfig.diff ||
           "function" === typeof attributeConfig.process
         ) {
           if (
+            enableShallowPropDiffing ||
             void 0 === prevProp ||
             ("function" === typeof attributeConfig.diff
               ? attributeConfig.diff(prevProp, nextProp)
@@ -10589,7 +10591,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1125 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-8d87e374ac-20240605",
+    version: "19.0.0-rc-eb259b5d3b-20240605",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10632,7 +10634,7 @@ var internals$jscomp$inline_1351 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-8d87e374ac-20240605"
+  reconcilerVersion: "19.0.0-rc-eb259b5d3b-20240605"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1352 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

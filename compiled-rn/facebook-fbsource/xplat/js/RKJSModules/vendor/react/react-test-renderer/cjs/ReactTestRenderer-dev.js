@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fa7cd5d97506f1bb69c87f488d89be8b>>
+ * @generated SignedSource<<ea78b2c848505f4463e69d15c9fab311>>
  */
 
 'use strict';
@@ -34,7 +34,7 @@ var enableLazyContextPropagation = false;
 var enableLegacyHidden = false;
 var enableAsyncActions = true;
 var disableLegacyMode = false;
-var enableOwnerStacks = false; // Flow magic to verify the exports of this file match the original version.
+var enableOwnerStacks = false;
 
 // by calls to these methods by a Babel plugin.
 //
@@ -23580,7 +23580,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-native-fb-8d87e374ac-20240605';
+var ReactVersion = '19.0.0-native-fb-eb259b5d3b-20240605';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

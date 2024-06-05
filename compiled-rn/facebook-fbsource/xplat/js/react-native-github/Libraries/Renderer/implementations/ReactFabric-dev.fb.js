@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<df2d3b83d063ac15c59e3e2b63766572>>
+ * @generated SignedSource<<14847709597e1765b7a5521ad085419c>>
  */
 
 'use strict';
@@ -40,6 +40,7 @@ var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
     enableAddPropertiesFastPath = dynamicFlags.enableAddPropertiesFastPath,
     enableDeferRootSchedulingToMicrotask = dynamicFlags.enableDeferRootSchedulingToMicrotask,
     enableInfiniteRenderLoopDetection = dynamicFlags.enableInfiniteRenderLoopDetection,
+    enableShallowPropDiffing = dynamicFlags.enableShallowPropDiffing,
     passChildrenWhenCloningPersistedNodes = dynamicFlags.passChildrenWhenCloningPersistedNodes; // The rest of the flags are static for better dead code elimination.
 var enableAsyncActions = true;
 var enableSchedulingProfiler = true;
@@ -2284,13 +2285,13 @@ function diffProperties(updatePayload, prevProps, nextProps, validAttributes) {
 
     if (typeof attributeConfig !== 'object') {
       // case: !Object is the default case
-      if (defaultDiffer(prevProp, nextProp)) {
+      if (enableShallowPropDiffing || defaultDiffer(prevProp, nextProp)) {
         // a normal leaf has changed
         (updatePayload || (updatePayload = {}))[propKey] = nextProp;
       }
     } else if (typeof attributeConfig.diff === 'function' || typeof attributeConfig.process === 'function') {
       // case: CustomAttributeConfiguration
-      var shouldUpdate = prevProp === undefined || (typeof attributeConfig.diff === 'function' ? attributeConfig.diff(prevProp, nextProp) : defaultDiffer(prevProp, nextProp));
+      var shouldUpdate = enableShallowPropDiffing || prevProp === undefined || (typeof attributeConfig.diff === 'function' ? attributeConfig.diff(prevProp, nextProp) : defaultDiffer(prevProp, nextProp));
 
       if (shouldUpdate) {
         var _nextValue = typeof attributeConfig.process === 'function' ? // $FlowFixMe[incompatible-use] found when upgrading Flow
@@ -26315,7 +26316,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-8d87e374ac-20240605';
+var ReactVersion = '19.0.0-rc-eb259b5d3b-20240605';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
