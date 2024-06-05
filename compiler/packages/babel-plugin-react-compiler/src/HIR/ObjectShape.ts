@@ -118,6 +118,8 @@ function addShape(
 export type HookKind =
   | "useContext"
   | "useState"
+  | "useActionState"
+  | "useFormState"
   | "useReducer"
   | "useRef"
   | "useEffect"
@@ -195,6 +197,10 @@ export const BuiltInJsxId = "BuiltInJsx";
 export const BuiltInObjectId = "BuiltInObject";
 export const BuiltInUseStateId = "BuiltInUseState";
 export const BuiltInSetStateId = "BuiltInSetState";
+export const BuiltInUseActionStateId = "BuiltInUseActionState";
+export const BuiltInSetActionStateId = "BuiltInSetActionState";
+export const BuiltInUseFormStateId = "BuiltInUseFormState";
+export const BuiltInSetFormStateId = "BuiltInSetFormState";
 export const BuiltInUseRefId = "BuiltInUseRefId";
 export const BuiltInRefValueId = "BuiltInRefValue";
 export const BuiltInMixedReadonlyId = "BuiltInMixedReadonly";
@@ -392,6 +398,44 @@ addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
         returnValueKind: ValueKind.Primitive,
       },
       BuiltInSetStateId
+    ),
+  ],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInUseActionStateId, [
+  ["0", { kind: "Poly" }],
+  [
+    "1",
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInSetActionStateId
+    ),
+  ],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInUseFormStateId, [
+  ["0", { kind: "Poly" }],
+  [
+    "1",
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInSetFormStateId
     ),
   ],
 ]);
