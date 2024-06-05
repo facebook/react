@@ -25,7 +25,7 @@
   "dependencies": {
     "cross-spawn": "^5.0.1",
     "electron": "^23.1.2",
-    "ip": "^1.1.4",
+    "ip": "^2.0.1",
     "minimist": "^1.2.3",
     "react-devtools-core": "5.2.0",
     "update-notifier": "^2.1.0"
