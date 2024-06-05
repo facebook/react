@@ -1568,6 +1568,7 @@ function getConstructionExpressionType(node) {
     case 'TypeCastExpression':
     case 'AsExpression':
     case 'TSAsExpression':
+    case 'TSSatisfiesExpression':
       return getConstructionExpressionType(node.expression);
   }
   return null;

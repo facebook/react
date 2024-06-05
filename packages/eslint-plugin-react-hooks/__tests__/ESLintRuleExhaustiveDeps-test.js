@@ -8184,6 +8184,41 @@ const testsTypescriptEslintParserV4 = {
   ],
 };
 
+const testsTypescriptEslintParserV5 = {
+  valid: [
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const dependencies = useMemo(() => [1, 2, 3] satisfies Array<any>, []);
+          useEffect(() => {
+            console.log(dependencies);
+          }, [dependencies]);
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = [] satisfies Array<any>;
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' array makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+  ],
+};
+
 // For easier local testing
 if (!process.env.CI) {
   let only = [];
@@ -8197,6 +8232,8 @@ if (!process.env.CI) {
     ...testsTypescript.invalid,
     ...testsTypescriptEslintParserV4.valid,
     ...testsTypescriptEslintParserV4.invalid,
+    ...testsTypescriptEslintParserV5.valid,
+    ...testsTypescriptEslintParserV5.invalid,
   ].forEach(t => {
     if (t.skip) {
       delete t.skip;
@@ -8354,15 +8391,17 @@ describe('rules-of-hooks/exhaustive-deps', () => {
     parser: require.resolve('@typescript-eslint/parser-v5'),
     parserOptions: parserOptionsV7,
   }).run(
-    'eslint: v7, parser: @typescript-eslint/parser@^5.0.0-0',
+    'eslint: v7, parser: @typescript-eslint/parser@^5.45.0',
     ReactHooksESLintRule,
     {
       valid: [
         ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParserV5.valid,
         ...testsTypescriptEslintParser.valid,
       ],
       invalid: [
         ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParserV5.invalid,
         ...testsTypescriptEslintParser.invalid,
       ],
     }
@@ -8374,15 +8413,17 @@ describe('rules-of-hooks/exhaustive-deps', () => {
       parser: require('@typescript-eslint/parser-v5'),
     },
   }).run(
-    'eslint: v9, parser: @typescript-eslint/parser@^5.0.0-0',
+    'eslint: v9, parser: @typescript-eslint/parser@^5.45.0',
     ReactHooksESLintRule,
     {
       valid: [
         ...testsTypescriptEslintParserV4.valid,
+        ...testsTypescriptEslintParserV5.valid,
         ...testsTypescriptEslintParser.valid,
       ],
       invalid: [
         ...testsTypescriptEslintParserV4.invalid,
+        ...testsTypescriptEslintParserV5.invalid,
         ...testsTypescriptEslintParser.invalid,
       ],
     }
