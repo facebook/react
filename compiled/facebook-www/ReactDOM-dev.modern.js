@@ -130,7 +130,7 @@ var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 var enableAsyncIterableChildren = false;
 var enableSuspenseCallback = true;
 var disableLegacyMode = true;
-var enableOwnerStacks = false; // Flow magic to verify the exports of this file match the original version.
+var enableOwnerStacks = false;
 
 var FunctionComponent = 0;
 var ClassComponent = 1;
@@ -30315,7 +30315,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-a26e90c29c-20240604';
+var ReactVersion = '19.0.0-www-modern-eb259b5d3b-20240605';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
