@@ -2117,6 +2117,8 @@ function getWriteErrorReason(abstractValue: AbstractValue): string {
     return "Mutating component props or hook arguments is not allowed. Consider using a local variable instead";
   } else if (abstractValue.reason.has(ValueReason.State)) {
     return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
+  } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
+    return "Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead";
   } else {
     return "This mutates a variable that React considers immutable";
   }
