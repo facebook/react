@@ -10,7 +10,7 @@
 
 const {diff, create} = require('../ReactNativeAttributePayloadFabric');
 
-describe('ReactNativeAttributePayload.create', () => {
+describe('ReactNativeAttributePayloadFabric.create', () => {
   it('should work with simple example', () => {
     expect(create({b: 2, c: 3}, {a: true, b: true})).toEqual({
       b: 2,
@@ -171,7 +171,7 @@ describe('ReactNativeAttributePayload.create', () => {
   });
 });
 
-describe('ReactNativeAttributePayload.diff', () => {
+describe('ReactNativeAttributePayloadFabric.diff', () => {
   it('should work with simple example', () => {
     expect(diff({a: 1, c: 3}, {b: 2, c: 3}, {a: true, b: true})).toEqual({
       a: null,
@@ -201,6 +201,7 @@ describe('ReactNativeAttributePayload.diff', () => {
     expect(diff({a: 1}, {b: 2}, {})).toEqual(null);
   });
 
+  // @gate !enableShallowPropDiffing
   it('should use the diff attribute', () => {
     const diffA = jest.fn((a, b) => true);
     const diffB = jest.fn((a, b) => false);
@@ -225,6 +226,7 @@ describe('ReactNativeAttributePayload.diff', () => {
     expect(diffB).not.toBeCalled();
   });
 
+  // @gate !enableShallowPropDiffing
   it('should do deep diffs of Objects by default', () => {
     expect(
       diff(
@@ -422,6 +424,7 @@ describe('ReactNativeAttributePayload.diff', () => {
     ).toEqual(null);
   });
 
+  // @gate !enableShallowPropDiffing
   it('should skip deeply-nested changed functions', () => {
     expect(
       diff(

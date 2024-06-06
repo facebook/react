@@ -26,6 +26,7 @@ export const {
   enableDeferRootSchedulingToMicrotask,
   enableFastJSX,
   enableInfiniteRenderLoopDetection,
+  enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
 } = dynamicFlags;
 

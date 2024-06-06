@@ -42,9 +42,25 @@ export interface Destination {
   onError(error: mixed): void;
 }
 
-export function scheduleWork(callback: () => void) {
-  callback();
+function handleErrorInNextTick(error: any) {
+  setTimeout(() => {
+    throw error;
+  });
 }
+
+const LocalPromise = Promise;
+
+/**
+ * Since this environment doesn't have a way to schedule tasks from JS we schedule
+ * using a microtask instead. This isn't necessarily ideal since we would like to give
+ * other IO a chance to run before performing work typically but it's the best we can
+ * do in this environment
+ */
+export function scheduleWork(callback: () => void) {
+  LocalPromise.resolve().then(callback).catch(handleErrorInNextTick);
+}
+
+export const scheduleMicrotask: (callback: () => void) => void = scheduleWork;
 
 export function beginWriting(destination: Destination) {
   destination.beginWriting();

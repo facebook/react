@@ -172,7 +172,7 @@ export default class Store extends EventEmitter<{
   _rootIDToRendererID: Map<number, number> = new Map();
 
   // These options may be initially set by a configuration option when constructing the Store.
-  _supportsNativeInspection: boolean = true;
+  _supportsNativeInspection: boolean = false;
   _supportsReloadAndProfile: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
@@ -216,7 +216,9 @@ export default class Store extends EventEmitter<{
         supportsTimeline,
         supportsTraceUpdates,
       } = config;
-      this._supportsNativeInspection = supportsNativeInspection !== false;
+      if (supportsNativeInspection) {
+        this._supportsNativeInspection = true;
+      }
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
       }

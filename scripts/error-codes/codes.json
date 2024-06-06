@@ -514,5 +514,6 @@
   "526": "Could not reference an opaque temporary reference. This is likely due to misconfiguring the temporaryReferences options on the server.",
   "527": "Incompatible React versions: The \"react\" and \"react-dom\" packages must have the exact same version. Instead got:\n  - react:      %s\n  - react-dom:  %s\nLearn more: https://react.dev/warnings/version-mismatch",
   "528": "Expected <link> not to update to be updated to a stylesheet with precedence. Check the `rel`, `href`, and `precedence` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.%s",
-  "529": "Expected stylesheet with precedence to not be updated to a different kind of <link>. Check the `rel`, `href`, and `precedence` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.%s"
+  "529": "Expected stylesheet with precedence to not be updated to a different kind of <link>. Check the `rel`, `href`, and `precedence` props of this component. Alternatively, check whether two different <link> components render in the same slot or share the same key.%s",
+  "530": "The render was aborted by the server with a promise."
 }

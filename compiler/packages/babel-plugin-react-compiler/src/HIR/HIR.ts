@@ -1262,6 +1262,11 @@ export enum ValueReason {
   State = "state",
 
   /**
+   * A value returned from `useReducer`
+   */
+  ReducerState = "reducer-state",
+
+  /**
    * Props of a component or arguments of a hook.
    */
   ReactiveFunctionArgument = "reactive-function-argument",
@@ -1498,6 +1503,14 @@ export function isUseStateType(id: Identifier): boolean {
 
 export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
+}
+
+export function isUseReducerType(id: Identifier): boolean {
+  return id.type.kind === "Function" && id.type.shapeId === "BuiltInUseReducer";
+}
+
+export function isDispatcherType(id: Identifier): boolean {
+  return id.type.kind === "Function" && id.type.shapeId === "BuiltInDispatch";
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

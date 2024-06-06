@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {patchMessageChannel} from '../../../../scripts/jest/patchMessageChannel';
+
 describe('ReactMismatchedVersions-test', () => {
   // Polyfills for test environment
   global.ReadableStream =
@@ -20,6 +22,9 @@ describe('ReactMismatchedVersions-test', () => {
 
   beforeEach(() => {
     jest.resetModules();
+
+    patchMessageChannel();
+
     jest.mock('react', () => {
       const actualReact = jest.requireActual('react');
       return {
