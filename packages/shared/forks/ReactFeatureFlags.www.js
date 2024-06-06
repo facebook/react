@@ -122,6 +122,7 @@ export const disableStringRefs = false;
 export const disableLegacyMode = __EXPERIMENTAL__;
 
 export const enableOwnerStacks = false;
+export const enableShallowPropDiffing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

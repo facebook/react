@@ -13,6 +13,7 @@ import {
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
   BuiltInUseOperatorId,
+  BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
   ShapeRegistry,
@@ -263,6 +264,18 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       hookKind: "useState",
       returnValueKind: ValueKind.Frozen,
       returnValueReason: ValueReason.State,
+    }),
+  ],
+  [
+    "useReducer",
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Object", shapeId: BuiltInUseReducerId },
+      calleeEffect: Effect.Read,
+      hookKind: "useReducer",
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.ReducerState,
     }),
   ],
   [
