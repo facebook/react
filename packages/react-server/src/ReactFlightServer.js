@@ -26,6 +26,7 @@ import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
+  scheduleMicrotask,
   flushBuffered,
   beginWriting,
   writeChunkAndReturn,
@@ -1571,7 +1572,7 @@ function pingTask(request: Request, task: Task): void {
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
-    scheduleWork(() => performWork(request));
+    scheduleMicrotask(() => performWork(request));
   }
 }
 
@@ -3506,9 +3507,14 @@ function enqueueFlush(request: Request): void {
     // happen when we start flowing again
     request.destination !== null
   ) {
-    const destination = request.destination;
     request.flushScheduled = true;
-    scheduleWork(() => flushCompletedChunks(request, destination));
+    scheduleWork(() => {
+      request.flushScheduled = false;
+      const destination = request.destination;
+      if (destination) {
+        flushCompletedChunks(request, destination);
+      }
+    });
   }
 }
 

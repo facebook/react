@@ -31,7 +31,8 @@ export default function BabelPluginReactCompiler(
       Program(prog, pass): void {
         let opts = parsePluginOptions(pass.opts);
         const isDev =
-          __DEV__ === true || process.env["NODE_ENV"] === "development";
+          (typeof __DEV__ !== "undefined" && __DEV__ === true) ||
+          process.env["NODE_ENV"] === "development";
         if (
           opts.enableReanimatedCheck === true &&
           pipelineUsesReanimatedPlugin(pass.file.opts.plugins)

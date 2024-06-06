@@ -74,6 +74,9 @@ function write(destination: Destination, buffer: Uint8Array): void {
 }
 
 const ReactNoopServer = ReactFizzServer({
+  scheduleMicrotask(callback: () => void) {
+    callback();
+  },
   scheduleWork(callback: () => void) {
     callback();
   },
