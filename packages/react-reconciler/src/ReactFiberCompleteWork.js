@@ -152,7 +152,6 @@ import {
   getRenderTargetTime,
   getWorkInProgressTransitions,
   shouldRemainOnPreviousScreen,
-  getWorkInProgressRootRenderLanes,
 } from './ReactFiberWorkLoop';
 import {
   OffscreenLane,
@@ -161,7 +160,6 @@ import {
   includesSomeLane,
   mergeLanes,
   claimNextRetryLane,
-  includesOnlyNonUrgentLanes,
 } from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
@@ -534,41 +532,15 @@ function preloadInstanceAndSuspendIfNeeded(
   // loaded yet.
   workInProgress.flags |= MaySuspendCommit;
 
-  // Check if we're rendering at a "non-urgent" priority. This is the same
-  // check that `useDeferredValue` does to determine whether it needs to
-  // defer. This is partly for gradual adoption purposes (i.e. shouldn't start
-  // suspending until you opt in with startTransition or Suspense) but it
-  // also happens to be the desired behavior for the concrete use cases we've
-  // thought of so far, like CSS loading, fonts, images, etc.
-  //
-  // We check the "root" render lanes here rather than the "subtree" render
-  // because during a retry or offscreen prerender, the "subtree" render
-  // lanes may include additional "base" lanes that were deferred during
-  // a previous render.
-  // TODO: We may decide to expose a way to force a fallback even during a
-  // sync update.
-  const rootRenderLanes = getWorkInProgressRootRenderLanes();
-  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) {
-    // This is an urgent render. Don't suspend or show a fallback. Also,
-    // there's no need to preload, because we're going to commit this
-    // synchronously anyway.
-    // TODO: Could there be benefit to preloading even during a synchronous
-    // render? The main thread will be blocked until the commit phase, but
-    // maybe the browser would be able to start loading off thread anyway?
-    // Likely a micro-optimization either way because typically new content
-    // is loaded during a transition, not an urgent render.
-  } else {
-    // Preload the instance
-    const isReady = preloadInstance(type, props);
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen()) {
-        // It's OK to suspend. Mark the fiber so we know to suspend before the
-        // commit phase. Then continue rendering.
-        workInProgress.flags |= ShouldSuspendCommit;
-      } else {
-        // Trigger a fallback rather than block the render.
-        suspendCommit();
-      }
+  // preload the instance if necessary. Even if this is an urgent render there
+  // could be benefits to preloading early.
+  // @TODO we should probably do the preload in begin work
+  const isReady = preloadInstance(type, props);
+  if (!isReady) {
+    if (shouldRemainOnPreviousScreen()) {
+      workInProgress.flags |= ShouldSuspendCommit;
+    } else {
+      suspendCommit();
     }
   }
 }
@@ -588,17 +560,12 @@ function preloadResourceAndSuspendIfNeeded(
 
   workInProgress.flags |= MaySuspendCommit;
 
-  const rootRenderLanes = getWorkInProgressRootRenderLanes();
-  if (!includesOnlyNonUrgentLanes(rootRenderLanes)) {
-    // This is an urgent render. Don't suspend or show a fallback.
-  } else {
-    const isReady = preloadResource(resource);
-    if (!isReady) {
-      if (shouldRemainOnPreviousScreen()) {
-        workInProgress.flags |= ShouldSuspendCommit;
-      } else {
-        suspendCommit();
-      }
+  const isReady = preloadResource(resource);
+  if (!isReady) {
+    if (shouldRemainOnPreviousScreen()) {
+      workInProgress.flags |= ShouldSuspendCommit;
+    } else {
+      suspendCommit();
     }
   }
 }
@@ -1085,7 +1052,6 @@ function completeWork(
             return null;
           } else {
             // This is a Hoistable Instance
-
             // This must come at the very end of the complete phase.
             bubbleProperties(workInProgress);
             preloadInstanceAndSuspendIfNeeded(
@@ -1097,21 +1063,18 @@ function completeWork(
             return null;
           }
         } else {
-          // We are updating.
-          const currentResource = current.memoizedState;
-          if (nextResource !== currentResource) {
-            // We are transitioning to, from, or between Hoistable Resources
-            // and require an update
-            markUpdate(workInProgress);
-          }
-          if (nextResource !== null) {
-            // This is a Hoistable Resource
-            // This must come at the very end of the complete phase.
-
-            bubbleProperties(workInProgress);
-            if (nextResource === currentResource) {
-              workInProgress.flags &= ~MaySuspendCommit;
-            } else {
+          // This is an update.
+          if (nextResource) {
+            // This is a Resource
+            if (nextResource !== current.memoizedState) {
+              // we have a new Resource. we need to update
+              markUpdate(workInProgress);
+              // This must come at the very end of the complete phase.
+              bubbleProperties(workInProgress);
+              // This must come at the very end of the complete phase, because it might
+              // throw to suspend, and if the resource immediately loads, the work loop
+              // will resume rendering as if the work-in-progress completed. So it must
+              // fully complete.
               preloadResourceAndSuspendIfNeeded(
                 workInProgress,
                 nextResource,
@@ -1119,10 +1082,15 @@ function completeWork(
                 newProps,
                 renderLanes,
               );
+              return null;
+            } else {
+              // This must come at the very end of the complete phase.
+              bubbleProperties(workInProgress);
+              workInProgress.flags &= ~MaySuspendCommit;
+              return null;
             }
-            return null;
           } else {
-            // This is a Hoistable Instance
+            // This is an Instance
             // We may have props to update on the Hoistable instance.
             if (supportsMutation) {
               const oldProps = current.memoizedProps;
@@ -1140,7 +1108,6 @@ function completeWork(
                 renderLanes,
               );
             }
-
             // This must come at the very end of the complete phase.
             bubbleProperties(workInProgress);
             preloadInstanceAndSuspendIfNeeded(

@@ -87,6 +87,7 @@ import {
 import {ConcurrentRoot} from './ReactRootTags';
 import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
 import {REACT_POSTPONE_TYPE} from 'shared/ReactSymbols';
+import {runWithFiberInDEV} from './ReactCurrentFiber';
 
 function createRootErrorUpdate(
   root: FiberRoot,
@@ -100,7 +101,11 @@ function createRootErrorUpdate(
   // being called "element".
   update.payload = {element: null};
   update.callback = () => {
-    logUncaughtError(root, errorInfo);
+    if (__DEV__) {
+      runWithFiberInDEV(errorInfo.source, logUncaughtError, root, errorInfo);
+    } else {
+      logUncaughtError(root, errorInfo);
+    }
   };
   return update;
 }
@@ -127,7 +132,17 @@ function initializeClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
-      logCaughtError(root, fiber, errorInfo);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          errorInfo.source,
+          logCaughtError,
+          root,
+          fiber,
+          errorInfo,
+        );
+      } else {
+        logCaughtError(root, fiber, errorInfo);
+      }
     };
   }
 
@@ -138,7 +153,17 @@ function initializeClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
-      logCaughtError(root, fiber, errorInfo);
+      if (__DEV__) {
+        runWithFiberInDEV(
+          errorInfo.source,
+          logCaughtError,
+          root,
+          fiber,
+          errorInfo,
+        );
+      } else {
+        logCaughtError(root, fiber, errorInfo);
+      }
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.

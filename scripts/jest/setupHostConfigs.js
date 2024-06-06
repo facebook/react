@@ -77,7 +77,7 @@ function mockReact() {
   jest.mock('react', () => {
     const resolvedEntryPoint = resolveEntryFork(
       require.resolve('react'),
-      global.__WWW__
+      global.__WWW__ || global.__XPLAT__
     );
     return jest.requireActual(resolvedEntryPoint);
   });
@@ -100,7 +100,7 @@ jest.mock('react/react.react-server', () => {
   });
   const resolvedEntryPoint = resolveEntryFork(
     require.resolve('react/src/ReactServer'),
-    global.__WWW__
+    global.__WWW__ || global.__XPLAT__
   );
   return jest.requireActual(resolvedEntryPoint);
 });
@@ -198,7 +198,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
       mockAllConfigs(rendererInfo);
       const resolvedEntryPoint = resolveEntryFork(
         require.resolve(entryPoint),
-        global.__WWW__
+        global.__WWW__ || global.__XPLAT__
       );
       return jest.requireActual(resolvedEntryPoint);
     });

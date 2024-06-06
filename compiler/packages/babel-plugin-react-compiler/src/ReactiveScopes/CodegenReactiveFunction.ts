@@ -81,18 +81,21 @@ export function codegenFunction(
   );
 
   /**
-   * Hot-module reloading reuses component instances at runtime even as the source of the component changes.
+   * Fast Refresh reuses component instances at runtime even as the source of the component changes.
    * The generated code needs to prevent values from one version of the code being reused after a code cange.
    * If HMR detection is enabled and we know the source code of the component, assign a cache slot to track
    * the source hash, and later, emit code to check for source changes and reset the cache on source changes.
    */
-  let hotModuleReloadState: { cacheIndex: number; hash: string } | null = null;
+  let fastRefreshState: {
+    cacheIndex: number;
+    hash: string;
+  } | null = null;
   if (
     fn.env.config.enableResetCacheOnSourceFileChanges &&
     fn.env.code !== null
   ) {
     const hash = createHmac("sha256", fn.env.code).digest("hex");
-    hotModuleReloadState = {
+    fastRefreshState = {
       cacheIndex: cx.nextCacheIndex,
       hash,
     };
@@ -131,7 +134,7 @@ export function codegenFunction(
         ),
       ])
     );
-    if (hotModuleReloadState !== null) {
+    if (fastRefreshState !== null) {
       // HMR detection is enabled, emit code to reset the memo cache on source changes
       const index = cx.synthesizeName("$i");
       preface.push(
@@ -140,10 +143,10 @@ export function codegenFunction(
             "!==",
             t.memberExpression(
               t.identifier(cx.synthesizeName("$")),
-              t.numericLiteral(hotModuleReloadState.cacheIndex),
+              t.numericLiteral(fastRefreshState.cacheIndex),
               true
             ),
-            t.stringLiteral(hotModuleReloadState.hash)
+            t.stringLiteral(fastRefreshState.hash)
           ),
           t.blockStatement([
             t.forStatement(
@@ -185,10 +188,10 @@ export function codegenFunction(
                 "=",
                 t.memberExpression(
                   t.identifier(cx.synthesizeName("$")),
-                  t.numericLiteral(hotModuleReloadState.cacheIndex),
+                  t.numericLiteral(fastRefreshState.cacheIndex),
                   true
                 ),
-                t.stringLiteral(hotModuleReloadState.hash)
+                t.stringLiteral(fastRefreshState.hash)
               )
             ),
           ])
@@ -458,6 +461,11 @@ function codegenReactiveScope(
 ): void {
   const cacheStoreStatements: Array<t.Statement> = [];
   const cacheLoadStatements: Array<t.Statement> = [];
+  const cacheLoads: Array<{
+    name: t.Identifier;
+    index: number;
+    value: t.Expression;
+  }> = [];
   const changeExpressions: Array<t.Expression> = [];
   const changeExpressionComments: Array<string> = [];
   const outputComments: Array<string> = [];
@@ -485,6 +493,10 @@ function codegenReactiveScope(
     } else {
       changeExpressions.push(comparison);
     }
+    /*
+     * Adding directly to cacheStoreStatements rather than cacheLoads, because there
+     * is no corresponding cacheLoadStatement for dependencies
+     */
     cacheStoreStatements.push(
       t.expressionStatement(
         t.assignmentExpression(
@@ -520,32 +532,7 @@ function codegenReactiveScope(
         t.variableDeclaration("let", [t.variableDeclarator(name)])
       );
     }
-    cacheStoreStatements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          "=",
-          t.memberExpression(
-            t.identifier(cx.synthesizeName("$")),
-            t.numericLiteral(index),
-            true
-          ),
-          wrapCacheDep(cx, name)
-        )
-      )
-    );
-    cacheLoadStatements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          "=",
-          name,
-          t.memberExpression(
-            t.identifier(cx.synthesizeName("$")),
-            t.numericLiteral(index),
-            true
-          )
-        )
-      )
-    );
+    cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
     cx.declare(identifier);
   }
   for (const reassignment of scope.reassignments) {
@@ -555,34 +542,9 @@ function codegenReactiveScope(
     }
     const name = convertIdentifier(reassignment);
     outputComments.push(name.name);
-
-    cacheStoreStatements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          "=",
-          t.memberExpression(
-            t.identifier(cx.synthesizeName("$")),
-            t.numericLiteral(index),
-            true
-          ),
-          wrapCacheDep(cx, name)
-        )
-      )
-    );
-    cacheLoadStatements.push(
-      t.expressionStatement(
-        t.assignmentExpression(
-          "=",
-          name,
-          t.memberExpression(
-            t.identifier(cx.synthesizeName("$")),
-            t.numericLiteral(index),
-            true
-          )
-        )
-      )
-    );
+    cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
   }
+
   let testCondition = (changeExpressions as Array<t.Expression>).reduce(
     (acc: t.Expression | null, ident: t.Expression) => {
       if (acc == null) {
@@ -613,15 +575,139 @@ function codegenReactiveScope(
     );
   }
 
+  if (cx.env.config.disableMemoizationForDebugging) {
+    CompilerError.invariant(
+      cx.env.config.enableChangeDetectionForDebugging == null,
+      {
+        reason: `Expected to not have both change detection enabled and memoization disabled`,
+        description: `Incompatible config options`,
+        loc: null,
+      }
+    );
+    testCondition = t.logicalExpression(
+      "||",
+      testCondition,
+      t.booleanLiteral(true)
+    );
+  }
   let computationBlock = codegenBlock(cx, block);
-  computationBlock.body.push(...cacheStoreStatements);
-  const memoBlock = t.blockStatement(cacheLoadStatements);
 
-  const memoStatement = t.ifStatement(
-    testCondition,
-    computationBlock,
-    memoBlock
-  );
+  let memoStatement;
+  if (
+    cx.env.config.enableChangeDetectionForDebugging != null &&
+    changeExpressions.length > 0
+  ) {
+    const loc =
+      typeof scope.loc === "symbol"
+        ? "unknown location"
+        : `(${scope.loc.start.line}:${scope.loc.end.line})`;
+    const detectionFunction =
+      cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
+    const cacheLoadOldValueStatements: Array<t.Statement> = [];
+    const changeDetectionStatements: Array<t.Statement> = [];
+    const idempotenceDetectionStatements: Array<t.Statement> = [];
+
+    for (const { name, index, value } of cacheLoads) {
+      const loadName = cx.synthesizeName(`old$${name.name}`);
+      const slot = t.memberExpression(
+        t.identifier(cx.synthesizeName("$")),
+        t.numericLiteral(index),
+        true
+      );
+      cacheStoreStatements.push(
+        t.expressionStatement(t.assignmentExpression("=", slot, value))
+      );
+      cacheLoadOldValueStatements.push(
+        t.variableDeclaration("let", [
+          t.variableDeclarator(t.identifier(loadName), slot),
+        ])
+      );
+      changeDetectionStatements.push(
+        t.expressionStatement(
+          t.callExpression(t.identifier(detectionFunction), [
+            t.identifier(loadName),
+            name,
+            t.stringLiteral(name.name),
+            t.stringLiteral(cx.fnName),
+            t.stringLiteral("cached"),
+            t.stringLiteral(loc),
+          ])
+        )
+      );
+      idempotenceDetectionStatements.push(
+        t.expressionStatement(
+          t.callExpression(t.identifier(detectionFunction), [
+            slot,
+            name,
+            t.stringLiteral(name.name),
+            t.stringLiteral(cx.fnName),
+            t.stringLiteral("recomputed"),
+            t.stringLiteral(loc),
+          ])
+        )
+      );
+      idempotenceDetectionStatements.push(
+        t.expressionStatement(t.assignmentExpression("=", name, slot))
+      );
+    }
+    const condition = cx.synthesizeName("condition");
+    memoStatement = t.blockStatement([
+      ...computationBlock.body,
+      t.variableDeclaration("let", [
+        t.variableDeclarator(t.identifier(condition), testCondition),
+      ]),
+      t.ifStatement(
+        t.unaryExpression("!", t.identifier(condition)),
+        t.blockStatement([
+          ...cacheLoadOldValueStatements,
+          ...changeDetectionStatements,
+        ])
+      ),
+      ...cacheStoreStatements,
+      t.ifStatement(
+        t.identifier(condition),
+        t.blockStatement([
+          ...computationBlock.body,
+          ...idempotenceDetectionStatements,
+        ])
+      ),
+    ]);
+  } else {
+    for (const { name, index, value } of cacheLoads) {
+      cacheStoreStatements.push(
+        t.expressionStatement(
+          t.assignmentExpression(
+            "=",
+            t.memberExpression(
+              t.identifier(cx.synthesizeName("$")),
+              t.numericLiteral(index),
+              true
+            ),
+            value
+          )
+        )
+      );
+      cacheLoadStatements.push(
+        t.expressionStatement(
+          t.assignmentExpression(
+            "=",
+            name,
+            t.memberExpression(
+              t.identifier(cx.synthesizeName("$")),
+              t.numericLiteral(index),
+              true
+            )
+          )
+        )
+      );
+    }
+    computationBlock.body.push(...cacheStoreStatements);
+    memoStatement = t.ifStatement(
+      testCondition,
+      computationBlock,
+      t.blockStatement(cacheLoadStatements)
+    );
+  }
 
   if (cx.env.config.enableMemoizationComments) {
     if (changeExpressionComments.length) {
@@ -662,9 +748,9 @@ function codegenReactiveScope(
         true
       );
     }
-    if (memoBlock.body.length > 0) {
+    if (cacheLoadStatements.length > 0) {
       t.addComment(
-        memoBlock.body[0]!,
+        cacheLoadStatements[0]!,
         "leading",
         ` Inputs did not change, use cached value`,
         true
@@ -1928,7 +2014,7 @@ function codegenInstructionValue(
       break;
     }
     case "LoadGlobal": {
-      value = t.identifier(instrValue.name);
+      value = t.identifier(instrValue.binding.name);
       break;
     }
     case "RegExpLiteral": {

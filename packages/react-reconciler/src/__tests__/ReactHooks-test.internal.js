@@ -716,6 +716,7 @@ describe('ReactHooks', () => {
       useImperativeHandle(ref, () => {}, props.deps);
       return null;
     });
+    App.displayName = 'App';
 
     await expect(async () => {
       await act(() => {
@@ -846,6 +847,7 @@ describe('ReactHooks', () => {
       });
       return null;
     });
+    App.displayName = 'App';
 
     await expect(async () => {
       await act(() => {
@@ -1616,8 +1618,7 @@ describe('ReactHooks', () => {
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameB)}\n` +
-            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
-            '    in App (at **)',
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
         ]);
 
         // further warnings for this component are silenced
@@ -1669,8 +1670,7 @@ describe('ReactHooks', () => {
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameA)}\n` +
             `2. undefined                  use${hookNameB}\n` +
-            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
-            '    in App (at **)',
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
         ]);
       });
     });
@@ -1756,8 +1756,7 @@ describe('ReactHooks', () => {
               'ImperativeHandle',
               'Memo',
             )}\n` +
-            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n' +
-            '    in App (at **)',
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
         ]);
 
         // further warnings for this component are silenced

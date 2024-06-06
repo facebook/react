@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { BindingKind } from "@babel/traverse";
 import * as t from "@babel/types";
 import { CompilerError, CompilerErrorDetailOptions } from "../CompilerError";
 import { assertExhaustive } from "../Utils/utils";
@@ -77,7 +78,7 @@ export type ReactiveInstructionStatement = {
 };
 
 export type ReactiveTerminalStatement<
-  Tterminal extends ReactiveTerminal = ReactiveTerminal
+  Tterminal extends ReactiveTerminal = ReactiveTerminal,
 > = {
   kind: "terminal";
   terminal: Tterminal;
@@ -1075,7 +1076,7 @@ export type PropertyLoad = {
 
 export type LoadGlobal = {
   kind: "LoadGlobal";
-  name: string;
+  binding: NonLocalBinding;
   loc: SourceLocation;
 };
 
@@ -1103,6 +1104,29 @@ export type MutableRange = {
   end: InstructionId;
 };
 
+export type VariableBinding =
+  // let, const, etc declared within the current component/hook
+  | { kind: "Identifier"; identifier: Identifier; bindingKind: BindingKind }
+  // bindings declard outside the current component/hook
+  | NonLocalBinding;
+
+export type NonLocalBinding =
+  // `import Foo from 'foo'`: name=Foo, module=foo
+  | { kind: "ImportDefault"; name: string; module: string }
+  // `import * as Foo from 'foo'`: name=Foo, module=foo
+  | { kind: "ImportNamespace"; name: string; module: string }
+  // `import {bar as baz} from 'foo'`: name=baz, module=foo, imported=bar
+  | {
+      kind: "ImportSpecifier";
+      name: string;
+      module: string;
+      imported: string;
+    }
+  // let, const, function, etc declared in the module but outside the current component/hook
+  | { kind: "ModuleLocal"; name: string }
+  // an unresolved binding
+  | { kind: "Global"; name: string };
+
 // Represents a user-defined variable (has a name) or a temporary variable (no name).
 export type Identifier = {
   /*
@@ -1120,6 +1144,7 @@ export type Identifier = {
    */
   scope: ReactiveScope | null;
   type: Type;
+  loc: SourceLocation;
 };
 
 export type IdentifierName = ValidatedIdentifier | PromotedIdentifier;
@@ -1228,6 +1253,11 @@ export enum ValueReason {
    * A value returned from `useState`
    */
   State = "state",
+
+  /**
+   * A value returned from `useReducer`
+   */
+  ReducerState = "reducer-state",
 
   /**
    * Props of a component or arguments of a hook.
@@ -1352,6 +1382,8 @@ export type ReactiveScope = {
    * no longer exist due to being pruned.
    */
   merged: Set<ScopeId>;
+
+  loc: SourceLocation;
 };
 
 export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;
@@ -1464,6 +1496,14 @@ export function isUseStateType(id: Identifier): boolean {
 
 export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
+}
+
+export function isUseReducerType(id: Identifier): boolean {
+  return id.type.kind === "Function" && id.type.shapeId === "BuiltInUseReducer";
+}
+
+export function isDispatcherType(id: Identifier): boolean {
+  return id.type.kind === "Function" && id.type.shapeId === "BuiltInDispatch";
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

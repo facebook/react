@@ -22,7 +22,6 @@ export const enableRefAsProp = __TODO_NEXT_RN_MAJOR__;
 export const disableStringRefs = __TODO_NEXT_RN_MAJOR__;
 export const enableFastJSX = __TODO_NEXT_RN_MAJOR__;
 export const disableLegacyMode = __TODO_NEXT_RN_MAJOR__;
-export const disableDOMTestUtils = __TODO_NEXT_RN_MAJOR__;
 export const useModernStrictMode = __TODO_NEXT_RN_MAJOR__;
 export const enableReactTestRendererWarning = __TODO_NEXT_RN_MAJOR__;
 export const enableAsyncActions = __TODO_NEXT_RN_MAJOR__;
@@ -103,7 +102,7 @@ export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableAsyncIterableChildren = false;
 export const enableAddPropertiesFastPath = false;
-
+export const enableShallowPropDiffing = false;
 export const renameElementSymbol = true;
 
 export const enableOwnerStacks = __EXPERIMENTAL__;

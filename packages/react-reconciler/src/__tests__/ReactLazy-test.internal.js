@@ -995,7 +995,10 @@ describe('ReactLazy', () => {
     await expect(async () => {
       await act(() => resolveFakeImport(Foo));
       assertLog(['A', 'B']);
-    }).toErrorDev('    in Text (at **)\n' + '    in Foo (at **)');
+    }).toErrorDev(
+      (gate(flags => flags.enableOwnerStacks) ? '' : '    in Text (at **)\n') +
+        '    in Foo (at **)',
+    );
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 

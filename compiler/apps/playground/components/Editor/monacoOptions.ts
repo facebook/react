@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
 import type { EditorProps } from "@monaco-editor/react";
 
 export const monacoOptions: Partial<EditorProps["options"]> = {

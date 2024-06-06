@@ -38,9 +38,7 @@ export type SharedStateServer = {
   // DEV-only
 
   // ReactDebugCurrentFrame
-  setExtraStackFrame: (stack: null | string) => void,
-  getCurrentStack: null | (() => string),
-  getStackAddendum: () => string,
+  getCurrentStack: null | ((stack: Error) => string),
 };
 
 export type RendererTask = boolean => RendererTask | null;
@@ -59,29 +57,10 @@ if (enableTaint) {
 }
 
 if (__DEV__) {
-  let currentExtraStackFrame = (null: null | string);
-  ReactSharedInternals.setExtraStackFrame = function (stack: null | string) {
-    currentExtraStackFrame = stack;
-  };
   // Stack implementation injected by the current renderer.
-  ReactSharedInternals.getCurrentStack = (null: null | (() => string));
-
-  ReactSharedInternals.getStackAddendum = function (): string {
-    let stack = '';
-
-    // Add an extra top frame while an element is being validated
-    if (currentExtraStackFrame) {
-      stack += currentExtraStackFrame;
-    }
-
-    // Delegate to the injected renderer-specific implementation
-    const impl = ReactSharedInternals.getCurrentStack;
-    if (impl) {
-      stack += impl() || '';
-    }
-
-    return stack;
-  };
+  ReactSharedInternals.getCurrentStack = (null:
+    | null
+    | ((stack: Error) => string));
 }
 
 export default ReactSharedInternals;

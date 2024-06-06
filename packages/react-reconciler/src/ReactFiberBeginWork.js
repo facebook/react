@@ -110,6 +110,7 @@ import {
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   disableStringRefs,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -124,7 +125,7 @@ import {
 } from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
-  setIsRendering,
+  setCurrentFiber,
 } from './ReactCurrentFiber';
 import {
   resolveFunctionForHotReloading,
@@ -296,7 +297,11 @@ import {
   pushRootMarkerInstance,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
-import {setCurrentOwner} from './ReactFiberCurrentOwner';
+import {
+  callLazyInitInDEV,
+  callComponentInDEV,
+  callRenderInDEV,
+} from './ReactFiberCallUserSpace';
 
 // A special exception that's used to unwind the stack when an update flows
 // into a dehydrated boundary.
@@ -432,8 +437,6 @@ function updateForwardRef(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    setCurrentOwner(workInProgress);
-    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -443,7 +446,6 @@ function updateForwardRef(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -1150,8 +1152,6 @@ function updateFunctionComponent(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    setCurrentOwner(workInProgress);
-    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -1161,7 +1161,6 @@ function updateFunctionComponent(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -1373,7 +1372,7 @@ function finishClassComponent(
 
   // Rerender
   if (__DEV__ || !disableStringRefs) {
-    setCurrentOwner(workInProgress);
+    setCurrentFiber(workInProgress);
   }
   let nextChildren;
   if (
@@ -1395,20 +1394,18 @@ function finishClassComponent(
       markComponentRenderStarted(workInProgress);
     }
     if (__DEV__) {
-      setIsRendering(true);
-      nextChildren = instance.render();
+      nextChildren = callRenderInDEV(instance);
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
         setIsStrictModeForDevtools(true);
         try {
-          instance.render();
+          callRenderInDEV(instance);
         } finally {
           setIsStrictModeForDevtools(false);
         }
       }
-      setIsRendering(false);
     } else {
       nextChildren = instance.render();
     }
@@ -1692,22 +1689,36 @@ function updateHostHoistable(
   renderLanes: Lanes,
 ) {
   markRef(current, workInProgress);
-  const currentProps = current === null ? null : current.memoizedProps;
-  const resource = (workInProgress.memoizedState = getResource(
-    workInProgress.type,
-    currentProps,
-    workInProgress.pendingProps,
-  ));
+
   if (current === null) {
-    if (!getIsHydrating() && resource === null) {
-      // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
-      workInProgress.stateNode = createHoistableInstance(
-        workInProgress.type,
-        workInProgress.pendingProps,
-        getRootHostContainer(),
-        workInProgress,
-      );
+    const resource = getResource(
+      workInProgress.type,
+      null,
+      workInProgress.pendingProps,
+      null,
+    );
+    if (resource) {
+      workInProgress.memoizedState = resource;
+    } else {
+      if (!getIsHydrating()) {
+        // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
+        workInProgress.stateNode = createHoistableInstance(
+          workInProgress.type,
+          workInProgress.pendingProps,
+          getRootHostContainer(),
+          workInProgress,
+        );
+      }
     }
+  } else {
+    // Get Resource may or may not return a resource. either way we stash the result
+    // on memoized state.
+    workInProgress.memoizedState = getResource(
+      workInProgress.type,
+      current.memoizedProps,
+      workInProgress.pendingProps,
+      current.memoizedState,
+    );
   }
 
   // Resources never have reconciler managed children. It is possible for
@@ -1768,9 +1779,14 @@ function mountLazyComponent(
 
   const props = workInProgress.pendingProps;
   const lazyComponent: LazyComponentType<any, any> = elementType;
-  const payload = lazyComponent._payload;
-  const init = lazyComponent._init;
-  let Component = init(payload);
+  let Component;
+  if (__DEV__) {
+    Component = callLazyInitInDEV(lazyComponent);
+  } else {
+    const payload = lazyComponent._payload;
+    const init = lazyComponent._init;
+    Component = init(payload);
+  }
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
 
@@ -3419,10 +3435,7 @@ function updateContextConsumer(
   }
   let newChildren;
   if (__DEV__) {
-    setCurrentOwner(workInProgress);
-    setIsRendering(true);
-    newChildren = render(newValue);
-    setIsRendering(false);
+    newChildren = callComponentInDEV(render, newValue, undefined);
   } else {
     newChildren = render(newValue);
   }
@@ -3834,18 +3847,19 @@ function beginWork(
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
-      return remountFiber(
-        current,
-        workInProgress,
-        createFiberFromTypeAndProps(
-          workInProgress.type,
-          workInProgress.key,
-          workInProgress.pendingProps,
-          workInProgress._debugOwner || null,
-          workInProgress.mode,
-          workInProgress.lanes,
-        ),
+      const copiedFiber = createFiberFromTypeAndProps(
+        workInProgress.type,
+        workInProgress.key,
+        workInProgress.pendingProps,
+        workInProgress._debugOwner || null,
+        workInProgress.mode,
+        workInProgress.lanes,
       );
+      if (enableOwnerStacks) {
+        copiedFiber._debugStack = workInProgress._debugStack;
+        copiedFiber._debugTask = workInProgress._debugTask;
+      }
+      return remountFiber(current, workInProgress, copiedFiber);
     }
   }
 

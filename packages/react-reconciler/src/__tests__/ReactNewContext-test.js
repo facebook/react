@@ -699,7 +699,7 @@ describe('ReactNewContext', () => {
         );
       });
 
-      // @gate www
+      // @gate enableLegacyHidden
       it("context consumer doesn't bail out inside hidden subtree", async () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);

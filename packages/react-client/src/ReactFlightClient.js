@@ -67,7 +67,10 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_POSTPONE_TYPE,
   ASYNC_ITERATOR,
+  REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
+
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 export type {CallServerCallback, EncodeFormActionCallback};
 
@@ -236,6 +239,8 @@ Chunk.prototype.then = function <T>(
   }
 };
 
+export type FindSourceMapURLCallback = (fileName: string) => null | string;
+
 export type Response = {
   _bundlerConfig: SSRModuleMap,
   _moduleLoading: ModuleLoading,
@@ -251,6 +256,8 @@ export type Response = {
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
+  _debugRootTask?: null | ConsoleTask, // DEV-only
+  _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -320,8 +327,24 @@ function wakeChunkIfInitialized<T>(
     case PENDING:
     case BLOCKED:
     case CYCLIC:
-      chunk.value = resolveListeners;
-      chunk.reason = rejectListeners;
+      if (chunk.value) {
+        for (let i = 0; i < resolveListeners.length; i++) {
+          chunk.value.push(resolveListeners[i]);
+        }
+      } else {
+        chunk.value = resolveListeners;
+      }
+
+      if (chunk.reason) {
+        if (rejectListeners) {
+          for (let i = 0; i < rejectListeners.length; i++) {
+            chunk.reason.push(rejectListeners[i]);
+          }
+        }
+      } else {
+        chunk.reason = rejectListeners;
+      }
+
       break;
     case ERRORED:
       if (rejectListeners) {
@@ -506,8 +529,6 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
       // We have to go the BLOCKED state until they're resolved.
       const blockedChunk: BlockedChunk<T> = (chunk: any);
       blockedChunk.status = BLOCKED;
-      blockedChunk.value = null;
-      blockedChunk.reason = null;
     } else {
       const resolveListeners = cyclicChunk.value;
       const initializedChunk: InitializedChunk<T> = (chunk: any);
@@ -559,12 +580,51 @@ function nullRefGetter() {
   }
 }
 
+function getServerComponentTaskName(componentInfo: ReactComponentInfo): string {
+  return '<' + (componentInfo.name || '...') + '>';
+}
+
+function getTaskName(type: mixed): string {
+  if (type === REACT_FRAGMENT_TYPE) {
+    return '<>';
+  }
+  if (typeof type === 'function') {
+    // This is a function so it must have been a Client Reference that resolved to
+    // a function. We use "use client" to indicate that this is the boundary into
+    // the client. There should only be one for any given owner chain.
+    return '"use client"';
+  }
+  if (
+    typeof type === 'object' &&
+    type !== null &&
+    type.$$typeof === REACT_LAZY_TYPE
+  ) {
+    if (type._init === readChunk) {
+      // This is a lazy node created by Flight. It is probably a client reference.
+      // We use the "use client" string to indicate that this is the boundary into
+      // the client. There will only be one for any given owner chain.
+      return '"use client"';
+    }
+    // We don't want to eagerly initialize the initializer in DEV mode so we can't
+    // call it to extract the type so we don't know the type of this component.
+    return '<...>';
+  }
+  try {
+    const name = getComponentNameFromType(type);
+    return name ? '<' + name + '>' : '<...>';
+  } catch (x) {
+    return '<...>';
+  }
+}
+
 function createElement(
+  response: Response,
   type: mixed,
   key: mixed,
   props: mixed,
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
+  validated: number, // DEV-only
 ): React$Element<any> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
@@ -610,13 +670,13 @@ function createElement(
     // Unfortunately, _store is enumerable in jest matchers so for equality to
     // work, I need to keep it or make _store non-enumerable in the other file.
     element._store = ({}: {
-      validated?: boolean,
+      validated?: number,
     });
     Object.defineProperty(element._store, 'validated', {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: true, // This element has already been validated on the server.
+      value: enableOwnerStacks ? validated : 1, // Whether the element has already been validated on the server.
     });
     // debugInfo contains Server Component debug information.
     Object.defineProperty(element, '_debugInfo', {
@@ -630,13 +690,36 @@ function createElement(
         configurable: false,
         enumerable: false,
         writable: true,
-        value: {stack: stack},
+        value: stack,
       });
+
+      let task: null | ConsoleTask = null;
+      if (supportsCreateTask && stack !== null) {
+        const createTaskFn = (console: any).createTask.bind(
+          console,
+          getTaskName(type),
+        );
+        const callStack = buildFakeCallStack(response, stack, createTaskFn);
+        // This owner should ideally have already been initialized to avoid getting
+        // user stack frames on the stack.
+        const ownerTask =
+          owner === null ? null : initializeFakeTask(response, owner);
+        if (ownerTask === null) {
+          const rootTask = response._debugRootTask;
+          if (rootTask != null) {
+            task = rootTask.run(callStack);
+          } else {
+            task = callStack();
+          }
+        } else {
+          task = ownerTask.run(callStack);
+        }
+      }
       Object.defineProperty(element, '_debugTask', {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: null,
+        value: task,
       });
     }
     // TODO: We should be freezing the element but currently, we might write into
@@ -1034,11 +1117,13 @@ function parseModelTuple(
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
     return createElement(
+      response,
       tuple[1],
       tuple[2],
       tuple[3],
       __DEV__ ? (tuple: any)[4] : null,
       __DEV__ && enableOwnerStacks ? (tuple: any)[5] : null,
+      __DEV__ && enableOwnerStacks ? (tuple: any)[6] : 0,
     );
   }
   return value;
@@ -1058,6 +1143,7 @@ export function createResponse(
   encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  findSourceMapURL: void | FindSourceMapURLCallback,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
@@ -1076,6 +1162,17 @@ export function createResponse(
     _buffer: [],
     _tempRefs: temporaryReferences,
   };
+  if (supportsCreateTask) {
+    // Any stacks that appear on the server need to be rooted somehow on the client
+    // so we create a root Task for this response which will be the root owner for any
+    // elements created by the server. We use the "use server" string to indicate that
+    // this is where we enter the server from the client.
+    // TODO: Make this string configurable.
+    response._debugRootTask = (console: any).createTask('"use server"');
+  }
+  if (__DEV__) {
+    response._debugFindSourceMapURL = findSourceMapURL;
+  }
   // Don't inline this call because it causes closure to outline the call above.
   response._fromJSON = createFromJSONCallback(response);
   return response;
@@ -1566,6 +1663,151 @@ function resolveHint<Code: HintCode>(
   dispatchHint(code, hintModel);
 }
 
+// eslint-disable-next-line react-internal/no-production-logging
+const supportsCreateTask =
+  __DEV__ && enableOwnerStacks && !!(console: any).createTask;
+
+const taskCache: null | WeakMap<
+  ReactComponentInfo | ReactAsyncInfo,
+  ConsoleTask,
+> = supportsCreateTask ? new WeakMap() : null;
+
+type FakeFunction<T> = (() => T) => T;
+const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
+  ? new Map()
+  : (null: any);
+
+function createFakeFunction<T>(
+  name: string,
+  filename: string,
+  sourceMap: null | string,
+  line: number,
+  col: number,
+): FakeFunction<T> {
+  // This creates a fake copy of a Server Module. It represents a module that has already
+  // executed on the server but we re-execute a blank copy for its stack frames on the client.
+
+  const comment =
+    '/* This module was rendered by a Server Component. Turn on Source Maps to see the server source. */';
+
+  // We generate code where the call is at the line and column of the server executed code.
+  // This allows us to use the original source map as the source map of this fake file to
+  // point to the original source.
+  let code;
+  if (line <= 1) {
+    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment + '\n';
+  } else {
+    code =
+      comment +
+      '\n'.repeat(line - 2) +
+      '_=>\n' +
+      ' '.repeat(col < 1 ? 0 : col - 1) +
+      '_()\n';
+  }
+
+  if (sourceMap) {
+    code += '//# sourceMappingURL=' + sourceMap;
+  } else if (filename) {
+    code += '//# sourceURL=' + filename;
+  }
+
+  let fn: FakeFunction<T>;
+  try {
+    // eslint-disable-next-line no-eval
+    fn = (0, eval)(code);
+  } catch (x) {
+    // If eval fails, such as if in an environment that doesn't support it,
+    // we fallback to creating a function here. It'll still have the right
+    // name but it'll lose line/column number and file name.
+    fn = function (_) {
+      return _();
+    };
+  }
+  // $FlowFixMe[cannot-write]
+  Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
+  // $FlowFixMe[prop-missing]
+  fn.displayName = name;
+  return fn;
+}
+
+// This matches either of these V8 formats.
+//     at name (filename:0:0)
+//     at filename:0:0
+//     at async filename:0:0
+const frameRegExp =
+  /^ {3} at (?:(.+) \(([^\)]+):(\d+):(\d+)\)|(?:async )?([^\)]+):(\d+):(\d+))$/;
+
+function buildFakeCallStack<T>(
+  response: Response,
+  stack: string,
+  innerCall: () => T,
+): () => T {
+  const frames = stack.split('\n');
+  let callStack = innerCall;
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i];
+    let fn = fakeFunctionCache.get(frame);
+    if (fn === undefined) {
+      const parsed = frameRegExp.exec(frame);
+      if (!parsed) {
+        // We assume the server returns a V8 compatible stack trace.
+        continue;
+      }
+      const name = parsed[1] || '';
+      const filename = parsed[2] || parsed[5] || '';
+      const line = +(parsed[3] || parsed[6]);
+      const col = +(parsed[4] || parsed[7]);
+      const sourceMap = response._debugFindSourceMapURL
+        ? response._debugFindSourceMapURL(filename)
+        : null;
+      fn = createFakeFunction(name, filename, sourceMap, line, col);
+      // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
+      // function is an input and can vary by response.
+      fakeFunctionCache.set(frame, fn);
+    }
+    callStack = fn.bind(null, callStack);
+  }
+  return callStack;
+}
+
+function initializeFakeTask(
+  response: Response,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): null | ConsoleTask {
+  if (taskCache === null || typeof debugInfo.stack !== 'string') {
+    return null;
+  }
+  const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
+  const stack: string = debugInfo.stack;
+  const cachedEntry = taskCache.get((componentInfo: any));
+  if (cachedEntry !== undefined) {
+    return cachedEntry;
+  }
+
+  const ownerTask =
+    componentInfo.owner == null
+      ? null
+      : initializeFakeTask(response, componentInfo.owner);
+
+  // eslint-disable-next-line react-internal/no-production-logging
+  const createTaskFn = (console: any).createTask.bind(
+    console,
+    getServerComponentTaskName(componentInfo),
+  );
+  const callStack = buildFakeCallStack(response, stack, createTaskFn);
+
+  if (ownerTask === null) {
+    const rootTask = response._debugRootTask;
+    if (rootTask != null) {
+      return rootTask.run(callStack);
+    } else {
+      return callStack();
+    }
+  } else {
+    return ownerTask.run(callStack);
+  }
+}
+
 function resolveDebugInfo(
   response: Response,
   id: number,
@@ -1578,6 +1820,10 @@ function resolveDebugInfo(
       'resolveDebugInfo should never be called in production mode. This is a bug in React.',
     );
   }
+  // We eagerly initialize the fake task because this resolving happens outside any
+  // render phase so we're not inside a user space stack at this point. If we waited
+  // to initialize it when we need it, we might be inside user code.
+  initializeFakeTask(response, debugInfo);
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
@@ -1599,12 +1845,34 @@ function resolveConsoleEntry(
   const payload: [string, string, null | ReactComponentInfo, string, mixed] =
     parseModel(response, value);
   const methodName = payload[0];
-  // TODO: Restore the fake stack before logging.
-  // const stackTrace = payload[1];
-  // const owner = payload[2];
+  const stackTrace = payload[1];
+  const owner = payload[2];
   const env = payload[3];
   const args = payload.slice(4);
-  printToConsole(methodName, args, env);
+  if (!enableOwnerStacks) {
+    // Printing with stack isn't really limited to owner stacks but
+    // we gate it behind the same flag for now while iterating.
+    printToConsole(methodName, args, env);
+    return;
+  }
+  const callStack = buildFakeCallStack(
+    response,
+    stackTrace,
+    printToConsole.bind(null, methodName, args, env),
+  );
+  if (owner != null) {
+    const task = initializeFakeTask(response, owner);
+    if (task !== null) {
+      task.run(callStack);
+      return;
+    }
+  }
+  const rootTask = response._debugRootTask;
+  if (rootTask != null) {
+    rootTask.run(callStack);
+    return;
+  }
+  callStack();
 }
 
 function mergeBuffer(

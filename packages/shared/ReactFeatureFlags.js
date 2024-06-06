@@ -125,6 +125,8 @@ export const enableAddPropertiesFastPath = false;
 
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
+export const enableShallowPropDiffing = false;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */
@@ -191,8 +193,6 @@ export const enableReactTestRendererWarning = true;
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
 export const disableLegacyMode = true;
-
-export const disableDOMTestUtils = true;
 
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
 export const enableRenderableContext = true;

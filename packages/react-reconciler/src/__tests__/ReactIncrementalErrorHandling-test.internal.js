@@ -289,7 +289,7 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('does not include offscreen work when retrying after an error', async () => {
     function App(props) {
       if (props.isBroken) {
@@ -1512,7 +1512,7 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.mock.calls[0][1]).toBe(notAnError);
       expect(console.error.mock.calls[0][2]).toContain(
-        'The above error occurred in the <BadRender> component:',
+        'The above error occurred in the <BadRender> component',
       );
     } else {
       expect(console.error).toHaveBeenCalledTimes(1);

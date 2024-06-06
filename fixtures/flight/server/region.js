@@ -24,6 +24,7 @@ babelRegister({
   ],
   presets: ['@babel/preset-react'],
   plugins: ['@babel/transform-modules-commonjs'],
+  sourceMaps: process.env.NODE_ENV === 'development' ? 'inline' : false,
 });
 
 if (typeof fetch === 'undefined') {
@@ -37,6 +38,8 @@ const busboy = require('busboy');
 const app = express();
 const compress = require('compression');
 const {Readable} = require('node:stream');
+
+const nodeModule = require('node:module');
 
 app.use(compress());
 
@@ -81,17 +84,20 @@ async function renderApp(res, returnValue, formState) {
     ).main.css;
   }
   const App = m.default.default || m.default;
-  const root = [
+  const root = React.createElement(
+    React.Fragment,
+    null,
     // Prepend the App's tree with stylesheets required for this entrypoint.
     mainCSSChunks.map(filename =>
       React.createElement('link', {
         rel: 'stylesheet',
         href: filename,
         precedence: 'default',
+        key: filename,
       })
     ),
-    React.createElement(App),
-  ];
+    React.createElement(App)
+  );
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
   const {pipe} = renderToPipeableStream(payload, moduleMap);
@@ -172,6 +178,71 @@ app.get('/todos', function (req, res) {
     },
   ]);
 });
+
+if (process.env.NODE_ENV === 'development') {
+  const rootDir = path.resolve(__dirname, '../');
+
+  app.get('/source-maps', async function (req, res, next) {
+    try {
+      res.set('Content-type', 'application/json');
+      let requestedFilePath = req.query.name;
+
+      let isCompiledOutput = false;
+      if (requestedFilePath.startsWith('file://')) {
+        // We assume that if it was prefixed with file:// it's referring to the compiled output
+        // and if it's a direct file path we assume it's source mapped back to original format.
+        isCompiledOutput = true;
+        requestedFilePath = requestedFilePath.slice(7);
+      }
+
+      const relativePath = path.relative(rootDir, requestedFilePath);
+      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+        // This is outside the root directory of the app. Forbid it to be served.
+        res.status = 403;
+        res.write('{}');
+        res.end();
+        return;
+      }
+
+      const sourceMap = nodeModule.findSourceMap(requestedFilePath);
+      let map;
+      // There are two ways to return a source map depending on what we observe in error.stack.
+      // A real app will have a similar choice to make for which strategy to pick.
+      if (!sourceMap || !isCompiledOutput) {
+        // If a file doesn't have a source map, such as this file, then we generate a blank
+        // source map that just contains the original content and segments pointing to the
+        // original lines.
+        // Similarly
+        const sourceContent = await readFile(requestedFilePath, 'utf8');
+        const lines = sourceContent.split('\n').length;
+        map = {
+          version: 3,
+          sources: [requestedFilePath],
+          sourcesContent: [sourceContent],
+          // Note: This approach to mapping each line only lets you jump to each line
+          // not jump to a column within a line. To do that, you need a proper source map
+          // generated for each parsed segment or add a segment for each column.
+          mappings: 'AAAA' + ';AACA'.repeat(lines - 1),
+          sourceRoot: '',
+        };
+      } else {
+        // We always set prepareStackTrace before reading the stack so that we get the stack
+        // without source maps applied. Therefore we have to use the original source map.
+        // If something read .stack before we did, we might observe the line/column after
+        // source mapping back to the original file. We use the isCompiledOutput check above
+        // in that case.
+        map = sourceMap.payload;
+      }
+      res.write(JSON.stringify(map));
+      res.end();
+    } catch (x) {
+      res.status = 500;
+      res.write('{}');
+      res.end();
+      console.error(x);
+    }
+  });
+}
 
 app.listen(3001, () => {
   console.log('Regional Flight Server listening on port 3001...');

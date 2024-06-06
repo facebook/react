@@ -11,7 +11,6 @@ import { fromZodError } from "zod-validation-error";
 import { CompilerError } from "../CompilerError";
 import { Logger } from "../Entrypoint";
 import { Err, Ok, Result } from "../Utils/Result";
-import { log } from "../Utils/logger";
 import {
   DEFAULT_GLOBALS,
   DEFAULT_SHAPES,
@@ -25,6 +24,7 @@ import {
   Effect,
   FunctionType,
   IdentifierId,
+  NonLocalBinding,
   PolyType,
   ScopeId,
   Type,
@@ -164,6 +164,13 @@ const EnvironmentConfigSchema = z.object({
    * may change under Forget.
    */
   validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
+
+  /**
+   * When this is true, rather than pruning existing manual memoization but ensuring or validating
+   * that the memoized values remain memoized, the compiler will simply not prune existing calls to
+   * useMemo/useCallback.
+   */
+  enablePreserveExistingManualUseMemo: z.boolean().default(false),
 
   // 🌲
   enableForest: z.boolean().default(false),
@@ -319,6 +326,8 @@ const EnvironmentConfigSchema = z.object({
    */
   throwUnknownException__testonly: z.boolean().default(false),
 
+  enableSharedRuntime__testonly: z.boolean().default(false),
+
   /**
    * Enables deps of a function epxression to be treated as conditional. This
    * makes sure we don't load a dep when it's a property (to check if it has
@@ -340,6 +349,23 @@ const EnvironmentConfigSchema = z.object({
    * non-ideal.
    */
   enableTreatFunctionDepsAsConditional: z.boolean().default(false),
+
+  /**
+   * When true, always act as though the dependencies of a memoized value
+   * have changed. This makes the compiler not actually perform any optimizations,
+   * but is useful for debugging. Implicitly also sets
+   * @enablePreserveExistingManualUseMemo, because otherwise memoization in the
+   * original source will be disabled as well.
+   */
+  disableMemoizationForDebugging: z.boolean().default(false),
+
+  /**
+   * When true, rather using memoized values, the compiler will always re-compute
+   * values, and then use a heuristic to compare the memoized value to the newly
+   * computed one. This detects cases where rules of react violations may cause the
+   * compiled code to behave differently than the original.
+   */
+  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
 
   /**
    * The react native re-animated library uses custom Babel transforms that
@@ -460,6 +486,18 @@ export class Environment {
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
 
+    if (
+      config.disableMemoizationForDebugging &&
+      config.enableChangeDetectionForDebugging != null
+    ) {
+      CompilerError.throwInvalidConfig({
+        reason: `Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+    }
+
     for (const [hookName, hook] of this.config.customHooks) {
       CompilerError.invariant(!this.#globals.has(hookName), {
         reason: `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
@@ -511,30 +549,79 @@ export class Environment {
     return this.#hoistedIdentifiers.has(node);
   }
 
-  getGlobalDeclaration(name: string): Global | null {
-    let resolvedName = name;
-
+  getGlobalDeclaration(binding: NonLocalBinding): Global | null {
     if (this.config.hookPattern != null) {
-      const match = new RegExp(this.config.hookPattern).exec(name);
+      const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
         match != null &&
         typeof match[1] === "string" &&
         isHookName(match[1])
       ) {
-        resolvedName = match[1];
+        const resolvedName = match[1];
+        return this.#globals.get(resolvedName) ?? this.#getCustomHookType();
       }
     }
 
-    let resolvedGlobal: Global | null = this.#globals.get(resolvedName) ?? null;
-    if (resolvedGlobal === null) {
-      // Hack, since we don't track module level declarations and imports
-      if (isHookName(resolvedName)) {
-        return this.#getCustomHookType();
-      } else {
-        log(() => `Undefined global \`${name}\``);
+    switch (binding.kind) {
+      case "ModuleLocal": {
+        // don't resolve module locals
+        return isHookName(binding.name) ? this.#getCustomHookType() : null;
+      }
+      case "Global": {
+        return (
+          this.#globals.get(binding.name) ??
+          (isHookName(binding.name) ? this.#getCustomHookType() : null)
+        );
+      }
+      case "ImportSpecifier": {
+        if (this.#isKnownReactModule(binding.module)) {
+          /**
+           * For `import {imported as name} from "..."` form, we use the `imported`
+           * name rather than the local alias. Because we don't have definitions for
+           * every React builtin hook yet, we also check to see if the imported name
+           * is hook-like (whereas the fall-through below is checking if the aliased
+           * name is hook-like)
+           */
+          return (
+            this.#globals.get(binding.imported) ??
+            (isHookName(binding.imported) ? this.#getCustomHookType() : null)
+          );
+        } else {
+          /**
+           * For modules we don't own, we look at whether the original name or import alias
+           * are hook-like. Both of the following are likely hooks so we would return a hook
+           * type for both:
+           *
+           * `import {useHook as foo} ...`
+           * `import {foo as useHook} ...`
+           */
+          return isHookName(binding.imported) || isHookName(binding.name)
+            ? this.#getCustomHookType()
+            : null;
+        }
+      }
+      case "ImportDefault":
+      case "ImportNamespace": {
+        if (this.#isKnownReactModule(binding.module)) {
+          // only resolve imports to modules we know about
+          return (
+            this.#globals.get(binding.name) ??
+            (isHookName(binding.name) ? this.#getCustomHookType() : null)
+          );
+        } else {
+          return isHookName(binding.name) ? this.#getCustomHookType() : null;
+        }
       }
     }
-    return resolvedGlobal;
+  }
+
+  #isKnownReactModule(moduleName: string): boolean {
+    return (
+      moduleName.toLowerCase() === "react" ||
+      moduleName.toLowerCase() === "react-dom" ||
+      (this.config.enableSharedRuntime__testonly &&
+        moduleName === "shared-runtime")
+    );
   }
 
   getPropertyType(

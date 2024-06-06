@@ -46,7 +46,7 @@ import { Stringify, identity, makeArray, toJSON } from "shared-runtime";
 import { useMemo } from "react";
 
 function Component(props) {
-  const $ = _c(29);
+  const $ = _c(13);
   let t0;
   let t1;
   let t2;
@@ -83,87 +83,50 @@ function Component(props) {
     t3 = $[5];
   }
   const linkProps = t3;
-  let T0;
   let t4;
-  let t5;
-  let t6;
-  let t7;
-  let t8;
-  let t9;
-  let t10;
   if ($[6] !== linkProps) {
     const x = {};
-
-    T0 = Stringify;
-    t4 = linkProps;
-    if ($[15] === Symbol.for("react.memo_cache_sentinel")) {
+    let t5;
+    let t6;
+    let t7;
+    let t8;
+    let t9;
+    if ($[8] === Symbol.for("react.memo_cache_sentinel")) {
       t5 = [1];
       t6 = [2];
       t7 = [3];
       t8 = [4];
       t9 = [5];
-      $[15] = t5;
-      $[16] = t6;
-      $[17] = t7;
-      $[18] = t8;
-      $[19] = t9;
+      $[8] = t5;
+      $[9] = t6;
+      $[10] = t7;
+      $[11] = t8;
+      $[12] = t9;
     } else {
-      t5 = $[15];
-      t6 = $[16];
-      t7 = $[17];
-      t8 = $[18];
-      t9 = $[19];
+      t5 = $[8];
+      t6 = $[9];
+      t7 = $[10];
+      t8 = $[11];
+      t9 = $[12];
     }
-
-    t10 = makeArray(x, 2);
-    $[6] = linkProps;
-    $[7] = T0;
-    $[8] = t4;
-    $[9] = t5;
-    $[10] = t6;
-    $[11] = t7;
-    $[12] = t8;
-    $[13] = t9;
-    $[14] = t10;
-  } else {
-    T0 = $[7];
-    t4 = $[8];
-    t5 = $[9];
-    t6 = $[10];
-    t7 = $[11];
-    t8 = $[12];
-    t9 = $[13];
-    t10 = $[14];
-  }
-  let t11;
-  if (
-    $[20] !== T0 ||
-    $[21] !== t4 ||
-    $[22] !== t5 ||
-    $[23] !== t6 ||
-    $[24] !== t7 ||
-    $[25] !== t8 ||
-    $[26] !== t9 ||
-    $[27] !== t10
-  ) {
-    t11 = (
-      <T0 link={t4} val1={t5} val2={t6} val3={t7} val4={t8} val5={t9}>
-        {t10}
-      </T0>
+    t4 = (
+      <Stringify
+        link={linkProps}
+        val1={t5}
+        val2={t6}
+        val3={t7}
+        val4={t8}
+        val5={t9}
+      >
+        {makeArray(x, 2)}
+      </Stringify>
     );
-    $[20] = T0;
-    $[21] = t4;
-    $[22] = t5;
-    $[23] = t6;
-    $[24] = t7;
-    $[25] = t8;
-    $[26] = t9;
-    $[27] = t10;
-    $[28] = t11;
+    $[6] = linkProps;
+    $[7] = t4;
   } else {
-    t11 = $[28];
+    t4 = $[7];
   }
-  return t11;
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {
