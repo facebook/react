@@ -8,17 +8,16 @@ import {
   makeObject_Primitives,
   useNoAlias,
 } from "shared-runtime";
-/**
- * BUG
- * Found differences in evaluator results
- *   Non-forget (expected):
- *   (kind: ok) [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   Forget:
- *   (kind: ok) [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   [[ (exception in render) Error: Oh no! ]]
- */
 
+/**
+ * Here the scope for `obj` is pruned because it spans the `useNoAlias()` hook call.
+ * Because `obj` is non-reactive, it would by default be excluded as dependency for
+ * `result = [...identity(obj)..., obj]`, but this could then cause the values in
+ * `result` to be out of sync with `obj`.
+ *
+ * The fix is to consider pruned memo block outputs as reactive, since they will
+ * recreate on every render. This means `thing` depends on both y and z.
+ */
 function Foo() {
   const obj = makeObject_Primitives();
   // hook calls keeps the next two lines as its own reactive scope
@@ -53,19 +52,18 @@ import {
   makeObject_Primitives,
   useNoAlias,
 } from "shared-runtime";
-/**
- * BUG
- * Found differences in evaluator results
- *   Non-forget (expected):
- *   (kind: ok) [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   Forget:
- *   (kind: ok) [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   [[ (exception in render) Error: Oh no! ]]
- */
 
+/**
+ * Here the scope for `obj` is pruned because it spans the `useNoAlias()` hook call.
+ * Because `obj` is non-reactive, it would by default be excluded as dependency for
+ * `result = [...identity(obj)..., obj]`, but this could then cause the values in
+ * `result` to be out of sync with `obj`.
+ *
+ * The fix is to consider pruned memo block outputs as reactive, since they will
+ * recreate on every render. This means `thing` depends on both y and z.
+ */
 function Foo() {
-  const $ = _c(1);
+  const $ = _c(3);
   const obj = makeObject_Primitives();
 
   useNoAlias();
@@ -73,11 +71,13 @@ function Foo() {
   const shouldCaptureObj = obj != null && CONST_TRUE;
   const t0 = shouldCaptureObj ? identity(obj) : null;
   let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== t0 || $[1] !== obj) {
     t1 = [t0, obj];
-    $[0] = t1;
+    $[0] = t0;
+    $[1] = obj;
+    $[2] = t1;
   } else {
-    t1 = $[0];
+    t1 = $[2];
   }
   const result = t1;
 
@@ -96,3 +96,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
+[{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]

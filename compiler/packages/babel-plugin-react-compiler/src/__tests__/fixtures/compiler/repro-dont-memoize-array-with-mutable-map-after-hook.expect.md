@@ -39,7 +39,7 @@ import { useEffect, useState } from "react";
 import { mutate } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(6);
+  const $ = _c(8);
   const x = [{ ...props.value }];
   let t0;
   let t1;
@@ -64,25 +64,27 @@ function Component(props) {
     return <span key={item.id}>{item.text}</span>;
   });
   let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] !== y) {
     t3 = mutate(y);
-    $[2] = t3;
+    $[2] = y;
+    $[3] = t3;
   } else {
-    t3 = $[2];
+    t3 = $[3];
   }
   let t4;
-  if ($[3] !== onClick || $[4] !== t2) {
+  if ($[4] !== onClick || $[5] !== t2 || $[6] !== t3) {
     t4 = (
       <div onClick={onClick}>
         {t2}
         {t3}
       </div>
     );
-    $[3] = onClick;
-    $[4] = t2;
-    $[5] = t4;
+    $[4] = onClick;
+    $[5] = t2;
+    $[6] = t3;
+    $[7] = t4;
   } else {
-    t4 = $[5];
+    t4 = $[7];
   }
   return t4;
 }
