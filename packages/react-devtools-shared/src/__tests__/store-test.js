@@ -1915,8 +1915,12 @@ describe('Store', () => {
       });
     });
 
-    // @reactVersion >= 18.0
-    it('from react get counted', () => {
+    // In React 19, JSX warnings were moved into the renderer - https://github.com/facebook/react/pull/29088
+    // When the error is emitted, the source fiber of this error is not yet mounted
+    // So DevTools can't connect the error and the fiber
+    // TODO(hoxyq): update RDT to keep track of such fibers
+    // @reactVersion >= 19.0
+    it('from react get counted [React >= 19]', () => {
       function Example() {
         return [<Child />];
       }
@@ -1934,6 +1938,31 @@ describe('Store', () => {
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Example>
+              <Child>
+      `);
+    });
+
+    // @reactVersion >= 18.0
+    // @reactVersion < 19.0
+    it('from react get counted [React 18.x]', () => {
+      function Example() {
+        return [<Child />];
+      }
+      function Child() {
+        return null;
+      }
+
+      withErrorsOrWarningsIgnored(
+        ['Warning: Each child in a list should have a unique "key" prop'],
+        () => {
+          act(() => render(<Example />));
+        },
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+          ▾ <Example> ✕
               <Child>
       `);
     });
