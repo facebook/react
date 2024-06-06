@@ -12,6 +12,7 @@ import {
   IdentifierName,
   InstructionId,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveScopeBlock,
@@ -82,6 +83,13 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
     state.enter(() => {
       this.traverseBlock(block, state);
     });
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: Scopes
+  ): void {
+    this.traverseBlock(scopeBlock.instructions, state);
   }
 
   override visitScope(scope: ReactiveScopeBlock, state: Scopes): void {

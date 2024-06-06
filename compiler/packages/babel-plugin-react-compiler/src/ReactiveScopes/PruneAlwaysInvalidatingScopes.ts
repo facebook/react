@@ -107,7 +107,14 @@ class Transform extends ReactiveFunctionTransform<boolean> {
             this.unmemoizedValues.add(identifier);
           }
         }
-        return { kind: "replace-many", value: scopeBlock.instructions };
+        return {
+          kind: "replace",
+          value: {
+            kind: "pruned-scope",
+            scope: scopeBlock.scope,
+            instructions: scopeBlock.instructions,
+          },
+        };
       }
     }
     return { kind: "keep" };
