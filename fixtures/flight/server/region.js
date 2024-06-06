@@ -3,6 +3,7 @@
 // This is a server to host data-local resources like databases and RSC
 
 const path = require('path');
+const url = require('url');
 
 const register = require('react-server-dom-webpack/node-register');
 register();
@@ -192,7 +193,7 @@ if (process.env.NODE_ENV === 'development') {
         // We assume that if it was prefixed with file:// it's referring to the compiled output
         // and if it's a direct file path we assume it's source mapped back to original format.
         isCompiledOutput = true;
-        requestedFilePath = requestedFilePath.slice(7);
+        requestedFilePath = url.fileURLToPath(requestedFilePath);
       }
 
       const relativePath = path.relative(rootDir, requestedFilePath);
@@ -211,7 +212,9 @@ if (process.env.NODE_ENV === 'development') {
         // generate a source map for it so that we can add it to an ignoreList automatically.
         map = {
           version: 3,
-          sources: [requestedFilePath],
+          // We use the node:// protocol convention to teach Chrome DevTools that this is
+          // on a different protocol and not part of the current page.
+          sources: ['node:///' + requestedFilePath.slice(5)],
           sourcesContent: ['// Node Internals'],
           mappings: 'AAAA',
           ignoreList: [0],
@@ -224,9 +227,11 @@ if (process.env.NODE_ENV === 'development') {
         // was already applied we also use this path.
         const sourceContent = await readFile(requestedFilePath, 'utf8');
         const lines = sourceContent.split('\n').length;
+        // We ensure to absolute
+        const sourceURL = url.pathToFileURL(requestedFilePath);
         map = {
           version: 3,
-          sources: [requestedFilePath],
+          sources: [sourceURL],
           sourcesContent: [sourceContent],
           // Note: This approach to mapping each line only lets you jump to each line
           // not jump to a column within a line. To do that, you need a proper source map

@@ -1739,8 +1739,14 @@ function createFakeFunction<T>(
   }
 
   if (sourceMap) {
-    code +=
-      '\n//# sourceURL=rsc://server/' + filename + '?' + fakeFunctionIdx++;
+    // We use the prefix rsc://React/ to separate these from other files listed in
+    // the Chrome DevTools. We need a "host name" and not just a protocol because
+    // otherwise the group name becomes the root folder. Ideally we don't want to
+    // show these at all but there's two reasons to assign a fake URL.
+    // 1) A printed stack trace string needs a unique URL to be able to source map it.
+    // 2) If source maps are disabled or fails, you should at least be able to tell
+    //    which file it was.
+    code += '\n//# sourceURL=rsc://React/' + filename + '?' + fakeFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
     code += '\n//# sourceURL=' + filename;
