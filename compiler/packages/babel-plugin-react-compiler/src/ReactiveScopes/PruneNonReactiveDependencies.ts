@@ -7,8 +7,10 @@
 
 import {
   IdentifierId,
+  PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveScope,
   ReactiveScopeBlock,
   isSetStateType,
 } from "../HIR";
@@ -95,23 +97,34 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
     state: ReactiveIdentifiers
   ): void {
     this.traverseScope(scopeBlock, state);
-    for (const dep of scopeBlock.scope.dependencies) {
+    this.visitScopeImpl(scopeBlock.scope, state);
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: ReactiveIdentifiers
+  ): void {
+    this.traversePrunedScope(scopeBlock, state);
+  }
+
+  visitScopeImpl(scope: ReactiveScope, state: ReactiveIdentifiers): void {
+    for (const dep of scope.dependencies) {
       const isReactive = state.has(dep.identifier.id);
       if (!isReactive) {
-        scopeBlock.scope.dependencies.delete(dep);
+        scope.dependencies.delete(dep);
       }
     }
-    if (scopeBlock.scope.dependencies.size !== 0) {
+    if (scope.dependencies.size !== 0) {
       /**
        * If any of a scope's dependencies are reactive, then all of its
        * outputs will re-evaluate whenever those dependencies change.
        * Mark all of the outputs as reactive to reflect the fact that
        * they may change in practice based on a reactive input.
        */
-      for (const [, declaration] of scopeBlock.scope.declarations) {
+      for (const [, declaration] of scope.declarations) {
         state.add(declaration.identifier.id);
       }
-      for (const reassignment of scopeBlock.scope.reassignments) {
+      for (const reassignment of scope.reassignments) {
         state.add(reassignment.id);
       }
     }
