@@ -400,6 +400,11 @@ function codegenBlockNoReset(
         }
         break;
       }
+      case "pruned-scope": {
+        const scopeBlock = codegenBlockNoReset(cx, item.instructions);
+        statements.push(...scopeBlock.body);
+        break;
+      }
       case "scope": {
         const temp = new Map(cx.temp);
         codegenReactiveScope(cx, statements, item.scope, item.instructions);
