@@ -14,6 +14,7 @@ import {
   Place,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveScope,
   ReactiveScopeBlock,
   ReactiveStatement,
   ReactiveTerminal,
@@ -122,17 +123,11 @@ export function pruneNonEscapingScopes(fn: ReactiveFunction): void {
   }
   visitReactiveFunction(fn, new CollectDependenciesVisitor(fn.env), state);
 
-  // log(() => prettyFormat(state));
-
   /*
    * Then walk outward from the returned values and find all captured operands.
    * This forms the set of identifiers which should be memoized.
    */
   const memoized = computeMemoizedIdentifiers(state);
-
-  // log(() => prettyFormat(memoized));
-
-  // log(() => printReactiveFunction(fn));
 
   // Prune scopes that do not declare/reassign any escaping values
   visitReactiveFunction(fn, new PruneScopesTransform(), memoized);
@@ -200,7 +195,9 @@ type IdentifierNode = {
 
 // A scope node describing its dependencies
 type ScopeNode = {
-  dependencies: Array<IdentifierId>;
+  declarations: Array<IdentifierId>;
+  inputs: Set<IdentifierId>;
+  innerScopes: Set<ScopeId>;
   seen: boolean;
 };
 
@@ -216,6 +213,7 @@ class State {
   identifiers: Map<IdentifierId, IdentifierNode> = new Map();
   scopes: Map<ScopeId, ScopeNode> = new Map();
   escapingValues: Set<IdentifierId> = new Set();
+  currentScope: ReactiveScope | null = null;
 
   constructor(env: Environment) {
     this.env = env;
@@ -247,11 +245,18 @@ class State {
       let node = this.scopes.get(scope.id);
       if (node === undefined) {
         node = {
-          dependencies: [...scope.dependencies].map((dep) => dep.identifier.id),
+          declarations: [...scope.declarations]
+            .map(([id]) => id)
+            .concat(
+              [...scope.reassignments].map((identifier) => identifier.id)
+            ),
+          inputs: new Set(),
+          innerScopes: new Set(),
           seen: false,
         };
         this.scopes.set(scope.id, node);
       }
+      node.inputs.add(identifier);
       const identifierNode = this.identifiers.get(identifier);
       CompilerError.invariant(identifierNode !== undefined, {
         reason: "Expected identifier to be initialized",
@@ -260,6 +265,22 @@ class State {
         suggestions: null,
       });
       identifierNode.scopes.add(scope.id);
+    }
+  }
+
+  enterScope(scope: ReactiveScope, fn: () => void): void {
+    const parentScope = this.currentScope;
+    this.currentScope = scope;
+    fn();
+    this.currentScope = parentScope;
+
+    if (
+      parentScope !== null &&
+      scope.declarations.size === 0 &&
+      scope.reassignments.size === 0
+    ) {
+      const parentNode = this.scopes.get(parentScope.id)!;
+      parentNode.innerScopes.add(scope.id);
     }
   }
 }
@@ -273,7 +294,7 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
   const memoized = new Set<IdentifierId>();
 
   // Visit an identifier, optionally forcing it to be memoized
-  function visit(id: IdentifierId, forceMemoize: boolean = false): boolean {
+  function visit(id: IdentifierId): boolean {
     const node = state.identifiers.get(id);
     CompilerError.invariant(node !== undefined, {
       reason: `Expected a node for all identifiers, none found for \`${id}\``,
@@ -301,21 +322,19 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
 
     if (
       node.level === MemoizationLevel.Memoized ||
-      (node.level === MemoizationLevel.Conditional &&
-        (hasMemoizedDependency || forceMemoize)) ||
-      (node.level === MemoizationLevel.Unmemoized && forceMemoize)
+      (node.level === MemoizationLevel.Conditional && hasMemoizedDependency)
     ) {
       node.memoized = true;
       memoized.add(id);
       for (const scope of node.scopes) {
-        forceMemoizeScopeDependencies(scope);
+        memoizeScopeDependencies(scope);
       }
     }
     return node.memoized;
   }
 
   // Force all the scope's optionally-memoizeable dependencies (not "Never") to be memoized
-  function forceMemoizeScopeDependencies(id: ScopeId): void {
+  function memoizeScopeDependencies(id: ScopeId): void {
     const node = state.scopes.get(id);
     CompilerError.invariant(node !== undefined, {
       reason: "Expected a node for all scopes",
@@ -328,8 +347,14 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
     }
     node.seen = true;
 
-    for (const dep of node.dependencies) {
-      visit(dep, true);
+    for (const dep of node.declarations) {
+      visit(dep);
+    }
+    for (const dep of node.inputs) {
+      visit(dep);
+    }
+    for (const scope of node.innerScopes) {
+      memoizeScopeDependencies(scope);
     }
     return;
   }
@@ -812,6 +837,12 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
       memoizeJsxElements: !this.env.config.enableForest,
       forceMemoizePrimitives: this.env.config.enableForest,
     };
+  }
+
+  override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
+    state.enterScope(scopeBlock.scope, () => {
+      this.traverseScope(scopeBlock, state);
+    });
   }
 
   override visitInstruction(
