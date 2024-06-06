@@ -14,7 +14,10 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import isArray from 'shared/isArray';
 
-import {enableAddPropertiesFastPath} from 'shared/ReactFeatureFlags';
+import {
+  enableAddPropertiesFastPath,
+  enableShallowPropDiffing,
+} from 'shared/ReactFeatureFlags';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
@@ -342,7 +345,7 @@ function diffProperties(
     // Pattern match on: attributeConfig
     if (typeof attributeConfig !== 'object') {
       // case: !Object is the default case
-      if (defaultDiffer(prevProp, nextProp)) {
+      if (enableShallowPropDiffing || defaultDiffer(prevProp, nextProp)) {
         // a normal leaf has changed
         (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
           propKey
@@ -354,6 +357,7 @@ function diffProperties(
     ) {
       // case: CustomAttributeConfiguration
       const shouldUpdate =
+        enableShallowPropDiffing ||
         prevProp === undefined ||
         (typeof attributeConfig.diff === 'function'
           ? attributeConfig.diff(prevProp, nextProp)

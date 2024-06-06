@@ -168,12 +168,19 @@ function processStable(buildDir) {
       );
     }
 
+    const rnVersionString =
+      ReactVersion + '-native-fb-' + sha + '-' + dateString;
     if (fs.existsSync(buildDir + '/facebook-react-native')) {
-      const versionString =
-        ReactVersion + '-native-fb-' + sha + '-' + dateString;
       updatePlaceholderReactVersionInCompiledArtifacts(
         buildDir + '/facebook-react-native',
-        versionString
+        rnVersionString
+      );
+    }
+
+    if (fs.existsSync(buildDir + '/react-native')) {
+      updatePlaceholderReactVersionInCompiledArtifactsFb(
+        buildDir + '/react-native',
+        rnVersionString
       );
     }
 
@@ -265,17 +272,24 @@ function processExperimental(buildDir, version) {
     fs.writeFileSync(buildDir + '/facebook-www/VERSION_MODERN', versionString);
   }
 
+  const rnVersionString = ReactVersion + '-native-fb-' + sha + '-' + dateString;
   if (fs.existsSync(buildDir + '/facebook-react-native')) {
-    const versionString = ReactVersion + '-native-fb-' + sha + '-' + dateString;
     updatePlaceholderReactVersionInCompiledArtifacts(
       buildDir + '/facebook-react-native',
-      versionString
+      rnVersionString
     );
 
     // Also save a file with the version number
     fs.writeFileSync(
       buildDir + '/facebook-react-native/VERSION_NATIVE_FB',
-      versionString
+      rnVersionString
+    );
+  }
+
+  if (fs.existsSync(buildDir + '/react-native')) {
+    updatePlaceholderReactVersionInCompiledArtifactsFb(
+      buildDir + '/react-native',
+      rnVersionString
     );
   }
 
@@ -385,6 +399,34 @@ function updatePlaceholderReactVersionInCompiledArtifacts(
     .trim()
     .split('\n')
     .filter(filename => filename.endsWith('.js'));
+
+  for (const artifactFilename of artifactFilenames) {
+    const originalText = fs.readFileSync(artifactFilename, 'utf8');
+    const replacedText = originalText.replaceAll(
+      PLACEHOLDER_REACT_VERSION,
+      newVersion
+    );
+    fs.writeFileSync(artifactFilename, replacedText);
+  }
+}
+
+function updatePlaceholderReactVersionInCompiledArtifactsFb(
+  artifactsDirectory,
+  newVersion
+) {
+  // Update the version of React in the compiled artifacts by searching for
+  // the placeholder string and replacing it with a new one.
+  const artifactFilenames = String(
+    spawnSync('grep', [
+      '-lr',
+      PLACEHOLDER_REACT_VERSION,
+      '--',
+      artifactsDirectory,
+    ]).stdout
+  )
+    .trim()
+    .split('\n')
+    .filter(filename => filename.endsWith('.fb.js'));
 
   for (const artifactFilename of artifactFilenames) {
     const originalText = fs.readFileSync(artifactFilename, 'utf8');
