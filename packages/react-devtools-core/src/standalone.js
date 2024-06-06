@@ -279,7 +279,7 @@ function initialize(socket: WebSocket) {
   // $FlowFixMe[incompatible-call] found when upgrading Flow
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
-    supportsNativeInspection: true,
+    supportsNativeInspection: false,
     supportsTraceUpdates: true,
   });
 
