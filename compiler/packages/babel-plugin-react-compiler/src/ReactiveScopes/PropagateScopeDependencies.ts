@@ -692,8 +692,10 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     scopeBlock: PrunedReactiveScopeBlock,
     context: Context
   ): void {
-    // NOTE: we explicitly throw away the deps, we only enter() the scope to record its
-    // declarations
+    /*
+     * NOTE: we explicitly throw away the deps, we only enter() the scope to record its
+     * declarations
+     */
     const _scopeDepdencies = context.enter(scopeBlock.scope, () => {
       this.visitBlock(scopeBlock.instructions, context);
     });
