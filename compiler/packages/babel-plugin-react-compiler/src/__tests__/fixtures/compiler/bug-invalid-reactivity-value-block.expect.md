@@ -71,14 +71,15 @@ function Foo() {
   useNoAlias();
 
   const shouldCaptureObj = obj != null && CONST_TRUE;
-  let t0;
+  const t0 = shouldCaptureObj ? identity(obj) : null;
+  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = [shouldCaptureObj ? identity(obj) : null, obj];
-    $[0] = t0;
+    t1 = [t0, obj];
+    $[0] = t1;
   } else {
-    t0 = $[0];
+    t1 = $[0];
   }
-  const result = t0;
+  const result = t1;
 
   useNoAlias(result, obj);
   if (shouldCaptureObj && result[0] !== obj) {
