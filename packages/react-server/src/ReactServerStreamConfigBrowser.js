@@ -27,6 +27,21 @@ export function scheduleWork(callback: () => void) {
   channel.port2.postMessage(null);
 }
 
+function handleErrorInNextTick(error: any) {
+  setTimeout(() => {
+    throw error;
+  });
+}
+
+const LocalPromise = Promise;
+
+export const scheduleMicrotask: (callback: () => void) => void =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : callback => {
+        LocalPromise.resolve(null).then(callback).catch(handleErrorInNextTick);
+      };
+
 export function flushBuffered(destination: Destination) {
   // WHATWG Streams do not yet have a way to flush the underlying
   // transform streams. https://github.com/whatwg/streams/issues/960

@@ -60,6 +60,8 @@ export function scheduleWork(callback: () => void) {
   LocalPromise.resolve().then(callback).catch(handleErrorInNextTick);
 }
 
+export const scheduleMicrotask: (callback: () => void) => void = scheduleWork;
+
 export function beginWriting(destination: Destination) {
   destination.beginWriting();
 }

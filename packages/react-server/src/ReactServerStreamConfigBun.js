@@ -25,6 +25,8 @@ export function scheduleWork(callback: () => void) {
   setTimeout(callback, 0);
 }
 
+export const scheduleMicrotask = queueMicrotask;
+
 export function flushBuffered(destination: Destination) {
   // Bun direct streams provide a flush function.
   // If we don't have any more data to send right now.
