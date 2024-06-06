@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<36871355887c707a5517eb44a01a2206>>
+ * @generated SignedSource<<d1587f949b13da755b03e380d2d73e55>>
  */
 
 'use strict';
@@ -26671,7 +26671,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-rc-704aeed022-20240605';
+var ReactVersion = '19.0.0-rc-99da76f23a-20240606';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

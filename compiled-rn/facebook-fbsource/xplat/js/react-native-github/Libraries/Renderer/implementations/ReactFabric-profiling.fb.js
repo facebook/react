@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<362f6feb64e85c616d0c79fc23434de1>>
+ * @generated SignedSource<<4e94ac0a2adddffaf123f37aad23b6c1>>
  */
 
 "use strict";
@@ -11297,7 +11297,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1206 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-rc-704aeed022-20240605",
+    version: "19.0.0-rc-99da76f23a-20240606",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11353,7 +11353,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-rc-704aeed022-20240605"
+  reconcilerVersion: "19.0.0-rc-99da76f23a-20240606"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
