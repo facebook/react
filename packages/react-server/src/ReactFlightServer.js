@@ -3506,9 +3506,14 @@ function enqueueFlush(request: Request): void {
     // happen when we start flowing again
     request.destination !== null
   ) {
-    const destination = request.destination;
     request.flushScheduled = true;
-    scheduleWork(() => flushCompletedChunks(request, destination));
+    scheduleWork(() => {
+      request.flushScheduled = false;
+      const destination = request.destination;
+      if (destination) {
+        flushCompletedChunks(request, destination);
+      }
+    });
   }
 }
 

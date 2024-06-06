@@ -9,15 +9,13 @@
 
 'use strict';
 
+import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
+
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
-
-// Don't wait before processing work on the server.
-// TODO: we can replace this with FlightServer.act().
-global.setImmediate = cb => cb();
 
 let act;
 let use;
@@ -36,6 +34,8 @@ let ReactDOMStaticServer;
 let Suspense;
 let ErrorBoundary;
 let JSDOM;
+let ReactServerScheduler;
+let reactServerAct;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
@@ -45,6 +45,10 @@ describe('ReactFlightDOM', () => {
     jest.resetModules();
 
     JSDOM = require('jsdom').JSDOM;
+
+    ReactServerScheduler = require('scheduler');
+    patchSetImmediate(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -91,6 +95,17 @@ describe('ReactFlightDOM', () => {
       }
     };
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   function getTestStream() {
     const writable = new Stream.PassThrough();
@@ -181,9 +196,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -230,9 +244,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<RootModel />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -266,9 +279,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<RootModel />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -300,9 +312,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<RootModel />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -349,9 +360,11 @@ describe('ReactFlightDOM', () => {
     );
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <Component greeting={hi} />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <Component greeting={hi} />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -386,9 +399,11 @@ describe('ReactFlightDOM', () => {
     const {Component} = clientExports(Module);
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <Component greeting={'Hello'} />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <Component greeting={'Hello'} />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -424,9 +439,11 @@ describe('ReactFlightDOM', () => {
     const {split: Component} = clientExports(Module);
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <Component greeting={'Hello'} />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <Component greeting={'Hello'} />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -464,9 +481,11 @@ describe('ReactFlightDOM', () => {
     const AsyncModuleRef2 = await clientExports(AsyncModule2);
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -502,9 +521,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -539,9 +560,8 @@ describe('ReactFlightDOM', () => {
     const ThenRef = clientExports(thenExports).then;
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ThenRef />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<ThenRef />, webpackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -719,15 +739,13 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      model,
-      webpackMap,
-      {
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(model, webpackMap, {
         onError(x) {
           reportedErrors.push(x);
           return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
-      },
+      }),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -744,14 +762,18 @@ describe('ReactFlightDOM', () => {
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // This isn't enough to show anything.
-    await act(() => {
-      resolveFriends();
+    await serverAct(async () => {
+      await act(() => {
+        resolveFriends();
+      });
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // We can now show the details. Sidebar and posts are still loading.
-    await act(() => {
-      resolveName();
+    await serverAct(async () => {
+      await act(() => {
+        resolveName();
+      });
     });
     // Advance time enough to trigger a nested fallback.
     await act(() => {
@@ -768,9 +790,11 @@ describe('ReactFlightDOM', () => {
 
     const theError = new Error('Game over');
     // Let's *fail* loading games.
-    await act(async () => {
-      await rejectGames(theError);
-      await 'the inner async function';
+    await serverAct(async () => {
+      await act(async () => {
+        await rejectGames(theError);
+        await 'the inner async function';
+      });
     });
     const expectedGamesValue = __DEV__
       ? '<p>Game over + a dev digest</p>'
@@ -786,9 +810,11 @@ describe('ReactFlightDOM', () => {
     reportedErrors = [];
 
     // We can now show the sidebar.
-    await act(async () => {
-      await resolvePhotos();
-      await 'the inner async function';
+    await serverAct(async () => {
+      await act(async () => {
+        await resolvePhotos();
+        await 'the inner async function';
+      });
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -798,9 +824,11 @@ describe('ReactFlightDOM', () => {
     );
 
     // Show everything.
-    await act(async () => {
-      await resolvePosts();
-      await 'the inner async function';
+    await serverAct(async () => {
+      await act(async () => {
+        await resolvePosts();
+        await 'the inner async function';
+      });
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -867,14 +895,16 @@ describe('ReactFlightDOM', () => {
     const [Photos, resolvePhotosData] = makeDelayedText();
     const suspendedChunk = createSuspendedChunk(<p>loading</p>);
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      suspendedChunk.row,
-      webpackMap,
-      {
-        onError(error) {
-          reportedErrors.push(error);
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        suspendedChunk.row,
+        webpackMap,
+        {
+          onError(error) {
+            reportedErrors.push(error);
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -900,16 +930,20 @@ describe('ReactFlightDOM', () => {
       </Suspense>
     );
 
-    await act(async () => {
-      suspendedChunk.resolve({value, done: false, next: donePromise.promise});
-      donePromise.resolve({value, done: true});
+    await serverAct(async () => {
+      await act(async () => {
+        suspendedChunk.resolve({value, done: false, next: donePromise.promise});
+        donePromise.resolve({value, done: true});
+      });
     });
 
     expect(container.innerHTML).toBe('<p>loading posts and photos</p>');
 
-    await act(async () => {
-      await resolvePostsData('posts');
-      await resolvePhotosData('photos');
+    await serverAct(async () => {
+      await act(async () => {
+        await resolvePostsData('posts');
+        await resolvePhotosData('photos');
+      });
     });
 
     expect(container.innerHTML).toBe('<div>posts</div><div>photos</div>');
@@ -945,9 +979,11 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOMClient.createRoot(container);
 
     const stream1 = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <App color="red" />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <App color="red" />,
+        webpackMap,
+      ),
     );
     pipe(stream1.writable);
     const response1 = ReactServerDOMClient.createFromReadableStream(
@@ -973,9 +1009,11 @@ describe('ReactFlightDOM', () => {
     inputB.value = 'goodbye';
 
     const stream2 = getTestStream();
-    const {pipe: pipe2} = ReactServerDOMServer.renderToPipeableStream(
-      <App color="blue" />,
-      webpackMap,
+    const {pipe: pipe2} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <App color="blue" />,
+        webpackMap,
+      ),
     );
     pipe2(stream2.writable);
     const response2 = ReactServerDOMClient.createFromReadableStream(
@@ -1005,18 +1043,20 @@ describe('ReactFlightDOM', () => {
     const reportedErrors = [];
 
     const {writable, readable} = getTestStream();
-    const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <InfiniteSuspend />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
-          const message = typeof x === 'string' ? x : x.message;
-          return __DEV__ ? 'a dev digest' : `digest("${message}")`;
+    const {pipe, abort} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <InfiniteSuspend />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+            const message = typeof x === 'string' ? x : x.message;
+            return __DEV__ ? 'a dev digest' : `digest("${message}")`;
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -1067,16 +1107,18 @@ describe('ReactFlightDOM', () => {
     const ClientReference = clientModuleError(new Error('module init error'));
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <ClientComponent prop={ClientReference} />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent prop={ClientReference} />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -1117,16 +1159,18 @@ describe('ReactFlightDOM', () => {
     );
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <ClientComponent prop={ClientReference} />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent prop={ClientReference} />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -1176,17 +1220,19 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <ClientComponent />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x.message);
-          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x.message);
+            return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+          },
         },
-      },
+      ),
     );
     pipe(writable);
 
@@ -1255,9 +1301,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -1311,15 +1359,17 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
-          return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+            return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
+          },
         },
-      },
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -1368,9 +1418,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(writable);
 
@@ -1463,9 +1515,8 @@ describe('ReactFlightDOM', () => {
 
     const {writable, readable} = getTestStream();
 
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
     pipe(writable);
 
@@ -1485,11 +1536,10 @@ describe('ReactFlightDOM', () => {
     function onError(error, errorInfo) {
       errors.push(error, errorInfo);
     }
-    const result = await ReactDOMStaticServer.prerenderToNodeStream(
-      <Response />,
-      {
+    const result = await serverAct(() =>
+      ReactDOMStaticServer.prerenderToNodeStream(<Response />, {
         onError,
-      },
+      }),
     );
 
     const prelude = await new Promise((resolve, reject) => {
@@ -1554,9 +1604,11 @@ describe('ReactFlightDOM', () => {
     // module graphs and we are contriving the sequencing to work in a way where
     // the right HostDispatcher is in scope during the Flight Server Float calls and the
     // Flight Client hint dispatches
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(flightWritable);
 
@@ -1577,7 +1629,7 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    await act(async () => {
+    await serverAct(async () => {
       ReactDOMFizzServer.renderToPipeableStream(<App />).pipe(fizzWritable);
     });
 
@@ -1680,11 +1732,11 @@ describe('ReactFlightDOM', () => {
     // pausing to let Flight runtime tick. This is a test only artifact of the fact that
     // we aren't operating separate module graphs for flight and fiber. In a real app
     // each would have their own dispatcher and there would be no cross dispatching.
-    await 1;
+    await serverAct(() => {});
 
     const {writable: fizzWritable1, readable: fizzReadable1} = getTestStream();
     const {writable: fizzWritable2, readable: fizzReadable2} = getTestStream();
-    await act(async () => {
+    await serverAct(async () => {
       ReactDOMFizzServer.renderToPipeableStream(
         <App stream={flightReadable1} />,
       ).pipe(fizzWritable1);
@@ -1751,10 +1803,12 @@ describe('ReactFlightDOM', () => {
 
     const {writable, readable} = getTestStream();
 
-    ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
-    ).pipe(writable);
+    await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ).pipe(writable),
+    );
 
     const hintRows = [];
     async function collectHints(stream) {
@@ -1798,16 +1852,18 @@ describe('ReactFlightDOM', () => {
     class InvalidValue {}
 
     const {writable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <div>
-        <ClientComponent prop={ClientReference} invalid={InvalidValue} />
-      </div>,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <div>
+          <ClientComponent prop={ClientReference} invalid={InvalidValue} />
+        </div>,
+        webpackMap,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
+      ),
     );
     pipe(writable);
 
@@ -1839,9 +1895,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <ServerComponent />,
-      webpackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
