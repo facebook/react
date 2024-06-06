@@ -13,6 +13,21 @@ export type PrecomputedChunk = Uint8Array;
 export opaque type Chunk = Uint8Array;
 export type BinaryChunk = Uint8Array;
 
+function handleErrorInNextTick(error: any) {
+  setTimeout(() => {
+    throw error;
+  });
+}
+
+const LocalPromise = Promise;
+
+export const scheduleMicrotask: (callback: () => void) => void =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : callback => {
+        LocalPromise.resolve(null).then(callback).catch(handleErrorInNextTick);
+      };
+
 export function scheduleWork(callback: () => void) {
   setTimeout(callback, 0);
 }

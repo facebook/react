@@ -31,6 +31,7 @@ export opaque type Chunk = mixed; // eslint-disable-line no-undef
 export opaque type BinaryChunk = mixed; // eslint-disable-line no-undef
 
 export const scheduleWork = $$$config.scheduleWork;
+export const scheduleMicrotask = $$$config.scheduleMicrotask;
 export const beginWriting = $$$config.beginWriting;
 export const writeChunk = $$$config.writeChunk;
 export const writeChunkAndReturn = $$$config.writeChunkAndReturn;

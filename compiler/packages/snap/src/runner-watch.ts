@@ -189,7 +189,7 @@ function subscribeKeyEvents(
   state: RunnerState,
   onChange: (state: RunnerState) => void
 ) {
-  process.stdin.on("keypress", (str, key) => {
+  process.stdin.on("keypress", async (str, key) => {
     if (key.name === "u") {
       // u => update fixtures
       state.mode.action = RunnerAction.Update;
@@ -197,6 +197,7 @@ function subscribeKeyEvents(
       process.exit(0);
     } else if (key.name === "f") {
       state.mode.filter = !state.mode.filter;
+      state.filter = state.mode.filter ? await readTestFilter() : null;
       state.mode.action = RunnerAction.Test;
     } else {
       // any other key re-runs tests
