@@ -37,7 +37,7 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
   return new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
-    supportsNativeInspection: true,
+    supportsNativeInspection: false,
     ...config,
   });
 }

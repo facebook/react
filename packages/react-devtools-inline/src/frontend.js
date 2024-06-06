@@ -23,7 +23,7 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
     supportsTimeline: true,
-    supportsNativeInspection: true,
+    supportsNativeInspection: false,
     ...config,
   });
 }
