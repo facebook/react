@@ -25,6 +25,9 @@ type Destination = Array<Uint8Array>;
 const textEncoder = new TextEncoder();
 
 const ReactNoopFlightServer = ReactFlightServer({
+  scheduleMicrotask(callback: () => void) {
+    callback();
+  },
   scheduleWork(callback: () => void) {
     callback();
   },
