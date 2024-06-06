@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {patchMessageChannel} from '../../../../scripts/jest/patchMessageChannel';
+
 import {
   getVisibleChildren,
   insertNodesAndExecuteScripts,
@@ -25,10 +27,16 @@ let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
 let container;
+let Scheduler;
+let act;
 
 describe('ReactDOMFizzStaticFloat', () => {
   beforeEach(() => {
     jest.resetModules();
+    Scheduler = require('scheduler');
+    patchMessageChannel(Scheduler);
+    act = require('internal-test-utils').act;
+
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
@@ -43,6 +51,17 @@ describe('ReactDOMFizzStaticFloat', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await act(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   async function readIntoContainer(stream) {
     const reader = stream.getReader();
@@ -135,7 +154,9 @@ describe('ReactDOMFizzStaticFloat', () => {
       virtual: true,
     });
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     await readIntoContainer(prerendered.prelude);
@@ -171,28 +192,28 @@ describe('ReactDOMFizzStaticFloat', () => {
     ]);
 
     prerendering = false;
-    const content = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const content = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(content);
 
-    // Dispatch load event to injected stylesheet
-    const linkCreds = document.querySelector(
-      'link[rel="stylesheet"][href="style creds"]',
-    );
-    const linkAnon = document.querySelector(
-      'link[rel="stylesheet"][href="style anon"]',
-    );
-    const event = document.createEvent('Events');
-    event.initEvent('load', true, true);
-    linkCreds.dispatchEvent(event);
-    linkAnon.dispatchEvent(event);
-
-    // Wait for the instruction microtasks to flush.
-    await 0;
-    await 0;
+    await act(() => {
+      // Dispatch load event to injected stylesheet
+      const linkCreds = document.querySelector(
+        'link[rel="stylesheet"][href="style creds"]',
+      );
+      const linkAnon = document.querySelector(
+        'link[rel="stylesheet"][href="style anon"]',
+      );
+      const event = document.createEvent('Events');
+      event.initEvent('load', true, true);
+      linkCreds.dispatchEvent(event);
+      linkAnon.dispatchEvent(event);
+    });
 
     expect(getVisibleChildren(document)).toEqual(
       <html>

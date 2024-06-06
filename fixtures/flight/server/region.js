@@ -187,7 +187,11 @@ if (process.env.NODE_ENV === 'development') {
       res.set('Content-type', 'application/json');
       let requestedFilePath = req.query.name;
 
+      let isCompiledOutput = false;
       if (requestedFilePath.startsWith('file://')) {
+        // We assume that if it was prefixed with file:// it's referring to the compiled output
+        // and if it's a direct file path we assume it's source mapped back to original format.
+        isCompiledOutput = true;
         requestedFilePath = requestedFilePath.slice(7);
       }
 
@@ -204,11 +208,11 @@ if (process.env.NODE_ENV === 'development') {
       let map;
       // There are two ways to return a source map depending on what we observe in error.stack.
       // A real app will have a similar choice to make for which strategy to pick.
-      if (!sourceMap || Error.prepareStackTrace === undefined) {
-        // When --enable-source-maps is enabled, the error.stack that we use to track
-        // stacks will have had the source map already applied so it's pointing to the
-        // original source. We return a blank source map that just maps everything to
-        // the original source in this case.
+      if (!sourceMap || !isCompiledOutput) {
+        // If a file doesn't have a source map, such as this file, then we generate a blank
+        // source map that just contains the original content and segments pointing to the
+        // original lines.
+        // Similarly
         const sourceContent = await readFile(requestedFilePath, 'utf8');
         const lines = sourceContent.split('\n').length;
         map = {
@@ -222,13 +226,11 @@ if (process.env.NODE_ENV === 'development') {
           sourceRoot: '',
         };
       } else {
-        // If something has overridden prepareStackTrace it is likely not getting the
-        // natively applied source mapping to error.stack and so the line will point to
-        // the compiled output similar to how a browser works.
-        // E.g. ironically this can happen with the source-map-support library that is
-        // auto-invoked by @babel/register if external source maps are generated.
-        // In this case we just use the source map that the native source mapping would
-        // have used.
+        // We always set prepareStackTrace before reading the stack so that we get the stack
+        // without source maps applied. Therefore we have to use the original source map.
+        // If something read .stack before we did, we might observe the line/column after
+        // source mapping back to the original file. We use the isCompiledOutput check above
+        // in that case.
         map = sourceMap.payload;
       }
       res.write(JSON.stringify(map));
