@@ -361,7 +361,8 @@ function getPlugins(
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
-    const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
+    const needsMinifiedByClosure =
+      bundleType !== ESM_PROD && bundleType !== ESM_DEV;
 
     return [
       // Keep dynamic imports as externals
