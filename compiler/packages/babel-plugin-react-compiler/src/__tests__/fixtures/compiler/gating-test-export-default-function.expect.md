@@ -24,7 +24,7 @@ function Foo(props) {
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating @compilationMode(annotation)
-export default isForgetEnabled_Fixtures()
+const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       "use forget";
       const $ = _c(2);
@@ -42,6 +42,7 @@ export default isForgetEnabled_Fixtures()
       "use forget";
       return <div>{props.bar}</div>;
     };
+export default Bar;
 
 function NoForget(props) {
   return <Bar>{props.noForget}</Bar>;
