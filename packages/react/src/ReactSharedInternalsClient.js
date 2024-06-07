@@ -35,7 +35,7 @@ export type SharedStateClient = {
   thrownErrors: Array<mixed>,
 
   // ReactDebugCurrentFrame
-  getCurrentStack: null | (() => string),
+  getCurrentStack: null | ((stack: Error) => string),
 };
 
 export type RendererTask = boolean => RendererTask | null;
@@ -54,7 +54,9 @@ if (__DEV__) {
   ReactSharedInternals.didUsePromise = false;
   ReactSharedInternals.thrownErrors = [];
   // Stack implementation injected by the current renderer.
-  ReactSharedInternals.getCurrentStack = (null: null | (() => string));
+  ReactSharedInternals.getCurrentStack = (null:
+    | null
+    | ((stack: Error) => string));
 }
 
 export default ReactSharedInternals;

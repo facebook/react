@@ -18,7 +18,7 @@ export function setSuppressWarning(newSuppressWarning) {
 export function warn(format, ...args) {
   if (__DEV__) {
     if (!suppressWarning) {
-      printWarning('warn', format, args);
+      printWarning('warn', format, args, new Error('react-stack-top-frame'));
     }
   }
 }
@@ -26,19 +26,19 @@ export function warn(format, ...args) {
 export function error(format, ...args) {
   if (__DEV__) {
     if (!suppressWarning) {
-      printWarning('error', format, args);
+      printWarning('error', format, args, new Error('react-stack-top-frame'));
     }
   }
 }
 
-function printWarning(level, format, args) {
+function printWarning(level, format, args, currentStack) {
   if (__DEV__) {
     const React = require('react');
     const ReactSharedInternals =
       React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
     // Defensive in case this is fired before React is initialized.
     if (ReactSharedInternals != null && ReactSharedInternals.getCurrentStack) {
-      const stack = ReactSharedInternals.getCurrentStack();
+      const stack = ReactSharedInternals.getCurrentStack(currentStack);
       if (stack !== '') {
         format += '%s';
         args.push(stack);

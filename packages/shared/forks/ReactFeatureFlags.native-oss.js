@@ -102,7 +102,7 @@ export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableAsyncIterableChildren = false;
 export const enableAddPropertiesFastPath = false;
-
+export const enableShallowPropDiffing = false;
 export const renameElementSymbol = true;
 
 export const enableOwnerStacks = __EXPERIMENTAL__;

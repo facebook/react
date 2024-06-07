@@ -103,6 +103,11 @@ function filterDebugStack(error: Error): string {
   if (lastFrameIdx !== -1) {
     // Cut off everything after our "callComponent" slot since it'll be Fiber internals.
     frames.length = lastFrameIdx;
+  } else {
+    // We didn't find any internal callsite out to user space.
+    // This means that this was called outside an owner or the owner is fully internal.
+    // To keep things light we exclude the entire trace in this case.
+    return '';
   }
   return frames.filter(isNotExternal).join('\n');
 }

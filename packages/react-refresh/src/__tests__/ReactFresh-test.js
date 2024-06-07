@@ -2441,7 +2441,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  // @gate www && __DEV__
+  // @gate enableLegacyHidden && __DEV__
   it('can hot reload offscreen components', async () => {
     const AppV1 = prepare(() => {
       function Hello() {

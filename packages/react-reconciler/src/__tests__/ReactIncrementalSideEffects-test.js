@@ -481,7 +481,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('preserves a previously rendered node when deprioritized', async () => {
     function Middle(props) {
       Scheduler.log('Middle');
@@ -530,7 +530,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('can reuse side-effects after being preempted', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
@@ -610,7 +610,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', async () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -733,7 +733,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={3} />);
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('updates a child even though the old props is empty', async () => {
     function Foo(props) {
       return (
@@ -984,7 +984,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('deprioritizes setStates that happens within a deprioritized tree', async () => {
     const barInstances = [];
 

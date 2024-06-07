@@ -16,6 +16,7 @@ let act;
 let use;
 let useDebugValue;
 let useState;
+let useTransition;
 let useMemo;
 let useEffect;
 let Suspense;
@@ -38,6 +39,7 @@ describe('ReactUse', () => {
     use = React.use;
     useDebugValue = React.useDebugValue;
     useState = React.useState;
+    useTransition = React.useTransition;
     useMemo = React.useMemo;
     useEffect = React.useEffect;
     Suspense = React.Suspense;
@@ -1915,4 +1917,80 @@ describe('ReactUse', () => {
     assertLog(['Hi', 'World']);
     expect(root).toMatchRenderedOutput(<div>Hi World</div>);
   });
+
+  it(
+    'regression: does not get stuck in pending state after `use` suspends ' +
+      '(when `use` comes before all hooks)',
+    async () => {
+      // This is a regression test. The root cause was an issue where we failed to
+      // switch from the "re-render" dispatcher back to the "update" dispatcher
+      // after a `use` suspends and triggers a replay.
+      let update;
+      function App({promise}) {
+        const value = use(promise);
+
+        const [isPending, startLocalTransition] = useTransition();
+        update = () => {
+          startLocalTransition(() => {
+            root.render(<App promise={getAsyncText('Updated')} />);
+          });
+        };
+
+        return <Text text={value + (isPending ? ' (pending...)' : '')} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App promise={Promise.resolve('Initial')} />);
+      });
+      assertLog(['Initial']);
+      expect(root).toMatchRenderedOutput('Initial');
+
+      await act(() => update());
+      assertLog(['Async text requested [Updated]', 'Initial (pending...)']);
+
+      await act(() => resolveTextRequests('Updated'));
+      assertLog(['Updated']);
+      expect(root).toMatchRenderedOutput('Updated');
+    },
+  );
+
+  it(
+    'regression: does not get stuck in pending state after `use` suspends ' +
+      '(when `use` in in the middle of hook list)',
+    async () => {
+      // Same as previous test but `use` comes in between two hooks.
+      let update;
+      function App({promise}) {
+        // This hook is only here to test that `use` resumes correctly after
+        // suspended even if it comes in between other hooks.
+        useState(false);
+
+        const value = use(promise);
+
+        const [isPending, startLocalTransition] = useTransition();
+        update = () => {
+          startLocalTransition(() => {
+            root.render(<App promise={getAsyncText('Updated')} />);
+          });
+        };
+
+        return <Text text={value + (isPending ? ' (pending...)' : '')} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => {
+        root.render(<App promise={Promise.resolve('Initial')} />);
+      });
+      assertLog(['Initial']);
+      expect(root).toMatchRenderedOutput('Initial');
+
+      await act(() => update());
+      assertLog(['Async text requested [Updated]', 'Initial (pending...)']);
+
+      await act(() => resolveTextRequests('Updated'));
+      assertLog(['Updated']);
+      expect(root).toMatchRenderedOutput('Updated');
+    },
+  );
 });

@@ -178,7 +178,7 @@ function makeManualMemoizationMarkers(
   return [
     {
       id: makeInstructionId(0),
-      lvalue: createTemporaryPlace(env),
+      lvalue: createTemporaryPlace(env, fnExpr.loc),
       value: {
         kind: "StartMemoize",
         manualMemoId,
@@ -193,7 +193,7 @@ function makeManualMemoizationMarkers(
     },
     {
       id: makeInstructionId(0),
-      lvalue: createTemporaryPlace(env),
+      lvalue: createTemporaryPlace(env, fnExpr.loc),
       value: {
         kind: "FinishMemoize",
         manualMemoId,

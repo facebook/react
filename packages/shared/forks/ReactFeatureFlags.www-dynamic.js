@@ -23,7 +23,6 @@ export const alwaysThrottleRetries = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableUseDeferredValueInitialArg = __VARIANT__;
 export const enableRenderableContext = __VARIANT__;
-export const enableRefAsProp = __VARIANT__;
 export const enableFastJSX = __VARIANT__;
 export const enableRetryLaneExpiration = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;
