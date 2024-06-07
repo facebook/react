@@ -22,7 +22,7 @@ if (
 ) {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
 }
-var ReactVersion = '19.0.0-www-classic-eb259b5d3b-20240605';
+var ReactVersion = '19.0.0-www-classic-142b2a8230-20240607';
 
 // Re-export dynamic flags from the www version.
 var dynamicFeatureFlags = require('ReactFeatureFlags');
@@ -36,7 +36,7 @@ var enableRefAsProp = true;
 // because JSX is an extremely hot path.
 
 var disableStringRefs = false;
-var disableLegacyMode = false;
+var disableLegacyMode = dynamicFeatureFlags.disableLegacyMode;
 
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
@@ -1150,6 +1150,9 @@ function getComponentNameFromFiber(fiber) {
 
     case IncompleteClassComponent:
     case IncompleteFunctionComponent:
+      if (disableLegacyMode) {
+        break;
+      }
 
     // Fallthrough
 
@@ -3030,7 +3033,7 @@ function act(callback) {
     // `act` calls can be nested.
     //
     // If we're already inside an `act` scope, reuse the existing queue.
-    var prevIsBatchingLegacy = ReactSharedInternals.isBatchingLegacy ;
+    var prevIsBatchingLegacy = !disableLegacyMode ? ReactSharedInternals.isBatchingLegacy : false;
     var prevActQueue = ReactSharedInternals.actQueue;
     var prevActScopeDepth = actScopeDepth;
     actScopeDepth++;
@@ -3039,7 +3042,7 @@ function act(callback) {
     // triggered during an async event, because this is how the legacy
     // implementation of `act` behaved.
 
-    {
+    if (!disableLegacyMode) {
       ReactSharedInternals.isBatchingLegacy = true;
     }
 
@@ -3081,7 +3084,7 @@ function act(callback) {
     }
 
     if (ReactSharedInternals.thrownErrors.length > 0) {
-      {
+      if (!disableLegacyMode) {
         ReactSharedInternals.isBatchingLegacy = prevIsBatchingLegacy;
       }
 

@@ -126,7 +126,7 @@ var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 var enableAsyncIterableChildren = false;
 var enableSuspenseCallback = true;
 var passChildrenWhenCloningPersistedNodes = false;
-var disableLegacyMode = true;
+var disableLegacyMode = true ;
 var enableOwnerStacks = false;
 
 var FunctionComponent = 0;
@@ -28159,7 +28159,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-modern-eb259b5d3b-20240605';
+var ReactVersion = '19.0.0-www-modern-142b2a8230-20240607';
 
 /*
  * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol

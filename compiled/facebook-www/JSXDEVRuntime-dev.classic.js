@@ -30,6 +30,7 @@ var enableRefAsProp = true;
 // because JSX is an extremely hot path.
 
 var disableStringRefs = false;
+var disableLegacyMode = dynamicFeatureFlags.disableLegacyMode;
 
 // When adding new symbols to this file,
 // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
@@ -893,6 +894,9 @@ function getComponentNameFromFiber(fiber) {
 
     case IncompleteClassComponent:
     case IncompleteFunctionComponent:
+      if (disableLegacyMode) {
+        break;
+      }
 
     // Fallthrough
 

@@ -147,6 +147,7 @@ module.exports = function ($$$config) {
         return "TracingMarker";
       case 17:
       case 28:
+        if (disableLegacyMode) break;
       case 1:
       case 0:
       case 14:
@@ -1088,7 +1089,7 @@ module.exports = function ($$$config) {
       do {
         var didPerformSomeWork = !1;
         for (var root = firstScheduledRoot; null !== root; ) {
-          if (!onlyLegacy || 0 === root.tag) {
+          if (!onlyLegacy || (!disableLegacyMode && 0 === root.tag)) {
             var workInProgressRootRenderLanes$16 =
               workInProgressRootRenderLanes;
             workInProgressRootRenderLanes$16 = getNextLanes(
@@ -3683,7 +3684,7 @@ module.exports = function ($$$config) {
     root,
     rootRenderLanes
   ) {
-    if (0 === (suspenseBoundary.mode & 1))
+    if (!disableLegacyMode && 0 === (suspenseBoundary.mode & 1))
       return (
         suspenseBoundary === returnFiber
           ? (suspenseBoundary.flags |= 65536)
@@ -3730,7 +3731,8 @@ module.exports = function ($$$config) {
           );
       }
       currentSourceFiber = sourceFiber.tag;
-      0 !== (sourceFiber.mode & 1) ||
+      disableLegacyMode ||
+        0 !== (sourceFiber.mode & 1) ||
         (0 !== currentSourceFiber &&
           11 !== currentSourceFiber &&
           15 !== currentSourceFiber) ||
@@ -3744,33 +3746,31 @@ module.exports = function ($$$config) {
       if (null !== currentSourceFiber) {
         switch (currentSourceFiber.tag) {
           case 13:
-            return (
-              sourceFiber.mode & 1 &&
-                (null === shellBoundary
-                  ? renderDidSuspendDelayIfPossible()
-                  : null === currentSourceFiber.alternate &&
-                    0 === workInProgressRootExitStatus &&
-                    (workInProgressRootExitStatus = 3)),
-              (currentSourceFiber.flags &= -257),
-              markSuspenseBoundaryShouldCapture(
-                currentSourceFiber,
-                returnFiber,
-                sourceFiber,
-                root,
-                rootRenderLanes
-              ),
-              value === noopSuspenseyCommitThenable
-                ? (currentSourceFiber.flags |= 16384)
-                : ((sourceFiber = currentSourceFiber.updateQueue),
-                  null === sourceFiber
-                    ? (currentSourceFiber.updateQueue = new Set([value]))
-                    : sourceFiber.add(value),
-                  currentSourceFiber.mode & 1 &&
-                    attachPingListener(root, value, rootRenderLanes)),
-              !1
+            if (disableLegacyMode || sourceFiber.mode & 1)
+              null === shellBoundary
+                ? renderDidSuspendDelayIfPossible()
+                : null === currentSourceFiber.alternate &&
+                  0 === workInProgressRootExitStatus &&
+                  (workInProgressRootExitStatus = 3);
+            currentSourceFiber.flags &= -257;
+            markSuspenseBoundaryShouldCapture(
+              currentSourceFiber,
+              returnFiber,
+              sourceFiber,
+              root,
+              rootRenderLanes
             );
+            value === noopSuspenseyCommitThenable
+              ? (currentSourceFiber.flags |= 16384)
+              : ((sourceFiber = currentSourceFiber.updateQueue),
+                null === sourceFiber
+                  ? (currentSourceFiber.updateQueue = new Set([value]))
+                  : sourceFiber.add(value),
+                (disableLegacyMode || currentSourceFiber.mode & 1) &&
+                  attachPingListener(root, value, rootRenderLanes));
+            return !1;
           case 22:
-            if (currentSourceFiber.mode & 1)
+            if (disableLegacyMode || currentSourceFiber.mode & 1)
               return (
                 (currentSourceFiber.flags |= 65536),
                 value === noopSuspenseyCommitThenable
@@ -3793,7 +3793,7 @@ module.exports = function ($$$config) {
         }
         throw Error(formatProdErrorMessage(435, currentSourceFiber.tag));
       }
-      if (1 === root.tag)
+      if (disableLegacyMode || 1 === root.tag)
         return (
           attachPingListener(root, value, rootRenderLanes),
           renderDidSuspendDelayIfPossible(),
@@ -3801,7 +3801,7 @@ module.exports = function ($$$config) {
         );
       value = Error(formatProdErrorMessage(426));
     }
-    if (isHydrating && sourceFiber.mode & 1)
+    if (isHydrating && (disableLegacyMode || sourceFiber.mode & 1))
       return (
         (currentSourceFiber = suspenseHandlerStackCursor.current),
         null !== currentSourceFiber
@@ -4204,35 +4204,36 @@ module.exports = function ($$$config) {
           renderLanes
         );
       }
-      if (0 === (workInProgress.mode & 1))
+      if (disableLegacyMode || 0 !== (workInProgress.mode & 1))
+        if (0 !== (renderLanes & 536870912))
+          (workInProgress.memoizedState = { baseLanes: 0, cachePool: null }),
+            null !== current &&
+              pushTransition(
+                workInProgress,
+                null !== prevState ? prevState.cachePool : null,
+                null
+              ),
+            null !== prevState
+              ? pushHiddenContext(workInProgress, prevState)
+              : reuseHiddenContextOnStack(),
+            pushOffscreenSuspenseHandler(workInProgress);
+        else
+          return (
+            (workInProgress.lanes = workInProgress.childLanes = 536870912),
+            deferHiddenOffscreenComponent(
+              current,
+              workInProgress,
+              null !== prevState
+                ? prevState.baseLanes | renderLanes
+                : renderLanes,
+              renderLanes
+            )
+          );
+      else
         (workInProgress.memoizedState = { baseLanes: 0, cachePool: null }),
           null !== current && pushTransition(workInProgress, null, null),
           reuseHiddenContextOnStack(),
           pushOffscreenSuspenseHandler(workInProgress);
-      else if (0 !== (renderLanes & 536870912))
-        (workInProgress.memoizedState = { baseLanes: 0, cachePool: null }),
-          null !== current &&
-            pushTransition(
-              workInProgress,
-              null !== prevState ? prevState.cachePool : null,
-              null
-            ),
-          null !== prevState
-            ? pushHiddenContext(workInProgress, prevState)
-            : reuseHiddenContextOnStack(),
-          pushOffscreenSuspenseHandler(workInProgress);
-      else
-        return (
-          (workInProgress.lanes = workInProgress.childLanes = 536870912),
-          deferHiddenOffscreenComponent(
-            current,
-            workInProgress,
-            null !== prevState
-              ? prevState.baseLanes | renderLanes
-              : renderLanes,
-            renderLanes
-          )
-        );
     } else if (null !== prevState) {
       nextProps = prevState.cachePool;
       nextIsDetached = null;
@@ -4827,7 +4828,7 @@ module.exports = function ($$$config) {
             (showFallback.return = workInProgress),
             (nextProps.sibling = showFallback),
             (workInProgress.child = nextProps),
-            0 !== (workInProgress.mode & 1) &&
+            (disableLegacyMode || 0 !== (workInProgress.mode & 1)) &&
               reconcileChildFibers(
                 workInProgress,
                 current.child,
@@ -4975,18 +4976,19 @@ module.exports = function ($$$config) {
       JSCompiler_temp$jscomp$0 = current.child;
       didSuspend = JSCompiler_temp$jscomp$0.sibling;
       var primaryChildProps = { mode: "hidden", children: nextProps.children };
-      0 === (nextInstance & 1) &&
-      workInProgress.child !== JSCompiler_temp$jscomp$0
-        ? ((nextProps = workInProgress.child),
-          (nextProps.childLanes = 0),
-          (nextProps.pendingProps = primaryChildProps),
-          (workInProgress.deletions = null))
-        : ((nextProps = createWorkInProgress(
+      disableLegacyMode ||
+      0 !== (nextInstance & 1) ||
+      workInProgress.child === JSCompiler_temp$jscomp$0
+        ? ((nextProps = createWorkInProgress(
             JSCompiler_temp$jscomp$0,
             primaryChildProps
           )),
           (nextProps.subtreeFlags =
-            JSCompiler_temp$jscomp$0.subtreeFlags & 31457280));
+            JSCompiler_temp$jscomp$0.subtreeFlags & 31457280))
+        : ((nextProps = workInProgress.child),
+          (nextProps.childLanes = 0),
+          (nextProps.pendingProps = primaryChildProps),
+          (workInProgress.deletions = null));
       null !== didSuspend
         ? (showFallback = createWorkInProgress(didSuspend, showFallback))
         : ((showFallback = createFiberFromFragment(
@@ -5062,7 +5064,9 @@ module.exports = function ($$$config) {
       mode: "visible",
       children: nextProps.children
     });
-    0 === (workInProgress.mode & 1) && (JSCompiler_temp.lanes = renderLanes);
+    disableLegacyMode ||
+      0 !== (workInProgress.mode & 1) ||
+      (JSCompiler_temp.lanes = renderLanes);
     JSCompiler_temp.return = workInProgress;
     JSCompiler_temp.sibling = null;
     null !== current &&
@@ -5093,15 +5097,15 @@ module.exports = function ($$$config) {
     var mode = workInProgress.mode,
       progressedPrimaryFragment = workInProgress.child;
     primaryChildren = { mode: "hidden", children: primaryChildren };
-    0 === (mode & 1) && null !== progressedPrimaryFragment
-      ? ((progressedPrimaryFragment.childLanes = 0),
-        (progressedPrimaryFragment.pendingProps = primaryChildren))
-      : (progressedPrimaryFragment = createFiberFromOffscreen(
+    disableLegacyMode || 0 !== (mode & 1) || null === progressedPrimaryFragment
+      ? (progressedPrimaryFragment = createFiberFromOffscreen(
           primaryChildren,
           mode,
           0,
           null
-        ));
+        ))
+      : ((progressedPrimaryFragment.childLanes = 0),
+        (progressedPrimaryFragment.pendingProps = primaryChildren));
     fallbackChildren = createFiberFromFragment(
       fallbackChildren,
       mode,
@@ -5191,8 +5195,7 @@ module.exports = function ($$$config) {
       nextProps &= 1;
     }
     push(suspenseStackCursor, nextProps);
-    if (0 === (workInProgress.mode & 1)) workInProgress.memoizedState = null;
-    else
+    if (disableLegacyMode || 0 !== (workInProgress.mode & 1))
       switch (revealOrder) {
         case "forwards":
           renderLanes = workInProgress.child;
@@ -5244,11 +5247,13 @@ module.exports = function ($$$config) {
         default:
           workInProgress.memoizedState = null;
       }
+    else workInProgress.memoizedState = null;
     return workInProgress.child;
   }
   function resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress) {
-    0 === (workInProgress.mode & 1) &&
-      null !== current &&
+    disableLegacyMode ||
+      0 !== (workInProgress.mode & 1) ||
+      null === current ||
       ((current.alternate = null),
       (workInProgress.alternate = null),
       (workInProgress.flags |= 2));
@@ -5893,47 +5898,45 @@ module.exports = function ($$$config) {
           renderLanes
         );
       case 17:
-        return (
-          (props = workInProgress.type),
-          (elementType = resolveClassComponentProps(
-            props,
-            workInProgress.pendingProps,
-            workInProgress.elementType === props
-          )),
-          resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress),
-          (workInProgress.tag = 1),
-          isContextProvider(props)
-            ? ((current = !0), pushContextProvider(workInProgress))
-            : (current = !1),
-          prepareToReadContext(workInProgress, renderLanes),
-          constructClassInstance(workInProgress, props, elementType),
-          mountClassInstance(workInProgress, props, elementType, renderLanes),
-          finishClassComponent(
-            null,
-            workInProgress,
-            props,
-            !0,
-            current,
-            renderLanes
-          )
+        if (disableLegacyMode) break;
+        props = workInProgress.type;
+        elementType = resolveClassComponentProps(
+          props,
+          workInProgress.pendingProps,
+          workInProgress.elementType === props
+        );
+        resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
+        workInProgress.tag = 1;
+        isContextProvider(props)
+          ? ((current = !0), pushContextProvider(workInProgress))
+          : (current = !1);
+        prepareToReadContext(workInProgress, renderLanes);
+        constructClassInstance(workInProgress, props, elementType);
+        mountClassInstance(workInProgress, props, elementType, renderLanes);
+        return finishClassComponent(
+          null,
+          workInProgress,
+          props,
+          !0,
+          current,
+          renderLanes
         );
       case 28:
-        return (
-          (props = workInProgress.type),
-          (elementType = resolveClassComponentProps(
-            props,
-            workInProgress.pendingProps,
-            workInProgress.elementType === props
-          )),
-          resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress),
-          (workInProgress.tag = 0),
-          updateFunctionComponent(
-            null,
-            workInProgress,
-            props,
-            elementType,
-            renderLanes
-          )
+        if (disableLegacyMode) break;
+        props = workInProgress.type;
+        elementType = resolveClassComponentProps(
+          props,
+          workInProgress.pendingProps,
+          workInProgress.elementType === props
+        );
+        resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
+        workInProgress.tag = 0;
+        return updateFunctionComponent(
+          null,
+          workInProgress,
+          props,
+          elementType,
+          renderLanes
         );
       case 19:
         return updateSuspenseListComponent(
@@ -6754,6 +6757,7 @@ module.exports = function ($$$config) {
     popTreeContext(workInProgress);
     switch (workInProgress.tag) {
       case 28:
+        if (disableLegacyMode) break;
       case 16:
       case 15:
       case 0:
@@ -7056,11 +7060,10 @@ module.exports = function ($$$config) {
           null
         );
       case 17:
-        return (
-          isContextProvider(workInProgress.type) && popContext(),
-          bubbleProperties(workInProgress),
-          null
-        );
+        if (disableLegacyMode) break;
+        isContextProvider(workInProgress.type) && popContext();
+        bubbleProperties(workInProgress);
+        return null;
       case 19:
         pop(suspenseStackCursor);
         nextResource = workInProgress.memoizedState;
@@ -7182,14 +7185,14 @@ module.exports = function ($$$config) {
               ? (null !== current.memoizedState) !== newProps &&
                 (workInProgress.flags |= 8192)
               : newProps && (workInProgress.flags |= 8192)),
-          newProps && 0 !== (workInProgress.mode & 1)
-            ? 0 !== (renderLanes & 536870912) &&
+          !newProps || (!disableLegacyMode && 0 === (workInProgress.mode & 1))
+            ? bubbleProperties(workInProgress)
+            : 0 !== (renderLanes & 536870912) &&
               0 === (workInProgress.flags & 128) &&
               (bubbleProperties(workInProgress),
               23 !== workInProgress.tag &&
                 workInProgress.subtreeFlags & 6 &&
-                (workInProgress.flags |= 8192))
-            : bubbleProperties(workInProgress),
+                (workInProgress.flags |= 8192)),
           (renderLanes = workInProgress.updateQueue),
           null !== renderLanes &&
             scheduleRetryEffect(workInProgress, renderLanes.retryQueue),
@@ -7693,7 +7696,7 @@ module.exports = function ($$$config) {
           commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
         break;
       case 22:
-        if (0 !== (finishedWork.mode & 1)) {
+        if (disableLegacyMode || 0 !== (finishedWork.mode & 1)) {
           if (
             ((prevProps =
               null !== finishedWork.memoizedState || offscreenSubtreeIsHidden),
@@ -8189,7 +8192,7 @@ module.exports = function ($$$config) {
         break;
       case 22:
         safelyDetachRef(deletedFiber, nearestMountedAncestor);
-        deletedFiber.mode & 1
+        disableLegacyMode || deletedFiber.mode & 1
           ? ((offscreenSubtreeWasHidden =
               (prevHostParent = offscreenSubtreeWasHidden) ||
               null !== deletedFiber.memoizedState),
@@ -8615,7 +8618,7 @@ module.exports = function ($$$config) {
           safelyDetachRef(current, current.return);
         suspenseCallback = null !== finishedWork.memoizedState;
         retryQueue = null !== current && null !== current.memoizedState;
-        if (finishedWork.mode & 1) {
+        if (disableLegacyMode || finishedWork.mode & 1) {
           var prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden,
             prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
           offscreenSubtreeIsHidden =
@@ -8641,7 +8644,7 @@ module.exports = function ($$$config) {
             null === current ||
               retryQueue ||
               root ||
-              (0 !== (finishedWork.mode & 1) &&
+              ((disableLegacyMode || 0 !== (finishedWork.mode & 1)) &&
                 recursivelyTraverseDisappearLayoutEffects(finishedWork))),
           supportsMutation &&
             (null === finishedWork.memoizedProps ||
@@ -9156,7 +9159,7 @@ module.exports = function ($$$config) {
                 committedLanes,
                 committedTransitions
               )
-            : finishedWork.mode & 1
+            : disableLegacyMode || finishedWork.mode & 1
             ? recursivelyTraverseAtomicPassiveEffects(
                 finishedRoot,
                 finishedWork
@@ -9275,7 +9278,7 @@ module.exports = function ($$$config) {
                   committedTransitions,
                   includeWorkInProgressEffects
                 )
-              : finishedWork.mode & 1
+              : disableLegacyMode || finishedWork.mode & 1
               ? recursivelyTraverseAtomicPassiveEffects(
                   finishedRoot,
                   finishedWork
@@ -9831,14 +9834,15 @@ module.exports = function ($$$config) {
     workInProgressRootRenderTargetTime = now() + 500;
   }
   function requestUpdateLane(fiber) {
-    return 0 === (fiber.mode & 1)
-      ? 2
-      : 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
-      ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
-      : null !== ReactSharedInternals.T
-      ? ((fiber = currentEntangledLane),
-        0 !== fiber ? fiber : requestTransitionLane())
-      : resolveUpdatePriority();
+    fiber = fiber.mode;
+    return disableLegacyMode || 0 !== (fiber & 1)
+      ? 0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes
+        ? workInProgressRootRenderLanes & -workInProgressRootRenderLanes
+        : null !== ReactSharedInternals.T
+        ? ((fiber = currentEntangledLane),
+          0 !== fiber ? fiber : requestTransitionLane())
+        : resolveUpdatePriority()
+      : 2;
   }
   function requestDeferredLane() {
     0 === workInProgressDeferredLane &&
@@ -9889,10 +9893,12 @@ module.exports = function ($$$config) {
             workInProgressDeferredLane
           ));
       ensureRootIsScheduled(root);
-      2 === lane &&
-        0 === executionContext &&
-        0 === (fiber.mode & 1) &&
-        (resetRenderTimer(), flushSyncWorkAcrossRoots_impl(!0));
+      2 !== lane ||
+        0 !== executionContext ||
+        disableLegacyMode ||
+        0 !== (fiber.mode & 1) ||
+        (resetRenderTimer(),
+        disableLegacyMode || flushSyncWorkAcrossRoots_impl(!0));
     }
   }
   function performConcurrentWorkOnRoot(root, didTimeout) {
@@ -10161,7 +10167,7 @@ module.exports = function ($$$config) {
     if (0 !== (executionContext & 6)) throw Error(formatProdErrorMessage(327));
     if (flushPassiveEffects()) return ensureRootIsScheduled(root), null;
     var exitStatus = renderRootSync(root, lanes);
-    if (0 !== root.tag && 2 === exitStatus) {
+    if ((disableLegacyMode || 0 !== root.tag) && 2 === exitStatus) {
       var originallyAttemptedLanes = lanes,
         errorRetryLanes = getLanesToRetrySynchronouslyOnError(
           root,
@@ -10750,8 +10756,8 @@ module.exports = function ($$$config) {
           renderPriorityLevel(remainingLanes.value, {
             componentStack: remainingLanes.stack
           });
-    0 !== (pendingPassiveEffectsLanes & 3) &&
-      0 !== root.tag &&
+    0 === (pendingPassiveEffectsLanes & 3) ||
+      (!disableLegacyMode && 0 === root.tag) ||
       flushPassiveEffects();
     remainingLanes = root.pendingLanes;
     (enableInfiniteRenderLoopDetection &&
@@ -10935,7 +10941,9 @@ module.exports = function ($$$config) {
   }
   function retryTimedOutBoundary(boundaryFiber, retryLane) {
     0 === retryLane &&
-      (retryLane = 0 === (boundaryFiber.mode & 1) ? 2 : claimNextRetryLane());
+      ((retryLane = boundaryFiber.mode),
+      (retryLane =
+        disableLegacyMode || 0 !== (retryLane & 1) ? claimNextRetryLane() : 2));
     boundaryFiber = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
     null !== boundaryFiber &&
       (markRootUpdated(boundaryFiber, retryLane),
@@ -11126,11 +11134,11 @@ module.exports = function ($$$config) {
         case REACT_STRICT_MODE_TYPE:
           fiberTag = 8;
           mode |= 8;
-          0 !== (mode & 1) &&
-            ((mode |= 16),
-            enableDO_NOT_USE_disableStrictPassiveEffect &&
-              pendingProps.DO_NOT_USE_disableStrictPassiveEffect &&
-              (mode |= 64));
+          if (disableLegacyMode || 0 !== (mode & 1))
+            (mode |= 16),
+              enableDO_NOT_USE_disableStrictPassiveEffect &&
+                pendingProps.DO_NOT_USE_disableStrictPassiveEffect &&
+                (mode |= 64);
           break;
         case REACT_PROFILER_TYPE:
           return (
@@ -11304,7 +11312,7 @@ module.exports = function ($$$config) {
     onRecoverableError,
     formState
   ) {
-    this.tag = tag;
+    this.tag = disableLegacyMode ? 1 : tag;
     this.containerInfo = containerInfo;
     this.finishedWork =
       this.pingCache =
@@ -11378,7 +11386,7 @@ module.exports = function ($$$config) {
     containerInfo.hydrationCallbacks = hydrationCallbacks;
     enableTransitionTracing &&
       (containerInfo.transitionCallbacks = transitionCallbacks);
-    1 === tag
+    disableLegacyMode || 1 === tag
       ? ((tag = 1),
         !0 === isStrictMode && (tag |= 24),
         concurrentUpdatesByDefaultOverride && (tag |= 32))
@@ -11519,6 +11527,7 @@ module.exports = function ($$$config) {
     disableDefaultPropsExceptForClasses =
       dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
     enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
+    disableLegacyMode = dynamicFeatureFlags.disableLegacyMode,
     REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
     REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
     REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -12328,6 +12337,7 @@ module.exports = function ($$$config) {
     }
   };
   exports.batchedUpdates = function (fn, a) {
+    if (disableLegacyMode) return fn(a);
     var prevExecutionContext = executionContext;
     executionContext |= 1;
     try {
@@ -12335,7 +12345,8 @@ module.exports = function ($$$config) {
     } finally {
       (executionContext = prevExecutionContext),
         0 === executionContext &&
-          (resetRenderTimer(), flushSyncWorkAcrossRoots_impl(!0));
+          (resetRenderTimer(),
+          disableLegacyMode || flushSyncWorkAcrossRoots_impl(!0));
     }
   };
   exports.createComponentSelector = function (component) {
@@ -12549,9 +12560,10 @@ module.exports = function ($$$config) {
   };
   exports.flushPassiveEffects = flushPassiveEffects;
   exports.flushSyncFromReconciler = function (fn) {
-    null !== rootWithPendingPassiveEffects &&
-      0 === rootWithPendingPassiveEffects.tag &&
-      0 === (executionContext & 6) &&
+    null === rootWithPendingPassiveEffects ||
+      disableLegacyMode ||
+      0 !== rootWithPendingPassiveEffects.tag ||
+      0 !== (executionContext & 6) ||
       flushPassiveEffects();
     var prevExecutionContext = executionContext;
     executionContext |= 1;
@@ -12661,7 +12673,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-eb259b5d3b-20240605"
+      reconcilerVersion: "19.0.0-www-classic-142b2a8230-20240607"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;
