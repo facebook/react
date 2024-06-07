@@ -16005,20 +16005,20 @@ function getResource(type, currentProps, pendingProps, currentResource) {
     case "style":
       return "string" === typeof pendingProps.precedence &&
         "string" === typeof pendingProps.href
-        ? ((pendingProps = getStyleKey(pendingProps.href)),
-          (JSCompiler_inline_result = getResourcesFromRoot(
+        ? ((currentProps = getStyleKey(pendingProps.href)),
+          (pendingProps = getResourcesFromRoot(
             JSCompiler_inline_result
           ).hoistableStyles),
-          (currentProps = JSCompiler_inline_result.get(pendingProps)),
-          currentProps ||
-            ((currentProps = {
+          (currentResource = pendingProps.get(currentProps)),
+          currentResource ||
+            ((currentResource = {
               type: "style",
               instance: null,
               count: 0,
               state: null
             }),
-            JSCompiler_inline_result.set(pendingProps, currentProps)),
-          currentProps)
+            pendingProps.set(currentProps, currentResource)),
+          currentResource)
         : { type: "void", instance: null, count: 0, state: null };
     case "link":
       if (
@@ -16041,22 +16041,31 @@ function getResource(type, currentProps, pendingProps, currentResource) {
             state: { loading: 0, preload: null }
           }),
           styles$296.set(type, resource$297),
+          (styles$296 = JSCompiler_inline_result.querySelector(
+            getStylesheetSelectorFromKey(type)
+          )) &&
+            !styles$296._p &&
+            ((resource$297.instance = styles$296),
+            (resource$297.state.loading = 5)),
           preloadPropsMap.has(type) ||
-            preloadStylesheet(
-              JSCompiler_inline_result,
-              type,
-              {
-                rel: "preload",
-                as: "style",
-                href: pendingProps.href,
-                crossOrigin: pendingProps.crossOrigin,
-                integrity: pendingProps.integrity,
-                media: pendingProps.media,
-                hrefLang: pendingProps.hrefLang,
-                referrerPolicy: pendingProps.referrerPolicy
-              },
-              resource$297.state
-            ));
+            ((pendingProps = {
+              rel: "preload",
+              as: "style",
+              href: pendingProps.href,
+              crossOrigin: pendingProps.crossOrigin,
+              integrity: pendingProps.integrity,
+              media: pendingProps.media,
+              hrefLang: pendingProps.hrefLang,
+              referrerPolicy: pendingProps.referrerPolicy
+            }),
+            preloadPropsMap.set(type, pendingProps),
+            styles$296 ||
+              preloadStylesheet(
+                JSCompiler_inline_result,
+                type,
+                pendingProps,
+                resource$297.state
+              )));
         if (currentProps && null === currentResource)
           throw Error(formatProdErrorMessage(528, ""));
         return resource$297;
@@ -16072,20 +16081,20 @@ function getResource(type, currentProps, pendingProps, currentResource) {
         currentProps &&
         "function" !== typeof currentProps &&
         "symbol" !== typeof currentProps
-          ? ((pendingProps = getScriptKey(pendingProps)),
-            (JSCompiler_inline_result = getResourcesFromRoot(
+          ? ((currentProps = getScriptKey(pendingProps)),
+            (pendingProps = getResourcesFromRoot(
               JSCompiler_inline_result
             ).hoistableScripts),
-            (currentProps = JSCompiler_inline_result.get(pendingProps)),
-            currentProps ||
-              ((currentProps = {
+            (currentResource = pendingProps.get(currentProps)),
+            currentResource ||
+              ((currentResource = {
                 type: "script",
                 instance: null,
                 count: 0,
                 state: null
               }),
-              JSCompiler_inline_result.set(pendingProps, currentProps)),
-            currentProps)
+              pendingProps.set(currentProps, currentResource)),
+            currentResource)
           : { type: "void", instance: null, count: 0, state: null }
       );
     default:
@@ -16105,21 +16114,19 @@ function stylesheetPropsFromRawProps(rawProps) {
   });
 }
 function preloadStylesheet(ownerDocument, key, preloadProps, state) {
-  preloadPropsMap.set(key, preloadProps);
-  ownerDocument.querySelector(getStylesheetSelectorFromKey(key)) ||
-    (ownerDocument.querySelector('link[rel="preload"][as="style"][' + key + "]")
-      ? (state.loading = 1)
-      : ((key = ownerDocument.createElement("link")),
-        (state.preload = key),
-        key.addEventListener("load", function () {
-          return (state.loading |= 1);
-        }),
-        key.addEventListener("error", function () {
-          return (state.loading |= 2);
-        }),
-        setInitialProperties(key, "link", preloadProps),
-        markNodeAsHoistable(key),
-        ownerDocument.head.appendChild(key)));
+  ownerDocument.querySelector('link[rel="preload"][as="style"][' + key + "]")
+    ? (state.loading = 1)
+    : ((key = ownerDocument.createElement("link")),
+      (state.preload = key),
+      key.addEventListener("load", function () {
+        return (state.loading |= 1);
+      }),
+      key.addEventListener("error", function () {
+        return (state.loading |= 2);
+      }),
+      setInitialProperties(key, "link", preloadProps),
+      markNodeAsHoistable(key),
+      ownerDocument.head.appendChild(key));
 }
 function getScriptKey(src) {
   return '[src="' + escapeSelectorAttributeValueInsideDoubleQuotes(src) + '"]';
@@ -17194,14 +17201,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1812 = React.version;
 if (
-  "19.0.0-www-modern-20841f9a62-20240607" !==
+  "19.0.0-www-modern-20b6f4c0e8-20240607" !==
   isomorphicReactPackageVersion$jscomp$inline_1812
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1812,
-      "19.0.0-www-modern-20841f9a62-20240607"
+      "19.0.0-www-modern-20b6f4c0e8-20240607"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17220,7 +17227,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1814 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-20841f9a62-20240607",
+  version: "19.0.0-www-modern-20b6f4c0e8-20240607",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17264,7 +17271,7 @@ var devToolsConfig$jscomp$inline_1814 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-20841f9a62-20240607"
+  reconcilerVersion: "19.0.0-www-modern-20b6f4c0e8-20240607"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -17625,7 +17632,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-20841f9a62-20240607";
+exports.version = "19.0.0-www-modern-20b6f4c0e8-20240607";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

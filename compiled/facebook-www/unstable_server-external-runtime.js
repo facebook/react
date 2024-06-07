@@ -36,6 +36,10 @@
     contentID,
     stylesheetDescriptors
   ) {
+    function cleanupWith(cb) {
+      this._p = null;
+      cb();
+    }
     for (
       var precedences = new Map(),
         thisDocument = document,
@@ -83,16 +87,13 @@
           )
             resourceEl.setAttribute(attr, stylesheetDescriptor[j++]);
           attr = resourceEl._p = new Promise(function (resolve, reject) {
-            resourceEl.onload = resolve;
-            resourceEl.onerror = reject;
+            resourceEl.onload = cleanupWith.bind(resourceEl, resolve);
+            resourceEl.onerror = cleanupWith.bind(resourceEl, reject);
           });
           resourceMap.set(href, resourceEl);
         }
         href = resourceEl.getAttribute("media");
-        !attr ||
-          "l" === attr.s ||
-          (href && !window.matchMedia(href).matches) ||
-          nodes.push(attr);
+        !attr || (href && !window.matchMedia(href).matches) || nodes.push(attr);
         if (avoidInsert) continue;
       } else {
         resourceEl = styleTagsToHoist[node++];

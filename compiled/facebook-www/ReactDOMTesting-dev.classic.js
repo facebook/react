@@ -31735,7 +31735,7 @@ identifierPrefix, onUncaughtError, onCaughtError, onRecoverableError, transition
   return root;
 }
 
-var ReactVersion = '19.0.0-www-classic-20841f9a62-20240607';
+var ReactVersion = '19.0.0-www-classic-20b6f4c0e8-20240607';
 
 function createPortal$1(children, containerInfo, // TODO: figure out the API for cross-renderer implementation.
 implementation) {
@@ -40173,8 +40173,25 @@ function getResource(type, currentProps, pendingProps, currentResource) {
 
             _styles.set(_key, _resource);
 
+            var instance = ownerDocument.querySelector(getStylesheetSelectorFromKey(_key));
+
+            if (instance) {
+              var loadingState = instance._p;
+
+              if (loadingState) ; else {
+                // This instance is already loaded
+                _resource.instance = instance;
+                _resource.state.loading = Loaded | Inserted;
+              }
+            }
+
             if (!preloadPropsMap.has(_key)) {
-              preloadStylesheet(ownerDocument, _key, preloadPropsFromStylesheet(qualifiedProps), _resource.state);
+              var preloadProps = preloadPropsFromStylesheet(qualifiedProps);
+              preloadPropsMap.set(_key, preloadProps);
+
+              if (!instance) {
+                preloadStylesheet(ownerDocument, _key, preloadProps, _resource.state);
+              }
             }
           }
 
@@ -40321,31 +40338,24 @@ function stylesheetPropsFromRawProps(rawProps) {
 }
 
 function preloadStylesheet(ownerDocument, key, preloadProps, state) {
-  preloadPropsMap.set(key, preloadProps);
+  var preloadEl = ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key));
 
-  if (!ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) {
-    // There is no matching stylesheet instance in the Document.
-    // We will insert a preload now to kick off loading because
-    // we expect this stylesheet to commit
-    var preloadEl = ownerDocument.querySelector(getPreloadStylesheetSelectorFromKey(key));
-
-    if (preloadEl) {
-      // If we find a preload already it was SSR'd and we won't have an actual
-      // loading state to track. For now we will just assume it is loaded
-      state.loading = Loaded;
-    } else {
-      var instance = ownerDocument.createElement('link');
-      state.preload = instance;
-      instance.addEventListener('load', function () {
-        return state.loading |= Loaded;
-      });
-      instance.addEventListener('error', function () {
-        return state.loading |= Errored;
-      });
-      setInitialProperties(instance, 'link', preloadProps);
-      markNodeAsHoistable(instance);
-      ownerDocument.head.appendChild(instance);
-    }
+  if (preloadEl) {
+    // If we find a preload already it was SSR'd and we won't have an actual
+    // loading state to track. For now we will just assume it is loaded
+    state.loading = Loaded;
+  } else {
+    var instance = ownerDocument.createElement('link');
+    state.preload = instance;
+    instance.addEventListener('load', function () {
+      return state.loading |= Loaded;
+    });
+    instance.addEventListener('error', function () {
+      return state.loading |= Errored;
+    });
+    setInitialProperties(instance, 'link', preloadProps);
+    markNodeAsHoistable(instance);
+    ownerDocument.head.appendChild(instance);
   }
 }
 
