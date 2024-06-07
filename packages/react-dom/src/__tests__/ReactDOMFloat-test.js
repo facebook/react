@@ -3348,6 +3348,172 @@ body {
     );
   });
 
+  it('will assume stylesheets already in the document have loaded if it cannot confirm it is not yet loaded', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+          </head>
+          <body>
+            <div id="foo" />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    const root = ReactDOMClient.createRoot(document.querySelector('#foo'));
+
+    root.render(
+      <div>
+        <Suspense fallback="loading...">
+          <link rel="stylesheet" href="foo" precedence="default" />
+          hello world
+        </Suspense>
+      </div>,
+    );
+
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div id="foo">
+            <div>hello world</div>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will assume wait for loading stylesheets to load before continuing', async () => {
+    let ssr = true;
+    function Component() {
+      if (ssr) {
+        return null;
+      } else {
+        return (
+          <>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            <div>hello client</div>
+          </>
+        );
+      }
+    }
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <div>
+              <Suspense fallback="loading...">
+                <BlockedOn value="reveal">
+                  <link rel="stylesheet" href="foo" precedence="default" />
+                  <div>hello world</div>
+                </BlockedOn>
+              </Suspense>
+            </div>
+            <div>
+              <Suspense fallback="loading 2...">
+                <Component />
+              </Suspense>
+            </div>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>loading...</div>
+          <div />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('reveal');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>loading...</div>
+          <div />
+          <link rel="preload" href="foo" as="style" />
+        </body>
+      </html>,
+    );
+
+    ssr = false;
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <body>
+          <div>
+            <Suspense fallback="loading...">
+              <BlockedOn value="reveal">
+                <link rel="stylesheet" href="foo" precedence="default" />
+                <div>hello world</div>
+              </BlockedOn>
+            </Suspense>
+          </div>
+          <div>
+            <Suspense fallback="loading 2...">
+              <Component />
+            </Suspense>
+          </div>
+        </body>
+      </html>,
+    );
+    await waitForAll([]);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>loading...</div>
+          <div />
+          <link rel="preload" href="foo" as="style" />
+        </body>
+      </html>,
+    );
+
+    await expect(async () => {
+      loadStylesheets();
+    }).toErrorDev([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+    ]);
+    assertLog(['load stylesheet: foo']);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>
+            <div>hello world</div>
+          </div>
+          <div>
+            <div>hello client</div>
+          </div>
+          <link rel="preload" href="foo" as="style" />
+        </body>
+      </html>,
+    );
+  });
+
   it('can suspend commits on more than one root for the same resource at the same time', async () => {
     document.body.innerHTML = '';
     const container1 = document.createElement('div');
