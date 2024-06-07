@@ -36,7 +36,7 @@ import {
   getHookKind,
   makeIdentifierName,
 } from "../HIR/HIR";
-import { printPlace } from "../HIR/PrintHIR";
+import { printIdentifier, printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
 import { Err, Ok, Result } from "../Utils/Result";
 import { GuardKind } from "../Utils/RuntimeDiagnosticConstants";
@@ -524,8 +524,8 @@ function codegenReactiveScope(
     }
 
     CompilerError.invariant(identifier.name != null, {
-      reason: `Expected identifier '@${identifier.id}' to be named`,
-      description: null,
+      reason: `Expected scope declaration identifier to be named`,
+      description: `Declaration \`${printIdentifier(identifier)}\` is unnamed in scope @${scope.id}`,
       loc: null,
       suggestions: null,
     });

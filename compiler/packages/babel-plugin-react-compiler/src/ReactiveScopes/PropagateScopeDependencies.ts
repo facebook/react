@@ -18,6 +18,7 @@ import {
   isUseRefType,
   makeInstructionId,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScope,
@@ -685,6 +686,19 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       this.visitBlock(scope.instructions, context);
     });
     scope.scope.dependencies = scopeDependencies;
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    context: Context
+  ): void {
+    /*
+     * NOTE: we explicitly throw away the deps, we only enter() the scope to record its
+     * declarations
+     */
+    const _scopeDepdencies = context.enter(scopeBlock.scope, () => {
+      this.visitBlock(scopeBlock.instructions, context);
+    });
   }
 
   override visitInstruction(
