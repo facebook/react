@@ -7,23 +7,32 @@ import { useState } from "react";
 import { identity, makeObject_Primitives, useHook } from "shared-runtime";
 
 function Component() {
+  // The scopes for x and x2 are interleaved, so this is one scope with two values
   const x = makeObject_Primitives();
   const x2 = makeObject_Primitives();
   useState(null);
   identity(x);
   identity(x2);
 
+  // We create a scope for all call expressions, but prune those with hook calls
+  // in this case it's _just_ a hook call, so we don't count this as pruned
   const y = useHook();
 
   const z = [];
-
   for (let i = 0; i < 10; i++) {
+    // The scope for obj is pruned bc it's in a loop
     const obj = makeObject_Primitives();
     z.push(obj);
   }
 
+  // Overall we expect two pruned scopes (for x+x2, and obj), with 3 pruned scope values.
   return [x, x2, y, z];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
 
 ```
 
@@ -36,6 +45,7 @@ import { identity, makeObject_Primitives, useHook } from "shared-runtime";
 
 function Component() {
   const $ = _c(5);
+
   const x = makeObject_Primitives();
   const x2 = makeObject_Primitives();
   useState(null);
@@ -67,13 +77,18 @@ function Component() {
   return t0;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
+
 ```
 
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":121},"end":{"line":22,"column":1,"index":431},"filename":"log-pruned-memoization.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"prunedMemoBlocks":2,"prunedMemoValues":3}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":121},"end":{"line":26,"column":1,"index":813},"filename":"log-pruned-memoization.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"prunedMemoBlocks":2,"prunedMemoValues":3}
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: ok) [{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},[{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true},{"a":0,"b":"value1","c":true}]]
