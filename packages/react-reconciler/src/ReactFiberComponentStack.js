@@ -90,12 +90,26 @@ function describeFunctionComponentFrameWithoutLineNumber(fn: Function): string {
   return name ? describeBuiltInComponentFrame(name) : '';
 }
 
-export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
+export function getOwnerStackByFiberInDev(
+  workInProgress: Fiber,
+  topStack: null | Error,
+): string {
   if (!enableOwnerStacks || !__DEV__) {
     return '';
   }
   try {
     let info = '';
+
+    if (topStack) {
+      // Prefix with a filtered version of the currently executing
+      // stack. This information will be available in the native
+      // stack regardless but it's hidden since we're reprinting
+      // the stack on top of it.
+      const formattedTopStack = formatOwnerStack(topStack);
+      if (formattedTopStack !== '') {
+        info += '\n' + formattedTopStack;
+      }
+    }
 
     if (workInProgress.tag === HostText) {
       // Text nodes never have an owner/stack because they're not created through JSX.
@@ -125,14 +139,16 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
       case FunctionComponent:
       case SimpleMemoComponent:
       case ClassComponent:
-        if (!workInProgress._debugOwner) {
+        if (!workInProgress._debugOwner && info === '') {
+          // Only if we have no other data about the callsite do we add
+          // the component name as the single stack frame.
           info += describeFunctionComponentFrameWithoutLineNumber(
             workInProgress.type,
           );
         }
         break;
       case ForwardRef:
-        if (!workInProgress._debugOwner) {
+        if (!workInProgress._debugOwner && info === '') {
           info += describeFunctionComponentFrameWithoutLineNumber(
             workInProgress.type.render,
           );

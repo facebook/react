@@ -507,6 +507,10 @@ workflows:
                 - "-r=www-modern --env=production --variant=false"
                 - "-r=www-modern --env=development --variant=true"
                 - "-r=www-modern --env=production --variant=true"
+                - "-r=xplat --env=development --variant=false"
+                - "-r=xplat --env=development --variant=true"
+                - "-r=xplat --env=production --variant=false"
+                - "-r=xplat --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
                 - '-r=stable --env=development --persistent'
@@ -551,6 +555,12 @@ workflows:
                 # - "-r=www-modern --env=production --variant=false"
                 # - "-r=www-modern --env=development --variant=true"
                 # - "-r=www-modern --env=production --variant=true"
+
+                # TODO: Update test config to support xplat build tests
+                # - "-r=xplat --env=development --variant=false"
+                # - "-r=xplat --env=development --variant=true"
+                # - "-r=xplat --env=production --variant=false"
+                # - "-r=xplat --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
       - download_base_build_for_sizebot:

@@ -111,6 +111,12 @@ export type PluginOptions = {
   ignoreUseNoForget: boolean;
 
   sources?: Array<string> | ((filename: string) => boolean) | null;
+
+  /**
+   * The compiler has customized support for react-native-reanimated, intended as a temporary workaround.
+   * Set this flag (on by default) to automatically check for this library and activate the support.
+   */
+  enableReanimatedCheck: boolean;
 };
 
 const CompilationModeSchema = z.enum([
@@ -188,6 +194,7 @@ export const defaultOptions: PluginOptions = {
   sources: (filename) => {
     return filename.indexOf("node_modules") === -1;
   },
+  enableReanimatedCheck: true,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

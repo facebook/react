@@ -191,6 +191,7 @@ function makePluginOptions(
     eslintSuppressionRules,
     flowSuppressions,
     ignoreUseNoForget,
+    enableReanimatedCheck: false,
   };
 }
 

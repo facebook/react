@@ -241,8 +241,7 @@ export default function inferReferenceEffects(
     functionEffects.forEach((eff) => {
       switch (eff.kind) {
         case "ReactMutation":
-        case "GlobalMutation":
-        case "RefMutation": {
+        case "GlobalMutation": {
           CompilerError.throw(eff.error);
         }
         case "ContextMutation": {
@@ -410,8 +409,7 @@ class InferenceState {
         for (const effect of value.loweredFunc.func.effects) {
           if (
             effect.kind === "GlobalMutation" ||
-            effect.kind === "ReactMutation" ||
-            effect.kind === "RefMutation"
+            effect.kind === "ReactMutation"
           ) {
             // Known effects are always propagated upwards
             functionEffects.push(effect);
@@ -529,23 +527,7 @@ class InferenceState {
           isRefValueType(place.identifier) ||
           isUseRefType(place.identifier)
         ) {
-          if (this.#env.config.validateRefAccessDuringRender) {
-            functionEffect = {
-              kind: "RefMutation",
-              error: {
-                reason:
-                  "Ref values (the `current` property) may not be modified during render. (https://react.dev/reference/react/useRef)",
-                description:
-                  place.identifier.name !== null &&
-                  place.identifier.name.kind === "named"
-                    ? `Found mutation of \`${place.identifier.name.value}\``
-                    : null,
-                loc: place.loc,
-                suggestions: null,
-                severity: ErrorSeverity.InvalidReact,
-              },
-            };
-          }
+          // no-op: refs are validate via ValidateNoRefAccessInRender
         } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
             kind: "ContextMutation",
@@ -589,23 +571,7 @@ class InferenceState {
           isRefValueType(place.identifier) ||
           isUseRefType(place.identifier)
         ) {
-          if (this.#env.config.validateRefAccessDuringRender) {
-            functionEffect = {
-              kind: "RefMutation",
-              error: {
-                reason:
-                  "Ref values (the `current` property) may not be modified during render. (https://react.dev/reference/react/useRef)",
-                description:
-                  place.identifier.name !== null &&
-                  place.identifier.name.kind === "named"
-                    ? `Found mutation of \`${place.identifier.name.value}\``
-                    : null,
-                loc: place.loc,
-                suggestions: null,
-                severity: ErrorSeverity.InvalidReact,
-              },
-            };
-          }
+          // no-op: refs are validate via ValidateNoRefAccessInRender
         } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
             kind: "ContextMutation",
@@ -1185,9 +1151,7 @@ function inferBlock(
             );
             functionEffects.push(
               ...propEffects.filter(
-                (propEffect) =>
-                  propEffect.kind !== "GlobalMutation" &&
-                  propEffect.kind !== "RefMutation"
+                (propEffect) => propEffect.kind !== "GlobalMutation"
               )
             );
           }
@@ -1381,10 +1345,7 @@ function inferBlock(
           functionEffects.push(
             ...argumentEffects.filter(
               (argEffect) =>
-                !isUseEffect ||
-                i !== 0 ||
-                (argEffect.kind !== "GlobalMutation" &&
-                  argEffect.kind !== "RefMutation")
+                !isUseEffect || i !== 0 || argEffect.kind !== "GlobalMutation"
             )
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
@@ -1513,10 +1474,7 @@ function inferBlock(
           functionEffects.push(
             ...argumentEffects.filter(
               (argEffect) =>
-                !isUseEffect ||
-                i !== 0 ||
-                (argEffect.kind !== "GlobalMutation" &&
-                  argEffect.kind !== "RefMutation")
+                !isUseEffect || i !== 0 || argEffect.kind !== "GlobalMutation"
             )
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
@@ -2171,6 +2129,8 @@ function getWriteErrorReason(abstractValue: AbstractValue): string {
     return "Mutating component props or hook arguments is not allowed. Consider using a local variable instead";
   } else if (abstractValue.reason.has(ValueReason.State)) {
     return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
+  } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
+    return "Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead";
   } else {
     return "This mutates a variable that React considers immutable";
   }
