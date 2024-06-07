@@ -169,6 +169,8 @@ export type LoggerEvent =
       fnName: string | null;
       memoSlots: number;
       memoBlocks: number;
+      prunedMemoBlocks: number;
+      prunedMemoValues: number;
     }
   | {
       kind: "PipelineError";

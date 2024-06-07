@@ -329,6 +329,8 @@ export function compileProgram(
         fnName: compiledFn.id?.name ?? null,
         memoSlots: compiledFn.memoSlotsUsed,
         memoBlocks: compiledFn.memoBlocks,
+        prunedMemoBlocks: compiledFn.prunedMemoBlocks,
+        prunedMemoValues: compiledFn.prunedMemoValues,
       });
     } catch (err) {
       hasCriticalError ||= isCriticalError(err);

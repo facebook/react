@@ -189,6 +189,7 @@ export async function transformFixture(
     input,
     snapOutput,
     sproutOutput,
+    compileResult?.logs ?? null,
     error
   );
 
