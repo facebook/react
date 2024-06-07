@@ -56,7 +56,7 @@ function useFragment(_arg1, _arg2) {
 }
 
 function Component(props) {
-  const $ = _c(15);
+  const $ = _c(9);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = graphql`...`;
@@ -65,67 +65,52 @@ function Component(props) {
     t0 = $[0];
   }
   const post = useFragment(t0, props.post);
-  let media;
-  let allUrls;
-  let onClick;
+  let t1;
   if ($[1] !== post) {
-    allUrls = [];
+    const allUrls = [];
 
-    const { media: t1, comments: t2, urls: t3 } = post;
-    media = t1 === undefined ? null : t1;
-    let t4;
-    if ($[5] !== t2) {
-      t4 = t2 === undefined ? [] : t2;
-      $[5] = t2;
-      $[6] = t4;
-    } else {
-      t4 = $[6];
-    }
-    const comments = t4;
+    const { media: t2, comments: t3, urls: t4 } = post;
+    const media = t2 === undefined ? null : t2;
     let t5;
-    if ($[7] !== t3) {
+    if ($[3] !== t3) {
       t5 = t3 === undefined ? [] : t3;
-      $[7] = t3;
-      $[8] = t5;
+      $[3] = t3;
+      $[4] = t5;
     } else {
-      t5 = $[8];
+      t5 = $[4];
     }
-    const urls = t5;
+    const comments = t5;
     let t6;
-    if ($[9] !== comments.length) {
-      t6 = (e) => {
+    if ($[5] !== t4) {
+      t6 = t4 === undefined ? [] : t4;
+      $[5] = t4;
+      $[6] = t6;
+    } else {
+      t6 = $[6];
+    }
+    const urls = t6;
+    let t7;
+    if ($[7] !== comments.length) {
+      t7 = (e) => {
         if (!comments.length) {
           return;
         }
 
         console.log(comments.length);
       };
-      $[9] = comments.length;
-      $[10] = t6;
+      $[7] = comments.length;
+      $[8] = t7;
     } else {
-      t6 = $[10];
+      t7 = $[8];
     }
-    onClick = t6;
+    const onClick = t7;
 
     allUrls.push(...urls);
-    $[1] = post;
-    $[2] = media;
-    $[3] = allUrls;
-    $[4] = onClick;
-  } else {
-    media = $[2];
-    allUrls = $[3];
-    onClick = $[4];
-  }
-  let t1;
-  if ($[11] !== media || $[12] !== allUrls || $[13] !== onClick) {
     t1 = <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
-    $[11] = media;
-    $[12] = allUrls;
-    $[13] = onClick;
-    $[14] = t1;
+    $[1] = post;
+    $[2] = t1;
   } else {
-    t1 = $[14];
+    t1 = $[2];
   }
   return t1;
 }

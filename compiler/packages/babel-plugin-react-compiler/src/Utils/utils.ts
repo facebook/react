@@ -30,7 +30,9 @@ export function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
 }
 
-// Modifies @param array in place, retaining only the items where the predicate returns true.
+/**
+ * Modifies @param array in place, retaining only the items where the predicate returns true.
+ */
 export function retainWhere<T>(
   array: Array<T>,
   predicate: (item: T) => boolean

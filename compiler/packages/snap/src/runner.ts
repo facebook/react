@@ -34,6 +34,7 @@ type RunnerOptions = {
   watch: boolean;
   filter: boolean;
   update: boolean;
+  verbose: boolean;
 };
 
 const opts: RunnerOptions = yargs
@@ -61,9 +62,18 @@ const opts: RunnerOptions = yargs
     "Only run fixtures which match the contents of testfilter.txt"
   )
   .default("filter", false)
+  .boolean("verbose")
+  .describe("verbose", "Enable additional logging")
+  .default("verbose", false)
   .help("help")
   .strict()
   .parseSync(hideBin(process.argv));
+
+function log(msg: string): void {
+  if (opts.verbose) {
+    console.log(msg);
+  }
+}
 
 /**
  * Do a test run and return the test results
@@ -98,16 +108,20 @@ async function runFixtures(
 
     entries = await Promise.all(work);
   } else {
+    log("runFixtures() start");
     entries = [];
     for (const [fixtureName, fixture] of fixtures) {
+      log(`${fixture.inputPath} start`);
       let output = await runnerWorker.transformFixture(
         fixture,
         compilerVersion,
         (filter?.debug ?? false) && isOnlyFixture,
         true
       );
+      log("...complete");
       entries.push([fixtureName, output]);
     }
+    log("runFixtures() complete");
   }
 
   return new Map(entries);

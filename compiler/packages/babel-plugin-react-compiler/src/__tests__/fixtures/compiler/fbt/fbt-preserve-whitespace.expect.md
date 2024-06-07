@@ -30,9 +30,10 @@ import fbt from "fbt";
 const _ = fbt;
 function Component(t0) {
   const $ = _c(2);
-  const { value } = t0;
   let t1;
-  if ($[0] !== value) {
+  if ($[0] !== t0) {
+    const { value } = t0;
+
     t1 = fbt._(
       "Before text {paramName}",
       [
@@ -44,7 +45,7 @@ function Component(t0) {
       ],
       { hk: "3z5SVE" },
     );
-    $[0] = value;
+    $[0] = t0;
     $[1] = t1;
   } else {
     t1 = $[1];

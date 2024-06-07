@@ -493,7 +493,7 @@ function evaluateInstruction(
     }
     case "LoadLocal": {
       const placeValue = read(constants, value.place);
-      if (placeValue !== null) {
+      if (placeValue != null) {
         instr.value = placeValue;
       }
       return placeValue;
