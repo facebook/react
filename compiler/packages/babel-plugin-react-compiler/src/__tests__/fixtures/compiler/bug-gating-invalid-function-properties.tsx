@@ -9,7 +9,12 @@ export default function Component() {
   return <></>;
 }
 
-Component.displayName = "some display name";
+export function Component2() {
+  return <></>;
+}
+
+Component.displayName = "Component ONE";
+Component2.displayName = "Component TWO";
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
