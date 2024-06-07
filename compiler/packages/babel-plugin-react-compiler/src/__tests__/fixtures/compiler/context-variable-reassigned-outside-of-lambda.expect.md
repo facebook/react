@@ -28,20 +28,19 @@ import { Stringify } from "shared-runtime";
 
 function Component(props) {
   const $ = _c(1);
+  let x;
+  x = null;
+  const callback = () => {
+    console.log(x);
+  };
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    let x;
-    x = null;
-    const callback = () => {
-      console.log(x);
-    };
-
-    x = {};
     t0 = <Stringify callback={callback} shouldInvokeFns={true} />;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
+  x = {};
   return t0;
 }
 

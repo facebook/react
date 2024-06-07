@@ -34,8 +34,8 @@ function Component(props) {
     if (foo()) {
     }
 
-    foo(a, b);
     t0 = <div a={a} b={b} />;
+    foo(a, b);
     $[0] = t0;
   } else {
     t0 = $[0];

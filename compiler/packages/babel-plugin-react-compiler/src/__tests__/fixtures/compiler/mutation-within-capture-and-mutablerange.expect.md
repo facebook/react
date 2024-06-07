@@ -53,22 +53,23 @@ import { mutate } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(3);
   const { a, b } = t0;
-  let z;
+  let t1;
   if ($[0] !== a || $[1] !== b) {
     const x = { a };
     const y = [b];
     mutate(x);
 
-    z = [mutate(y)];
+    const z = [mutate(y)];
 
+    t1 = z;
     mutate(y);
     $[0] = a;
     $[1] = b;
-    $[2] = z;
+    $[2] = t1;
   } else {
-    z = $[2];
+    t1 = $[2];
   }
-  return z;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

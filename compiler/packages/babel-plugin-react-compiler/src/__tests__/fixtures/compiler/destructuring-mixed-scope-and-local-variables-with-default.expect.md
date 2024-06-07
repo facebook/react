@@ -105,8 +105,8 @@ function Component(props) {
     }
     const onClick = t7;
 
-    allUrls.push(...urls);
     t1 = <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
+    allUrls.push(...urls);
     $[1] = post;
     $[2] = t1;
   } else {

@@ -31,16 +31,18 @@ function Component(props) {
     t0 = $[0];
   }
   const mutate = t0;
-  let x;
+  let t1;
   if ($[1] !== props) {
-    x = makeObject(props);
+    const x = makeObject(props);
+
+    t1 = x;
     mutate(x);
     $[1] = props;
-    $[2] = x;
+    $[2] = t1;
   } else {
-    x = $[2];
+    t1 = $[2];
   }
-  return x;
+  return t1;
 }
 
 ```

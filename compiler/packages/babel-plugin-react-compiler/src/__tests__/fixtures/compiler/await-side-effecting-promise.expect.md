@@ -16,16 +16,18 @@ async function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 async function Component(props) {
   const $ = _c(2);
-  let x;
+  let t0;
   if ($[0] !== props.id) {
-    x = [];
+    const x = [];
+
+    t0 = x;
     await populateData(props.id, x);
     $[0] = props.id;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
-  return x;
+  return t0;
 }
 
 ```

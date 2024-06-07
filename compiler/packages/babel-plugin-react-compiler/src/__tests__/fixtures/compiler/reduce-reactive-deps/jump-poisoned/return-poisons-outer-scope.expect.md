@@ -39,38 +39,40 @@ import { identity } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(6);
   const { input, cond } = t0;
-  let x;
   let t1;
+  let t2;
   if ($[0] !== cond || $[1] !== input) {
-    t1 = Symbol.for("react.early_return_sentinel");
+    t2 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      x = [];
+      const x = [];
       if (cond) {
-        t1 = null;
+        t2 = null;
         break bb0;
       }
-      let t2;
+
+      t1 = x;
+      let t3;
       if ($[4] !== input.a.b) {
-        t2 = identity(input.a.b);
+        t3 = identity(input.a.b);
         $[4] = input.a.b;
-        $[5] = t2;
+        $[5] = t3;
       } else {
-        t2 = $[5];
+        t3 = $[5];
       }
-      x.push(t2);
+      x.push(t3);
     }
     $[0] = cond;
     $[1] = input;
-    $[2] = x;
-    $[3] = t1;
+    $[2] = t1;
+    $[3] = t2;
   } else {
-    x = $[2];
-    t1 = $[3];
+    t1 = $[2];
+    t2 = $[3];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
-    return t1;
+  if (t2 !== Symbol.for("react.early_return_sentinel")) {
+    return t2;
   }
-  return x;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

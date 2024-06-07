@@ -34,9 +34,9 @@ import { c as _c } from "react/compiler-runtime"; /**
  */
 function Component(props) {
   const $ = _c(2);
-  let a;
+  let t0;
   if ($[0] !== props) {
-    a = [];
+    const a = [];
     a.push(props.a);
     bb0: {
       if (props.b) {
@@ -46,13 +46,14 @@ function Component(props) {
       a.push(props.c);
     }
 
+    t0 = a;
     a.push(props.d);
     $[0] = props;
-    $[1] = a;
+    $[1] = t0;
   } else {
-    a = $[1];
+    t0 = $[1];
   }
-  return a;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
