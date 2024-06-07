@@ -4,11 +4,6 @@
 ```javascript
 // @gating
 
-/**
- * Fail: bug-gating-invalid-function-properties
- *   Unexpected error in Forget runner
- *   Component is not defined
- */
 export default function Component() {
   return <></>;
 }
@@ -23,7 +18,7 @@ Component2.displayName = "Component TWO";
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
-  sequentialRenders: [],
+  sequentialRenders: [{}],
 };
 
 ```
@@ -33,13 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { c as _c } from "react/compiler-runtime"; // @gating
-
-/**
- * Fail: bug-gating-invalid-function-properties
- *   Unexpected error in Forget runner
- *   Component is not defined
- */
-export default isForgetEnabled_Fixtures()
+const Component = isForgetEnabled_Fixtures()
   ? function Component() {
       const $ = _c(1);
       let t0;
@@ -54,6 +43,7 @@ export default isForgetEnabled_Fixtures()
   : function Component() {
       return <></>;
     };
+export default Component;
 
 export const Component2 = isForgetEnabled_Fixtures()
   ? function Component2() {
@@ -77,8 +67,10 @@ Component2.displayName = "Component TWO";
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
-  sequentialRenders: [],
+  sequentialRenders: [{}],
 };
 
 ```
       
+### Eval output
+(kind: ok) 
