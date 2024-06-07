@@ -84,7 +84,7 @@ export const disableStringRefs = false;
 export const enableFastJSX = false;
 
 export const enableReactTestRendererWarning = false;
-export const disableLegacyMode = false;
+export const disableLegacyMode = true;
 
 export const disableDefaultPropsExceptForClasses = false;
 export const enableAddPropertiesFastPath = false;
