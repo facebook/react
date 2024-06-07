@@ -169,6 +169,7 @@ export type LoggerEvent =
       fnName: string | null;
       memoSlots: number;
       memoBlocks: number;
+      memoValues: number;
       prunedMemoBlocks: number;
       prunedMemoValues: number;
     }

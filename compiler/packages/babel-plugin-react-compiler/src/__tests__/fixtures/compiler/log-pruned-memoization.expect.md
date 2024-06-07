@@ -87,7 +87,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Logs
 
 ```
-{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":121},"end":{"line":26,"column":1,"index":813},"filename":"log-pruned-memoization.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"prunedMemoBlocks":2,"prunedMemoValues":3}
+{"kind":"CompileSuccess","fnLoc":{"start":{"line":5,"column":0,"index":121},"end":{"line":26,"column":1,"index":813},"filename":"log-pruned-memoization.ts"},"fnName":"Component","memoSlots":5,"memoBlocks":2,"memoValues":2,"prunedMemoBlocks":2,"prunedMemoValues":3}
 ```
       
 ### Eval output
