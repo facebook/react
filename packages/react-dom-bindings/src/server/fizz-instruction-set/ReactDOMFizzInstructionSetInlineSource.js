@@ -47,6 +47,11 @@ export function completeBoundaryWithStyles(
   const dependencies = [];
   let href, precedence, attr, loadingState, resourceEl, media;
 
+  function cleanupWith(cb) {
+    this['_p'] = null;
+    cb();
+  }
+
   // Sheets Mode
   let sheetMode = true;
   while (true) {
@@ -82,18 +87,14 @@ export function completeBoundaryWithStyles(
           resourceEl.setAttribute(attr, stylesheetDescriptor[j++]);
         }
         loadingState = resourceEl['_p'] = new Promise((resolve, reject) => {
-          resourceEl.onload = resolve;
-          resourceEl.onerror = reject;
+          resourceEl.onload = cleanupWith.bind(resourceEl, resolve);
+          resourceEl.onerror = cleanupWith.bind(resourceEl, reject);
         });
         // Save this resource element so we can bailout if it is used again
         resourceMap.set(href, resourceEl);
       }
       media = resourceEl.getAttribute('media');
-      if (
-        loadingState &&
-        loadingState['s'] !== 'l' &&
-        (!media || window['matchMedia'](media).matches)
-      ) {
+      if (loadingState && (!media || window['matchMedia'](media).matches)) {
         dependencies.push(loadingState);
       }
       if (avoidInsert) {
