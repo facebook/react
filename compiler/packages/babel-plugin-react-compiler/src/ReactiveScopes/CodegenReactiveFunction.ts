@@ -22,6 +22,7 @@ import {
   ObjectPropertyKey,
   Pattern,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -67,6 +68,23 @@ export type CodegenFunction = {
    * how many inputs/outputs each block has
    */
   memoBlocks: number;
+
+  /**
+   * Number of memoized values across all reactive scopes
+   */
+  memoValues: number;
+
+  /**
+   * The number of reactive scopes that were created but had to be discarded
+   * because they contained hook calls.
+   */
+  prunedMemoBlocks: number;
+
+  /**
+   * The total number of values that should have been memoized but weren't
+   * because they were part of a pruned memo block.
+   */
+  prunedMemoValues: number;
 };
 
 export function codegenFunction(
@@ -272,7 +290,7 @@ function codegenReactiveFunction(
     return Err(cx.errors);
   }
 
-  const countMemoBlockVisitor = new CountMemoBlockVisitor();
+  const countMemoBlockVisitor = new CountMemoBlockVisitor(fn.env);
   visitReactiveFunction(fn, countMemoBlockVisitor, undefined);
 
   return Ok({
@@ -284,16 +302,59 @@ function codegenReactiveFunction(
     generator: fn.generator,
     async: fn.async,
     memoSlotsUsed: cx.nextCacheIndex,
-    memoBlocks: countMemoBlockVisitor.count,
+    memoBlocks: countMemoBlockVisitor.memoBlocks,
+    memoValues: countMemoBlockVisitor.memoValues,
+    prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
+    prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
   });
 }
 
 class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void> {
-  count: number = 0;
+  env: Environment;
+  memoBlocks: number = 0;
+  memoValues: number = 0;
+  prunedMemoBlocks: number = 0;
+  prunedMemoValues: number = 0;
 
-  override visitScope(scope: ReactiveScopeBlock, state: void): void {
-    this.count += 1;
-    this.traverseScope(scope, state);
+  constructor(env: Environment) {
+    super();
+    this.env = env;
+  }
+
+  override visitScope(scopeBlock: ReactiveScopeBlock, state: void): void {
+    this.memoBlocks += 1;
+    this.memoValues += scopeBlock.scope.declarations.size;
+    this.traverseScope(scopeBlock, state);
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: void
+  ): void {
+    let isHookOnlyMemoBlock = false;
+    if (
+      scopeBlock.instructions.length === 1 &&
+      scopeBlock.instructions[0].kind === "instruction"
+    ) {
+      const instr = scopeBlock.instructions[0]!.instruction;
+      if (
+        instr.value.kind === "MethodCall" ||
+        instr.value.kind === "CallExpression"
+      ) {
+        const callee =
+          instr.value.kind === "MethodCall"
+            ? instr.value.property
+            : instr.value.callee;
+        if (getHookKind(this.env, callee.identifier) != null) {
+          isHookOnlyMemoBlock = true;
+        }
+      }
+    }
+    if (!isHookOnlyMemoBlock) {
+      this.prunedMemoBlocks += 1;
+      this.prunedMemoValues += scopeBlock.scope.declarations.size;
+    }
+    this.traversePrunedScope(scopeBlock, state);
   }
 }
 
