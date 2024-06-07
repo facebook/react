@@ -373,7 +373,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(instance.updater.isMounted(instance)).toBe(false);
   });
 
-  // @gate www && !disableLegacyMode
+  // @gate www && classic
   it('warns if legacy findDOMNode is used inside render', async () => {
     class Component extends React.Component {
       state = {isMounted: false};
