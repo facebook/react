@@ -239,6 +239,8 @@ Chunk.prototype.then = function <T>(
   }
 };
 
+export type FindSourceMapURLCallback = (fileName: string) => null | string;
+
 export type Response = {
   _bundlerConfig: SSRModuleMap,
   _moduleLoading: ModuleLoading,
@@ -255,6 +257,7 @@ export type Response = {
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _debugRootTask?: null | ConsoleTask, // DEV-only
+  _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -696,7 +699,7 @@ function createElement(
           console,
           getTaskName(type),
         );
-        const callStack = buildFakeCallStack(stack, createTaskFn);
+        const callStack = buildFakeCallStack(response, stack, createTaskFn);
         // This owner should ideally have already been initialized to avoid getting
         // user stack frames on the stack.
         const ownerTask =
@@ -1140,6 +1143,7 @@ export function createResponse(
   encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  findSourceMapURL: void | FindSourceMapURLCallback,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
@@ -1165,6 +1169,9 @@ export function createResponse(
     // this is where we enter the server from the client.
     // TODO: Make this string configurable.
     response._debugRootTask = (console: any).createTask('"use server"');
+  }
+  if (__DEV__) {
+    response._debugFindSourceMapURL = findSourceMapURL;
   }
   // Don't inline this call because it causes closure to outline the call above.
   response._fromJSON = createFromJSONCallback(response);
@@ -1673,6 +1680,7 @@ const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
 function createFakeFunction<T>(
   name: string,
   filename: string,
+  sourceMap: null | string,
   line: number,
   col: number,
 ): FakeFunction<T> {
@@ -1697,7 +1705,9 @@ function createFakeFunction<T>(
       '_()\n';
   }
 
-  if (filename) {
+  if (sourceMap) {
+    code += '//# sourceMappingURL=' + sourceMap;
+  } else if (filename) {
     code += '//# sourceURL=' + filename;
   }
 
@@ -1720,10 +1730,18 @@ function createFakeFunction<T>(
   return fn;
 }
 
+// This matches either of these V8 formats.
+//     at name (filename:0:0)
+//     at filename:0:0
+//     at async filename:0:0
 const frameRegExp =
-  /^ {3} at (?:(.+) \(([^\)]+):(\d+):(\d+)\)|([^\)]+):(\d+):(\d+))$/;
+  /^ {3} at (?:(.+) \(([^\)]+):(\d+):(\d+)\)|(?:async )?([^\)]+):(\d+):(\d+))$/;
 
-function buildFakeCallStack<T>(stack: string, innerCall: () => T): () => T {
+function buildFakeCallStack<T>(
+  response: Response,
+  stack: string,
+  innerCall: () => T,
+): () => T {
   const frames = stack.split('\n');
   let callStack = innerCall;
   for (let i = 0; i < frames.length; i++) {
@@ -1739,7 +1757,13 @@ function buildFakeCallStack<T>(stack: string, innerCall: () => T): () => T {
       const filename = parsed[2] || parsed[5] || '';
       const line = +(parsed[3] || parsed[6]);
       const col = +(parsed[4] || parsed[7]);
-      fn = createFakeFunction(name, filename, line, col);
+      const sourceMap = response._debugFindSourceMapURL
+        ? response._debugFindSourceMapURL(filename)
+        : null;
+      fn = createFakeFunction(name, filename, sourceMap, line, col);
+      // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
+      // function is an input and can vary by response.
+      fakeFunctionCache.set(frame, fn);
     }
     callStack = fn.bind(null, callStack);
   }
@@ -1770,7 +1794,7 @@ function initializeFakeTask(
     console,
     getServerComponentTaskName(componentInfo),
   );
-  const callStack = buildFakeCallStack(stack, createTaskFn);
+  const callStack = buildFakeCallStack(response, stack, createTaskFn);
 
   if (ownerTask === null) {
     const rootTask = response._debugRootTask;
@@ -1832,6 +1856,7 @@ function resolveConsoleEntry(
     return;
   }
   const callStack = buildFakeCallStack(
+    response,
     stackTrace,
     printToConsole.bind(null, methodName, args, env),
   );

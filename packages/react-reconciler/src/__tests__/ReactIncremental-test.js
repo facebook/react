@@ -239,7 +239,7 @@ describe('ReactIncremental', () => {
     expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('can deprioritize unfinished work and resume it later', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
@@ -279,7 +279,7 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle', 'Middle']);
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('can deprioritize a tree from without dropping work', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
@@ -1864,8 +1864,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  // @gate www
-  // @gate !disableLegacyContext
+  // @gate enableLegacyHidden && !disableLegacyContext
   it('provides context when reusing work', async () => {
     class Intl extends React.Component {
       static childContextTypes = {

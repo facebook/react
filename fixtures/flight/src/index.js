@@ -39,6 +39,9 @@ async function hydrateApp() {
     }),
     {
       callServer,
+      findSourceMapURL(fileName) {
+        return '/source-maps?name=' + encodeURIComponent(fileName);
+      },
     }
   );
 

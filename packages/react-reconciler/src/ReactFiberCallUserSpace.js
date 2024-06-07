@@ -9,7 +9,7 @@
 
 import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {setIsRendering} from './ReactCurrentFiber';
+import {isRendering, setIsRendering} from './ReactCurrentFiber';
 
 // These indirections exists so we can exclude its stack frame in DEV (and anything below it).
 // TODO: Consider marking the whole bundle instead of these boundaries.
@@ -20,10 +20,14 @@ export function callComponentInDEV<Props, Arg, R>(
   props: Props,
   secondArg: Arg,
 ): R {
+  const wasRendering = isRendering;
   setIsRendering(true);
-  const result = Component(props, secondArg);
-  setIsRendering(false);
-  return result;
+  try {
+    const result = Component(props, secondArg);
+    return result;
+  } finally {
+    setIsRendering(wasRendering);
+  }
 }
 
 interface ClassInstance<R> {
@@ -32,10 +36,14 @@ interface ClassInstance<R> {
 
 /** @noinline */
 export function callRenderInDEV<R>(instance: ClassInstance<R>): R {
+  const wasRendering = isRendering;
   setIsRendering(true);
-  const result = instance.render();
-  setIsRendering(false);
-  return result;
+  try {
+    const result = instance.render();
+    return result;
+  } finally {
+    setIsRendering(wasRendering);
+  }
 }
 
 /** @noinline */
