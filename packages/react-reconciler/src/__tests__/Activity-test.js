@@ -118,7 +118,7 @@ describe('Activity', () => {
     );
   });
 
-  // @gate www && !disableLegacyMode
+  // @gate enableLegacyHidden && !disableLegacyMode
   it('does not defer in legacy mode', async () => {
     let setState;
     function Foo() {
@@ -163,7 +163,7 @@ describe('Activity', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('does defer in concurrent mode', async () => {
     let setState;
     function Foo() {

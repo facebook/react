@@ -50,6 +50,8 @@ const run = async ({build, cwd, releaseChannel}) => {
     sourceDir = 'oss-stable';
   } else if (releaseChannel === 'experimental') {
     sourceDir = 'oss-experimental';
+  } else if (releaseChannel === 'rc') {
+    sourceDir = 'oss-stable-rc';
   } else if (releaseChannel === 'latest') {
     sourceDir = 'oss-stable-semver';
   } else {

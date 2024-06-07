@@ -369,6 +369,58 @@ function evaluateInstruction(
             }
             break;
           }
+          case "|": {
+            if (typeof lhs === "number" && typeof rhs === "number") {
+              result = { kind: "Primitive", value: lhs | rhs, loc: value.loc };
+            }
+            break;
+          }
+          case "&": {
+            if (typeof lhs === "number" && typeof rhs === "number") {
+              result = { kind: "Primitive", value: lhs & rhs, loc: value.loc };
+            }
+            break;
+          }
+          case "^": {
+            if (typeof lhs === "number" && typeof rhs === "number") {
+              result = { kind: "Primitive", value: lhs ^ rhs, loc: value.loc };
+            }
+            break;
+          }
+          case "<<": {
+            if (typeof lhs === "number" && typeof rhs === "number") {
+              result = { kind: "Primitive", value: lhs << rhs, loc: value.loc };
+            }
+            break;
+          }
+          case ">>": {
+            if (typeof lhs === "number" && typeof rhs === "number") {
+              result = { kind: "Primitive", value: lhs >> rhs, loc: value.loc };
+            }
+            break;
+          }
+          case ">>>": {
+            if (typeof lhs === "number" && typeof rhs === "number") {
+              result = {
+                kind: "Primitive",
+                value: lhs >>> rhs,
+                loc: value.loc,
+              };
+            }
+            break;
+          }
+          case "%": {
+            if (typeof lhs === "number" && typeof rhs === "number") {
+              result = { kind: "Primitive", value: lhs % rhs, loc: value.loc };
+            }
+            break;
+          }
+          case "**": {
+            if (typeof lhs === "number" && typeof rhs === "number") {
+              result = { kind: "Primitive", value: lhs ** rhs, loc: value.loc };
+            }
+            break;
+          }
           case "<": {
             if (typeof lhs === "number" && typeof rhs === "number") {
               result = { kind: "Primitive", value: lhs < rhs, loc: value.loc };
