@@ -322,9 +322,7 @@ describe('ReactJSXElementValidator', () => {
           </>,
         );
       });
-    }).toErrorDev('Encountered two children with the same key, `a`.', {
-      withoutStack: true,
-    });
+    }).toErrorDev('Encountered two children with the same key, `a`.');
   });
 
   it('does not call lazy initializers eagerly', () => {
