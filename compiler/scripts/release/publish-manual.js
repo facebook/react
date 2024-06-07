@@ -51,8 +51,6 @@ async function getDateStringForCommit(commit) {
 }
 
 /**
- * Please login to npm first with `npm login`. You will also need 2FA enabled to push to npm.
- *
  * Script for publishing PUBLISHABLE_PACKAGES to npm. By default, this runs in tarball mode, meaning
  * the script will only print out what the contents of the files included in the npm tarball would
  * be.
@@ -60,10 +58,11 @@ async function getDateStringForCommit(commit) {
  * Please run this first (ie `yarn npm:publish`) and double check the contents of the files that
  * will be pushed to npm.
  *
- * If it looks good, you can run `yarn npm:publish --for-real` to really publish to npm. There's a
- * small annoying delay before the packages are actually pushed to give you time to panic cancel. In
- * this mode, we will bump the version field of each package's package.json, and git commit it.
- * Then, the packages will be published to npm.
+ * If it looks good, you can run `yarn npm:publish --for-real` to really publish to npm. You must
+ * have 2FA enabled first and the script will prompt you to enter a 2FA code before proceeding.
+ * There's a small annoying delay before the packages are actually pushed to give you time to panic
+ * cancel. In this mode, we will bump the version field of each package's package.json, and git
+ * commit it. Then, the packages will be published to npm.
  *
  * Optionally, you can add the `--debug` flag to `yarn npm:publish --debug --for-real` to run all
  * steps, but the final npm publish step will have the `--dry-run` flag added to it. This will make
