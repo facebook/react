@@ -66,7 +66,14 @@ class Transform extends ReactiveFunctionTransform<State> {
     this.visitScope(scope, innerState);
     outerState.hasHook ||= innerState.hasHook;
     if (innerState.hasHook) {
-      return { kind: "replace-many", value: scope.instructions };
+      return {
+        kind: "replace",
+        value: {
+          kind: "pruned-scope",
+          scope: scope.scope,
+          instructions: scope.instructions,
+        },
+      };
     } else {
       return { kind: "keep" };
     }

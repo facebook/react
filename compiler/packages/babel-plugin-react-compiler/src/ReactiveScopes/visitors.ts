@@ -9,6 +9,7 @@ import {
   HIRFunction,
   InstructionId,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -196,6 +197,16 @@ export class ReactiveFunctionVisitor<TState = void> {
     this.visitBlock(scope.instructions, state);
   }
 
+  visitPrunedScope(scopeBlock: PrunedReactiveScopeBlock, state: TState): void {
+    this.traversePrunedScope(scopeBlock, state);
+  }
+  traversePrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: TState
+  ): void {
+    this.visitBlock(scopeBlock.instructions, state);
+  }
+
   visitBlock(block: ReactiveBlock, state: TState): void {
     this.traverseBlock(block, state);
   }
@@ -208,6 +219,10 @@ export class ReactiveFunctionVisitor<TState = void> {
         }
         case "scope": {
           this.visitScope(instr, state);
+          break;
+        }
+        case "pruned-scope": {
+          this.visitPrunedScope(instr, state);
           break;
         }
         case "terminal": {
@@ -273,6 +288,10 @@ export class ReactiveFunctionTransform<
           transformed = this.transformScope(instr, state);
           break;
         }
+        case "pruned-scope": {
+          transformed = this.transformPrunedScope(instr, state);
+          break;
+        }
         case "terminal": {
           transformed = this.transformTerminal(instr, state);
           break;
@@ -336,6 +355,14 @@ export class ReactiveFunctionTransform<
     state: TState
   ): Transformed<ReactiveStatement> {
     this.visitScope(scope, state);
+    return { kind: "keep" };
+  }
+
+  transformPrunedScope(
+    scope: PrunedReactiveScopeBlock,
+    state: TState
+  ): Transformed<ReactiveStatement> {
+    this.visitPrunedScope(scope, state);
     return { kind: "keep" };
   }
 

@@ -7,6 +7,7 @@
 
 import { CompilerError } from "../CompilerError";
 import {
+  PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveScope,
   ReactiveScopeBlock,
@@ -83,6 +84,15 @@ export function writeReactiveBlock(
   writer.writeLine("}");
 }
 
+export function writePrunedScope(
+  writer: Writer,
+  block: PrunedReactiveScopeBlock
+): void {
+  writer.writeLine(`<pruned> ${printReactiveScopeSummary(block.scope)} {`);
+  writeReactiveInstructions(writer, block.instructions);
+  writer.writeLine("}");
+}
+
 export function printDependency(dependency: ReactiveScopeDependency): string {
   const identifier =
     printIdentifier(dependency.identifier) +
@@ -131,6 +141,10 @@ function writeReactiveInstruction(
     }
     case "scope": {
       writeReactiveBlock(writer, instr);
+      break;
+    }
+    case "pruned-scope": {
+      writePrunedScope(writer, instr);
       break;
     }
     case "terminal": {

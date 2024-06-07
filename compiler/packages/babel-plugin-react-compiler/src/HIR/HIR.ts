@@ -65,12 +65,19 @@ export type ReactiveScopeBlock = {
   instructions: ReactiveBlock;
 };
 
+export type PrunedReactiveScopeBlock = {
+  kind: "pruned-scope";
+  scope: ReactiveScope;
+  instructions: ReactiveBlock;
+};
+
 export type ReactiveBlock = Array<ReactiveStatement>;
 
 export type ReactiveStatement =
   | ReactiveInstructionStatement
   | ReactiveTerminalStatement
-  | ReactiveScopeBlock;
+  | ReactiveScopeBlock
+  | PrunedReactiveScopeBlock;
 
 export type ReactiveInstructionStatement = {
   kind: "instruction";
