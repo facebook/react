@@ -70,6 +70,11 @@ export type CodegenFunction = {
   memoBlocks: number;
 
   /**
+   * Number of memoized values across all reactive scopes
+   */
+  memoValues: number;
+
+  /**
    * The number of reactive scopes that were created but had to be discarded
    * because they contained hook calls.
    */
@@ -297,7 +302,8 @@ function codegenReactiveFunction(
     generator: fn.generator,
     async: fn.async,
     memoSlotsUsed: cx.nextCacheIndex,
-    memoBlocks: countMemoBlockVisitor.count,
+    memoBlocks: countMemoBlockVisitor.memoBlocks,
+    memoValues: countMemoBlockVisitor.memoValues,
     prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
   });
@@ -305,7 +311,8 @@ function codegenReactiveFunction(
 
 class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void> {
   env: Environment;
-  count: number = 0;
+  memoBlocks: number = 0;
+  memoValues: number = 0;
   prunedMemoBlocks: number = 0;
   prunedMemoValues: number = 0;
 
@@ -314,9 +321,10 @@ class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void> {
     this.env = env;
   }
 
-  override visitScope(scope: ReactiveScopeBlock, state: void): void {
-    this.count += 1;
-    this.traverseScope(scope, state);
+  override visitScope(scopeBlock: ReactiveScopeBlock, state: void): void {
+    this.memoBlocks += 1;
+    this.memoValues += scopeBlock.scope.declarations.size;
+    this.traverseScope(scopeBlock, state);
   }
 
   override visitPrunedScope(
