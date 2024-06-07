@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {patchMessageChannel} from '../../../../scripts/jest/patchMessageChannel';
+
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
@@ -18,10 +20,16 @@ global.TextDecoder = require('util').TextDecoder;
 let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
+let ReactServerScheduler;
+let reactServerAct;
 
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    ReactServerScheduler = require('scheduler');
+    patchMessageChannel(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -37,6 +45,17 @@ describe('ReactFlightDOMBrowser', () => {
     React = require('react');
     ReactServerDOMClient = require('react-server-dom-turbopack/client');
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   it('should resolve HTML using W3C streams', async () => {
     function Text({children}) {
@@ -58,7 +77,9 @@ describe('ReactFlightDOMBrowser', () => {
       return model;
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<App />),
+    );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
     const model = await response;
     expect(model).toEqual({

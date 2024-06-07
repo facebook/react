@@ -495,6 +495,10 @@ const skipFilter = new Set([
   "flag-enable-emit-hook-guards",
 
   "fast-refresh-refresh-on-const-changes-dev",
+  "useState-pruned-dependency-change-detect",
+  "useState-unpruned-dependency",
+  "useState-and-other-hook-unpruned-dependency",
+  "change-detect-reassign",
 ]);
 
 export default skipFilter;

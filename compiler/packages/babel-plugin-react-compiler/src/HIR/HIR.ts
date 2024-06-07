@@ -1144,6 +1144,7 @@ export type Identifier = {
    */
   scope: ReactiveScope | null;
   type: Type;
+  loc: SourceLocation;
 };
 
 export type IdentifierName = ValidatedIdentifier | PromotedIdentifier;
@@ -1252,6 +1253,11 @@ export enum ValueReason {
    * A value returned from `useState`
    */
   State = "state",
+
+  /**
+   * A value returned from `useReducer`
+   */
+  ReducerState = "reducer-state",
 
   /**
    * Props of a component or arguments of a hook.
@@ -1376,6 +1382,8 @@ export type ReactiveScope = {
    * no longer exist due to being pruned.
    */
   merged: Set<ScopeId>;
+
+  loc: SourceLocation;
 };
 
 export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;
@@ -1488,6 +1496,14 @@ export function isUseStateType(id: Identifier): boolean {
 
 export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
+}
+
+export function isUseReducerType(id: Identifier): boolean {
+  return id.type.kind === "Function" && id.type.shapeId === "BuiltInUseReducer";
+}
+
+export function isDispatcherType(id: Identifier): boolean {
+  return id.type.kind === "Function" && id.type.shapeId === "BuiltInDispatch";
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

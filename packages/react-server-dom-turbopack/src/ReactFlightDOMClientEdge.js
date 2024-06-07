@@ -9,7 +9,10 @@
 
 import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes.js';
 
-import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
+import type {
+  Response as FlightResponse,
+  FindSourceMapURLCallback,
+} from 'react-client/src/ReactFlightClient';
 
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
@@ -67,6 +70,7 @@ export type Options = {
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
+  findSourceMapURL?: FindSourceMapURLCallback,
 };
 
 function createResponseFromOptions(options: Options) {
@@ -78,6 +82,9 @@ function createResponseFromOptions(options: Options) {
     typeof options.nonce === 'string' ? options.nonce : undefined,
     options && options.temporaryReferences
       ? options.temporaryReferences
+      : undefined,
+    __DEV__ && options && options.findSourceMapURL
+      ? options.findSourceMapURL
       : undefined,
   );
 }

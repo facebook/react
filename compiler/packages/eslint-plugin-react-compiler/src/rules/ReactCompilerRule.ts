@@ -124,12 +124,14 @@ const rule: Rule.RuleModule = {
         });
       } catch {}
     } else {
-      babelAST = HermesParser.parse(sourceCode, {
-        babel: true,
-        enableExperimentalComponentSyntax: true,
-        sourceFilename: filename,
-        sourceType: "module",
-      });
+      try {
+        babelAST = HermesParser.parse(sourceCode, {
+          babel: true,
+          enableExperimentalComponentSyntax: true,
+          sourceFilename: filename,
+          sourceType: "module",
+        });
+      } catch {}
     }
 
     if (babelAST != null) {
