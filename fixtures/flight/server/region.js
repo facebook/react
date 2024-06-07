@@ -3,6 +3,7 @@
 // This is a server to host data-local resources like databases and RSC
 
 const path = require('path');
+const url = require('url');
 
 const register = require('react-server-dom-webpack/node-register');
 register();
@@ -192,7 +193,7 @@ if (process.env.NODE_ENV === 'development') {
         // We assume that if it was prefixed with file:// it's referring to the compiled output
         // and if it's a direct file path we assume it's source mapped back to original format.
         isCompiledOutput = true;
-        requestedFilePath = requestedFilePath.slice(7);
+        requestedFilePath = url.fileURLToPath(requestedFilePath);
       }
 
       const relativePath = path.relative(rootDir, requestedFilePath);
@@ -206,24 +207,41 @@ if (process.env.NODE_ENV === 'development') {
 
       const sourceMap = nodeModule.findSourceMap(requestedFilePath);
       let map;
-      // There are two ways to return a source map depending on what we observe in error.stack.
-      // A real app will have a similar choice to make for which strategy to pick.
-      if (!sourceMap || !isCompiledOutput) {
-        // If a file doesn't have a source map, such as this file, then we generate a blank
-        // source map that just contains the original content and segments pointing to the
-        // original lines.
-        // Similarly
-        const sourceContent = await readFile(requestedFilePath, 'utf8');
-        const lines = sourceContent.split('\n').length;
+      if (requestedFilePath.startsWith('node:')) {
+        // This is a node internal. We don't include any source code for this but we still
+        // generate a source map for it so that we can add it to an ignoreList automatically.
         map = {
           version: 3,
-          sources: [requestedFilePath],
+          // We use the node:// protocol convention to teach Chrome DevTools that this is
+          // on a different protocol and not part of the current page.
+          sources: ['node:///' + requestedFilePath.slice(5)],
+          sourcesContent: ['// Node Internals'],
+          mappings: 'AAAA',
+          ignoreList: [0],
+          sourceRoot: '',
+        };
+      } else if (!sourceMap || !isCompiledOutput) {
+        // If a file doesn't have a source map, such as this file, then we generate a blank
+        // source map that just contains the original content and segments pointing to the
+        // original lines. If a line number points to uncompiled output, like if source mapping
+        // was already applied we also use this path.
+        const sourceContent = await readFile(requestedFilePath, 'utf8');
+        const lines = sourceContent.split('\n').length;
+        // We ensure to absolute
+        const sourceURL = url.pathToFileURL(requestedFilePath);
+        map = {
+          version: 3,
+          sources: [sourceURL],
           sourcesContent: [sourceContent],
           // Note: This approach to mapping each line only lets you jump to each line
           // not jump to a column within a line. To do that, you need a proper source map
           // generated for each parsed segment or add a segment for each column.
           mappings: 'AAAA' + ';AACA'.repeat(lines - 1),
           sourceRoot: '',
+          // Add any node_modules to the ignore list automatically.
+          ignoreList: requestedFilePath.includes('node_modules')
+            ? [0]
+            : undefined,
         };
       } else {
         // We always set prepareStackTrace before reading the stack so that we get the stack
