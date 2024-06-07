@@ -153,10 +153,10 @@ class Transform extends ReactiveFunctionTransform<State> {
 
         const instructions = scopeBlock.instructions;
         const loc = earlyReturnValue.loc;
-        const sentinelTemp = createTemporaryPlace(this.env);
-        const symbolTemp = createTemporaryPlace(this.env);
-        const forTemp = createTemporaryPlace(this.env);
-        const argTemp = createTemporaryPlace(this.env);
+        const sentinelTemp = createTemporaryPlace(this.env, loc);
+        const symbolTemp = createTemporaryPlace(this.env, loc);
+        const forTemp = createTemporaryPlace(this.env, loc);
+        const argTemp = createTemporaryPlace(this.env, loc);
         scopeBlock.instructions = [
           {
             kind: "instruction",
@@ -274,7 +274,7 @@ class Transform extends ReactiveFunctionTransform<State> {
       if (state.earlyReturnValue !== null) {
         earlyReturnValue = state.earlyReturnValue;
       } else {
-        const identifier = createTemporaryPlace(this.env).identifier;
+        const identifier = createTemporaryPlace(this.env, loc).identifier;
         promoteTemporary(identifier);
         earlyReturnValue = {
           label: this.env.nextBlockId,

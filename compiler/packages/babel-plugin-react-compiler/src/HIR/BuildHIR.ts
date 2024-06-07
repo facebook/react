@@ -124,7 +124,7 @@ export function lower(
     ) {
       const place: Place = {
         kind: "Identifier",
-        identifier: builder.makeTemporary(),
+        identifier: builder.makeTemporary(param.node.loc ?? GeneratedSource),
         effect: Effect.Unknown,
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
@@ -141,7 +141,7 @@ export function lower(
     } else if (param.isRestElement()) {
       const place: Place = {
         kind: "Identifier",
-        identifier: builder.makeTemporary(),
+        identifier: builder.makeTemporary(param.node.loc ?? GeneratedSource),
         effect: Effect.Unknown,
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
@@ -1256,7 +1256,9 @@ function lowerStatement(
       if (hasNode(handlerBindingPath)) {
         const place: Place = {
           kind: "Identifier",
-          identifier: builder.makeTemporary(),
+          identifier: builder.makeTemporary(
+            handlerBindingPath.node.loc ?? GeneratedSource
+          ),
           effect: Effect.Unknown,
           reactive: false,
           loc: handlerBindingPath.node.loc ?? GeneratedSource,
@@ -3301,7 +3303,7 @@ function lowerIdentifier(
 function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
   const place: Place = {
     kind: "Identifier",
-    identifier: builder.makeTemporary(),
+    identifier: builder.makeTemporary(loc),
     effect: Effect.Unknown,
     reactive: false,
     loc,

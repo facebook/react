@@ -50,10 +50,11 @@ module.exports = async () => {
   if (
     channel !== 'experimental' &&
     channel !== 'stable' &&
+    channel !== 'rc' &&
     channel !== 'latest'
   ) {
     console.error(
-      theme.error`Invalid release channel (-r) "${channel}". Must be "stable", "experimental", or "latest".`
+      theme.error`Invalid release channel (-r) "${channel}". Must be "stable", "experimental", "rc", or "latest".`
     );
     process.exit(1);
   }

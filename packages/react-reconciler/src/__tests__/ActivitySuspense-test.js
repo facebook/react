@@ -140,7 +140,7 @@ describe('Activity Suspense', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   test('LegacyHidden does not handle suspense', async () => {
     const root = ReactNoop.createRoot();
 
@@ -174,7 +174,7 @@ describe('Activity Suspense', () => {
     );
   });
 
-  // @gate experimental || www
+  // @gate enableActivity
   test("suspending inside currently hidden tree that's switching to visible", async () => {
     const root = ReactNoop.createRoot();
 
@@ -319,7 +319,7 @@ describe('Activity Suspense', () => {
     );
   });
 
-  // @gate experimental || www
+  // @gate enableActivity
   test('update that suspends inside hidden tree', async () => {
     let setText;
     function Child() {
@@ -352,7 +352,7 @@ describe('Activity Suspense', () => {
     });
   });
 
-  // @gate experimental || www
+  // @gate enableActivity
   test('updates at multiple priorities that suspend inside hidden tree', async () => {
     let setText;
     let setStep;

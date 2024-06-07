@@ -26,6 +26,7 @@ import {enableFlightReadableStream} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
+  scheduleMicrotask,
   flushBuffered,
   beginWriting,
   writeChunkAndReturn,
@@ -137,10 +138,41 @@ function isNotExternal(stackFrame: string): boolean {
   return !externalRegExp.test(stackFrame);
 }
 
+function prepareStackTrace(
+  error: Error,
+  structuredStackTrace: CallSite[],
+): string {
+  const name = error.name || 'Error';
+  const message = error.message || '';
+  let stack = name + ': ' + message;
+  for (let i = 0; i < structuredStackTrace.length; i++) {
+    stack += '\n    at ' + structuredStackTrace[i].toString();
+  }
+  return stack;
+}
+
+function getStack(error: Error): string {
+  // We override Error.prepareStackTrace with our own version that normalizes
+  // the stack to V8 formatting even if the server uses other formatting.
+  // It also ensures that source maps are NOT applied to this since that can
+  // be slow we're better off doing that lazily from the client instead of
+  // eagerly on the server. If the stack has already been read, then we might
+  // not get a normalized stack and it might still have been source mapped.
+  // So the client still needs to be resilient to this.
+  const previousPrepare = Error.prepareStackTrace;
+  Error.prepareStackTrace = prepareStackTrace;
+  try {
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    return String(error.stack);
+  } finally {
+    Error.prepareStackTrace = previousPrepare;
+  }
+}
+
 function initCallComponentFrame(): string {
   // Extract the stack frame of the callComponentInDEV function.
   const error = callComponentInDEV(Error, 'react-stack-top-frame', {});
-  const stack = error.stack;
+  const stack = getStack(error);
   const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
   const endIdx = stack.indexOf('\n', startIdx);
   if (endIdx === -1) {
@@ -155,7 +187,7 @@ function initCallIteratorFrame(): string {
     (callIteratorInDEV: any)({next: null});
     return '';
   } catch (error) {
-    const stack = error.stack;
+    const stack = getStack(error);
     const startIdx = stack.startsWith('TypeError: ')
       ? stack.indexOf('\n') + 1
       : 0;
@@ -174,7 +206,7 @@ function initCallLazyInitFrame(): string {
     _init: Error,
     _payload: 'react-stack-top-frame',
   });
-  const stack = error.stack;
+  const stack = getStack(error);
   const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
   const endIdx = stack.indexOf('\n', startIdx);
   if (endIdx === -1) {
@@ -188,7 +220,7 @@ function filterDebugStack(error: Error): string {
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
   // the DevTools or framework's ignore lists to filter them out.
-  let stack = error.stack;
+  let stack = getStack(error);
   if (stack.startsWith('Error: react-stack-top-frame\n')) {
     // V8's default formatting prefixes with the error message which we
     // don't want/need.
@@ -241,14 +273,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // Extract the stack. Not all console logs print the full stack but they have at
         // least the line it was called from. We could optimize transfer by keeping just
         // one stack frame but keeping it simple for now and include all frames.
-        let stack = filterDebugStack(new Error('react-stack-top-frame'));
-        const firstLine = stack.indexOf('\n');
-        if (firstLine === -1) {
-          stack = '';
-        } else {
-          // Skip the console wrapper itself.
-          stack = stack.slice(firstLine + 1);
-        }
+        const stack = filterDebugStack(new Error('react-stack-top-frame'));
         request.pendingChunks++;
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
@@ -356,10 +381,11 @@ const PENDING = 0;
 const COMPLETED = 1;
 const ABORTED = 3;
 const ERRORED = 4;
+const RENDERING = 5;
 
 type Task = {
   id: number,
-  status: 0 | 1 | 3 | 4,
+  status: 0 | 1 | 3 | 4 | 5,
   model: ReactClientValue,
   ping: () => void,
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
@@ -371,7 +397,7 @@ type Task = {
 interface Reference {}
 
 export type Request = {
-  status: 0 | 1 | 2,
+  status: 0 | 1 | 2 | 3,
   flushScheduled: boolean,
   fatalError: mixed,
   destination: null | Destination,
@@ -401,6 +427,8 @@ export type Request = {
   environmentName: string,
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
 };
+
+const AbortSigil = {};
 
 const {
   TaintRegistryObjects,
@@ -441,8 +469,9 @@ function defaultPostponeHandler(reason: string) {
 }
 
 const OPEN = 0;
-const CLOSING = 1;
-const CLOSED = 2;
+const ABORTING = 1;
+const CLOSING = 2;
+const CLOSED = 3;
 
 export function createRequest(
   model: ReactClientValue,
@@ -531,7 +560,6 @@ function serializeThenable(
     task.implicitSlot,
     request.abortableTasks,
   );
-
   if (__DEV__) {
     // If this came from Flight, forward any debug info into this new row.
     const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
@@ -565,6 +593,15 @@ function serializeThenable(
       return newTask.id;
     }
     default: {
+      if (request.status === ABORTING) {
+        // We can no longer accept any resolved values
+        newTask.status = ABORTED;
+        const errorId: number = (request.fatalError: any);
+        const model = stringify(serializeByValueID(errorId));
+        emitModelChunk(request, newTask.id, model);
+        request.abortableTasks.delete(newTask);
+        return newTask.id;
+      }
       if (typeof thenable.status === 'string') {
         // Only instrument the thenable if the status if not defined. If
         // it's defined, but an unknown value, assume it's been instrumented by
@@ -1021,6 +1058,14 @@ function renderFunctionComponent<Props>(
     const secondArg = undefined;
     result = Component(props, secondArg);
   }
+
+  if (request.status === ABORTING) {
+    // If we aborted during rendering we should interrupt the render but
+    // we don't need to provide an error because the renderer will encode
+    // the abort error as the reason.
+    throw AbortSigil;
+  }
+
   if (
     typeof result === 'object' &&
     result !== null &&
@@ -1222,12 +1267,25 @@ function renderFragment(
   if (task.keyPath !== null) {
     // We have a Server Component that specifies a key but we're now splitting
     // the tree using a fragment.
-    const fragment = [
-      REACT_ELEMENT_TYPE,
-      REACT_FRAGMENT_TYPE,
-      task.keyPath,
-      {children},
-    ];
+    const fragment = __DEV__
+      ? enableOwnerStacks
+        ? [
+            REACT_ELEMENT_TYPE,
+            REACT_FRAGMENT_TYPE,
+            task.keyPath,
+            {children},
+            null,
+            null,
+            0,
+          ]
+        : [
+            REACT_ELEMENT_TYPE,
+            REACT_FRAGMENT_TYPE,
+            task.keyPath,
+            {children},
+            null,
+          ]
+      : [REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE, task.keyPath, {children}];
     if (!task.implicitSlot) {
       // If this was keyed inside a set. I.e. the outer Server Component was keyed
       // then we need to handle reorders of the whole set. To do this we need to wrap
@@ -1281,12 +1339,25 @@ function renderAsyncFragment(
   if (task.keyPath !== null) {
     // We have a Server Component that specifies a key but we're now splitting
     // the tree using a fragment.
-    const fragment = [
-      REACT_ELEMENT_TYPE,
-      REACT_FRAGMENT_TYPE,
-      task.keyPath,
-      {children},
-    ];
+    const fragment = __DEV__
+      ? enableOwnerStacks
+        ? [
+            REACT_ELEMENT_TYPE,
+            REACT_FRAGMENT_TYPE,
+            task.keyPath,
+            {children},
+            null,
+            null,
+            0,
+          ]
+        : [
+            REACT_ELEMENT_TYPE,
+            REACT_FRAGMENT_TYPE,
+            task.keyPath,
+            {children},
+            null,
+          ]
+      : [REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE, task.keyPath, {children}];
     if (!task.implicitSlot) {
       // If this was keyed inside a set. I.e. the outer Server Component was keyed
       // then we need to handle reorders of the whole set. To do this we need to wrap
@@ -1472,6 +1543,12 @@ function renderElement(
           const init = type._init;
           wrappedType = init(payload);
         }
+        if (request.status === ABORTING) {
+          // lazy initializers are user code and could abort during render
+          // we don't wan to return any value resolved from the lazy initializer
+          // if it aborts so we interrupt rendering here
+          throw AbortSigil;
+        }
         return renderElement(
           request,
           task,
@@ -1521,7 +1598,7 @@ function pingTask(request: Request, task: Task): void {
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
-    scheduleWork(() => performWork(request));
+    scheduleMicrotask(() => performWork(request));
   }
 }
 
@@ -1891,6 +1968,15 @@ function renderModel(
   try {
     return renderModelDestructive(request, task, parent, key, value);
   } catch (thrownValue) {
+    // If the suspended/errored value was an element or lazy it can be reduced
+    // to a lazy reference, so that it doesn't error the parent.
+    const model = task.model;
+    const wasReactNode =
+      typeof model === 'object' &&
+      model !== null &&
+      ((model: any).$$typeof === REACT_ELEMENT_TYPE ||
+        (model: any).$$typeof === REACT_LAZY_TYPE);
+
     const x =
       thrownValue === SuspenseException
         ? // This is a special type of exception used for Suspense. For historical
@@ -1900,17 +1986,18 @@ function renderModel(
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
         : thrownValue;
-    // If the suspended/errored value was an element or lazy it can be reduced
-    // to a lazy reference, so that it doesn't error the parent.
-    const model = task.model;
-    const wasReactNode =
-      typeof model === 'object' &&
-      model !== null &&
-      ((model: any).$$typeof === REACT_ELEMENT_TYPE ||
-        (model: any).$$typeof === REACT_LAZY_TYPE);
+
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
+        if (request.status === ABORTING) {
+          task.status = ABORTED;
+          const errorId: number = (request.fatalError: any);
+          if (wasReactNode) {
+            return serializeLazyID(errorId);
+          }
+          return serializeByValueID(errorId);
+        }
         // Something suspended, we'll need to create a new task and resolve it later.
         const newTask = createTask(
           request,
@@ -1951,6 +2038,15 @@ function renderModel(
         }
         return serializeByValueID(postponeId);
       }
+    }
+
+    if (thrownValue === AbortSigil) {
+      task.status = ABORTED;
+      const errorId: number = (request.fatalError: any);
+      if (wasReactNode) {
+        return serializeLazyID(errorId);
+      }
+      return serializeByValueID(errorId);
     }
 
     // Restore the context. We assume that this will be restored by the inner
@@ -2095,6 +2191,12 @@ function renderModelDestructive(
           const payload = lazy._payload;
           const init = lazy._init;
           resolvedModel = init(payload);
+        }
+        if (request.status === ABORTING) {
+          // lazy initializers are user code and could abort during render
+          // we don't wan to return any value resolved from the lazy initializer
+          // if it aborts so we interrupt rendering here
+          throw AbortSigil;
         }
         if (__DEV__) {
           const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
@@ -2582,8 +2684,7 @@ function emitPostponeChunk(
     try {
       // eslint-disable-next-line react-internal/safe-string-coercion
       reason = String(postponeInstance.message);
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      stack = String(postponeInstance.stack);
+      stack = getStack(postponeInstance);
     } catch (x) {}
     row = serializeRowHeader('P', id) + stringify({reason, stack}) + '\n';
   } else {
@@ -2608,8 +2709,7 @@ function emitErrorChunk(
       if (error instanceof Error) {
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
-        // eslint-disable-next-line react-internal/safe-string-coercion
-        stack = String(error.stack);
+        stack = getStack(error);
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
       } else {
@@ -3213,6 +3313,7 @@ function retryTask(request: Request, task: Task): void {
   }
 
   const prevDebugID = debugID;
+  task.status = RENDERING;
 
   try {
     // Track the root so we know that we have to emit this object even though it
@@ -3279,10 +3380,19 @@ function retryTask(request: Request, task: Task): void {
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
+        if (request.status === ABORTING) {
+          request.abortableTasks.delete(task);
+          task.status = ABORTED;
+          const errorId: number = (request.fatalError: any);
+          const model = stringify(serializeByValueID(errorId));
+          emitModelChunk(request, task.id, model);
+          return;
+        }
         // Something suspended again, let's pick it back up later.
+        task.status = PENDING;
+        task.thenableState = getThenableStateAfterSuspending();
         const ping = task.ping;
         x.then(ping, ping);
-        task.thenableState = getThenableStateAfterSuspending();
         return;
       } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
         request.abortableTasks.delete(task);
@@ -3293,6 +3403,16 @@ function retryTask(request: Request, task: Task): void {
         return;
       }
     }
+
+    if (x === AbortSigil) {
+      request.abortableTasks.delete(task);
+      task.status = ABORTED;
+      const errorId: number = (request.fatalError: any);
+      const model = stringify(serializeByValueID(errorId));
+      emitModelChunk(request, task.id, model);
+      return;
+    }
+
     request.abortableTasks.delete(task);
     task.status = ERRORED;
     const digest = logRecoverableError(request, x);
@@ -3350,6 +3470,10 @@ function performWork(request: Request): void {
 }
 
 function abortTask(task: Task, request: Request, errorId: number): void {
+  if (task.status === RENDERING) {
+    // This task will be aborted by the render
+    return;
+  }
   task.status = ABORTED;
   // Instead of emitting an error per task.id, we emit a model that only
   // has a single value referencing the error.
@@ -3435,6 +3559,7 @@ function flushCompletedChunks(
     if (enableTaint) {
       cleanupTaintQueue(request);
     }
+    request.status = CLOSED;
     close(destination);
     request.destination = null;
   }
@@ -3458,9 +3583,14 @@ function enqueueFlush(request: Request): void {
     // happen when we start flowing again
     request.destination !== null
   ) {
-    const destination = request.destination;
     request.flushScheduled = true;
-    scheduleWork(() => flushCompletedChunks(request, destination));
+    scheduleWork(() => {
+      request.flushScheduled = false;
+      const destination = request.destination;
+      if (destination) {
+        flushCompletedChunks(request, destination);
+      }
+    });
   }
 }
 
@@ -3493,12 +3623,14 @@ export function stopFlowing(request: Request): void {
 // This is called to early terminate a request. It creates an error at all pending tasks.
 export function abort(request: Request, reason: mixed): void {
   try {
+    request.status = ABORTING;
     const abortableTasks = request.abortableTasks;
     // We have tasks to abort. We'll emit one error row and then emit a reference
     // to that row from every row that's still remaining.
     if (abortableTasks.size > 0) {
       request.pendingChunks++;
       const errorId = request.nextChunkId++;
+      request.fatalError = errorId;
       if (
         enablePostpone &&
         typeof reason === 'object' &&
@@ -3514,6 +3646,10 @@ export function abort(request: Request, reason: mixed): void {
             ? new Error(
                 'The render was aborted by the server without a reason.',
               )
+            : typeof reason === 'object' &&
+              reason !== null &&
+              typeof reason.then === 'function'
+            ? new Error('The render was aborted by the server with a promise.')
             : reason;
         const digest = logRecoverableError(request, error);
         emitErrorChunk(request, errorId, digest, error);
@@ -3540,6 +3676,10 @@ export function abort(request: Request, reason: mixed): void {
             ? new Error(
                 'The render was aborted by the server without a reason.',
               )
+            : typeof reason === 'object' &&
+              reason !== null &&
+              typeof reason.then === 'function'
+            ? new Error('The render was aborted by the server with a promise.')
             : reason;
       }
       abortListeners.forEach(callback => callback(error));

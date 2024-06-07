@@ -165,6 +165,13 @@ const EnvironmentConfigSchema = z.object({
    */
   validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
 
+  /**
+   * When this is true, rather than pruning existing manual memoization but ensuring or validating
+   * that the memoized values remain memoized, the compiler will simply not prune existing calls to
+   * useMemo/useCallback.
+   */
+  enablePreserveExistingManualUseMemo: z.boolean().default(false),
+
   // 🌲
   enableForest: z.boolean().default(false),
 
@@ -344,6 +351,23 @@ const EnvironmentConfigSchema = z.object({
   enableTreatFunctionDepsAsConditional: z.boolean().default(false),
 
   /**
+   * When true, always act as though the dependencies of a memoized value
+   * have changed. This makes the compiler not actually perform any optimizations,
+   * but is useful for debugging. Implicitly also sets
+   * @enablePreserveExistingManualUseMemo, because otherwise memoization in the
+   * original source will be disabled as well.
+   */
+  disableMemoizationForDebugging: z.boolean().default(false),
+
+  /**
+   * When true, rather using memoized values, the compiler will always re-compute
+   * values, and then use a heuristic to compare the memoized value to the newly
+   * computed one. This detects cases where rules of react violations may cause the
+   * compiled code to behave differently than the original.
+   */
+  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
+
+  /**
    * The react native re-animated library uses custom Babel transforms that
    * requires the calls to library API remain unmodified.
    *
@@ -461,6 +485,18 @@ export class Environment {
     this.useMemoCacheIdentifier = useMemoCacheIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
+
+    if (
+      config.disableMemoizationForDebugging &&
+      config.enableChangeDetectionForDebugging != null
+    ) {
+      CompilerError.throwInvalidConfig({
+        reason: `Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+    }
 
     for (const [hookName, hook] of this.config.customHooks) {
       CompilerError.invariant(!this.#globals.has(hookName), {
