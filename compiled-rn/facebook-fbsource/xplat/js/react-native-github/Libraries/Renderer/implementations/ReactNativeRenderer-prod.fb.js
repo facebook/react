@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<79c124aba5abe763ab6190e5beb874a9>>
+ * @generated SignedSource<<b7610a64cf4a6f65902a28874cb860a1>>
  */
 
 "use strict";
@@ -3376,7 +3376,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         nextOldFiber = null,
         step = newChildren.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildren.next(), null
+      newIdx++, step = newChildren.next()
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -3402,7 +3402,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         deleteRemainingChildren(returnFiber, oldFiber), resultingFirstChild
       );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildren.next(), null)
+      for (; !step.done; newIdx++, step = newChildren.next())
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
@@ -3415,7 +3415,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildren.next(), null
+      newIdx++, step = newChildren.next()
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -10734,11 +10734,11 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     traverseOwnerTreeUp(hierarchy, instance);
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-0a5e0b0c2e-20240607" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-20841f9a62-20240607" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-0a5e0b0c2e-20240607\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-20841f9a62-20240607\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -10788,7 +10788,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1193 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-native-fb-0a5e0b0c2e-20240607",
+    version: "19.0.0-native-fb-20841f9a62-20240607",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10831,7 +10831,7 @@ var internals$jscomp$inline_1440 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-0a5e0b0c2e-20240607"
+  reconcilerVersion: "19.0.0-native-fb-20841f9a62-20240607"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1441 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

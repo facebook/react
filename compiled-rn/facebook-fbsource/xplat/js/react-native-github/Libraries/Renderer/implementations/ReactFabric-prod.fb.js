@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e3cca7ac906a3ef5cea686f2aaf30285>>
+ * @generated SignedSource<<2e93e3cb365a6be9a8ee47867dac0398>>
  */
 
 "use strict";
@@ -3356,7 +3356,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         nextOldFiber = null,
         step = newChildren.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildren.next(), null
+      newIdx++, step = newChildren.next()
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -3382,7 +3382,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         deleteRemainingChildren(returnFiber, oldFiber), resultingFirstChild
       );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildren.next(), null)
+      for (; !step.done; newIdx++, step = newChildren.next())
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
@@ -3395,7 +3395,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildren.next(), null
+      newIdx++, step = newChildren.next()
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -10591,7 +10591,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1125 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-0a5e0b0c2e-20240607",
+    version: "19.0.0-native-fb-20841f9a62-20240607",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10634,7 +10634,7 @@ var internals$jscomp$inline_1351 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-0a5e0b0c2e-20240607"
+  reconcilerVersion: "19.0.0-native-fb-20841f9a62-20240607"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1352 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

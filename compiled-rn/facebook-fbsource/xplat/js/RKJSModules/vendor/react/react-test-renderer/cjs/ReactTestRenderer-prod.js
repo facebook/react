@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<686c8c65b3c5a43aa1a8872c8cfe89a3>>
+ * @generated SignedSource<<a11af6f9b212cf2aeebb79b52de06240>>
  */
 
 "use strict";
@@ -1975,7 +1975,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         nextOldFiber = null,
         step = newChildren.next();
       null !== oldFiber && !step.done;
-      newIdx++, step = newChildren.next(), null
+      newIdx++, step = newChildren.next()
     ) {
       oldFiber.index > newIdx
         ? ((nextOldFiber = oldFiber), (oldFiber = null))
@@ -2001,7 +2001,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         deleteRemainingChildren(returnFiber, oldFiber), resultingFirstChild
       );
     if (null === oldFiber) {
-      for (; !step.done; newIdx++, step = newChildren.next(), null)
+      for (; !step.done; newIdx++, step = newChildren.next())
         (step = createChild(returnFiber, step.value, lanes)),
           null !== step &&
             ((currentFirstChild = placeChild(step, currentFirstChild, newIdx)),
@@ -2014,7 +2014,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     for (
       oldFiber = mapRemainingChildren(oldFiber);
       !step.done;
-      newIdx++, step = newChildren.next(), null
+      newIdx++, step = newChildren.next()
     )
       (step = updateFromMap(oldFiber, returnFiber, newIdx, step.value, lanes)),
         null !== step &&
@@ -9336,7 +9336,7 @@ var devToolsConfig$jscomp$inline_1048 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-0a5e0b0c2e-20240607",
+  version: "19.0.0-native-fb-20841f9a62-20240607",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1235 = {
@@ -9367,7 +9367,7 @@ var internals$jscomp$inline_1235 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-0a5e0b0c2e-20240607"
+  reconcilerVersion: "19.0.0-native-fb-20841f9a62-20240607"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1236 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
