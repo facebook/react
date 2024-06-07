@@ -1586,12 +1586,36 @@ function resolveErrorDev(
       'resolveErrorDev should never be called in production mode. Use resolveErrorProd instead. This is a bug in React.',
     );
   }
-  // eslint-disable-next-line react-internal/prod-error-codes
-  const error = new Error(
-    message ||
-      'An error occurred in the Server Components render but no message was provided',
-  );
-  error.stack = stack;
+
+  let error;
+  if (!enableOwnerStacks) {
+    // Executing Error within a native stack isn't really limited to owner stacks
+    // but we gate it behind the same flag for now while iterating.
+    // eslint-disable-next-line react-internal/prod-error-codes
+    error = Error(
+      message ||
+        'An error occurred in the Server Components render but no message was provided',
+    );
+    error.stack = stack;
+  } else {
+    const callStack = buildFakeCallStack(
+      response,
+      stack,
+      // $FlowFixMe[incompatible-use]
+      Error.bind(
+        null,
+        message ||
+          'An error occurred in the Server Components render but no message was provided',
+      ),
+    );
+    const rootTask = response._debugRootTask;
+    if (rootTask != null) {
+      error = rootTask.run(callStack);
+    } else {
+      error = callStack();
+    }
+  }
+
   (error: any).digest = digest;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
@@ -1677,6 +1701,7 @@ const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
   ? new Map()
   : (null: any);
 
+let fakeFunctionIdx = 0;
 function createFakeFunction<T>(
   name: string,
   filename: string,
@@ -1695,20 +1720,36 @@ function createFakeFunction<T>(
   // point to the original source.
   let code;
   if (line <= 1) {
-    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment + '\n';
+    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment;
   } else {
     code =
       comment +
       '\n'.repeat(line - 2) +
       '_=>\n' +
       ' '.repeat(col < 1 ? 0 : col - 1) +
-      '_()\n';
+      '_()';
+  }
+
+  if (filename.startsWith('/')) {
+    // If the filename starts with `/` we assume that it is a file system file
+    // rather than relative to the current host. Since on the server fully qualified
+    // stack traces use the file path.
+    // TODO: What does this look like on Windows?
+    filename = 'file://' + filename;
   }
 
   if (sourceMap) {
-    code += '//# sourceMappingURL=' + sourceMap;
+    // We use the prefix rsc://React/ to separate these from other files listed in
+    // the Chrome DevTools. We need a "host name" and not just a protocol because
+    // otherwise the group name becomes the root folder. Ideally we don't want to
+    // show these at all but there's two reasons to assign a fake URL.
+    // 1) A printed stack trace string needs a unique URL to be able to source map it.
+    // 2) If source maps are disabled or fails, you should at least be able to tell
+    //    which file it was.
+    code += '\n//# sourceURL=rsc://React/' + filename + '?' + fakeFunctionIdx++;
+    code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
-    code += '//# sourceURL=' + filename;
+    code += '\n//# sourceURL=' + filename;
   }
 
   let fn: FakeFunction<T>;

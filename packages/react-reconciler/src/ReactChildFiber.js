@@ -93,7 +93,11 @@ let didWarnAboutGenerators;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
 let ownerHasSymbolTypeWarning;
-let warnForMissingKey = (child: mixed, returnFiber: Fiber) => {};
+let warnForMissingKey = (
+  returnFiber: Fiber,
+  workInProgress: Fiber,
+  child: mixed,
+) => {};
 
 if (__DEV__) {
   didWarnAboutMaps = false;
@@ -108,7 +112,11 @@ if (__DEV__) {
   ownerHasFunctionTypeWarning = ({}: {[string]: boolean});
   ownerHasSymbolTypeWarning = ({}: {[string]: boolean});
 
-  warnForMissingKey = (child: mixed, returnFiber: Fiber) => {
+  warnForMissingKey = (
+    returnFiber: Fiber,
+    workInProgress: Fiber,
+    child: mixed,
+  ) => {
     if (child === null || typeof child !== 'object') {
       return;
     }
@@ -172,14 +180,7 @@ if (__DEV__) {
       }
     }
 
-    // We create a fake Fiber for the child to log the stack trace from.
-    // TODO: Refactor the warnForMissingKey calls to happen after fiber creation
-    // so that we can get access to the fiber that will eventually be created.
-    // That way the log can show up associated with the right instance in DevTools.
-    const fiber = createFiberFromElement((child: any), returnFiber.mode, 0);
-    fiber.return = returnFiber;
-
-    runWithFiberInDEV(fiber, () => {
+    runWithFiberInDEV(workInProgress, () => {
       console.error(
         'Each child in a list should have a unique "key" prop.' +
           '%s%s See https://react.dev/link/warning-keys for more information.',
@@ -1034,9 +1035,10 @@ function createChildReconciler(
    * Warns if there is a duplicate or missing key
    */
   function warnOnInvalidKey(
+    returnFiber: Fiber,
+    workInProgress: Fiber,
     child: mixed,
     knownKeys: Set<string> | null,
-    returnFiber: Fiber,
   ): Set<string> | null {
     if (__DEV__) {
       if (typeof child !== 'object' || child === null) {
@@ -1045,7 +1047,7 @@ function createChildReconciler(
       switch (child.$$typeof) {
         case REACT_ELEMENT_TYPE:
         case REACT_PORTAL_TYPE:
-          warnForMissingKey(child, returnFiber);
+          warnForMissingKey(returnFiber, workInProgress, child);
           const key = child.key;
           if (typeof key !== 'string') {
             break;
@@ -1059,14 +1061,16 @@ function createChildReconciler(
             knownKeys.add(key);
             break;
           }
-          console.error(
-            'Encountered two children with the same key, `%s`. ' +
-              'Keys should be unique so that components maintain their identity ' +
-              'across updates. Non-unique keys may cause children to be ' +
-              'duplicated and/or omitted — the behavior is unsupported and ' +
-              'could change in a future version.',
-            key,
-          );
+          runWithFiberInDEV(workInProgress, () => {
+            console.error(
+              'Encountered two children with the same key, `%s`. ' +
+                'Keys should be unique so that components maintain their identity ' +
+                'across updates. Non-unique keys may cause children to be ' +
+                'duplicated and/or omitted — the behavior is unsupported and ' +
+                'could change in a future version.',
+              key,
+            );
+          });
           break;
         case REACT_LAZY_TYPE: {
           let resolvedChild;
@@ -1077,7 +1081,12 @@ function createChildReconciler(
             const init = (child._init: any);
             resolvedChild = init(payload);
           }
-          warnOnInvalidKey(resolvedChild, knownKeys, returnFiber);
+          warnOnInvalidKey(
+            returnFiber,
+            workInProgress,
+            resolvedChild,
+            knownKeys,
+          );
           break;
         }
         default:
@@ -1113,14 +1122,7 @@ function createChildReconciler(
     // If you change this code, also update reconcileChildrenIterator() which
     // uses the same algorithm.
 
-    if (__DEV__) {
-      // First, validate keys.
-      let knownKeys: Set<string> | null = null;
-      for (let i = 0; i < newChildren.length; i++) {
-        const child = newChildren[i];
-        knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber);
-      }
-    }
+    let knownKeys: Set<string> | null = null;
 
     let resultingFirstChild: Fiber | null = null;
     let previousNewFiber: Fiber | null = null;
@@ -1153,6 +1155,16 @@ function createChildReconciler(
         }
         break;
       }
+
+      if (__DEV__) {
+        knownKeys = warnOnInvalidKey(
+          returnFiber,
+          newFiber,
+          newChildren[newIdx],
+          knownKeys,
+        );
+      }
+
       if (shouldTrackSideEffects) {
         if (oldFiber && newFiber.alternate === null) {
           // We matched the slot, but we didn't reuse the existing fiber, so we
@@ -1198,6 +1210,14 @@ function createChildReconciler(
         if (newFiber === null) {
           continue;
         }
+        if (__DEV__) {
+          knownKeys = warnOnInvalidKey(
+            returnFiber,
+            newFiber,
+            newChildren[newIdx],
+            knownKeys,
+          );
+        }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
         if (previousNewFiber === null) {
           // TODO: Move out of the loop. This only happens for the first run.
@@ -1228,6 +1248,14 @@ function createChildReconciler(
         debugInfo,
       );
       if (newFiber !== null) {
+        if (__DEV__) {
+          knownKeys = warnOnInvalidKey(
+            returnFiber,
+            newFiber,
+            newChildren[newIdx],
+            knownKeys,
+          );
+        }
         if (shouldTrackSideEffects) {
           if (newFiber.alternate !== null) {
             // The new fiber is a work in progress, but if there exists a
@@ -1410,17 +1438,10 @@ function createChildReconciler(
     let knownKeys: Set<string> | null = null;
 
     let step = newChildren.next();
-    if (__DEV__) {
-      knownKeys = warnOnInvalidKey(step.value, knownKeys, returnFiber);
-    }
     for (
       ;
       oldFiber !== null && !step.done;
-      newIdx++,
-        step = newChildren.next(),
-        knownKeys = __DEV__
-          ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
-          : null
+      newIdx++, step = newChildren.next()
     ) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
@@ -1445,6 +1466,16 @@ function createChildReconciler(
         }
         break;
       }
+
+      if (__DEV__) {
+        knownKeys = warnOnInvalidKey(
+          returnFiber,
+          newFiber,
+          step.value,
+          knownKeys,
+        );
+      }
+
       if (shouldTrackSideEffects) {
         if (oldFiber && newFiber.alternate === null) {
           // We matched the slot, but we didn't reuse the existing fiber, so we
@@ -1480,18 +1511,18 @@ function createChildReconciler(
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
-      for (
-        ;
-        !step.done;
-        newIdx++,
-          step = newChildren.next(),
-          knownKeys = __DEV__
-            ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
-            : null
-      ) {
+      for (; !step.done; newIdx++, step = newChildren.next()) {
         const newFiber = createChild(returnFiber, step.value, lanes, debugInfo);
         if (newFiber === null) {
           continue;
+        }
+        if (__DEV__) {
+          knownKeys = warnOnInvalidKey(
+            returnFiber,
+            newFiber,
+            step.value,
+            knownKeys,
+          );
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
         if (previousNewFiber === null) {
@@ -1513,15 +1544,7 @@ function createChildReconciler(
     const existingChildren = mapRemainingChildren(oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
-    for (
-      ;
-      !step.done;
-      newIdx++,
-        step = newChildren.next(),
-        knownKeys = __DEV__
-          ? warnOnInvalidKey(step.value, knownKeys, returnFiber)
-          : null
-    ) {
+    for (; !step.done; newIdx++, step = newChildren.next()) {
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
@@ -1531,6 +1554,14 @@ function createChildReconciler(
         debugInfo,
       );
       if (newFiber !== null) {
+        if (__DEV__) {
+          knownKeys = warnOnInvalidKey(
+            returnFiber,
+            newFiber,
+            step.value,
+            knownKeys,
+          );
+        }
         if (shouldTrackSideEffects) {
           if (newFiber.alternate !== null) {
             // The new fiber is a work in progress, but if there exists a
