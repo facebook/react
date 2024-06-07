@@ -5,16 +5,23 @@ import {
   IdentifierId,
   Instruction,
   InstructionId,
+  MutableRange,
+  ReactiveScope,
+  isMutableEffect,
   makeInstructionId,
   markInstructionIds,
 } from "../HIR";
+import { printIdentifier } from "../HIR/PrintHIR";
 import {
+  eachInstructionLValue,
   eachInstructionValueLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
 import { mayAllocate } from "../ReactiveScopes/InferReactiveScopeVariables";
 import { getOrInsertDefault } from "../Utils/utils";
+
+const DEBUG = false;
 
 /**
  * WIP early exploration of instruction reordering. This is a fairly aggressive form and has
@@ -82,6 +89,39 @@ export function instructionReordering(fn: HIRFunction): void {
     );
   }
   markInstructionIds(fn.body);
+
+  /**
+   * Instructions have been reordered and renumbered, so all the reactive scope ranges are now
+   * incorrect. Walk the HIR again to recalculate the ranges of each scope based on where it
+   * is mutated.
+   */
+  const scopes = new Map<ReactiveScope, MutableRange>();
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      for (const operand of [
+        ...eachInstructionValueOperand(instr.value),
+        ...eachInstructionLValue(instr),
+      ]) {
+        if (
+          isMutableEffect(operand.effect, operand.loc) &&
+          operand.identifier.scope !== null
+        ) {
+          const scope = operand.identifier.scope;
+          let range = scopes.get(scope);
+          if (range === undefined) {
+            range = { start: instr.id, end: makeInstructionId(instr.id + 1) };
+            scopes.set(scope, range);
+          } else {
+            range.start = makeInstructionId(Math.min(range.start, instr.id));
+            range.end = makeInstructionId(Math.max(range.end, instr.id + 1));
+          }
+        }
+      }
+    }
+  }
+  for (const [scope, range] of scopes) {
+    scope.range = range;
+  }
 }
 
 function findSingleUseLoadLocals(fn: HIRFunction): Set<IdentifierId> {
@@ -120,6 +160,15 @@ function findSingleUseLoadLocals(fn: HIRFunction): Set<IdentifierId> {
 
 function getLastAssignments(fn: HIRFunction): LastAssignments {
   const lastAssignments: LastAssignments = new Map();
+  for (const param of fn.params) {
+    const place = param.kind === "Identifier" ? param : param.place;
+    if (
+      place.identifier.name !== null &&
+      place.identifier.name.kind === "named"
+    ) {
+      lastAssignments.set(place.identifier.name.value, makeInstructionId(0));
+    }
+  }
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       for (const lvalue of eachInstructionValueLValue(instr.value)) {
@@ -148,7 +197,7 @@ type LastAssignments = Map<string, InstructionId>;
 type Dependencies = Map<IdentifierId, Node>;
 type Node = {
   instruction: Instruction | null;
-  dependencies: Array<IdentifierId>;
+  dependencies: Set<IdentifierId>;
   depth: number | null;
 };
 
@@ -167,14 +216,14 @@ function reorderBlock(
 ): void {
   const dependencies: Dependencies = new Map();
   const locals = new Map<string, IdentifierId>();
-  let previousIdentifier: IdentifierId | null = null;
+  const previousByScope = new Map<ReactiveScope | null, IdentifierId>();
   for (const instr of block.instructions) {
     const node: Node = getOrInsertDefault(
       dependencies,
       instr.lvalue.identifier.id,
       {
         instruction: instr,
-        dependencies: [],
+        dependencies: new Set(),
         depth: null,
       }
     );
@@ -182,19 +231,27 @@ function reorderBlock(
       getReorderingLevel(instr, lastAssignments, singleUseLoadLocals) ===
       ReorderingLevel.None
     ) {
-      if (previousIdentifier !== null) {
-        node.dependencies.push(previousIdentifier);
+      const scopes = getAllScopes(instr);
+      if (scopes.size === 0) {
+        const previouIdentifier = previousByScope.get(null);
+        if (previouIdentifier != null) {
+          node.dependencies.add(previouIdentifier);
+        }
+        previousByScope.set(null, instr.lvalue.identifier.id);
       }
-      previousIdentifier = instr.lvalue.identifier.id;
     }
     for (const operand of eachInstructionValueOperand(instr.value)) {
-      if (
+      const scope = operand.identifier.scope;
+      if (scope !== null && previousByScope.has(scope)) {
+        const previous = previousByScope.get(scope)!;
+        node.dependencies.add(previous);
+      } else if (
         operand.identifier.name !== null &&
         operand.identifier.name.kind === "named"
       ) {
         const previous = locals.get(operand.identifier.name.value);
         if (previous !== undefined) {
-          node.dependencies.push(previous);
+          node.dependencies.add(previous);
         }
         locals.set(operand.identifier.name.value, instr.lvalue.identifier.id);
       } else {
@@ -202,9 +259,10 @@ function reorderBlock(
           dependencies.has(operand.identifier.id) ||
           globalDependencies.has(operand.identifier.id)
         ) {
-          node.dependencies.push(operand.identifier.id);
+          node.dependencies.add(operand.identifier.id);
         }
       }
+      previousByScope.set(scope, instr.lvalue.identifier.id);
     }
     dependencies.set(instr.lvalue.identifier.id, node);
 
@@ -214,18 +272,18 @@ function reorderBlock(
         lvalue.identifier.id,
         {
           instruction: null,
-          dependencies: [],
+          dependencies: new Set(),
           depth: null,
-        }
+        } as Node
       );
-      lvalueNode.dependencies.push(instr.lvalue.identifier.id);
+      lvalueNode.dependencies.add(instr.lvalue.identifier.id);
       if (
         lvalue.identifier.name !== null &&
         lvalue.identifier.name.kind === "named"
       ) {
         const previous = locals.get(lvalue.identifier.name.value);
         if (previous !== undefined) {
-          node.dependencies.push(previous);
+          node.dependencies.add(previous);
         }
         locals.set(lvalue.identifier.name.value, instr.lvalue.identifier.id);
       }
@@ -259,12 +317,13 @@ function reorderBlock(
     }
     dependencies.delete(id);
     globalDependencies.delete(id);
-    node.dependencies.sort((a, b) => {
+    const deps = [...node.dependencies];
+    deps.sort((a, b) => {
       const aDepth = getDepth(env, a);
       const bDepth = getDepth(env, b);
       return bDepth - aDepth;
     });
-    for (const dep of node.dependencies) {
+    for (const dep of deps) {
       emit(dep);
     }
     if (node.instruction !== null) {
@@ -272,7 +331,32 @@ function reorderBlock(
     }
   }
 
+  const printEmitted = new Set<IdentifierId>();
+  function print(id: IdentifierId, depth: number = 0): void {
+    if (printEmitted.has(id)) {
+      console.log(`  ${"|   ".repeat(depth)}$${id} (emitted)`);
+      return;
+    }
+    printEmitted.add(id);
+    const node = dependencies.get(id) ?? globalDependencies.get(id);
+    if (node == null) {
+      return;
+    }
+    const deps = [...node.dependencies];
+    deps.sort((a, b) => {
+      const aDepth = getDepth(env, a);
+      const bDepth = getDepth(env, b);
+      return bDepth - aDepth;
+    });
+    for (const dep of deps) {
+      print(dep, depth + 1);
+    }
+    console.log(`  ${"|   ".repeat(depth)}${printNode(id, node, deps)}`);
+  }
+
+  DEBUG && console.log(`\nbb${block.id}:`);
   for (const operand of eachTerminalOperand(block.terminal)) {
+    DEBUG && print(operand.identifier.id);
     emit(operand.identifier.id);
   }
   /**
@@ -295,8 +379,10 @@ function reorderBlock(
       ) === ReorderingLevel.Global &&
       (block.kind === "block" || block.kind === "catch")
     ) {
+      DEBUG && console.log(`global $${id}`);
       globalDependencies.set(id, node);
     } else {
+      DEBUG && print(id);
       emit(id);
     }
   }
@@ -342,4 +428,41 @@ function getReorderingLevel(
       return ReorderingLevel.None;
     }
   }
+}
+
+function printNode(
+  id: IdentifierId,
+  node: Node,
+  deps: Array<IdentifierId>
+): string {
+  let printed: string = "";
+  const { instruction } = node;
+  if (instruction !== null) {
+    switch (instruction.value.kind) {
+      case "FunctionExpression":
+      case "ObjectMethod": {
+        printed = `[${instruction.id}] ${instruction.value.kind}`;
+        break;
+      }
+      default: {
+        printed = `[${instruction.id}] ${printIdentifier(instruction.lvalue.identifier)} = ${instruction.value.kind} ${[...eachInstructionValueOperand(instruction.value)].map((operand) => printIdentifier(operand.identifier)).join(", ")}`;
+      }
+    }
+  }
+  return `$${id} ${printed} deps=[${deps.map((x) => `$${x}`)}]`;
+}
+
+function getAllScopes(instr: Instruction): Set<ReactiveScope> {
+  const scopes = new Set<ReactiveScope>();
+  for (const operand of eachInstructionLValue(instr)) {
+    if (operand.identifier.scope !== null) {
+      scopes.add(operand.identifier.scope);
+    }
+  }
+  for (const operand of eachInstructionValueOperand(instr.value)) {
+    if (operand.identifier.scope !== null) {
+      scopes.add(operand.identifier.scope);
+    }
+  }
+  return scopes;
 }
