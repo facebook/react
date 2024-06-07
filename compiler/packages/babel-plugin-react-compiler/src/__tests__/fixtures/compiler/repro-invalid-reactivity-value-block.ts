@@ -4,17 +4,16 @@ import {
   makeObject_Primitives,
   useNoAlias,
 } from "shared-runtime";
-/**
- * BUG
- * Found differences in evaluator results
- *   Non-forget (expected):
- *   (kind: ok) [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   Forget:
- *   (kind: ok) [{"a":0,"b":"value1","c":true},"[[ cyclic ref *1 ]]"]
- *   [[ (exception in render) Error: Oh no! ]]
- */
 
+/**
+ * Here the scope for `obj` is pruned because it spans the `useNoAlias()` hook call.
+ * Because `obj` is non-reactive, it would by default be excluded as dependency for
+ * `result = [...identity(obj)..., obj]`, but this could then cause the values in
+ * `result` to be out of sync with `obj`.
+ *
+ * The fix is to consider pruned memo block outputs as reactive, since they will
+ * recreate on every render. This means `thing` depends on both y and z.
+ */
 function Foo() {
   const obj = makeObject_Primitives();
   // hook calls keeps the next two lines as its own reactive scope
