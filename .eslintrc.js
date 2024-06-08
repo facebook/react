@@ -245,7 +245,7 @@ module.exports = {
       },
     ],
     'no-shadow': ERROR,
-    'no-unused-vars': [ERROR, {args: 'none'}],
+    'no-unused-vars': [ERROR, {args: 'none', ignoreRestSiblings: true}],
     'no-use-before-define': OFF,
     'no-useless-concat': OFF,
     quotes: [ERROR, 'single', {avoidEscape: true, allowTemplateLiterals: true}],

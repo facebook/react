@@ -162,6 +162,7 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _response: Response,
+  _debugInfo?: null | ReactDebugInfo,
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
@@ -1710,11 +1711,6 @@ function resolveHint<Code: HintCode>(
 const supportsCreateTask =
   __DEV__ && enableOwnerStacks && !!(console: any).createTask;
 
-const taskCache: null | WeakMap<
-  ReactComponentInfo | ReactAsyncInfo,
-  ConsoleTask,
-> = supportsCreateTask ? new WeakMap() : null;
-
 type FakeFunction<T> = (() => T) => T;
 const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
   ? new Map()
@@ -1834,12 +1830,12 @@ function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): null | ConsoleTask {
-  if (taskCache === null || typeof debugInfo.stack !== 'string') {
+  if (!supportsCreateTask || typeof debugInfo.stack !== 'string') {
     return null;
   }
   const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
   const stack: string = debugInfo.stack;
-  const cachedEntry = taskCache.get((componentInfo: any));
+  const cachedEntry = componentInfo.task;
   if (cachedEntry !== undefined) {
     return cachedEntry;
   }
@@ -1856,16 +1852,20 @@ function initializeFakeTask(
   );
   const callStack = buildFakeCallStack(response, stack, createTaskFn);
 
+  let componentTask;
   if (ownerTask === null) {
     const rootTask = response._debugRootTask;
     if (rootTask != null) {
-      return rootTask.run(callStack);
+      componentTask = rootTask.run(callStack);
     } else {
-      return callStack();
+      componentTask = callStack();
     }
   } else {
-    return ownerTask.run(callStack);
+    componentTask = ownerTask.run(callStack);
   }
+  // $FlowFixMe[cannot-write]: We consider this part of initialization.
+  componentInfo.task = componentTask;
+  return componentTask;
 }
 
 function resolveDebugInfo(
