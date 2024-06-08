@@ -168,13 +168,17 @@ function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
     return l;
   } else {
     return {
+      filename: r.filename,
+      identifierName: r.identifierName,
       start: {
         line: Math.min(l.start.line, r.start.line),
         column: Math.min(l.start.column, r.start.column),
+        index: Math.min(l.start.index, r.start.index),
       },
       end: {
         line: Math.max(l.end.line, r.end.line),
         column: Math.max(l.end.column, r.end.column),
+        index: Math.max(l.end.index, r.end.index),
       },
     };
   }

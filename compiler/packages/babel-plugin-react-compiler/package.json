@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@babel/generator": "7.2.0",
-    "@babel/types": "^7.19.0",
+    "@babel/types": "^7.24.7",
     "chalk": "4",
     "invariant": "^2.2.4",
     "pretty-format": "^24",
@@ -59,7 +59,7 @@
   "resolutions": {
     "./**/@babel/parser": "7.7.4",
     "./**/@babel/plugin-syntax-flow": "7.7.4",
-    "./**/@babel/types": "7.7.4",
+    "./**/@babel/types": "$@babel/types",
     "@babel/core": "7.2.0",
     "@babel/generator": "7.2.0",
     "@babel/traverse": "7.7.4"
