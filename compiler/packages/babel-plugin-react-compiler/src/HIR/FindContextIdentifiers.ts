@@ -64,7 +64,21 @@ export function findContextIdentifiers(
       ): void {
         const left = path.get("left");
         const currentFn = state.currentFn.at(-1) ?? null;
-        handleAssignment(currentFn, state.identifiers, left);
+
+        if (left.type === "OptionalMemberExpression") {
+          CompilerError.throwTodo({
+            reason: `[FindContextIdentifiers] Cannot handle OptionalAssignmentExpressions assignment target ${left.type}`,
+            description: null,
+            loc: left.node.loc ?? GeneratedSource,
+            suggestions: null,
+          });
+        }
+
+        handleAssignment(
+          currentFn,
+          state.identifiers,
+          left as NodePath<t.LVal>
+        );
       },
       UpdateExpression(
         path: NodePath<t.UpdateExpression>,
