@@ -459,6 +459,7 @@ function computeMemoizationInputs(
     case "ComputedDelete":
     case "PropertyDelete":
     case "LoadGlobal":
+    case "MetaProperty":
     case "TemplateLiteral":
     case "Primitive":
     case "JSXText":

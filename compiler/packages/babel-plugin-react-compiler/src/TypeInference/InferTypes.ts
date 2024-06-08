@@ -338,6 +338,7 @@ function* generateInstructionTypes(
     case "DeclareLocal":
     case "NewExpression":
     case "RegExpLiteral":
+    case "MetaProperty":
     case "PropertyStore":
     case "ComputedStore":
     case "ComputedLoad":

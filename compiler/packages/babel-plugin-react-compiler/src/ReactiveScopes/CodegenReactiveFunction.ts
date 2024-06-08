@@ -2021,6 +2021,13 @@ function codegenInstructionValue(
       value = t.regExpLiteral(instrValue.pattern, instrValue.flags);
       break;
     }
+    case "MetaProperty": {
+      value = t.metaProperty(
+        t.identifier(instrValue.meta),
+        t.identifier(instrValue.property)
+      );
+      break;
+    }
     case "Await": {
       value = t.awaitExpression(codegenPlaceToExpression(cx, instrValue.value));
       break;

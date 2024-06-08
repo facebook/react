@@ -199,6 +199,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "DeclareContext":
     case "StoreLocal":
     case "LoadGlobal":
+    case "MetaProperty":
     case "TypeCastExpression":
     case "LoadLocal":
     case "LoadContext":

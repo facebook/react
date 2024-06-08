@@ -242,6 +242,7 @@ export function* eachInstructionValueOperand(
     }
     case "Debugger":
     case "RegExpLiteral":
+    case "MetaProperty":
     case "LoadGlobal":
     case "UnsupportedNode":
     case "Primitive":
@@ -566,6 +567,7 @@ export function mapInstructionValueOperands(
     }
     case "Debugger":
     case "RegExpLiteral":
+    case "MetaProperty":
     case "LoadGlobal":
     case "UnsupportedNode":
     case "Primitive":
