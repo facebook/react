@@ -2440,6 +2440,13 @@ function lowerExpression(
           loc: expr.node.loc ?? GeneratedSource,
         };
       }
+
+      builder.errors.push({
+        reason: `(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta`,
+        severity: ErrorSeverity.Todo,
+        loc: exprPath.node.loc ?? null,
+        suggestions: null,
+      });
       return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
     }
     default: {
