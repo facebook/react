@@ -67,15 +67,19 @@ class Transform extends ReactiveFunctionTransform<State> {
     outerState.hasHook ||= innerState.hasHook;
     if (innerState.hasHook) {
       if (scope.instructions.length === 1) {
-        // This was a scope just for a hook call, which doesn't need memoization.
-        // flatten it away
+        /*
+         * This was a scope just for a hook call, which doesn't need memoization.
+         * flatten it away
+         */
         return {
           kind: "replace-many",
           value: scope.instructions,
         };
       }
-      // else this scope had multiple instructions and produced some other value:
-      // mark it as pruned
+      /*
+       * else this scope had multiple instructions and produced some other value:
+       * mark it as pruned
+       */
       return {
         kind: "replace",
         value: {
