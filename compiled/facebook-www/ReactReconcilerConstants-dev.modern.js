@@ -10,49 +10,14 @@
  * @preserve-invariant-messages
  */
 
-'use strict';
-
-if (__DEV__) {
-  (function() {
-'use strict';
-
-// This refers to a WWW module.
-require('warning');
-
-// Re-export dynamic flags from the www version.
-require('ReactFeatureFlags');
-
-var NoLane =
-/*                          */
-0;
-var SyncLane =
-/*                        */
-2;
-var InputContinuousLane =
-/*             */
-8;
-var DefaultLane =
-/*                     */
-32;
-var IdleLane =
-/*                        */
-268435456;
-
-var NoEventPriority = NoLane;
-var DiscreteEventPriority = SyncLane;
-var ContinuousEventPriority = InputContinuousLane;
-var DefaultEventPriority = DefaultLane;
-var IdleEventPriority = IdleLane;
-
-var LegacyRoot = 0;
-var ConcurrentRoot = 1;
-
-exports.ConcurrentRoot = ConcurrentRoot;
-exports.ContinuousEventPriority = ContinuousEventPriority;
-exports.DefaultEventPriority = DefaultEventPriority;
-exports.DiscreteEventPriority = DiscreteEventPriority;
-exports.IdleEventPriority = IdleEventPriority;
-exports.LegacyRoot = LegacyRoot;
-exports.NoEventPriority = NoEventPriority;
-  })();
-}
+"use strict";
+__DEV__ &&
+  (require("warning"),
+  require("ReactFeatureFlags"),
+  (exports.ConcurrentRoot = 1),
+  (exports.ContinuousEventPriority = 8),
+  (exports.DefaultEventPriority = 32),
+  (exports.DiscreteEventPriority = 2),
+  (exports.IdleEventPriority = 268435456),
+  (exports.LegacyRoot = 0),
+  (exports.NoEventPriority = 0));

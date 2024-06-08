@@ -10,206 +10,151 @@
  * @preserve-invariant-messages
  */
 
-'use strict';
-
-if (__DEV__) {
-  (function() {
-'use strict';
-
-// Re-export dynamic flags from the www version.
-var dynamicFeatureFlags = require('ReactFeatureFlags');
-
-var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-    enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-    enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
- // On WWW, true is used for a new modern build.
-
-// When adding new symbols to this file,
-// Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
-// The Symbol used to tag the ReactElement-like types.
-
-var REACT_LEGACY_ELEMENT_TYPE = Symbol.for('react.element');
-var REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE;
-var REACT_PORTAL_TYPE = Symbol.for('react.portal');
-var REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
-var REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
-var REACT_PROFILER_TYPE = Symbol.for('react.profiler');
-var REACT_PROVIDER_TYPE = Symbol.for('react.provider'); // TODO: Delete with enableRenderableContext
-
-var REACT_CONSUMER_TYPE = Symbol.for('react.consumer');
-var REACT_CONTEXT_TYPE = Symbol.for('react.context');
-var REACT_FORWARD_REF_TYPE = Symbol.for('react.forward_ref');
-var REACT_SUSPENSE_TYPE = Symbol.for('react.suspense');
-var REACT_SUSPENSE_LIST_TYPE = Symbol.for('react.suspense_list');
-var REACT_MEMO_TYPE = Symbol.for('react.memo');
-var REACT_LAZY_TYPE = Symbol.for('react.lazy');
-var REACT_SCOPE_TYPE = Symbol.for('react.scope');
-var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for('react.debug_trace_mode');
-var REACT_OFFSCREEN_TYPE = Symbol.for('react.offscreen');
-var REACT_LEGACY_HIDDEN_TYPE = Symbol.for('react.legacy_hidden');
-var REACT_TRACING_MARKER_TYPE = Symbol.for('react.tracing_marker');
-
-var REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference'); // This function is deprecated. Don't use. Only the renderer knows what a valid type is.
-// TODO: Delete this when enableOwnerStacks ships.
-
-function isValidElementType(type) {
-  if (typeof type === 'string' || typeof type === 'function') {
-    return true;
-  } // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
-
-
-  if (type === REACT_FRAGMENT_TYPE || type === REACT_PROFILER_TYPE || enableDebugTracing && type === REACT_DEBUG_TRACING_MODE_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || type === REACT_SUSPENSE_LIST_TYPE || type === REACT_LEGACY_HIDDEN_TYPE || type === REACT_OFFSCREEN_TYPE || type === REACT_SCOPE_TYPE || enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) {
-    return true;
-  }
-
-  if (typeof type === 'object' && type !== null) {
-    if (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || !enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE || enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
-    // types supported by any Flight configuration anywhere since
-    // we don't know which Flight build this will end up being used
-    // with.
-    type.$$typeof === REACT_CLIENT_REFERENCE || type.getModuleId !== undefined) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function typeOf(object) {
-  if (typeof object === 'object' && object !== null) {
-    var $$typeof = object.$$typeof;
-
-    switch ($$typeof) {
-      case REACT_ELEMENT_TYPE:
-        var type = object.type;
-
-        switch (type) {
-          case REACT_FRAGMENT_TYPE:
-          case REACT_PROFILER_TYPE:
-          case REACT_STRICT_MODE_TYPE:
-          case REACT_SUSPENSE_TYPE:
-          case REACT_SUSPENSE_LIST_TYPE:
-            return type;
-
-          default:
-            var $$typeofType = type && type.$$typeof;
-
-            switch ($$typeofType) {
-              case REACT_CONTEXT_TYPE:
-              case REACT_FORWARD_REF_TYPE:
-              case REACT_LAZY_TYPE:
-              case REACT_MEMO_TYPE:
-                return $$typeofType;
-
-              case REACT_CONSUMER_TYPE:
-                if (enableRenderableContext) {
-                  return $$typeofType;
-                }
-
-              // Fall through
-
-              case REACT_PROVIDER_TYPE:
-                if (!enableRenderableContext) {
-                  return $$typeofType;
-                }
-
-              // Fall through
-
+"use strict";
+__DEV__ &&
+  (function () {
+    function typeOf(object) {
+      if ("object" === typeof object && null !== object) {
+        var $$typeof = object.$$typeof;
+        switch ($$typeof) {
+          case REACT_ELEMENT_TYPE:
+            switch (((object = object.type), object)) {
+              case REACT_FRAGMENT_TYPE:
+              case REACT_PROFILER_TYPE:
+              case REACT_STRICT_MODE_TYPE:
+              case REACT_SUSPENSE_TYPE:
+              case REACT_SUSPENSE_LIST_TYPE:
+                return object;
               default:
-                return $$typeof;
+                switch (((object = object && object.$$typeof), object)) {
+                  case REACT_CONTEXT_TYPE:
+                  case REACT_FORWARD_REF_TYPE:
+                  case REACT_LAZY_TYPE:
+                  case REACT_MEMO_TYPE:
+                    return object;
+                  case REACT_CONSUMER_TYPE:
+                    if (enableRenderableContext) return object;
+                  case REACT_PROVIDER_TYPE:
+                    if (!enableRenderableContext) return object;
+                  default:
+                    return $$typeof;
+                }
             }
-
+          case REACT_PORTAL_TYPE:
+            return $$typeof;
         }
-
-      case REACT_PORTAL_TYPE:
-        return $$typeof;
+      }
     }
-  }
-
-  return undefined;
-}
-var ContextConsumer = enableRenderableContext ? REACT_CONSUMER_TYPE : REACT_CONTEXT_TYPE;
-var ContextProvider = enableRenderableContext ? REACT_CONTEXT_TYPE : REACT_PROVIDER_TYPE;
-var Element = REACT_ELEMENT_TYPE;
-var ForwardRef = REACT_FORWARD_REF_TYPE;
-var Fragment = REACT_FRAGMENT_TYPE;
-var Lazy = REACT_LAZY_TYPE;
-var Memo = REACT_MEMO_TYPE;
-var Portal = REACT_PORTAL_TYPE;
-var Profiler = REACT_PROFILER_TYPE;
-var StrictMode = REACT_STRICT_MODE_TYPE;
-var Suspense = REACT_SUSPENSE_TYPE;
-var SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-function isContextConsumer(object) {
-  if (enableRenderableContext) {
-    return typeOf(object) === REACT_CONSUMER_TYPE;
-  } else {
-    return typeOf(object) === REACT_CONTEXT_TYPE;
-  }
-}
-function isContextProvider(object) {
-  if (enableRenderableContext) {
-    return typeOf(object) === REACT_CONTEXT_TYPE;
-  } else {
-    return typeOf(object) === REACT_PROVIDER_TYPE;
-  }
-}
-function isElement(object) {
-  return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
-}
-function isForwardRef(object) {
-  return typeOf(object) === REACT_FORWARD_REF_TYPE;
-}
-function isFragment(object) {
-  return typeOf(object) === REACT_FRAGMENT_TYPE;
-}
-function isLazy(object) {
-  return typeOf(object) === REACT_LAZY_TYPE;
-}
-function isMemo(object) {
-  return typeOf(object) === REACT_MEMO_TYPE;
-}
-function isPortal(object) {
-  return typeOf(object) === REACT_PORTAL_TYPE;
-}
-function isProfiler(object) {
-  return typeOf(object) === REACT_PROFILER_TYPE;
-}
-function isStrictMode(object) {
-  return typeOf(object) === REACT_STRICT_MODE_TYPE;
-}
-function isSuspense(object) {
-  return typeOf(object) === REACT_SUSPENSE_TYPE;
-}
-function isSuspenseList(object) {
-  return typeOf(object) === REACT_SUSPENSE_LIST_TYPE;
-}
-
-exports.ContextConsumer = ContextConsumer;
-exports.ContextProvider = ContextProvider;
-exports.Element = Element;
-exports.ForwardRef = ForwardRef;
-exports.Fragment = Fragment;
-exports.Lazy = Lazy;
-exports.Memo = Memo;
-exports.Portal = Portal;
-exports.Profiler = Profiler;
-exports.StrictMode = StrictMode;
-exports.Suspense = Suspense;
-exports.SuspenseList = SuspenseList;
-exports.isContextConsumer = isContextConsumer;
-exports.isContextProvider = isContextProvider;
-exports.isElement = isElement;
-exports.isForwardRef = isForwardRef;
-exports.isFragment = isFragment;
-exports.isLazy = isLazy;
-exports.isMemo = isMemo;
-exports.isPortal = isPortal;
-exports.isProfiler = isProfiler;
-exports.isStrictMode = isStrictMode;
-exports.isSuspense = isSuspense;
-exports.isSuspenseList = isSuspenseList;
-exports.isValidElementType = isValidElementType;
-exports.typeOf = typeOf;
+    var dynamicFeatureFlags = require("ReactFeatureFlags"),
+      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_PORTAL_TYPE = Symbol.for("react.portal"),
+      REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
+      REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
+      REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
+      REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+      REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
+      REACT_CONTEXT_TYPE = Symbol.for("react.context"),
+      REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
+      REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
+      REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
+      REACT_MEMO_TYPE = Symbol.for("react.memo"),
+      REACT_LAZY_TYPE = Symbol.for("react.lazy"),
+      REACT_SCOPE_TYPE = Symbol.for("react.scope"),
+      REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
+      REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
+      REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
+      REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
+      REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
+    exports.ContextConsumer = enableRenderableContext
+      ? REACT_CONSUMER_TYPE
+      : REACT_CONTEXT_TYPE;
+    exports.ContextProvider = enableRenderableContext
+      ? REACT_CONTEXT_TYPE
+      : REACT_PROVIDER_TYPE;
+    exports.Element = REACT_ELEMENT_TYPE;
+    exports.ForwardRef = REACT_FORWARD_REF_TYPE;
+    exports.Fragment = REACT_FRAGMENT_TYPE;
+    exports.Lazy = REACT_LAZY_TYPE;
+    exports.Memo = REACT_MEMO_TYPE;
+    exports.Portal = REACT_PORTAL_TYPE;
+    exports.Profiler = REACT_PROFILER_TYPE;
+    exports.StrictMode = REACT_STRICT_MODE_TYPE;
+    exports.Suspense = REACT_SUSPENSE_TYPE;
+    exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
+    exports.isContextConsumer = function (object) {
+      return enableRenderableContext
+        ? typeOf(object) === REACT_CONSUMER_TYPE
+        : typeOf(object) === REACT_CONTEXT_TYPE;
+    };
+    exports.isContextProvider = function (object) {
+      return enableRenderableContext
+        ? typeOf(object) === REACT_CONTEXT_TYPE
+        : typeOf(object) === REACT_PROVIDER_TYPE;
+    };
+    exports.isElement = function (object) {
+      return (
+        "object" === typeof object &&
+        null !== object &&
+        object.$$typeof === REACT_ELEMENT_TYPE
+      );
+    };
+    exports.isForwardRef = function (object) {
+      return typeOf(object) === REACT_FORWARD_REF_TYPE;
+    };
+    exports.isFragment = function (object) {
+      return typeOf(object) === REACT_FRAGMENT_TYPE;
+    };
+    exports.isLazy = function (object) {
+      return typeOf(object) === REACT_LAZY_TYPE;
+    };
+    exports.isMemo = function (object) {
+      return typeOf(object) === REACT_MEMO_TYPE;
+    };
+    exports.isPortal = function (object) {
+      return typeOf(object) === REACT_PORTAL_TYPE;
+    };
+    exports.isProfiler = function (object) {
+      return typeOf(object) === REACT_PROFILER_TYPE;
+    };
+    exports.isStrictMode = function (object) {
+      return typeOf(object) === REACT_STRICT_MODE_TYPE;
+    };
+    exports.isSuspense = function (object) {
+      return typeOf(object) === REACT_SUSPENSE_TYPE;
+    };
+    exports.isSuspenseList = function (object) {
+      return typeOf(object) === REACT_SUSPENSE_LIST_TYPE;
+    };
+    exports.isValidElementType = function (type) {
+      return "string" === typeof type ||
+        "function" === typeof type ||
+        type === REACT_FRAGMENT_TYPE ||
+        type === REACT_PROFILER_TYPE ||
+        (enableDebugTracing && type === REACT_DEBUG_TRACING_MODE_TYPE) ||
+        type === REACT_STRICT_MODE_TYPE ||
+        type === REACT_SUSPENSE_TYPE ||
+        type === REACT_SUSPENSE_LIST_TYPE ||
+        type === REACT_LEGACY_HIDDEN_TYPE ||
+        type === REACT_OFFSCREEN_TYPE ||
+        type === REACT_SCOPE_TYPE ||
+        (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE) ||
+        ("object" === typeof type &&
+          null !== type &&
+          (type.$$typeof === REACT_LAZY_TYPE ||
+            type.$$typeof === REACT_MEMO_TYPE ||
+            type.$$typeof === REACT_CONTEXT_TYPE ||
+            (!enableRenderableContext &&
+              type.$$typeof === REACT_PROVIDER_TYPE) ||
+            (enableRenderableContext &&
+              type.$$typeof === REACT_CONSUMER_TYPE) ||
+            type.$$typeof === REACT_FORWARD_REF_TYPE ||
+            type.$$typeof === REACT_CLIENT_REFERENCE ||
+            void 0 !== type.getModuleId))
+        ? !0
+        : !1;
+    };
+    exports.typeOf = typeOf;
   })();
-}
