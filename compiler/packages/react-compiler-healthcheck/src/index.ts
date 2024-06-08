@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { glob } from "fast-glob";
+import { glob, isDynamicPattern } from "fast-glob";
 import * as fs from "fs/promises";
 import ora from "ora";
 import yargs from "yargs/yargs";
@@ -39,7 +39,9 @@ async function main() {
     ],
   };
 
-  for (const path of await glob(src, globOptions)) {
+  const paths = isDynamicPattern(src) ? await glob(src, globOptions) : getPathsFromArgs();
+
+  for (const path of paths) {
     const source = await fs.readFile(path, "utf-8");
     spinner.text = `Checking ${path}`;
     reactCompilerCheck.run(source, path);
@@ -51,6 +53,11 @@ async function main() {
   reactCompilerCheck.report();
   strictModeCheck.report();
   libraryCompatCheck.report();
+}
+
+function getPathsFromArgs() {
+  const srcIndex = process.argv.indexOf('--src') + 1;
+  return process.argv.slice(srcIndex).filter(arg => !arg.startsWith('--'));
 }
 
 main();
