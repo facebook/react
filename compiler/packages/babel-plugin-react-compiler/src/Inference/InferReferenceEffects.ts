@@ -1216,7 +1216,18 @@ function inferBlock(
         };
         break;
       }
-      case "MetaProperty":
+      case "MetaProperty": {
+        if (instrValue.meta !== "import" || instrValue.property !== "meta") {
+          continue;
+        }
+
+        valueKind = {
+          kind: ValueKind.Global,
+          reason: new Set([ValueReason.Global]),
+          context: new Set(),
+        };
+        break;
+      }
       case "LoadGlobal":
         valueKind = {
           kind: ValueKind.Global,
