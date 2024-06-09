@@ -2117,6 +2117,7 @@ function renderModelDestructive(
   if (typeof value === 'object') {
     switch ((value: any).$$typeof) {
       case REACT_ELEMENT_TYPE: {
+        let elementReference = null;
         const writtenObjects = request.writtenObjects;
         if (task.keyPath !== null || task.implicitSlot) {
           // If we're in some kind of context we can't reuse the result of this render or
@@ -2145,10 +2146,8 @@ function renderModelDestructive(
             if (parentReference !== undefined) {
               // If the parent has a reference, we can refer to this object indirectly
               // through the property name inside that parent.
-              writtenObjects.set(
-                value,
-                parentReference + ':' + parentPropertyName,
-              );
+              elementReference = parentReference + ':' + parentPropertyName;
+              writtenObjects.set(value, elementReference);
             }
           }
         }
@@ -2183,7 +2182,7 @@ function renderModelDestructive(
         }
 
         // Attempt to render the Server Component.
-        return renderElement(
+        const newChild = renderElement(
           request,
           task,
           element.type,
@@ -2199,6 +2198,18 @@ function renderModelDestructive(
             : null,
           __DEV__ && enableOwnerStacks ? element._store.validated : 0,
         );
+        if (
+          typeof newChild === 'object' &&
+          newChild !== null &&
+          elementReference !== null
+        ) {
+          // If this element renders another object, we can now refer to that object through
+          // the same location as this element.
+          if (!writtenObjects.has(newChild)) {
+            writtenObjects.set(newChild, elementReference);
+          }
+        }
+        return newChild;
       }
       case REACT_LAZY_TYPE: {
         // Reset the task's thenable state before continuing. If there was one, it was
