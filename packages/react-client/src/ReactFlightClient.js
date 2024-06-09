@@ -501,13 +501,17 @@ function resolveModuleChunk<T>(
   }
 }
 
-let initializingChunk: ResolvedModelChunk<any> = (null: any);
-let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
+type InitializationHandler = {
+  chunk: null | BlockedChunk<any>,
+  value: any,
+  deps: number,
+  errored: boolean,
+};
+let initializingHandler: null | InitializationHandler = null;
+
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
-  const prevChunk = initializingChunk;
-  const prevBlocked = initializingChunkBlockedModel;
-  initializingChunk = chunk;
-  initializingChunkBlockedModel = null;
+  const prevHandler = initializingHandler;
+  initializingHandler = null;
 
   const resolvedModel = chunk.value;
 
@@ -521,31 +525,33 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
 
   try {
     const value: T = parseModel(chunk._response, resolvedModel);
-    if (
-      initializingChunkBlockedModel !== null &&
-      initializingChunkBlockedModel.deps > 0
-    ) {
-      initializingChunkBlockedModel.value = value;
-      // We discovered new dependencies on modules that are not yet resolved.
-      // We have to go the BLOCKED state until they're resolved.
-      const blockedChunk: BlockedChunk<T> = (chunk: any);
-      blockedChunk.status = BLOCKED;
-    } else {
-      const resolveListeners = cyclicChunk.value;
-      const initializedChunk: InitializedChunk<T> = (chunk: any);
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = value;
-      if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, value);
+    if (initializingHandler !== null) {
+      if (initializingHandler.errored) {
+        throw initializingHandler.value;
       }
+      if (initializingHandler.deps > 0) {
+        // We discovered new dependencies on modules that are not yet resolved.
+        // We have to go the BLOCKED state until they're resolved.
+        const blockedChunk: BlockedChunk<T> = (chunk: any);
+        blockedChunk.status = BLOCKED;
+        initializingHandler.value = value;
+        initializingHandler.chunk = blockedChunk;
+        return;
+      }
+    }
+    const resolveListeners = cyclicChunk.value;
+    const initializedChunk: InitializedChunk<T> = (chunk: any);
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = value;
+    if (resolveListeners !== null) {
+      wakeChunk(resolveListeners, value);
     }
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
     erroredChunk.reason = error;
   } finally {
-    initializingChunk = prevChunk;
-    initializingChunkBlockedModel = prevBlocked;
+    initializingHandler = prevHandler;
   }
 }
 
@@ -725,9 +731,10 @@ function createElement(
     }
     // TODO: We should be freezing the element but currently, we might write into
     // _debugInfo later. We could move it into _store which remains mutable.
-    if (initializingChunkBlockedModel !== null) {
-      const freeze = Object.freeze.bind(Object, element.props);
-      initializingChunk.then(freeze, freeze);
+    if (initializingHandler !== null) {
+      // TODO: Restore
+      // const freeze = Object.freeze.bind(Object, element.props);
+      // initializingChunk.then(freeze, freeze);
     } else {
       Object.freeze(element.props);
     }
@@ -762,57 +769,76 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
-function createModelResolver<T>(
-  chunk: SomeChunk<T>,
+function waitForReference<T>(
+  referencedChunk: PendingChunk<T> | BlockedChunk<T> | CyclicChunk<T>,
   parentObject: Object,
   key: string,
-  cyclic: boolean,
   response: Response,
   map: (response: Response, model: any) => T,
   path: Array<string>,
-): (value: any) => void {
-  let blocked;
-  if (initializingChunkBlockedModel) {
-    blocked = initializingChunkBlockedModel;
+): T {
+  const cyclic = referencedChunk.status === CYCLIC;
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
     if (!cyclic) {
-      blocked.deps++;
+      handler.deps++;
     }
   } else {
-    blocked = initializingChunkBlockedModel = {
+    handler = initializingHandler = {
+      chunk: null,
+      value: null,
       deps: cyclic ? 0 : 1,
-      value: (null: any),
+      errored: false,
     };
   }
-  return value => {
-    for (let i = 1; i < path.length; i++) {
-      value = value[path[i]];
-    }
-    parentObject[key] = map(response, value);
 
-    // If this is the root object for a model reference, where `blocked.value`
-    // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && blocked.value === null) {
-      blocked.value = parentObject[key];
-    }
+  referencedChunk.then(
+    (value: any) => {
+      for (let i = 1; i < path.length; i++) {
+        value = value[path[i]];
+      }
+      parentObject[key] = map(response, value);
 
-    blocked.deps--;
-    if (blocked.deps === 0) {
-      if (chunk.status !== BLOCKED) {
+      // If this is the root object for a model reference, where `handler.value`
+      // is a stale `null`, the resolved value can be used directly.
+      if (key === '' && handler.value === null) {
+        handler.value = parentObject[key];
+      }
+
+      if (cyclic || --handler.deps === 0) {
+        const chunk = handler.chunk;
+        if (chunk === null || chunk.status !== BLOCKED) {
+          return;
+        }
+        const resolveListeners = chunk.value;
+        const initializedChunk: InitializedChunk<T> = (chunk: any);
+        initializedChunk.status = INITIALIZED;
+        initializedChunk.value = handler.value;
+        if (resolveListeners !== null) {
+          wakeChunk(resolveListeners, handler.value);
+        }
+      }
+    },
+    error => {
+      if (handler.errored) {
+        // We've already errored. We could instead build up an AggregateError
+        // but if there are multiple errors we just take the first one like
+        // Promise.all.
         return;
       }
-      const resolveListeners = chunk.value;
-      const initializedChunk: InitializedChunk<T> = (chunk: any);
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = blocked.value;
-      if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, blocked.value);
+      handler.errored = true;
+      handler.value = error;
+      const chunk = handler.chunk;
+      if (chunk === null || chunk.status !== BLOCKED) {
+        return;
       }
-    }
-  };
-}
+      triggerErrorOnChunk(chunk, error);
+    },
+  );
 
-function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
-  return (error: mixed) => triggerErrorOnChunk(chunk, error);
+  // Return a place holder value for now.
+  return (null: any);
 }
 
 function createServerReferenceProxy<A: Iterable<any>, T>(
@@ -899,20 +925,7 @@ function getOutlinedModel<T>(
     case PENDING:
     case BLOCKED:
     case CYCLIC:
-      const parentChunk = initializingChunk;
-      chunk.then(
-        createModelResolver(
-          parentChunk,
-          parentObject,
-          key,
-          chunk.status === CYCLIC,
-          response,
-          map,
-          path,
-        ),
-        createModelReject(parentChunk),
-      );
-      return (null: any);
+      return waitForReference(chunk, parentObject, key, response, map, path);
     default:
       throw chunk.reason;
   }
