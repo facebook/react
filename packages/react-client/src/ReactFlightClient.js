@@ -103,7 +103,6 @@ type RowParserState = 0 | 1 | 2 | 3 | 4;
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const CYCLIC = 'cyclic';
 const RESOLVED_MODEL = 'resolved_model';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
@@ -119,14 +118,6 @@ type PendingChunk<T> = {
 };
 type BlockedChunk<T> = {
   status: 'blocked',
-  value: null | Array<(T) => mixed>,
-  reason: null | Array<(mixed) => mixed>,
-  _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
-};
-type CyclicChunk<T> = {
-  status: 'cyclic',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
@@ -178,7 +169,6 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | CyclicChunk<T>
   | ResolvedModelChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
@@ -220,7 +210,6 @@ Chunk.prototype.then = function <T>(
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       if (resolve) {
         if (chunk.value === null) {
           chunk.value = ([]: Array<(T) => mixed>);
@@ -280,7 +269,6 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       return chunk.value;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       // eslint-disable-next-line no-throw-literal
       throw ((chunk: any): Thenable<T>);
     default:
@@ -329,7 +317,6 @@ function wakeChunkIfInitialized<T>(
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       if (chunk.value) {
         for (let i = 0; i < resolveListeners.length; i++) {
           chunk.value.push(resolveListeners[i]);
@@ -796,7 +783,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 }
 
 function waitForReference<T>(
-  referencedChunk: PendingChunk<T> | BlockedChunk<T> | CyclicChunk<T>,
+  referencedChunk: PendingChunk<T> | BlockedChunk<T>,
   parentObject: Object,
   key: string,
   response: Response,
@@ -972,7 +959,6 @@ function getOutlinedModel<T>(
       return chunkValue;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       return waitForReference(chunk, parentObject, key, response, map, path);
     default:
       throw chunk.reason;
