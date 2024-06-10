@@ -23,6 +23,7 @@ import {
   BuiltInFunctionId,
   BuiltInJsxId,
   BuiltInObjectId,
+  BuiltInPropsId,
   BuiltInUseRefId,
 } from "../HIR/ObjectShape";
 import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
@@ -101,7 +102,13 @@ function* generate(
   func: HIRFunction
 ): Generator<TypeEquation, void, undefined> {
   if (func.env.fnType === "Component") {
-    const [_, ref] = func.params;
+    const [props, ref] = func.params;
+    if (props && props.kind === "Identifier") {
+      yield equation(props.identifier.type, {
+        kind: "Object",
+        shapeId: BuiltInPropsId,
+      });
+    }
     if (ref && ref.kind === "Identifier") {
       yield equation(ref.identifier.type, {
         kind: "Object",
