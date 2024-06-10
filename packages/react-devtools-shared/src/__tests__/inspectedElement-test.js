@@ -2556,7 +2556,7 @@ describe('InspectedElement', () => {
       };
 
       await withErrorsOrWarningsIgnored(
-        ['Warning: Each child in a list should have a unique "key" prop.'],
+        ['Each child in a list should have a unique "key" prop.'],
         async () => {
           await utils.actAsync(() =>
             render(<Example repeatWarningCount={1} />),
