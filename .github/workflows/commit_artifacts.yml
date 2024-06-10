@@ -327,25 +327,12 @@ jobs:
           grep -rl "$CURRENT_VERSION" ./compiled-rn || echo "No files found with $CURRENT_VERSION"
           grep -rl "$CURRENT_VERSION" ./compiled-rn | xargs -r sed -i -e "s/$CURRENT_VERSION/$LAST_VERSION/g"
           grep -rl "$CURRENT_VERSION" ./compiled-rn || echo "Version reverted"
-      - name: Check changes before signing
-        run: |
-          echo "Full git status"
-          git add .
-          git status
-          echo "===================="
-          if git status --porcelain | grep -qv '/REVISION'; then
-            echo "Changes detected"
-            echo "===== Changes ====="
-            git --no-pager diff -U0 --cached | grep '^[+-]' | head -n 50
-            echo "==================="
-          else
-            echo "No Changes detected"
-          fi
       - name: Check for changes
         id: check_should_commit
         run: |
           echo "Full git status"
           git add .
+          git status
           echo "===================="
           # Ignore REVISION or lines removing @generated headers.
           if git diff --cached' :(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" > /dev/null; then
