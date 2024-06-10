@@ -2776,11 +2776,18 @@ function emitErrorChunk(
   if (__DEV__) {
     let message;
     let stack = '';
+    let env = request.environmentName;
     try {
       if (error instanceof Error) {
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
         stack = getStack(error);
+        const errorEnv = (error: any).environmentName;
+        if (typeof errorEnv === 'string') {
+          // This probably came from another FlightClient as a pass through.
+          // Keep the environment name.
+          env = errorEnv;
+        }
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
       } else {
@@ -2790,7 +2797,7 @@ function emitErrorChunk(
     } catch (x) {
       message = 'An error occurred but serializing the error message failed.';
     }
-    errorInfo = {digest, message, stack};
+    errorInfo = {digest, message, stack, env};
   } else {
     errorInfo = {digest};
   }
