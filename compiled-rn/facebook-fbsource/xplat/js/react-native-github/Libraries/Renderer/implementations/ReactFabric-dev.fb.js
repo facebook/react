@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<50de4ae8b3ee39790e8c9b7e11f89ad9>>
+ * @generated SignedSource<<b5fd1f738b9e23ac9f724f39960a3e88>>
  */
 
 "use strict";
@@ -156,18 +156,11 @@ __DEV__ &&
       }
     }
     function printWarning(level, format, args, currentStack) {
-      var isErrorLogger =
-        "%s\n\n%s\n" === format || "%o\n\n%s\n\n%s\n" === format;
       ReactSharedInternals.getCurrentStack &&
         ((currentStack = ReactSharedInternals.getCurrentStack(currentStack)),
         "" !== currentStack &&
           ((format += "%s"), (args = args.concat([currentStack]))));
-      isErrorLogger
-        ? args.unshift(format)
-        : ((args = args.map(function (item) {
-            return String(item);
-          })),
-          args.unshift("Warning: " + format));
+      args.unshift(format);
       Function.prototype.apply.call(console[level], console, args);
     }
     function validateEventDispatches(event) {
@@ -16681,12 +16674,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-bf1bb2e5e5-20240610"
+        reconcilerVersion: "19.0.0-native-fb-2774208039-20240610"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-bf1bb2e5e5-20240610",
+      version: "19.0.0-native-fb-2774208039-20240610",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<da42891998648234a32c9a1ac70d9bce>>
+ * @generated SignedSource<<e9c8f9f36a45a6dd3249367e7f40a6db>>
  */
 
 "use strict";
@@ -152,18 +152,11 @@ __DEV__ &&
       printWarning("error", format, args, Error("react-stack-top-frame"));
     }
     function printWarning(level, format, args, currentStack) {
-      var isErrorLogger =
-        "%s\n\n%s\n" === format || "%o\n\n%s\n\n%s\n" === format;
       ReactSharedInternals.getCurrentStack &&
         ((currentStack = ReactSharedInternals.getCurrentStack(currentStack)),
         "" !== currentStack &&
           ((format += "%s"), (args = args.concat([currentStack]))));
-      isErrorLogger
-        ? args.unshift(format)
-        : ((args = args.map(function (item) {
-            return String(item);
-          })),
-          args.unshift("Warning: " + format));
+      args.unshift(format);
       Function.prototype.apply.call(console[level], console, args);
     }
     function _defineProperties(target, props) {
@@ -15049,14 +15042,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-bf1bb2e5e5-20240610"
+        reconcilerVersion: "19.0.0-native-fb-2774208039-20240610"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-bf1bb2e5e5-20240610",
+      version: "19.0.0-native-fb-2774208039-20240610",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

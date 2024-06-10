@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7faf4baf7672a196e4363c40fd86f64a>>
+ * @generated SignedSource<<3f15f53fe07104640c18ca42c6b3b13a>>
  */
 
 "use strict";
@@ -156,18 +156,11 @@ __DEV__ &&
       }
     }
     function printWarning(level, format, args, currentStack) {
-      var isErrorLogger =
-        "%s\n\n%s\n" === format || "%o\n\n%s\n\n%s\n" === format;
       ReactSharedInternals.getCurrentStack &&
         ((currentStack = ReactSharedInternals.getCurrentStack(currentStack)),
         "" !== currentStack &&
           ((format += "%s"), (args = args.concat([currentStack]))));
-      isErrorLogger
-        ? args.unshift(format)
-        : ((args = args.map(function (item) {
-            return String(item);
-          })),
-          args.unshift("Warning: " + format));
+      args.unshift(format);
       Function.prototype.apply.call(console[level], console, args);
     }
     function validateEventDispatches(event) {
@@ -15060,7 +15053,7 @@ __DEV__ &&
               (relativeNode = relativeToNativeNode._nativeTag);
           null == relativeNode
             ? error$jscomp$0(
-                "Warning: ref.measureLayout must be called with a node handle or a ref to a native component."
+                "ref.measureLayout must be called with a node handle or a ref to a native component."
               )
             : ReactNativePrivateInterface.UIManager.measureLayout(
                 this._nativeTag,
@@ -16870,11 +16863,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-bf1bb2e5e5-20240610" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-2774208039-20240610" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-bf1bb2e5e5-20240610\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-2774208039-20240610\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16922,12 +16915,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-bf1bb2e5e5-20240610"
+        reconcilerVersion: "19.0.0-native-fb-2774208039-20240610"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-bf1bb2e5e5-20240610",
+      version: "19.0.0-native-fb-2774208039-20240610",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

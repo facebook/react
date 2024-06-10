@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c21f501f8b44219eb9f3f5d971634c05>>
+ * @generated SignedSource<<4e0e4b457140b7f25071b271f8f187d2>>
  */
 
 "use strict";
@@ -55,18 +55,11 @@ __DEV__ &&
       printWarning("error", format, args, Error("react-stack-top-frame"));
     }
     function printWarning(level, format, args, currentStack) {
-      var isErrorLogger =
-        "%s\n\n%s\n" === format || "%o\n\n%s\n\n%s\n" === format;
       ReactSharedInternals.getCurrentStack &&
         ((currentStack = ReactSharedInternals.getCurrentStack(currentStack)),
         "" !== currentStack &&
           ((format += "%s"), (args = args.concat([currentStack]))));
-      isErrorLogger
-        ? args.unshift(format)
-        : ((args = args.map(function (item) {
-            return String(item);
-          })),
-          args.unshift("Warning: " + format));
+      args.unshift(format);
       Function.prototype.apply.call(console[level], console, args);
     }
     function warnNoop(publicInstance, callerName) {
@@ -1748,7 +1741,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-bf1bb2e5e5-20240610";
+    exports.version = "19.0.0-native-fb-2774208039-20240610";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

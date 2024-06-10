@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4d095073d7f6f1a36d5b981e9c2a52aa>>
+ * @generated SignedSource<<1e831dc318079da75149235e0e09d92d>>
  */
 
 "use strict";
@@ -22,22 +22,13 @@ __DEV__ &&
         _key2++
       )
         args[_key2 - 1] = arguments[_key2];
-      printWarning("error", format, args, Error("react-stack-top-frame"));
-    }
-    function printWarning(level, format, args, currentStack) {
-      var isErrorLogger =
-        "%s\n\n%s\n" === format || "%o\n\n%s\n\n%s\n" === format;
+      _len2 = format;
+      _key2 = Error("react-stack-top-frame");
       ReactSharedInternals.getCurrentStack &&
-        ((currentStack = ReactSharedInternals.getCurrentStack(currentStack)),
-        "" !== currentStack &&
-          ((format += "%s"), (args = args.concat([currentStack]))));
-      isErrorLogger
-        ? args.unshift(format)
-        : ((args = args.map(function (item) {
-            return String(item);
-          })),
-          args.unshift("Warning: " + format));
-      Function.prototype.apply.call(console[level], console, args);
+        ((_key2 = ReactSharedInternals.getCurrentStack(_key2)),
+        "" !== _key2 && ((_len2 += "%s"), (args = args.concat([_key2]))));
+      args.unshift(_len2);
+      Function.prototype.apply.call(console.error, console, args);
     }
     function getComponentNameFromType(type) {
       if (null == type) return null;
