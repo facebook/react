@@ -198,7 +198,8 @@ describe('create-react-class-integration', () => {
   });
 
   // TODO: Consider actually moving these to statics or drop this unit test.
-  xit('should warn when using deprecated non-static spec keys', () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should warn when using deprecated non-static spec keys', () => {
     expect(() =>
       createReactClass({
         mixins: [{}],

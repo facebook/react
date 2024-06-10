@@ -1244,25 +1244,6 @@ describe('ReactHooks', () => {
     ]);
   });
 
-  it('warns when reading context inside useMemo', async () => {
-    const {useMemo, createContext} = React;
-    const ReactSharedInternals =
-      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-
-    const ThemeContext = createContext('light');
-    function App() {
-      return useMemo(() => {
-        return ReactSharedInternals.H.readContext(ThemeContext);
-      }, []);
-    }
-
-    await expect(async () => {
-      await act(() => {
-        ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
-      });
-    }).toErrorDev('Context can only be read while React is rendering');
-  });
-
   it('double-invokes components with Hooks in Strict Mode', async () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = true;
 

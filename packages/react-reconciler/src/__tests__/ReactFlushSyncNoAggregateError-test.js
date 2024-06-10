@@ -93,7 +93,7 @@ describe('ReactFlushSync (AggregateError not available)', () => {
       : children;
   }
 
-  test('completely exhausts synchronous work queue even if something throws', async () => {
+  it('completely exhausts synchronous work queue even if something throws', async () => {
     function Throws({error}) {
       throw error;
     }

@@ -1241,6 +1241,7 @@ describe('Activity', () => {
   // either an option or a heuristic to mount passive effects inside a hidden
   // tree after a delay.
   // @gate enableActivity
+  // eslint-disable-next-line jest/no-disabled-tests
   it.skip("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
     function Child({label}) {
       useEffect(() => {

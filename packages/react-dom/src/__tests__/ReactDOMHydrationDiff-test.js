@@ -685,7 +685,7 @@ describe('ReactDOMServerHydration', () => {
       });
 
       // @gate __DEV__
-      it('warns when client renders an extra text node in the beginning', () => {
+      it('warns when client renders an extra text node in the middle', () => {
         function Mismatch({isClient}) {
           return (
             <div className="parent">

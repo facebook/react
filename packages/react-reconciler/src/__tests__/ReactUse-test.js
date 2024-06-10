@@ -89,7 +89,7 @@ describe('ReactUse', () => {
   // add this back; however, the plan is to migrate all existing Suspense code
   // to `use`, so the extra code probably isn't worth it.
   // @gate TODO
-  test('if suspended fiber is pinged in a microtask, retry immediately without unwinding the stack', async () => {
+  it('if suspended fiber is pinged in a microtask, retry immediately without unwinding the stack', async () => {
     let fulfilled = false;
     function Async() {
       if (fulfilled) {
@@ -128,7 +128,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
-  test('if suspended fiber is pinged in a microtask, it does not block a transition from completing', async () => {
+  it('if suspended fiber is pinged in a microtask, it does not block a transition from completing', async () => {
     let fulfilled = false;
     function Async() {
       if (fulfilled) {
@@ -155,7 +155,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
-  test('does not infinite loop if already fulfilled thenable is thrown', async () => {
+  it('does not infinite loop if already fulfilled thenable is thrown', async () => {
     // An already fulfilled promise should never be thrown. Since it already
     // fulfilled, we shouldn't bother trying to render again — doing so would
     // likely lead to an infinite loop. This scenario should only happen if a
@@ -195,7 +195,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Loading...');
   });
 
-  test('basic use(promise)', async () => {
+  it('basic use(promise)', async () => {
     const promiseA = Promise.resolve('A');
     const promiseB = Promise.resolve('B');
     const promiseC = Promise.resolve('C');
@@ -223,7 +223,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('ABC');
   });
 
-  test("using a promise that's not cached between attempts", async () => {
+  it("using a promise that's not cached between attempts", async () => {
     function Async() {
       const text =
         use(Promise.resolve('A')) +
@@ -256,7 +256,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('ABC');
   });
 
-  test('using a rejected promise will throw', async () => {
+  it('using a rejected promise will throw', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -300,7 +300,7 @@ describe('ReactUse', () => {
     assertLog(['Oops!', 'Oops!']);
   });
 
-  test('use(promise) in multiple components', async () => {
+  it('use(promise) in multiple components', async () => {
     // This tests that the state for tracking promises is reset per component.
     const promiseA = Promise.resolve('A');
     const promiseB = Promise.resolve('B');
@@ -333,7 +333,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('ABCD');
   });
 
-  test('use(promise) in multiple sibling components', async () => {
+  it('use(promise) in multiple sibling components', async () => {
     // This tests that the state for tracking promises is reset per component.
 
     const promiseA = {then: () => {}, status: 'pending', value: null};
@@ -368,7 +368,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Loading...');
   });
 
-  test('erroring in the same component as an uncached promise does not result in an infinite loop', async () => {
+  it('erroring in the same component as an uncached promise does not result in an infinite loop', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -454,7 +454,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Caught an error: Oops!');
   });
 
-  test('basic use(context)', async () => {
+  it('basic use(context)', async () => {
     const ContextA = React.createContext('');
     const ContextB = React.createContext('B');
 
@@ -477,7 +477,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  test('interrupting while yielded should reset contexts', async () => {
+  it('interrupting while yielded should reset contexts', async () => {
     let resolve;
     const promise = new Promise(r => {
       resolve = r;
@@ -523,7 +523,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput(<div>Hello world!</div>);
   });
 
-  test('warns if use(promise) is wrapped with try/catch block', async () => {
+  it('warns if use(promise) is wrapped with try/catch block', async () => {
     function Async() {
       try {
         return <Text text={use(Promise.resolve('Async'))} />;
@@ -558,7 +558,7 @@ describe('ReactUse', () => {
     }
   });
 
-  test('during a transition, can unwrap async operations even if nothing is cached', async () => {
+  it('during a transition, can unwrap async operations even if nothing is cached', async () => {
     function App() {
       return <Text text={use(getAsyncText('Async'))} />;
     }
@@ -593,7 +593,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
-  test("does not prevent a Suspense fallback from showing if it's a new boundary, even during a transition", async () => {
+  it("does not prevent a Suspense fallback from showing if it's a new boundary, even during a transition", async () => {
     function App() {
       return <Text text={use(getAsyncText('Async'))} />;
     }
@@ -635,7 +635,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
-  test('when waiting for data to resolve, a fresh update will trigger a restart', async () => {
+  it('when waiting for data to resolve, a fresh update will trigger a restart', async () => {
     function App() {
       return <Text text={use(getAsyncText('Will never resolve'))} />;
     }
@@ -666,7 +666,7 @@ describe('ReactUse', () => {
     assertLog(['Something different']);
   });
 
-  test('when waiting for data to resolve, an update on a different root does not cause work to be dropped', async () => {
+  it('when waiting for data to resolve, an update on a different root does not cause work to be dropped', async () => {
     const promise = getAsyncText('Hi');
 
     function App() {
@@ -708,7 +708,7 @@ describe('ReactUse', () => {
     expect(root1).toMatchRenderedOutput('Hi');
   });
 
-  test('while suspended, hooks cannot be called (i.e. current dispatcher is unset correctly)', async () => {
+  it('while suspended, hooks cannot be called (i.e. current dispatcher is unset correctly)', async () => {
     function App() {
       return <Text text={use(getAsyncText('Will never resolve'))} />;
     }
@@ -736,7 +736,7 @@ describe('ReactUse', () => {
     );
   });
 
-  test('unwraps thenable that fulfills synchronously without suspending', async () => {
+  it('unwraps thenable that fulfills synchronously without suspending', async () => {
     function App() {
       const thenable = {
         then(resolve) {
@@ -763,7 +763,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  test('does not suspend indefinitely if an interleaved update was skipped', async () => {
+  it('does not suspend indefinitely if an interleaved update was skipped', async () => {
     function Child({childShouldSuspend}) {
       return (
         <Text
@@ -845,7 +845,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('(empty)');
   });
 
-  test('when replaying a suspended component, reuses the hooks computed during the previous attempt (Memo)', async () => {
+  it('when replaying a suspended component, reuses the hooks computed during the previous attempt (Memo)', async () => {
     function ExcitingText({text}) {
       // This computes the uppercased version of some text. Pretend it's an
       // expensive operation that we want to reuse.
@@ -894,7 +894,7 @@ describe('ReactUse', () => {
     ]);
   });
 
-  test('when replaying a suspended component, reuses the hooks computed during the previous attempt (State)', async () => {
+  it('when replaying a suspended component, reuses the hooks computed during the previous attempt (State)', async () => {
     let _setFruit;
     let _setVegetable;
     function Kitchen() {
@@ -950,7 +950,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('banana dill');
   });
 
-  test('when replaying a suspended component, reuses the hooks computed during the previous attempt (DebugValue+State)', async () => {
+  it('when replaying a suspended component, reuses the hooks computed during the previous attempt (DebugValue+State)', async () => {
     // Make sure we don't get a Hook mismatch warning on updates if there were non-stateful Hooks before the use().
     let _setLawyer;
     function Lexicon() {
@@ -991,7 +991,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('aguacate avocat');
   });
 
-  test(
+  it(
     'wrap an async function with useMemo to skip running the function ' +
       'twice when loading new data',
     async () => {
@@ -1023,7 +1023,7 @@ describe('ReactUse', () => {
     },
   );
 
-  test('load multiple nested Suspense boundaries', async () => {
+  it('load multiple nested Suspense boundaries', async () => {
     const promiseA = getAsyncText('A');
     const promiseB = getAsyncText('B');
     const promiseC = getAsyncText('C');
@@ -1073,7 +1073,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('ABC');
   });
 
-  test('load multiple nested Suspense boundaries (uncached requests)', async () => {
+  it('load multiple nested Suspense boundaries (uncached requests)', async () => {
     // This the same as the previous test, except the requests are not cached.
     // The tree should still eventually resolve, despite the
     // duplicate requests.
@@ -1155,7 +1155,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('ABC');
   });
 
-  test('use() combined with render phase updates', async () => {
+  it('use() combined with render phase updates', async () => {
     function Async() {
       const a = use(Promise.resolve('A'));
       const [count, setCount] = useState(0);
@@ -1184,7 +1184,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('A1');
   });
 
-  test('basic promise as child', async () => {
+  it('basic promise as child', async () => {
     const promise = Promise.resolve(<Text text="Hi" />);
     const root = ReactNoop.createRoot();
     await act(() => {
@@ -1196,7 +1196,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  test('basic async component', async () => {
+  it('basic async component', async () => {
     async function App() {
       await getAsyncText('Hi');
       return <Text text="Hi" />;
@@ -1220,7 +1220,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  test('async child of a non-function component (e.g. a class)', async () => {
+  it('async child of a non-function component (e.g. a class)', async () => {
     class App extends React.Component {
       async render() {
         const text = await getAsyncText('Hi');
@@ -1248,7 +1248,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  test('async children are recursively unwrapped', async () => {
+  it('async children are recursively unwrapped', async () => {
     // This is a Usable of a Usable. `use` would only unwrap a single level, but
     // when passed as a child, the reconciler recurisvely unwraps until it
     // resolves to a non-Usable value.
@@ -1269,7 +1269,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  test('async children are transparently unwrapped before being reconciled (top level)', async () => {
+  it('async children are transparently unwrapped before being reconciled (top level)', async () => {
     function Child({text}) {
       useEffect(() => {
         Scheduler.log(`Mount: ${text}`);
@@ -1303,7 +1303,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('B');
   });
 
-  test('async children are transparently unwrapped before being reconciled (siblings)', async () => {
+  it('async children are transparently unwrapped before being reconciled (siblings)', async () => {
     function Child({text}) {
       useEffect(() => {
         Scheduler.log(`Mount: ${text}`);
@@ -1342,7 +1342,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('ABC');
   });
 
-  test('async children are transparently unwrapped before being reconciled (siblings, reordered)', async () => {
+  it('async children are transparently unwrapped before being reconciled (siblings, reordered)', async () => {
     function Child({text}) {
       useEffect(() => {
         Scheduler.log(`Mount: ${text}`);
@@ -1381,7 +1381,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('BAC');
   });
 
-  test('basic Context as node', async () => {
+  it('basic Context as node', async () => {
     const Context = React.createContext(null);
 
     function Indirection({children}) {
@@ -1463,7 +1463,7 @@ describe('ReactUse', () => {
     ]);
   });
 
-  test('context as node, at the root', async () => {
+  it('context as node, at the root', async () => {
     const Context = React.createContext(<Text text="Hi" />);
     const root = ReactNoop.createRoot();
     await act(async () => {
@@ -1475,7 +1475,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  test('promises that resolves to a context, rendered as a node', async () => {
+  it('promises that resolves to a context, rendered as a node', async () => {
     const Context = React.createContext(<Text text="Hi" />);
     const promise = Promise.resolve(Context);
     const root = ReactNoop.createRoot();
@@ -1488,7 +1488,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  test('unwrap uncached promises inside forwardRef', async () => {
+  it('unwrap uncached promises inside forwardRef', async () => {
     const asyncInstance = {};
     const Async = React.forwardRef((props, ref) => {
       React.useImperativeHandle(ref, () => asyncInstance);
@@ -1516,7 +1516,7 @@ describe('ReactUse', () => {
     expect(ref.current).toBe(asyncInstance);
   });
 
-  test('unwrap uncached promises inside memo', async () => {
+  it('unwrap uncached promises inside memo', async () => {
     const Async = React.memo(
       props => {
         const text = use(Promise.resolve(props.text));
@@ -1563,7 +1563,7 @@ describe('ReactUse', () => {
   });
 
   // @gate !disableLegacyContext
-  test('unwrap uncached promises in component that accesses legacy context', async () => {
+  it('unwrap uncached promises in component that accesses legacy context', async () => {
     class ContextProvider extends React.Component {
       static childContextTypes = {
         legacyContext() {},
@@ -1616,7 +1616,7 @@ describe('ReactUse', () => {
     );
   });
 
-  test('regression test: updates while component is suspended should not be mistaken for render phase updates', async () => {
+  it('regression test: updates while component is suspended should not be mistaken for render phase updates', async () => {
     const promiseA = getAsyncText('A');
     const promiseB = getAsyncText('B');
     const promiseC = getAsyncText('C');
@@ -1657,7 +1657,7 @@ describe('ReactUse', () => {
   });
 
   // @gate !forceConcurrentByDefaultForTesting
-  test('an async component outside of a Suspense boundary crashes with an error (resolves in microtask)', async () => {
+  it('an async component outside of a Suspense boundary crashes with an error (resolves in microtask)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -1709,7 +1709,7 @@ describe('ReactUse', () => {
   });
 
   // @gate !forceConcurrentByDefaultForTesting
-  test('an async component outside of a Suspense boundary crashes with an error (resolves in macrotask)', async () => {
+  it('an async component outside of a Suspense boundary crashes with an error (resolves in macrotask)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -1761,7 +1761,7 @@ describe('ReactUse', () => {
     );
   });
 
-  test(
+  it(
     'warn if async client component calls a hook (e.g. useState) ' +
       'during a non-sync update',
     async () => {
@@ -1794,7 +1794,7 @@ describe('ReactUse', () => {
     },
   );
 
-  test('warn if async client component calls a hook (e.g. use)', async () => {
+  it('warn if async client component calls a hook (e.g. use)', async () => {
     const promise = Promise.resolve();
 
     async function AsyncClientComponent() {
@@ -1829,7 +1829,7 @@ describe('ReactUse', () => {
   });
 
   // @gate enableAsyncIterableChildren
-  test('async generator component', async () => {
+  it('async generator component', async () => {
     let hi, world;
     async function* App() {
       // Only cached promises can be awaited in async generators because
@@ -1874,7 +1874,7 @@ describe('ReactUse', () => {
   });
 
   // @gate enableAsyncIterableChildren
-  test('async iterable children', async () => {
+  it('async iterable children', async () => {
     let hi, world;
     const iterable = {
       async *[Symbol.asyncIterator]() {

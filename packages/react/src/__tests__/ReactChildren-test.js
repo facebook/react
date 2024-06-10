@@ -543,7 +543,7 @@ describe('ReactChildren', () => {
     expect(mappedChildren[0]).toBe(scopeTester);
   });
 
-  it('should be called for each child', () => {
+  it('should be called for each child in array', () => {
     const zero = <div key="keyZero" />;
     const one = null;
     const two = <div key="keyTwo" />;
@@ -605,7 +605,7 @@ describe('ReactChildren', () => {
     expect(mappedChildren[3]).toEqual(<div key=".$keyFour" />);
   });
 
-  it('should be called for each child in nested structure', () => {
+  it('should be called for each child in nested structure with mapping', () => {
     const zero = <div key="keyZero" />;
     const one = null;
     const two = <div key="keyTwo" />;
@@ -678,7 +678,7 @@ describe('ReactChildren', () => {
     expect(mappedChildren[3]).toEqual(<div key=".0:$keyFive" />);
   });
 
-  it('should retain key across two mappings', () => {
+  it('should retain key across two mappings with conditions', () => {
     const zeroForceKey = <div key="keyZero" />;
     const oneForceKey = <div key="keyOne" />;
 

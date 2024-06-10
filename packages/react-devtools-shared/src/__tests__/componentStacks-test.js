@@ -65,7 +65,8 @@ describe('component stack', () => {
   // but didn't because both DevTools and ReactDOM are running in the same memory space,
   // so the case we're testing against (DevTools prod build and React DEV build) doesn't exist.
   // It would be nice to figure out a way to test this combination at some point...
-  xit('should disable the current dispatcher before shallow rendering so no effects get scheduled', () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should disable the current dispatcher before shallow rendering so no effects get scheduled', () => {
     let useEffectCount = 0;
 
     const Example = props => {

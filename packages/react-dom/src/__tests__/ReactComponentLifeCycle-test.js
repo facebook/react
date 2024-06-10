@@ -131,7 +131,7 @@ describe('ReactComponentLifeCycle', () => {
    * If a state update triggers rerendering that in turn fires an onDOMReady,
    * that second onDOMReady should not fail.
    */
-  it('it should fire onDOMReady when already in onDOMReady', async () => {
+  it('should fire onDOMReady when already in onDOMReady', async () => {
     const _testJournal = [];
 
     class Child extends React.Component {

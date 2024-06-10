@@ -259,7 +259,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('it replays the last load event when more than one fire before the end of the layout phase completes', async function () {
+  it('replays the last load event when more than one fire before the end of the layout phase completes', async function () {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
 
@@ -436,6 +436,7 @@ describe('ReactDOMImageLoad', () => {
     expect(onLoadSpy).not.toHaveBeenCalled();
   });
 
+  // eslint-disable-next-line jest/no-commented-out-tests
   // it('captures the load event if it happens in a suspended subtree and replays it between layout and passive effects on resumption', async function() {
   //   function SuspendingWithImage() {
   //     Scheduler.log('SuspendingWithImage');

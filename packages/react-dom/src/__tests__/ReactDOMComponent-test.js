@@ -1838,7 +1838,7 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev('Directly setting property `innerHTML` is not permitted. ');
     });
 
-    it('should validate use of dangerouslySetInnerHTML', async () => {
+    it('should validate use of dangerouslySetInnerHTM with JSX', async () => {
       await expect(async () => {
         await mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).rejects.toThrowError(
@@ -1847,7 +1847,7 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should validate use of dangerouslySetInnerHTML', async () => {
+    it('should validate use of dangerouslySetInnerHTML with object', async () => {
       await expect(async () => {
         await mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
       }).rejects.toThrowError(

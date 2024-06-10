@@ -167,7 +167,7 @@ describe('ReactDOMFizzShellHydration', () => {
     textCache = new Map();
   }
 
-  test('suspending in the shell during hydration', async () => {
+  it('suspending in the shell during hydration', async () => {
     const div = React.createRef(null);
 
     function App() {
@@ -207,7 +207,7 @@ describe('ReactDOMFizzShellHydration', () => {
     expect(container.textContent).toBe('Shell');
   });
 
-  test('suspending in the shell during a normal client render', async () => {
+  it('suspending in the shell during a normal client render', async () => {
     // Same as previous test but during a normal client render, no hydration
     function App() {
       return <AsyncText text="Shell" />;
@@ -226,7 +226,7 @@ describe('ReactDOMFizzShellHydration', () => {
     expect(container.textContent).toBe('Shell');
   });
 
-  test(
+  it(
     'updating the root at lower priority than initial hydration does not ' +
       'force a client render',
     async () => {
@@ -255,7 +255,7 @@ describe('ReactDOMFizzShellHydration', () => {
     },
   );
 
-  test('updating the root while the shell is suspended forces a client render', async () => {
+  it('updating the root while the shell is suspended forces a client render', async () => {
     function App() {
       return <AsyncText text="Shell" />;
     }
@@ -293,7 +293,7 @@ describe('ReactDOMFizzShellHydration', () => {
     expect(container.textContent).toBe('New screen');
   });
 
-  test('TODO: A large component stack causes SSR to stack overflow', async () => {
+  it('TODO: A large component stack causes SSR to stack overflow', async () => {
     spyOnDevAndProd(console, 'error').mockImplementation(() => {});
 
     function NestedComponent({depth}: {depth: number}) {

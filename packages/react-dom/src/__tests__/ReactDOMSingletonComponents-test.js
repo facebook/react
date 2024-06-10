@@ -590,7 +590,8 @@ describe('ReactDOM HostSingleton', () => {
   });
 
   // This test is not supported in this implementation. If we reintroduce insertion edge we should revisit
-  xit('is able to maintain insertions in head and body between tree-adjacent Nodes', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('is able to maintain insertions in head and body between tree-adjacent Nodes', async () => {
     // Server render some html and hydrate on the client
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(

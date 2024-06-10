@@ -226,7 +226,8 @@ describe('Store component filters', () => {
 
   // Disabled: filtering by path was removed, source is now determined lazily, including symbolication if applicable
   // @reactVersion >= 16.0
-  xit('should filter by path', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should filter by path', async () => {
     // This component should use props object in order to throw for component stack generation
     // See ReactComponentStackFrame:155 or DevToolsComponentStackFrame:147
     const Component = props => {

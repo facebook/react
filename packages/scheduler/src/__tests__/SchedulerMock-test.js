@@ -444,6 +444,7 @@ describe('Scheduler', () => {
     // priority if you have sourcemaps.
     // TODO: Feature temporarily disabled while we investigate a bug in one of
     // our minifiers.
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip('adds extra function to the JS stack whose name includes the priority level', async () => {
       function inferPriorityFromCallstack() {
         try {

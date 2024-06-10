@@ -104,7 +104,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     };
   }
 
-  test('native version', async () => {
+  it('native version', async () => {
     const store = createExternalStore('client');
 
     function App() {
@@ -124,7 +124,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     expect(root).toMatchRenderedOutput('client');
   });
 
-  test('Using isEqual to bailout', async () => {
+  it('Using isEqual to bailout', async () => {
     const store = createExternalStore({a: 0, b: 0});
 
     function A() {

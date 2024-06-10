@@ -37,7 +37,7 @@ describe('ReactMismatchedVersions-test', () => {
     actualReactVersion = React.__actualVersion;
   });
 
-  test('importing "react-dom/client" throws if version does not match React version', async () => {
+  it('importing "react-dom/client" throws if version does not match React version', async () => {
     expect(() => require('react-dom/client')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -51,7 +51,7 @@ describe('ReactMismatchedVersions-test', () => {
   // only errors once you call something and trigger the require. Running the
   // test in build mode is sufficient.
   // @gate !source
-  test('importing "react-dom/server" throws if version does not match React version', async () => {
+  it('importing "react-dom/server" throws if version does not match React version', async () => {
     expect(() => require('react-dom/server')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -61,7 +61,7 @@ describe('ReactMismatchedVersions-test', () => {
   });
 
   // @gate !source
-  test('importing "react-dom/server.node" throws if version does not match React version', async () => {
+  it('importing "react-dom/server.node" throws if version does not match React version', async () => {
     expect(() => require('react-dom/server.node')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -71,7 +71,7 @@ describe('ReactMismatchedVersions-test', () => {
   });
 
   // @gate !source
-  test('importing "react-dom/server.browser" throws if version does not match React version', async () => {
+  it('importing "react-dom/server.browser" throws if version does not match React version', async () => {
     expect(() => require('react-dom/server.browser')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -81,7 +81,7 @@ describe('ReactMismatchedVersions-test', () => {
   });
 
   // @gate !source
-  test('importing "react-dom/server.bun" throws if version does not match React version', async () => {
+  it('importing "react-dom/server.bun" throws if version does not match React version', async () => {
     expect(() => require('react-dom/server.bun')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -91,7 +91,7 @@ describe('ReactMismatchedVersions-test', () => {
   });
 
   // @gate !source
-  test('importing "react-dom/server.edge" throws if version does not match React version', async () => {
+  it('importing "react-dom/server.edge" throws if version does not match React version', async () => {
     expect(() => require('react-dom/server.edge')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -100,7 +100,7 @@ describe('ReactMismatchedVersions-test', () => {
     );
   });
 
-  test('importing "react-dom/static" throws if version does not match React version', async () => {
+  it('importing "react-dom/static" throws if version does not match React version', async () => {
     expect(() => require('react-dom/static')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -109,7 +109,7 @@ describe('ReactMismatchedVersions-test', () => {
     );
   });
 
-  test('importing "react-dom/static.node" throws if version does not match React version', async () => {
+  it('importing "react-dom/static.node" throws if version does not match React version', async () => {
     expect(() => require('react-dom/static.node')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -118,7 +118,7 @@ describe('ReactMismatchedVersions-test', () => {
     );
   });
 
-  test('importing "react-dom/static.browser" throws if version does not match React version', async () => {
+  it('importing "react-dom/static.browser" throws if version does not match React version', async () => {
     expect(() => require('react-dom/static.browser')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -127,7 +127,7 @@ describe('ReactMismatchedVersions-test', () => {
     );
   });
 
-  test('importing "react-dom/static.edge" throws if version does not match React version', async () => {
+  it('importing "react-dom/static.edge" throws if version does not match React version', async () => {
     expect(() => require('react-dom/static.edge')).toThrow(
       'Incompatible React versions: The "react" and "react-dom" packages ' +
         'must have the exact same version. Instead got:\n' +
@@ -137,7 +137,7 @@ describe('ReactMismatchedVersions-test', () => {
   });
 
   // @gate source
-  test('importing "react-native-renderer" throws if version does not match React version', async () => {
+  it('importing "react-native-renderer" throws if version does not match React version', async () => {
     expect(() => require('react-native-renderer')).toThrow(
       'Incompatible React versions: The "react" and "react-native-renderer" packages ' +
         'must have the exact same version. Instead got:\n' +

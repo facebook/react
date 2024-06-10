@@ -1010,16 +1010,6 @@ describe('ReactDOMTextarea', () => {
     expect(node.defaultValue).toBe('');
   });
 
-  it('should not warn about missing onChange if value is not set', async () => {
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(
-      act(() => {
-        root.render(<textarea />);
-      }),
-    ).resolves.not.toThrow();
-  });
-
   it('should not warn about missing onChange if value is undefined', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);

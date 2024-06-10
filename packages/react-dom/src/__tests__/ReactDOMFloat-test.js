@@ -2951,7 +2951,8 @@ body {
     );
   });
 
-  xit('can delay commit until css resources error', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can delay commit until css resources error', async () => {
     // TODO: This test fails and crashes jest. need to figure out why before unskipping.
     const root = ReactDOMClient.createRoot(container);
     expect(getMeaningfulChildren(container)).toBe(undefined);
@@ -6191,7 +6192,7 @@ body {
       );
     });
 
-    it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called outside of render on the client', async () => {
+    it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called in shadowRoot', async () => {
       // This is testing behavior, but it shows that it is not a good idea to preinit inside a shadowRoot. The point is we are asserting a behavior
       // you would want to avoid in a real app.
       const shadow = document.body.attachShadow({mode: 'open'});
