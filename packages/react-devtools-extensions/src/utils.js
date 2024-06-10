@@ -1,6 +1,6 @@
 /* global chrome */
 
-import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {BrowserTheme, BrowserThemeListenerUnsubscribe} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 export function getBrowserTheme(): BrowserTheme {
   if (__IS_CHROME__) {
@@ -19,6 +19,18 @@ export function getBrowserTheme(): BrowserTheme {
       }
     }
   }
+}
+
+export function listenToDevToolsThemeChange(callback: ((newTheme: BrowserTheme) => void)): BrowserThemeListenerUnsubscribe {
+  try {
+    chrome.devtools.panels.setThemeChangeHandler(theme => {
+      callback(theme);
+    });
+  } catch (e) {
+    console.warn('couldn\'t set up the dev tools theme change listener.');
+  }
+  // TODO: no way to unsubscribe from "setThemeChangeHandler"
+  return () => {};
 }
 
 export const COMPACT_VERSION_NAME = 'compact';

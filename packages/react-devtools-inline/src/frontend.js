@@ -13,6 +13,7 @@ import {
   getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
 
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 import type {Wall} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
@@ -91,8 +92,21 @@ export function initialize(
 
   frontendBridge.addListener('getSavedPreferences', onGetSavedPreferences);
 
+  function listenToBrowserThemeChange(callback: () => BrowserTheme): void {
+    window.matchMedia('(prefers-color-scheme: dark)')?.addEventListener?.('change', event => {
+      callback(event.matches ? 'dark' : 'light');
+      console.log('new browser theme:', event.matches ? 'dark' : 'light');
+    });
+  }
+
   const ForwardRef = forwardRef<Props, mixed>((props, ref) => (
-    <DevTools ref={ref} bridge={frontendBridge} store={store} {...props} />
+    <DevTools
+      ref={ref}
+      bridge={frontendBridge}
+      store={store}
+      browserThemeListener={listenToBrowserThemeChange}
+      {...props}
+    />
   ));
   ForwardRef.displayName = 'DevTools';
 

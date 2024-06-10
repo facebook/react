@@ -66,9 +66,13 @@ export type CanViewElementSource = (
   symbolicatedSource: Source | null,
 ) => boolean;
 
+export type BrowserThemeListenerUnsubscribe = () => void;
+export type BrowserThemeListener = (callback: ((newTheme: BrowserTheme) => void)) => BrowserThemeListenerUnsubscribe;
+
 export type Props = {
   bridge: FrontendBridge,
   browserTheme?: BrowserTheme,
+  browserThemeListener?: BrowserThemeListener,
   canViewElementSourceFunction?: ?CanViewElementSource,
   defaultTab?: TabID,
   enabledInspectedElementContextMenu?: boolean,
@@ -123,6 +127,7 @@ const tabs = [componentsTab, profilerTab];
 export default function DevTools({
   bridge,
   browserTheme: initialBrowserTheme = 'light',
+  browserThemeListener = () => () => {},
   canViewElementSourceFunction,
   componentsPortalContainer,
   defaultTab = 'components',
@@ -146,15 +151,10 @@ export default function DevTools({
 }: Props): React.Node {
   const [browserTheme, setBrowserTheme] = useState(initialBrowserTheme);
   useEffect(() => {
-    global?.window?.matchMedia('(prefers-color-scheme: dark)')?.addEventListener?.('change', event => {
-      setBrowserTheme(event.matches ? 'dark' : 'light');
-      console.log('new browser theme:', event.matches ? 'dark' : 'light');
-    });
-
-    global?.browser?.devtools?.panels?.onThemeChanged?.addListener(theme => {
-      setBrowserTheme(theme);
-      console.log('new panels theme:', theme);
-    });
+    const unsubscribe = browserThemeListener(newTheme => setBrowserTheme(newTheme));
+    return () => {
+      unsubscribe()
+    };
   }, []);
 
   const [currentTab, setTab] = useLocalStorage<TabID>(

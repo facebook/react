@@ -5,7 +5,7 @@ import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
-import {getBrowserTheme} from '../utils';
+import {getBrowserTheme, listenToDevToolsThemeChange} from '../utils';
 import {
   localStorageGetItem,
   localStorageSetItem,
@@ -152,6 +152,7 @@ function createBridgeAndStore() {
       createElement(DevTools, {
         bridge,
         browserTheme: getBrowserTheme(),
+        browserThemeListener: listenToDevToolsThemeChange,
         componentsPortalContainer,
         enabledInspectedElementContextMenu: true,
         fetchFileWithCaching,
