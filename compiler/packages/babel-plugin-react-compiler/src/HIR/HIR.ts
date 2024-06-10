@@ -369,7 +369,8 @@ export type Terminal =
   | SequenceTerminal
   | MaybeThrowTerminal
   | TryTerminal
-  | ReactiveScopeTerminal;
+  | ReactiveScopeTerminal
+  | PrunedScopeTerminal;
 
 export type TerminalWithFallthrough = Terminal & { fallthrough: BlockId };
 
@@ -596,6 +597,15 @@ export type MaybeThrowTerminal = {
 
 export type ReactiveScopeTerminal = {
   kind: "scope";
+  fallthrough: BlockId;
+  block: BlockId;
+  scope: ReactiveScope;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type PrunedScopeTerminal = {
+  kind: "pruned-scope";
   fallthrough: BlockId;
   block: BlockId;
   scope: ReactiveScope;
