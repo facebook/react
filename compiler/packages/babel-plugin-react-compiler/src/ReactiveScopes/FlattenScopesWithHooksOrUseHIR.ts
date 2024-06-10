@@ -96,7 +96,7 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
         fallthrough: terminal.fallthrough,
         id: terminal.id,
         loc: terminal.loc,
-      } satisfies LabelTerminal;
+      } as LabelTerminal;
       continue;
     }
 
@@ -107,6 +107,6 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
       id: terminal.id,
       loc: terminal.loc,
       scope: terminal.scope,
-    } satisfies PrunedScopeTerminal;
+    } as PrunedScopeTerminal;
   }
 }
