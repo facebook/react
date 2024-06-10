@@ -13,7 +13,7 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef} from 'react';
+import {useState, useCallback, useEffect, useLayoutEffect, useMemo, useRef} from 'react';
 import Store from '../store';
 import {
   BridgeContext,
@@ -122,7 +122,7 @@ const tabs = [componentsTab, profilerTab];
 
 export default function DevTools({
   bridge,
-  browserTheme = 'light',
+  browserTheme: initialBrowserTheme = 'light',
   canViewElementSourceFunction,
   componentsPortalContainer,
   defaultTab = 'components',
@@ -144,6 +144,19 @@ export default function DevTools({
   hideLogAction,
   hideViewSourceAction,
 }: Props): React.Node {
+  const [browserTheme, setBrowserTheme] = useState(initialBrowserTheme);
+  useEffect(() => {
+    global?.window?.matchMedia('(prefers-color-scheme: dark)')?.addEventListener?.('change', event => {
+      setBrowserTheme(event.matches ? 'dark' : 'light');
+      console.log('new browser theme:', event.matches ? 'dark' : 'light');
+    });
+
+    global?.browser?.devtools?.panels?.onThemeChanged?.addListener(theme => {
+      setBrowserTheme(theme);
+      console.log('new panels theme:', theme);
+    });
+  }, []);
+
   const [currentTab, setTab] = useLocalStorage<TabID>(
     LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,
