@@ -8,7 +8,7 @@
  */
 
 export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
-export * from 'react-client/src/ReactFlightClientConsoleConfigBrowser';
+export * from 'react-client/src/ReactClientConsoleConfigBrowser';
 export * from 'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpack';
 export * from 'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpackBrowser';
 export * from 'react-server-dom-webpack/src/ReactFlightClientConfigTargetWebpackBrowser';
