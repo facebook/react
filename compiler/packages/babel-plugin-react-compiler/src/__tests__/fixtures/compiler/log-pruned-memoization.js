@@ -1,8 +1,15 @@
 // @logger
-import { useState } from "react";
-import { identity, makeObject_Primitives, useHook } from "shared-runtime";
+import { createContext, use, useState } from "react";
+import {
+  Stringify,
+  identity,
+  makeObject_Primitives,
+  useHook,
+} from "shared-runtime";
 
 function Component() {
+  const w = use(Context);
+
   // The scopes for x and x2 are interleaved, so this is one scope with two values
   const x = makeObject_Primitives();
   const x2 = makeObject_Primitives();
@@ -22,10 +29,20 @@ function Component() {
   }
 
   // Overall we expect two pruned scopes (for x+x2, and obj), with 3 pruned scope values.
-  return [x, x2, y, z];
+  return <Stringify items={[w, x, x2, y, z]} />;
+}
+
+const Context = createContext();
+
+function Wrapper() {
+  return (
+    <Context value={42}>
+      <Component />
+    </Context>
+  );
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
+  fn: Wrapper,
   params: [{}],
 };

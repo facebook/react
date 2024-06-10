@@ -331,29 +331,8 @@ class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void> {
     scopeBlock: PrunedReactiveScopeBlock,
     state: void
   ): void {
-    let isHookOnlyMemoBlock = false;
-    if (
-      scopeBlock.instructions.length === 1 &&
-      scopeBlock.instructions[0].kind === "instruction"
-    ) {
-      const instr = scopeBlock.instructions[0]!.instruction;
-      if (
-        instr.value.kind === "MethodCall" ||
-        instr.value.kind === "CallExpression"
-      ) {
-        const callee =
-          instr.value.kind === "MethodCall"
-            ? instr.value.property
-            : instr.value.callee;
-        if (getHookKind(this.env, callee.identifier) != null) {
-          isHookOnlyMemoBlock = true;
-        }
-      }
-    }
-    if (!isHookOnlyMemoBlock) {
-      this.prunedMemoBlocks += 1;
-      this.prunedMemoValues += scopeBlock.scope.declarations.size;
-    }
+    this.prunedMemoBlocks += 1;
+    this.prunedMemoValues += scopeBlock.scope.declarations.size;
     this.traversePrunedScope(scopeBlock, state);
   }
 }
