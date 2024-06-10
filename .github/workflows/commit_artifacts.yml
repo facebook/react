@@ -2,7 +2,7 @@ name: Commit Artifacts for Meta WWW and fbsource
 
 on:
   push:
-    branches: [main, meta-www, meta-fbsource, rh/test-ci-new]
+    branches: [main, meta-www, meta-fbsource]
 
 jobs:
   download_artifacts:
@@ -72,55 +72,53 @@ jobs:
               });
             }
 
-            let artifactsUrl = `https://circleci.com/api/v1.1/project/github/facebook/react/905149/artifacts`;
-            if (!artifactsUrl) {
-              // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
-              // workflow to notify this GitHub action. Sorry!
-              let iter = 0;
-              spinloop: while (iter < 15) {
-                const res = await github.rest.repos.listCommitStatusesForRef({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  ref: context.sha
-                });
-                for (const status of res.data) {
-                  if (/process_artifacts_combined/.test(status.context)) {
-                    switch (status.state) {
-                      case 'pending': {
-                        console.log(`${status.context} is still pending`);
-                        break;
+            let artifactsUrl = null;
+            // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
+            // workflow to notify this GitHub action. Sorry!
+            let iter = 0;
+            spinloop: while (iter < 15) {
+              const res = await github.rest.repos.listCommitStatusesForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.sha
+              });
+              for (const status of res.data) {
+                if (/process_artifacts_combined/.test(status.context)) {
+                  switch (status.state) {
+                    case 'pending': {
+                      console.log(`${status.context} is still pending`);
+                      break;
+                    }
+                    case 'failure':
+                    case 'error': {
+                      throw new Error(`${status.context} has failed or errored`);
+                    }
+                    case 'success': {
+                      // The status does not include a build ID, but we can extract it
+                      // from the URL. I couldn't find a better way to do this.
+                      const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
+                        status.target_url,
+                      )[1];
+                      if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
+                        artifactsUrl =
+                          `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
+                        console.log(`Found artifactsUrl: ${artifactsUrl}`);
+                        break spinloop;
+                      } else {
+                        throw new Error(`${ciBuildId} isn't a number`);
                       }
-                      case 'failure':
-                      case 'error': {
-                        throw new Error(`${status.context} has failed or errored`);
-                      }
-                      case 'success': {
-                        // The status does not include a build ID, but we can extract it
-                        // from the URL. I couldn't find a better way to do this.
-                        const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-                          status.target_url,
-                        )[1];
-                        if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
-                          artifactsUrl =
-                            `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
-                          console.log(`Found artifactsUrl: ${artifactsUrl}`);
-                          break spinloop;
-                        } else {
-                          throw new Error(`${ciBuildId} isn't a number`);
-                        }
-                        break;
-                      }
-                      default: {
-                        throw new Error(`Unhandled status state: ${status.state}`);
-                        break;
-                      }
+                      break;
+                    }
+                    default: {
+                      throw new Error(`Unhandled status state: ${status.state}`);
+                      break;
                     }
                   }
                 }
-                iter++;
-                console.log("Sleeping for 60s...");
-                await sleep(60_000);
               }
+              iter++;
+              console.log("Sleeping for 60s...");
+              await sleep(60_000);
             }
             if (artifactsUrl != null) {
               const {CIRCLECI_TOKEN} = process.env;
@@ -224,7 +222,7 @@ jobs:
 
   commit_www_artifacts:
     needs: download_artifacts
-    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0') || github.ref == 'refs/heads/meta-www' || github.ref == 'refs/heads/rh/test-ci-new' }}
+    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0') || github.ref == 'refs/heads/meta-www' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -293,7 +291,7 @@ jobs:
           echo ":"
           git status -u
       - name: Commit changes to branch
-        if: false && steps.check_should_commit.outputs.should_commit == 'true'
+        if: steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
@@ -307,7 +305,7 @@ jobs:
 
   commit_fbsource_artifacts:
     needs: download_artifacts
-    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') || github.ref == 'refs/heads/meta-fbsource' || github.ref == 'refs/heads/rh/test-ci-new' }}
+    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') || github.ref == 'refs/heads/meta-fbsource' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -391,7 +389,7 @@ jobs:
                 }
                 return data.replace(NEWTOKEN, `SignedSource<<${hash(data, 'utf8')}>>`);
               },
-             };
+            };
 
             const directory = './compiled-rn';
             console.log('Signing files in directory:', directory);
@@ -501,7 +499,7 @@ jobs:
                 }
                 return data.replace(NEWTOKEN, `SignedSource<<${hash(data, 'utf8')}>>`);
               },
-             };
+            };
 
             const directory = './compiled-rn';
             console.log('Signing files in directory:', directory);
@@ -535,7 +533,7 @@ jobs:
         run: |
           git status -u
       - name: Commit changes to branch
-        if: false && steps.check_should_commit.outputs.should_commit == 'true'
+        if: steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
