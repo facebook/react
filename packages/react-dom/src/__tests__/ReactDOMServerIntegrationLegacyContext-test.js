@@ -48,7 +48,7 @@ describe('ReactDOMServerIntegration', () => {
     // The `itRenders` test abstraction doesn't work with @gate so we have
     // to do this instead.
     if (gate(flags => flags.disableLegacyContext)) {
-      test('empty test to stop Jest from being a complainy complainer', () => {});
+      it('empty test to stop Jest from being a complainy complainer', () => {});
       return;
     }
 

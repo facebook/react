@@ -5338,7 +5338,7 @@ describe('ReactDOMFizzServer', () => {
       });
     }
 
-    it('it only includes separators between adjacent text nodes', async () => {
+    it('only includes separators between adjacent text nodes', async () => {
       function App({name}) {
         return (
           <div>
@@ -5370,7 +5370,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    it('it does not insert text separators even when adjacent text is in a delayed segment', async () => {
+    it('does not insert text separators even when adjacent text is in a delayed segment', async () => {
       function App({name}) {
         return (
           <Suspense fallback={'loading...'}>
@@ -5433,7 +5433,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    it('it works with multiple adjacent segments', async () => {
+    it('works with multiple adjacent segments', async () => {
       function App() {
         return (
           <Suspense fallback={'loading...'}>
@@ -5481,7 +5481,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    it('it works when some segments are flushed and others are patched', async () => {
+    it('works when some segments are flushed and others are patched', async () => {
       function App() {
         return (
           <Suspense fallback={'loading...'}>
@@ -5529,7 +5529,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    it('it does not prepend a text separators if the segment follows a non-Text Node', async () => {
+    it('does not prepend a text separators if the segment follows a non-Text Node', async () => {
       function App() {
         return (
           <Suspense fallback={'loading...'}>
@@ -5569,7 +5569,7 @@ describe('ReactDOMFizzServer', () => {
       );
     });
 
-    it('it does not prepend a text separators if the segments first emission is a non-Text Node', async () => {
+    it('does not prepend a text separators if the segments first emission is a non-Text Node', async () => {
       function App() {
         return (
           <Suspense fallback={'loading...'}>

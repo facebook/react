@@ -141,7 +141,8 @@ describe('Timeline profiler', () => {
       // TODO(hoxyq): investigate why running this test with React 18 fails
       // @reactVersion <= 18.2
       // @reactVersion >= 18.0
-      xit('should mark sync render with suspense that resolves', async () => {
+      // eslint-disable-next-line jest/no-disabled-tests
+      it.skip('should mark sync render with suspense that resolves', async () => {
         const fakeSuspensePromise = Promise.resolve(true);
         function Example() {
           throw fakeSuspensePromise;
@@ -186,7 +187,8 @@ describe('Timeline profiler', () => {
       // TODO(hoxyq): investigate why running this test with React 18 fails
       // @reactVersion <= 18.2
       // @reactVersion >= 18.0
-      xit('should mark sync render with suspense that rejects', async () => {
+      // eslint-disable-next-line jest/no-disabled-tests
+      it.skip('should mark sync render with suspense that rejects', async () => {
         const fakeSuspensePromise = Promise.reject(new Error('error'));
         function Example() {
           throw fakeSuspensePromise;
@@ -1528,7 +1530,7 @@ describe('Timeline profiler', () => {
                   `);
         });
 
-        it('should mark concurrent render without suspends or state updates', () => {
+        it('should mark concurrent render without suspends with state updates', () => {
           let updaterFn;
 
           function Example() {

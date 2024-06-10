@@ -288,7 +288,7 @@ describe('SchedulerDOMSetImmediate', () => {
   });
 });
 
-it('does not crash if setImmediate is undefined', () => {
+test('does not crash if setImmediate is undefined', () => {
   jest.resetModules();
   const originalSetImmediate = global.setImmediate;
   try {

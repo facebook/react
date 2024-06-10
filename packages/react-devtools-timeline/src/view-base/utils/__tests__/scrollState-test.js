@@ -15,7 +15,7 @@ import {
   zoomState,
 } from '../scrollState';
 
-describe(clampState, () => {
+describe('clampState', () => {
   it('should passthrough offset if state fits within container', () => {
     expect(
       clampState({
@@ -137,7 +137,7 @@ describe(clampState, () => {
   });
 });
 
-describe(translateState, () => {
+describe('translateState', () => {
   it('should translate state by delta and leave length unchanged', () => {
     expect(
       translateState({
@@ -166,7 +166,7 @@ describe(translateState, () => {
   });
 });
 
-describe(zoomState, () => {
+describe('zoomState', () => {
   it('should scale width by multiplier', () => {
     expect(
       zoomState({
@@ -218,7 +218,7 @@ describe(zoomState, () => {
   });
 });
 
-describe(moveStateToRange, () => {
+describe('moveStateToRange', () => {
   it('should set [rangeStart, rangeEnd] = container', () => {
     const movedState = moveStateToRange({
       state: {offset: -20, length: 100},
@@ -240,7 +240,7 @@ describe(moveStateToRange, () => {
   });
 });
 
-describe(areScrollStatesEqual, () => {
+describe('areScrollStatesEqual', () => {
   it('should return true if equal', () => {
     expect(
       areScrollStatesEqual({offset: 0, length: 0}, {offset: 0, length: 0}),

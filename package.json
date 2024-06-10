@@ -56,7 +56,7 @@
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-eslint-plugin": "^3.5.3",
     "eslint-plugin-ft-flow": "^2.0.3",
-    "eslint-plugin-jest": "^22.15.0",
+    "eslint-plugin-jest": "28.4.0",
     "eslint-plugin-no-for-of-loops": "^1.0.0",
     "eslint-plugin-no-function-declare-after-return": "^1.0.0",
     "eslint-plugin-react": "^6.7.1",

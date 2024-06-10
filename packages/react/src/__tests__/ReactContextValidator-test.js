@@ -267,7 +267,7 @@ describe('ReactContextValidator', () => {
     expect(childContext.foo).toBe('FOO');
   });
 
-  it('should pass next context to lifecycles', async () => {
+  it('should pass next context to lifecycles on update', async () => {
     let componentDidMountContext;
     let componentDidUpdateContext;
     let componentWillReceivePropsContext;

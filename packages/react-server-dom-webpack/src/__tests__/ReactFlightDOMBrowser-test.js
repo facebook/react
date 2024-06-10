@@ -192,41 +192,6 @@ describe('ReactFlightDOMBrowser', () => {
     });
   });
 
-  it('should resolve HTML using W3C streams', async () => {
-    function Text({children}) {
-      return <span>{children}</span>;
-    }
-    function HTML() {
-      return (
-        <div>
-          <Text>hello</Text>
-          <Text>world</Text>
-        </div>
-      );
-    }
-
-    function App() {
-      const model = {
-        html: <HTML />,
-      };
-      return model;
-    }
-
-    const stream = await serverAct(() =>
-      ReactServerDOMServer.renderToReadableStream(<App />),
-    );
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-    const model = await response;
-    expect(model).toEqual({
-      html: (
-        <div>
-          <span>hello</span>
-          <span>world</span>
-        </div>
-      ),
-    });
-  });
-
   it('should resolve client components (with async chunks) when referenced in props', async () => {
     let resolveClientComponentChunk;
 

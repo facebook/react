@@ -1515,7 +1515,7 @@ describe('ReactDOMSelect', () => {
       ]);
     });
 
-    it('throws when given a Temporal.PlainDate-like value (both)', async () => {
+    it('throws when given a Temporal.PlainDate-like defaultValue (both)', async () => {
       const container = document.createElement('div');
       const root = ReactDOMClient.createRoot(container);
       await expect(async () => {

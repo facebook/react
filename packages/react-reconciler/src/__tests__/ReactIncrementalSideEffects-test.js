@@ -752,7 +752,8 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  xit('can defer side-effects and resume them later on', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can defer side-effects and resume them later on', async () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
         return this.props.idx !== nextProps.idx;
@@ -835,7 +836,8 @@ describe('ReactIncrementalSideEffects', () => {
     expect(innerSpanA).toBe(innerSpanB);
   });
 
-  xit('can defer side-effects and reuse them later - complex', async function () {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can defer side-effects and reuse them later - complex', async function () {
     let ops = [];
 
     class Bar extends React.Component {
