@@ -314,7 +314,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(() => {
         ReactDOMServer.renderToString(<MyComponent />);
       }).toErrorDev(
-        'Warning: MyComponent.getChildContext(): childContextTypes must be defined in order to use getChildContext().\n' +
+        'MyComponent.getChildContext(): childContextTypes must be defined in order to use getChildContext().\n' +
           '    in MyComponent (at **)',
       );
     });

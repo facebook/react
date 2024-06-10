@@ -34,7 +34,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         root.render(<div style={{font: 'foo'}} />);
       });
     }).toErrorDev(
-      'Warning: Removing a style property during rerender (fontStyle) ' +
+      'Removing a style property during rerender (fontStyle) ' +
         'when a conflicting property is set (font) can lead to styling ' +
         "bugs. To avoid this, don't mix shorthand and non-shorthand " +
         'properties for the same value; instead, replace the shorthand ' +
@@ -55,7 +55,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         root.render(<div style={{font: 'qux', fontStyle: 'baz'}} />);
       });
     }).toErrorDev(
-      'Warning: Updating a style property during rerender (font) when ' +
+      'Updating a style property during rerender (font) when ' +
         'a conflicting property is set (fontStyle) can lead to styling ' +
         "bugs. To avoid this, don't mix shorthand and non-shorthand " +
         'properties for the same value; instead, replace the shorthand ' +
@@ -67,7 +67,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         root.render(<div style={{fontStyle: 'baz'}} />);
       });
     }).toErrorDev(
-      'Warning: Removing a style property during rerender (font) when ' +
+      'Removing a style property during rerender (font) when ' +
         'a conflicting property is set (fontStyle) can lead to styling ' +
         "bugs. To avoid this, don't mix shorthand and non-shorthand " +
         'properties for the same value; instead, replace the shorthand ' +
@@ -87,7 +87,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         root.render(<div style={{background: 'yellow'}} />);
       });
     }).toErrorDev(
-      'Warning: Removing a style property during rerender ' +
+      'Removing a style property during rerender ' +
         '(backgroundPosition) when a conflicting property is set ' +
         "(background) can lead to styling bugs. To avoid this, don't mix " +
         'shorthand and non-shorthand properties for the same value; ' +
@@ -110,7 +110,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         root.render(<div style={{backgroundPosition: 'top'}} />);
       });
     }).toErrorDev(
-      'Warning: Removing a style property during rerender (background) ' +
+      'Removing a style property during rerender (background) ' +
         'when a conflicting property is set (backgroundPosition) can lead ' +
         "to styling bugs. To avoid this, don't mix shorthand and " +
         'non-shorthand properties for the same value; instead, replace the ' +
@@ -129,7 +129,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         root.render(<div style={{borderLeft: '1px solid red'}} />);
       });
     }).toErrorDev(
-      'Warning: Removing a style property during rerender (borderStyle) ' +
+      'Removing a style property during rerender (borderStyle) ' +
         'when a conflicting property is set (borderLeft) can lead to ' +
         "styling bugs. To avoid this, don't mix shorthand and " +
         'non-shorthand properties for the same value; instead, replace the ' +
@@ -143,7 +143,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         );
       });
     }).toErrorDev(
-      'Warning: Updating a style property during rerender (borderStyle) ' +
+      'Updating a style property during rerender (borderStyle) ' +
         'when a conflicting property is set (borderLeft) can lead to ' +
         "styling bugs. To avoid this, don't mix shorthand and " +
         'non-shorthand properties for the same value; instead, replace the ' +
@@ -161,7 +161,7 @@ describe('ReactDOMShorthandCSSPropertyCollision', () => {
         root.render(<div style={{borderStyle: 'dotted'}} />);
       });
     }).toErrorDev(
-      'Warning: Removing a style property during rerender (borderLeft) ' +
+      'Removing a style property during rerender (borderLeft) ' +
         'when a conflicting property is set (borderStyle) can lead to ' +
         "styling bugs. To avoid this, don't mix shorthand and " +
         'non-shorthand properties for the same value; instead, replace the ' +

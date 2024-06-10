@@ -427,7 +427,7 @@ describe('forwardRef', () => {
       );
     }).toErrorDev(
       [
-        'Warning: forwardRef requires a render function but received a `memo` ' +
+        'forwardRef requires a render function but received a `memo` ' +
           'component. Instead of forwardRef(memo(...)), use ' +
           'memo(forwardRef(...)).',
       ],

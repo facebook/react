@@ -121,7 +121,7 @@ describe('ReactDOMServerHydration', () => {
       } else {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
           - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -183,7 +183,7 @@ describe('ReactDOMServerHydration', () => {
       } else {
         expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
           [
-            "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
           - A server/client branch \`if (typeof window !== 'undefined')\`.
           - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -224,7 +224,7 @@ describe('ReactDOMServerHydration', () => {
       }
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+          "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
         - A server/client branch \`if (typeof window !== 'undefined')\`.
         - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -266,7 +266,7 @@ describe('ReactDOMServerHydration', () => {
       }
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+          "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
         - A server/client branch \`if (typeof window !== 'undefined')\`.
         - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -306,7 +306,7 @@ describe('ReactDOMServerHydration', () => {
       }
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+          "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
         - A server/client branch \`if (typeof window !== 'undefined')\`.
         - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -347,7 +347,7 @@ describe('ReactDOMServerHydration', () => {
       }
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+          "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
         - A server/client branch \`if (typeof window !== 'undefined')\`.
         - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -388,7 +388,7 @@ describe('ReactDOMServerHydration', () => {
       }
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+          "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
         - A server/client branch \`if (typeof window !== 'undefined')\`.
         - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -430,7 +430,7 @@ describe('ReactDOMServerHydration', () => {
       }
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+          "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
         - A server/client branch \`if (typeof window !== 'undefined')\`.
         - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.
@@ -626,7 +626,7 @@ describe('ReactDOMServerHydration', () => {
         } else {
           expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
             [
-              "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+              "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
 
             - A server/client branch \`if (typeof window !== 'undefined')\`.
             - Variable input such as \`Date.now()\` or \`Math.random()\` which changes each time it's called.

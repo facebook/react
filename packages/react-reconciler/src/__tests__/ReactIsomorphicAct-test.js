@@ -290,7 +290,7 @@ describe('isomorphic act()', () => {
 
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error.mock.calls[0][0]).toContain(
-      'Warning: A component suspended inside an `act` scope, but the `act` ' +
+      'A component suspended inside an `act` scope, but the `act` ' +
         'call was not awaited. When testing React components that ' +
         'depend on asynchronous data, you must await the result:\n\n' +
         'await act(() => ...)',

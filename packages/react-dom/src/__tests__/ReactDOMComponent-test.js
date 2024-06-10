@@ -194,7 +194,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div foo={() => {}} />);
         });
       }).toErrorDev(
-        'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
+        'Invalid value for prop `foo` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep ' +
           'it in the DOM. For details, see https://react.dev/link/attribute-behavior ' +
           '\n    in div (at **)',
@@ -209,7 +209,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div foo={() => {}} baz={() => {}} />);
         });
       }).toErrorDev(
-        'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
+        'Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
           'them from the element, or pass a string or number value to keep ' +
           'them in the DOM. For details, see https://react.dev/link/attribute-behavior ' +
           '\n    in div (at **)',
@@ -224,7 +224,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div onDblClick={() => {}} />);
         });
       }).toErrorDev(
-        'Warning: Invalid event handler property `onDblClick`. Did you mean `onDoubleClick`?\n    in div (at **)',
+        'Invalid event handler property `onDblClick`. Did you mean `onDoubleClick`?\n    in div (at **)',
       );
     });
 
@@ -236,7 +236,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div onUnknown='alert("hack")' />);
         });
       }).toErrorDev(
-        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+        'Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
       expect(container.firstChild.onUnknown).toBe(undefined);
@@ -245,7 +245,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div onunknown='alert("hack")' />);
         });
       }).toErrorDev(
-        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+        'Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
       expect(container.firstChild.onunknown).toBe(undefined);
@@ -254,7 +254,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div on-unknown='alert("hack")' />);
         });
       }).toErrorDev(
-        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+        'Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
       expect(container.firstChild['on-unknown']).toBe(undefined);
@@ -268,7 +268,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div onUnknown={function () {}} />);
         });
       }).toErrorDev(
-        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+        'Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
       expect(container.firstChild.onUnknown).toBe(undefined);
@@ -277,7 +277,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div onunknown={function () {}} />);
         });
       }).toErrorDev(
-        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+        'Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
       expect(container.firstChild.onunknown).toBe(undefined);
@@ -286,7 +286,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div on-unknown={function () {}} />);
         });
       }).toErrorDev(
-        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+        'Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
       expect(container.firstChild['on-unknown']).toBe(undefined);
@@ -300,7 +300,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div CHILDREN="5" />);
         });
       }).toErrorDev(
-        'Warning: Invalid DOM property `CHILDREN`. Did you mean `children`?\n    in div (at **)',
+        'Invalid DOM property `CHILDREN`. Did you mean `children`?\n    in div (at **)',
       );
       expect(container.firstChild.getAttribute('CHILDREN')).toBe('5');
     });
@@ -328,7 +328,7 @@ describe('ReactDOMComponent', () => {
           root.render(<span style={style} />);
         });
       }).toErrorDev(
-        'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
+        '`NaN` is an invalid value for the `fontSize` css style property.' +
           '\n    in span (at **)',
       );
       await act(() => {
@@ -355,7 +355,7 @@ describe('ReactDOMComponent', () => {
             root.render(<span style={style} />);
           });
         }).toErrorDev(
-          'Warning: The provided `fontSize` CSS property is an unsupported type TemporalLike.' +
+          'The provided `fontSize` CSS property is an unsupported type TemporalLike.' +
             ' This value must be coerced to a string before using it here.',
         );
       }).rejects.toThrowError(new TypeError('prod message'));
@@ -891,8 +891,8 @@ describe('ReactDOMComponent', () => {
           expect(result2.toLowerCase()).not.toContain('script');
         }
       }).toErrorDev([
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-        'Warning: Invalid attribute name: `></div><script>alert("hi")</script>`',
+        'Invalid attribute name: `blah" onclick="beevil" noise="hi`',
+        'Invalid attribute name: `></div><script>alert("hi")</script>`',
       ]);
     });
 
@@ -915,8 +915,8 @@ describe('ReactDOMComponent', () => {
           expect(result2.toLowerCase()).not.toContain('script');
         }
       }).toErrorDev([
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-        'Warning: Invalid attribute name: `></x-foo-component><script>alert("hi")</script>`',
+        'Invalid attribute name: `blah" onclick="beevil" noise="hi`',
+        'Invalid attribute name: `></x-foo-component><script>alert("hi")</script>`',
       ]);
     });
 
@@ -953,8 +953,8 @@ describe('ReactDOMComponent', () => {
           expect(container.firstChild.attributes.length).toBe(0);
         }
       }).toErrorDev([
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-        'Warning: Invalid attribute name: `></div><script>alert("hi")</script>`',
+        'Invalid attribute name: `blah" onclick="beevil" noise="hi`',
+        'Invalid attribute name: `></div><script>alert("hi")</script>`',
       ]);
     });
 
@@ -992,8 +992,8 @@ describe('ReactDOMComponent', () => {
           expect(container.firstChild.attributes.length).toBe(0);
         }
       }).toErrorDev([
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-        'Warning: Invalid attribute name: `></x-foo-component><script>alert("hi")</script>`',
+        'Invalid attribute name: `blah" onclick="beevil" noise="hi`',
+        'Invalid attribute name: `></x-foo-component><script>alert("hi")</script>`',
       ]);
     });
 
@@ -1030,8 +1030,8 @@ describe('ReactDOMComponent', () => {
           expect(container.firstChild.attributes.length).toBe(0);
         }
       }).toErrorDev([
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-        'Warning: Invalid attribute name: `></div><script>alert("hi")</script>`',
+        'Invalid attribute name: `blah" onclick="beevil" noise="hi`',
+        'Invalid attribute name: `></div><script>alert("hi")</script>`',
       ]);
     });
 
@@ -1068,8 +1068,8 @@ describe('ReactDOMComponent', () => {
           expect(container.firstChild.attributes.length).toBe(0);
         }
       }).toErrorDev([
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-        'Warning: Invalid attribute name: `></x-foo-component><script>alert("hi")</script>`',
+        'Invalid attribute name: `blah" onclick="beevil" noise="hi`',
+        'Invalid attribute name: `></x-foo-component><script>alert("hi")</script>`',
       ]);
     });
 
@@ -1410,7 +1410,7 @@ describe('ReactDOMComponent', () => {
           root.render(<input value="" onChange={onChange} />);
         });
       }).toErrorDev(
-        ' A component is changing an uncontrolled input to be controlled. This is likely caused by ' +
+        'A component is changing an uncontrolled input to be controlled. This is likely caused by ' +
           'the value changing from undefined to a defined value, which should not happen. Decide between ' +
           'using a controlled or uncontrolled input element for the lifetime of the component.',
       );
@@ -1866,7 +1866,7 @@ describe('ReactDOMComponent', () => {
       await expect(async () => {
         await mountComponent({contentEditable: true, children: ''});
       }).toErrorDev(
-        'Warning: A component is `contentEditable` and contains `children` ' +
+        'A component is `contentEditable` and contains `children` ' +
           'managed by React. It is now your responsibility to guarantee that ' +
           'none of those nodes are unexpectedly modified or duplicated. This ' +
           'is probably not intentional.\n    in div (at **)',
@@ -2194,7 +2194,7 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev([
-        'Warning: In HTML, <tr> cannot be a child of ' +
+        'In HTML, <tr> cannot be a child of ' +
           '<div>.\n' +
           'This will cause a hydration error.' +
           '\n    in tr (at **)' +
@@ -2215,7 +2215,7 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        'Warning: In HTML, <p> cannot be a descendant ' +
+        'In HTML, <p> cannot be a descendant ' +
           'of <p>.\n' +
           'This will cause a hydration error.' +
           // There is no outer `p` here because root container is not part of the stack.
@@ -2249,7 +2249,7 @@ describe('ReactDOMComponent', () => {
           root.render(<Foo />);
         });
       }).toErrorDev([
-        'Warning: In HTML, <tr> cannot be a child of ' +
+        'In HTML, <tr> cannot be a child of ' +
           '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
           'by the browser.\n' +
           'This will cause a hydration error.' +
@@ -2257,14 +2257,14 @@ describe('ReactDOMComponent', () => {
           '\n    in Row (at **)' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
-        'Warning: In HTML, text nodes cannot be a ' +
+        'In HTML, text nodes cannot be a ' +
           'child of <tr>.\n' +
           'This will cause a hydration error.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
-        'Warning: In HTML, whitespace text nodes cannot ' +
+        'In HTML, whitespace text nodes cannot ' +
           "be a child of <table>. Make sure you don't have any extra " +
           'whitespace between tags on each line of your source code.\n' +
           'This will cause a hydration error.' +
@@ -2294,7 +2294,7 @@ describe('ReactDOMComponent', () => {
           root.render(<Foo> </Foo>);
         });
       }).toErrorDev([
-        'Warning: In HTML, whitespace text nodes cannot ' +
+        'In HTML, whitespace text nodes cannot ' +
           "be a child of <table>. Make sure you don't have any extra " +
           'whitespace between tags on each line of your source code.\n' +
           'This will cause a hydration error.' +
@@ -2323,7 +2323,7 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev([
-        'Warning: In HTML, text nodes cannot be a ' +
+        'In HTML, text nodes cannot be a ' +
           'child of <tr>.\n' +
           'This will cause a hydration error.' +
           '\n    in tr (at **)' +
@@ -2713,7 +2713,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div class="paladin" />);
         });
       }).toErrorDev(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        'Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
       await expect(async () => {
         const container = document.createElement('div');
@@ -2722,7 +2722,7 @@ describe('ReactDOMComponent', () => {
           root.render(<input type="text" onclick="1" />);
         });
       }).toErrorDev(
-        'Warning: Invalid event handler property `onclick`. Did you mean ' +
+        'Invalid event handler property `onclick`. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
     });
@@ -2731,12 +2731,12 @@ describe('ReactDOMComponent', () => {
       expect(() =>
         ReactDOMServer.renderToString(<div class="paladin" />),
       ).toErrorDev(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        'Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
       expect(() =>
         ReactDOMServer.renderToString(<input type="text" oninput="1" />),
       ).toErrorDev(
-        'Warning: Invalid event handler property `oninput`. ' +
+        'Invalid event handler property `oninput`. ' +
           // Note: we don't know the right event name so we
           // use a generic one (onClick) as a suggestion.
           // This is because we don't bundle the event system
@@ -2760,7 +2760,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div class="paladin" />);
         });
       }).toErrorDev(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        'Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
     });
 
@@ -2912,7 +2912,7 @@ describe('ReactDOMComponent', () => {
           root.render(React.createElement('label', {for: 'test'}));
         });
       }).toErrorDev(
-        'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
+        'Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
       );
 
       await expect(async () => {
@@ -2924,7 +2924,7 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
+        'Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
       );
     });
 
@@ -2934,14 +2934,14 @@ describe('ReactDOMComponent', () => {
           React.createElement('label', {for: 'test'}),
         ),
       ).toErrorDev(
-        'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
+        'Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
       );
       expect(() =>
         ReactDOMServer.renderToString(
           React.createElement('input', {type: 'text', autofocus: true}),
         ),
       ).toErrorDev(
-        'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
+        'Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
       );
     });
   });
@@ -2989,9 +2989,7 @@ describe('ReactDOMComponent', () => {
         await act(() => {
           root.render(<div class="test" ref={current => (el = current)} />);
         });
-      }).toErrorDev(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?',
-      );
+      }).toErrorDev('Invalid DOM property `class`. Did you mean `className`?');
 
       expect(el.className).toBe('test');
     });
@@ -3005,9 +3003,7 @@ describe('ReactDOMComponent', () => {
         await act(() => {
           root.render(<div cLASS="test" ref={current => (el = current)} />);
         });
-      }).toErrorDev(
-        'Warning: Invalid DOM property `cLASS`. Did you mean `className`?',
-      );
+      }).toErrorDev('Invalid DOM property `cLASS`. Did you mean `className`?');
 
       expect(el.className).toBe('test');
     });
@@ -3026,7 +3022,7 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        'Warning: Invalid DOM property `arabic-form`. Did you mean `arabicForm`?',
+        'Invalid DOM property `arabic-form`. Did you mean `arabicForm`?',
       );
       const text = el.querySelector('text');
 
@@ -3164,7 +3160,7 @@ describe('ReactDOMComponent', () => {
             <div whatever={() => {}} ref={current => (el = current)} />,
           );
         });
-      }).toErrorDev('Warning: Invalid value for prop `whatever` on <div> tag');
+      }).toErrorDev('Invalid value for prop `whatever` on <div> tag');
 
       expect(el.hasAttribute('whatever')).toBe(false);
     });
@@ -3257,7 +3253,7 @@ describe('ReactDOMComponent', () => {
           root.render(<div whatever={NaN} ref={current => (el = current)} />);
         });
       }).toErrorDev(
-        'Warning: Received NaN for the `whatever` attribute. If this is ' +
+        'Received NaN for the `whatever` attribute. If this is ' +
           'expected, cast the value to a string.\n    in div',
       );
 
@@ -3274,7 +3270,7 @@ describe('ReactDOMComponent', () => {
         await act(() => {
           root.render(<div whatever={() => {}} />);
         });
-      }).toErrorDev('Warning: Invalid value for prop `whatever` on <div> tag.');
+      }).toErrorDev('Invalid value for prop `whatever` on <div> tag.');
       const el = container.firstChild;
       expect(el.hasAttribute('whatever')).toBe(false);
     });
@@ -3288,9 +3284,7 @@ describe('ReactDOMComponent', () => {
         await act(() => {
           root.render(<div SiZe="30" ref={current => (el = current)} />);
         });
-      }).toErrorDev(
-        'Warning: Invalid DOM property `SiZe`. Did you mean `size`?',
-      );
+      }).toErrorDev('Invalid DOM property `SiZe`. Did you mean `size`?');
 
       expect(el.getAttribute('size')).toBe('30');
     });
@@ -3502,9 +3496,7 @@ describe('ReactDOMComponent', () => {
             </svg>,
           );
         });
-      }).toErrorDev(
-        'Warning: Invalid DOM property `x-height`. Did you mean `xHeight`',
-      );
+      }).toErrorDev('Invalid DOM property `x-height`. Did you mean `xHeight`');
 
       expect(el.querySelector('font-face').hasAttribute('x-height')).toBe(
         false,

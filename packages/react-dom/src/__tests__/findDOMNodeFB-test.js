@@ -130,7 +130,7 @@ describe('findDOMNode', () => {
 
     let match;
     expect(() => (match = ReactDOM.findDOMNode(parent))).toErrorDev([
-      'Warning: findDOMNode is deprecated in StrictMode. ' +
+      'findDOMNode is deprecated in StrictMode. ' +
         'findDOMNode was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
@@ -163,7 +163,7 @@ describe('findDOMNode', () => {
 
     let match;
     expect(() => (match = ReactDOM.findDOMNode(parent))).toErrorDev([
-      'Warning: findDOMNode is deprecated in StrictMode. ' +
+      'findDOMNode is deprecated in StrictMode. ' +
         'findDOMNode was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +

@@ -2106,7 +2106,7 @@ describe('ReactLegacyErrorBoundaries', () => {
         });
       }).rejects.toThrow('got: null');
     }).toErrorDev(
-      'Warning: React.jsx: type is invalid -- expected a string ' +
+      'React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function ' +
         '(for composite components) but got: null.',
       {withoutStack: 1},
@@ -2120,7 +2120,7 @@ describe('ReactLegacyErrorBoundaries', () => {
         });
       }).rejects.toThrow('got: undefined');
     }).toErrorDev(
-      'Warning: React.jsx: type is invalid -- expected a string ' +
+      'React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function ' +
         '(for composite components) but got: undefined.',
       {withoutStack: 1},

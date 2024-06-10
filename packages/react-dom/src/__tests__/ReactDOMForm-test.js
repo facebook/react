@@ -386,7 +386,7 @@ describe('ReactDOMForm', () => {
         );
       });
     }).toErrorDev([
-      'Warning: In HTML, <form> cannot be a descendant of <form>.\n' +
+      'In HTML, <form> cannot be a descendant of <form>.\n' +
         'This will cause a hydration error.' +
         '\n    in form (at **)' +
         '\n    in form (at **)',

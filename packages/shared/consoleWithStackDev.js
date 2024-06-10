@@ -44,9 +44,6 @@ function printWarning(level, format, args, currentStack) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   if (__DEV__) {
-    const isErrorLogger =
-      format === '%s\n\n%s\n' || format === '%o\n\n%s\n\n%s\n';
-
     if (!supportsCreateTask && ReactSharedInternals.getCurrentStack) {
       // We only add the current stack to the console when createTask is not supported.
       // Since createTask requires DevTools to be open to work, this means that stacks
@@ -58,18 +55,7 @@ function printWarning(level, format, args, currentStack) {
       }
     }
 
-    if (isErrorLogger) {
-      // Don't prefix our default logging formatting in ReactFiberErrorLoggger.
-      // Don't toString the arguments.
-      args.unshift(format);
-    } else {
-      // TODO: Remove this prefix and stop toStringing in the wrapper and
-      // instead do it at each callsite as needed.
-      // Careful: RN currently depends on this prefix
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      args = args.map(item => String(item));
-      args.unshift('Warning: ' + format);
-    }
+    args.unshift(format);
     // We intentionally don't use spread (or .apply) directly because it
     // breaks IE9: https://github.com/facebook/react/issues/13610
     // eslint-disable-next-line react-internal/no-production-logging

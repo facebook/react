@@ -266,7 +266,7 @@ describe('ReactDOMOption', () => {
           onRecoverableError: () => {},
         });
       });
-    }).toErrorDev(['Warning: In HTML, <div> cannot be a child of <option>']);
+    }).toErrorDev(['In HTML, <div> cannot be a child of <option>']);
     option = container.firstChild.firstChild;
 
     expect(option.textContent).toBe('BarFooBaz');
