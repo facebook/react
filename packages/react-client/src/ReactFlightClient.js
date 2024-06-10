@@ -732,8 +732,32 @@ function createElement(
     // This is effectively the complete phase.
     initializingHandler = handler.parent;
     if (handler.errored) {
-      // TODO: Encode the error as Lazy.
-      throw handler.value;
+      // Something errored inside this Element's props. We can turn this Element
+      // into a Lazy so that we can still render up until that Lazy is rendered.
+      const erroredChunk: ErroredChunk<React$Element<any>> = createErrorChunk(
+        response,
+        handler.value,
+      );
+      if (__DEV__) {
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.stack = element._debugStack;
+          // $FlowFixMe[cannot-write]
+          erroredComponent.task = element._debugTask;
+        }
+        erroredChunk._debugInfo = [erroredComponent];
+      }
+      return createLazyChunkWrapper(erroredChunk);
     }
     if (handler.deps > 0) {
       // We have blocked references inside this Element but we can turn this into
@@ -861,12 +885,43 @@ function waitForReference<T>(
       // Promise.all.
       return;
     }
+    const blockedValue = handler.value;
     handler.errored = true;
     handler.value = error;
     const chunk = handler.chunk;
     if (chunk === null || chunk.status !== BLOCKED) {
       return;
     }
+
+    if (__DEV__) {
+      if (
+        typeof blockedValue === 'object' &&
+        blockedValue !== null &&
+        blockedValue.$$typeof === REACT_ELEMENT_TYPE
+      ) {
+        const element = blockedValue;
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.stack = element._debugStack;
+          // $FlowFixMe[cannot-write]
+          erroredComponent.task = element._debugTask;
+        }
+        const chunkDebugInfo: ReactDebugInfo =
+          chunk._debugInfo || (chunk._debugInfo = []);
+        chunkDebugInfo.push(erroredComponent);
+      }
+    }
+
     triggerErrorOnChunk(chunk, error);
   }
 
@@ -961,7 +1016,22 @@ function getOutlinedModel<T>(
     case BLOCKED:
       return waitForReference(chunk, parentObject, key, response, map, path);
     default:
-      throw chunk.reason;
+      // This is an error. Instead of erroring directly, we're going to encode this on
+      // an initialization handler so that we can catch it at the nearest Element.
+      if (initializingHandler) {
+        initializingHandler.errored = true;
+        initializingHandler.value = chunk.reason;
+      } else {
+        initializingHandler = {
+          parent: null,
+          chunk: null,
+          value: chunk.reason,
+          deps: 0,
+          errored: true,
+        };
+      }
+      // Placeholder
+      return (null: any);
   }
 }
 
