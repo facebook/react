@@ -341,94 +341,19 @@ jobs:
           else
             echo "No Changes detected"
           fi
-      - name: Revert signatures
-        uses: actions/github-script@v6
-        with:
-          script: |
-            // TODO: Move this to a script file.
-            // We currently can't call scripts from the repo because
-            // at this point in the workflow, we're on the compiled
-            // artifact branch (so the scripts don't exist).
-            // We can fix this with a composite action in the main repo.
-            // This script is duplicated below.
-            const fs = require('fs');
-            const crypto = require('crypto');
-            const {execSync} = require('child_process');
-
-            // TODO: when we move this to a script, we can use this from npm.
-            // Copy of signedsource since we can't install deps on this branch
-            const GENERATED = '@' + 'generated';
-            const NEWTOKEN = '<<SignedSource::*O*zOeWoEQle#+L!plEphiEmie@IsG>>';
-            const PATTERN = new RegExp(`${GENERATED} (?:SignedSource<<([a-f0-9]{32})>>)`);
-
-            const TokenNotFoundError = new Error(
-              `SignedSource.signFile(...): Cannot sign file without token: ${NEWTOKEN}`
-            );
-
-            function hash(data, encoding) {
-              const md5sum = crypto.createHash('md5');
-              md5sum.update(data, encoding);
-              return md5sum.digest('hex');
-            }
-
-            const SignedSource = {
-              getSigningToken() {
-                return `${GENERATED} ${NEWTOKEN}`;
-              },
-              isSigned(data) {
-                return PATTERN.exec(data) != null;
-              },
-              signFile(data) {
-                if (!data.includes(NEWTOKEN)) {
-                  if (SignedSource.isSigned(data)) {
-                    // Signing a file that was previously signed.
-                   data = data.replace(PATTERN, SignedSource.getSigningToken());
-                  } else {
-                    throw TokenNotFoundError;
-                  }
-                }
-                return data.replace(NEWTOKEN, `SignedSource<<${hash(data, 'utf8')}>>`);
-              },
-            };
-
-            const directory = './compiled-rn';
-            console.log('Signing files in directory:', directory);
-            try {
-              const result = execSync(`git status --porcelain ${directory}`, {encoding: 'utf8'});
-
-              // Parse the git status output to get file paths
-              const files = result.split('\n').filter(file => file.endsWith('.js'));
-
-              if (files.length === 0) {
-                throw new Error(
-                  'git status returned no files to sign. this job should not have run.'
-                );
-              } else {
-                files.forEach(line => {
-                  const file = line.slice(3).trim();
-                  if (file) {
-                    console.log('  Signing file:', file);
-                    const originalContents = fs.readFileSync(file, 'utf8');
-                    const signedContents = SignedSource.signFile(originalContents);
-                    fs.writeFileSync(file, signedContents, 'utf8');
-                  }
-                });
-              }
-            } catch (e) {
-              process.exitCode = 1;
-              console.error('Error signing files:', e);
-            }
       - name: Check for changes
         id: check_should_commit
         run: |
           echo "Full git status"
           git add .
-          git status --porcelain
           echo "===================="
-          if git status --porcelain | grep -qv '/REVISION'; then
+          # Ignore REVISION or lines removing @generated headers.
+          if git diff -- . ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" > /dev/null; then
             echo "Changes detected"
             echo "===== Changes ====="
-             git --no-pager diff -U0 --cached | grep '^[+-]' | head -n 50
+            git --no-pager diff -- . ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]"
+            echo "=== All Changes ==="
+            git --no-pager diff -U0 --cached | grep '^[+-]' | head -n 50
             echo "==================="
             echo "should_commit=true" >> "$GITHUB_OUTPUT"
           else
