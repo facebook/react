@@ -332,15 +332,13 @@ jobs:
         run: |
           echo "Full git status"
           git add .
-          git status
+          git --no-pager diff -U0 --cached | grep '^[+-]' | head -n 100
           echo "===================="
           # Ignore REVISION or lines removing @generated headers.
           if git diff --cached' :(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" > /dev/null; then
             echo "Changes detected"
             echo "===== Changes ====="
-            git --no-pager diff --cached ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]"
-            echo "=== All Changes ==="
-            git --no-pager diff -U0 --cached | grep '^[+-]' | head -n 50
+            git --no-pager diff --cached ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" | head -n 50
             echo "==================="
             echo "should_commit=true" >> "$GITHUB_OUTPUT"
           else
@@ -357,7 +355,7 @@ jobs:
           grep -rl "$LAST_VERSION" ./compiled-rn || echo "No files found with $LAST_VERSION"
           grep -rl "$LAST_VERSION" ./compiled-rn | xargs -r sed -i -e "s/$LAST_VERSION/$CURRENT_VERSION/g"
           grep -rl "$LAST_VERSION" ./compiled-rn || echo "Version re-applied"
-      - name: Add files
+      - name: Add files for signing
         if: steps.check_should_commit.outputs.should_commit == 'true'
         run: |
           echo ":"
@@ -431,7 +429,12 @@ jobs:
                   if (file) {
                     console.log('  Signing file:', file);
                     const originalContents = fs.readFileSync(file, 'utf8');
-                    const signedContents = SignedSource.signFile(originalContents);
+                    const signedContents = SignedSource.signFile(
+                      originalContents
+                        // Need to add the header in, since it's not inserted at build time.
+                        .replace(' */\n', ` * ${SignedSource.getSigningToken()}\n */\n`)
+                    );
+
                     fs.writeFileSync(file, signedContents, 'utf8');
                   }
                 });
@@ -443,7 +446,8 @@ jobs:
       - name: Will commit these changes
         if: steps.check_should_commit.outputs.should_commit == 'true'
         run: |
-          git status -u
+          git add .
+          git status
       - name: Commit changes to branch
         if: steps.check_should_commit.outputs.should_commit == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
