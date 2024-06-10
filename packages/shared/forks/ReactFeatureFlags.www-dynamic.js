@@ -23,7 +23,6 @@ export const alwaysThrottleRetries = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableUseDeferredValueInitialArg = __VARIANT__;
 export const enableRenderableContext = __VARIANT__;
-export const enableRefAsProp = __VARIANT__;
 export const enableFastJSX = __VARIANT__;
 export const enableRetryLaneExpiration = __VARIANT__;
 export const favorSafetyOverHydrationPerf = __VARIANT__;
@@ -33,6 +32,7 @@ export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const enableAddPropertiesFastPath = __VARIANT__;
+export const disableLegacyMode = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.

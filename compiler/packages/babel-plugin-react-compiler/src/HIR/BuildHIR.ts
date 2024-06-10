@@ -124,7 +124,7 @@ export function lower(
     ) {
       const place: Place = {
         kind: "Identifier",
-        identifier: builder.makeTemporary(),
+        identifier: builder.makeTemporary(param.node.loc ?? GeneratedSource),
         effect: Effect.Unknown,
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
@@ -141,7 +141,7 @@ export function lower(
     } else if (param.isRestElement()) {
       const place: Place = {
         kind: "Identifier",
-        identifier: builder.makeTemporary(),
+        identifier: builder.makeTemporary(param.node.loc ?? GeneratedSource),
         effect: Effect.Unknown,
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
@@ -1256,7 +1256,9 @@ function lowerStatement(
       if (hasNode(handlerBindingPath)) {
         const place: Place = {
           kind: "Identifier",
-          identifier: builder.makeTemporary(),
+          identifier: builder.makeTemporary(
+            handlerBindingPath.node.loc ?? GeneratedSource
+          ),
           effect: Effect.Unknown,
           reactive: false,
           loc: handlerBindingPath.node.loc ?? GeneratedSource,
@@ -1520,6 +1522,15 @@ function lowerExpression(
             place,
           });
         } else if (propertyPath.isObjectMethod()) {
+          if (propertyPath.node.kind !== "method") {
+            builder.errors.push({
+              reason: `(BuildHIR::lowerExpression) Handle ${propertyPath.node.kind} functions in ObjectExpression`,
+              severity: ErrorSeverity.Todo,
+              loc: propertyPath.node.loc ?? null,
+              suggestions: null,
+            });
+            continue;
+          }
           const method = lowerObjectMethod(builder, propertyPath);
           const place = lowerValueToTemporary(builder, method);
           const loweredKey = lowerObjectPropertyKey(builder, propertyPath);
@@ -2416,6 +2427,28 @@ function lowerExpression(
       let expr = exprPath as NodePath<t.TSNonNullExpression>;
       return lowerExpression(builder, expr.get("expression"));
     }
+    case "MetaProperty": {
+      let expr = exprPath as NodePath<t.MetaProperty>;
+      if (
+        expr.node.meta.name === "import" &&
+        expr.node.property.name === "meta"
+      ) {
+        return {
+          kind: "MetaProperty",
+          meta: expr.node.meta.name,
+          property: expr.node.property.name,
+          loc: expr.node.loc ?? GeneratedSource,
+        };
+      }
+
+      builder.errors.push({
+        reason: `(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta`,
+        severity: ErrorSeverity.Todo,
+        loc: exprPath.node.loc ?? null,
+        suggestions: null,
+      });
+      return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+    }
     default: {
       builder.errors.push({
         reason: `(BuildHIR::lowerExpression) Handle ${exprPath.type} expressions`,
@@ -3292,7 +3325,7 @@ function lowerIdentifier(
 function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
   const place: Place = {
     kind: "Identifier",
-    identifier: builder.makeTemporary(),
+    identifier: builder.makeTemporary(loc),
     effect: Effect.Unknown,
     reactive: false,
     loc,
@@ -3336,6 +3369,20 @@ function lowerIdentifierForAssignment(
       });
       return null;
     }
+  } else if (
+    binding.bindingKind === "const" &&
+    kind === InstructionKind.Reassign
+  ) {
+    builder.errors.push({
+      reason: `Cannot reassign a \`const\` variable`,
+      severity: ErrorSeverity.InvalidJS,
+      loc: path.node.loc ?? null,
+      description:
+        binding.identifier.name != null
+          ? `\`${binding.identifier.name.value}\` is declared as const`
+          : null,
+    });
+    return null;
   }
 
   const place: Place = {

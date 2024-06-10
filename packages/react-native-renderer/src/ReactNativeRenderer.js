@@ -56,6 +56,20 @@ import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 // Module provided by RN:
 import {ReactFiberErrorDialog} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
+import reactNativePackageVersion from 'shared/ReactVersion';
+import * as IsomorphicReactPackage from 'react';
+
+const isomorphicReactPackageVersion = IsomorphicReactPackage.version;
+if (isomorphicReactPackageVersion !== reactNativePackageVersion) {
+  throw new Error(
+    'Incompatible React versions: The "react" and "react-native-renderer" packages must ' +
+      'have the exact same version. Instead got:\n' +
+      `  - react:                  ${isomorphicReactPackageVersion}\n` +
+      `  - react-native-renderer:  ${reactNativePackageVersion}\n` +
+      'Learn more: https://react.dev/warnings/version-mismatch',
+  );
+}
+
 if (typeof ReactFiberErrorDialog.showErrorDialog !== 'function') {
   throw new Error(
     'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',

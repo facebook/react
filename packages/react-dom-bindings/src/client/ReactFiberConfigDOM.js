@@ -2358,6 +2358,7 @@ export function getResource(
   type: string,
   currentProps: any,
   pendingProps: any,
+  currentResource: null | Resource,
 ): null | Resource {
   const resourceRoot = getCurrentResourceRoot();
   if (!resourceRoot) {
@@ -2411,7 +2412,7 @@ export function getResource(
         if (!resource) {
           // We asserted this above but Flow can't figure out that the type satisfies
           const ownerDocument = getDocumentFromRoot(resourceRoot);
-          resource = {
+          resource = ({
             type: 'stylesheet',
             instance: null,
             count: 0,
@@ -2419,20 +2420,74 @@ export function getResource(
               loading: NotLoaded,
               preload: null,
             },
-          };
+          }: StylesheetResource);
           styles.set(key, resource);
+          const instance = ownerDocument.querySelector(
+            getStylesheetSelectorFromKey(key),
+          );
+          if (instance) {
+            const loadingState: ?Promise<mixed> = (instance: any)._p;
+            if (loadingState) {
+              // This instance is inserted as part of a boundary reveal and is not yet
+              // loaded
+            } else {
+              // This instance is already loaded
+              resource.instance = instance;
+              resource.state.loading = Loaded | Inserted;
+            }
+          }
+
           if (!preloadPropsMap.has(key)) {
-            preloadStylesheet(
-              ownerDocument,
-              key,
-              preloadPropsFromStylesheet(qualifiedProps),
-              resource.state,
-            );
+            const preloadProps = preloadPropsFromStylesheet(qualifiedProps);
+            preloadPropsMap.set(key, preloadProps);
+            if (!instance) {
+              preloadStylesheet(
+                ownerDocument,
+                key,
+                preloadProps,
+                resource.state,
+              );
+            }
           }
         }
+        if (currentProps && currentResource === null) {
+          // This node was previously an Instance type and is becoming a Resource type
+          // For now we error because we don't support flavor changes
+          let diff = '';
+          if (__DEV__) {
+            diff = `
+
+  - ${describeLinkForResourceErrorDEV(currentProps)}
+  + ${describeLinkForResourceErrorDEV(pendingProps)}`;
+          }
+          throw new Error(
+            'Expected <link> not to update to be updated to a stylesheet with precedence.' +
+              ' Check the `rel`, `href`, and `precedence` props of this component.' +
+              ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' +
+              diff,
+          );
+        }
         return resource;
+      } else {
+        if (currentProps && currentResource !== null) {
+          // This node was previously a Resource type and is becoming an Instance type
+          // For now we error because we don't support flavor changes
+          let diff = '';
+          if (__DEV__) {
+            diff = `
+
+  - ${describeLinkForResourceErrorDEV(currentProps)}
+  + ${describeLinkForResourceErrorDEV(pendingProps)}`;
+          }
+          throw new Error(
+            'Expected stylesheet with precedence to not be updated to a different kind of <link>.' +
+              ' Check the `rel`, `href`, and `precedence` props of this component.' +
+              ' Alternatively, check whether two different <link> components render in the same slot or share the same key.' +
+              diff,
+          );
+        }
+        return null;
       }
-      return null;
     }
     case 'script': {
       const async = pendingProps.async;
@@ -2471,6 +2526,49 @@ export function getResource(
       );
     }
   }
+}
+
+function describeLinkForResourceErrorDEV(props: any) {
+  if (__DEV__) {
+    let describedProps = 0;
+
+    let description = '<link';
+    if (typeof props.rel === 'string') {
+      describedProps++;
+      description += ` rel="${props.rel}"`;
+    } else if (hasOwnProperty.call(props, 'rel')) {
+      describedProps++;
+      description += ` rel="${
+        props.rel === null ? 'null' : 'invalid type ' + typeof props.rel
+      }"`;
+    }
+    if (typeof props.href === 'string') {
+      describedProps++;
+      description += ` href="${props.href}"`;
+    } else if (hasOwnProperty.call(props, 'href')) {
+      describedProps++;
+      description += ` href="${
+        props.href === null ? 'null' : 'invalid type ' + typeof props.href
+      }"`;
+    }
+    if (typeof props.precedence === 'string') {
+      describedProps++;
+      description += ` precedence="${props.precedence}"`;
+    } else if (hasOwnProperty.call(props, 'precedence')) {
+      describedProps++;
+      description += ` precedence={${
+        props.precedence === null
+          ? 'null'
+          : 'invalid type ' + typeof props.precedence
+      }}`;
+    }
+    if (Object.getOwnPropertyNames(props).length > describedProps) {
+      description += ' ...';
+    }
+    description += ' />';
+    return description;
+  }
+  return '';
 }
 
 function styleTagPropsFromRawProps(
@@ -2520,28 +2618,21 @@ function preloadStylesheet(
   preloadProps: PreloadProps,
   state: StylesheetState,
 ) {
-  preloadPropsMap.set(key, preloadProps);
-
-  if (!ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) {
-    // There is no matching stylesheet instance in the Document.
-    // We will insert a preload now to kick off loading because
-    // we expect this stylesheet to commit
-    const preloadEl = ownerDocument.querySelector(
-      getPreloadStylesheetSelectorFromKey(key),
-    );
-    if (preloadEl) {
-      // If we find a preload already it was SSR'd and we won't have an actual
-      // loading state to track. For now we will just assume it is loaded
-      state.loading = Loaded;
-    } else {
-      const instance = ownerDocument.createElement('link');
-      state.preload = instance;
-      instance.addEventListener('load', () => (state.loading |= Loaded));
-      instance.addEventListener('error', () => (state.loading |= Errored));
-      setInitialProperties(instance, 'link', preloadProps);
-      markNodeAsHoistable(instance);
-      (ownerDocument.head: any).appendChild(instance);
-    }
+  const preloadEl = ownerDocument.querySelector(
+    getPreloadStylesheetSelectorFromKey(key),
+  );
+  if (preloadEl) {
+    // If we find a preload already it was SSR'd and we won't have an actual
+    // loading state to track. For now we will just assume it is loaded
+    state.loading = Loaded;
+  } else {
+    const instance = ownerDocument.createElement('link');
+    state.preload = instance;
+    instance.addEventListener('load', () => (state.loading |= Loaded));
+    instance.addEventListener('error', () => (state.loading |= Errored));
+    setInitialProperties(instance, 'link', preloadProps);
+    markNodeAsHoistable(instance);
+    (ownerDocument.head: any).appendChild(instance);
   }
 }
 

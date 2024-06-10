@@ -26,7 +26,7 @@ function Component(props) {
   const $ = _c(5);
   const user = useFragment(
     graphql`fragment Component_user on User { ... }`,
-    props.user
+    props.user,
   );
   let posts;
   if ($[0] !== user.timeline.posts.edges.nodes) {

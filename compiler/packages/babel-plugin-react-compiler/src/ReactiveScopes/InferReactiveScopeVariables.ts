@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
+import { CompilerError, SourceLocation } from "..";
 import { Environment } from "../HIR";
 import {
   GeneratedSource,
@@ -110,6 +110,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
         reassignments: new Set(),
         earlyReturnValue: null,
         merged: new Set(),
+        loc: identifier.loc,
       };
       scopes.set(groupIdentifier, scope);
     } else {
@@ -119,6 +120,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       scope.range.end = makeInstructionId(
         Math.max(scope.range.end, identifier.mutableRange.end)
       );
+      scope.loc = mergeLocation(scope.loc, identifier.loc);
     }
     identifier.scope = scope;
     identifier.mutableRange = scope.range;
@@ -159,6 +161,25 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
   }
 }
 
+function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
+  if (l === GeneratedSource) {
+    return r;
+  } else if (r === GeneratedSource) {
+    return l;
+  } else {
+    return {
+      start: {
+        line: Math.min(l.start.line, r.start.line),
+        column: Math.min(l.start.column, r.start.column),
+      },
+      end: {
+        line: Math.max(l.end.line, r.end.line),
+        column: Math.max(l.end.column, r.end.column),
+      },
+    };
+  }
+}
+
 // Is the operand mutable at this given instruction
 export function isMutable({ id }: Instruction, place: Place): boolean {
   const range = place.identifier.mutableRange;
@@ -178,6 +199,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "DeclareContext":
     case "StoreLocal":
     case "LoadGlobal":
+    case "MetaProperty":
     case "TypeCastExpression":
     case "LoadLocal":
     case "LoadContext":

@@ -18,14 +18,13 @@ export function insertGatedFunctionDeclaration(
     | t.ArrowFunctionExpression
     | t.FunctionExpression,
   gating: NonNullable<PluginOptions["gating"]>
-): NodePath<t.ConditionalExpression | t.VariableDeclaration> {
+): void {
   const gatingExpression = t.conditionalExpression(
     t.callExpression(t.identifier(gating.importSpecifierName), []),
     buildFunctionExpression(compiled),
     buildFunctionExpression(fnPath.node)
   );
 
-  let compiledFn;
   /*
    * Convert function declarations to named variables *unless* this is an
    * `export default function ...` since `export default const ...` is
@@ -37,16 +36,30 @@ export function insertGatedFunctionDeclaration(
     fnPath.node.type === "FunctionDeclaration" &&
     fnPath.node.id != null
   ) {
-    compiledFn = fnPath.replaceWith(
+    fnPath.replaceWith(
       t.variableDeclaration("const", [
         t.variableDeclarator(fnPath.node.id, gatingExpression),
       ])
-    )[0];
+    );
+  } else if (
+    fnPath.parentPath.node.type === "ExportDefaultDeclaration" &&
+    fnPath.node.type !== "ArrowFunctionExpression" &&
+    fnPath.node.id != null
+  ) {
+    fnPath.insertAfter(
+      t.exportDefaultDeclaration(t.identifier(fnPath.node.id.name))
+    );
+    fnPath.parentPath.replaceWith(
+      t.variableDeclaration("const", [
+        t.variableDeclarator(
+          t.identifier(fnPath.node.id.name),
+          gatingExpression
+        ),
+      ])
+    );
   } else {
-    compiledFn = fnPath.replaceWith(gatingExpression)[0];
+    fnPath.replaceWith(gatingExpression);
   }
-
-  return compiledFn;
 }
 
 function buildFunctionExpression(

@@ -21,6 +21,7 @@ import {
   IdentifierId,
   Instruction,
   Place,
+  SourceLocation,
   Terminal,
   VariableBinding,
   makeBlockId,
@@ -174,7 +175,7 @@ export default class HIRBuilder {
     return handler ?? null;
   }
 
-  makeTemporary(): Identifier {
+  makeTemporary(loc: SourceLocation): Identifier {
     const id = this.nextIdentifierId;
     return {
       id,
@@ -182,6 +183,7 @@ export default class HIRBuilder {
       mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) },
       scope: null,
       type: makeType(),
+      loc,
     };
   }
 
@@ -280,7 +282,11 @@ export default class HIRBuilder {
     if (resolvedBinding.name && resolvedBinding.name.value !== originalName) {
       babelBinding.scope.rename(originalName, resolvedBinding.name.value);
     }
-    return { kind: "Identifier", identifier: resolvedBinding };
+    return {
+      kind: "Identifier",
+      identifier: resolvedBinding,
+      bindingKind: babelBinding.kind,
+    };
   }
 
   isContextIdentifier(path: NodePath<t.Identifier | t.JSXIdentifier>): boolean {
@@ -316,6 +322,7 @@ export default class HIRBuilder {
           },
           scope: null,
           type: makeType(),
+          loc: node.loc ?? GeneratedSource,
         };
         this.#bindings.set(name, { node, identifier });
         return identifier;
@@ -873,7 +880,10 @@ export function removeUnnecessaryTryCatch(fn: HIR): void {
   }
 }
 
-export function createTemporaryPlace(env: Environment): Place {
+export function createTemporaryPlace(
+  env: Environment,
+  loc: SourceLocation
+): Place {
   return {
     kind: "Identifier",
     identifier: {
@@ -882,6 +892,7 @@ export function createTemporaryPlace(env: Environment): Place {
       name: null,
       scope: null,
       type: makeType(),
+      loc,
     },
     reactive: false,
     effect: Effect.Unknown,

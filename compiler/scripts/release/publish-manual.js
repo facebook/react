@@ -25,7 +25,7 @@ const spawnHelper = util.promisify(_spawn);
 function execHelper(command, options, streamStdout = false) {
   return new Promise((resolve, reject) => {
     const proc = cp.exec(command, options, (error, stdout) =>
-      error ? reject(error) : resolve(stdout.trim()),
+      error ? reject(error) : resolve(stdout.trim())
     );
     if (streamStdout) {
       proc.stdout.pipe(process.stdout);
@@ -39,7 +39,7 @@ function sleep(ms) {
 
 async function getDateStringForCommit(commit) {
   let dateString = await execHelper(
-    `git show -s --no-show-signature --format=%cd --date=format:%Y%m%d ${commit}`,
+    `git show -s --no-show-signature --format=%cd --date=format:%Y%m%d ${commit}`
   );
 
   // On CI environment, this string is wrapped with quotes '...'s
@@ -51,8 +51,6 @@ async function getDateStringForCommit(commit) {
 }
 
 /**
- * Please login to npm first with `npm login`. You will also need 2FA enabled to push to npm.
- *
  * Script for publishing PUBLISHABLE_PACKAGES to npm. By default, this runs in tarball mode, meaning
  * the script will only print out what the contents of the files included in the npm tarball would
  * be.
@@ -60,10 +58,11 @@ async function getDateStringForCommit(commit) {
  * Please run this first (ie `yarn npm:publish`) and double check the contents of the files that
  * will be pushed to npm.
  *
- * If it looks good, you can run `yarn npm:publish --for-real` to really publish to npm. There's a
- * small annoying delay before the packages are actually pushed to give you time to panic cancel. In
- * this mode, we will bump the version field of each package's package.json, and git commit it.
- * Then, the packages will be published to npm.
+ * If it looks good, you can run `yarn npm:publish --for-real` to really publish to npm. You must
+ * have 2FA enabled first and the script will prompt you to enter a 2FA code before proceeding.
+ * There's a small annoying delay before the packages are actually pushed to give you time to panic
+ * cancel. In this mode, we will bump the version field of each package's package.json, and git
+ * commit it. Then, the packages will be published to npm.
  *
  * Optionally, you can add the `--debug` flag to `yarn npm:publish --debug --for-real` to run all
  * steps, but the final npm publish step will have the `--dry-run` flag added to it. This will make
@@ -99,7 +98,7 @@ async function main() {
     const isPristine = (await execHelper("git status --porcelain")) === "";
     if (currBranchName !== "main" || isPristine === false) {
       throw new Error(
-        "This script must be run from the `main` branch with no uncommitted changes",
+        "This script must be run from the `main` branch with no uncommitted changes"
       );
     }
   }
@@ -111,7 +110,7 @@ async function main() {
   const spinner = ora(
     `Preparing to publish ${
       forReal === true ? "(for real)" : "(dry run)"
-    } [debug=${debug}]`,
+    } [debug=${debug}]`
   ).info();
 
   spinner.info("Building packages");
@@ -145,7 +144,7 @@ async function main() {
       spinner.stop(`Successfully packed ${pkgName} (dry run)`);
     }
     spinner.succeed(
-      "Please confirm contents of packages before publishing. You can run this command again with --for-real to publish to npm",
+      "Please confirm contents of packages before publishing. You can run this command again with --for-real to publish to npm"
     );
   }
 
@@ -155,7 +154,7 @@ async function main() {
       "git show -s --no-show-signature --format=%h",
       {
         cwd: path.resolve(__dirname, ".."),
-      },
+      }
     );
     const dateString = await getDateStringForCommit(commit);
 
@@ -175,20 +174,20 @@ async function main() {
           `yarn version --new-version ${newVersion} --no-git-tag-version`,
           {
             cwd: pkgDir,
-          },
+          }
         );
         await execHelper(
           `git add package.json && git commit -m "Bump version to ${newVersion}"`,
           {
             cwd: pkgDir,
-          },
+          }
         );
       } catch (e) {
         spinner.fail(e.toString());
         throw e;
       }
       spinner.succeed(
-        `Bumped ${pkgName} to ${newVersion} and added a git commit`,
+        `Bumped ${pkgName} to ${newVersion} and added a git commit`
       );
     }
 
@@ -196,7 +195,7 @@ async function main() {
       spinner.info(
         `🚨🚨🚨 About to publish to npm in ${
           TIME_TO_RECONSIDER / 1000
-        } seconds. You still have time to kill this script!`,
+        } seconds. You still have time to kill this script!`
       );
       await sleep(TIME_TO_RECONSIDER);
     }
@@ -214,7 +213,7 @@ async function main() {
           {
             cwd: pkgDir,
             stdio: "inherit",
-          },
+          }
         );
         console.log("\n");
       } catch (e) {

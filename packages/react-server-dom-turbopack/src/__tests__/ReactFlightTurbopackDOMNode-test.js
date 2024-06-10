@@ -9,9 +9,7 @@
 
 'use strict';
 
-// Don't wait before processing work on the server.
-// TODO: we can replace this with FlightServer.act().
-global.setImmediate = cb => cb();
+import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
 
 let clientExports;
 let turbopackMap;
@@ -23,10 +21,16 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
+let ReactServerScheduler;
+let reactServerAct;
 
 describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    ReactServerScheduler = require('scheduler');
+    patchSetImmediate(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -54,6 +58,17 @@ describe('ReactFlightDOMNode', () => {
     Stream = require('stream');
     use = React.use;
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   function readResult(stream) {
     return new Promise((resolve, reject) => {
@@ -102,9 +117,8 @@ describe('ReactFlightDOMNode', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      turbopackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, turbopackMap),
     );
     const readable = new Stream.PassThrough();
 
@@ -121,8 +135,8 @@ describe('ReactFlightDOMNode', () => {
       return use(response);
     }
 
-    const ssrStream = await ReactDOMServer.renderToPipeableStream(
-      <ClientRoot />,
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(<ClientRoot />),
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual(

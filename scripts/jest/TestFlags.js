@@ -60,6 +60,7 @@ function getTestFlags() {
   const schedulerFeatureFlags = require('scheduler/src/SchedulerFeatureFlags');
 
   const www = global.__WWW__ === true;
+  const xplat = global.__XPLAT__ === true;
   const releaseChannel = www
     ? __EXPERIMENTAL__
       ? 'modern'
@@ -79,8 +80,8 @@ function getTestFlags() {
       www,
 
       // These aren't flags, just a useful aliases for tests.
-      enableActivity: releaseChannel === 'experimental' || www,
-      enableSuspenseList: releaseChannel === 'experimental' || www,
+      enableActivity: releaseChannel === 'experimental' || www || xplat,
+      enableSuspenseList: releaseChannel === 'experimental' || www || xplat,
       enableLegacyHidden: www,
 
       // This flag is used to determine whether we should run Fizz tests using

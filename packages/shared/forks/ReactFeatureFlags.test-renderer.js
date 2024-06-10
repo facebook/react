@@ -79,6 +79,7 @@ export const enableInfiniteRenderLoopDetection = false;
 export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = true;
+export const enableShallowPropDiffing = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
@@ -92,7 +93,6 @@ export const disableStringRefs = true;
 export const enableFastJSX = true;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
-export const disableDOMTestUtils = true;
 export const enableRenderableContext = true;
 export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;

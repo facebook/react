@@ -24,7 +24,7 @@ export function setSuppressWarning(newSuppressWarning) {
 export function warn(format, ...args) {
   if (__DEV__) {
     if (!suppressWarning) {
-      printWarning('warn', format, args);
+      printWarning('warn', format, args, new Error('react-stack-top-frame'));
     }
   }
 }
@@ -32,7 +32,7 @@ export function warn(format, ...args) {
 export function error(format, ...args) {
   if (__DEV__) {
     if (!suppressWarning) {
-      printWarning('error', format, args);
+      printWarning('error', format, args, new Error('react-stack-top-frame'));
     }
   }
 }
@@ -40,7 +40,7 @@ export function error(format, ...args) {
 // eslint-disable-next-line react-internal/no-production-logging
 const supportsCreateTask = __DEV__ && enableOwnerStacks && !!console.createTask;
 
-function printWarning(level, format, args) {
+function printWarning(level, format, args, currentStack) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   if (__DEV__) {
@@ -51,7 +51,7 @@ function printWarning(level, format, args) {
       // We only add the current stack to the console when createTask is not supported.
       // Since createTask requires DevTools to be open to work, this means that stacks
       // can be lost while DevTools isn't open but we can't detect this.
-      const stack = ReactSharedInternals.getCurrentStack();
+      const stack = ReactSharedInternals.getCurrentStack(currentStack);
       if (stack !== '') {
         format += '%s';
         args = args.concat([stack]);

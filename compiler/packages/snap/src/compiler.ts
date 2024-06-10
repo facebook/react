@@ -43,6 +43,7 @@ function makePluginOptions(
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
+  let enableChangeDetectionForDebugging = null;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -120,6 +121,12 @@ function makePluginOptions(
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
+  if (firstLine.includes("@enableChangeDetectionForDebugging")) {
+    enableChangeDetectionForDebugging = {
+      source: "react-compiler-runtime",
+      importSpecifierName: "$structuralCheck",
+    };
+  }
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -173,6 +180,7 @@ function makePluginOptions(
       enableSharedRuntime__testonly: true,
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
+      enableChangeDetectionForDebugging,
     },
     compilationMode,
     logger: null,
@@ -183,6 +191,7 @@ function makePluginOptions(
     eslintSuppressionRules,
     flowSuppressions,
     ignoreUseNoForget,
+    enableReanimatedCheck: false,
   };
 }
 
@@ -271,8 +280,11 @@ function getEvaluatorPresets(
   );
   return presets;
 }
-function format(inputCode: string, language: "typescript" | "flow"): string {
-  return prettier.format(inputCode, {
+async function format(
+  inputCode: string,
+  language: "typescript" | "flow"
+): Promise<string> {
+  return await prettier.format(inputCode, {
     semi: true,
     parser: language === "typescript" ? "babel-ts" : "flow",
   });
@@ -288,13 +300,15 @@ export type TransformResult = {
   } | null;
 };
 
-export function transformFixtureInput(
+export async function transformFixtureInput(
   input: string,
   fixturePath: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
   includeEvaluator: boolean
-): { kind: "ok"; value: TransformResult } | { kind: "err"; msg: string } {
+): Promise<
+  { kind: "ok"; value: TransformResult } | { kind: "err"; msg: string }
+> {
   // Extract the first line to quickly check for custom test directives
   const firstLine = input.substring(0, input.indexOf("\n"));
 
@@ -328,6 +342,8 @@ export function transformFixtureInput(
     sourceType: "module",
     ast: includeEvaluator,
     cloneInputAst: includeEvaluator,
+    configFile: false,
+    babelrc: false,
   });
   invariant(
     forgetResult?.code != null,
@@ -350,6 +366,8 @@ export function transformFixtureInput(
       const result = transformFromAstSync(forgetResult.ast, forgetOutput, {
         presets,
         filename: virtualFilepath,
+        configFile: false,
+        babelrc: false,
       });
       if (result?.code == null) {
         return {
@@ -374,6 +392,8 @@ export function transformFixtureInput(
       const result = transformFromAstSync(inputAst, input, {
         presets,
         filename: virtualFilepath,
+        configFile: false,
+        babelrc: false,
       });
 
       if (result?.code == null) {
@@ -398,7 +418,7 @@ export function transformFixtureInput(
   return {
     kind: "ok",
     value: {
-      forgetOutput: format(forgetOutput, language),
+      forgetOutput: await format(forgetOutput, language),
       evaluatorCode,
     },
   };
