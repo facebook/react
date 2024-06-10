@@ -71,6 +71,7 @@ import {
 import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
 import { alignReactiveScopesToBlockScopesHIR } from "../ReactiveScopes/AlignReactiveScopesToBlockScopesHIR";
 import { flattenReactiveLoopsHIR } from "../ReactiveScopes/FlattenReactiveLoopsHIR";
+import { flattenScopesWithHooksOrUseHIR } from "../ReactiveScopes/FlattenScopesWithHooksOrUseHIR";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
 import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 import { stabilizeBlockIds } from "../ReactiveScopes/StabilizeBlockIds";
@@ -289,6 +290,13 @@ function* runWithEnvironment(
       name: "FlattenReactiveLoopsHIR",
       value: hir,
     });
+
+    flattenScopesWithHooksOrUseHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "FlattenScopesWithHooksOrUseHIR",
+      value: hir,
+    });
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
@@ -335,16 +343,16 @@ function* runWithEnvironment(
       name: "FlattenReactiveLoops",
       value: reactiveFunction,
     });
+
+    flattenScopesWithHooksOrUse(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "FlattenScopesWithHooks",
+      value: reactiveFunction,
+    });
   }
 
   assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  flattenScopesWithHooksOrUse(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "FlattenScopesWithHooks",
-    value: reactiveFunction,
-  });
 
   propagateScopeDependencies(reactiveFunction);
   yield log({
