@@ -551,7 +551,7 @@ describe('ReactUse', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.mock.calls[0][0]).toContain(
-        'Warning: `use` was called from inside a try/catch block. This is not ' +
+        '`use` was called from inside a try/catch block. This is not ' +
           'allowed and can lead to unexpected behavior. To handle errors ' +
           'triggered by `use`, wrap your component in a error boundary.',
       );

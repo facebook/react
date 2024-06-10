@@ -592,7 +592,7 @@ describe('ReactDOMServer', () => {
 
     ReactDOMServer.renderToString(<Foo />);
     expect(() => jest.runOnlyPendingTimers()).toErrorDev(
-      'Warning: Can only update a mounting component.' +
+      'Can only update a mounting component.' +
         ' This usually means you called setState() outside componentWillMount() on the server.' +
         ' This is a no-op.\n\nPlease check the code for the Foo component.',
       {withoutStack: true},
@@ -620,7 +620,7 @@ describe('ReactDOMServer', () => {
 
     ReactDOMServer.renderToString(<Baz />);
     expect(() => jest.runOnlyPendingTimers()).toErrorDev(
-      'Warning: Can only update a mounting component. ' +
+      'Can only update a mounting component. ' +
         'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the Baz component.',
       {withoutStack: true},
@@ -732,11 +732,11 @@ describe('ReactDOMServer', () => {
         </div>,
       ),
     ).toErrorDev([
-      'Warning: <inPUT /> is using incorrect casing. ' +
+      '<inPUT /> is using incorrect casing. ' +
         'Use PascalCase for React components, ' +
         'or lowercase for HTML elements.',
       // linearGradient doesn't warn
-      'Warning: <iFrame /> is using incorrect casing. ' +
+      '<iFrame /> is using incorrect casing. ' +
         'Use PascalCase for React components, ' +
         'or lowercase for HTML elements.',
     ]);
@@ -746,7 +746,7 @@ describe('ReactDOMServer', () => {
     expect(() =>
       ReactDOMServer.renderToString(<div contentEditable={true} children="" />),
     ).toErrorDev(
-      'Warning: A component is `contentEditable` and contains `children` ' +
+      'A component is `contentEditable` and contains `children` ' +
         'managed by React. It is now your responsibility to guarantee that ' +
         'none of those nodes are unexpectedly modified or duplicated. This ' +
         'is probably not intentional.\n    in div (at **)',
@@ -765,7 +765,7 @@ describe('ReactDOMServer', () => {
         ReactDOMServer.renderToString(<ClassWithRenderNotExtended />),
       ).toThrow(TypeError);
     }).toErrorDev(
-      'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
+      'The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
         "but doesn't extend React.Component. This is likely to cause errors. " +
         'Change ClassWithRenderNotExtended to extend React.Component instead.',
     );
@@ -923,7 +923,7 @@ describe('ReactDOMServer', () => {
     expect(() => {
       ReactDOMServer.renderToString(<ComponentA />);
     }).toErrorDev(
-      'Warning: ComponentA defines an invalid contextType. ' +
+      'ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Consumer instead?',
     );

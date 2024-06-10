@@ -1059,7 +1059,7 @@ describe('ReactDOMTextarea', () => {
         root.render(<textarea value={false} />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form ' +
+      'You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
@@ -1074,7 +1074,7 @@ describe('ReactDOMTextarea', () => {
         root.render(<textarea value={0} />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form ' +
+      'You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
@@ -1089,7 +1089,7 @@ describe('ReactDOMTextarea', () => {
         root.render(<textarea value="0" />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form ' +
+      'You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
@@ -1104,7 +1104,7 @@ describe('ReactDOMTextarea', () => {
         root.render(<textarea value="" />);
       });
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form ' +
+      'You provided a `value` prop to a form ' +
         'field without an `onChange` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',

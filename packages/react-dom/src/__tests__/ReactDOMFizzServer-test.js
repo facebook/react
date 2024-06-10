@@ -1810,7 +1810,7 @@ describe('ReactDOMFizzServer', () => {
 
       if (__DEV__) {
         expect(mockError).toHaveBeenCalledWith(
-          'Warning: <%s /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.%s',
+          '<%s /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.%s',
           'inCorrectTag',
           '\n' +
             '    in inCorrectTag (at **)\n' +
@@ -1831,7 +1831,7 @@ describe('ReactDOMFizzServer', () => {
 
       if (__DEV__) {
         expect(mockError).toHaveBeenCalledWith(
-          'Warning: Each child in a list should have a unique "key" prop.%s%s' +
+          'Each child in a list should have a unique "key" prop.%s%s' +
             ' See https://react.dev/link/warning-keys for more information.%s',
           gate(flags => flags.enableOwnerStacks)
             ? // We currently don't track owners in Fizz which is responsible for this frame.
@@ -6543,17 +6543,17 @@ describe('ReactDOMFizzServer', () => {
       if (__DEV__) {
         expect(mockError.mock.calls.length).toBe(3);
         expect(mockError.mock.calls[0]).toEqual([
-          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
           'a number for children',
           componentStack(['script', 'body', 'html']),
         ]);
         expect(mockError.mock.calls[1]).toEqual([
-          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
           'an array for children',
           componentStack(['script', 'body', 'html']),
         ]);
         expect(mockError.mock.calls[2]).toEqual([
-          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
           'something unexpected for children',
           componentStack(['script', 'body', 'html']),
         ]);

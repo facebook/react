@@ -18,7 +18,7 @@ let StrictMode;
 let act;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
-  "Warning: dispatchCommand was called with a ref that isn't a " +
+  "dispatchCommand was called with a ref that isn't a " +
   'native component. Use React.forwardRef to get access to the underlying native component';
 
 const SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT =
@@ -898,7 +898,7 @@ describe('ReactFabric', () => {
     expect(
       () => (match = ReactFabric.findHostInstance_DEPRECATED(parent)),
     ).toErrorDev([
-      'Warning: findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
+      'findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
@@ -937,7 +937,7 @@ describe('ReactFabric', () => {
     expect(
       () => (match = ReactFabric.findHostInstance_DEPRECATED(parent)),
     ).toErrorDev([
-      'Warning: findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
+      'findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
@@ -976,7 +976,7 @@ describe('ReactFabric', () => {
 
     let match;
     expect(() => (match = ReactFabric.findNodeHandle(parent))).toErrorDev([
-      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+      'findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
@@ -1015,7 +1015,7 @@ describe('ReactFabric', () => {
 
     let match;
     expect(() => (match = ReactFabric.findNodeHandle(parent))).toErrorDev([
-      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+      'findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +

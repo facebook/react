@@ -1303,7 +1303,7 @@ describe('ReactIncrementalSideEffects', () => {
       await waitForAll([]);
     } else {
       await expect(async () => await waitForAll([])).toErrorDev(
-        'Warning: Function components cannot be given refs. ' +
+        'Function components cannot be given refs. ' +
           'Attempts to access this ref will fail. ' +
           'Did you mean to use React.forwardRef()?\n\n' +
           'Check the render method ' +
@@ -1372,7 +1372,7 @@ describe('ReactIncrementalSideEffects', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev([
-      'Warning: Component "Foo" contains the string ref "bar". ' +
+      'Component "Foo" contains the string ref "bar". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
