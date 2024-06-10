@@ -61,7 +61,6 @@ export function printFunction(fn: HIRFunction): string {
         .join(", ") +
       ")";
   }
-  definition += ` type=${fn.fnType}`;
   if (definition.length !== 0) {
     output.push(definition);
   }
