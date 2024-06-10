@@ -389,7 +389,7 @@ jobs:
                 }
                 return data.replace(NEWTOKEN, `SignedSource<<${hash(data, 'utf8')}>>`);
               },
-             };
+            };
 
             const directory = './compiled-rn';
             console.log('Signing files in directory:', directory);
@@ -415,6 +415,7 @@ jobs:
                 });
               }
             } catch (e) {
+              process.exitCode = 1;
               console.error('Error signing files:', e);
             }
       - name: Check for changes
@@ -498,7 +499,7 @@ jobs:
                 }
                 return data.replace(NEWTOKEN, `SignedSource<<${hash(data, 'utf8')}>>`);
               },
-             };
+            };
 
             const directory = './compiled-rn';
             console.log('Signing files in directory:', directory);
@@ -524,6 +525,7 @@ jobs:
                 });
               }
             } catch (e) {
+              process.exitCode = 1;
               console.error('Error signing files:', e);
             }
       - name: Will commit these changes
