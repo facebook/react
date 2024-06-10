@@ -37,6 +37,7 @@
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.4",
+    "babel-plugin-react-compiler": "0.0.0-experimental-592953e-20240517",
     "buffer": "^6.0.3",
     "cross-env": "^3.1.4",
     "css-loader": "^1.0.1",

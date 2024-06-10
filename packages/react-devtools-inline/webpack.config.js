@@ -33,6 +33,10 @@ const babelOptions = {
   ),
 };
 
+const ReactCompilerConfig = {
+  /* ... */
+};
+
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'eval-cheap-source-map' : 'source-map',
@@ -109,6 +113,19 @@ module.exports = {
             options: babelOptions,
           },
         ],
+      },
+      {
+        test: /\.js$/,
+        exclude: [/node_modules/],
+        loader: 'babel-loader',
+        options: {
+          plugins: [
+            [
+              require.resolve('babel-plugin-react-compiler'),
+              ReactCompilerConfig,
+            ],
+          ],
+        },
       },
       {
         test: /\.js$/,
