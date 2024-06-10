@@ -952,12 +952,8 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
     } else {
       this.prunedScopes.add(scopeBlock.scope.id);
       return {
-        kind: "replace",
-        value: {
-          kind: "pruned-scope",
-          scope: scopeBlock.scope,
-          instructions: scopeBlock.instructions,
-        },
+        kind: "replace-many",
+        value: scopeBlock.instructions,
       };
     }
   }
