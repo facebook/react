@@ -5,11 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @noformat
- * @flow
  * @nolint
- * @generated SignedSource<<0debd6e5a17dc037cb4661315a886de6>>
+ * @flow
+ * @generated SignedSource<<475c7d864efc2948c6125ddb8a38a4fc>>
  */
-
 'use strict';
 
 import type {ReactNativeType} from './ReactNativeTypes';

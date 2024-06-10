@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @noformat
- * @flow strict
  * @nolint
- * @generated SignedSource<<c41f61379973354629ee7bf55ba92541>>
+ * @flow strict
+ * @generated SignedSource<<e7a1421518e1d99f18c5b14e85f44843>>
  */
 
 import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
