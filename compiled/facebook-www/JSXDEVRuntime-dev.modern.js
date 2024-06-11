@@ -428,6 +428,13 @@ __DEV__ &&
           break;
         case 23:
           return "LegacyHidden";
+        case 29:
+          type = fiber._debugInfo;
+          if (null != type)
+            for (var i = type.length - 1; 0 <= i; i--)
+              if ("string" === typeof type[i].name) return type[i].name;
+          if (null !== fiber.return)
+            return getComponentNameFromFiber(fiber.return);
       }
       return null;
     }
