@@ -134,7 +134,10 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
         }
 
         for (const operand of eachReactiveValueOperand(value)) {
-          if (operand.identifier.name !== null) {
+          if (
+            operand.identifier.name !== null &&
+            operand.identifier.name.kind === "named"
+          ) {
             /*
              * named identifiers were already locals, we only have to force temporaries
              * into the same scope
