@@ -345,6 +345,53 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<pre>[[1,2,3],[1,2,3]]</pre>');
   });
 
+  it('should resolve deduped objects that are themselves blocked', async () => {
+    let resolveClientComponentChunk;
+
+    const Client = clientExports(
+      [4, 5],
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    const shared = [1, 2, 3, Client];
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <div>
+          <Suspense fallback="Loading">
+            <span>
+              {shared /* this will serialize first and block nearest element */}
+            </span>
+          </Suspense>
+          {shared /* this will be referenced inside the blocked element */}
+        </div>,
+        webpackMap,
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<div><span>12345</span>12345</div>');
+  });
+
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 

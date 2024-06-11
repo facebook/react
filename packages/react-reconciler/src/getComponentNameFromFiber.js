@@ -164,7 +164,7 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       break;
     case Throw: {
       if (__DEV__) {
-        // For an error in child position we use the of the inner most parent component.
+        // For an error in child position we use the name of the inner most parent component.
         // Whether a Server Component or the parent Fiber.
         const debugInfo = fiber._debugInfo;
         if (debugInfo != null) {

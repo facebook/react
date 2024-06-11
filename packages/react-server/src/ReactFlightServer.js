@@ -1054,13 +1054,14 @@ function renderFunctionComponent<Props>(
       request.pendingChunks++;
 
       const componentDebugID = debugID;
-      componentDebugInfo = {
+      componentDebugInfo = ({
         name: componentName,
         env: request.environmentName,
         owner: owner,
-      };
+      }: ReactComponentInfo);
       if (enableOwnerStacks) {
-        (componentDebugInfo: any).stack = stack;
+        // $FlowFixMe[cannot-write]
+        componentDebugInfo.stack = stack;
       }
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
@@ -2076,20 +2077,19 @@ function renderModel(
     task.keyPath = prevKeyPath;
     task.implicitSlot = prevImplicitSlot;
 
+    // Something errored. We'll still send everything we have up until this point.
+    request.pendingChunks++;
+    const errorId = request.nextChunkId++;
+    const digest = logRecoverableError(request, x);
+    emitErrorChunk(request, errorId, digest, x);
     if (wasReactNode) {
-      // Something errored. We'll still send everything we have up until this point.
       // We'll replace this element with a lazy reference that throws on the client
       // once it gets rendered.
-      request.pendingChunks++;
-      const errorId = request.nextChunkId++;
-      const digest = logRecoverableError(request, x);
-      emitErrorChunk(request, errorId, digest, x);
       return serializeLazyID(errorId);
     }
-    // Something errored but it was not in a React Node. There's no need to serialize
-    // it by value because it'll just error the whole parent row anyway so we can
-    // just stop any siblings and error the whole parent row.
-    throw x;
+    // If we don't know if it was a React Node we render a direct reference and let
+    // the client deal with it.
+    return serializeByValueID(errorId);
   }
 }
 
@@ -2117,6 +2117,7 @@ function renderModelDestructive(
   if (typeof value === 'object') {
     switch ((value: any).$$typeof) {
       case REACT_ELEMENT_TYPE: {
+        let elementReference = null;
         const writtenObjects = request.writtenObjects;
         if (task.keyPath !== null || task.implicitSlot) {
           // If we're in some kind of context we can't reuse the result of this render or
@@ -2145,10 +2146,8 @@ function renderModelDestructive(
             if (parentReference !== undefined) {
               // If the parent has a reference, we can refer to this object indirectly
               // through the property name inside that parent.
-              writtenObjects.set(
-                value,
-                parentReference + ':' + parentPropertyName,
-              );
+              elementReference = parentReference + ':' + parentPropertyName;
+              writtenObjects.set(value, elementReference);
             }
           }
         }
@@ -2183,7 +2182,7 @@ function renderModelDestructive(
         }
 
         // Attempt to render the Server Component.
-        return renderElement(
+        const newChild = renderElement(
           request,
           task,
           element.type,
@@ -2199,6 +2198,18 @@ function renderModelDestructive(
             : null,
           __DEV__ && enableOwnerStacks ? element._store.validated : 0,
         );
+        if (
+          typeof newChild === 'object' &&
+          newChild !== null &&
+          elementReference !== null
+        ) {
+          // If this element renders another object, we can now refer to that object through
+          // the same location as this element.
+          if (!writtenObjects.has(newChild)) {
+            writtenObjects.set(newChild, elementReference);
+          }
+        }
+        return newChild;
       }
       case REACT_LAZY_TYPE: {
         // Reset the task's thenable state before continuing. If there was one, it was
@@ -2478,15 +2489,16 @@ function renderModelDestructive(
       ) {
         // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
         // need to omit it before serializing.
-        const componentDebugInfo = {
+        const componentDebugInfo: Omit<ReactComponentInfo, 'task'> = {
           name: value.name,
           env: value.env,
-          owner: value.owner,
+          owner: (value: any).owner,
         };
         if (enableOwnerStacks) {
-          (componentDebugInfo: any).stack = (value: any).stack;
+          // $FlowFixMe[cannot-write]
+          componentDebugInfo.stack = (value: any).stack;
         }
-        return (componentDebugInfo: any);
+        return componentDebugInfo;
       }
 
       if (objectName(value) !== 'Object') {

@@ -72,6 +72,8 @@ import {
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
+import isArray from 'shared/isArray';
+
 export type {CallServerCallback, EncodeFormActionCallback};
 
 interface FlightStreamController {
@@ -101,7 +103,6 @@ type RowParserState = 0 | 1 | 2 | 3 | 4;
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const CYCLIC = 'cyclic';
 const RESOLVED_MODEL = 'resolved_model';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
@@ -117,14 +118,6 @@ type PendingChunk<T> = {
 };
 type BlockedChunk<T> = {
   status: 'blocked',
-  value: null | Array<(T) => mixed>,
-  reason: null | Array<(mixed) => mixed>,
-  _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
-};
-type CyclicChunk<T> = {
-  status: 'cyclic',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
@@ -176,7 +169,6 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | CyclicChunk<T>
   | ResolvedModelChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
@@ -218,7 +210,6 @@ Chunk.prototype.then = function <T>(
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       if (resolve) {
         if (chunk.value === null) {
           chunk.value = ([]: Array<(T) => mixed>);
@@ -278,7 +269,6 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       return chunk.value;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       // eslint-disable-next-line no-throw-literal
       throw ((chunk: any): Thenable<T>);
     default:
@@ -327,7 +317,6 @@ function wakeChunkIfInitialized<T>(
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       if (chunk.value) {
         for (let i = 0; i < resolveListeners.length; i++) {
           chunk.value.push(resolveListeners[i]);
@@ -501,51 +490,61 @@ function resolveModuleChunk<T>(
   }
 }
 
-let initializingChunk: ResolvedModelChunk<any> = (null: any);
-let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
+type InitializationHandler = {
+  parent: null | InitializationHandler,
+  chunk: null | BlockedChunk<any>,
+  value: any,
+  deps: number,
+  errored: boolean,
+};
+let initializingHandler: null | InitializationHandler = null;
+
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
-  const prevChunk = initializingChunk;
-  const prevBlocked = initializingChunkBlockedModel;
-  initializingChunk = chunk;
-  initializingChunkBlockedModel = null;
+  const prevHandler = initializingHandler;
+  initializingHandler = null;
 
   const resolvedModel = chunk.value;
 
-  // We go to the CYCLIC state until we've fully resolved this.
+  // We go to the BLOCKED state until we've fully resolved this.
   // We do this before parsing in case we try to initialize the same chunk
   // while parsing the model. Such as in a cyclic reference.
-  const cyclicChunk: CyclicChunk<T> = (chunk: any);
-  cyclicChunk.status = CYCLIC;
+  const cyclicChunk: BlockedChunk<T> = (chunk: any);
+  cyclicChunk.status = BLOCKED;
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
 
   try {
     const value: T = parseModel(chunk._response, resolvedModel);
-    if (
-      initializingChunkBlockedModel !== null &&
-      initializingChunkBlockedModel.deps > 0
-    ) {
-      initializingChunkBlockedModel.value = value;
-      // We discovered new dependencies on modules that are not yet resolved.
-      // We have to go the BLOCKED state until they're resolved.
-      const blockedChunk: BlockedChunk<T> = (chunk: any);
-      blockedChunk.status = BLOCKED;
-    } else {
-      const resolveListeners = cyclicChunk.value;
-      const initializedChunk: InitializedChunk<T> = (chunk: any);
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = value;
-      if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, value);
+    // Invoke any listeners added while resolving this model. I.e. cyclic
+    // references. This may or may not fully resolve the model depending on
+    // if they were blocked.
+    const resolveListeners = cyclicChunk.value;
+    if (resolveListeners !== null) {
+      cyclicChunk.value = null;
+      cyclicChunk.reason = null;
+      wakeChunk(resolveListeners, value);
+    }
+    if (initializingHandler !== null) {
+      if (initializingHandler.errored) {
+        throw initializingHandler.value;
+      }
+      if (initializingHandler.deps > 0) {
+        // We discovered new dependencies on modules that are not yet resolved.
+        // We have to keep the BLOCKED state until they're resolved.
+        initializingHandler.value = value;
+        initializingHandler.chunk = cyclicChunk;
+        return;
       }
     }
+    const initializedChunk: InitializedChunk<T> = (chunk: any);
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = value;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
     erroredChunk.reason = error;
   } finally {
-    initializingChunk = prevChunk;
-    initializingChunkBlockedModel = prevBlocked;
+    initializingHandler = prevHandler;
   }
 }
 
@@ -626,7 +625,9 @@ function createElement(
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
   validated: number, // DEV-only
-): React$Element<any> {
+):
+  | React$Element<any>
+  | LazyComponent<React$Element<any>, SomeChunk<React$Element<any>>> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
     // `ref` is non-enumerable in dev
@@ -723,15 +724,60 @@ function createElement(
         value: task,
       });
     }
+  }
+
+  if (initializingHandler !== null) {
+    const handler = initializingHandler;
+    // We pop the stack to the previous outer handler before leaving the Element.
+    // This is effectively the complete phase.
+    initializingHandler = handler.parent;
+    if (handler.errored) {
+      // Something errored inside this Element's props. We can turn this Element
+      // into a Lazy so that we can still render up until that Lazy is rendered.
+      const erroredChunk: ErroredChunk<React$Element<any>> = createErrorChunk(
+        response,
+        handler.value,
+      );
+      if (__DEV__) {
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.stack = element._debugStack;
+          // $FlowFixMe[cannot-write]
+          erroredComponent.task = element._debugTask;
+        }
+        erroredChunk._debugInfo = [erroredComponent];
+      }
+      return createLazyChunkWrapper(erroredChunk);
+    }
+    if (handler.deps > 0) {
+      // We have blocked references inside this Element but we can turn this into
+      // a Lazy node referencing this Element to let everything around it proceed.
+      const blockedChunk: BlockedChunk<React$Element<any>> =
+        createBlockedChunk(response);
+      handler.value = element;
+      handler.chunk = blockedChunk;
+      if (__DEV__) {
+        const freeze = Object.freeze.bind(Object, element.props);
+        blockedChunk.then(freeze, freeze);
+      }
+      return createLazyChunkWrapper(blockedChunk);
+    }
+  } else if (__DEV__) {
     // TODO: We should be freezing the element but currently, we might write into
     // _debugInfo later. We could move it into _store which remains mutable.
-    if (initializingChunkBlockedModel !== null) {
-      const freeze = Object.freeze.bind(Object, element.props);
-      initializingChunk.then(freeze, freeze);
-    } else {
-      Object.freeze(element.props);
-    }
+    Object.freeze(element.props);
   }
+
   return element;
 }
 
@@ -762,57 +808,129 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
-function createModelResolver<T>(
-  chunk: SomeChunk<T>,
+function waitForReference<T>(
+  referencedChunk: PendingChunk<T> | BlockedChunk<T>,
   parentObject: Object,
   key: string,
-  cyclic: boolean,
   response: Response,
   map: (response: Response, model: any) => T,
   path: Array<string>,
-): (value: any) => void {
-  let blocked;
-  if (initializingChunkBlockedModel) {
-    blocked = initializingChunkBlockedModel;
-    if (!cyclic) {
-      blocked.deps++;
-    }
+): T {
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+    handler.deps++;
   } else {
-    blocked = initializingChunkBlockedModel = {
-      deps: cyclic ? 0 : 1,
-      value: (null: any),
+    handler = initializingHandler = {
+      parent: null,
+      chunk: null,
+      value: null,
+      deps: 1,
+      errored: false,
     };
   }
-  return value => {
+
+  function fulfill(value: any): void {
     for (let i = 1; i < path.length; i++) {
+      while (value.$$typeof === REACT_LAZY_TYPE) {
+        // We never expect to see a Lazy node on this path because we encode those as
+        // separate models. This must mean that we have inserted an extra lazy node
+        // e.g. to replace a blocked element. We must instead look for it inside.
+        const chunk: SomeChunk<any> = value._payload;
+        if (chunk === handler.chunk) {
+          // This is a reference to the thing we're currently blocking. We can peak
+          // inside of it to get the value.
+          value = handler.value;
+          continue;
+        } else if (chunk.status === INITIALIZED) {
+          value = chunk.value;
+          continue;
+        } else {
+          // If we're not yet initialized we need to skip what we've already drilled
+          // through and then wait for the next value to become available.
+          path.splice(0, i - 1);
+          chunk.then(fulfill, reject);
+          return;
+        }
+      }
       value = value[path[i]];
     }
     parentObject[key] = map(response, value);
 
-    // If this is the root object for a model reference, where `blocked.value`
+    // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && blocked.value === null) {
-      blocked.value = parentObject[key];
+    if (key === '' && handler.value === null) {
+      handler.value = parentObject[key];
     }
 
-    blocked.deps--;
-    if (blocked.deps === 0) {
-      if (chunk.status !== BLOCKED) {
+    handler.deps--;
+
+    if (handler.deps === 0) {
+      const chunk = handler.chunk;
+      if (chunk === null || chunk.status !== BLOCKED) {
         return;
       }
       const resolveListeners = chunk.value;
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
-      initializedChunk.value = blocked.value;
+      initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, blocked.value);
+        wakeChunk(resolveListeners, handler.value);
       }
     }
-  };
-}
+  }
 
-function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
-  return (error: mixed) => triggerErrorOnChunk(chunk, error);
+  function reject(error: mixed): void {
+    if (handler.errored) {
+      // We've already errored. We could instead build up an AggregateError
+      // but if there are multiple errors we just take the first one like
+      // Promise.all.
+      return;
+    }
+    const blockedValue = handler.value;
+    handler.errored = true;
+    handler.value = error;
+    const chunk = handler.chunk;
+    if (chunk === null || chunk.status !== BLOCKED) {
+      return;
+    }
+
+    if (__DEV__) {
+      if (
+        typeof blockedValue === 'object' &&
+        blockedValue !== null &&
+        blockedValue.$$typeof === REACT_ELEMENT_TYPE
+      ) {
+        const element = blockedValue;
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.stack = element._debugStack;
+          // $FlowFixMe[cannot-write]
+          erroredComponent.task = element._debugTask;
+        }
+        const chunkDebugInfo: ReactDebugInfo =
+          chunk._debugInfo || (chunk._debugInfo = []);
+        chunkDebugInfo.push(erroredComponent);
+      }
+    }
+
+    triggerErrorOnChunk(chunk, error);
+  }
+
+  referencedChunk.then(fulfill, reject);
+
+  // Return a place holder value for now.
+  return (null: any);
 }
 
 function createServerReferenceProxy<A: Iterable<any>, T>(
@@ -880,7 +998,7 @@ function getOutlinedModel<T>(
         if (
           typeof chunkValue === 'object' &&
           chunkValue !== null &&
-          (Array.isArray(chunkValue) ||
+          (isArray(chunkValue) ||
             typeof chunkValue[ASYNC_ITERATOR] === 'function' ||
             chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
           !chunkValue._debugInfo
@@ -898,23 +1016,24 @@ function getOutlinedModel<T>(
       return chunkValue;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
-      const parentChunk = initializingChunk;
-      chunk.then(
-        createModelResolver(
-          parentChunk,
-          parentObject,
-          key,
-          chunk.status === CYCLIC,
-          response,
-          map,
-          path,
-        ),
-        createModelReject(parentChunk),
-      );
-      return (null: any);
+      return waitForReference(chunk, parentObject, key, response, map, path);
     default:
-      throw chunk.reason;
+      // This is an error. Instead of erroring directly, we're going to encode this on
+      // an initialization handler so that we can catch it at the nearest Element.
+      if (initializingHandler) {
+        initializingHandler.errored = true;
+        initializingHandler.value = chunk.reason;
+      } else {
+        initializingHandler = {
+          parent: null,
+          chunk: null,
+          value: chunk.reason,
+          deps: 0,
+          errored: true,
+        };
+      }
+      // Placeholder
+      return (null: any);
   }
 }
 
@@ -962,6 +1081,19 @@ function parseModelString(
   if (value[0] === '$') {
     if (value === '$') {
       // A very common symbol.
+      if (initializingHandler !== null && key === '0') {
+        // We we already have an initializing handler and we're abound to enter
+        // a new element, we need to shadow it because we're now in a new scope.
+        // This is effectively the "begin" or "push" phase of Element parsing.
+        // We'll pop later when we parse the array itself.
+        initializingHandler = {
+          parent: initializingHandler,
+          chunk: null,
+          value: null,
+          deps: 0,
+          errored: false,
+        };
+      }
       return REACT_ELEMENT_TYPE;
     }
     switch (value[1]) {
