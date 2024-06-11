@@ -4225,7 +4225,7 @@ __DEV__ &&
       return null;
     }
     function noop() {}
-    function createRequest(
+    function RequestInstance(
       children,
       resumableState,
       renderState,
@@ -4241,51 +4241,47 @@ __DEV__ &&
     ) {
       var pingedTasks = [],
         abortSet = new Set();
-      resumableState = {
-        destination: null,
-        flushScheduled: !1,
-        resumableState: resumableState,
-        renderState: renderState,
-        rootFormatContext: rootFormatContext,
-        progressiveChunkSize:
-          void 0 === progressiveChunkSize ? 12800 : progressiveChunkSize,
-        status: 0,
-        fatalError: null,
-        nextSegmentId: 0,
-        allPendingTasks: 0,
-        pendingRootTasks: 0,
-        completedRootSegment: null,
-        abortableTasks: abortSet,
-        pingedTasks: pingedTasks,
-        clientRenderedBoundaries: [],
-        completedBoundaries: [],
-        partialBoundaries: [],
-        trackedPostpones: null,
-        onError: void 0 === onError ? defaultErrorHandler : onError,
-        onPostpone: void 0 === onPostpone ? noop : onPostpone,
-        onAllReady: void 0 === onAllReady ? noop : onAllReady,
-        onShellReady: void 0 === onShellReady ? noop : onShellReady,
-        onShellError: void 0 === onShellError ? noop : onShellError,
-        onFatalError: void 0 === onFatalError ? noop : onFatalError,
-        formState: void 0 === formState ? null : formState,
-        didWarnForKey: null
-      };
-      renderState = createPendingSegment(
-        resumableState,
+      this.destination = null;
+      this.flushScheduled = !1;
+      this.resumableState = resumableState;
+      this.renderState = renderState;
+      this.rootFormatContext = rootFormatContext;
+      this.progressiveChunkSize =
+        void 0 === progressiveChunkSize ? 12800 : progressiveChunkSize;
+      this.status = 0;
+      this.fatalError = null;
+      this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
+      this.completedRootSegment = null;
+      this.abortableTasks = abortSet;
+      this.pingedTasks = pingedTasks;
+      this.clientRenderedBoundaries = [];
+      this.completedBoundaries = [];
+      this.partialBoundaries = [];
+      this.trackedPostpones = null;
+      this.onError = void 0 === onError ? defaultErrorHandler : onError;
+      this.onPostpone = void 0 === onPostpone ? noop : onPostpone;
+      this.onAllReady = void 0 === onAllReady ? noop : onAllReady;
+      this.onShellReady = void 0 === onShellReady ? noop : onShellReady;
+      this.onShellError = void 0 === onShellError ? noop : onShellError;
+      this.onFatalError = void 0 === onFatalError ? noop : onFatalError;
+      this.formState = void 0 === formState ? null : formState;
+      this.didWarnForKey = null;
+      resumableState = createPendingSegment(
+        this,
         0,
         null,
         rootFormatContext,
         !1,
         !1
       );
-      renderState.parentFlushed = !0;
+      resumableState.parentFlushed = !0;
       children = createRenderTask(
-        resumableState,
+        this,
         null,
         children,
         -1,
         null,
-        renderState,
+        resumableState,
         null,
         abortSet,
         null,
@@ -4297,7 +4293,35 @@ __DEV__ &&
         !1
       );
       pingedTasks.push(children);
-      return resumableState;
+    }
+    function createRequest(
+      children,
+      resumableState,
+      renderState,
+      rootFormatContext,
+      progressiveChunkSize,
+      onError,
+      onAllReady,
+      onShellReady,
+      onShellError,
+      onFatalError,
+      onPostpone,
+      formState
+    ) {
+      return new RequestInstance(
+        children,
+        resumableState,
+        renderState,
+        rootFormatContext,
+        progressiveChunkSize,
+        onError,
+        onAllReady,
+        onShellReady,
+        onShellError,
+        onFatalError,
+        onPostpone,
+        formState
+      );
     }
     function pingTask(request, task) {
       request.pingedTasks.push(task);
@@ -8697,5 +8721,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-2774208039-20240610";
+    exports.version = "19.0.0-www-classic-01a40570c3-20240611";
   })();

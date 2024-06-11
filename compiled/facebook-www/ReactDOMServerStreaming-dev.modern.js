@@ -4012,6 +4012,75 @@ __DEV__ &&
       return null;
     }
     function noop() {}
+    function RequestInstance(
+      children,
+      resumableState,
+      renderState,
+      rootFormatContext,
+      progressiveChunkSize,
+      onError,
+      onAllReady,
+      onShellReady,
+      onShellError,
+      onFatalError,
+      onPostpone,
+      formState
+    ) {
+      var pingedTasks = [],
+        abortSet = new Set();
+      this.destination = null;
+      this.flushScheduled = !1;
+      this.resumableState = resumableState;
+      this.renderState = renderState;
+      this.rootFormatContext = rootFormatContext;
+      this.progressiveChunkSize =
+        void 0 === progressiveChunkSize ? 12800 : progressiveChunkSize;
+      this.status = 0;
+      this.fatalError = null;
+      this.pendingRootTasks = this.allPendingTasks = this.nextSegmentId = 0;
+      this.completedRootSegment = null;
+      this.abortableTasks = abortSet;
+      this.pingedTasks = pingedTasks;
+      this.clientRenderedBoundaries = [];
+      this.completedBoundaries = [];
+      this.partialBoundaries = [];
+      this.trackedPostpones = null;
+      this.onError = void 0 === onError ? defaultErrorHandler : onError;
+      this.onPostpone = void 0 === onPostpone ? noop : onPostpone;
+      this.onAllReady = void 0 === onAllReady ? noop : onAllReady;
+      this.onShellReady = void 0 === onShellReady ? noop : onShellReady;
+      this.onShellError = void 0 === onShellError ? noop : onShellError;
+      this.onFatalError = void 0 === onFatalError ? noop : onFatalError;
+      this.formState = void 0 === formState ? null : formState;
+      this.didWarnForKey = null;
+      resumableState = createPendingSegment(
+        this,
+        0,
+        null,
+        rootFormatContext,
+        !1,
+        !1
+      );
+      resumableState.parentFlushed = !0;
+      children = createRenderTask(
+        this,
+        null,
+        children,
+        -1,
+        null,
+        resumableState,
+        null,
+        abortSet,
+        null,
+        rootFormatContext,
+        emptyContextObject,
+        null,
+        emptyTreeContext,
+        null,
+        !1
+      );
+      pingedTasks.push(children);
+    }
     function pingTask(request, task) {
       request.pingedTasks.push(task);
       1 === request.pingedTasks.length &&
@@ -8222,36 +8291,44 @@ __DEV__ &&
         moduleUnknownResources: {},
         moduleScriptResources: {}
       };
-      streamingFormat = options ? options.unstable_externalRuntimeSrc : void 0;
-      var idPrefix = resumableState.idPrefix,
-        bootstrapChunks = [],
-        externalRuntimeScript = null,
+      var externalRuntimeConfig = options
+          ? options.unstable_externalRuntimeSrc
+          : void 0,
+        idPrefix = resumableState.idPrefix;
+      streamingFormat = [];
+      var externalRuntimeScript = null,
         bootstrapScriptContent = resumableState.bootstrapScriptContent,
         bootstrapScripts = resumableState.bootstrapScripts,
         bootstrapModules = resumableState.bootstrapModules;
       void 0 !== bootstrapScriptContent &&
-        bootstrapChunks.push(
+        streamingFormat.push(
           "<script>",
           escapeEntireInlineScriptContent(bootstrapScriptContent),
           "\x3c/script>"
         );
-      void 0 !== streamingFormat &&
-        ("string" === typeof streamingFormat
-          ? ((externalRuntimeScript = { src: streamingFormat, chunks: [] }),
+      void 0 !== externalRuntimeConfig &&
+        ("string" === typeof externalRuntimeConfig
+          ? ((externalRuntimeScript = {
+              src: externalRuntimeConfig,
+              chunks: []
+            }),
             pushScriptImpl(externalRuntimeScript.chunks, {
-              src: streamingFormat,
+              src: externalRuntimeConfig,
               async: !0,
               integrity: void 0,
               nonce: void 0
             }))
-          : ((externalRuntimeScript = { src: streamingFormat.src, chunks: [] }),
+          : ((externalRuntimeScript = {
+              src: externalRuntimeConfig.src,
+              chunks: []
+            }),
             pushScriptImpl(externalRuntimeScript.chunks, {
-              src: streamingFormat.src,
+              src: externalRuntimeConfig.src,
               async: !0,
-              integrity: streamingFormat.integrity,
+              integrity: externalRuntimeConfig.integrity,
               nonce: void 0
             })));
-      streamingFormat = {
+      externalRuntimeConfig = {
         placeholderPrefix: idPrefix + "P:",
         segmentPrefix: idPrefix + "S:",
         boundaryPrefix: idPrefix + "B:",
@@ -8259,7 +8336,7 @@ __DEV__ &&
         htmlChunks: null,
         headChunks: null,
         externalRuntimeScript: externalRuntimeScript,
-        bootstrapChunks: bootstrapChunks,
+        bootstrapChunks: streamingFormat,
         importMapChunks: [],
         onHeaders: void 0,
         headers: null,
@@ -8318,25 +8395,25 @@ __DEV__ &&
                   : ""));
           preloadBootstrapScriptOrModule(
             resumableState,
-            streamingFormat,
+            externalRuntimeConfig,
             bootstrapScriptContent,
             props
           );
-          bootstrapChunks.push(
+          streamingFormat.push(
             '<script src="',
             escapeTextForBrowser(bootstrapScriptContent)
           );
           "string" === typeof integrity &&
-            bootstrapChunks.push(
+            streamingFormat.push(
               '" integrity="',
               escapeTextForBrowser(integrity)
             );
           "string" === typeof crossOrigin &&
-            bootstrapChunks.push(
+            streamingFormat.push(
               '" crossorigin="',
               escapeTextForBrowser(crossOrigin)
             );
-          bootstrapChunks.push('" async="">\x3c/script>');
+          streamingFormat.push('" async="">\x3c/script>');
         }
       if (void 0 !== bootstrapModules)
         for (
@@ -8366,88 +8443,42 @@ __DEV__ &&
                     : "")),
             preloadBootstrapScriptOrModule(
               resumableState,
-              streamingFormat,
+              externalRuntimeConfig,
               externalRuntimeScript,
               integrity
             ),
-            bootstrapChunks.push(
+            streamingFormat.push(
               '<script type="module" src="',
               escapeTextForBrowser(externalRuntimeScript)
             ),
             "string" === typeof crossOrigin &&
-              bootstrapChunks.push(
+              streamingFormat.push(
                 '" integrity="',
                 escapeTextForBrowser(crossOrigin)
               ),
             "string" === typeof bootstrapScriptContent &&
-              bootstrapChunks.push(
+              streamingFormat.push(
                 '" crossorigin="',
                 escapeTextForBrowser(bootstrapScriptContent)
               ),
-            bootstrapChunks.push('" async="">\x3c/script>');
-      bootstrapChunks = createFormatContext(0, null, 0);
-      bootstrapScripts = options ? options.progressiveChunkSize : void 0;
-      idPrefix = options.onError;
-      options = [];
-      bootstrapModules = new Set();
-      resumableState = {
-        destination: null,
-        flushScheduled: !1,
-        resumableState: resumableState,
-        renderState: streamingFormat,
-        rootFormatContext: bootstrapChunks,
-        progressiveChunkSize:
-          void 0 === bootstrapScripts ? 12800 : bootstrapScripts,
-        status: 0,
-        fatalError: null,
-        nextSegmentId: 0,
-        allPendingTasks: 0,
-        pendingRootTasks: 0,
-        completedRootSegment: null,
-        abortableTasks: bootstrapModules,
-        pingedTasks: options,
-        clientRenderedBoundaries: [],
-        completedBoundaries: [],
-        partialBoundaries: [],
-        trackedPostpones: null,
-        onError: void 0 === idPrefix ? defaultErrorHandler : idPrefix,
-        onPostpone: noop,
-        onAllReady: noop,
-        onShellReady: noop,
-        onShellError: noop,
-        onFatalError: noop,
-        formState: null,
-        didWarnForKey: null
-      };
-      streamingFormat = createPendingSegment(
-        resumableState,
-        0,
-        null,
-        bootstrapChunks,
-        !1,
-        !1
-      );
-      streamingFormat.parentFlushed = !0;
-      children = createRenderTask(
-        resumableState,
-        null,
+            streamingFormat.push('" async="">\x3c/script>');
+      streamingFormat = createFormatContext(0, null, 0);
+      children = new RequestInstance(
         children,
-        -1,
-        null,
+        resumableState,
+        externalRuntimeConfig,
         streamingFormat,
-        null,
-        bootstrapModules,
-        null,
-        bootstrapChunks,
-        emptyContextObject,
-        null,
-        emptyTreeContext,
-        null,
-        !1
+        options ? options.progressiveChunkSize : void 0,
+        options.onError,
+        void 0,
+        void 0,
+        void 0,
+        void 0,
+        void 0,
+        void 0
       );
-      options.push(children);
-      resumableState.flushScheduled = null !== resumableState.destination;
+      children.flushScheduled = null !== children.destination;
       if (destination.fatal) throw destination.error;
-      return { destination: destination, request: resumableState };
+      return { destination: destination, request: children };
     };
   })();
