@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aa56dfafc02539ff90e5976580e28082>>
+ * @generated SignedSource<<66b22d1679511b7aa79c1c2858bd860b>>
  */
 
 "use strict";
@@ -893,7 +893,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_261 = {
+var injectedNamesToPlugins$jscomp$inline_262 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -939,32 +939,32 @@ var injectedNamesToPlugins$jscomp$inline_261 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_262 = !1,
-  pluginName$jscomp$inline_263;
-for (pluginName$jscomp$inline_263 in injectedNamesToPlugins$jscomp$inline_261)
+  isOrderingDirty$jscomp$inline_263 = !1,
+  pluginName$jscomp$inline_264;
+for (pluginName$jscomp$inline_264 in injectedNamesToPlugins$jscomp$inline_262)
   if (
-    injectedNamesToPlugins$jscomp$inline_261.hasOwnProperty(
-      pluginName$jscomp$inline_263
+    injectedNamesToPlugins$jscomp$inline_262.hasOwnProperty(
+      pluginName$jscomp$inline_264
     )
   ) {
-    var pluginModule$jscomp$inline_264 =
-      injectedNamesToPlugins$jscomp$inline_261[pluginName$jscomp$inline_263];
+    var pluginModule$jscomp$inline_265 =
+      injectedNamesToPlugins$jscomp$inline_262[pluginName$jscomp$inline_264];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_263) ||
-      namesToPlugins[pluginName$jscomp$inline_263] !==
-        pluginModule$jscomp$inline_264
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_264) ||
+      namesToPlugins[pluginName$jscomp$inline_264] !==
+        pluginModule$jscomp$inline_265
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_263])
+      if (namesToPlugins[pluginName$jscomp$inline_264])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_263 + "`.")
+            (pluginName$jscomp$inline_264 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_263] =
-        pluginModule$jscomp$inline_264;
-      isOrderingDirty$jscomp$inline_262 = !0;
+      namesToPlugins[pluginName$jscomp$inline_264] =
+        pluginModule$jscomp$inline_265;
+      isOrderingDirty$jscomp$inline_263 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_262 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_263 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -3614,15 +3614,31 @@ function createChildReconciler(shouldTrackSideEffects) {
       : deleteRemainingChildren(returnFiber, currentFirstChild);
   }
   return function (returnFiber, currentFirstChild, newChild, lanes) {
-    thenableIndexCounter$1 = 0;
-    returnFiber = reconcileChildFibersImpl(
-      returnFiber,
-      currentFirstChild,
-      newChild,
-      lanes
-    );
-    thenableState$1 = null;
-    return returnFiber;
+    try {
+      thenableIndexCounter$1 = 0;
+      var firstChildFiber = reconcileChildFibersImpl(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes,
+        null
+      );
+      thenableState$1 = null;
+      return firstChildFiber;
+    } catch (x) {
+      if (
+        x === SuspenseException ||
+        (0 === (returnFiber.mode & 1) &&
+          "object" === typeof x &&
+          null !== x &&
+          "function" === typeof x.then)
+      )
+        throw x;
+      currentFirstChild = createFiber(29, x, null, returnFiber.mode);
+      currentFirstChild.lanes = lanes;
+      currentFirstChild.return = returnFiber;
+      return currentFirstChild;
+    }
   };
 }
 var reconcileChildFibers = createChildReconciler(!0),
@@ -6891,6 +6907,8 @@ function beginWork(current, workInProgress, renderLanes) {
         ),
         workInProgress.child
       );
+    case 29:
+      throw workInProgress.pendingProps;
   }
   throw Error(
     "Unknown unit of work tag (" +
@@ -7484,6 +7502,8 @@ function completeWork(current, workInProgress, renderLanes) {
         null
       );
     case 25:
+      return null;
+    case 29:
       return null;
   }
   throw Error(
@@ -10734,11 +10754,11 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     traverseOwnerTreeUp(hierarchy, instance);
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-2774208039-20240610" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-270229f0c3-20240611" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-2774208039-20240610\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-270229f0c3-20240611\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -10785,10 +10805,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1193 = {
+  devToolsConfig$jscomp$inline_1199 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-native-fb-2774208039-20240610",
+    version: "19.0.0-native-fb-270229f0c3-20240611",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10804,11 +10824,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1440 = {
-  bundleType: devToolsConfig$jscomp$inline_1193.bundleType,
-  version: devToolsConfig$jscomp$inline_1193.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1193.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1193.rendererConfig,
+var internals$jscomp$inline_1446 = {
+  bundleType: devToolsConfig$jscomp$inline_1199.bundleType,
+  version: devToolsConfig$jscomp$inline_1199.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1199.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1199.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10824,26 +10844,26 @@ var internals$jscomp$inline_1440 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1193.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1199.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-2774208039-20240610"
+  reconcilerVersion: "19.0.0-native-fb-270229f0c3-20240611"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1441 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1447 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1441.isDisabled &&
-    hook$jscomp$inline_1441.supportsFiber
+    !hook$jscomp$inline_1447.isDisabled &&
+    hook$jscomp$inline_1447.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1441.inject(
-        internals$jscomp$inline_1440
+      (rendererID = hook$jscomp$inline_1447.inject(
+        internals$jscomp$inline_1446
       )),
-        (injectedHook = hook$jscomp$inline_1441);
+        (injectedHook = hook$jscomp$inline_1447);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

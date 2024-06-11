@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<db4dd88f7d1228b66c0f9b5647536e42>>
+ * @generated SignedSource<<adf999d3185fc19ce81dca5007d5bb72>>
  */
 
 "use strict";
@@ -2213,15 +2213,31 @@ function createChildReconciler(shouldTrackSideEffects) {
       : deleteRemainingChildren(returnFiber, currentFirstChild);
   }
   return function (returnFiber, currentFirstChild, newChild, lanes) {
-    thenableIndexCounter$1 = 0;
-    returnFiber = reconcileChildFibersImpl(
-      returnFiber,
-      currentFirstChild,
-      newChild,
-      lanes
-    );
-    thenableState$1 = null;
-    return returnFiber;
+    try {
+      thenableIndexCounter$1 = 0;
+      var firstChildFiber = reconcileChildFibersImpl(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes,
+        null
+      );
+      thenableState$1 = null;
+      return firstChildFiber;
+    } catch (x) {
+      if (
+        x === SuspenseException ||
+        (0 === (returnFiber.mode & 1) &&
+          "object" === typeof x &&
+          null !== x &&
+          "function" === typeof x.then)
+      )
+        throw x;
+      currentFirstChild = createFiber(29, x, null, returnFiber.mode);
+      currentFirstChild.lanes = lanes;
+      currentFirstChild.return = returnFiber;
+      return currentFirstChild;
+    }
   };
 }
 var reconcileChildFibers = createChildReconciler(!0),
@@ -5461,6 +5477,8 @@ function beginWork(current, workInProgress, renderLanes) {
         ),
         workInProgress.child
       );
+    case 29:
+      throw workInProgress.pendingProps;
   }
   throw Error(
     "Unknown unit of work tag (" +
@@ -6036,6 +6054,8 @@ function completeWork(current, workInProgress, renderLanes) {
         null
       );
     case 25:
+      return null;
+    case 29:
       return null;
   }
   throw Error(
@@ -9331,19 +9351,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1048 = {
+var devToolsConfig$jscomp$inline_1054 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-2774208039-20240610",
+  version: "19.0.0-native-fb-270229f0c3-20240611",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1235 = {
-  bundleType: devToolsConfig$jscomp$inline_1048.bundleType,
-  version: devToolsConfig$jscomp$inline_1048.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1048.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1048.rendererConfig,
+var internals$jscomp$inline_1241 = {
+  bundleType: devToolsConfig$jscomp$inline_1054.bundleType,
+  version: devToolsConfig$jscomp$inline_1054.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1054.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1054.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9360,26 +9380,26 @@ var internals$jscomp$inline_1235 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1048.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1054.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-2774208039-20240610"
+  reconcilerVersion: "19.0.0-native-fb-270229f0c3-20240611"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1236 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1242 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1236.isDisabled &&
-    hook$jscomp$inline_1236.supportsFiber
+    !hook$jscomp$inline_1242.isDisabled &&
+    hook$jscomp$inline_1242.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1236.inject(
-        internals$jscomp$inline_1235
+      (rendererID = hook$jscomp$inline_1242.inject(
+        internals$jscomp$inline_1241
       )),
-        (injectedHook = hook$jscomp$inline_1236);
+        (injectedHook = hook$jscomp$inline_1242);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

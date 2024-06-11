@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<df6f3910cc77174c9921429231bb3527>>
+ * @generated SignedSource<<20324cd9265db5606b25d8373cfc02a1>>
  */
 
 "use strict";
@@ -897,7 +897,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_269 = {
+var injectedNamesToPlugins$jscomp$inline_270 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -943,32 +943,32 @@ var injectedNamesToPlugins$jscomp$inline_269 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_270 = !1,
-  pluginName$jscomp$inline_271;
-for (pluginName$jscomp$inline_271 in injectedNamesToPlugins$jscomp$inline_269)
+  isOrderingDirty$jscomp$inline_271 = !1,
+  pluginName$jscomp$inline_272;
+for (pluginName$jscomp$inline_272 in injectedNamesToPlugins$jscomp$inline_270)
   if (
-    injectedNamesToPlugins$jscomp$inline_269.hasOwnProperty(
-      pluginName$jscomp$inline_271
+    injectedNamesToPlugins$jscomp$inline_270.hasOwnProperty(
+      pluginName$jscomp$inline_272
     )
   ) {
-    var pluginModule$jscomp$inline_272 =
-      injectedNamesToPlugins$jscomp$inline_269[pluginName$jscomp$inline_271];
+    var pluginModule$jscomp$inline_273 =
+      injectedNamesToPlugins$jscomp$inline_270[pluginName$jscomp$inline_272];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_271) ||
-      namesToPlugins[pluginName$jscomp$inline_271] !==
-        pluginModule$jscomp$inline_272
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_272) ||
+      namesToPlugins[pluginName$jscomp$inline_272] !==
+        pluginModule$jscomp$inline_273
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_271])
+      if (namesToPlugins[pluginName$jscomp$inline_272])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_271 + "`.")
+            (pluginName$jscomp$inline_272 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_271] =
-        pluginModule$jscomp$inline_272;
-      isOrderingDirty$jscomp$inline_270 = !0;
+      namesToPlugins[pluginName$jscomp$inline_272] =
+        pluginModule$jscomp$inline_273;
+      isOrderingDirty$jscomp$inline_271 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_270 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_271 && recomputePluginOrdering();
 var alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   consoleManagedByDevToolsDuringStrictMode =
     dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
@@ -3716,15 +3716,31 @@ function createChildReconciler(shouldTrackSideEffects) {
       : deleteRemainingChildren(returnFiber, currentFirstChild);
   }
   return function (returnFiber, currentFirstChild, newChild, lanes) {
-    thenableIndexCounter$1 = 0;
-    returnFiber = reconcileChildFibersImpl(
-      returnFiber,
-      currentFirstChild,
-      newChild,
-      lanes
-    );
-    thenableState$1 = null;
-    return returnFiber;
+    try {
+      thenableIndexCounter$1 = 0;
+      var firstChildFiber = reconcileChildFibersImpl(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes,
+        null
+      );
+      thenableState$1 = null;
+      return firstChildFiber;
+    } catch (x) {
+      if (
+        x === SuspenseException ||
+        (0 === (returnFiber.mode & 1) &&
+          "object" === typeof x &&
+          null !== x &&
+          "function" === typeof x.then)
+      )
+        throw x;
+      currentFirstChild = createFiber(29, x, null, returnFiber.mode);
+      currentFirstChild.lanes = lanes;
+      currentFirstChild.return = returnFiber;
+      return currentFirstChild;
+    }
   };
 }
 var reconcileChildFibers = createChildReconciler(!0),
@@ -7101,6 +7117,8 @@ function beginWork(current, workInProgress, renderLanes) {
         ),
         workInProgress.child
       );
+    case 29:
+      throw workInProgress.pendingProps;
   }
   throw Error(
     "Unknown unit of work tag (" +
@@ -7896,6 +7914,8 @@ function completeWork(current, workInProgress, renderLanes) {
         null
       );
     case 25:
+      return null;
+    case 29:
       return null;
   }
   throw Error(
@@ -11294,10 +11314,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1206 = {
+  devToolsConfig$jscomp$inline_1212 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-2774208039-20240610",
+    version: "19.0.0-native-fb-270229f0c3-20240611",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11327,10 +11347,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1206.bundleType,
-  version: devToolsConfig$jscomp$inline_1206.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1206.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1206.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1212.bundleType,
+  version: devToolsConfig$jscomp$inline_1212.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1212.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1212.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11346,14 +11366,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1206.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1212.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-2774208039-20240610"
+  reconcilerVersion: "19.0.0-native-fb-270229f0c3-20240611"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

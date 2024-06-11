@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b5fd1f738b9e23ac9f724f39960a3e88>>
+ * @generated SignedSource<<f736dac12d00766c0ace09646964237e>>
  */
 
 "use strict";
@@ -4384,16 +4384,31 @@ __DEV__ &&
         return deleteRemainingChildren(returnFiber, currentFirstChild);
       }
       return function (returnFiber, currentFirstChild, newChild, lanes) {
-        thenableIndexCounter$1 = 0;
-        returnFiber = reconcileChildFibersImpl(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          lanes,
-          null
-        );
-        thenableState$1 = null;
-        return returnFiber;
+        try {
+          thenableIndexCounter$1 = 0;
+          var firstChildFiber = reconcileChildFibersImpl(
+            returnFiber,
+            currentFirstChild,
+            newChild,
+            lanes,
+            null
+          );
+          thenableState$1 = null;
+          return firstChildFiber;
+        } catch (x) {
+          if (
+            x === SuspenseException ||
+            (0 === (returnFiber.mode & 1) &&
+              "object" === typeof x &&
+              null !== x &&
+              "function" === typeof x.then)
+          )
+            throw x;
+          currentFirstChild = createFiber(29, x, null, returnFiber.mode);
+          currentFirstChild.lanes = lanes;
+          currentFirstChild.return = returnFiber;
+          return currentFirstChild;
+        }
       };
     }
     function pushHiddenContext(fiber, context) {
@@ -8691,6 +8706,8 @@ __DEV__ &&
             ),
             workInProgress.child
           );
+        case 29:
+          throw workInProgress.pendingProps;
       }
       throw Error(
         "Unknown unit of work tag (" +
@@ -9540,6 +9557,8 @@ __DEV__ &&
             null
           );
         case 25:
+          return null;
+        case 29:
           return null;
       }
       throw Error(
@@ -16674,12 +16693,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-2774208039-20240610"
+        reconcilerVersion: "19.0.0-native-fb-270229f0c3-20240611"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-2774208039-20240610",
+      version: "19.0.0-native-fb-270229f0c3-20240611",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

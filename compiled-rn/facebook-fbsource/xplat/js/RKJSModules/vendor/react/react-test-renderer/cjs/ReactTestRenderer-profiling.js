@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ee84d20386606858c48dfc7bb7fcd98b>>
+ * @generated SignedSource<<c022c8ceea256c9067b54e586075c7b9>>
  */
 
 "use strict";
@@ -2301,15 +2301,31 @@ function createChildReconciler(shouldTrackSideEffects) {
       : deleteRemainingChildren(returnFiber, currentFirstChild);
   }
   return function (returnFiber, currentFirstChild, newChild, lanes) {
-    thenableIndexCounter$1 = 0;
-    returnFiber = reconcileChildFibersImpl(
-      returnFiber,
-      currentFirstChild,
-      newChild,
-      lanes
-    );
-    thenableState$1 = null;
-    return returnFiber;
+    try {
+      thenableIndexCounter$1 = 0;
+      var firstChildFiber = reconcileChildFibersImpl(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes,
+        null
+      );
+      thenableState$1 = null;
+      return firstChildFiber;
+    } catch (x) {
+      if (
+        x === SuspenseException ||
+        (0 === (returnFiber.mode & 1) &&
+          "object" === typeof x &&
+          null !== x &&
+          "function" === typeof x.then)
+      )
+        throw x;
+      currentFirstChild = createFiber(29, x, null, returnFiber.mode);
+      currentFirstChild.lanes = lanes;
+      currentFirstChild.return = returnFiber;
+      return currentFirstChild;
+    }
   };
 }
 var reconcileChildFibers = createChildReconciler(!0),
@@ -5656,6 +5672,8 @@ function beginWork(current, workInProgress, renderLanes) {
         ),
         workInProgress.child
       );
+    case 29:
+      throw workInProgress.pendingProps;
   }
   throw Error(
     "Unknown unit of work tag (" +
@@ -6282,6 +6300,8 @@ function completeWork(current, workInProgress, renderLanes) {
         null
       );
     case 25:
+      return null;
+    case 29:
       return null;
   }
   throw Error(
@@ -9953,12 +9973,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1131 = {
+var devToolsConfig$jscomp$inline_1137 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-2774208039-20240610",
+  version: "19.0.0-native-fb-270229f0c3-20240611",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9975,10 +9995,10 @@ var devToolsConfig$jscomp$inline_1131 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1131.bundleType,
-  version: devToolsConfig$jscomp$inline_1131.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1131.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1131.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1137.bundleType,
+  version: devToolsConfig$jscomp$inline_1137.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1137.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1137.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9995,14 +10015,14 @@ var devToolsConfig$jscomp$inline_1131 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1131.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1137.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-2774208039-20240610"
+  reconcilerVersion: "19.0.0-native-fb-270229f0c3-20240611"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
