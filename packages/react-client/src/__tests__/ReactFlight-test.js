@@ -1050,8 +1050,10 @@ describe('ReactFlight', () => {
     }
 
     const expectedStack = __DEV__
-      ? // TODO: This should include Throw but it doesn't have a Fiber.
-        '\n    in div' + '\n    in ErrorBoundary (at **)' + '\n    in App'
+      ? '\n    in Throw' +
+        '\n    in div' +
+        '\n    in ErrorBoundary (at **)' +
+        '\n    in App'
       : '\n    in div' + '\n    in ErrorBoundary (at **)';
 
     function App() {
