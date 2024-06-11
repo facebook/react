@@ -623,6 +623,19 @@ describe('ReactFlightDOM', () => {
     );
   });
 
+  it('throws when await a client module prop of client exports', () => {
+    const ClientModule = clientExports({
+      Component: function () {},
+    });
+    async function read() {
+      return await ClientModule.then(mod => mod.Component);
+    }
+    expect(read).toThrowError(
+      `Cannot await or return from a thenable. ` +
+        `You cannot await a client module from a server component.`,
+    );
+  });
+
   it('throws when accessing a symbol prop from client exports', () => {
     const symbol = Symbol('test');
     const ClientModule = clientExports({
