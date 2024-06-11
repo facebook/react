@@ -8,7 +8,6 @@
     "vercel-build": "yarn workspaces run build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "yarn playwright install",
     "test": "playwright test"
   },
   "dependencies": {
