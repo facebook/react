@@ -501,12 +501,12 @@ function getReactFunctionType(
   }
 
   // Component and hook declarations are known components/hooks
-  let explicitSyntax: ReactFunctionType | null = null;
+  let componentSyntaxType: ReactFunctionType | null = null;
   if (fn.isFunctionDeclaration()) {
     if (isComponentDeclaration(fn.node)) {
-      explicitSyntax = "Component";
+      componentSyntaxType = "Component";
     } else if (isHookDeclaration(fn.node)) {
-      explicitSyntax = "Hook";
+      componentSyntaxType = "Hook";
     }
   }
 
@@ -517,10 +517,10 @@ function getReactFunctionType(
     }
     case "infer": {
       // Check if this is a component or hook-like function
-      return explicitSyntax ?? getComponentOrHookLike(fn, hookPattern);
+      return componentSyntaxType ?? getComponentOrHookLike(fn, hookPattern);
     }
     case "syntax": {
-      return explicitSyntax;
+      return componentSyntaxType;
     }
     case "all": {
       // Compile only top level functions
@@ -701,25 +701,25 @@ function isValidComponentParams(
 ): boolean {
   if (params.length === 0) {
     return true;
-  } else if (params.length === 1) {
-    return (
-      isValidPropsAnnotation(params[0].node.typeAnnotation) &&
-      !params[0].isRestElement()
-    );
-  } else if (params.length === 2) {
-    // check if second param might be a ref
-    if (params[1].isIdentifier()) {
-      const { name } = params[1].node;
-      return (
-        isValidPropsAnnotation(params[0].node.typeAnnotation) &&
-        (name.includes("ref") || name.includes("Ref"))
-      );
+  } else if (params.length > 0 && params.length <= 2) {
+    if (!isValidPropsAnnotation(params[0].node.typeAnnotation)) {
+      return false;
     }
-    /**
-     * Otherwise, avoid helper functions that take more than one argument.
-     * Helpers are _usually_ named with lowercase, but some code may
-     * violate this rule
-     */
+
+    if (params.length === 1) {
+      return !params[0].isRestElement();
+    } else if (params[1].isIdentifier()) {
+      // check if second param might be a ref
+      const { name } = params[1].node;
+      return name.includes("ref") || name.includes("Ref");
+    } else {
+      /**
+       * Otherwise, avoid helper functions that take more than one argument.
+       * Helpers are _usually_ named with lowercase, but some code may
+       * violate this rule
+       */
+      return false;
+    }
   }
   return false;
 }
