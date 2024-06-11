@@ -22,7 +22,6 @@ import {
   getStackByFiberInDevAndProd,
   supportsNativeConsoleTasks,
 } from './DevToolsFiberComponentStack';
-import {consoleManagedByDevToolsDuringStrictMode} from 'react-devtools-feature-flags';
 import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];
@@ -302,76 +301,72 @@ let unpatchForStrictModeFn: null | (() => void) = null;
 
 // NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialCommitInStrictMode
 export function patchForStrictMode() {
-  if (consoleManagedByDevToolsDuringStrictMode) {
-    const overrideConsoleMethods = [
-      'error',
-      'group',
-      'groupCollapsed',
-      'info',
-      'log',
-      'trace',
-      'warn',
-    ];
+  const overrideConsoleMethods = [
+    'error',
+    'group',
+    'groupCollapsed',
+    'info',
+    'log',
+    'trace',
+    'warn',
+  ];
 
-    if (unpatchForStrictModeFn !== null) {
-      // Don't patch twice.
-      return;
-    }
+  if (unpatchForStrictModeFn !== null) {
+    // Don't patch twice.
+    return;
+  }
 
-    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
+  const originalConsoleMethods: {[string]: $FlowFixMe} = {};
 
-    unpatchForStrictModeFn = () => {
-      for (const method in originalConsoleMethods) {
-        try {
-          targetConsole[method] = originalConsoleMethods[method];
-        } catch (error) {}
-      }
-    };
-
-    overrideConsoleMethods.forEach(method => {
+  unpatchForStrictModeFn = () => {
+    for (const method in originalConsoleMethods) {
       try {
-        const originalMethod = (originalConsoleMethods[method] = targetConsole[
-          method
-        ].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
-          ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
-          : targetConsole[method]);
+        targetConsole[method] = originalConsoleMethods[method];
+      } catch (error) {}
+    }
+  };
 
-        // $FlowFixMe[missing-local-annot]
-        const overrideMethod = (...args) => {
-          if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
-            // Dim the text color of the double logs if we're not
-            // hiding them.
-            if (isNode) {
-              originalMethod(DIMMED_NODE_CONSOLE_COLOR, format(...args));
+  overrideConsoleMethods.forEach(method => {
+    try {
+      const originalMethod = (originalConsoleMethods[method] = targetConsole[
+        method
+      ].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
+        ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
+        : targetConsole[method]);
+
+      // $FlowFixMe[missing-local-annot]
+      const overrideMethod = (...args) => {
+        if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
+          // Dim the text color of the double logs if we're not
+          // hiding them.
+          if (isNode) {
+            originalMethod(DIMMED_NODE_CONSOLE_COLOR, format(...args));
+          } else {
+            const color = getConsoleColor(method);
+            if (color) {
+              originalMethod(...formatWithStyles(args, `color: ${color}`));
             } else {
-              const color = getConsoleColor(method);
-              if (color) {
-                originalMethod(...formatWithStyles(args, `color: ${color}`));
-              } else {
-                throw Error('Console color is not defined');
-              }
+              throw Error('Console color is not defined');
             }
           }
-        };
+        }
+      };
 
-        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ =
-          originalMethod;
-        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ =
-          overrideMethod;
+      overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ =
+        originalMethod;
+      originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ =
+        overrideMethod;
 
-        targetConsole[method] = overrideMethod;
-      } catch (error) {}
-    });
-  }
+      targetConsole[method] = overrideMethod;
+    } catch (error) {}
+  });
 }
 
 // NOTE: KEEP IN SYNC with src/hook.js:unpatchConsoleForInitialCommitInStrictMode
 export function unpatchForStrictMode(): void {
-  if (consoleManagedByDevToolsDuringStrictMode) {
-    if (unpatchForStrictModeFn !== null) {
-      unpatchForStrictModeFn();
-      unpatchForStrictModeFn = null;
-    }
+  if (unpatchForStrictModeFn !== null) {
+    unpatchForStrictModeFn();
+    unpatchForStrictModeFn = null;
   }
 }
 
