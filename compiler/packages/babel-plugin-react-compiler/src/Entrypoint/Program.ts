@@ -688,7 +688,8 @@ function getComponentOrHookLike(
   if (functionName !== null && isComponentName(functionName)) {
     let isComponent =
       callsHooksOrCreatesJsx(node, hookPattern) &&
-      isValidComponentParams(node.get("params"));
+      isValidComponentParams(node.get("params")) &&
+      !returnsNonNode(node);
     return isComponent ? "Component" : null;
   } else if (functionName !== null && isHook(functionName, hookPattern)) {
     // Hooks have hook invocations or JSX, but can take any # of arguments
@@ -708,12 +709,31 @@ function getComponentOrHookLike(
   return null;
 }
 
+function skipNestedFunctions(
+  node: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >
+) {
+  return (
+    fn: NodePath<
+      t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+    >
+  ): void => {
+    if (fn.node !== node.node) {
+      fn.skip();
+    }
+  };
+}
+
 function callsHooksOrCreatesJsx(
-  node: NodePath<t.Node>,
+  node: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
   hookPattern: string | null
 ): boolean {
   let invokesHooks = false;
   let createsJsx = false;
+
   node.traverse({
     JSX() {
       createsJsx = true;
@@ -724,9 +744,46 @@ function callsHooksOrCreatesJsx(
         invokesHooks = true;
       }
     },
+    ArrowFunctionExpression: skipNestedFunctions(node),
+    FunctionExpression: skipNestedFunctions(node),
+    FunctionDeclaration: skipNestedFunctions(node),
   });
 
   return invokesHooks || createsJsx;
+}
+
+function returnsNonNode(
+  node: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >
+): boolean {
+  let hasReturn = false;
+  let returnsNonNode = false;
+
+  node.traverse({
+    ReturnStatement(ret) {
+      hasReturn = true;
+      const argument = ret.node.argument;
+      if (argument == null) {
+        returnsNonNode = true;
+      } else {
+        switch (argument.type) {
+          case "ObjectExpression":
+          case "ArrowFunctionExpression":
+          case "FunctionExpression":
+          case "BigIntLiteral":
+          case "ClassExpression":
+          case "NewExpression": // technically `new Array()` is legit, but unlikely
+            returnsNonNode = true;
+        }
+      }
+    },
+    ArrowFunctionExpression: skipNestedFunctions(node),
+    FunctionExpression: skipNestedFunctions(node),
+    FunctionDeclaration: skipNestedFunctions(node),
+  });
+
+  return !hasReturn || returnsNonNode;
 }
 
 /*
