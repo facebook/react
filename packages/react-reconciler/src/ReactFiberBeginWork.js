@@ -72,6 +72,7 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  Throw,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -4125,6 +4126,11 @@ function beginWork(
         );
       }
       break;
+    }
+    case Throw: {
+      // This represents a Component that threw in the reconciliation phase.
+      // So we'll rethrow here. This might be
+      throw workInProgress.pendingProps;
     }
   }
 
