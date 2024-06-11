@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {warn, error} from 'shared/consoleWithStackDev';
+
 // This flips color using ANSI, then sets a color styling, then resets.
 const badgeFormat = '\x1b[0m\x1b[7m%c%s\x1b[0m%c ';
 // Same badge styling as DevTools.
@@ -64,7 +66,14 @@ export function printToConsole(
     );
   }
 
-  // eslint-disable-next-line react-internal/no-production-logging
-  console[methodName].apply(console, newArgs);
-  return;
+  if (methodName === 'error') {
+    // eslint-disable-next-line react-internal/no-production-logging
+    error.apply(console, newArgs);
+  } else if (methodName === 'warn') {
+    // eslint-disable-next-line react-internal/no-production-logging
+    warn.apply(console, newArgs);
+  } else {
+    // eslint-disable-next-line react-internal/no-production-logging
+    console[methodName].apply(console, newArgs);
+  }
 }
