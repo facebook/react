@@ -21,12 +21,20 @@ async function main() {
       description: "glob expression matching src files to compile",
       type: "string",
       default: "**/+(*.{js,mjs,jsx,ts,tsx}|package.json)",
+    },
+ )
+ .option('verbose', {
+      alias: 'v',
+      type: 'boolean',
+      default: false,
+      description: 'run with verbose logging',
     })
     .parseSync();
 
   const spinner = ora("Checking").start();
   let src = argv.src;
-
+  let verbose = argv.verbose;
+  
   const globOptions = {
     onlyFiles: true,
     ignore: [
@@ -48,7 +56,7 @@ async function main() {
   }
   spinner.stop();
 
-  reactCompilerCheck.report();
+  reactCompilerCheck.report(verbose);
   strictModeCheck.report();
   libraryCompatCheck.report();
 }
