@@ -651,24 +651,75 @@ function isMemoCallback(path: NodePath<t.Expression>): boolean {
   );
 }
 
+function isValidPropsAnnotation(
+  annot: t.TypeAnnotation | t.TSTypeAnnotation | t.Noop | null | undefined
+): boolean {
+  if (annot == null) {
+    return true;
+  } else if (annot.type === "TSTypeAnnotation") {
+    switch (annot.typeAnnotation.type) {
+      case "TSArrayType":
+      case "TSBigIntKeyword":
+      case "TSBooleanKeyword":
+      case "TSConstructorType":
+      case "TSFunctionType":
+      case "TSLiteralType":
+      case "TSNeverKeyword":
+      case "TSNumberKeyword":
+      case "TSStringKeyword":
+      case "TSSymbolKeyword":
+      case "TSTupleType":
+        return false;
+    }
+    return true;
+  } else if (annot.type === "TypeAnnotation") {
+    switch (annot.typeAnnotation.type) {
+      case "ArrayTypeAnnotation":
+      case "BooleanLiteralTypeAnnotation":
+      case "BooleanTypeAnnotation":
+      case "EmptyTypeAnnotation":
+      case "FunctionTypeAnnotation":
+      case "NumberLiteralTypeAnnotation":
+      case "NumberTypeAnnotation":
+      case "StringLiteralTypeAnnotation":
+      case "StringTypeAnnotation":
+      case "SymbolTypeAnnotation":
+      case "ThisTypeAnnotation":
+      case "TupleTypeAnnotation":
+        return false;
+    }
+    return true;
+  } else if (annot.type === "Noop") {
+    return true;
+  } else {
+    assertExhaustive(annot, `Unexpected annotation node \`${annot}\``);
+  }
+}
+
 function isValidComponentParams(
   params: Array<NodePath<t.Identifier | t.Pattern | t.RestElement>>
 ): boolean {
   if (params.length === 0) {
     return true;
-  } else if (params.length === 1) {
-    return !params[0].isRestElement();
-  } else if (params.length === 2) {
-    // check if second param might be a ref
-    if (params[1].isIdentifier()) {
+  } else if (params.length > 0 && params.length <= 2) {
+    if (!isValidPropsAnnotation(params[0].node.typeAnnotation)) {
+      return false;
+    }
+
+    if (params.length === 1) {
+      return !params[0].isRestElement();
+    } else if (params[1].isIdentifier()) {
+      // check if second param might be a ref
       const { name } = params[1].node;
       return name.includes("ref") || name.includes("Ref");
+    } else {
+      /**
+       * Otherwise, avoid helper functions that take more than one argument.
+       * Helpers are _usually_ named with lowercase, but some code may
+       * violate this rule
+       */
+      return false;
     }
-    /**
-     * Otherwise, avoid helper functions that take more than one argument.
-     * Helpers are _usually_ named with lowercase, but some code may
-     * violate this rule
-     */
   }
   return false;
 }
