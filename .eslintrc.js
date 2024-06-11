@@ -571,6 +571,7 @@ module.exports = {
     TimeoutID: 'readonly',
     WheelEventHandler: 'readonly',
     FinalizationRegistry: 'readonly',
+    Omit: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',
