@@ -268,6 +268,7 @@ export function getInternalReactConstants(version: string): {
       TracingMarkerComponent: 25, // Experimental - This is technically in 18 but we don't
       // want to fork again so we're adding it here instead
       YieldComponent: -1, // Removed
+      Throw: 29,
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
@@ -302,6 +303,7 @@ export function getInternalReactConstants(version: string): {
       SuspenseListComponent: 19, // Experimental
       TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
+      Throw: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
@@ -336,6 +338,7 @@ export function getInternalReactConstants(version: string): {
       SuspenseListComponent: 19, // Experimental
       TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
+      Throw: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
@@ -370,6 +373,7 @@ export function getInternalReactConstants(version: string): {
       SuspenseListComponent: -1, // Doesn't exist yet
       TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
+      Throw: -1, // Doesn't exist yet
     };
   } else {
     ReactTypeOfWork = {
@@ -404,6 +408,7 @@ export function getInternalReactConstants(version: string): {
       SuspenseListComponent: -1, // Doesn't exist yet
       TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: 9,
+      Throw: -1, // Doesn't exist yet
     };
   }
   // **********************************************************
@@ -445,6 +450,7 @@ export function getInternalReactConstants(version: string): {
     SuspenseComponent,
     SuspenseListComponent,
     TracingMarkerComponent,
+    Throw,
   } = ReactTypeOfWork;
 
   function resolveFiberType(type: any): $FlowFixMe {
@@ -551,6 +557,9 @@ export function getInternalReactConstants(version: string): {
         return 'Profiler';
       case TracingMarkerComponent:
         return 'TracingMarker';
+      case Throw:
+        // This should really never be visible.
+        return 'Error';
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -672,6 +681,7 @@ export function attach(
     SuspenseComponent,
     SuspenseListComponent,
     TracingMarkerComponent,
+    Throw,
   } = ReactTypeOfWork;
   const {
     ImmediatePriority,
@@ -1036,6 +1046,7 @@ export function attach(
       case HostText:
       case LegacyHiddenComponent:
       case OffscreenComponent:
+      case Throw:
         return true;
       case HostRoot:
         // It is never valid to filter the root element.

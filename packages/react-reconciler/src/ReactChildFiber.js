@@ -25,6 +25,7 @@ import {
   Forked,
   PlacementDEV,
 } from './ReactFiberFlags';
+import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import {
   getIteratorFn,
   ASYNC_ITERATOR,
@@ -46,6 +47,7 @@ import isArray from 'shared/isArray';
 import {
   enableRefAsProp,
   enableAsyncIterableChildren,
+  disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -55,11 +57,16 @@ import {
   createFiberFromFragment,
   createFiberFromText,
   createFiberFromPortal,
+  createFiberFromThrow,
 } from './ReactFiber';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {getIsHydrating} from './ReactFiberHydrationContext';
 import {pushTreeFork} from './ReactFiberTreeContext';
-import {createThenableState, trackUsedThenable} from './ReactFiberThenable';
+import {
+  SuspenseException,
+  createThenableState,
+  trackUsedThenable,
+} from './ReactFiberThenable';
 import {readContextDuringReconciliation} from './ReactFiberNewContext';
 import {callLazyInitInDEV} from './ReactFiberCallUserSpace';
 
@@ -1919,20 +1926,45 @@ function createChildReconciler(
     newChild: any,
     lanes: Lanes,
   ): Fiber | null {
-    // This indirection only exists so we can reset `thenableState` at the end.
-    // It should get inlined by Closure.
-    thenableIndexCounter = 0;
-    const firstChildFiber = reconcileChildFibersImpl(
-      returnFiber,
-      currentFirstChild,
-      newChild,
-      lanes,
-      null, // debugInfo
-    );
-    thenableState = null;
-    // Don't bother to reset `thenableIndexCounter` to 0 because it always gets
-    // set at the beginning.
-    return firstChildFiber;
+    try {
+      // This indirection only exists so we can reset `thenableState` at the end.
+      // It should get inlined by Closure.
+      thenableIndexCounter = 0;
+      const firstChildFiber = reconcileChildFibersImpl(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes,
+        null, // debugInfo
+      );
+      thenableState = null;
+      // Don't bother to reset `thenableIndexCounter` to 0 because it always gets
+      // set at the beginning.
+      return firstChildFiber;
+    } catch (x) {
+      if (
+        x === SuspenseException ||
+        (!disableLegacyMode &&
+          (returnFiber.mode & ConcurrentMode) === NoMode &&
+          typeof x === 'object' &&
+          x !== null &&
+          typeof x.then === 'function')
+      ) {
+        // Suspense exceptions need to read the current suspended state before
+        // yielding and replay it using the same sequence so this trick doesn't
+        // work here.
+        // Suspending in legacy mode actually mounts so if we let the child
+        // mount then we delete its state in an update.
+        throw x;
+      }
+      // Something errored during reconciliation but it's conceptually a child that
+      // errored and not the current component itself so we create a virtual child
+      // that throws in its begin phase. That way the current component can handle
+      // the error or suspending if needed.
+      const throwFiber = createFiberFromThrow(x, returnFiber.mode, lanes);
+      throwFiber.return = returnFiber;
+      return throwFiber;
+    }
   }
 
   return reconcileChildFibers;

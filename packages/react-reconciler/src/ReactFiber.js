@@ -67,6 +67,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   TracingMarkerComponent,
+  Throw,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
@@ -877,5 +878,15 @@ export function createFiberFromPortal(
     pendingChildren: null, // Used by persistent updates
     implementation: portal.implementation,
   };
+  return fiber;
+}
+
+export function createFiberFromThrow(
+  error: mixed,
+  mode: TypeOfMode,
+  lanes: Lanes,
+): Fiber {
+  const fiber = createFiber(Throw, error, null, mode);
+  fiber.lanes = lanes;
   return fiber;
 }

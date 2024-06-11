@@ -72,6 +72,7 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  Throw,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -1801,6 +1802,12 @@ function completeWork(
         bubbleProperties(workInProgress);
       }
       return null;
+    }
+    case Throw: {
+      if (!disableLegacyMode) {
+        // Only Legacy Mode completes an errored node.
+        return null;
+      }
     }
   }
 
