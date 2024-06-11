@@ -964,67 +964,47 @@ describe('ReactFlight', () => {
     const testCases = (
       <>
         <ClientErrorBoundary expectedMessage="This is a real Error.">
-          <div>
-            <Throw value={new TypeError('This is a real Error.')} />
-          </div>
+          <Throw value={new TypeError('This is a real Error.')} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="This is a string error.">
-          <div>
-            <Throw value="This is a string error." />
-          </div>
+          <Throw value="This is a string error." />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="{message: ..., extra: ..., nested: ...}">
-          <div>
-            <Throw
-              value={{
-                message: 'This is a long message',
-                extra: 'properties',
-                nested: {more: 'prop'},
-              }}
-            />
-          </div>
+          <Throw
+            value={{
+              message: 'This is a long message',
+              extra: 'properties',
+              nested: {more: 'prop'},
+            }}
+          />
         </ClientErrorBoundary>
         <ClientErrorBoundary
           expectedMessage={'{message: "Short", extra: ..., nested: ...}'}>
-          <div>
-            <Throw
-              value={{
-                message: 'Short',
-                extra: 'properties',
-                nested: {more: 'prop'},
-              }}
-            />
-          </div>
+          <Throw
+            value={{
+              message: 'Short',
+              extra: 'properties',
+              nested: {more: 'prop'},
+            }}
+          />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="Symbol(hello)">
-          <div>
-            <Throw value={Symbol('hello')} />
-          </div>
+          <Throw value={Symbol('hello')} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="123">
-          <div>
-            <Throw value={123} />
-          </div>
+          <Throw value={123} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="undefined">
-          <div>
-            <Throw value={undefined} />
-          </div>
+          <Throw value={undefined} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="<div/>">
-          <div>
-            <Throw value={<div />} />
-          </div>
+          <Throw value={<div />} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="function Foo() {}">
-          <div>
-            <Throw value={function Foo() {}} />
-          </div>
+          <Throw value={function Foo() {}} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage={'["array"]'}>
-          <div>
-            <Throw value={['array']} />
-          </div>
+          <Throw value={['array']} />
         </ClientErrorBoundary>
         <ClientErrorBoundary
           expectedMessage={
@@ -1034,9 +1014,7 @@ describe('ReactFlight', () => {
             '- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n' +
             '- A compiler tries to "inline" JSX instead of using the runtime.'
           }>
-          <div>
-            <LazyInlined />
-          </div>
+          <LazyInlined />
         </ClientErrorBoundary>
       </>
     );

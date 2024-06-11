@@ -237,6 +237,8 @@ type RenderTask = {
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
   isFallback: boolean, // whether this task is rendering inside a fallback tree
+  // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
+  // Consider splitting into multiple objects or consolidating some fields.
 };
 
 type ReplaySet = {
@@ -264,6 +266,8 @@ type ReplayTask = {
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
   isFallback: boolean, // whether this task is rendering inside a fallback tree
+  // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
+  // Consider splitting into multiple objects or consolidating some fields.
 };
 
 export type Task = RenderTask | ReplayTask;
@@ -365,7 +369,8 @@ function defaultErrorHandler(error: mixed) {
 
 function noop(): void {}
 
-export function createRequest(
+function RequestInstance(
+  this: $FlowFixMe,
   children: ReactNodeList,
   resumableState: ResumableState,
   renderState: RenderState,
@@ -378,45 +383,43 @@ export function createRequest(
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
   formState: void | null | ReactFormState<any, any>,
-): Request {
+) {
   const pingedTasks: Array<Task> = [];
   const abortSet: Set<Task> = new Set();
-  const request: Request = {
-    destination: null,
-    flushScheduled: false,
-    resumableState,
-    renderState,
-    rootFormatContext,
-    progressiveChunkSize:
-      progressiveChunkSize === undefined
-        ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
-        : progressiveChunkSize,
-    status: OPEN,
-    fatalError: null,
-    nextSegmentId: 0,
-    allPendingTasks: 0,
-    pendingRootTasks: 0,
-    completedRootSegment: null,
-    abortableTasks: abortSet,
-    pingedTasks: pingedTasks,
-    clientRenderedBoundaries: ([]: Array<SuspenseBoundary>),
-    completedBoundaries: ([]: Array<SuspenseBoundary>),
-    partialBoundaries: ([]: Array<SuspenseBoundary>),
-    trackedPostpones: null,
-    onError: onError === undefined ? defaultErrorHandler : onError,
-    onPostpone: onPostpone === undefined ? noop : onPostpone,
-    onAllReady: onAllReady === undefined ? noop : onAllReady,
-    onShellReady: onShellReady === undefined ? noop : onShellReady,
-    onShellError: onShellError === undefined ? noop : onShellError,
-    onFatalError: onFatalError === undefined ? noop : onFatalError,
-    formState: formState === undefined ? null : formState,
-  };
+  this.destination = null;
+  this.flushScheduled = false;
+  this.resumableState = resumableState;
+  this.renderState = renderState;
+  this.rootFormatContext = rootFormatContext;
+  this.progressiveChunkSize =
+    progressiveChunkSize === undefined
+      ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
+      : progressiveChunkSize;
+  this.status = OPEN;
+  this.fatalError = null;
+  this.nextSegmentId = 0;
+  this.allPendingTasks = 0;
+  this.pendingRootTasks = 0;
+  this.completedRootSegment = null;
+  this.abortableTasks = abortSet;
+  this.pingedTasks = pingedTasks;
+  this.clientRenderedBoundaries = ([]: Array<SuspenseBoundary>);
+  this.completedBoundaries = ([]: Array<SuspenseBoundary>);
+  this.partialBoundaries = ([]: Array<SuspenseBoundary>);
+  this.trackedPostpones = null;
+  this.onError = onError === undefined ? defaultErrorHandler : onError;
+  this.onPostpone = onPostpone === undefined ? noop : onPostpone;
+  this.onAllReady = onAllReady === undefined ? noop : onAllReady;
+  this.onShellReady = onShellReady === undefined ? noop : onShellReady;
+  this.onShellError = onShellError === undefined ? noop : onShellError;
+  this.onFatalError = onFatalError === undefined ? noop : onFatalError;
+  this.formState = formState === undefined ? null : formState;
   if (__DEV__) {
-    request.didWarnForKey = null;
+    this.didWarnForKey = null;
   }
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(
-    request,
+    this,
     0,
     null,
     rootFormatContext,
@@ -427,7 +430,7 @@ export function createRequest(
   // There is no parent so conceptually, we're unblocked to flush this segment.
   rootSegment.parentFlushed = true;
   const rootTask = createRenderTask(
-    request,
+    this,
     null,
     children,
     -1,
@@ -444,7 +447,37 @@ export function createRequest(
     false,
   );
   pingedTasks.push(rootTask);
-  return request;
+}
+
+export function createRequest(
+  children: ReactNodeList,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  rootFormatContext: FormatContext,
+  progressiveChunkSize: void | number,
+  onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
+  onAllReady: void | (() => void),
+  onShellReady: void | (() => void),
+  onShellError: void | ((error: mixed) => void),
+  onFatalError: void | ((error: mixed) => void),
+  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
+  formState: void | null | ReactFormState<any, any>,
+): Request {
+  // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
+  return new RequestInstance(
+    children,
+    resumableState,
+    renderState,
+    rootFormatContext,
+    progressiveChunkSize,
+    onError,
+    onAllReady,
+    onShellReady,
+    onShellError,
+    onFatalError,
+    onPostpone,
+    formState,
+  );
 }
 
 export function createPrerenderRequest(
