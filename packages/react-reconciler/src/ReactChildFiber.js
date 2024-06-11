@@ -1974,8 +1974,6 @@ function createChildReconciler(
         if (debugInfo != null) {
           for (let i = debugInfo.length - 1; i >= 0; i--) {
             if (typeof debugInfo[i].stack === 'string') {
-              // Ideally we could get the Task from this object but we don't expose it
-              // from Flight since it's in a WeakMap so we use the
               throwFiber._debugOwner = (debugInfo[i]: any);
               if (enableOwnerStacks) {
                 throwFiber._debugTask = debugInfo[i].task;
