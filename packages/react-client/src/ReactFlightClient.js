@@ -766,8 +766,10 @@ function createElement(
         createBlockedChunk(response);
       handler.value = element;
       handler.chunk = blockedChunk;
-      const freeze = Object.freeze.bind(Object, element.props);
-      blockedChunk.then(freeze, freeze);
+      if (__DEV__) {
+        const freeze = Object.freeze.bind(Object, element.props);
+        blockedChunk.then(freeze, freeze);
+      }
       return createLazyChunkWrapper(blockedChunk);
     }
   } else if (__DEV__) {
@@ -1079,11 +1081,7 @@ function parseModelString(
   if (value[0] === '$') {
     if (value === '$') {
       // A very common symbol.
-      if (
-        initializingHandler !== null &&
-        isArray(parentObject) &&
-        key === '0'
-      ) {
+      if (initializingHandler !== null && key === '0') {
         // We we already have an initializing handler and we're abound to enter
         // a new element, we need to shadow it because we're now in a new scope.
         // This is effectively the "begin" or "push" phase of Element parsing.

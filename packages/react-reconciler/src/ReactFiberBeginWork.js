@@ -4129,7 +4129,7 @@ function beginWork(
     }
     case Throw: {
       // This represents a Component that threw in the reconciliation phase.
-      // So we'll rethrow here. This might be
+      // So we'll rethrow here. This might be a Thenable.
       throw workInProgress.pendingProps;
     }
   }
