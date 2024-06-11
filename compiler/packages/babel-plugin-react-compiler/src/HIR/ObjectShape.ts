@@ -188,6 +188,7 @@ export type ObjectShape = {
  * the inferred types for [] and {}.
  */
 export type ShapeRegistry = Map<string, ObjectShape>;
+export const BuiltInPropsId = "BuiltInProps";
 export const BuiltInArrayId = "BuiltInArray";
 export const BuiltInFunctionId = "BuiltInFunction";
 export const BuiltInJsxId = "BuiltInJsx";
@@ -206,6 +207,11 @@ export const BuiltInDispatchId = "BuiltInDispatch";
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
+
+// If the `ref` prop exists, it has the ref type
+addObject(BUILTIN_SHAPES, BuiltInPropsId, [
+  ["ref", { kind: "Object", shapeId: BuiltInUseRefId }],
+]);
 
 /* Built-in array shape */
 addObject(BUILTIN_SHAPES, BuiltInArrayId, [

@@ -1499,6 +1499,7 @@ describe('Timeline profiler', () => {
 
           // This is temporarily disabled because the warning doesn't work
           // with useDeferredValue
+          // eslint-disable-next-line jest/no-disabled-tests
           it.skip('should warn about long nested (state) updates during layout effects', async () => {
             function Component() {
               const [didMount, setDidMount] = React.useState(false);
@@ -1556,6 +1557,7 @@ describe('Timeline profiler', () => {
 
           // This is temporarily disabled because the warning doesn't work
           // with useDeferredValue
+          // eslint-disable-next-line jest/no-disabled-tests
           it.skip('should warn about long nested (forced) updates during layout effects', async () => {
             class Component extends React.Component {
               _didMount: boolean = false;
@@ -1685,6 +1687,7 @@ describe('Timeline profiler', () => {
 
           // This is temporarily disabled because the warning doesn't work
           // with useDeferredValue
+          // eslint-disable-next-line jest/no-disabled-tests
           it.skip('should not warn about deferred value updates scheduled during commit phase', async () => {
             function Component() {
               const [value, setValue] = React.useState(0);

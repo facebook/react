@@ -169,8 +169,8 @@ describe('ReactMultiChildText', () => {
         ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
       ]);
     }).toErrorDev([
-      'Warning: Each child in a list should have a unique "key" prop.',
-      'Warning: Each child in a list should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
+      'Each child in a list should have a unique "key" prop.',
     ]);
   });
 

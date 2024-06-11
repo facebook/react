@@ -36,7 +36,7 @@ const {
 } = require('../ReactInternalTestUtils');
 
 describe('ReactInternalTestUtils', () => {
-  test('waitFor', async () => {
+  it('waitFor', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
       return id;
@@ -61,7 +61,7 @@ describe('ReactInternalTestUtils', () => {
     expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
   });
 
-  test('waitForAll', async () => {
+  it('waitForAll', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
       return id;
@@ -82,7 +82,7 @@ describe('ReactInternalTestUtils', () => {
     expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
   });
 
-  test('waitForThrow', async () => {
+  it('waitForThrow', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
       return id;
@@ -117,7 +117,7 @@ describe('ReactInternalTestUtils', () => {
     ]);
   });
 
-  test('waitForPaint', async () => {
+  it('waitForPaint', async () => {
     function App({prop}) {
       const deferred = useDeferredValue(prop);
       const text = `Urgent: ${prop}, Deferred: ${deferred}`;
@@ -143,7 +143,7 @@ describe('ReactInternalTestUtils', () => {
     expect(root).toMatchRenderedOutput('Urgent: B, Deferred: B');
   });
 
-  test('assertLog', async () => {
+  it('assertLog', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
       React.useEffect(() => {
@@ -732,7 +732,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['foo', 'bar', 'baz']);
     });
 
-    test('should fail if waitForThrow is called before asserting', async () => {
+    it('should fail if waitForThrow is called before asserting', async () => {
       const Yield = ({id}) => {
         Scheduler.log(id);
         return id;
@@ -774,7 +774,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['A', 'B', 'A', 'B']);
     });
 
-    test('should fail if waitForPaint is called before asserting', async () => {
+    it('should fail if waitForPaint is called before asserting', async () => {
       function App({prop}) {
         const deferred = useDeferredValue(prop);
         const text = `Urgent: ${prop}, Deferred: ${deferred}`;
@@ -1664,7 +1664,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['foo', 'bar', 'baz']);
     });
 
-    test('should fail if waitForThrow is called before asserting', async () => {
+    it('should fail if waitForThrow is called before asserting', async () => {
       const Yield = ({id}) => {
         Scheduler.log(id);
         return id;
@@ -1706,7 +1706,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['A', 'B', 'A', 'B']);
     });
 
-    test('should fail if waitForPaint is called before asserting', async () => {
+    it('should fail if waitForPaint is called before asserting', async () => {
       function App({prop}) {
         const deferred = useDeferredValue(prop);
         const text = `Urgent: ${prop}, Deferred: ${deferred}`;
@@ -2640,7 +2640,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['foo', 'bar', 'baz']);
     });
 
-    test('should fail if waitForThrow is called before asserting', async () => {
+    it('should fail if waitForThrow is called before asserting', async () => {
       const Yield = ({id}) => {
         Scheduler.log(id);
         return id;
@@ -2682,7 +2682,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['A', 'B', 'A', 'B']);
     });
 
-    test('should fail if waitForPaint is called before asserting', async () => {
+    it('should fail if waitForPaint is called before asserting', async () => {
       function App({prop}) {
         const deferred = useDeferredValue(prop);
         const text = `Urgent: ${prop}, Deferred: ${deferred}`;

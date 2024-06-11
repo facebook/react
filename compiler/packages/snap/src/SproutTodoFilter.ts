@@ -485,8 +485,6 @@ const skipFilter = new Set([
   "rules-of-hooks/rules-of-hooks-69521d94fa03",
 
   // bugs
-  "bug-invalid-reactivity-value-block",
-  "bug-invalid-pruned-scope-leaks-value",
   "bug-invalid-hoisting-functionexpr",
   "original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block",
   "original-reactive-scopes-fork/bug-hoisted-declaration-with-scope",
@@ -499,6 +497,9 @@ const skipFilter = new Set([
   "useState-unpruned-dependency",
   "useState-and-other-hook-unpruned-dependency",
   "change-detect-reassign",
+
+  // needs to be executed as a module
+  "meta-property",
 ]);
 
 export default skipFilter;

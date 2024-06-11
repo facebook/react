@@ -1804,7 +1804,7 @@ describe('ReactUpdates', () => {
         await act(() => ReactDOM.flushSync(() => root.render(<App />)));
       }).rejects.toThrow('Maximum update depth exceeded');
     }).toErrorDev(
-      'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
+      'Cannot update a component (`App`) while rendering a different component (`Child`)',
     );
   });
 
@@ -1839,7 +1839,7 @@ describe('ReactUpdates', () => {
       }
       expect(error.message).toMatch('Maximum update depth exceeded');
     }).toErrorDev(
-      'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
+      'Cannot update a component (`App`) while rendering a different component (`Child`)',
     );
   });
 

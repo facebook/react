@@ -145,7 +145,7 @@ describe('ReactDOMServerHydration', () => {
         favorSafetyOverHydrationPerf
           ? []
           : [
-              " A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+              "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
             ],
         {withoutStack: true},
       );
@@ -545,7 +545,7 @@ describe('ReactDOMServerHydration', () => {
       favorSafetyOverHydrationPerf
         ? []
         : [
-            " A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+            "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
           ],
       {withoutStack: true},
     );
@@ -598,7 +598,7 @@ describe('ReactDOMServerHydration', () => {
           ReactDOMClient.hydrateRoot(element, jsx);
         });
       }).toErrorDev(
-        `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
+        `Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
       );
     }
   });

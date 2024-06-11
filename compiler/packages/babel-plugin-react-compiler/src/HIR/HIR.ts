@@ -65,12 +65,19 @@ export type ReactiveScopeBlock = {
   instructions: ReactiveBlock;
 };
 
+export type PrunedReactiveScopeBlock = {
+  kind: "pruned-scope";
+  scope: ReactiveScope;
+  instructions: ReactiveBlock;
+};
+
 export type ReactiveBlock = Array<ReactiveStatement>;
 
 export type ReactiveStatement =
   | ReactiveInstructionStatement
   | ReactiveTerminalStatement
-  | ReactiveScopeBlock;
+  | ReactiveScopeBlock
+  | PrunedReactiveScopeBlock;
 
 export type ReactiveInstructionStatement = {
   kind: "instruction";
@@ -362,7 +369,8 @@ export type Terminal =
   | SequenceTerminal
   | MaybeThrowTerminal
   | TryTerminal
-  | ReactiveScopeTerminal;
+  | ReactiveScopeTerminal
+  | PrunedScopeTerminal;
 
 export type TerminalWithFallthrough = Terminal & { fallthrough: BlockId };
 
@@ -589,6 +597,15 @@ export type MaybeThrowTerminal = {
 
 export type ReactiveScopeTerminal = {
   kind: "scope";
+  fallthrough: BlockId;
+  block: BlockId;
+  scope: ReactiveScope;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type PrunedScopeTerminal = {
+  kind: "pruned-scope";
   fallthrough: BlockId;
   block: BlockId;
   scope: ReactiveScope;
@@ -896,6 +913,12 @@ export type InstructionValue =
       kind: "RegExpLiteral";
       pattern: string;
       flags: string;
+      loc: SourceLocation;
+    }
+  | {
+      kind: "MetaProperty";
+      meta: string;
+      property: string;
       loc: SourceLocation;
     }
 

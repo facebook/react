@@ -95,7 +95,7 @@ describe('ReactPureComponent', () => {
         root.render(<Component />);
       });
     }).toErrorDev(
-      'Warning: ' +
+      '' +
         'Component has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
         'Please extend React.Component if shouldComponentUpdate is used.',
@@ -138,7 +138,7 @@ describe('ReactPureComponent', () => {
         root.render(<PureComponent />);
       });
     }).toErrorDev(
-      'Warning: ' +
+      '' +
         'PureComponent has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
         'Please extend React.Component if shouldComponentUpdate is used.',

@@ -12,7 +12,7 @@ const WARNING = 1;
 const ERROR = 2;
 
 module.exports = {
-  extends: ['prettier'],
+  extends: ['prettier', 'plugin:jest/recommended'],
 
   // Stop ESLint from looking for a configuration file in parent folders
   root: true,
@@ -376,16 +376,49 @@ module.exports = {
       files: ['**/__tests__/*.js'],
       rules: {
         // https://github.com/jest-community/eslint-plugin-jest
-        'jest/no-focused-tests': ERROR,
-        'jest/valid-expect': ERROR,
-        'jest/valid-expect-in-promise': ERROR,
+        // Meh, who cares.
+        'jest/consistent-test-it': OFF,
+        // Meh, we have a lot of these, who cares.
+        'jest/no-alias-methods': OFF,
+        // We do conditions based on feature flags.
+        'jest/no-conditional-expect': OFF,
+        // We have our own assertion helpers.
+        'jest/expect-expect': OFF,
+        // Lame rule that fires in itRender helpers or in render methods.
+        'jest/no-standalone-expect': OFF,
       },
     },
     {
-      // disable no focused tests for test setup helper files even if they are inside __tests__ directory
-      files: ['**/setupTests.js'],
+      // Rules specific to test setup helper files.
+      files: [
+        '**/setupTests.js',
+        '**/setupEnv.js',
+        '**/jest/TestFlags.js',
+        '**/dom-event-testing-library/testHelpers.js',
+        '**/utils/ReactDOMServerIntegrationTestUtils.js',
+        '**/babel/transform-react-version-pragma.js',
+        '**/babel/transform-test-gate-pragma.js',
+      ],
       rules: {
+        // Some helpers intentionally focus tests.
         'jest/no-focused-tests': OFF,
+        // Test fn helpers don't use static text names.
+        'jest/valid-title': OFF,
+        // We have our own assertion helpers.
+        'jest/expect-expect': OFF,
+        // Some helpers intentionally disable tests.
+        'jest/no-disabled-tests': OFF,
+        // Helpers export text function helpers.
+        'jest/no-export': OFF,
+        // The examples in comments trigger false errors.
+        'jest/no-commented-out-tests': OFF,
+      },
+    },
+    {
+      files: ['**/jest/TestFlags.js'],
+      rules: {
+        // The examples in comments trigger false errors.
+        'jest/no-commented-out-tests': OFF,
       },
     },
     {

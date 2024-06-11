@@ -43,7 +43,7 @@ afterEach(() => {
 });
 
 // @gate __DEV__
-it('can use act to flush effects', async () => {
+test('can use act to flush effects', async () => {
   function App() {
     React.useEffect(() => {
       yields.push(100);
@@ -60,7 +60,7 @@ it('can use act to flush effects', async () => {
 });
 
 // @gate __DEV__
-it('flushes effects on every call', async () => {
+test('flushes effects on every call', async () => {
   function App() {
     const [ctr, setCtr] = React.useState(0);
     React.useEffect(() => {
@@ -100,7 +100,7 @@ it('flushes effects on every call', async () => {
 });
 
 // @gate __DEV__
-it("should keep flushing effects until they're done", async () => {
+test("should keep flushing effects until they're done", async () => {
   function App() {
     const [ctr, setCtr] = React.useState(0);
     React.useEffect(() => {
@@ -120,7 +120,7 @@ it("should keep flushing effects until they're done", async () => {
 });
 
 // @gate __DEV__
-it('should flush effects only on exiting the outermost act', async () => {
+test('should flush effects only on exiting the outermost act', async () => {
   function App() {
     React.useEffect(() => {
       yields.push(0);
@@ -142,7 +142,7 @@ it('should flush effects only on exiting the outermost act', async () => {
 });
 
 // @gate __DEV__
-it('can handle cascading promises', async () => {
+test('can handle cascading promises', async () => {
   // this component triggers an effect, that waits a tick,
   // then sets state. repeats this 5 times.
   function App() {

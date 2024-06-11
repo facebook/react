@@ -1915,8 +1915,10 @@ describe('Store', () => {
       });
     });
 
-    // @reactVersion >= 18.0
-    it('from react get counted', () => {
+    // In React 19, JSX warnings were moved into the renderer - https://github.com/facebook/react/pull/29088
+    // The warning is moved to the Child instead of the Parent.
+    // @reactVersion >= 19.0.1
+    it('from react get counted [React >= 19.0.1]', () => {
       function Example() {
         return [<Child />];
       }
@@ -1925,15 +1927,41 @@ describe('Store', () => {
       }
 
       withErrorsOrWarningsIgnored(
-        ['Warning: Each child in a list should have a unique "key" prop'],
+        ['Each child in a list should have a unique "key" prop'],
         () => {
           act(() => render(<Example />));
         },
       );
 
       expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
         [root]
           ▾ <Example>
+              <Child> ✕
+      `);
+    });
+
+    // @reactVersion >= 18.0
+    // @reactVersion < 19.0
+    it('from react get counted [React 18.x]', () => {
+      function Example() {
+        return [<Child />];
+      }
+      function Child() {
+        return null;
+      }
+
+      withErrorsOrWarningsIgnored(
+        ['Each child in a list should have a unique "key" prop'],
+        () => {
+          act(() => render(<Example />));
+        },
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+          ▾ <Example> ✕
               <Child>
       `);
     });

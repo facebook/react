@@ -169,7 +169,7 @@ describe('ReactTransition', () => {
   }
 
   // @gate enableLegacyCache
-  test('isPending works even if called from outside an input event', async () => {
+  it('isPending works even if called from outside an input event', async () => {
     let start;
     function App() {
       const [show, setShow] = useState(false);
@@ -210,7 +210,7 @@ describe('ReactTransition', () => {
   });
 
   // @gate enableLegacyCache
-  test(
+  it(
     'when multiple transitions update the same queue, only the most recent ' +
       'one is allowed to finish (no intermediate states)',
     async () => {
@@ -329,7 +329,7 @@ describe('ReactTransition', () => {
 
   // Same as previous test, but for class update queue.
   // @gate enableLegacyCache
-  test(
+  it(
     'when multiple transitions update the same queue, only the most recent ' +
       'one is allowed to finish (no intermediate states) (classes)',
     async () => {
@@ -453,7 +453,7 @@ describe('ReactTransition', () => {
   );
 
   // @gate enableLegacyCache
-  test(
+  it(
     'when multiple transitions update overlapping queues, all the transitions ' +
       'across all the queues are entangled',
     async () => {
@@ -558,7 +558,7 @@ describe('ReactTransition', () => {
   );
 
   // @gate enableLegacyCache
-  test('interrupt a refresh transition if a new transition is scheduled', async () => {
+  it('interrupt a refresh transition if a new transition is scheduled', async () => {
     const root = ReactNoop.createRoot();
 
     await act(() => {
@@ -613,7 +613,7 @@ describe('ReactTransition', () => {
   });
 
   // @gate enableLegacyCache
-  test(
+  it(
     "interrupt a refresh transition when something suspends and we've " +
       'already bailed out on another transition in a parent',
     async () => {
@@ -705,7 +705,7 @@ describe('ReactTransition', () => {
   );
 
   // @gate enableLegacyCache
-  test(
+  it(
     'interrupt a refresh transition when something suspends and a parent ' +
       'component received an interleaved update after its queue was processed',
     async () => {

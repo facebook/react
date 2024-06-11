@@ -2536,7 +2536,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root1.render(<App return={17} />);
         });
       }).toErrorDev([
-        'Warning: useEffect must not return anything besides a ' +
+        'useEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned: 17',
       ]);
 
@@ -2546,7 +2546,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root2.render(<App return={null} />);
         });
       }).toErrorDev([
-        'Warning: useEffect must not return anything besides a ' +
+        'useEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned null. If your ' +
           'effect does not require clean up, return undefined (or nothing).',
       ]);
@@ -2557,7 +2557,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root3.render(<App return={Promise.resolve()} />);
         });
       }).toErrorDev([
-        'Warning: useEffect must not return anything besides a ' +
+        'useEffect must not return anything besides a ' +
           'function, which is used for clean-up.\n\n' +
           'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
       ]);
@@ -2915,7 +2915,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root1.render(<App return={17} />);
         });
       }).toErrorDev([
-        'Warning: useInsertionEffect must not return anything besides a ' +
+        'useInsertionEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned: 17',
       ]);
 
@@ -2925,7 +2925,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root2.render(<App return={null} />);
         });
       }).toErrorDev([
-        'Warning: useInsertionEffect must not return anything besides a ' +
+        'useInsertionEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned null. If your ' +
           'effect does not require clean up, return undefined (or nothing).',
       ]);
@@ -2936,7 +2936,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root3.render(<App return={Promise.resolve()} />);
         });
       }).toErrorDev([
-        'Warning: useInsertionEffect must not return anything besides a ' +
+        'useInsertionEffect must not return anything besides a ' +
           'function, which is used for clean-up.\n\n' +
           'It looks like you wrote useInsertionEffect(async () => ...) or returned a Promise.',
       ]);
@@ -2965,7 +2965,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         await act(() => {
           root.render(<App />);
         });
-      }).toErrorDev(['Warning: useInsertionEffect must not schedule updates.']);
+      }).toErrorDev(['useInsertionEffect must not schedule updates.']);
 
       await act(async () => {
         root.render(<App throw={true} />);
@@ -3007,7 +3007,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         await act(() => {
           root.render(<App foo="goodbye" />);
         });
-      }).toErrorDev(['Warning: useInsertionEffect must not schedule updates.']);
+      }).toErrorDev(['useInsertionEffect must not schedule updates.']);
 
       await act(async () => {
         root.render(<App throw={true} />);
@@ -3194,7 +3194,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root1.render(<App return={17} />);
         });
       }).toErrorDev([
-        'Warning: useLayoutEffect must not return anything besides a ' +
+        'useLayoutEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned: 17',
       ]);
 
@@ -3204,7 +3204,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root2.render(<App return={null} />);
         });
       }).toErrorDev([
-        'Warning: useLayoutEffect must not return anything besides a ' +
+        'useLayoutEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned null. If your ' +
           'effect does not require clean up, return undefined (or nothing).',
       ]);
@@ -3215,7 +3215,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root3.render(<App return={Promise.resolve()} />);
         });
       }).toErrorDev([
-        'Warning: useLayoutEffect must not return anything besides a ' +
+        'useLayoutEffect must not return anything besides a ' +
           'function, which is used for clean-up.\n\n' +
           'It looks like you wrote useLayoutEffect(async () => ...) or returned a Promise.',
       ]);
@@ -3687,7 +3687,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
         assertLog([]);
       }).toErrorDev([
-        'Warning: React has detected a change in the order of Hooks called by App. ' +
+        'React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
           'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
           '   Previous render            Next render\n' +
@@ -3784,7 +3784,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           );
           assertLog(['Unmount A']);
         }).toErrorDev([
-          'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
             'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +

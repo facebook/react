@@ -129,7 +129,7 @@ describe('ReactFreshIntegration', () => {
       testJavaScript,
     ],
     ['TypeScript syntax', executeTypescript, testTypeScript],
-  ])('%s', (language, execute, test) => {
+  ])('%s', (language, execute, runTest) => {
     async function render(source) {
       const Component = execute(source);
       await act(() => {
@@ -175,7 +175,7 @@ describe('ReactFreshIntegration', () => {
       expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    test(render, patch);
+    runTest(render, patch);
   });
 
   function testJavaScript(render, patch) {
