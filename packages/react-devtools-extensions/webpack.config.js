@@ -3,16 +3,7 @@
 const {resolve, isAbsolute, relative} = require('path');
 const Webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
-const {
-  DARK_MODE_DIMMED_WARNING_COLOR,
-  DARK_MODE_DIMMED_ERROR_COLOR,
-  DARK_MODE_DIMMED_LOG_COLOR,
-  LIGHT_MODE_DIMMED_WARNING_COLOR,
-  LIGHT_MODE_DIMMED_ERROR_COLOR,
-  LIGHT_MODE_DIMMED_LOG_COLOR,
-  GITHUB_URL,
-  getVersionString,
-} = require('./utils');
+const {GITHUB_URL, getVersionString} = require('./utils');
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
 
@@ -128,12 +119,6 @@ module.exports = {
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.LOGGING_URL': `"${LOGGING_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
-      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
     }),
     new Webpack.SourceMapDevToolPlugin({
       filename: '[file].map',

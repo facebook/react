@@ -15,8 +15,13 @@ import type {
   WorkTagMap,
   ConsolePatchSettings,
 } from './types';
-import {format, formatWithStyles} from './utils';
+import {formatWithStyles} from './utils';
 
+import {
+  FIREFOX_CONSOLE_DIMMING_COLOR,
+  ANSI_STYLE_DIMMING_TEMPLATE,
+  ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK,
+} from 'react-devtools-shared/src/constants';
 import {getInternalReactConstants, getDispatcherRef} from './renderer';
 import {
   getStackByFiberInDevAndProd,
@@ -25,7 +30,6 @@ import {
 import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];
-const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
 
 // React's custom built component stack strings match "\s{4}in"
 // Chrome's prefix matches "\s{4}at"
@@ -44,31 +48,18 @@ const STYLE_DIRECTIVE_REGEX = /^%c/;
 // method has been overridden by the patchForStrictMode function.
 // If it has we'll need to do some special formatting of the arguments
 // so the console color stays consistent
-function isStrictModeOverride(args: Array<string>, method: string): boolean {
-  return (
-    args.length >= 2 &&
-    STYLE_DIRECTIVE_REGEX.test(args[0]) &&
-    args[1] === `color: ${getConsoleColor(method) || ''}`
-  );
-}
-
-function getConsoleColor(method: string): ?string {
-  switch (method) {
-    case 'warn':
-      return consoleSettingsRef.browserTheme === 'light'
-        ? process.env.LIGHT_MODE_DIMMED_WARNING_COLOR
-        : process.env.DARK_MODE_DIMMED_WARNING_COLOR;
-    case 'error':
-      return consoleSettingsRef.browserTheme === 'light'
-        ? process.env.LIGHT_MODE_DIMMED_ERROR_COLOR
-        : process.env.DARK_MODE_DIMMED_ERROR_COLOR;
-    case 'log':
-    default:
-      return consoleSettingsRef.browserTheme === 'light'
-        ? process.env.LIGHT_MODE_DIMMED_LOG_COLOR
-        : process.env.DARK_MODE_DIMMED_LOG_COLOR;
+function isStrictModeOverride(args: Array<string>): boolean {
+  if (__IS_FIREFOX__) {
+    return (
+      args.length >= 2 &&
+      STYLE_DIRECTIVE_REGEX.test(args[0]) &&
+      args[1] === FIREFOX_CONSOLE_DIMMING_COLOR
+    );
+  } else {
+    return args.length >= 2 && args[0] === ANSI_STYLE_DIMMING_TEMPLATE;
   }
 }
+
 type OnErrorOrWarning = (
   fiber: Fiber,
   type: 'error' | 'warn',
@@ -92,11 +83,6 @@ for (const method in console) {
 }
 
 let unpatchFn: null | (() => void) = null;
-
-let isNode = false;
-try {
-  isNode = this === global;
-} catch (error) {}
 
 // Enables e.g. Jest tests to inject a mock console object.
 export function dangerous_setTargetConsoleForTesting(
@@ -247,9 +233,15 @@ export function patch({
                     (currentDispatcherRef: any),
                   );
                   if (componentStack !== '') {
-                    if (isStrictModeOverride(args, method)) {
-                      args[0] = `${args[0]} %s`;
-                      args.push(componentStack);
+                    if (isStrictModeOverride(args)) {
+                      if (__IS_FIREFOX__) {
+                        args[0] = `${args[0]} %s`;
+                        args.push(componentStack);
+                      } else {
+                        args[0] =
+                          ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK;
+                        args.push(componentStack);
+                      }
                     } else {
                       args.push(componentStack);
                     }
@@ -337,17 +329,13 @@ export function patchForStrictMode() {
       // $FlowFixMe[missing-local-annot]
       const overrideMethod = (...args) => {
         if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
-          // Dim the text color of the double logs if we're not
-          // hiding them.
-          if (isNode) {
-            originalMethod(DIMMED_NODE_CONSOLE_COLOR, format(...args));
+          // Dim the text color of the double logs if we're not hiding them.
+          if (__IS_FIREFOX__) {
+            originalMethod(
+              ...formatWithStyles(args, FIREFOX_CONSOLE_DIMMING_COLOR),
+            );
           } else {
-            const color = getConsoleColor(method);
-            if (color) {
-              originalMethod(...formatWithStyles(args, `color: ${color}`));
-            } else {
-              throw Error('Console color is not defined');
-            }
+            originalMethod(ANSI_STYLE_DIMMING_TEMPLATE, ...args);
           }
         }
       };
