@@ -2314,15 +2314,32 @@ module.exports = function ($$$config) {
         : deleteRemainingChildren(returnFiber, currentFirstChild);
     }
     return function (returnFiber, currentFirstChild, newChild, lanes) {
-      thenableIndexCounter$1 = 0;
-      returnFiber = reconcileChildFibersImpl(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes
-      );
-      thenableState$1 = null;
-      return returnFiber;
+      try {
+        thenableIndexCounter$1 = 0;
+        var firstChildFiber = reconcileChildFibersImpl(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+          null
+        );
+        thenableState$1 = null;
+        return firstChildFiber;
+      } catch (x) {
+        if (
+          x === SuspenseException ||
+          (!disableLegacyMode &&
+            0 === (returnFiber.mode & 1) &&
+            "object" === typeof x &&
+            null !== x &&
+            "function" === typeof x.then)
+        )
+          throw x;
+        currentFirstChild = createFiber(29, x, null, returnFiber.mode);
+        currentFirstChild.lanes = lanes;
+        currentFirstChild.return = returnFiber;
+        return currentFirstChild;
+      }
     };
   }
   function pushHiddenContext(fiber, context) {
@@ -6039,6 +6056,9 @@ module.exports = function ($$$config) {
               : (workInProgress = null),
             workInProgress
           );
+        break;
+      case 29:
+        throw workInProgress.pendingProps;
     }
     throw Error(formatProdErrorMessage(156, workInProgress.tag));
   }
@@ -7228,6 +7248,8 @@ module.exports = function ($$$config) {
             bubbleProperties(workInProgress)),
           null
         );
+      case 29:
+        if (!disableLegacyMode) return null;
     }
     throw Error(formatProdErrorMessage(156, workInProgress.tag));
   }
@@ -12673,7 +12695,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-01a40570c3-20240611"
+      reconcilerVersion: "19.0.0-www-classic-270229f0c3-20240611"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

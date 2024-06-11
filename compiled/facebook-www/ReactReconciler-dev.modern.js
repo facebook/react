@@ -3795,16 +3795,24 @@ __DEV__ &&
         return deleteRemainingChildren(returnFiber, currentFirstChild);
       }
       return function (returnFiber, currentFirstChild, newChild, lanes) {
-        thenableIndexCounter$1 = 0;
-        returnFiber = reconcileChildFibersImpl(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          lanes,
-          null
-        );
-        thenableState$1 = null;
-        return returnFiber;
+        try {
+          thenableIndexCounter$1 = 0;
+          var firstChildFiber = reconcileChildFibersImpl(
+            returnFiber,
+            currentFirstChild,
+            newChild,
+            lanes,
+            null
+          );
+          thenableState$1 = null;
+          return firstChildFiber;
+        } catch (x) {
+          if (x === SuspenseException) throw x;
+          currentFirstChild = createFiber(29, x, null, returnFiber.mode);
+          currentFirstChild.lanes = lanes;
+          currentFirstChild.return = returnFiber;
+          return currentFirstChild;
+        }
       };
     }
     function pushHiddenContext(fiber, context) {
@@ -8784,6 +8792,9 @@ __DEV__ &&
                 : (workInProgress = null),
               workInProgress
             );
+          break;
+        case 29:
+          throw workInProgress.pendingProps;
       }
       throw Error(
         "Unknown unit of work tag (" +
@@ -18369,7 +18380,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-01a40570c3-20240611"
+        reconcilerVersion: "19.0.0-www-modern-270229f0c3-20240611"
       });
     };
     exports.isAlreadyRendering = function () {

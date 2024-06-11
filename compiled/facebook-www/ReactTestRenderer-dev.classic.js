@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1090() {
+    function JSCompiler_object_inline_createNodeMock_1095() {
       return null;
     }
     function findHook(fiber, id) {
@@ -3379,16 +3379,24 @@ __DEV__ &&
         return deleteRemainingChildren(returnFiber, currentFirstChild);
       }
       return function (returnFiber, currentFirstChild, newChild, lanes) {
-        thenableIndexCounter$1 = 0;
-        returnFiber = reconcileChildFibersImpl(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          lanes,
-          null
-        );
-        thenableState$1 = null;
-        return returnFiber;
+        try {
+          thenableIndexCounter$1 = 0;
+          var firstChildFiber = reconcileChildFibersImpl(
+            returnFiber,
+            currentFirstChild,
+            newChild,
+            lanes,
+            null
+          );
+          thenableState$1 = null;
+          return firstChildFiber;
+        } catch (x) {
+          if (x === SuspenseException) throw x;
+          currentFirstChild = createFiber(29, x, null, returnFiber.mode);
+          currentFirstChild.lanes = lanes;
+          currentFirstChild.return = returnFiber;
+          return currentFirstChild;
+        }
       };
     }
     function pushHiddenContext(fiber, context) {
@@ -7476,6 +7484,8 @@ __DEV__ &&
             ),
             workInProgress.child
           );
+        case 29:
+          throw workInProgress.pendingProps;
       }
       throw Error(
         "Unknown unit of work tag (" +
@@ -14710,20 +14720,20 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-01a40570c3-20240611"
+        reconcilerVersion: "19.0.0-www-classic-270229f0c3-20240611"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-www-classic-01a40570c3-20240611",
+      version: "19.0.0-www-classic-270229f0c3-20240611",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1090,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1095,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1,
