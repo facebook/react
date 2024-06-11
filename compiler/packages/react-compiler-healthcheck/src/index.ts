@@ -22,19 +22,19 @@ async function main() {
       type: "string",
       default: "**/+(*.{js,mjs,jsx,ts,tsx}|package.json)",
     },
- )
- .option('verbose', {
-      alias: 'v',
-      type: 'boolean',
-      default: false,
-      description: 'run with verbose logging',
+    )
+   .option('verbose', {
+     description: 'run with verbose logging',
+     type: 'boolean',
+     default: false,
+     alias: 'v',
     })
     .parseSync();
 
   const spinner = ora("Checking").start();
   let src = argv.src;
   let verbose = argv.verbose;
-  
+
   const globOptions = {
     onlyFiles: true,
     ignore: [
