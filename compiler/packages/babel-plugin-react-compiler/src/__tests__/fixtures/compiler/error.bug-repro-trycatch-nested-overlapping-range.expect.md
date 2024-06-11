@@ -20,7 +20,7 @@ function Foo() {
 ## Error
 
 ```
-Invariant: Invalid nesting in program blocks or scopes. Items overlap but are not nested: 2:24(18:26)
+Invariant: Invalid nesting in program blocks or scopes. Items overlap but are not nested: 2:23(17:25)
 ```
           
       

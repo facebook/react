@@ -33,51 +33,59 @@ import { useState } from "react";
 import { Stringify } from "shared-runtime";
 
 function Component() {
-  const $ = _c(8);
+  const $ = _c(10);
   const [state, setState] = useState(0);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Stringify text="Counter" />;
-    $[0] = t0;
+  if ($[0] !== state) {
+    t0 = () => setState(state + 1);
+    $[0] = state;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   let t1;
-  if ($[1] !== state) {
-    t1 = <span>{state}</span>;
-    $[1] = state;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = <Stringify text="Counter" />;
     $[2] = t1;
   } else {
     t1 = $[2];
   }
   let t2;
   if ($[3] !== state) {
-    t2 = (
-      <button data-testid="button" onClick={() => setState(state + 1)}>
-        increment
-      </button>
-    );
+    t2 = <span>{state}</span>;
     $[3] = state;
     $[4] = t2;
   } else {
     t2 = $[4];
   }
   let t3;
-  if ($[5] !== t1 || $[6] !== t2) {
+  if ($[5] !== t0) {
     t3 = (
+      <button data-testid="button" onClick={t0}>
+        increment
+      </button>
+    );
+    $[5] = t0;
+    $[6] = t3;
+  } else {
+    t3 = $[6];
+  }
+  let t4;
+  if ($[7] !== t2 || $[8] !== t3) {
+    t4 = (
       <div>
-        {t0}
         {t1}
         {t2}
+        {t3}
       </div>
     );
-    $[5] = t1;
-    $[6] = t2;
-    $[7] = t3;
+    $[7] = t2;
+    $[8] = t3;
+    $[9] = t4;
   } else {
-    t3 = $[7];
+    t4 = $[9];
   }
-  return t3;
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {
