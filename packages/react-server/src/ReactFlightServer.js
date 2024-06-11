@@ -473,7 +473,8 @@ const ABORTING = 1;
 const CLOSING = 2;
 const CLOSED = 3;
 
-export function createRequest(
+function RequestInstance(
+  this: $FlowFixMe,
   model: ReactClientValue,
   bundlerConfig: ClientManifest,
   onError: void | ((error: mixed) => ?string),
@@ -481,7 +482,7 @@ export function createRequest(
   onPostpone: void | ((reason: string) => void),
   environmentName: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
-): Request {
+) {
   if (
     ReactSharedInternals.A !== null &&
     ReactSharedInternals.A !== DefaultAsyncDispatcher
@@ -499,42 +500,62 @@ export function createRequest(
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
   const hints = createHints();
-  const request: Request = ({
-    status: OPEN,
-    flushScheduled: false,
-    fatalError: null,
-    destination: null,
-    bundlerConfig,
-    cache: new Map(),
-    nextChunkId: 0,
-    pendingChunks: 0,
-    hints,
-    abortListeners: new Set(),
-    abortableTasks: abortSet,
-    pingedTasks: pingedTasks,
-    completedImportChunks: ([]: Array<Chunk>),
-    completedHintChunks: ([]: Array<Chunk>),
-    completedRegularChunks: ([]: Array<Chunk | BinaryChunk>),
-    completedErrorChunks: ([]: Array<Chunk>),
-    writtenSymbols: new Map(),
-    writtenClientReferences: new Map(),
-    writtenServerReferences: new Map(),
-    writtenObjects: new WeakMap(),
-    temporaryReferences: temporaryReferences,
-    identifierPrefix: identifierPrefix || '',
-    identifierCount: 1,
-    taintCleanupQueue: cleanupQueue,
-    onError: onError === undefined ? defaultErrorHandler : onError,
-    onPostpone: onPostpone === undefined ? defaultPostponeHandler : onPostpone,
-  }: any);
+  this.status = OPEN;
+  this.flushScheduled = false;
+  this.fatalError = null;
+  this.destination = null;
+  this.bundlerConfig = bundlerConfig;
+  this.cache = new Map();
+  this.nextChunkId = 0;
+  this.pendingChunks = 0;
+  this.hints = hints;
+  this.abortListeners = new Set();
+  this.abortableTasks = abortSet;
+  this.pingedTasks = pingedTasks;
+  this.completedImportChunks = ([]: Array<Chunk>);
+  this.completedHintChunks = ([]: Array<Chunk>);
+  this.completedRegularChunks = ([]: Array<Chunk | BinaryChunk>);
+  this.completedErrorChunks = ([]: Array<Chunk>);
+  this.writtenSymbols = new Map();
+  this.writtenClientReferences = new Map();
+  this.writtenServerReferences = new Map();
+  this.writtenObjects = new WeakMap();
+  this.temporaryReferences = temporaryReferences;
+  this.identifierPrefix = identifierPrefix || '';
+  this.identifierCount = 1;
+  this.taintCleanupQueue = cleanupQueue;
+  this.onError = onError === undefined ? defaultErrorHandler : onError;
+  this.onPostpone =
+    onPostpone === undefined ? defaultPostponeHandler : onPostpone;
+
   if (__DEV__) {
-    request.environmentName =
+    this.environmentName =
       environmentName === undefined ? 'Server' : environmentName;
-    request.didWarnForKey = null;
+    this.didWarnForKey = null;
   }
-  const rootTask = createTask(request, model, null, false, abortSet);
+  const rootTask = createTask(this, model, null, false, abortSet);
   pingedTasks.push(rootTask);
-  return request;
+}
+
+export function createRequest(
+  model: ReactClientValue,
+  bundlerConfig: ClientManifest,
+  onError: void | ((error: mixed) => ?string),
+  identifierPrefix?: string,
+  onPostpone: void | ((reason: string) => void),
+  environmentName: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+): Request {
+  // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
+  return new RequestInstance(
+    model,
+    bundlerConfig,
+    onError,
+    identifierPrefix,
+    onPostpone,
+    environmentName,
+    temporaryReferences,
+  );
 }
 
 let currentRequest: null | Request = null;
