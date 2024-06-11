@@ -1136,6 +1136,46 @@ function missingCall() {
   );
 }
 
+function ResponseInstance(
+  this: $FlowFixMe,
+  bundlerConfig: SSRModuleMap,
+  moduleLoading: ModuleLoading,
+  callServer: void | CallServerCallback,
+  encodeFormAction: void | EncodeFormActionCallback,
+  nonce: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+  findSourceMapURL: void | FindSourceMapURLCallback,
+) {
+  const chunks: Map<number, SomeChunk<any>> = new Map();
+  this._bundlerConfig = bundlerConfig;
+  this._moduleLoading = moduleLoading;
+  this._callServer = callServer !== undefined ? callServer : missingCall;
+  this._encodeFormAction = encodeFormAction;
+  this._nonce = nonce;
+  this._chunks = chunks;
+  this._stringDecoder = createStringDecoder();
+  this._fromJSON = (null: any);
+  this._rowState = 0;
+  this._rowID = 0;
+  this._rowTag = 0;
+  this._rowLength = 0;
+  this._buffer = [];
+  this._tempRefs = temporaryReferences;
+  if (supportsCreateTask) {
+    // Any stacks that appear on the server need to be rooted somehow on the client
+    // so we create a root Task for this response which will be the root owner for any
+    // elements created by the server. We use the "use server" string to indicate that
+    // this is where we enter the server from the client.
+    // TODO: Make this string configurable.
+    this._debugRootTask = (console: any).createTask('"use server"');
+  }
+  if (__DEV__) {
+    this._debugFindSourceMapURL = findSourceMapURL;
+  }
+  // Don't inline this call because it causes closure to outline the call above.
+  this._fromJSON = createFromJSONCallback(this);
+}
+
 export function createResponse(
   bundlerConfig: SSRModuleMap,
   moduleLoading: ModuleLoading,
@@ -1145,37 +1185,16 @@ export function createResponse(
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
 ): Response {
-  const chunks: Map<number, SomeChunk<any>> = new Map();
-  const response: Response = {
-    _bundlerConfig: bundlerConfig,
-    _moduleLoading: moduleLoading,
-    _callServer: callServer !== undefined ? callServer : missingCall,
-    _encodeFormAction: encodeFormAction,
-    _nonce: nonce,
-    _chunks: chunks,
-    _stringDecoder: createStringDecoder(),
-    _fromJSON: (null: any),
-    _rowState: 0,
-    _rowID: 0,
-    _rowTag: 0,
-    _rowLength: 0,
-    _buffer: [],
-    _tempRefs: temporaryReferences,
-  };
-  if (supportsCreateTask) {
-    // Any stacks that appear on the server need to be rooted somehow on the client
-    // so we create a root Task for this response which will be the root owner for any
-    // elements created by the server. We use the "use server" string to indicate that
-    // this is where we enter the server from the client.
-    // TODO: Make this string configurable.
-    response._debugRootTask = (console: any).createTask('"use server"');
-  }
-  if (__DEV__) {
-    response._debugFindSourceMapURL = findSourceMapURL;
-  }
-  // Don't inline this call because it causes closure to outline the call above.
-  response._fromJSON = createFromJSONCallback(response);
-  return response;
+  // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
+  return new ResponseInstance(
+    bundlerConfig,
+    moduleLoading,
+    callServer,
+    encodeFormAction,
+    nonce,
+    temporaryReferences,
+    findSourceMapURL,
+  );
 }
 
 function resolveModel(
