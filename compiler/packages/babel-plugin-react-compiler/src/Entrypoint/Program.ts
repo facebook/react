@@ -499,23 +499,28 @@ function getReactFunctionType(
       return getComponentOrHookLike(fn, hookPattern) ?? "Other";
     }
   }
+
+  // Component and hook declarations are known components/hooks
+  let componentSyntaxType: ReactFunctionType | null = null;
+  if (fn.isFunctionDeclaration()) {
+    if (isComponentDeclaration(fn.node)) {
+      componentSyntaxType = "Component";
+    } else if (isHookDeclaration(fn.node)) {
+      componentSyntaxType = "Hook";
+    }
+  }
+
   switch (pass.opts.compilationMode) {
     case "annotation": {
       // opt-ins are checked above
       return null;
     }
     case "infer": {
-      // Component and hook declarations are known components/hooks
-      if (fn.isFunctionDeclaration()) {
-        if (isComponentDeclaration(fn.node)) {
-          return "Component";
-        } else if (isHookDeclaration(fn.node)) {
-          return "Hook";
-        }
-      }
-
-      // Otherwise check if this is a component or hook-like function
-      return getComponentOrHookLike(fn, hookPattern);
+      // Check if this is a component or hook-like function
+      return componentSyntaxType ?? getComponentOrHookLike(fn, hookPattern);
+    }
+    case "syntax": {
+      return componentSyntaxType;
     }
     case "all": {
       // Compile only top level functions
