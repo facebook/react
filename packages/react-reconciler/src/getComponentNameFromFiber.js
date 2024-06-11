@@ -44,6 +44,7 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  Throw,
 } from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
@@ -160,6 +161,26 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       if (enableLegacyHidden) {
         return 'LegacyHidden';
       }
+      break;
+    case Throw: {
+      if (__DEV__) {
+        // For an error in child position we use the of the inner most parent component.
+        // Whether a Server Component or the parent Fiber.
+        const debugInfo = fiber._debugInfo;
+        if (debugInfo != null) {
+          for (let i = debugInfo.length - 1; i >= 0; i--) {
+            if (typeof debugInfo[i].name === 'string') {
+              return debugInfo[i].name;
+            }
+          }
+        }
+        if (fiber.return === null) {
+          return null;
+        }
+        return getComponentNameFromFiber(fiber.return);
+      }
+      return null;
+    }
   }
 
   return null;

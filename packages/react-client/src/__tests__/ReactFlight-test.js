@@ -27,14 +27,27 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+function normalizeComponentInfo(debugInfo) {
+  if (typeof debugInfo.stack === 'string') {
+    const {task, ...copy} = debugInfo;
+    copy.stack = normalizeCodeLocInfo(debugInfo.stack);
+    if (debugInfo.owner) {
+      copy.owner = normalizeComponentInfo(debugInfo.owner);
+    }
+    return copy;
+  } else {
+    return debugInfo;
+  }
+}
+
 function getDebugInfo(obj) {
   const debugInfo = obj._debugInfo;
   if (debugInfo) {
+    const copy = [];
     for (let i = 0; i < debugInfo.length; i++) {
-      if (typeof debugInfo[i].stack === 'string') {
-        debugInfo[i].stack = normalizeCodeLocInfo(debugInfo[i].stack);
-      }
+      copy.push(normalizeComponentInfo(debugInfo[i]));
     }
+    return copy;
   }
   return debugInfo;
 }

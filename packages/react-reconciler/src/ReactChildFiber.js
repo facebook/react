@@ -48,6 +48,7 @@ import {
   enableRefAsProp,
   enableAsyncIterableChildren,
   disableLegacyMode,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1959,7 +1960,28 @@ function createChildReconciler(
       const throwFiber = createFiberFromThrow(x, returnFiber.mode, lanes);
       throwFiber.return = returnFiber;
       if (__DEV__) {
-        throwFiber._debugInfo = currentDebugInfo;
+        const debugInfo = (throwFiber._debugInfo = currentDebugInfo);
+        // Conceptually the error's owner/task should ideally be captured when the
+        // Error constructor is called but neither console.createTask does this,
+        // nor do we override them to capture our `owner`. So instead, we use the
+        // nearest parent as the owner/task of the error. This is usually the same
+        // thing when it's thrown from the same async component but not if you await
+        // a promise started from a different component/task.
+        throwFiber._debugOwner = returnFiber._debugOwner;
+        if (enableOwnerStacks) {
+          throwFiber._debugTask = returnFiber._debugTask;
+        }
+        if (debugInfo != null) {
+          for (let i = debugInfo.length - 1; i >= 0; i--) {
+            if (typeof debugInfo[i].stack === 'string') {
+              throwFiber._debugOwner = (debugInfo[i]: any);
+              if (enableOwnerStacks) {
+                throwFiber._debugTask = debugInfo[i].task;
+              }
+              break;
+            }
+          }
+        }
       }
       return throwFiber;
     } finally {

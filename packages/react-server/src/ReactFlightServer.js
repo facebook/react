@@ -352,6 +352,7 @@ export type ReactClientValue =
   // subtype, so the receiver can only accept once of these.
   | React$Element<string>
   | React$Element<ClientReference<any> & any>
+  | ReactComponentInfo
   | string
   | boolean
   | number
@@ -2462,6 +2463,32 @@ function renderModelDestructive(
       );
     }
     if (__DEV__) {
+      if (
+        // TODO: We don't currently have a brand check on ReactComponentInfo. Reconsider.
+        typeof value.task === 'object' &&
+        value.task !== null &&
+        // $FlowFixMe[method-unbinding]
+        typeof value.task.run === 'function' &&
+        typeof value.name === 'string' &&
+        typeof value.env === 'string' &&
+        value.owner !== undefined &&
+        (enableOwnerStacks
+          ? typeof (value: any).stack === 'string'
+          : typeof (value: any).stack === 'undefined')
+      ) {
+        // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
+        // need to omit it before serializing.
+        const componentDebugInfo = {
+          name: value.name,
+          env: value.env,
+          owner: value.owner,
+        };
+        if (enableOwnerStacks) {
+          (componentDebugInfo: any).stack = (value: any).stack;
+        }
+        return (componentDebugInfo: any);
+      }
+
       if (objectName(value) !== 'Object') {
         console.error(
           'Only plain objects can be passed to Client Components from Server Components. ' +
@@ -3231,6 +3258,12 @@ function forwardDebugInfo(
 ) {
   for (let i = 0; i < debugInfo.length; i++) {
     request.pendingChunks++;
+    if (typeof debugInfo[i].name === 'string') {
+      // We outline this model eagerly so that we can refer to by reference as an owner.
+      // If we had a smarter way to dedupe we might not have to do this if there ends up
+      // being no references to this as an owner.
+      outlineModel(request, debugInfo[i]);
+    }
     emitDebugChunk(request, id, debugInfo[i]);
   }
 }
