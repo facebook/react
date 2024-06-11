@@ -1054,13 +1054,12 @@ function renderFunctionComponent<Props>(
       request.pendingChunks++;
 
       const componentDebugID = debugID;
-      componentDebugInfo = {
+      componentDebugInfo = ({
         name: componentName,
         env: request.environmentName,
         owner: owner,
-      };
+      }: ReactComponentInfo);
       if (enableOwnerStacks) {
-        // $FlowFixMe[prop-missing]
         // $FlowFixMe[cannot-write]
         componentDebugInfo.stack = stack;
       }
@@ -2490,15 +2489,16 @@ function renderModelDestructive(
       ) {
         // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
         // need to omit it before serializing.
-        const componentDebugInfo = {
+        const componentDebugInfo: Omit<ReactComponentInfo, 'task'> = {
           name: value.name,
           env: value.env,
-          owner: value.owner,
+          owner: (value: any).owner,
         };
         if (enableOwnerStacks) {
-          (componentDebugInfo: any).stack = (value: any).stack;
+          // $FlowFixMe[cannot-write]
+          componentDebugInfo.stack = (value: any).stack;
         }
-        return (componentDebugInfo: any);
+        return componentDebugInfo;
       }
 
       if (objectName(value) !== 'Object') {
