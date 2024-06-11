@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<82e2b14aefb0095e8e550c733d58de3f>>
+ * @generated SignedSource<<0f8fb935cba4739044ec815f4845fc5b>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1120() {
+    function JSCompiler_object_inline_createNodeMock_1116() {
       return null;
     }
     function findHook(fiber, id) {
@@ -292,6 +292,14 @@ __DEV__ &&
           if ("function" === typeof type)
             return type.displayName || type.name || null;
           if ("string" === typeof type) return type;
+          break;
+        case 29:
+          type = fiber._debugInfo;
+          if (null != type)
+            for (var i = type.length - 1; 0 <= i; i--)
+              if ("string" === typeof type[i].name) return type[i].name;
+          if (null !== fiber.return)
+            return getComponentNameFromFiber(fiber.return);
       }
       return null;
     }
@@ -2438,12 +2446,14 @@ __DEV__ &&
           "Hooks are not supported inside an async component. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
         );
     }
-    function mergeDebugInfo(outer, inner) {
-      return null == inner
-        ? outer
-        : null === outer
-        ? inner
-        : outer.concat(inner);
+    function pushDebugInfo(debugInfo) {
+      var previousDebugInfo = currentDebugInfo;
+      null != debugInfo &&
+        (currentDebugInfo =
+          null === previousDebugInfo
+            ? debugInfo
+            : previousDebugInfo.concat(debugInfo));
+      return previousDebugInfo;
     }
     function validateFragmentProps(element, fiber, returnFiber) {
       for (var keys = Object.keys(element.props), i = 0; i < keys.length; i++) {
@@ -2581,13 +2591,7 @@ __DEV__ &&
           (newFiber.flags |= 33554434);
         return newFiber;
       }
-      function updateTextNode(
-        returnFiber,
-        current,
-        textContent,
-        lanes,
-        debugInfo
-      ) {
+      function updateTextNode(returnFiber, current, textContent, lanes) {
         if (null === current || 6 !== current.tag)
           return (
             (current = createFiberFromText(
@@ -2596,15 +2600,15 @@ __DEV__ &&
               lanes
             )),
             (current.return = returnFiber),
-            (current._debugInfo = debugInfo),
+            (current._debugInfo = currentDebugInfo),
             current
           );
         current = useFiber(current, textContent);
         current.return = returnFiber;
-        current._debugInfo = debugInfo;
+        current._debugInfo = currentDebugInfo;
         return current;
       }
-      function updateElement(returnFiber, current, element, lanes, debugInfo) {
+      function updateElement(returnFiber, current, element, lanes) {
         var elementType = element.type;
         if (elementType === REACT_FRAGMENT_TYPE)
           return (
@@ -2613,8 +2617,7 @@ __DEV__ &&
               current,
               element.props.children,
               lanes,
-              element.key,
-              debugInfo
+              element.key
             )),
             validateFragmentProps(element, current, returnFiber),
             current
@@ -2633,16 +2636,16 @@ __DEV__ &&
             coerceRef(returnFiber, current, lanes, element),
             (lanes.return = returnFiber),
             (lanes._debugOwner = element._owner),
-            (lanes._debugInfo = debugInfo),
+            (lanes._debugInfo = currentDebugInfo),
             lanes
           );
         lanes = createFiberFromElement(element, returnFiber.mode, lanes);
         coerceRef(returnFiber, current, lanes, element);
         lanes.return = returnFiber;
-        lanes._debugInfo = debugInfo;
+        lanes._debugInfo = currentDebugInfo;
         return lanes;
       }
-      function updatePortal(returnFiber, current, portal, lanes, debugInfo) {
+      function updatePortal(returnFiber, current, portal, lanes) {
         if (
           null === current ||
           4 !== current.tag ||
@@ -2652,22 +2655,15 @@ __DEV__ &&
           return (
             (current = createFiberFromPortal(portal, returnFiber.mode, lanes)),
             (current.return = returnFiber),
-            (current._debugInfo = debugInfo),
+            (current._debugInfo = currentDebugInfo),
             current
           );
         current = useFiber(current, portal.children || []);
         current.return = returnFiber;
-        current._debugInfo = debugInfo;
+        current._debugInfo = currentDebugInfo;
         return current;
       }
-      function updateFragment(
-        returnFiber,
-        current,
-        fragment,
-        lanes,
-        key,
-        debugInfo
-      ) {
+      function updateFragment(returnFiber, current, fragment, lanes, key) {
         if (null === current || 7 !== current.tag)
           return (
             (current = createFiberFromFragment(
@@ -2677,15 +2673,15 @@ __DEV__ &&
               key
             )),
             (current.return = returnFiber),
-            (current._debugInfo = debugInfo),
+            (current._debugInfo = currentDebugInfo),
             current
           );
         current = useFiber(current, fragment);
         current.return = returnFiber;
-        current._debugInfo = debugInfo;
+        current._debugInfo = currentDebugInfo;
         return current;
       }
-      function createChild(returnFiber, newChild, lanes, debugInfo) {
+      function createChild(returnFiber, newChild, lanes) {
         if (
           ("string" === typeof newChild && "" !== newChild) ||
           "number" === typeof newChild ||
@@ -2698,7 +2694,7 @@ __DEV__ &&
               lanes
             )),
             (newChild.return = returnFiber),
-            (newChild._debugInfo = debugInfo),
+            (newChild._debugInfo = currentDebugInfo),
             newChild
           );
         if ("object" === typeof newChild && null !== newChild) {
@@ -2712,10 +2708,9 @@ __DEV__ &&
                 )),
                 coerceRef(returnFiber, null, lanes, newChild),
                 (lanes.return = returnFiber),
-                (lanes._debugInfo = mergeDebugInfo(
-                  debugInfo,
-                  newChild._debugInfo
-                )),
+                (returnFiber = pushDebugInfo(newChild._debugInfo)),
+                (lanes._debugInfo = currentDebugInfo),
+                (currentDebugInfo = returnFiber),
                 lanes
               );
             case REACT_PORTAL_TYPE:
@@ -2726,17 +2721,15 @@ __DEV__ &&
                   lanes
                 )),
                 (newChild.return = returnFiber),
-                (newChild._debugInfo = debugInfo),
+                (newChild._debugInfo = currentDebugInfo),
                 newChild
               );
             case REACT_LAZY_TYPE:
-              var resolvedChild = callLazyInitInDEV(newChild);
-              return createChild(
-                returnFiber,
-                resolvedChild,
-                lanes,
-                mergeDebugInfo(debugInfo, newChild._debugInfo)
-              );
+              var _prevDebugInfo = pushDebugInfo(newChild._debugInfo);
+              newChild = callLazyInitInDEV(newChild);
+              returnFiber = createChild(returnFiber, newChild, lanes);
+              currentDebugInfo = _prevDebugInfo;
+              return returnFiber;
           }
           if (isArrayImpl(newChild) || getIteratorFn(newChild))
             return (
@@ -2747,25 +2740,27 @@ __DEV__ &&
                 null
               )),
               (lanes.return = returnFiber),
-              (lanes._debugInfo = mergeDebugInfo(
-                debugInfo,
-                newChild._debugInfo
-              )),
+              (returnFiber = pushDebugInfo(newChild._debugInfo)),
+              (lanes._debugInfo = currentDebugInfo),
+              (currentDebugInfo = returnFiber),
               lanes
             );
           if ("function" === typeof newChild.then)
-            return createChild(
-              returnFiber,
-              unwrapThenable(newChild),
-              lanes,
-              mergeDebugInfo(debugInfo, newChild._debugInfo)
+            return (
+              (_prevDebugInfo = pushDebugInfo(newChild._debugInfo)),
+              (returnFiber = createChild(
+                returnFiber,
+                unwrapThenable(newChild),
+                lanes
+              )),
+              (currentDebugInfo = _prevDebugInfo),
+              returnFiber
             );
           if (newChild.$$typeof === REACT_CONTEXT_TYPE)
             return createChild(
               returnFiber,
               readContextDuringReconciliation(returnFiber, newChild, lanes),
-              lanes,
-              debugInfo
+              lanes
             );
           throwOnInvalidObjectType(returnFiber, newChild);
         }
@@ -2774,7 +2769,7 @@ __DEV__ &&
         "symbol" === typeof newChild && warnOnSymbolType(returnFiber, newChild);
         return null;
       }
-      function updateSlot(returnFiber, oldFiber, newChild, lanes, debugInfo) {
+      function updateSlot(returnFiber, oldFiber, newChild, lanes) {
         var key = null !== oldFiber ? oldFiber.key : null;
         if (
           ("string" === typeof newChild && "" !== newChild) ||
@@ -2783,73 +2778,70 @@ __DEV__ &&
         )
           return null !== key
             ? null
-            : updateTextNode(
-                returnFiber,
-                oldFiber,
-                "" + newChild,
-                lanes,
-                debugInfo
-              );
+            : updateTextNode(returnFiber, oldFiber, "" + newChild, lanes);
         if ("object" === typeof newChild && null !== newChild) {
           switch (newChild.$$typeof) {
             case REACT_ELEMENT_TYPE:
               return newChild.key === key
-                ? updateElement(
+                ? ((key = pushDebugInfo(newChild._debugInfo)),
+                  (returnFiber = updateElement(
                     returnFiber,
                     oldFiber,
                     newChild,
-                    lanes,
-                    mergeDebugInfo(debugInfo, newChild._debugInfo)
-                  )
+                    lanes
+                  )),
+                  (currentDebugInfo = key),
+                  returnFiber)
                 : null;
             case REACT_PORTAL_TYPE:
               return newChild.key === key
-                ? updatePortal(
-                    returnFiber,
-                    oldFiber,
-                    newChild,
-                    lanes,
-                    debugInfo
-                  )
+                ? updatePortal(returnFiber, oldFiber, newChild, lanes)
                 : null;
             case REACT_LAZY_TYPE:
               return (
-                (key = callLazyInitInDEV(newChild)),
-                updateSlot(
-                  returnFiber,
-                  oldFiber,
-                  key,
-                  lanes,
-                  mergeDebugInfo(debugInfo, newChild._debugInfo)
-                )
-              );
-          }
-          if (isArrayImpl(newChild) || getIteratorFn(newChild))
-            return null !== key
-              ? null
-              : updateFragment(
+                (key = pushDebugInfo(newChild._debugInfo)),
+                (newChild = callLazyInitInDEV(newChild)),
+                (returnFiber = updateSlot(
                   returnFiber,
                   oldFiber,
                   newChild,
-                  lanes,
-                  null,
-                  mergeDebugInfo(debugInfo, newChild._debugInfo)
-                );
-          if ("function" === typeof newChild.then)
-            return updateSlot(
+                  lanes
+                )),
+                (currentDebugInfo = key),
+                returnFiber
+              );
+          }
+          if (isArrayImpl(newChild) || getIteratorFn(newChild)) {
+            if (null !== key) return null;
+            key = pushDebugInfo(newChild._debugInfo);
+            returnFiber = updateFragment(
               returnFiber,
               oldFiber,
-              unwrapThenable(newChild),
+              newChild,
               lanes,
-              debugInfo
+              null
+            );
+            currentDebugInfo = key;
+            return returnFiber;
+          }
+          if ("function" === typeof newChild.then)
+            return (
+              (key = pushDebugInfo(newChild._debugInfo)),
+              (returnFiber = updateSlot(
+                returnFiber,
+                oldFiber,
+                unwrapThenable(newChild),
+                lanes
+              )),
+              (currentDebugInfo = key),
+              returnFiber
             );
           if (newChild.$$typeof === REACT_CONTEXT_TYPE)
             return updateSlot(
               returnFiber,
               oldFiber,
               readContextDuringReconciliation(returnFiber, newChild, lanes),
-              lanes,
-              debugInfo
+              lanes
             );
           throwOnInvalidObjectType(returnFiber, newChild);
         }
@@ -2863,8 +2855,7 @@ __DEV__ &&
         returnFiber,
         newIdx,
         newChild,
-        lanes,
-        debugInfo
+        lanes
       ) {
         if (
           ("string" === typeof newChild && "" !== newChild) ||
@@ -2873,29 +2864,25 @@ __DEV__ &&
         )
           return (
             (existingChildren = existingChildren.get(newIdx) || null),
-            updateTextNode(
-              returnFiber,
-              existingChildren,
-              "" + newChild,
-              lanes,
-              debugInfo
-            )
+            updateTextNode(returnFiber, existingChildren, "" + newChild, lanes)
           );
         if ("object" === typeof newChild && null !== newChild) {
           switch (newChild.$$typeof) {
             case REACT_ELEMENT_TYPE:
               return (
-                (existingChildren =
+                (newIdx =
                   existingChildren.get(
                     null === newChild.key ? newIdx : newChild.key
                   ) || null),
-                updateElement(
+                (existingChildren = pushDebugInfo(newChild._debugInfo)),
+                (returnFiber = updateElement(
                   returnFiber,
-                  existingChildren,
+                  newIdx,
                   newChild,
-                  lanes,
-                  mergeDebugInfo(debugInfo, newChild._debugInfo)
-                )
+                  lanes
+                )),
+                (currentDebugInfo = existingChildren),
+                returnFiber
               );
             case REACT_PORTAL_TYPE:
               return (
@@ -2903,45 +2890,47 @@ __DEV__ &&
                   existingChildren.get(
                     null === newChild.key ? newIdx : newChild.key
                   ) || null),
-                updatePortal(
-                  returnFiber,
-                  existingChildren,
-                  newChild,
-                  lanes,
-                  debugInfo
-                )
+                updatePortal(returnFiber, existingChildren, newChild, lanes)
               );
             case REACT_LAZY_TYPE:
-              var resolvedChild = callLazyInitInDEV(newChild);
-              return updateFromMap(
+              var _prevDebugInfo7 = pushDebugInfo(newChild._debugInfo);
+              newChild = callLazyInitInDEV(newChild);
+              returnFiber = updateFromMap(
                 existingChildren,
                 returnFiber,
                 newIdx,
-                resolvedChild,
-                lanes,
-                mergeDebugInfo(debugInfo, newChild._debugInfo)
+                newChild,
+                lanes
               );
+              currentDebugInfo = _prevDebugInfo7;
+              return returnFiber;
           }
           if (isArrayImpl(newChild) || getIteratorFn(newChild))
             return (
-              (existingChildren = existingChildren.get(newIdx) || null),
-              updateFragment(
+              (newIdx = existingChildren.get(newIdx) || null),
+              (existingChildren = pushDebugInfo(newChild._debugInfo)),
+              (returnFiber = updateFragment(
                 returnFiber,
-                existingChildren,
+                newIdx,
                 newChild,
                 lanes,
-                null,
-                mergeDebugInfo(debugInfo, newChild._debugInfo)
-              )
+                null
+              )),
+              (currentDebugInfo = existingChildren),
+              returnFiber
             );
           if ("function" === typeof newChild.then)
-            return updateFromMap(
-              existingChildren,
-              returnFiber,
-              newIdx,
-              unwrapThenable(newChild),
-              lanes,
-              debugInfo
+            return (
+              (_prevDebugInfo7 = pushDebugInfo(newChild._debugInfo)),
+              (returnFiber = updateFromMap(
+                existingChildren,
+                returnFiber,
+                newIdx,
+                unwrapThenable(newChild),
+                lanes
+              )),
+              (currentDebugInfo = _prevDebugInfo7),
+              returnFiber
             );
           if (newChild.$$typeof === REACT_CONTEXT_TYPE)
             return updateFromMap(
@@ -2949,8 +2938,7 @@ __DEV__ &&
               returnFiber,
               newIdx,
               readContextDuringReconciliation(returnFiber, newChild, lanes),
-              lanes,
-              debugInfo
+              lanes
             );
           throwOnInvalidObjectType(returnFiber, newChild);
         }
@@ -2993,8 +2981,7 @@ __DEV__ &&
         returnFiber,
         currentFirstChild,
         newChildren,
-        lanes,
-        debugInfo
+        lanes
       ) {
         for (
           var knownKeys = null,
@@ -3013,8 +3000,7 @@ __DEV__ &&
             returnFiber,
             oldFiber,
             newChildren[newIdx],
-            lanes,
-            debugInfo
+            lanes
           );
           if (null === newFiber) {
             null === oldFiber && (oldFiber = nextOldFiber);
@@ -3043,12 +3029,7 @@ __DEV__ &&
           );
         if (null === oldFiber) {
           for (; newIdx < newChildren.length; newIdx++)
-            (oldFiber = createChild(
-              returnFiber,
-              newChildren[newIdx],
-              lanes,
-              debugInfo
-            )),
+            (oldFiber = createChild(returnFiber, newChildren[newIdx], lanes)),
               null !== oldFiber &&
                 ((knownKeys = warnOnInvalidKey(
                   returnFiber,
@@ -3077,8 +3058,7 @@ __DEV__ &&
             returnFiber,
             newIdx,
             newChildren[newIdx],
-            lanes,
-            debugInfo
+            lanes
           )),
             null !== nextOldFiber &&
               ((knownKeys = warnOnInvalidKey(
@@ -3111,8 +3091,7 @@ __DEV__ &&
         returnFiber,
         currentFirstChild,
         newChildren,
-        lanes,
-        debugInfo
+        lanes
       ) {
         if (null == newChildren)
           throw Error("An iterable object provided no iterator.");
@@ -3130,13 +3109,7 @@ __DEV__ &&
           oldFiber.index > newIdx
             ? ((nextOldFiber = oldFiber), (oldFiber = null))
             : (nextOldFiber = oldFiber.sibling);
-          var newFiber = updateSlot(
-            returnFiber,
-            oldFiber,
-            step.value,
-            lanes,
-            debugInfo
-          );
+          var newFiber = updateSlot(returnFiber, oldFiber, step.value, lanes);
           if (null === newFiber) {
             null === oldFiber && (oldFiber = nextOldFiber);
             break;
@@ -3164,7 +3137,7 @@ __DEV__ &&
           );
         if (null === oldFiber) {
           for (; !step.done; newIdx++, step = newChildren.next())
-            (oldFiber = createChild(returnFiber, step.value, lanes, debugInfo)),
+            (oldFiber = createChild(returnFiber, step.value, lanes)),
               null !== oldFiber &&
                 ((knownKeys = warnOnInvalidKey(
                   returnFiber,
@@ -3193,8 +3166,7 @@ __DEV__ &&
             returnFiber,
             newIdx,
             step.value,
-            lanes,
-            debugInfo
+            lanes
           )),
             null !== nextOldFiber &&
               ((knownKeys = warnOnInvalidKey(
@@ -3227,8 +3199,7 @@ __DEV__ &&
         returnFiber,
         currentFirstChild,
         newChild,
-        lanes,
-        debugInfo
+        lanes
       ) {
         "object" === typeof newChild &&
           null !== newChild &&
@@ -3239,25 +3210,27 @@ __DEV__ &&
         if ("object" === typeof newChild && null !== newChild) {
           switch (newChild.$$typeof) {
             case REACT_ELEMENT_TYPE:
+              var prevDebugInfo = pushDebugInfo(newChild._debugInfo);
               a: {
-                var element = newChild;
-                debugInfo = mergeDebugInfo(debugInfo, newChild._debugInfo);
-                var key = element.key;
-                for (newChild = currentFirstChild; null !== newChild; ) {
-                  if (newChild.key === key) {
-                    key = element.type;
+                for (
+                  var key = newChild.key, child = currentFirstChild;
+                  null !== child;
+
+                ) {
+                  if (child.key === key) {
+                    key = newChild.type;
                     if (key === REACT_FRAGMENT_TYPE) {
-                      if (7 === newChild.tag) {
-                        deleteRemainingChildren(returnFiber, newChild.sibling);
+                      if (7 === child.tag) {
+                        deleteRemainingChildren(returnFiber, child.sibling);
                         currentFirstChild = useFiber(
-                          newChild,
-                          element.props.children
+                          child,
+                          newChild.props.children
                         );
                         currentFirstChild.return = returnFiber;
-                        currentFirstChild._debugOwner = element._owner;
-                        currentFirstChild._debugInfo = debugInfo;
+                        currentFirstChild._debugOwner = newChild._owner;
+                        currentFirstChild._debugInfo = currentDebugInfo;
                         validateFragmentProps(
-                          element,
+                          newChild,
                           currentFirstChild,
                           returnFiber
                         );
@@ -3265,69 +3238,75 @@ __DEV__ &&
                         break a;
                       }
                     } else if (
-                      newChild.elementType === key ||
-                      isCompatibleFamilyForHotReloading(newChild, element) ||
+                      child.elementType === key ||
+                      isCompatibleFamilyForHotReloading(child, newChild) ||
                       ("object" === typeof key &&
                         null !== key &&
                         key.$$typeof === REACT_LAZY_TYPE &&
-                        callLazyInitInDEV(key) === newChild.type)
+                        callLazyInitInDEV(key) === child.type)
                     ) {
-                      deleteRemainingChildren(returnFiber, newChild.sibling);
-                      currentFirstChild = useFiber(newChild, element.props);
+                      deleteRemainingChildren(returnFiber, child.sibling);
+                      currentFirstChild = useFiber(child, newChild.props);
                       coerceRef(
                         returnFiber,
-                        newChild,
+                        child,
                         currentFirstChild,
-                        element
+                        newChild
                       );
                       currentFirstChild.return = returnFiber;
-                      currentFirstChild._debugOwner = element._owner;
-                      currentFirstChild._debugInfo = debugInfo;
+                      currentFirstChild._debugOwner = newChild._owner;
+                      currentFirstChild._debugInfo = currentDebugInfo;
                       returnFiber = currentFirstChild;
                       break a;
                     }
-                    deleteRemainingChildren(returnFiber, newChild);
+                    deleteRemainingChildren(returnFiber, child);
                     break;
-                  } else deleteChild(returnFiber, newChild);
-                  newChild = newChild.sibling;
+                  } else deleteChild(returnFiber, child);
+                  child = child.sibling;
                 }
-                element.type === REACT_FRAGMENT_TYPE
+                newChild.type === REACT_FRAGMENT_TYPE
                   ? ((currentFirstChild = createFiberFromFragment(
-                      element.props.children,
+                      newChild.props.children,
                       returnFiber.mode,
                       lanes,
-                      element.key
+                      newChild.key
                     )),
                     (currentFirstChild.return = returnFiber),
-                    (currentFirstChild._debugInfo = debugInfo),
+                    (currentFirstChild._debugInfo = currentDebugInfo),
                     validateFragmentProps(
-                      element,
+                      newChild,
                       currentFirstChild,
                       returnFiber
                     ),
                     (returnFiber = currentFirstChild))
                   : ((lanes = createFiberFromElement(
-                      element,
+                      newChild,
                       returnFiber.mode,
                       lanes
                     )),
-                    coerceRef(returnFiber, currentFirstChild, lanes, element),
+                    coerceRef(returnFiber, currentFirstChild, lanes, newChild),
                     (lanes.return = returnFiber),
-                    (lanes._debugInfo = debugInfo),
+                    (lanes._debugInfo = currentDebugInfo),
                     (returnFiber = lanes));
               }
-              return placeSingleChild(returnFiber);
+              returnFiber = placeSingleChild(returnFiber);
+              currentDebugInfo = prevDebugInfo;
+              return returnFiber;
             case REACT_PORTAL_TYPE:
               a: {
-                element = newChild;
-                for (debugInfo = element.key; null !== currentFirstChild; ) {
-                  if (currentFirstChild.key === debugInfo)
+                prevDebugInfo = newChild;
+                for (
+                  newChild = prevDebugInfo.key;
+                  null !== currentFirstChild;
+
+                ) {
+                  if (currentFirstChild.key === newChild)
                     if (
                       4 === currentFirstChild.tag &&
                       currentFirstChild.stateNode.containerInfo ===
-                        element.containerInfo &&
+                        prevDebugInfo.containerInfo &&
                       currentFirstChild.stateNode.implementation ===
-                        element.implementation
+                        prevDebugInfo.implementation
                     ) {
                       deleteRemainingChildren(
                         returnFiber,
@@ -3335,7 +3314,7 @@ __DEV__ &&
                       );
                       currentFirstChild = useFiber(
                         currentFirstChild,
-                        element.children || []
+                        prevDebugInfo.children || []
                       );
                       currentFirstChild.return = returnFiber;
                       returnFiber = currentFirstChild;
@@ -3348,7 +3327,7 @@ __DEV__ &&
                   currentFirstChild = currentFirstChild.sibling;
                 }
                 currentFirstChild = createFiberFromPortal(
-                  element,
+                  prevDebugInfo,
                   returnFiber.mode,
                   lanes
                 );
@@ -3358,34 +3337,39 @@ __DEV__ &&
               return placeSingleChild(returnFiber);
             case REACT_LAZY_TYPE:
               return (
-                (element = newChild._init),
-                reconcileChildFibersImpl(
+                (prevDebugInfo = pushDebugInfo(newChild._debugInfo)),
+                (newChild = callLazyInitInDEV(newChild)),
+                (returnFiber = reconcileChildFibersImpl(
                   returnFiber,
                   currentFirstChild,
-                  element(newChild._payload),
-                  lanes,
-                  mergeDebugInfo(debugInfo, newChild._debugInfo)
-                )
+                  newChild,
+                  lanes
+                )),
+                (currentDebugInfo = prevDebugInfo),
+                returnFiber
               );
           }
           if (isArrayImpl(newChild))
-            return reconcileChildrenArray(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              lanes,
-              mergeDebugInfo(debugInfo, newChild._debugInfo)
+            return (
+              (prevDebugInfo = pushDebugInfo(newChild._debugInfo)),
+              (returnFiber = reconcileChildrenArray(
+                returnFiber,
+                currentFirstChild,
+                newChild,
+                lanes
+              )),
+              (currentDebugInfo = prevDebugInfo),
+              returnFiber
             );
           if (getIteratorFn(newChild)) {
-            element = newChild;
-            debugInfo = mergeDebugInfo(debugInfo, newChild._debugInfo);
-            newChild = getIteratorFn(element);
-            if ("function" !== typeof newChild)
+            prevDebugInfo = pushDebugInfo(newChild._debugInfo);
+            child = getIteratorFn(newChild);
+            if ("function" !== typeof child)
               throw Error(
                 "An object is not an iterable. This error is likely caused by a bug in React. Please file an issue."
               );
-            key = newChild.call(element);
-            if (key === element) {
+            key = child.call(newChild);
+            if (key === newChild) {
               if (
                 0 !== returnFiber.tag ||
                 "[object GeneratorFunction]" !==
@@ -3398,38 +3382,39 @@ __DEV__ &&
                   ),
                   (didWarnAboutGenerators = !0);
             } else
-              element.entries !== newChild ||
+              newChild.entries !== child ||
                 didWarnAboutMaps ||
                 (error$jscomp$0(
                   "Using Maps as children is not supported. Use an array of keyed ReactElements instead."
                 ),
                 (didWarnAboutMaps = !0));
-            return reconcileChildrenIterator(
+            returnFiber = reconcileChildrenIterator(
               returnFiber,
               currentFirstChild,
               key,
-              lanes,
-              debugInfo
+              lanes
             );
+            currentDebugInfo = prevDebugInfo;
+            return returnFiber;
           }
           if ("function" === typeof newChild.then)
             return (
-              (element = newChild),
-              reconcileChildFibersImpl(
+              (prevDebugInfo = pushDebugInfo(newChild._debugInfo)),
+              (returnFiber = reconcileChildFibersImpl(
                 returnFiber,
                 currentFirstChild,
-                unwrapThenable(element),
-                lanes,
-                mergeDebugInfo(debugInfo, element._debugInfo)
-              )
+                unwrapThenable(newChild),
+                lanes
+              )),
+              (currentDebugInfo = prevDebugInfo),
+              returnFiber
             );
           if (newChild.$$typeof === REACT_CONTEXT_TYPE)
             return reconcileChildFibersImpl(
               returnFiber,
               currentFirstChild,
               readContextDuringReconciliation(returnFiber, newChild, lanes),
-              lanes,
-              debugInfo
+              lanes
             );
           throwOnInvalidObjectType(returnFiber, newChild);
         }
@@ -3439,18 +3424,21 @@ __DEV__ &&
           "bigint" === typeof newChild
         )
           return (
-            (element = "" + newChild),
+            (prevDebugInfo = "" + newChild),
             null !== currentFirstChild && 6 === currentFirstChild.tag
               ? (deleteRemainingChildren(
                   returnFiber,
                   currentFirstChild.sibling
                 ),
-                (currentFirstChild = useFiber(currentFirstChild, element)),
+                (currentFirstChild = useFiber(
+                  currentFirstChild,
+                  prevDebugInfo
+                )),
                 (currentFirstChild.return = returnFiber),
                 (returnFiber = currentFirstChild))
               : (deleteRemainingChildren(returnFiber, currentFirstChild),
                 (currentFirstChild = createFiberFromText(
-                  element,
+                  prevDebugInfo,
                   returnFiber.mode,
                   lanes
                 )),
@@ -3464,14 +3452,15 @@ __DEV__ &&
         return deleteRemainingChildren(returnFiber, currentFirstChild);
       }
       return function (returnFiber, currentFirstChild, newChild, lanes) {
+        var prevDebugInfo = currentDebugInfo;
+        currentDebugInfo = null;
         try {
           thenableIndexCounter$1 = 0;
           var firstChildFiber = reconcileChildFibersImpl(
             returnFiber,
             currentFirstChild,
             newChild,
-            lanes,
-            null
+            lanes
           );
           thenableState$1 = null;
           return firstChildFiber;
@@ -3484,10 +3473,20 @@ __DEV__ &&
               "function" === typeof x.then)
           )
             throw x;
-          currentFirstChild = createFiber(29, x, null, returnFiber.mode);
-          currentFirstChild.lanes = lanes;
-          currentFirstChild.return = returnFiber;
-          return currentFirstChild;
+          var fiber = createFiber(29, x, null, returnFiber.mode);
+          fiber.lanes = lanes;
+          fiber.return = returnFiber;
+          var debugInfo = (fiber._debugInfo = currentDebugInfo);
+          fiber._debugOwner = returnFiber._debugOwner;
+          if (null != debugInfo)
+            for (var i = debugInfo.length - 1; 0 <= i; i--)
+              if ("string" === typeof debugInfo[i].stack) {
+                fiber._debugOwner = debugInfo[i];
+                break;
+              }
+          return fiber;
+        } finally {
+          currentDebugInfo = prevDebugInfo;
         }
       };
     }
@@ -13457,6 +13456,7 @@ __DEV__ &&
       needsToResetSuspendedThenableDEV = !1,
       thenableState$1 = null,
       thenableIndexCounter$1 = 0,
+      currentDebugInfo = null,
       didWarnAboutMaps;
     var didWarnAboutGenerators = (didWarnAboutMaps = !1);
     var ownerHasKeyUseWarning = {};
@@ -15061,20 +15061,20 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-270229f0c3-20240611"
+        reconcilerVersion: "19.0.0-native-fb-383b2a1845-20240611"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-270229f0c3-20240611",
+      version: "19.0.0-native-fb-383b2a1845-20240611",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1120,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1116,
         isConcurrent = !1,
         isStrictMode = !1,
         concurrentUpdatesByDefault = null;
