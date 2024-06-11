@@ -8,5 +8,6 @@ module.exports = {
     'prod-error-codes': require('./prod-error-codes'),
     'no-production-logging': require('./no-production-logging'),
     'safe-string-coercion': require('./safe-string-coercion'),
+    'no-dynamic-import-in-literal': require('./no-dynamic-import-in-literal'),
   },
 };

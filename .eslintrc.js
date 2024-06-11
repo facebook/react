@@ -303,6 +303,7 @@ module.exports = {
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
+    'react-internal/no-dynamic-import-in-literal': ERROR,
   },
 
   overrides: [
@@ -379,6 +380,7 @@ module.exports = {
         'jest/no-focused-tests': ERROR,
         'jest/valid-expect': ERROR,
         'jest/valid-expect-in-promise': ERROR,
+        'react-internal/no-dynamic-import-in-literal': OFF,
       },
     },
     {
