@@ -41,6 +41,7 @@ import {
   deadCodeElimination,
   pruneMaybeThrows,
 } from "../Optimization";
+import { instructionReordering } from "../Optimization/InstructionReordering";
 import {
   CodegenFunction,
   alignObjectMethodScopes,
@@ -71,6 +72,7 @@ import {
 import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
 import { alignReactiveScopesToBlockScopesHIR } from "../ReactiveScopes/AlignReactiveScopesToBlockScopesHIR";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
+import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 import { stabilizeBlockIds } from "../ReactiveScopes/StabilizeBlockIds";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -91,7 +93,6 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
-import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -201,6 +202,9 @@ function* runWithEnvironment(
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
   yield log({ kind: "hir", name: "DeadCodeElimination", value: hir });
+
+  instructionReordering(hir);
+  yield log({ kind: "hir", name: "InstructionReordering", value: hir });
 
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });

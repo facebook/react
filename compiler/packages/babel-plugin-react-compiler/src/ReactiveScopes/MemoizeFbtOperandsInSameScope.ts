@@ -94,6 +94,7 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
               operand.identifier.mutableRange.start
             )
           );
+          fbtValues.add(operand.identifier.id);
         }
       } else if (
         isFbtJsxExpression(fbtValues, value) ||
@@ -125,6 +126,30 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
            * grouped with this expression
            */
           fbtValues.add(operand.identifier.id);
+        }
+      } else if (fbtValues.has(lvalue.identifier.id)) {
+        const fbtScope = lvalue.identifier.scope;
+        if (fbtScope === null) {
+          return;
+        }
+
+        for (const operand of eachReactiveValueOperand(value)) {
+          if (operand.identifier.name !== null) {
+            /*
+             * named identifiers were already locals, we only have to force temporaries
+             * into the same scope
+             */
+            continue;
+          }
+          operand.identifier.scope = fbtScope;
+
+          // Expand the jsx element's range to account for its operands
+          fbtScope.range.start = makeInstructionId(
+            Math.min(
+              fbtScope.range.start,
+              operand.identifier.mutableRange.start
+            )
+          );
         }
       }
     }

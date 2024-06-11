@@ -190,7 +190,8 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
             case "JSXText":
             case "LoadLocal":
             case "Primitive":
-            case "PropertyLoad": {
+            case "PropertyLoad":
+            case "LoadGlobal": {
               /*
                * We can merge two scopes if there are intervening instructions, but:
                * - Only if the instructions are simple and it's okay to make them
