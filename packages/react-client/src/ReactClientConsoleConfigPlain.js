@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {warn, error} from 'shared/consoleWithStackDev';
+
 const badgeFormat = '[%s] ';
 const pad = ' ';
 
@@ -44,7 +46,14 @@ export function printToConsole(
     newArgs.splice(offset, 0, badgeFormat, pad + badgeName + pad);
   }
 
-  // eslint-disable-next-line react-internal/no-production-logging
-  console[methodName].apply(console, newArgs);
-  return;
+  if (methodName === 'error') {
+    // eslint-disable-next-line react-internal/no-production-logging
+    error.apply(console, newArgs);
+  } else if (methodName === 'warn') {
+    // eslint-disable-next-line react-internal/no-production-logging
+    warn.apply(console, newArgs);
+  } else {
+    // eslint-disable-next-line react-internal/no-production-logging
+    console[methodName].apply(console, newArgs);
+  }
 }

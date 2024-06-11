@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {warn, error} from 'shared/consoleWithStackDev';
+
 const badgeFormat = '%c%s%c ';
 // Same badge styling as DevTools.
 const badgeStyle =
@@ -63,7 +65,14 @@ export function printToConsole(
     );
   }
 
-  // eslint-disable-next-line react-internal/no-production-logging
-  console[methodName].apply(console, newArgs);
-  return;
+  if (methodName === 'error') {
+    // eslint-disable-next-line react-internal/no-production-logging
+    error.apply(console, newArgs);
+  } else if (methodName === 'warn') {
+    // eslint-disable-next-line react-internal/no-production-logging
+    warn.apply(console, newArgs);
+  } else {
+    // eslint-disable-next-line react-internal/no-production-logging
+    console[methodName].apply(console, newArgs);
+  }
 }

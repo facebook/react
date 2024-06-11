@@ -2060,6 +2060,8 @@ function resolveConsoleEntry(
       task.run(callStack);
       return;
     }
+    // TODO: Set the current owner so that consoleWithStackDev adds the component
+    // stack during the replay - if needed.
   }
   const rootTask = response._debugRootTask;
   if (rootTask != null) {
