@@ -149,33 +149,25 @@ export default {
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`
       )
     );
-    if (verboseErrors) {
 
-    if (OtherFailures.length > 0) {
-    console.log(
-      chalk.red(
-        `Failed to compile ${OtherFailures.length} components due to non-actionable errors.`
-      )
+    if (verboseErrors) {
+     console.log(
+      chalk.bold(
+        chalk.red(
+         `Failed to compile ${OtherFailures.length} components due to non-actionable errors.`
+      ))
     );
     OtherFailures.forEach((failure) => {
-      console.log(chalk.red(`Error details for ${failure.filename}:`));
-      console.log(failure.detail.reason);
+      console.log(chalk.red(`Error details for ${failure.filename}:`) + ' ' + failure.detail.reason + '\n');
     });
-  }
-  
-  if (ActionableFailures.length > 0) {
     console.log(
-      chalk.red(
+      chalk.bold(chalk.red(
         `Failed to compile ${ActionableFailures.length} components due to actionable errors.`
-      )
-    );
-    
-      ActionableFailures.forEach((failure) => {
-        console.log(chalk.red(`Error details for ${failure.filename}:`));
-        console.log(failure.detail.reason);
-      });
-    
-    }
+      ))
+  );
+    ActionableFailures.forEach((failure) => {
+      console.log(chalk.red(`Error details for ${failure.filename}:`) + ' ' + failure.detail.reason + '\n');
+    });
   }
 
   }
