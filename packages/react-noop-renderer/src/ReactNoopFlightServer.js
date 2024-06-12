@@ -67,7 +67,7 @@ const ReactNoopFlightServer = ReactFlightServer({
 });
 
 type Options = {
-  environmentName?: string,
+  environmentName?: string | (() => string),
   identifierPrefix?: string,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
