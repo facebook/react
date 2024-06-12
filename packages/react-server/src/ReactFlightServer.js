@@ -425,7 +425,7 @@ export type Request = {
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
   // DEV-only
-  environmentName: string,
+  environmentName: () => string,
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
 };
 
@@ -481,7 +481,7 @@ function RequestInstance(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix?: string,
   onPostpone: void | ((reason: string) => void),
-  environmentName: void | string,
+  environmentName: void | string | (() => string),
   temporaryReferences: void | TemporaryReferenceSet,
 ) {
   if (
@@ -531,7 +531,11 @@ function RequestInstance(
 
   if (__DEV__) {
     this.environmentName =
-      environmentName === undefined ? 'Server' : environmentName;
+      environmentName === undefined
+        ? () => 'Server'
+        : typeof environmentName !== 'function'
+        ? () => environmentName
+        : environmentName;
     this.didWarnForKey = null;
   }
   const rootTask = createTask(this, model, null, false, abortSet);
@@ -544,7 +548,7 @@ export function createRequest(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix?: string,
   onPostpone: void | ((reason: string) => void),
-  environmentName: void | string,
+  environmentName: void | string | (() => string),
   temporaryReferences: void | TemporaryReferenceSet,
 ): Request {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
@@ -1056,7 +1060,7 @@ function renderFunctionComponent<Props>(
       const componentDebugID = debugID;
       componentDebugInfo = ({
         name: componentName,
-        env: request.environmentName,
+        env: request.environmentName(),
         owner: owner,
       }: ReactComponentInfo);
       if (enableOwnerStacks) {
@@ -3252,7 +3256,7 @@ function emitConsoleChunk(
   }
 
   // TODO: Don't double badge if this log came from another Flight Client.
-  const env = request.environmentName;
+  const env = request.environmentName();
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
