@@ -44,7 +44,7 @@ export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTem
 export type {TemporaryReferenceSet};
 
 type Options = {
-  environmentName?: string,
+  environmentName?: string | (() => string),
   identifierPrefix?: string,
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
