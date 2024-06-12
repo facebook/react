@@ -996,4 +996,35 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(container.textContent).toEqual('Malformed state');
     });
   });
+
+  it('does not try to access React internals that may not exist in old React versions', async () => {
+    const store = createExternalStore({text: 'A'});
+
+    let returnedUnstable = false;
+    function App() {
+      const {text} = useSyncExternalStore(store.subscribe, () => {
+        if (returnedUnstable) {
+          // Only provoke the warning, but don't cause an actual infinite loop
+          return store.getState();
+        }
+        returnedUnstable = true;
+        // Intentionally return an uncached snapshot to trigger warnings
+        return {...store.getState()};
+      });
+
+      return text;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await expect(async () => {
+      await act(() => root.render(<App />));
+    }).toErrorDev(
+      ['The result of getSnapshot should be cached to avoid an infinite loop'],
+      {withoutStack: true},
+    );
+
+    expect(container.textContent).toEqual('A');
+  });
 });
