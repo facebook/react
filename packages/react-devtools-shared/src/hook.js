@@ -220,6 +220,61 @@ export function installHook(target: any): DevToolsHook | null {
       return [firstArg, style, ...inputArgs];
     }
   }
+  // NOTE: KEEP IN SYNC with src/backend/utils.js
+  function formatConsoleArguments(
+    maybeMessage: any,
+    ...inputArgs: $ReadOnlyArray<any>
+  ): $ReadOnlyArray<any> {
+    if (inputArgs.length === 0 || typeof maybeMessage !== 'string') {
+      return [maybeMessage, ...inputArgs];
+    }
+
+    const args = inputArgs.slice();
+
+    let template = '';
+    let argumentsPointer = 0;
+    for (let i = 0; i < maybeMessage.length; ++i) {
+      const currentChar = maybeMessage[i];
+      if (currentChar !== '%') {
+        template += currentChar;
+        continue;
+      }
+
+      const nextChar = maybeMessage[i + 1];
+      ++i;
+
+      // Only keep CSS and objects, inline other arguments
+      switch (nextChar) {
+        case 'c':
+        case 'O':
+        case 'o': {
+          ++argumentsPointer;
+          template += `%${nextChar}`;
+
+          break;
+        }
+        case 'd':
+        case 'i': {
+          const [arg] = args.splice(argumentsPointer, 1);
+          template += parseInt(arg, 10).toString();
+
+          break;
+        }
+        case 'f': {
+          const [arg] = args.splice(argumentsPointer, 1);
+          template += parseFloat(arg).toString();
+
+          break;
+        }
+        case 's': {
+          const [arg] = args.splice(argumentsPointer, 1);
+          template += arg.toString();
+        }
+      }
+    }
+
+    return [template, ...args];
+  }
 
   let unpatchFn = null;
 
@@ -274,7 +329,10 @@ export function installHook(target: any): DevToolsHook | null {
                 ...formatWithStyles(args, FIREFOX_CONSOLE_DIMMING_COLOR),
               );
             } else {
-              originalMethod(ANSI_STYLE_DIMMING_TEMPLATE, ...args);
+              originalMethod(
+                ANSI_STYLE_DIMMING_TEMPLATE,
+                ...formatConsoleArguments(...args),
+              );
             }
           }
         };

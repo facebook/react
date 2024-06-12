@@ -15,8 +15,11 @@ import type {
   WorkTagMap,
   ConsolePatchSettings,
 } from './types';
-import {formatWithStyles} from './utils';
 
+import {
+  formatConsoleArguments,
+  formatWithStyles,
+} from 'react-devtools-shared/src/backend/utils';
 import {
   FIREFOX_CONSOLE_DIMMING_COLOR,
   ANSI_STYLE_DIMMING_TEMPLATE,
@@ -335,7 +338,10 @@ export function patchForStrictMode() {
               ...formatWithStyles(args, FIREFOX_CONSOLE_DIMMING_COLOR),
             );
           } else {
-            originalMethod(ANSI_STYLE_DIMMING_TEMPLATE, ...args);
+            originalMethod(
+              ANSI_STYLE_DIMMING_TEMPLATE,
+              ...formatConsoleArguments(...args),
+            );
           }
         }
       };
