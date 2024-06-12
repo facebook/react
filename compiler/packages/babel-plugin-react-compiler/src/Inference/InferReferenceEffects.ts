@@ -34,7 +34,6 @@ import {
 } from "../HIR/HIR";
 import { FunctionSignature } from "../HIR/ObjectShape";
 import {
-  printFunction,
   printIdentifier,
   printMixedHIR,
   printPlace,
