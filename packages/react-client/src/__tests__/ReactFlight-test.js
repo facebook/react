@@ -2565,6 +2565,50 @@ describe('ReactFlight', () => {
     );
   });
 
+  it('can change the environment name inside a component', async () => {
+    let env = 'A';
+    function Component(props) {
+      env = 'B';
+      return <div>hi</div>;
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      {
+        greeting: <Component />,
+      },
+      {
+        environmentName() {
+          return env;
+        },
+      },
+    );
+
+    await act(async () => {
+      const rootModel = await ReactNoopFlightClient.read(transport);
+      const greeting = rootModel.greeting;
+      expect(getDebugInfo(greeting)).toEqual(
+        __DEV__
+          ? [
+              {
+                name: 'Component',
+                env: 'A',
+                owner: null,
+                stack: gate(flag => flag.enableOwnerStacks)
+                  ? '    in Object.<anonymous> (at **)'
+                  : undefined,
+              },
+              {
+                env: 'B',
+              },
+            ]
+          : undefined,
+      );
+      ReactNoop.render(greeting);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>hi</div>);
+  });
+
   // @gate enableServerComponentLogs && __DEV__
   it('replays logs, but not onError logs', async () => {
     function foo() {
