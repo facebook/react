@@ -2774,7 +2774,7 @@ function emitErrorChunk(
   if (__DEV__) {
     let message;
     let stack = '';
-    let env = request.environmentName;
+    let env = request.environmentName();
     try {
       if (error instanceof Error) {
         // eslint-disable-next-line react-internal/safe-string-coercion
