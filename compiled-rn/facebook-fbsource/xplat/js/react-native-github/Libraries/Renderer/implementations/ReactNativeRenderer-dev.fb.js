@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7104000f8b539c9c744ca553fded299b>>
+ * @generated SignedSource<<0c02c677d236e9caec59c73844981a5f>>
  */
 
 "use strict";
@@ -16874,11 +16874,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-93826c8483-20240612" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-f3e09d6328-20240612" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-93826c8483-20240612\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-f3e09d6328-20240612\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16926,12 +16926,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-93826c8483-20240612"
+        reconcilerVersion: "19.0.0-native-fb-f3e09d6328-20240612"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-93826c8483-20240612",
+      version: "19.0.0-native-fb-f3e09d6328-20240612",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
