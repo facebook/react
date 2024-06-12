@@ -393,6 +393,7 @@ type Task = {
   keyPath: null | string, // parent server component keys
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   thenableState: ThenableState | null,
+  environmentName: string, // DEV-only. Used to track if the environment for this task changed.
 };
 
 interface Reference {}
@@ -1053,14 +1054,14 @@ function renderFunctionComponent<Props>(
       componentDebugInfo = (prevThenableState: any)._componentDebugInfo;
     } else {
       // This is a new component in the same task so we can emit more debug info.
+      const componentDebugID = debugID;
       const componentName =
         (Component: any).displayName || Component.name || '';
+      const componentEnv = request.environmentName();
       request.pendingChunks++;
-
-      const componentDebugID = debugID;
       componentDebugInfo = ({
         name: componentName,
-        env: request.environmentName(),
+        env: componentEnv,
         owner: owner,
       }: ReactComponentInfo);
       if (enableOwnerStacks) {
@@ -1072,6 +1073,9 @@ function renderFunctionComponent<Props>(
       // being no references to this as an owner.
       outlineModel(request, componentDebugInfo);
       emitDebugChunk(request, componentDebugID, componentDebugInfo);
+
+      // We've emitted the latest environment for this task so we track that.
+      task.environmentName = componentEnv;
 
       if (enableOwnerStacks) {
         warnForMissingKey(request, key, validated, componentDebugInfo);
@@ -1648,7 +1652,7 @@ function createTask(
       request.writtenObjects.set(model, serializeByValueID(id));
     }
   }
-  const task: Task = {
+  const task: Task = (({
     id,
     status: PENDING,
     model,
@@ -1701,7 +1705,10 @@ function createTask(
       return renderModel(request, task, parent, parentPropertyName, value);
     },
     thenableState: null,
-  };
+  }: Omit<Task, 'environmentName'>): any);
+  if (__DEV__) {
+    task.environmentName = request.environmentName();
+  }
   abortSet.add(task);
   return task;
 }
@@ -3424,6 +3431,15 @@ function retryTask(request: Request, task: Task): void {
       // any future references.
       request.writtenObjects.set(resolvedModel, serializeByValueID(task.id));
 
+      if (__DEV__) {
+        const currentEnv = request.environmentName();
+        if (currentEnv !== task.environmentName) {
+          // The environment changed since we last emitted any debug information for this
+          // task. We emit an entry that just includes the environment name change.
+          emitDebugChunk(request, task.id, {env: currentEnv});
+        }
+      }
+
       // Object might contain unresolved values like additional elements.
       // This is simulating what the JSON loop would do if this was part of it.
       emitChunk(request, task, resolvedModel);
@@ -3432,6 +3448,16 @@ function retryTask(request: Request, task: Task): void {
       // We don't need to escape it again so it's not passed the toJSON replacer.
       // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
       const json: string = stringify(resolvedModel);
+
+      if (__DEV__) {
+        const currentEnv = request.environmentName();
+        if (currentEnv !== task.environmentName) {
+          // The environment changed since we last emitted any debug information for this
+          // task. We emit an entry that just includes the environment name change.
+          emitDebugChunk(request, task.id, {env: currentEnv});
+        }
+      }
+
       emitModelChunk(request, task.id, json);
     }
 
