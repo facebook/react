@@ -27,42 +27,42 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(6);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = <div />;
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
   const dispatch = useDispatch();
   useFreeze(dispatch);
-  let t0;
-  if ($[0] !== dispatch) {
-    t0 = () => {
+  let t1;
+  if ($[1] !== dispatch) {
+    t1 = () => {
       dispatch({ kind: "update" });
     };
-    $[0] = dispatch;
-    $[1] = t0;
+    $[1] = dispatch;
+    $[2] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[2];
   }
-  const onUpdate = t0;
-  let t1;
+  const onUpdate = t1;
   let t2;
-  if ($[2] !== onUpdate) {
-    t1 = () => {
+  let t3;
+  if ($[3] !== onUpdate) {
+    t2 = () => {
       onUpdate();
     };
-    t2 = [onUpdate];
-    $[2] = onUpdate;
-    $[3] = t1;
+    t3 = [onUpdate];
+    $[3] = onUpdate;
     $[4] = t2;
-  } else {
-    t1 = $[3];
-    t2 = $[4];
-  }
-  useEffect(t1, t2);
-  let t3;
-  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = <div />;
     $[5] = t3;
   } else {
+    t2 = $[4];
     t3 = $[5];
   }
-  return t3;
+  useEffect(t2, t3);
+  return t0;
 }
 
 ```

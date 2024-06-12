@@ -56,33 +56,33 @@ function Component(t0) {
     t2 = $[1];
   }
   let t3;
-  if ($[2] !== t2) {
-    t3 = <div className={t2} />;
-    $[2] = t2;
+  if ($[2] !== cond) {
+    t3 = cond === false && (
+      <div className={identity(styles.c, DISPLAY ? styles.d : {})} />
+    );
+    $[2] = cond;
     $[3] = t3;
   } else {
     t3 = $[3];
   }
   let t4;
-  if ($[4] !== cond) {
-    t4 = cond === false && (
-      <div className={identity(styles.c, DISPLAY ? styles.d : {})} />
-    );
-    $[4] = cond;
+  if ($[4] !== t2) {
+    t4 = <div className={t2} />;
+    $[4] = t2;
     $[5] = t4;
   } else {
     t4 = $[5];
   }
   let t5;
-  if ($[6] !== t3 || $[7] !== t4) {
+  if ($[6] !== t4 || $[7] !== t3) {
     t5 = (
       <>
-        {t3}
         {t4}
+        {t3}
       </>
     );
-    $[6] = t3;
-    $[7] = t4;
+    $[6] = t4;
+    $[7] = t3;
     $[8] = t5;
   } else {
     t5 = $[8];

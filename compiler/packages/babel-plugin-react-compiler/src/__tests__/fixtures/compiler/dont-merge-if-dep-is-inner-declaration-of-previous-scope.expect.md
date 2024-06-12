@@ -99,42 +99,42 @@ function Component(t0) {
     t2 = $[12];
   }
   let t3;
-  if ($[13] !== t2 || $[14] !== x) {
-    t3 = <ValidateMemoization inputs={t2} output={x} />;
-    $[13] = t2;
-    $[14] = x;
+  if ($[13] !== a || $[14] !== b) {
+    t3 = [a, b];
+    $[13] = a;
+    $[14] = b;
     $[15] = t3;
   } else {
     t3 = $[15];
   }
   let t4;
-  if ($[16] !== a || $[17] !== b) {
-    t4 = [a, b];
-    $[16] = a;
-    $[17] = b;
+  if ($[16] !== t3 || $[17] !== z) {
+    t4 = <ValidateMemoization inputs={t3} output={z} />;
+    $[16] = t3;
+    $[17] = z;
     $[18] = t4;
   } else {
     t4 = $[18];
   }
   let t5;
-  if ($[19] !== t4 || $[20] !== z) {
-    t5 = <ValidateMemoization inputs={t4} output={z} />;
-    $[19] = t4;
-    $[20] = z;
+  if ($[19] !== t2 || $[20] !== x) {
+    t5 = <ValidateMemoization inputs={t2} output={x} />;
+    $[19] = t2;
+    $[20] = x;
     $[21] = t5;
   } else {
     t5 = $[21];
   }
   let t6;
-  if ($[22] !== t3 || $[23] !== t5) {
+  if ($[22] !== t5 || $[23] !== t4) {
     t6 = (
       <>
-        {t3}
         {t5}
+        {t4}
       </>
     );
-    $[22] = t3;
-    $[23] = t5;
+    $[22] = t5;
+    $[23] = t4;
     $[24] = t6;
   } else {
     t6 = $[24];

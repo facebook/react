@@ -33,49 +33,45 @@ import { useState } from "react";
 import { Stringify } from "shared-runtime";
 
 function Component() {
-  const $ = _c(8);
+  const $ = _c(7);
   const [state, setState] = useState(0);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Stringify text="Counter" />;
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
   let t1;
-  if ($[1] !== state) {
-    t1 = <span>{state}</span>;
-    $[1] = state;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  let t2;
-  if ($[3] !== state) {
-    t2 = (
+  if ($[0] !== state) {
+    t0 = (
       <button data-testid="button" onClick={() => setState(state + 1)}>
         increment
       </button>
     );
-    $[3] = state;
-    $[4] = t2;
+    t1 = <span>{state}</span>;
+    $[0] = state;
+    $[1] = t0;
+    $[2] = t1;
   } else {
-    t2 = $[4];
+    t0 = $[1];
+    t1 = $[2];
+  }
+  let t2;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = <Stringify text="Counter" />;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
   }
   let t3;
-  if ($[5] !== t1 || $[6] !== t2) {
+  if ($[4] !== t1 || $[5] !== t0) {
     t3 = (
       <div>
-        {t0}
-        {t1}
         {t2}
+        {t1}
+        {t0}
       </div>
     );
-    $[5] = t1;
-    $[6] = t2;
-    $[7] = t3;
+    $[4] = t1;
+    $[5] = t0;
+    $[6] = t3;
   } else {
-    t3 = $[7];
+    t3 = $[6];
   }
   return t3;
 }
