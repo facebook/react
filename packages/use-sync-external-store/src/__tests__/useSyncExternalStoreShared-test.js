@@ -595,8 +595,13 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     }).toErrorDev(
       'The result of getSnapshot should be cached to avoid an infinite loop',
       {
-        // `console.error` in this package should not be transformed, so we'll never see stack traces
-        withoutStack: true,
+        withoutStack: gate(flags => {
+          if (flags.enableUseSyncExternalStoreShim) {
+            // `console.error` in this package should not be transformed, so we'll never see stack traces
+            return true;
+          }
+          return false;
+        }),
       },
     );
   });
