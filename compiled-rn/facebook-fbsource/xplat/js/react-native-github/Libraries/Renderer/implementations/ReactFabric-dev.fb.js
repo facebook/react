@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d385b8ae99781bb4812778017d564ec0>>
+ * @generated SignedSource<<c5eb663ba843b3f6dfbca3feeeb3aace>>
  */
 
 "use strict";
@@ -16301,14 +16301,6 @@ __DEV__ &&
     var didWarnAboutContextTypeAndContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
-    Object.defineProperty(fakeInternalInstance, "_processChildContext", {
-      enumerable: !1,
-      value: function () {
-        throw Error(
-          "_processChildContext is not available in React 16+. This likely means you have multiple copies of React and are attempting to nest a React 15 tree inside a React 16 tree using unstable_renderSubtreeIntoContainer, which isn't supported. Try to make sure you have only one copy of React (and ideally, switch to ReactDOM.createPortal)."
-        );
-      }
-    });
     Object.freeze(fakeInternalInstance);
     var classComponentUpdater = {
         isMounted: function (component) {
@@ -16693,12 +16685,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-383b2a1845-20240611"
+        reconcilerVersion: "19.0.0-native-fb-93826c8483-20240612"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-383b2a1845-20240611",
+      version: "19.0.0-native-fb-93826c8483-20240612",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
