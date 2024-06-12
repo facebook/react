@@ -131,6 +131,8 @@ const CompilationModeSchema = z.enum([
    * This is the default mode
    */
   "infer",
+  // Compile only components using Flow component syntax and hooks using hook syntax.
+  "syntax",
   // Compile only functions which are explicitly annotated with "use forget"
   "annotation",
   // Compile all top-level functions

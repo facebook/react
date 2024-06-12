@@ -265,6 +265,12 @@ const EnvironmentConfigSchema = z.object({
 
   enableEmitHookGuards: ExternalFunctionSchema.nullish(),
 
+  /**
+   * Enable instruction reordering. See InstructionReordering.ts for the details
+   * of the approach.
+   */
+  enableInstructionReordering: z.boolean().default(true),
+
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
    * instrumentation function, for components and hooks that Forget compiles.

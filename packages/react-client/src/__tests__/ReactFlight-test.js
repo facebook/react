@@ -27,14 +27,27 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+function normalizeComponentInfo(debugInfo) {
+  if (typeof debugInfo.stack === 'string') {
+    const {task, ...copy} = debugInfo;
+    copy.stack = normalizeCodeLocInfo(debugInfo.stack);
+    if (debugInfo.owner) {
+      copy.owner = normalizeComponentInfo(debugInfo.owner);
+    }
+    return copy;
+  } else {
+    return debugInfo;
+  }
+}
+
 function getDebugInfo(obj) {
   const debugInfo = obj._debugInfo;
   if (debugInfo) {
+    const copy = [];
     for (let i = 0; i < debugInfo.length; i++) {
-      if (typeof debugInfo[i].stack === 'string') {
-        debugInfo[i].stack = normalizeCodeLocInfo(debugInfo[i].stack);
-      }
+      copy.push(normalizeComponentInfo(debugInfo[i]));
     }
+    return copy;
   }
   return debugInfo;
 }
@@ -964,67 +977,47 @@ describe('ReactFlight', () => {
     const testCases = (
       <>
         <ClientErrorBoundary expectedMessage="This is a real Error.">
-          <div>
-            <Throw value={new TypeError('This is a real Error.')} />
-          </div>
+          <Throw value={new TypeError('This is a real Error.')} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="This is a string error.">
-          <div>
-            <Throw value="This is a string error." />
-          </div>
+          <Throw value="This is a string error." />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="{message: ..., extra: ..., nested: ...}">
-          <div>
-            <Throw
-              value={{
-                message: 'This is a long message',
-                extra: 'properties',
-                nested: {more: 'prop'},
-              }}
-            />
-          </div>
+          <Throw
+            value={{
+              message: 'This is a long message',
+              extra: 'properties',
+              nested: {more: 'prop'},
+            }}
+          />
         </ClientErrorBoundary>
         <ClientErrorBoundary
           expectedMessage={'{message: "Short", extra: ..., nested: ...}'}>
-          <div>
-            <Throw
-              value={{
-                message: 'Short',
-                extra: 'properties',
-                nested: {more: 'prop'},
-              }}
-            />
-          </div>
+          <Throw
+            value={{
+              message: 'Short',
+              extra: 'properties',
+              nested: {more: 'prop'},
+            }}
+          />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="Symbol(hello)">
-          <div>
-            <Throw value={Symbol('hello')} />
-          </div>
+          <Throw value={Symbol('hello')} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="123">
-          <div>
-            <Throw value={123} />
-          </div>
+          <Throw value={123} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="undefined">
-          <div>
-            <Throw value={undefined} />
-          </div>
+          <Throw value={undefined} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="<div/>">
-          <div>
-            <Throw value={<div />} />
-          </div>
+          <Throw value={<div />} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="function Foo() {}">
-          <div>
-            <Throw value={function Foo() {}} />
-          </div>
+          <Throw value={function Foo() {}} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage={'["array"]'}>
-          <div>
-            <Throw value={['array']} />
-          </div>
+          <Throw value={['array']} />
         </ClientErrorBoundary>
         <ClientErrorBoundary
           expectedMessage={
@@ -1034,9 +1027,7 @@ describe('ReactFlight', () => {
             '- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n' +
             '- A compiler tries to "inline" JSX instead of using the runtime.'
           }>
-          <div>
-            <LazyInlined />
-          </div>
+          <LazyInlined />
         </ClientErrorBoundary>
       </>
     );
@@ -1072,8 +1063,10 @@ describe('ReactFlight', () => {
     }
 
     const expectedStack = __DEV__
-      ? // TODO: This should include Throw but it doesn't have a Fiber.
-        '\n    in div' + '\n    in ErrorBoundary (at **)' + '\n    in App'
+      ? '\n    in Throw' +
+        '\n    in div' +
+        '\n    in ErrorBoundary (at **)' +
+        '\n    in App'
       : '\n    in div' + '\n    in ErrorBoundary (at **)';
 
     function App() {
@@ -1084,6 +1077,46 @@ describe('ReactFlight', () => {
           <div>
             <Throw value={new TypeError('This is a real Error.')} />
           </div>
+        </ClientErrorBoundary>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<App />, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        if (x instanceof Error) {
+          return `digest("${x.message}")`;
+        } else if (Array.isArray(x)) {
+          return `digest([])`;
+        } else if (typeof x === 'object' && x !== null) {
+          return `digest({})`;
+        }
+        return `digest(${String(x)})`;
+      },
+    });
+
+    await act(() => {
+      startTransition(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+    });
+  });
+
+  it('should handle serialization errors in element inside error boundary', async () => {
+    const ClientErrorBoundary = clientReference(ErrorBoundary);
+
+    const expectedStack = __DEV__
+      ? '\n    in div' + '\n    in ErrorBoundary (at **)' + '\n    in App'
+      : '\n    in ErrorBoundary (at **)';
+
+    function App() {
+      return (
+        <ClientErrorBoundary
+          expectedMessage="Event handlers cannot be passed to Client Component props."
+          expectedStack={expectedStack}>
+          <div onClick={function () {}} />
         </ClientErrorBoundary>
       );
     }
@@ -2530,6 +2563,50 @@ describe('ReactFlight', () => {
         <span>dis?</span>
       </div>,
     );
+  });
+
+  it('can change the environment name inside a component', async () => {
+    let env = 'A';
+    function Component(props) {
+      env = 'B';
+      return <div>hi</div>;
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      {
+        greeting: <Component />,
+      },
+      {
+        environmentName() {
+          return env;
+        },
+      },
+    );
+
+    await act(async () => {
+      const rootModel = await ReactNoopFlightClient.read(transport);
+      const greeting = rootModel.greeting;
+      expect(getDebugInfo(greeting)).toEqual(
+        __DEV__
+          ? [
+              {
+                name: 'Component',
+                env: 'A',
+                owner: null,
+                stack: gate(flag => flag.enableOwnerStacks)
+                  ? '    in Object.<anonymous> (at **)'
+                  : undefined,
+              },
+              {
+                env: 'B',
+              },
+            ]
+          : undefined,
+      );
+      ReactNoop.render(greeting);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>hi</div>);
   });
 
   // @gate enableServerComponentLogs && __DEV__

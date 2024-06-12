@@ -9,9 +9,11 @@ import { CompilerError } from "..";
 import {
   BasicBlock,
   Environment,
+  GeneratedSource,
   HIRFunction,
   IdentifierId,
   Instruction,
+  isExpressionBlockKind,
   markInstructionIds,
 } from "../HIR";
 import { printInstruction } from "../HIR/PrintHIR";
@@ -65,10 +67,18 @@ import { getOrInsertWith } from "../Utils/utils";
  * of the named variable. We can add this in a follow-up.
  */
 export function instructionReordering(fn: HIRFunction): void {
+  // Shared nodes are emitted when they are first used
   const shared: Nodes = new Map();
   for (const [, block] of fn.body.blocks) {
     reorderBlock(fn.env, block, shared);
   }
+  CompilerError.invariant(shared.size === 0, {
+    reason: `InstructionReordering: expected all reorderable nodes to have been emitted`,
+    loc:
+      [...shared.values()]
+        .map((node) => node.instruction?.loc)
+        .filter((loc) => loc != null)[0] ?? GeneratedSource,
+  });
   markInstructionIds(fn.body);
 }
 
@@ -169,16 +179,12 @@ function reorderBlock(
     emit(env, locals, shared, nextInstructions, previous);
   }
   /*
-   * For value blocks the final instruction represents its value, so we have to be
+   * For "value" blocks the final instruction represents its value, so we have to be
    * careful to not change the ordering. Emit the last instruction explicitly.
    * Any non-reorderable instructions will get emitted first, and any unused
    * reorderable instructions can be deferred to the shared node list.
    */
-  if (
-    block.kind !== "block" &&
-    block.kind !== "catch" &&
-    block.instructions.length !== 0
-  ) {
+  if (isExpressionBlockKind(block.kind) && block.instructions.length !== 0) {
     DEBUG && console.log(`(block value)`);
     DEBUG &&
       print(
@@ -228,31 +234,6 @@ function reorderBlock(
     shared.set(id, node);
   }
 
-  /*
-   *for (const operand of eachTerminalOperand(block.terminal)) {
-   *  emit(env, locals, shared, nextInstructions, operand.identifier.id);
-   *}
-   *const index = nextInstructions.length;
-   *for (const id of Array.from(locals.keys()).reverse()) {
-   *  const node = locals.get(id);
-   *  if (node == null) {
-   *    continue;
-   *  }
-   *  if (
-   *    node.instruction !== null &&
-   *    getReoderability(node.instruction) === Reorderability.Reorderable &&
-   *    (block.kind === "block" || block.kind === "catch")
-   *  ) {
-   *    shared.set(id, node);
-   *  } else {
-   *    emit(env, locals, shared, nextInstructions, id);
-   *  }
-   *}
-   *if (block.kind !== "block" && block.kind !== "catch") {
-   *  const extra = nextInstructions.splice(index);
-   *  nextInstructions.splice(0, 0, ...extra);
-   *}
-   */
   block.instructions = nextInstructions;
   DEBUG && console.log();
 }
@@ -360,7 +341,9 @@ function getReoderability(instr: Instruction): Reorderability {
     case "JSXText":
     case "LoadGlobal":
     case "Primitive":
-    case "TemplateLiteral": {
+    case "TemplateLiteral":
+    case "BinaryExpression":
+    case "UnaryExpression": {
       return Reorderability.Reorderable;
     }
     default: {

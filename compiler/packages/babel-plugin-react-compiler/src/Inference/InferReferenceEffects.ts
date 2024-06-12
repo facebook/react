@@ -201,7 +201,7 @@ export default function inferReferenceEffects(
     let queuedState = queuedStates.get(blockId);
     if (queuedState != null) {
       // merge the queued states for this block
-      state = queuedState.merge(state) ?? state;
+      state = queuedState.merge(state) ?? queuedState;
       queuedStates.set(blockId, state);
     } else {
       /*
@@ -765,7 +765,7 @@ class InferenceState {
       result.values[id] = { kind, value: printMixedHIR(value) };
     }
     for (const [variable, values] of this.#variables) {
-      result.variables[variable] = [...values].map(identify);
+      result.variables[`$${variable}`] = [...values].map(identify);
     }
     return result;
   }

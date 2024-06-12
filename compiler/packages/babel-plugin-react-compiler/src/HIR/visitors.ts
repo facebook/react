@@ -851,7 +851,8 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "scope": {
+    case "scope":
+    case "pruned-scope": {
       const block = fn(terminal.block);
       const fallthrough = fn(terminal.fallthrough);
       return {
@@ -904,7 +905,8 @@ export function terminalHasFallthrough<
     case "switch":
     case "ternary":
     case "while":
-    case "scope": {
+    case "scope":
+    case "pruned-scope": {
       const _: BlockId = terminal.fallthrough;
       return true;
     }
@@ -1006,7 +1008,8 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.block;
       break;
     }
-    case "scope": {
+    case "scope":
+    case "pruned-scope": {
       yield terminal.block;
       break;
     }
@@ -1072,7 +1075,8 @@ export function mapTerminalOperands(
     case "goto":
     case "unreachable":
     case "unsupported":
-    case "scope": {
+    case "scope":
+    case "pruned-scope": {
       // no-op
       break;
     }
@@ -1130,7 +1134,8 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     case "goto":
     case "unreachable":
     case "unsupported":
-    case "scope": {
+    case "scope":
+    case "pruned-scope": {
       // no-op
       break;
     }
