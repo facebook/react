@@ -654,7 +654,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       {
         withoutStack: gate(flags => {
           if (flags.enableUseSyncExternalStoreShim) {
-            // `console.error` in this package should not be transformed, so we'll never see stack traces
+            // `console.error` in this package should not be transformed, so we'll never see component stacks.
             return true;
           }
           return false;

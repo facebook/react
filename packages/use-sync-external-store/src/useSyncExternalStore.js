@@ -16,7 +16,7 @@ import * as React from 'react';
 export const useSyncExternalStore = React.useSyncExternalStore;
 
 if (__DEV__) {
-  // Avoid transforming the `console.error` call as it would cause the built artefact
+  // Avoid transforming the `console.error` call as it would cause the built artifact
   // to access React internals, which exist under different paths depending on the
   // React version.
   console['error'](

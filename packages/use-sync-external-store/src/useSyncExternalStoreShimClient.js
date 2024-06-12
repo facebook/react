@@ -40,7 +40,7 @@ export function useSyncExternalStore<T>(
     if (!didWarnOld18Alpha) {
       if (React.startTransition !== undefined) {
         didWarnOld18Alpha = true;
-        // Avoid transforming the `console.error` call as it would cause the built artefact
+        // Avoid transforming the `console.error` call as it would cause the built artifact
         // to access React internals, which exist under different paths depending on the
         // React version.
         console['error'](
@@ -62,7 +62,7 @@ export function useSyncExternalStore<T>(
     if (!didWarnUncachedGetSnapshot) {
       const cachedValue = getSnapshot();
       if (!is(value, cachedValue)) {
-        // Avoid transforming the `console.error` call as it would cause the built artefact
+        // Avoid transforming the `console.error` call as it would cause the built artifact
         // to access React internals, which exist under different paths depending on the
         // React version.
         console['error'](
