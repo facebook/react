@@ -50,7 +50,7 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any, ...} = {
     '--color-commit-gradient-text': '#000000',
     '--color-component-name': '#6a51b2',
     '--color-component-name-inverted': '#ffffff',
-    '--color-component-badge-background': 'rgba(0, 0, 0, 0.1)',
+    '--color-component-badge-background': '#e6e6e6',
     '--color-component-badge-background-inverted': 'rgba(255, 255, 255, 0.25)',
     '--color-component-badge-count': '#777d88',
     '--color-component-badge-count-inverted': 'rgba(255, 255, 255, 0.7)',

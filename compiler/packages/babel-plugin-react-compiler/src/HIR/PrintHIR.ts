@@ -127,7 +127,8 @@ export function printMixedHIR(
     case "do-while":
     case "for-in":
     case "for-of":
-    case "scope": {
+    case "scope":
+    case "pruned-scope": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
         return terminal.join("; ");
@@ -276,6 +277,12 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "scope": {
       value = `Scope ${printReactiveScopeSummary(terminal.scope)} block=bb${
+        terminal.block
+      } fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "pruned-scope": {
+      value = `<pruned> Scope ${printReactiveScopeSummary(terminal.scope)} block=bb${
         terminal.block
       } fallthrough=bb${terminal.fallthrough}`;
       break;

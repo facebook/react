@@ -70,7 +70,10 @@ import {
 } from "../ReactiveScopes";
 import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
 import { alignReactiveScopesToBlockScopesHIR } from "../ReactiveScopes/AlignReactiveScopesToBlockScopesHIR";
+import { flattenReactiveLoopsHIR } from "../ReactiveScopes/FlattenReactiveLoopsHIR";
+import { flattenScopesWithHooksOrUseHIR } from "../ReactiveScopes/FlattenScopesWithHooksOrUseHIR";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
+import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 import { stabilizeBlockIds } from "../ReactiveScopes/StabilizeBlockIds";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -91,7 +94,6 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
-import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -281,6 +283,20 @@ function* runWithEnvironment(
     });
 
     assertValidBlockNesting(hir);
+
+    flattenReactiveLoopsHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "FlattenReactiveLoopsHIR",
+      value: hir,
+    });
+
+    flattenScopesWithHooksOrUseHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "FlattenScopesWithHooksOrUseHIR",
+      value: hir,
+    });
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
@@ -320,23 +336,23 @@ function* runWithEnvironment(
       name: "BuildReactiveBlocks",
       value: reactiveFunction,
     });
+
+    flattenReactiveLoops(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "FlattenReactiveLoops",
+      value: reactiveFunction,
+    });
+
+    flattenScopesWithHooksOrUse(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "FlattenScopesWithHooks",
+      value: reactiveFunction,
+    });
   }
 
-  flattenReactiveLoops(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "FlattenReactiveLoops",
-    value: reactiveFunction,
-  });
-
   assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  flattenScopesWithHooksOrUse(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "FlattenScopesWithHooks",
-    value: reactiveFunction,
-  });
 
   propagateScopeDependencies(reactiveFunction);
   yield log({

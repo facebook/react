@@ -806,6 +806,7 @@ class Driver {
         }
         break;
       }
+      case "pruned-scope":
       case "scope": {
         const fallthroughId = !this.cx.isScheduled(terminal.fallthrough)
           ? terminal.fallthrough
@@ -828,7 +829,7 @@ class Driver {
 
         this.cx.unscheduleAll(scheduleIds);
         blockValue.push({
-          kind: "scope",
+          kind: terminal.kind,
           instructions: block,
           scope: terminal.scope,
         });

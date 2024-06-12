@@ -67,7 +67,7 @@ function createCancelHandler(request: Request, reason: string) {
 }
 
 type Options = {
-  environmentName?: string,
+  environmentName?: string | (() => string),
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
   identifierPrefix?: string,
