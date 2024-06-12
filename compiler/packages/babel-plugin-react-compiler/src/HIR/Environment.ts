@@ -269,7 +269,7 @@ const EnvironmentConfigSchema = z.object({
    * Enable instruction reordering. See InstructionReordering.ts for the details
    * of the approach.
    */
-  enableInstructionReordering: z.boolean().default(true),
+  enableInstructionReordering: z.boolean().default(false),
 
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an

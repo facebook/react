@@ -350,7 +350,7 @@ export function isStatementBlockKind(kind: BlockKind): boolean {
  * Returns true for "value", "loop", and "sequence" block kinds which correspond to
  * expressions in the source, such as ConditionalExpression, LogicalExpression, loop
  * initializer/test/updaters, etc
-
+ *
  * Inverse of isStatementBlockKind()
  */
 export function isExpressionBlockKind(kind: BlockKind): boolean {
