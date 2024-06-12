@@ -16415,14 +16415,6 @@ __DEV__ &&
     var didWarnAboutContextTypeAndContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
-    Object.defineProperty(fakeInternalInstance, "_processChildContext", {
-      enumerable: !1,
-      value: function () {
-        throw Error(
-          "_processChildContext is not available in React 16+. This likely means you have multiple copies of React and are attempting to nest a React 15 tree inside a React 16 tree using unstable_renderSubtreeIntoContainer, which isn't supported. Try to make sure you have only one copy of React (and ideally, switch to ReactDOM.createPortal)."
-        );
-      }
-    });
     Object.freeze(fakeInternalInstance);
     var classComponentUpdater = {
       isMounted: function (component) {
@@ -16942,14 +16934,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-383b2a1845-20240611"
+        reconcilerVersion: "19.0.0-www-classic-93826c8483-20240612"
       });
     })({
       findFiberByHostInstance: function () {
         return null;
       },
       bundleType: 1,
-      version: "19.0.0-www-classic-383b2a1845-20240611",
+      version: "19.0.0-www-classic-93826c8483-20240612",
       rendererPackageName: "react-art"
     });
     var ClippingRectangle = TYPES.CLIPPING_RECTANGLE,

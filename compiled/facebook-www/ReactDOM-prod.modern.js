@@ -16464,14 +16464,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1740 = React.version;
 if (
-  "19.0.0-www-modern-383b2a1845-20240611" !==
+  "19.0.0-www-modern-93826c8483-20240612" !==
   isomorphicReactPackageVersion$jscomp$inline_1740
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1740,
-      "19.0.0-www-modern-383b2a1845-20240611"
+      "19.0.0-www-modern-93826c8483-20240612"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -16490,7 +16490,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1742 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-383b2a1845-20240611",
+  version: "19.0.0-www-modern-93826c8483-20240612",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2211 = {
@@ -16520,7 +16520,7 @@ var internals$jscomp$inline_2211 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-383b2a1845-20240611"
+  reconcilerVersion: "19.0.0-www-modern-93826c8483-20240612"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2212 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16884,9 +16884,6 @@ exports.unstable_createEventHandle = function (type, options) {
     "boolean" === typeof options && (isCapturePhaseListener = options));
   return eventHandle;
 };
-exports.unstable_renderSubtreeIntoContainer = function () {
-  throw Error(formatProdErrorMessage(509));
-};
 exports.unstable_runWithPriority = runWithPriority;
 exports.useFormState = function (action, initialState, permalink) {
   return ReactSharedInternals.H.useFormState(action, initialState, permalink);
@@ -16894,4 +16891,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-383b2a1845-20240611";
+exports.version = "19.0.0-www-modern-93826c8483-20240612";

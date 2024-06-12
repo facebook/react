@@ -26260,14 +26260,6 @@ __DEV__ &&
     var didWarnAboutContextTypeAndContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
-    Object.defineProperty(fakeInternalInstance, "_processChildContext", {
-      enumerable: !1,
-      value: function () {
-        throw Error(
-          "_processChildContext is not available in React 16+. This likely means you have multiple copies of React and are attempting to nest a React 15 tree inside a React 16 tree using unstable_renderSubtreeIntoContainer, which isn't supported. Try to make sure you have only one copy of React (and ideally, switch to ReactDOM.createPortal)."
-        );
-      }
-    });
     Object.freeze(fakeInternalInstance);
     var classComponentUpdater = {
         isMounted: function (component) {
@@ -27358,11 +27350,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-383b2a1845-20240611" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-93826c8483-20240612" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-383b2a1845-20240611\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-93826c8483-20240612\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27428,12 +27420,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-classic-383b2a1845-20240611"
+          reconcilerVersion: "19.0.0-www-classic-93826c8483-20240612"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-classic-383b2a1845-20240611",
+        version: "19.0.0-www-classic-93826c8483-20240612",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -28069,34 +28061,6 @@ __DEV__ &&
         "boolean" === typeof options && (isCapturePhaseListener = options));
       return eventHandle;
     };
-    exports.unstable_renderSubtreeIntoContainer = function (
-      parentComponent,
-      element,
-      containerNode,
-      callback
-    ) {
-      if (disableLegacyMode)
-        throw (
-          (error$jscomp$0(
-            "ReactDOM.unstable_renderSubtreeIntoContainer() was removed in React 19. Consider using a portal instead."
-          ),
-          Error("ReactDOM: Unsupported Legacy Mode API."))
-        );
-      error$jscomp$0(
-        "ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18. Consider using a portal instead. Until you switch to the createRoot API, your app will behave as if it's running React 17. Learn more: https://react.dev/link/switch-to-createroot"
-      );
-      if (!isValidContainerLegacy(containerNode))
-        throw Error("Target container is not a DOM element.");
-      if (null == parentComponent || void 0 === parentComponent._reactInternals)
-        throw Error("parentComponent must be a valid React Component");
-      return legacyRenderSubtreeIntoContainer(
-        parentComponent,
-        element,
-        containerNode,
-        !1,
-        callback
-      );
-    };
     exports.unstable_runWithPriority = runWithPriority;
     exports.useFormState = function (action, initialState, permalink) {
       return resolveDispatcher().useFormState(action, initialState, permalink);
@@ -28104,7 +28068,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-383b2a1845-20240611";
+    exports.version = "19.0.0-www-classic-93826c8483-20240612";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

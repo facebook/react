@@ -243,8 +243,6 @@ export default [
   "ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel=\"modulepreload\" as=\"...\" />` tag.%s",
   "ReactDOM.render has not been supported since React 18. Use createRoot instead. Until you switch to the new API, your app will behave as if it's running React 17. Learn more: https://react.dev/link/switch-to-createroot",
   "ReactDOM.render was removed in React 19. Use createRoot instead.",
-  "ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported since React 18. Consider using a portal instead. Until you switch to the createRoot API, your app will behave as if it's running React 17. Learn more: https://react.dev/link/switch-to-createroot",
-  "ReactDOM.unstable_renderSubtreeIntoContainer() was removed in React 19. Consider using a portal instead.",
   "ReactDOM.useFormState has been renamed to React.useActionState. Please update %s to use React.useActionState.",
   "Received NaN for the `%s` attribute. If this is expected, cast the value to a string.",
   "Received `%s` for a non-boolean attribute `%s`.\n\nIf you want to write it to the DOM, pass a string instead: %s=\"%s\" or %s={value.toString()}.",
