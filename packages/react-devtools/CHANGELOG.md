@@ -4,6 +4,56 @@
 
 ---
 
+### 5.2.0
+May 8, 2024
+
+* feat[react-devtools]: display forget badge for components in profiling session ([hoxyq](https://github.com/hoxyq) in [#29014](https://github.com/facebook/react/pull/29014))
+* fix[react-devtools]: add backwards compat with legacy element type symbol ([hoxyq](https://github.com/hoxyq) in [#28982](https://github.com/facebook/react/pull/28982))
+* Expose "view source" options to Fusebox integration ([motiz88](https://github.com/motiz88) in [#28973](https://github.com/facebook/react/pull/28973))
+* Enable inspected element context menu in Fusebox ([motiz88](https://github.com/motiz88) in [#28972](https://github.com/facebook/react/pull/28972))
+* Check in `frontend.d.ts` for react-devtools-fusebox, include in build output ([motiz88](https://github.com/motiz88) in [#28970](https://github.com/facebook/react/pull/28970))
+* Rename Forget badge  ([jbonta](https://github.com/jbonta) in [#28858](https://github.com/facebook/react/pull/28858))
+* Devtools: Add support for useFormStatus ([eps1lon](https://github.com/eps1lon) in [#28413](https://github.com/facebook/react/pull/28413))
+
+---
+
+### 5.1.0
+April 15, 2024
+
+* Look for a ReactMemoCacheSentinel on state ([gsathya](https://github.com/gsathya) in [#28831](https://github.com/facebook/react/pull/28831))
+* feat[devtools]: add method for connecting backend with custom messaging protocol ([hoxyq](https://github.com/hoxyq) in [#28552](https://github.com/facebook/react/pull/28552))
+* feat[devtools]: ship source maps for content scripts and ignore list installHook script ([hoxyq](https://github.com/hoxyq) in [#28730](https://github.com/facebook/react/pull/28730))
+* Devtools: Display actual pending state when inspecting `useTransition` ([eps1lon](https://github.com/eps1lon) in [#28499](https://github.com/facebook/react/pull/28499))
+
+---
+
+### 5.0.2
+March 5, 2024
+
+* feat[devtools]: symbolicate source for inspected element ([hoxyq](https://github.com/hoxyq) in [#28471](https://github.com/facebook/react/pull/28471))
+* refactor[devtools]: lazily define source for fiber based on component stacks ([hoxyq](https://github.com/hoxyq) in [#28351](https://github.com/facebook/react/pull/28351))
+* fix[devtools/tree/element]: onClick -> onMouseDown to handle first click correctly ([hoxyq](https://github.com/hoxyq) in [#28486](https://github.com/facebook/react/pull/28486))
+* Devtools: Unwrap Promise in useFormState ([eps1lon](https://github.com/eps1lon) in [#28319](https://github.com/facebook/react/pull/28319))
+* Include server component names in the componentStack in DEV ([sebmarkbage](https://github.com/sebmarkbage) in [#28415](https://github.com/facebook/react/pull/28415))
+
+---
+
+### 5.0.1
+February 22, 2024
+
+* feature[REMOVED][devtools]: turn off / hide location based component filters ([hoxyq](https://github.com/hoxyq) in [#28417](https://github.com/facebook/react/pull/28417))
+* Add useSyncExternalStore and useTransition to getPrimitiveStackCache ([jamesbvaughan](https://github.com/jamesbvaughan) in [#28399](https://github.com/facebook/react/pull/28399))
+* chore[devtools]: use react-window from npm and bump react-virtualized-auto-sizer to ^1.0.23 ([hoxyq](https://github.com/hoxyq) in [#28408](https://github.com/facebook/react/pull/28408))
+* [Debug Tools] Always use includeHooksSource option ([sebmarkbage](https://github.com/sebmarkbage) in [#28309](https://github.com/facebook/react/pull/28309))
+* [Debug Tools] Introspect Promises in use() ([sebmarkbage](https://github.com/sebmarkbage) in [#28297](https://github.com/facebook/react/pull/28297))
+* fix[devtools/useModalDismissSignal]: use getRootNode for shadow root case support ([hoxyq](https://github.com/hoxyq) in [#28145](https://github.com/facebook/react/pull/28145))
+* DevTools: Add support for use(Context) ([eps1lon](https://github.com/eps1lon) in [#28233](https://github.com/facebook/react/pull/28233))
+* Patch devtools before running useMemo function in strict mode ([gsathya](https://github.com/gsathya) in [#28249](https://github.com/facebook/react/pull/28249))
+* DevTools: Add support for useFormState ([eps1lon](https://github.com/eps1lon) in [#28232](https://github.com/facebook/react/pull/28232))
+* DevTools: Add support for useOptimistic Hook ([eps1lon](https://github.com/eps1lon) in [#27982](https://github.com/facebook/react/pull/27982))
+
+---
+
 ### 5.0.0
 November 29, 2023
 

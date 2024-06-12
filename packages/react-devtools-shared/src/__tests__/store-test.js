@@ -227,6 +227,7 @@ describe('Store', () => {
 
     // @reactVersion >= 18.0
     // @reactVersion < 19
+    // @gate !disableLegacyMode
     it('should support mount and update operations for multiple roots (legacy render)', () => {
       const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
@@ -941,6 +942,7 @@ describe('Store', () => {
 
     // @reactVersion >= 18.0
     // @reactVersion < 19
+    // @gate !disableLegacyMode
     it('should support mount and update operations for multiple roots (legacy render)', () => {
       const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
@@ -1469,6 +1471,7 @@ describe('Store', () => {
 
   // @reactVersion >= 18.0
   // @reactVersion < 19
+  // @gate !disableLegacyMode
   it('detects and updates profiling support based on the attached roots (legacy render)', () => {
     const Component = () => null;
 
@@ -1572,7 +1575,6 @@ describe('Store', () => {
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
-        <React.unstable_Cache />
         <MemoizedFakeHigherOrderComponentWithDisplayNameOverride />
         <ForwardRefFakeHigherOrderComponentWithDisplayNameOverride />
       </React.Fragment>
@@ -1600,7 +1602,6 @@ describe('Store', () => {
             <Baz> [withFoo][withBar]
             <Baz> [Memo][withFoo][withBar]
             <Baz> [ForwardRef][withFoo][withBar]
-            <Cache>
             <memoRefOverride>
             <forwardRefOverride>
     `);
@@ -1632,6 +1633,7 @@ describe('Store', () => {
 
     // @reactVersion >= 18.0
     // @reactVersion < 19
+    // @gate !disableLegacyMode
     it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
@@ -1702,6 +1704,7 @@ describe('Store', () => {
 
     // @reactVersion >= 18.0
     // @reactVersion < 19
+    // @gate !disableLegacyMode
     it('should support Lazy components that are unmounted before they finish loading (legacy render)', async () => {
       const container = document.createElement('div');
 
@@ -1912,8 +1915,10 @@ describe('Store', () => {
       });
     });
 
-    // @reactVersion >= 18.0
-    it('from react get counted', () => {
+    // In React 19, JSX warnings were moved into the renderer - https://github.com/facebook/react/pull/29088
+    // The warning is moved to the Child instead of the Parent.
+    // @reactVersion >= 19.0.1
+    it('from react get counted [React >= 19.0.1]', () => {
       function Example() {
         return [<Child />];
       }
@@ -1922,7 +1927,32 @@ describe('Store', () => {
       }
 
       withErrorsOrWarningsIgnored(
-        ['Warning: Each child in a list should have a unique "key" prop'],
+        ['Each child in a list should have a unique "key" prop'],
+        () => {
+          act(() => render(<Example />));
+        },
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+          ▾ <Example>
+              <Child> ✕
+      `);
+    });
+
+    // @reactVersion >= 18.0
+    // @reactVersion < 19.0
+    it('from react get counted [React 18.x]', () => {
+      function Example() {
+        return [<Child />];
+      }
+      function Child() {
+        return null;
+      }
+
+      withErrorsOrWarningsIgnored(
+        ['Each child in a list should have a unique "key" prop'],
         () => {
           act(() => render(<Example />));
         },

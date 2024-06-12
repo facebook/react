@@ -30,8 +30,7 @@ export const enableComponentStackLocations = true;
 // -----------------------------------------------------------------------------
 
 // TODO: Finish rolling out in www
-export const enableClientRenderFallbackOnTextMismatch = true;
-export const enableFormActions = true;
+export const favorSafetyOverHydrationPerf = true;
 export const enableAsyncActions = true;
 
 // Need to remove didTimeout argument from Scheduler before landing
@@ -40,6 +39,9 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 // This will break some internal tests at Meta so we need to gate this until
 // those can be fixed.
 export const enableDeferRootSchedulingToMicrotask = true;
+
+// TODO: Land at Meta before removing.
+export const disableDefaultPropsExceptForClasses = true;
 
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
@@ -76,10 +78,10 @@ export const enableLegacyFBSupport = false;
 
 export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
-export const enableCacheElement = __EXPERIMENTAL__;
-export const enableFetchInstrumentation = true;
 
-export const enableBinaryFlight = __EXPERIMENTAL__;
+export const enableBinaryFlight = true;
+export const enableFlightReadableStream = true;
+export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 
@@ -100,28 +102,30 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableFloat = true;
-
-// Enables unstable_useMemoCache hook, intended as a compilation target for
+// Enables useMemoCache hook, intended as a compilation target for
 // auto-memoization.
-export const enableUseMemoCacheHook = __EXPERIMENTAL__;
+export const enableUseMemoCacheHook = true;
+// Test this at Meta before enabling.
+export const enableNoCloningMemoCache = false;
 
 export const enableUseEffectEventHook = __EXPERIMENTAL__;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
-export const enableFizzExternalRuntime = true;
+export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries = true;
 
-export const useMicrotasksForSchedulingInFabric = false;
-
 export const passChildrenWhenCloningPersistedNodes = false;
 
-export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+export const enableServerComponentLogs = __EXPERIMENTAL__;
 
-export const enableRenderableContext = false;
+export const enableAddPropertiesFastPath = false;
+
+export const enableOwnerStacks = __EXPERIMENTAL__;
+
+export const enableShallowPropDiffing = false;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -136,41 +140,36 @@ export const transitionLaneExpirationMs = 5000;
 //
 // Alias __NEXT_MAJOR__ to __EXPERIMENTAL__ for easier skimming.
 // -----------------------------------------------------------------------------
-const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
-// Not ready to break experimental yet.
-export const disableLegacyContext = false;
+// TODO: Anything that's set to `true` in this section should either be cleaned
+// up (if it's on everywhere, including Meta and RN builds) or moved to a
+// different section of this file.
 
-// Not ready to break experimental yet.
-// Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = false;
+// const __NEXT_MAJOR__ = __EXPERIMENTAL__;
+
+// Renames the internal symbol for elements since they have changed signature/constructor
+export const renameElementSymbol = true;
+
+// Removes legacy style context
+export const disableLegacyContext = true;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = __NEXT_MAJOR__;
+export const useModernStrictMode = true;
 
 // Not ready to break experimental yet.
 // Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = __NEXT_MAJOR__;
-
-// Changes the behavior for rendering custom elements in both server rendering
-// and client rendering, mostly to allow JSX attributes to apply to the custom
-// element's object properties instead of only HTML attributes.
-// https://github.com/facebook/react/issues/11347
-export const enableCustomElementPropertySupport = __NEXT_MAJOR__;
+export const disableIEWorkarounds = true;
 
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
+export const enableFilterEmptyStringAttributesDOM = true;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
-export const disableClientCache = false;
-
-// Changes Server Components Reconciliation when they have keys
-export const enableServerComponentKeys = __NEXT_MAJOR__;
+export const disableClientCache = true;
 
 /**
  * Enables a new error detection for infinite render loops from updates caused
@@ -178,16 +177,35 @@ export const enableServerComponentKeys = __NEXT_MAJOR__;
  */
 export const enableInfiniteRenderLoopDetection = true;
 
+// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
+// as a normal prop instead of stripping it from the props object.
+
+// Passes `ref` as a normal prop instead of stripping it from the props object
+// during element creation.
+export const enableRefAsProp = true;
+export const disableStringRefs = true;
+export const enableFastJSX = true;
+
+// Warn on any usage of ReactTestRenderer
+export const enableReactTestRendererWarning = true;
+
+// Disables legacy mode
+// This allows us to land breaking changes to remove legacy mode APIs in experimental builds
+// before removing them in stable in the next Major
+export const disableLegacyMode = true;
+
+// Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
+export const enableRenderableContext = true;
+
+// Enables the `initialValue` option for `useDeferredValue`
+export const enableUseDeferredValueInitialArg = true;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
 // Planned feature deprecations and breaking changes. Sorted roughly in order of
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
-
-export const disableModulePatternComponents = false;
-
-export const enableUseRefAccessWarning = false;
 
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const forceConcurrentByDefaultForTesting = false;
@@ -229,10 +247,6 @@ export const enableSchedulingProfiler = __PROFILE__;
 // reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
-// To preserve the "Pause on caught exceptions" behavior of the debugger, we
-// replay the begin phase of a failed component inside invokeGuardedCallback.
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
@@ -254,10 +268,6 @@ export const enableUpdaterTracking = __PROFILE__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
-
-// Profiler API accepts a function to be called when a nested update is scheduled.
-// This callback accepts the component type (class instance or function) the update is scheduled for.
-export const enableProfilerNestedUpdateScheduledHook = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
 

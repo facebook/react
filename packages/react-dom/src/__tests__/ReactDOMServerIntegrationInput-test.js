@@ -17,7 +17,6 @@ const {disableInputAttributeSyncing} = require('shared/ReactFeatureFlags');
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
@@ -25,13 +24,11 @@ function initModules() {
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -47,6 +44,11 @@ desc('ReactDOMServerIntegrationInput', () => {
   itRenders('an input with a value and an onChange', async render => {
     const e = await render(<input value="foo" onChange={() => {}} />);
     expect(e.value).toBe('foo');
+  });
+
+  itRenders('an input with a bigint value and an onChange', async render => {
+    const e = await render(<input value={5n} onChange={() => {}} />);
+    expect(e.value).toBe('5');
   });
 
   itRenders('an input with a value and readOnly', async render => {

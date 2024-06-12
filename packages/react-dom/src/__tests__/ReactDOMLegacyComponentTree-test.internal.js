@@ -27,6 +27,7 @@ describe('ReactDOMComponentTree', () => {
     container = null;
   });
 
+  // @gate !disableLegacyMode
   it('finds instance of node that is attempted to be unmounted', () => {
     const component = <div />;
     const node = ReactDOM.render(<div>{component}</div>, container);
@@ -39,6 +40,7 @@ describe('ReactDOMComponentTree', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('finds instance from node to stop rendering over other react rendered components', () => {
     const component = (
       <div>
@@ -48,7 +50,7 @@ describe('ReactDOMComponentTree', () => {
     const anotherComponent = <div />;
     const instance = ReactDOM.render(component, container);
     expect(() => ReactDOM.render(anotherComponent, instance)).toErrorDev(
-      'render(...): Replacing React-rendered children with a new root ' +
+      'Replacing React-rendered children with a new root ' +
         'component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state ' +
         'and render the new components instead of calling ReactDOM.render.',

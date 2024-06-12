@@ -9,9 +9,10 @@
 
 'use strict';
 
-// Don't wait before processing work on the server.
-// TODO: we can replace this with FlightServer.act().
-global.setImmediate = cb => cb();
+import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
+
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 
 let clientExports;
 let webpackMap;
@@ -23,10 +24,16 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Stream;
 let use;
+let ReactServerScheduler;
+let reactServerAct;
 
 describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    ReactServerScheduler = require('scheduler');
+    patchSetImmediate(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
@@ -54,6 +61,17 @@ describe('ReactFlightDOMNode', () => {
     Stream = require('stream');
     use = React.use;
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   function readResult(stream) {
     return new Promise((resolve, reject) => {
@@ -107,9 +125,8 @@ describe('ReactFlightDOMNode', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
     const readable = new Stream.PassThrough();
     let response;
@@ -125,8 +142,8 @@ describe('ReactFlightDOMNode', () => {
       return use(response);
     }
 
-    const ssrStream = await ReactDOMServer.renderToPipeableStream(
-      <ClientRoot />,
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(<ClientRoot />),
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual(
@@ -137,9 +154,11 @@ describe('ReactFlightDOMNode', () => {
   it('should encode long string in a compact format', async () => {
     const testString = '"\n\t'.repeat(500) + '🙃';
 
-    const stream = ReactServerDOMServer.renderToPipeableStream({
-      text: testString,
-    });
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream({
+        text: testString,
+      }),
+    );
 
     const readable = new Stream.PassThrough();
 
@@ -184,7 +203,9 @@ describe('ReactFlightDOMNode', () => {
       new BigUint64Array(buffer, 0),
       new DataView(buffer, 3),
     ];
-    const stream = ReactServerDOMServer.renderToPipeableStream(buffers);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(buffers),
+    );
     const readable = new Stream.PassThrough();
     const promise = ReactServerDOMClient.createFromNodeStream(readable, {
       moduleMap: {},
@@ -229,9 +250,8 @@ describe('ReactFlightDOMNode', () => {
       return <ClientComponentOnTheClient />;
     }
 
-    const stream = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
     const readable = new Stream.PassThrough();
     let response;
@@ -250,12 +270,107 @@ describe('ReactFlightDOMNode', () => {
       return use(response);
     }
 
-    const ssrStream = await ReactDOMServer.renderToPipeableStream(
-      <ClientRoot />,
+    const ssrStream = await serverAct(() =>
+      ReactDOMServer.renderToPipeableStream(<ClientRoot />),
     );
     const result = await readResult(ssrStream);
     expect(result).toEqual(
       '<script src="/path/to/chunk.js" async="" nonce="r4nd0m"></script><span>Client Component</span>',
     );
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we are cancelled', async () => {
+    let controller;
+    let cancelReason;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        s,
+        {},
+        {
+          onError(error) {
+            return error.message;
+          },
+        },
+      ),
+    );
+
+    const writable = new Stream.PassThrough();
+    rscStream.pipe(writable);
+
+    controller.enqueue('hi');
+
+    const reason = new Error('aborted');
+    writable.destroy(reason);
+
+    await new Promise(resolve => {
+      writable.on('error', () => {
+        resolve();
+      });
+    });
+
+    expect(cancelReason.message).toBe(
+      'The destination stream errored while writing data.',
+    );
+  });
+
+  // @gate enableFlightReadableStream
+  it('should cancels the underlying ReadableStream when we abort', async () => {
+    const errors = [];
+    let controller;
+    let cancelReason;
+    const s = new ReadableStream({
+      start(c) {
+        controller = c;
+      },
+      cancel(r) {
+        cancelReason = r;
+      },
+    });
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        s,
+        {},
+        {
+          onError(x) {
+            errors.push(x);
+            return x.message;
+          },
+        },
+      ),
+    );
+
+    const readable = new Stream.PassThrough();
+    rscStream.pipe(readable);
+
+    const result = await ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: webpackModuleLoading,
+    });
+    const reader = result.getReader();
+    controller.enqueue('hi');
+
+    const reason = new Error('aborted');
+    rscStream.abort(reason);
+
+    expect(cancelReason).toBe(reason);
+
+    let error = null;
+    try {
+      await reader.read();
+    } catch (x) {
+      error = x;
+    }
+    expect(error.digest).toBe('aborted');
+    expect(errors).toEqual([reason]);
   });
 });

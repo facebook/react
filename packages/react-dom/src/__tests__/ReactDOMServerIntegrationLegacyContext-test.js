@@ -14,29 +14,30 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 
 let PropTypes;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
   jest.resetModules();
   PropTypes = require('prop-types');
   React = require('react');
-  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
-const {resetModules, itRenders, itThrowsWhenRendering} =
-  ReactDOMServerIntegrationUtils(initModules);
+const {
+  resetModules,
+  itRenders,
+  itThrowsWhenRendering,
+  clientRenderOnBadMarkup,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
@@ -47,7 +48,7 @@ describe('ReactDOMServerIntegration', () => {
     // The `itRenders` test abstraction doesn't work with @gate so we have
     // to do this instead.
     if (gate(flags => flags.disableLegacyContext)) {
-      test('empty test to stop Jest from being a complainy complainer', () => {});
+      it('empty test to stop Jest from being a complainy complainer', () => {});
       return;
     }
 
@@ -275,7 +276,10 @@ describe('ReactDOMServerIntegration', () => {
             return {foo: 'bar'};
           }
         }
-        const e = await render(<ForgetfulParent />, 1);
+        const e = await render(
+          <ForgetfulParent />,
+          render === clientRenderOnBadMarkup ? 2 : 1,
+        );
         expect(e.textContent).toBe('nope');
       },
     );
@@ -310,7 +314,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(() => {
         ReactDOMServer.renderToString(<MyComponent />);
       }).toErrorDev(
-        'Warning: MyComponent.getChildContext(): childContextTypes must be defined in order to use getChildContext().\n' +
+        'MyComponent.getChildContext(): childContextTypes must be defined in order to use getChildContext().\n' +
           '    in MyComponent (at **)',
       );
     });

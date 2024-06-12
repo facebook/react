@@ -37,10 +37,17 @@ export {
   createClientModuleProxy,
 } from './ReactFlightWebpackReferences';
 
+import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
+
+export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
+
+export type {TemporaryReferenceSet};
+
 type Options = {
   environmentName?: string,
   identifierPrefix?: string,
   signal?: AbortSignal,
+  temporaryReferences?: TemporaryReferenceSet,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
 };
@@ -57,6 +64,7 @@ function renderToReadableStream(
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
     options ? options.environmentName : undefined,
+    options ? options.temporaryReferences : undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
@@ -93,13 +101,19 @@ function renderToReadableStream(
 function decodeReply<T>(
   body: string | FormData,
   webpackMap: ServerManifest,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
     form.append('0', body);
     body = form;
   }
-  const response = createResponse(webpackMap, '', body);
+  const response = createResponse(
+    webpackMap,
+    '',
+    options ? options.temporaryReferences : undefined,
+    body,
+  );
   const root = getRoot<T>(response);
   close(response);
   return root;

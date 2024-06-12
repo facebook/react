@@ -92,7 +92,7 @@ class ReactNativeFiberHostComponent implements INativeMethods {
     if (relativeNode == null) {
       if (__DEV__) {
         console.error(
-          'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+          'ref.measureLayout must be called with a node handle or a ref to a native component.',
         );
       }
 

@@ -65,7 +65,8 @@ describe('component stack', () => {
   // but didn't because both DevTools and ReactDOM are running in the same memory space,
   // so the case we're testing against (DevTools prod build and React DEV build) doesn't exist.
   // It would be nice to figure out a way to test this combination at some point...
-  xit('should disable the current dispatcher before shallow rendering so no effects get scheduled', () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should disable the current dispatcher before shallow rendering so no effects get scheduled', () => {
     let useEffectCount = 0;
 
     const Example = props => {
@@ -84,6 +85,44 @@ describe('component stack', () => {
     expect(mockWarn).toHaveBeenCalledWith(
       'Warning to trigger appended component stacks.',
       '\n    in Example (at **)',
+    );
+  });
+
+  // @reactVersion >=18.3
+  it('should log the current component stack with debug info from promises', () => {
+    const Child = () => {
+      console.error('Test error.');
+      console.warn('Test warning.');
+      return null;
+    };
+    const ChildPromise = Promise.resolve(<Child />);
+    ChildPromise.status = 'fulfilled';
+    ChildPromise.value = <Child />;
+    ChildPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const Parent = () => ChildPromise;
+    const Grandparent = () => <Parent />;
+
+    act(() => render(<Grandparent />));
+
+    expect(mockError).toHaveBeenCalledWith(
+      'Test error.',
+      '\n    in Child (at **)' +
+        '\n    in ServerComponent (at **)' +
+        '\n    in Parent (at **)' +
+        '\n    in Grandparent (at **)',
+    );
+    expect(mockWarn).toHaveBeenCalledWith(
+      'Test warning.',
+      '\n    in Child (at **)' +
+        '\n    in ServerComponent (at **)' +
+        '\n    in Parent (at **)' +
+        '\n    in Grandparent (at **)',
     );
   });
 });

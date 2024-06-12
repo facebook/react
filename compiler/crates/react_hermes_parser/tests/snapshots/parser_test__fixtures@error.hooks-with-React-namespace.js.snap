@@ -1,0 +1,175 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.hooks-with-React-namespace.js
+---
+Input:
+function Foo() {
+  const [x, setX] = React.useState(1);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        26,
+                        27
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "setX",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        29,
+                        33
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    25,
+                    34
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "React",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        37,
+                        42
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "useState",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        43,
+                        51
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      37,
+                      51
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        52,
+                        53
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    37,
+                    54
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  25,
+                  54
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              19,
+              55
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                65,
+                66
+              ]
+            },
+            "loc": null,
+            "range": [
+              58,
+              67
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          69
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        69
+      ],
+      "loc": null,
+      "range": [
+        0,
+        69
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    69
+  ]
+}

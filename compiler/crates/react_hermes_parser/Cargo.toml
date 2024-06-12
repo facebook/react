@@ -1,0 +1,23 @@
+[package]
+name = "react_hermes_parser"
+version = "0.1.0"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+insta = { workspace = true }
+react_diagnostics = { workspace = true }
+react_estree = { workspace = true }
+hermes = { workspace = true } 
+juno_support = { workspace = true }
+serde_json = { workspace = true }
+
+[build-dependencies]
+react_estree_codegen = { workspace = true }

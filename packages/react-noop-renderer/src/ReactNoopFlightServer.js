@@ -25,6 +25,9 @@ type Destination = Array<Uint8Array>;
 const textEncoder = new TextEncoder();
 
 const ReactNoopFlightServer = ReactFlightServer({
+  scheduleMicrotask(callback: () => void) {
+    callback();
+  },
   scheduleWork(callback: () => void) {
     callback();
   },
@@ -46,9 +49,6 @@ const ReactNoopFlightServer = ReactFlightServer({
   stringToPrecomputedChunk(content: string): Uint8Array {
     return textEncoder.encode(content);
   },
-  clonePrecomputedChunk(chunk: Uint8Array): Uint8Array {
-    return chunk;
-  },
   isClientReference(reference: Object): boolean {
     return reference.$$typeof === Symbol.for('react.client.reference');
   },
@@ -64,7 +64,6 @@ const ReactNoopFlightServer = ReactFlightServer({
   ) {
     return saveModule(reference.value);
   },
-  prepareHostDispatcher() {},
 });
 
 type Options = {

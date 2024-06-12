@@ -1,0 +1,331 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/hooks-freeze-arguments.js
+---
+Input:
+function Component() {
+  const a = [];
+  useFreeze(a); // should freeze
+  useFreeze(a); // should be readonly
+  call(a); // should be readonly
+  return a;
+}
+
+function useFreeze(x) {}
+function call(x) {}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    31,
+                    32
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    35,
+                    37
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  31,
+                  37
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              38
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useFreeze",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  41,
+                  50
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    51,
+                    52
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                41,
+                53
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              41,
+              54
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useFreeze",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  74,
+                  83
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    84,
+                    85
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                74,
+                86
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              74,
+              87
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "call",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  112,
+                  116
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    117,
+                    118
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                112,
+                119
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              112,
+              120
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "a",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                152,
+                153
+              ]
+            },
+            "loc": null,
+            "range": [
+              145,
+              154
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          156
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        156
+      ],
+      "loc": null,
+      "range": [
+        0,
+        156
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "useFreeze",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          167,
+          176
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "x",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            177,
+            178
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          180,
+          182
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        158,
+        182
+      ],
+      "loc": null,
+      "range": [
+        158,
+        182
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "call",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          192,
+          196
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "x",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            197,
+            198
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          200,
+          202
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        183,
+        202
+      ],
+      "loc": null,
+      "range": [
+        183,
+        202
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    202
+  ]
+}

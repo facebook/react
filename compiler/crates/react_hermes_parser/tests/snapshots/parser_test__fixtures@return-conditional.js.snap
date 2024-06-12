@@ -1,0 +1,173 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/return-conditional.js
+---
+Input:
+function foo(a, b) {
+  if (a == null) {
+    return null;
+  } else {
+    return b;
+  }
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            14
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "b",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            17
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  27,
+                  28
+                ]
+              },
+              "operator": "==",
+              "right": {
+                "type": "NullLiteral",
+                "loc": null,
+                "range": [
+                  32,
+                  36
+                ]
+              },
+              "loc": null,
+              "range": [
+                27,
+                36
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "NullLiteral",
+                    "loc": null,
+                    "range": [
+                      51,
+                      55
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    44,
+                    56
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                38,
+                60
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "Identifier",
+                    "name": "b",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      79,
+                      80
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    72,
+                    81
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                66,
+                85
+              ]
+            },
+            "loc": null,
+            "range": [
+              23,
+              85
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          19,
+          87
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        87
+      ],
+      "loc": null,
+      "range": [
+        0,
+        87
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    87
+  ]
+}

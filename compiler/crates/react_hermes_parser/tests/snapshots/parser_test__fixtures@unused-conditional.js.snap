@@ -1,0 +1,202 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/unused-conditional.js
+---
+Input:
+function Component(props) {
+  let x = 0;
+  (x = 1) && (x = 2);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    35
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 0.0,
+                  "loc": null,
+                  "range": [
+                    38,
+                    39
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  34,
+                  39
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              40
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "LogicalExpression",
+              "operator": "&&",
+              "left": {
+                "type": "AssignmentExpression",
+                "operator": "=",
+                "left": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    44,
+                    45
+                  ]
+                },
+                "right": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    48,
+                    49
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  44,
+                  49
+                ]
+              },
+              "right": {
+                "type": "AssignmentExpression",
+                "operator": "=",
+                "left": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    55,
+                    56
+                  ]
+                },
+                "right": {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    59,
+                    60
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  55,
+                  60
+                ]
+              },
+              "loc": null,
+              "range": [
+                43,
+                61
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              43,
+              62
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                72,
+                73
+              ]
+            },
+            "loc": null,
+            "range": [
+              65,
+              74
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          76
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        76
+      ],
+      "loc": null,
+      "range": [
+        0,
+        76
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    76
+  ]
+}

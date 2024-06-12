@@ -1,0 +1,261 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-delete-property-of-frozen-value.js
+---
+Input:
+function Component(props) {
+  const x = makeObject();
+  // freeze
+  <div>{x}</div>;
+  delete x.y;
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "makeObject",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      40,
+                      50
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    40,
+                    52
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  52
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              53
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    69,
+                    72
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  68,
+                  73
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      74,
+                      75
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    73,
+                    76
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    78,
+                    81
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  76,
+                  82
+                ]
+              },
+              "loc": null,
+              "range": [
+                68,
+                82
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              68,
+              83
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "UnaryExpression",
+              "operator": "delete",
+              "prefix": true,
+              "argument": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    93,
+                    94
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    95,
+                    96
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  93,
+                  96
+                ]
+              },
+              "loc": null,
+              "range": [
+                86,
+                96
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              86,
+              97
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                107,
+                108
+              ]
+            },
+            "loc": null,
+            "range": [
+              100,
+              109
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          111
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        111
+      ],
+      "loc": null,
+      "range": [
+        0,
+        111
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    111
+  ]
+}

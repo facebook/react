@@ -1,0 +1,263 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/jsx-spread.js
+---
+Input:
+function Component(props) {
+  return (
+    <Component {...props} {...{ bar: props.cond ? props.foo : props.bar }} />
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Component",
+                  "loc": null,
+                  "range": [
+                    44,
+                    53
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXSpreadAttribute",
+                    "argument": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        58,
+                        63
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      54,
+                      64
+                    ]
+                  },
+                  {
+                    "type": "JSXSpreadAttribute",
+                    "argument": {
+                      "type": "ObjectExpression",
+                      "properties": [
+                        {
+                          "type": "Property",
+                          "key": {
+                            "type": "Identifier",
+                            "name": "bar",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              71,
+                              74
+                            ]
+                          },
+                          "value": {
+                            "type": "ConditionalExpression",
+                            "test": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "props",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  76,
+                                  81
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "cond",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  82,
+                                  86
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                76,
+                                86
+                              ]
+                            },
+                            "alternate": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "props",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  101,
+                                  106
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "bar",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  107,
+                                  110
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                101,
+                                110
+                              ]
+                            },
+                            "consequent": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "props",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  89,
+                                  94
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "foo",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  95,
+                                  98
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                89,
+                                98
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              76,
+                              110
+                            ]
+                          },
+                          "kind": "init",
+                          "method": false,
+                          "shorthand": false,
+                          "computed": false,
+                          "loc": null,
+                          "range": [
+                            71,
+                            110
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        69,
+                        112
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      65,
+                      113
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  43,
+                  116
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                43,
+                116
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              121
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          123
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        123
+      ],
+      "loc": null,
+      "range": [
+        0,
+        123
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    123
+  ]
+}

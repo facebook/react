@@ -1,0 +1,184 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-ternary-with-hook-values.js
+---
+Input:
+function Component(props) {
+  const x = props.cond ? useA : useB;
+  return x();
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "ConditionalExpression",
+                  "test": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        40,
+                        45
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "cond",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        46,
+                        50
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      40,
+                      50
+                    ]
+                  },
+                  "alternate": {
+                    "type": "Identifier",
+                    "name": "useB",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      60,
+                      64
+                    ]
+                  },
+                  "consequent": {
+                    "type": "Identifier",
+                    "name": "useA",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      53,
+                      57
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    40,
+                    64
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  64
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              65
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  75,
+                  76
+                ]
+              },
+              "arguments": [],
+              "loc": null,
+              "range": [
+                75,
+                78
+              ]
+            },
+            "loc": null,
+            "range": [
+              68,
+              79
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          81
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        81
+      ],
+      "loc": null,
+      "range": [
+        0,
+        81
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    81
+  ]
+}

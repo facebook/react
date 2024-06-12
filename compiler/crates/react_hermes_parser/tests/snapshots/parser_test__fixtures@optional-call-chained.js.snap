@@ -1,0 +1,208 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/optional-call-chained.js
+---
+Input:
+function Component(props) {
+  return call?.(props.a)?.(props.b)?.(props.c);
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "OptionalCallExpression",
+              "callee": {
+                "type": "OptionalCallExpression",
+                "callee": {
+                  "type": "OptionalCallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "call",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      37,
+                      41
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          44,
+                          49
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          50,
+                          51
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        44,
+                        51
+                      ]
+                    }
+                  ],
+                  "optional": true,
+                  "loc": null,
+                  "range": [
+                    37,
+                    52
+                  ]
+                },
+                "arguments": [
+                  {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        55,
+                        60
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "b",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        61,
+                        62
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      55,
+                      62
+                    ]
+                  }
+                ],
+                "optional": true,
+                "loc": null,
+                "range": [
+                  37,
+                  63
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      66,
+                      71
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "c",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      72,
+                      73
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    66,
+                    73
+                  ]
+                }
+              ],
+              "optional": true,
+              "loc": null,
+              "range": [
+                37,
+                74
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              75
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          77
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        77
+      ],
+      "loc": null,
+      "range": [
+        0,
+        77
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    77
+  ]
+}

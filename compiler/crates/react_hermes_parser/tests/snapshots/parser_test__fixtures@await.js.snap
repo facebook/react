@@ -1,0 +1,248 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/await.js
+---
+Input:
+async function Component(props) {
+  const user = await load(props.id);
+  return <div>{user.name}</div>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          15,
+          24
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            25,
+            30
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "user",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    42,
+                    46
+                  ]
+                },
+                "init": {
+                  "type": "AwaitExpression",
+                  "argument": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "load",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        55,
+                        59
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            60,
+                            65
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "id",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            66,
+                            68
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          60,
+                          68
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      55,
+                      69
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    49,
+                    69
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  42,
+                  69
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              36,
+              70
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    81,
+                    84
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  80,
+                  85
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "user",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        86,
+                        90
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "name",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        91,
+                        95
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      86,
+                      95
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    85,
+                    96
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    98,
+                    101
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  96,
+                  102
+                ]
+              },
+              "loc": null,
+              "range": [
+                80,
+                102
+              ]
+            },
+            "loc": null,
+            "range": [
+              73,
+              103
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          32,
+          105
+        ]
+      },
+      "generator": false,
+      "async": true,
+      "loc": null,
+      "range": [
+        0,
+        105
+      ],
+      "loc": null,
+      "range": [
+        0,
+        105
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    105
+  ]
+}

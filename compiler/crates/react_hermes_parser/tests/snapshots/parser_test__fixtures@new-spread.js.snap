@@ -1,0 +1,230 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/new-spread.js
+---
+Input:
+function Component(props) {
+  const x = new Foo(...props.foo, null, ...[props.bar]);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "NewExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "Foo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      44,
+                      47
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "SpreadElement",
+                      "argument": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            51,
+                            56
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "foo",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            57,
+                            60
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          51,
+                          60
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        48,
+                        60
+                      ]
+                    },
+                    {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        62,
+                        66
+                      ]
+                    },
+                    {
+                      "type": "SpreadElement",
+                      "argument": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "props",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                72,
+                                77
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "bar",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                78,
+                                81
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              72,
+                              81
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          71,
+                          82
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        68,
+                        82
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    40,
+                    83
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  83
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              84
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                94,
+                95
+              ]
+            },
+            "loc": null,
+            "range": [
+              87,
+              96
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          98
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        98
+      ],
+      "loc": null,
+      "range": [
+        0,
+        98
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    98
+  ]
+}

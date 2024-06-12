@@ -169,7 +169,7 @@ describe('ReactLazyContextPropagation', () => {
   //   }
   // }
 
-  test(
+  it(
     'context change should prevent bailout of memoized component (useMemo -> ' +
       'no intermediate fiber)',
     async () => {
@@ -217,7 +217,7 @@ describe('ReactLazyContextPropagation', () => {
     },
   );
 
-  test('context change should prevent bailout of memoized component (memo HOC)', async () => {
+  it('context change should prevent bailout of memoized component (memo HOC)', async () => {
     const root = ReactNoop.createRoot();
 
     const Context = React.createContext(0);
@@ -258,7 +258,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('1');
   });
 
-  test('context change should prevent bailout of memoized component (PureComponent)', async () => {
+  it('context change should prevent bailout of memoized component (PureComponent)', async () => {
     const root = ReactNoop.createRoot();
 
     const Context = React.createContext(0);
@@ -301,7 +301,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('1');
   });
 
-  test("context consumer bails out if context hasn't changed", async () => {
+  it("context consumer bails out if context hasn't changed", async () => {
     const root = ReactNoop.createRoot();
 
     const Context = React.createContext(0);
@@ -349,7 +349,7 @@ describe('ReactLazyContextPropagation', () => {
   });
 
   // @gate enableLegacyCache
-  test('context is propagated across retries', async () => {
+  it('context is propagated across retries', async () => {
     const root = ReactNoop.createRoot();
 
     const Context = React.createContext('A');
@@ -410,7 +410,7 @@ describe('ReactLazyContextPropagation', () => {
   });
 
   // @gate enableLegacyCache
-  test('multiple contexts are propagated across retries', async () => {
+  it('multiple contexts are propagated across retries', async () => {
     // Same as previous test, but with multiple context providers
     const root = ReactNoop.createRoot();
 
@@ -489,8 +489,8 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BBB');
   });
 
-  // @gate enableLegacyCache
-  test('context is propagated across retries (legacy)', async () => {
+  // @gate enableLegacyCache && !disableLegacyMode
+  it('context is propagated across retries (legacy)', async () => {
     const root = ReactNoop.createLegacyRoot();
 
     const Context = React.createContext('A');
@@ -550,8 +550,8 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate www
-  test('context is propagated through offscreen trees', async () => {
+  // @gate enableLegacyCache && enableLegacyHidden
+  it('context is propagated through offscreen trees', async () => {
     const LegacyHidden = React.unstable_LegacyHidden;
 
     const root = ReactNoop.createRoot();
@@ -596,8 +596,8 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate www
-  test('multiple contexts are propagated across through offscreen trees', async () => {
+  // @gate enableLegacyCache && enableLegacyHidden
+  it('multiple contexts are propagated across through offscreen trees', async () => {
     // Same as previous test, but with multiple context providers
     const LegacyHidden = React.unstable_LegacyHidden;
 
@@ -658,7 +658,7 @@ describe('ReactLazyContextPropagation', () => {
   });
 
   // @gate enableSuspenseList
-  test('contexts are propagated through SuspenseList', async () => {
+  it('contexts are propagated through SuspenseList', async () => {
     // This kinda tests an implementation detail. SuspenseList has an early
     // bailout that doesn't use `bailoutOnAlreadyFinishedWork`. It probably
     // should just use that function, though.
@@ -699,7 +699,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  test('nested bailouts', async () => {
+  it('nested bailouts', async () => {
     // Lazy context propagation will stop propagating when it hits the first
     // match. If we bail out again inside that tree, we must resume propagating.
 
@@ -754,7 +754,7 @@ describe('ReactLazyContextPropagation', () => {
   });
 
   // @gate enableLegacyCache
-  test('nested bailouts across retries', async () => {
+  it('nested bailouts across retries', async () => {
     // Lazy context propagation will stop propagating when it hits the first
     // match. If we bail out again inside that tree, we must resume propagating.
 
@@ -822,8 +822,8 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate www
-  test('nested bailouts through offscreen trees', async () => {
+  // @gate enableLegacyCache && enableLegacyHidden
+  it('nested bailouts through offscreen trees', async () => {
     // Lazy context propagation will stop propagating when it hits the first
     // match. If we bail out again inside that tree, we must resume propagating.
 
@@ -877,7 +877,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  test('finds context consumers in multiple sibling branches', async () => {
+  it('finds context consumers in multiple sibling branches', async () => {
     // This test confirms that when we find a matching context consumer during
     // propagation, we continue propagating to its sibling branches.
 

@@ -17,7 +17,6 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 let useState;
 let useReducer;
 let useEffect;
@@ -41,7 +40,6 @@ function initModules() {
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
   useState = React.useState;
   useReducer = React.useReducer;
   useEffect = React.useEffect;
@@ -69,7 +67,6 @@ function initModules() {
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
@@ -153,7 +150,7 @@ describe('ReactDOMServerHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
     itRenders('multiple times when an updater is called', async render => {
@@ -675,7 +672,7 @@ describe('ReactDOMServerHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   });
 
@@ -778,8 +775,7 @@ describe('ReactDOMServerHooks', () => {
   describe('readContext', () => {
     function readContext(Context) {
       const dispatcher =
-        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-          .ReactCurrentDispatcher.current;
+        React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H;
       return dispatcher.readContext(Context);
     }
 

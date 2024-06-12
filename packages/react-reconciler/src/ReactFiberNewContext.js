@@ -44,7 +44,6 @@ import {createUpdate, ForceUpdate} from './ReactFiberClassUpdateQueue';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableLazyContextPropagation,
-  enableFormActions,
   enableAsyncActions,
   enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
@@ -582,11 +581,7 @@ function propagateParentContextChanges(
           }
         }
       }
-    } else if (
-      enableFormActions &&
-      enableAsyncActions &&
-      parent === getHostTransitionProvider()
-    ) {
+    } else if (enableAsyncActions && parent === getHostTransitionProvider()) {
       // During a host transition, a host component can act like a context
       // provider. E.g. in React DOM, this would be a <form />.
       const currentParent = parent.alternate;
@@ -715,7 +710,7 @@ export function readContext<T>(context: ReactContext<T>): T {
   return readContextForConsumer(currentlyRenderingFiber, context);
 }
 
-export function readContextDuringReconcilation<T>(
+export function readContextDuringReconciliation<T>(
   consumer: Fiber,
   context: ReactContext<T>,
   renderLanes: Lanes,

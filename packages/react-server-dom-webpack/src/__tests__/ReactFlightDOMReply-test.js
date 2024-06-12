@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {patchMessageChannel} from '../../../../scripts/jest/patchMessageChannel';
+
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
@@ -17,12 +19,20 @@ global.TextDecoder = require('util').TextDecoder;
 
 // let serverExports;
 let webpackServerMap;
+let React;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
+let ReactServerScheduler;
+let reactServerAct;
 
 describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    ReactServerScheduler = require('scheduler');
+    patchMessageChannel(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
+
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
@@ -31,10 +41,23 @@ describe('ReactFlightDOMReply', () => {
     const WebpackMock = require('./utils/WebpackMock');
     // serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
+    React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
     jest.resetModules();
+    __unmockReact();
     ReactServerDOMClient = require('react-server-dom-webpack/client');
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   // This method should exist on File but is not implemented in JSDOM
   async function arrayBuffer(file) {
@@ -94,6 +117,35 @@ describe('ReactFlightDOMReply', () => {
       items.push(item);
     }
     expect(items).toEqual(['A', 'B', 'C']);
+
+    // Multipass
+    const items2 = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const item of iterable) {
+      items2.push(item);
+    }
+    expect(items2).toEqual(['A', 'B', 'C']);
+  });
+
+  it('can pass an iterator as a reply', async () => {
+    const iterator = (function* () {
+      yield 'A';
+      yield 'B';
+      yield 'C';
+    })();
+
+    const body = await ReactServerDOMClient.encodeReply(iterator);
+    const result = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    // The iterator should be the same as itself.
+    expect(result[Symbol.iterator]()).toBe(result);
+
+    expect(Array.from(result)).toEqual(['A', 'B', 'C']);
+    // We've already consumed this iterator.
+    expect(Array.from(result)).toEqual([]);
   });
 
   it('can pass weird numbers as a reply', async () => {
@@ -240,5 +292,330 @@ describe('ReactFlightDOMReply', () => {
       error = e;
     }
     expect(error.message).toBe('Connection closed.');
+  });
+
+  it('resolves a promise and includes its value', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    const bodyPromise = ReactServerDOMClient.encodeReply({promise: promise});
+    resolve('Hi');
+    const result = await ReactServerDOMServer.decodeReply(await bodyPromise);
+    expect(await result.promise).toBe('Hi');
+  });
+
+  it('resolves a React.lazy and includes its value', async () => {
+    let resolve;
+    const lazy = React.lazy(() => new Promise(r => (resolve = r)));
+    const bodyPromise = ReactServerDOMClient.encodeReply({lazy: lazy});
+    resolve({default: 'Hi'});
+    const result = await ReactServerDOMServer.decodeReply(await bodyPromise);
+    expect(result.lazy).toBe('Hi');
+  });
+
+  it('resolves a proxy throwing a promise inside React.lazy', async () => {
+    let resolve1;
+    let resolve2;
+    const lazy = React.lazy(() => new Promise(r => (resolve1 = r)));
+    const promise = new Promise(r => (resolve2 = r));
+    const bodyPromise1 = ReactServerDOMClient.encodeReply({lazy: lazy});
+    const target = {value: ''};
+    let loaded = false;
+    const proxy = new Proxy(target, {
+      get(targetObj, prop, receiver) {
+        if (prop === 'value') {
+          if (!loaded) {
+            throw promise;
+          }
+          return 'Hello';
+        }
+        return targetObj[prop];
+      },
+    });
+    await resolve1({default: proxy});
+
+    // Encode it again so that we have an already initialized lazy
+    // This is now already resolved but the proxy inside isn't. This ensures
+    // we trigger the retry code path.
+    const bodyPromise2 = ReactServerDOMClient.encodeReply({lazy: lazy});
+
+    // Then resolve the inner thrown promise.
+    loaded = true;
+    await resolve2('Hello');
+
+    const result1 = await ReactServerDOMServer.decodeReply(await bodyPromise1);
+    expect(await result1.lazy.value).toBe('Hello');
+    const result2 = await ReactServerDOMServer.decodeReply(await bodyPromise2);
+    expect(await result2.lazy.value).toBe('Hello');
+  });
+
+  it('errors when called with JSX by default', async () => {
+    let error;
+    try {
+      await ReactServerDOMClient.encodeReply(<div />);
+    } catch (x) {
+      error = x;
+    }
+    expect(error).toEqual(
+      expect.objectContaining({
+        message: __DEV__
+          ? expect.stringContaining(
+              'React Element cannot be passed to Server Functions from the Client without a temporary reference set.',
+            )
+          : expect.stringContaining(''),
+      }),
+    );
+  });
+
+  it('can pass JSX through a round trip using temporary references', async () => {
+    function Component() {
+      return <div />;
+    }
+
+    const children = <Component />;
+
+    const temporaryReferences =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+    const body = await ReactServerDOMClient.encodeReply(
+      {children},
+      {
+        temporaryReferences,
+      },
+    );
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+    const serverPayload = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(serverPayload, null, {
+        temporaryReferences: temporaryReferencesServer,
+      }),
+    );
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        temporaryReferences,
+      },
+    );
+
+    // This should've been the same reference that we already saw.
+    expect(response.children).toBe(children);
+  });
+
+  it('can return the same object using temporary references', async () => {
+    const obj = {
+      this: {is: 'a large object'},
+      with: {many: 'properties in it'},
+    };
+
+    const root = {obj};
+
+    const temporaryReferences =
+      ReactServerDOMClient.createTemporaryReferenceSet();
+    const body = await ReactServerDOMClient.encodeReply(root, {
+      temporaryReferences,
+    });
+
+    const temporaryReferencesServer =
+      ReactServerDOMServer.createTemporaryReferenceSet();
+    const serverPayload = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+      {temporaryReferences: temporaryReferencesServer},
+    );
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          root: serverPayload,
+          obj: serverPayload.obj,
+        },
+        null,
+        {temporaryReferences: temporaryReferencesServer},
+      ),
+    );
+    const response = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        temporaryReferences,
+      },
+    );
+
+    // This should've been the same reference that we already saw because
+    // we returned it by reference.
+    expect(response.root).toBe(root);
+    expect(response.obj).toBe(obj);
+  });
+
+  // @gate enableFlightReadableStream
+  it('should supports streaming ReadableStream with objects', async () => {
+    let controller1;
+    let controller2;
+    const s1 = new ReadableStream({
+      start(c) {
+        controller1 = c;
+      },
+    });
+    const s2 = new ReadableStream({
+      start(c) {
+        controller2 = c;
+      },
+    });
+
+    const promise = ReactServerDOMClient.encodeReply({s1, s2});
+
+    controller1.enqueue({hello: 'world'});
+    controller2.enqueue({hi: 'there'});
+
+    controller1.enqueue('text1');
+    controller2.enqueue('text2');
+
+    controller1.close();
+    controller2.close();
+
+    const body = await promise;
+
+    const result = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+    const reader1 = result.s1.getReader();
+    const reader2 = result.s2.getReader();
+
+    expect(await reader1.read()).toEqual({
+      value: {hello: 'world'},
+      done: false,
+    });
+    expect(await reader2.read()).toEqual({
+      value: {hi: 'there'},
+      done: false,
+    });
+
+    expect(await reader1.read()).toEqual({
+      value: 'text1',
+      done: false,
+    });
+    expect(await reader1.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+    expect(await reader2.read()).toEqual({
+      value: 'text2',
+      done: false,
+    });
+    expect(await reader2.read()).toEqual({
+      value: undefined,
+      done: true,
+    });
+  });
+
+  // @gate enableFlightReadableStream
+  it('should supports streaming AsyncIterables with objects', async () => {
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+    const multiShotIterable = {
+      async *[Symbol.asyncIterator]() {
+        const next = yield {hello: 'A'};
+        expect(next).toBe(undefined);
+        await wait;
+        yield {hi: 'B'};
+        return 'C';
+      },
+    };
+    const singleShotIterator = (async function* () {
+      const next = yield {hello: 'D'};
+      expect(next).toBe(undefined);
+      await wait;
+      yield {hi: 'E'};
+      return 'F';
+    })();
+
+    await resolve();
+
+    const body = await ReactServerDOMClient.encodeReply({
+      multiShotIterable,
+      singleShotIterator,
+    });
+    const result = await ReactServerDOMServer.decodeReply(
+      body,
+      webpackServerMap,
+    );
+
+    const iterator1 = result.multiShotIterable[Symbol.asyncIterator]();
+    const iterator2 = result.singleShotIterator[Symbol.asyncIterator]();
+
+    expect(iterator1).not.toBe(result.multiShotIterable);
+    expect(iterator2).toBe(result.singleShotIterator);
+
+    expect(await iterator1.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(await iterator2.next()).toEqual({
+      value: {hello: 'D'},
+      done: false,
+    });
+
+    expect(await iterator1.next()).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(await iterator2.next()).toEqual({
+      value: {hi: 'E'},
+      done: false,
+    });
+    expect(await iterator1.next()).toEqual({
+      value: 'C', // Return value
+      done: true,
+    });
+    expect(await iterator1.next()).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    expect(await iterator2.next()).toEqual({
+      value: 'F', // Return value
+      done: true,
+    });
+
+    // Multi-shot iterables should be able to do the same thing again
+    const iterator3 = result.multiShotIterable[Symbol.asyncIterator]();
+
+    expect(iterator3).not.toBe(iterator1);
+
+    // We should be able to iterate over the iterable again and it should be
+    // synchronously available using instrumented promises so that React can
+    // rerender it synchronously.
+    expect(iterator3.next().value).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: {hi: 'B'},
+      done: false,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: 'C', // Return value
+      done: true,
+    });
+    expect(iterator3.next().value).toEqual({
+      value: undefined,
+      done: true,
+    });
+
+    expect(() => iterator3.next('this is not allowed')).toThrow(
+      'Values cannot be passed to next() of AsyncIterables passed to Client Components.',
+    );
+  });
+
+  it('can transport cyclic objects', async () => {
+    const cyclic = {obj: null};
+    cyclic.obj = cyclic;
+
+    const body = await ReactServerDOMClient.encodeReply({prop: cyclic});
+    const root = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+    expect(root.prop.obj).toBe(root.prop);
   });
 });

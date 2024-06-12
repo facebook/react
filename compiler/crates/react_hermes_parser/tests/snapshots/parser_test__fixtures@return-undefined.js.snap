@@ -1,0 +1,176 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/return-undefined.js
+---
+Input:
+function Component(props) {
+  if (props.cond) {
+    return undefined;
+  }
+  return props.value;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  34,
+                  39
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "cond",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  40,
+                  44
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                34,
+                44
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "Identifier",
+                    "name": "undefined",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      59,
+                      68
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    52,
+                    69
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                46,
+                73
+              ]
+            },
+            "alternate": null,
+            "loc": null,
+            "range": [
+              30,
+              73
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  83,
+                  88
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "value",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  89,
+                  94
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                83,
+                94
+              ]
+            },
+            "loc": null,
+            "range": [
+              76,
+              95
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          97
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        97
+      ],
+      "loc": null,
+      "range": [
+        0,
+        97
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    97
+  ]
+}

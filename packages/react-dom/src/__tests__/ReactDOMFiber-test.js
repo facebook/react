@@ -60,6 +60,16 @@ describe('ReactDOMFiber', () => {
     expect(container.textContent).toEqual('10');
   });
 
+  it('should render bigints as children', async () => {
+    const Box = ({value}) => <div>{value}</div>;
+
+    await act(async () => {
+      root.render(<Box value={10n} />);
+    });
+
+    expect(container.textContent).toEqual('10');
+  });
+
   it('should call an effect after mount/update (replacing render callback pattern)', async () => {
     function Component() {
       React.useEffect(() => {
@@ -1097,11 +1107,13 @@ describe('ReactDOMFiber', () => {
     // It's an error of type 'NotFoundError' with no message
     container.innerHTML = '<div>MEOW.</div>';
 
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<div key="2">baz</div>);
+    await expect(async () => {
+      await act(() => {
+        ReactDOM.flushSync(() => {
+          root.render(<div key="2">baz</div>);
+        });
       });
-    }).toThrow('The node to be removed is not a child of this node');
+    }).rejects.toThrow('The node to be removed is not a child of this node');
   });
 
   it('should not warn when doing an update to a container manually updated outside of React', async () => {

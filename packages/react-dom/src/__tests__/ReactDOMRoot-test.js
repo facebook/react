@@ -47,31 +47,11 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
   });
 
-  it('warns if you import createRoot from react-dom', async () => {
-    expect(() => ReactDOM.createRoot(container)).toErrorDev(
-      'You are importing createRoot from "react-dom" which is not supported. ' +
-        'You should instead import it from "react-dom/client".',
-      {
-        withoutStack: true,
-      },
-    );
-  });
-
-  it('warns if you import hydrateRoot from react-dom', async () => {
-    expect(() => ReactDOM.hydrateRoot(container, null)).toErrorDev(
-      'You are importing hydrateRoot from "react-dom" which is not supported. ' +
-        'You should instead import it from "react-dom/client".',
-      {
-        withoutStack: true,
-      },
-    );
-  });
-
   it('warns if a callback parameter is provided to render', async () => {
     const callback = jest.fn();
     const root = ReactDOMClient.createRoot(container);
     expect(() => root.render(<div>Hi</div>, callback)).toErrorDev(
-      'render(...): does not support the second callback argument. ' +
+      'does not support the second callback argument. ' +
         'To execute a side effect after rendering, declare it in a component body with useEffect().',
       {withoutStack: true},
     );
@@ -79,7 +59,7 @@ describe('ReactDOMRoot', () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('warn if a container is passed to root.render(...)', async () => {
+  it('warn if a object is passed to root.render(...)', async () => {
     function App() {
       return 'Child';
     }
@@ -115,7 +95,7 @@ describe('ReactDOMRoot', () => {
     const root = ReactDOMClient.createRoot(container);
     root.render(<div>Hi</div>);
     expect(() => root.unmount(callback)).toErrorDev(
-      'unmount(...): does not support a callback argument. ' +
+      'does not support a callback argument. ' +
         'To execute a side effect after rendering, declare it in a component body with useEffect().',
       {withoutStack: true},
     );
@@ -171,7 +151,8 @@ describe('ReactDOMRoot', () => {
       </div>,
     );
     await expect(async () => await waitForAll([])).toErrorDev(
-      'Extra attributes',
+      "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+      {withoutStack: true},
     );
   });
 
@@ -199,7 +180,7 @@ describe('ReactDOMRoot', () => {
   it('throws a good message on invalid containers', () => {
     expect(() => {
       ReactDOMClient.createRoot(<div>Hi</div>);
-    }).toThrow('createRoot(...): Target container is not a DOM element.');
+    }).toThrow('Target container is not a DOM element.');
   });
 
   it('warns when creating two roots managing the same container', () => {
@@ -222,21 +203,8 @@ describe('ReactDOMRoot', () => {
   });
 
   it('warns if creating a root on the document.body', async () => {
-    if (gate(flags => flags.enableFloat)) {
-      // we no longer expect an error for this if float is enabled
-      ReactDOMClient.createRoot(document.body);
-    } else {
-      expect(() => {
-        ReactDOMClient.createRoot(document.body);
-      }).toErrorDev(
-        'createRoot(): Creating roots directly with document.body is ' +
-          'discouraged, since its children are often manipulated by third-party ' +
-          'scripts and browser extensions. This may lead to subtle ' +
-          'reconciliation issues. Try using a container element created ' +
-          'for your app.',
-        {withoutStack: true},
-      );
-    }
+    // we no longer expect an error for this if float is enabled
+    ReactDOMClient.createRoot(document.body);
   });
 
   it('warns if updating a root that has had its contents removed', async () => {
@@ -245,21 +213,9 @@ describe('ReactDOMRoot', () => {
     await waitForAll([]);
     container.innerHTML = '';
 
-    if (gate(flags => flags.enableFloat)) {
-      // When either of these flags are on this validation is turned off so we
-      // expect there to be no warnings
-      root.render(<div>Hi</div>);
-    } else {
-      expect(() => {
-        root.render(<div>Hi</div>);
-      }).toErrorDev(
-        'render(...): It looks like the React-rendered content of the ' +
-          'root container was removed without using React. This is not ' +
-          'supported and will cause errors. Instead, call ' +
-          "root.unmount() to empty a root's container.",
-        {withoutStack: true},
-      );
-    }
+    // When either of these flags are on this validation is turned off so we
+    // expect there to be no warnings
+    root.render(<div>Hi</div>);
   });
 
   it('should render different components in same root', async () => {
@@ -343,9 +299,11 @@ describe('ReactDOMRoot', () => {
     });
     container.innerHTML = '';
 
-    expect(() => {
-      root.unmount();
-    }).toThrow('The node to be removed is not a child of this node.');
+    await expect(async () => {
+      await act(() => {
+        root.unmount();
+      });
+    }).rejects.toThrow('The node to be removed is not a child of this node.');
   });
 
   it('opts-in to concurrent default updates', async () => {
@@ -362,12 +320,13 @@ describe('ReactDOMRoot', () => {
       root.render(<Foo value="a" />);
     });
 
+    assertLog(['a']);
     expect(container.textContent).toEqual('a');
 
     await act(async () => {
       root.render(<Foo value="b" />);
 
-      assertLog(['a']);
+      assertLog([]);
       expect(container.textContent).toEqual('a');
 
       await waitFor(['b']);
@@ -446,10 +405,10 @@ describe('ReactDOMRoot', () => {
     const commentNode = div.childNodes[0];
 
     expect(() => ReactDOMClient.createRoot(commentNode)).toThrow(
-      'createRoot(...): Target container is not a DOM element.',
+      'Target container is not a DOM element.',
     );
     expect(() => ReactDOMClient.hydrateRoot(commentNode)).toThrow(
-      'hydrateRoot(...): Target container is not a DOM element.',
+      'Target container is not a DOM element.',
     );
   });
 
@@ -487,8 +446,23 @@ describe('ReactDOMRoot', () => {
       });
     }).toErrorDev(
       'Functions are not valid as a React child. ' +
-        'This may happen if you return a Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
+        'This may happen if you return Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.\n' +
+        '  root.render(Component)',
+      {withoutStack: true},
+    );
+  });
+
+  it('warns when given a symbol', () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+
+    expect(() => {
+      ReactDOM.flushSync(() => {
+        root.render(Symbol('foo'));
+      });
+    }).toErrorDev(
+      'Symbols are not valid as a React child.\n' +
+        '  root.render(Symbol(foo))',
       {withoutStack: true},
     );
   });

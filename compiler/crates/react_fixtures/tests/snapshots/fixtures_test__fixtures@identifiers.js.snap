@@ -1,0 +1,41 @@
+---
+source: crates/react_fixtures/tests/fixtures_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_fixtures/tests/fixtures/identifiers.js
+---
+Input:
+// import React from "react";
+
+// const FOO = false;
+
+function id(x) {
+  // React;
+  // FOO;
+  Math;
+  id;
+  let y = true;
+  y = false;
+  y;
+  let z;
+  z;
+  return x;
+}
+
+
+Output:
+function id(
+  unknown x$14,
+)
+entry bb0
+bb0 (block)
+  [0] unknown $15 = LoadGlobal Math
+  [1] unknown $16 = LoadGlobal id
+  [2] unknown $17 = true
+  [3] unknown $19 = StoreLocal Let unknown y$18 = unknown $17
+  [4] unknown $20 = false
+  [5] unknown $22 = StoreLocal Reassign unknown y$21 = unknown $20
+  [6] unknown $23 = false
+  [7] unknown $25 = DeclareLocal Let unknown z$24
+  [8] unknown $26 = LoadLocal unknown z$24
+  [9] unknown $27 = LoadLocal unknown x$14
+  [10] Return unknown $27

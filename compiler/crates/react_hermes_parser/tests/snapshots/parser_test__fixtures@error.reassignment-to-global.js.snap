@@ -1,0 +1,135 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.reassignment-to-global.js
+---
+Input:
+function Component() {
+  // Cannot assign to globals
+  someUnknownGlobal = true;
+  moduleLocal = true;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "Identifier",
+                "name": "someUnknownGlobal",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  55,
+                  72
+                ]
+              },
+              "right": {
+                "type": "BooleanLiteral",
+                "value": true,
+                "loc": null,
+                "range": [
+                  75,
+                  79
+                ]
+              },
+              "loc": null,
+              "range": [
+                55,
+                79
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              55,
+              80
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "Identifier",
+                "name": "moduleLocal",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  83,
+                  94
+                ]
+              },
+              "right": {
+                "type": "BooleanLiteral",
+                "value": true,
+                "loc": null,
+                "range": [
+                  97,
+                  101
+                ]
+              },
+              "loc": null,
+              "range": [
+                83,
+                101
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              83,
+              102
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          104
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        104
+      ],
+      "loc": null,
+      "range": [
+        0,
+        104
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    104
+  ]
+}

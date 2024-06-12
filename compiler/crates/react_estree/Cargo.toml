@@ -1,0 +1,22 @@
+[package]
+name = "react_estree"
+version = "0.1.0"
+publish               = false
+authors.workspace     = true
+description.workspace = true
+edition.workspace     = true
+homepage.workspace    = true
+keywords.workspace    = true
+license.workspace     = true
+repository.workspace  = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+insta = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+static_assertions = { workspace = true }
+
+[build-dependencies]
+react_estree_codegen = { workspace = true }

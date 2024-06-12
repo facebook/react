@@ -1,0 +1,220 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/switch-global-propertyload-case-test.js
+---
+Input:
+function Component(props) {
+  switch (props.value) {
+    case Global.Property: {
+      return true;
+    }
+    default: {
+      return false;
+    }
+  }
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "SwitchStatement",
+            "discriminant": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  38,
+                  43
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "value",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  44,
+                  49
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                38,
+                49
+              ]
+            },
+            "cases": [
+              {
+                "type": "SwitchCase",
+                "test": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "Global",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      62,
+                      68
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "Property",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      69,
+                      77
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    62,
+                    77
+                  ]
+                },
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ReturnStatement",
+                        "argument": {
+                          "type": "BooleanLiteral",
+                          "value": true,
+                          "loc": null,
+                          "range": [
+                            94,
+                            98
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          87,
+                          99
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      79,
+                      105
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  57,
+                  105
+                ]
+              },
+              {
+                "type": "SwitchCase",
+                "test": null,
+                "consequent": [
+                  {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ReturnStatement",
+                        "argument": {
+                          "type": "BooleanLiteral",
+                          "value": false,
+                          "loc": null,
+                          "range": [
+                            134,
+                            139
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          127,
+                          140
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      119,
+                      146
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  110,
+                  146
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              150
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          152
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        152
+      ],
+      "loc": null,
+      "range": [
+        0,
+        152
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    152
+  ]
+}

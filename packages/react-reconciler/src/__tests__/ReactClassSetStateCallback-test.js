@@ -22,7 +22,7 @@ describe('ReactClassSetStateCallback', () => {
     return text;
   }
 
-  test('regression: setState callback (2nd arg) should only fire once, even after a rebase', async () => {
+  it('regression: setState callback (2nd arg) should only fire once, even after a rebase', async () => {
     let app;
     class App extends React.Component {
       state = {step: 0};

@@ -70,8 +70,8 @@ export function registerServerReference<T: Function>(
 ): ServerReference<T> {
   return Object.defineProperties((reference: any), {
     $$typeof: {value: SERVER_REFERENCE_TAG},
-    $$id: {value: id + '#' + exportName},
-    $$bound: {value: null},
-    bind: {value: bind},
+    $$id: {value: id + '#' + exportName, configurable: true},
+    $$bound: {value: null, configurable: true},
+    bind: {value: bind, configurable: true},
   });
 }

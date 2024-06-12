@@ -81,7 +81,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     };
   }
 
-  test('basic server render', async () => {
+  it('basic server render', async () => {
     const store = createExternalStore('client');
 
     function App() {

@@ -1,0 +1,229 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/nested-optional-member-expr.js
+---
+Input:
+// We should codegen nested optional properties correctly
+// (i.e. placing `?` in the correct PropertyLoad)
+function Component(props) {
+  let x = foo(props.a?.b.c.d);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          117,
+          126
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            127,
+            132
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    142,
+                    143
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "foo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      146,
+                      149
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "OptionalMemberExpression",
+                      "object": {
+                        "type": "OptionalMemberExpression",
+                        "object": {
+                          "type": "OptionalMemberExpression",
+                          "object": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "props",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                150,
+                                155
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "a",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                156,
+                                157
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              150,
+                              157
+                            ]
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "b",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              159,
+                              160
+                            ]
+                          },
+                          "computed": false,
+                          "optional": true,
+                          "loc": null,
+                          "range": [
+                            150,
+                            160
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "c",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            161,
+                            162
+                          ]
+                        },
+                        "computed": false,
+                        "optional": false,
+                        "loc": null,
+                        "range": [
+                          150,
+                          162
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "d",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          163,
+                          164
+                        ]
+                      },
+                      "computed": false,
+                      "optional": false,
+                      "loc": null,
+                      "range": [
+                        150,
+                        164
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    146,
+                    165
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  142,
+                  165
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              138,
+              166
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                176,
+                177
+              ]
+            },
+            "loc": null,
+            "range": [
+              169,
+              178
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          134,
+          180
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        108,
+        180
+      ],
+      "loc": null,
+      "range": [
+        108,
+        180
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    108,
+    180
+  ]
+}

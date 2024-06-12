@@ -22,6 +22,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -36,7 +37,10 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
 
 export {
   registerServerReference,
@@ -44,8 +48,22 @@ export {
   createClientModuleProxy,
 } from './ReactFlightTurbopackReferences';
 
+import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
+
+export {createTemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
+
+export type {TemporaryReferenceSet};
+
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
+}
+
+function createCancelHandler(request: Request, reason: string) {
+  return () => {
+    stopFlowing(request);
+    // eslint-disable-next-line react-internal/prod-error-codes
+    abort(request, new Error(reason));
+  };
 }
 
 type Options = {
@@ -53,6 +71,7 @@ type Options = {
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
   identifierPrefix?: string,
+  temporaryReferences?: TemporaryReferenceSet,
 };
 
 type PipeableStream = {
@@ -72,6 +91,7 @@ function renderToPipeableStream(
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
     options ? options.environmentName : undefined,
+    options ? options.temporaryReferences : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -85,6 +105,17 @@ function renderToPipeableStream(
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
+      destination.on(
+        'error',
+        createCancelHandler(
+          request,
+          'The destination stream errored while writing data.',
+        ),
+      );
+      destination.on(
+        'close',
+        createCancelHandler(request, 'The destination stream closed early.'),
+      );
       return destination;
     },
     abort(reason: mixed) {
@@ -96,8 +127,13 @@ function renderToPipeableStream(
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
   turbopackMap: ServerManifest,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
-  const response = createResponse(turbopackMap, '');
+  const response = createResponse(
+    turbopackMap,
+    '',
+    options ? options.temporaryReferences : undefined,
+  );
   let pendingFiles = 0;
   const queuedFields: Array<string> = [];
   busboyStream.on('field', (name, value) => {
@@ -151,13 +187,19 @@ function decodeReplyFromBusboy<T>(
 function decodeReply<T>(
   body: string | FormData,
   turbopackMap: ServerManifest,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
     form.append('0', body);
     body = form;
   }
-  const response = createResponse(turbopackMap, '', body);
+  const response = createResponse(
+    turbopackMap,
+    '',
+    options ? options.temporaryReferences : undefined,
+    body,
+  );
   const root = getRoot<T>(response);
   close(response);
   return root;
@@ -168,4 +210,5 @@ export {
   decodeReplyFromBusboy,
   decodeReply,
   decodeAction,
+  decodeFormState,
 };

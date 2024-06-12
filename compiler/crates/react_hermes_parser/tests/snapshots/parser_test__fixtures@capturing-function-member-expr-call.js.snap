@@ -1,0 +1,461 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/capturing-function-member-expr-call.js
+---
+Input:
+function component({ mutator }) {
+  const poke = () => {
+    mutator.poke();
+  };
+
+  const hide = () => {
+    mutator.user.hide();
+  };
+
+  return <Foo poke={poke} hide={hide}></Foo>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "ObjectPattern",
+          "properties": [
+            {
+              "type": "Property",
+              "key": {
+                "type": "Identifier",
+                "name": "mutator",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  21,
+                  28
+                ]
+              },
+              "value": {
+                "type": "Identifier",
+                "name": "mutator",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  21,
+                  28
+                ]
+              },
+              "kind": "init",
+              "computed": false,
+              "shorthand": true,
+              "method": false,
+              "loc": null,
+              "range": [
+                21,
+                28
+              ]
+            }
+          ],
+          "loc": null,
+          "range": [
+            19,
+            30
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "poke",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    42,
+                    46
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "mutator",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                61,
+                                68
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "poke",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                69,
+                                73
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              61,
+                              73
+                            ]
+                          },
+                          "arguments": [],
+                          "loc": null,
+                          "range": [
+                            61,
+                            75
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          61,
+                          76
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      55,
+                      80
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    49,
+                    80
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    49,
+                    80
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  42,
+                  80
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              36,
+              81
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "hide",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    91,
+                    95
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "mutator",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  110,
+                                  117
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "user",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  118,
+                                  122
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                110,
+                                122
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "hide",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                123,
+                                127
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              110,
+                              127
+                            ]
+                          },
+                          "arguments": [],
+                          "loc": null,
+                          "range": [
+                            110,
+                            129
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          110,
+                          130
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      104,
+                      134
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    98,
+                    134
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    98,
+                    134
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  91,
+                  134
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              85,
+              135
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    147,
+                    150
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "poke",
+                      "loc": null,
+                      "range": [
+                        151,
+                        155
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "poke",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          157,
+                          161
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        156,
+                        162
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      151,
+                      162
+                    ]
+                  },
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "hide",
+                      "loc": null,
+                      "range": [
+                        163,
+                        167
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "hide",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          169,
+                          173
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        168,
+                        174
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      163,
+                      174
+                    ]
+                  }
+                ],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  146,
+                  175
+                ]
+              },
+              "children": [],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    177,
+                    180
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  175,
+                  181
+                ]
+              },
+              "loc": null,
+              "range": [
+                146,
+                181
+              ]
+            },
+            "loc": null,
+            "range": [
+              139,
+              182
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          32,
+          184
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        184
+      ],
+      "loc": null,
+      "range": [
+        0,
+        184
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    184
+  ]
+}

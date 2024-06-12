@@ -21,7 +21,7 @@ import {
   useState,
   use,
 } from 'react';
-import {useFormState} from 'react-dom';
+import {useFormState, useFormStatus} from 'react-dom';
 
 const object = {
   string: 'abc',
@@ -120,16 +120,95 @@ function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
 }
 const HocWithHooks = wrapWithHoc(FunctionWithHooks);
 
+const Suspendender = React.lazy(() => {
+  return new Promise<any>(resolve => {
+    setTimeout(() => {
+      resolve({
+        default: () => 'Finished!',
+      });
+    }, 3000);
+  });
+});
+function Transition() {
+  const [show, setShow] = React.useState(false);
+  const [isPending, startTransition] = React.useTransition();
+
+  return (
+    <div>
+      <React.Suspense fallback="Loading">
+        {isPending ? 'Pending' : null}
+        {show ? <Suspendender /> : null}
+      </React.Suspense>
+      {!show && (
+        <button onClick={() => startTransition(() => setShow(true))}>
+          Transition
+        </button>
+      )}
+    </div>
+  );
+}
+
+function incrementWithDelay(previousState: number, formData: FormData) {
+  const incrementDelay = +formData.get('incrementDelay');
+  const shouldReject = formData.get('shouldReject');
+  const reason = formData.get('reason');
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (shouldReject) {
+        reject(reason);
+      } else {
+        resolve(previousState + 1);
+      }
+    }, incrementDelay);
+  });
+}
+
+function FormStatus() {
+  const status = useFormStatus();
+
+  return <pre>{JSON.stringify(status)}</pre>;
+}
+
 function Forms() {
-  const [state, formAction] = useFormState((n: number, formData: FormData) => {
-    return n + 1;
-  }, 0);
+  const [state, formAction] = useFormState<any, any>(incrementWithDelay, 0);
   return (
     <form>
-      {state}
+      State: {state}&nbsp;
+      <label>
+        delay:
+        <input
+          name="incrementDelay"
+          defaultValue={5000}
+          type="text"
+          inputMode="numeric"
+        />
+      </label>
+      <label>
+        Reject:
+        <input name="reason" type="text" />
+        <input name="shouldReject" type="checkbox" />
+      </label>
       <button formAction={formAction}>Increment</button>
+      <FormStatus />
     </form>
   );
+}
+
+class ErrorBoundary extends React.Component<{children?: React$Node}> {
+  state: {error: any} = {error: null};
+  static getDerivedStateFromError(error: mixed): {error: any} {
+    return {error};
+  }
+  componentDidCatch(error: any, info: any) {
+    console.error(error, info);
+  }
+  render(): any {
+    if (this.state.error) {
+      return <div>Error: {String(this.state.error)}</div>;
+    }
+    return this.props.children;
+  }
 }
 
 export default function CustomHooks(): React.Node {
@@ -139,7 +218,10 @@ export default function CustomHooks(): React.Node {
       <MemoWithHooks />
       <ForwardRefWithHooks />
       <HocWithHooks />
-      <Forms />
+      <Transition />
+      <ErrorBoundary>
+        <Forms />
+      </ErrorBoundary>
     </Fragment>
   );
 }

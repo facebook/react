@@ -1,0 +1,233 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/infer-types-through-type-cast.flow.js
+---
+Input:
+// @flow
+function Component(props) {
+  // We can infer that `x` is a primitive bc it is aliased to `y`,
+  // which is used in a binary expression
+  const x = foo();
+  const y = (x: any);
+  y + 1;
+  return x;
+}
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          18,
+          27
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            28,
+            33
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    154,
+                    155
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "foo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      158,
+                      161
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    158,
+                    163
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  154,
+                  163
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              148,
+              164
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    173,
+                    174
+                  ]
+                },
+                "init": {
+                  "type": "CoverTypedIdentifier",
+                  "left": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      178,
+                      179
+                    ]
+                  },
+                  "right": {
+                    "type": "TSTypeAnnotation",
+                    "loc": null,
+                    "range": [
+                      179,
+                      184
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    178,
+                    184
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  173,
+                  185
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              167,
+              186
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "y",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  189,
+                  190
+                ]
+              },
+              "operator": "+",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 1.0,
+                "loc": null,
+                "range": [
+                  193,
+                  194
+                ]
+              },
+              "loc": null,
+              "range": [
+                189,
+                194
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              189,
+              195
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                205,
+                206
+              ]
+            },
+            "loc": null,
+            "range": [
+              198,
+              207
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          35,
+          209
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        9,
+        209
+      ],
+      "loc": null,
+      "range": [
+        9,
+        209
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    9,
+    209
+  ]
+}

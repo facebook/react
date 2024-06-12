@@ -1,0 +1,342 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/useMemo-inverted-if.js
+---
+Input:
+function Component(props) {
+  const x = useMemo(() => {
+    label: {
+      if (props.cond) {
+        break label;
+      }
+      return props.a;
+    }
+    return props.b;
+  });
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useMemo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      40,
+                      47
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "LabeledStatement",
+                            "label": {
+                              "type": "Identifier",
+                              "name": "label",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                60,
+                                65
+                              ]
+                            },
+                            "body": {
+                              "type": "BlockStatement",
+                              "body": [
+                                {
+                                  "type": "IfStatement",
+                                  "test": {
+                                    "type": "MemberExpression",
+                                    "object": {
+                                      "type": "Identifier",
+                                      "name": "props",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        79,
+                                        84
+                                      ]
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "cond",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        85,
+                                        89
+                                      ]
+                                    },
+                                    "computed": false,
+                                    "loc": null,
+                                    "range": [
+                                      79,
+                                      89
+                                    ]
+                                  },
+                                  "consequent": {
+                                    "type": "BlockStatement",
+                                    "body": [
+                                      {
+                                        "type": "BreakStatement",
+                                        "label": {
+                                          "type": "Identifier",
+                                          "name": "label",
+                                          "typeAnnotation": null,
+                                          "loc": null,
+                                          "range": [
+                                            107,
+                                            112
+                                          ]
+                                        },
+                                        "loc": null,
+                                        "range": [
+                                          101,
+                                          113
+                                        ]
+                                      }
+                                    ],
+                                    "loc": null,
+                                    "range": [
+                                      91,
+                                      121
+                                    ]
+                                  },
+                                  "alternate": null,
+                                  "loc": null,
+                                  "range": [
+                                    75,
+                                    121
+                                  ]
+                                },
+                                {
+                                  "type": "ReturnStatement",
+                                  "argument": {
+                                    "type": "MemberExpression",
+                                    "object": {
+                                      "type": "Identifier",
+                                      "name": "props",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        135,
+                                        140
+                                      ]
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "a",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        141,
+                                        142
+                                      ]
+                                    },
+                                    "computed": false,
+                                    "loc": null,
+                                    "range": [
+                                      135,
+                                      142
+                                    ]
+                                  },
+                                  "loc": null,
+                                  "range": [
+                                    128,
+                                    143
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                67,
+                                149
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              60,
+                              149
+                            ]
+                          },
+                          {
+                            "type": "ReturnStatement",
+                            "argument": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "props",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  161,
+                                  166
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "b",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  167,
+                                  168
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                161,
+                                168
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              154,
+                              169
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          54,
+                          173
+                        ]
+                      },
+                      "generator": false,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        48,
+                        173
+                      ],
+                      "expression": false,
+                      "loc": null,
+                      "range": [
+                        48,
+                        173
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    40,
+                    174
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  174
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              175
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                185,
+                186
+              ]
+            },
+            "loc": null,
+            "range": [
+              178,
+              187
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          189
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        189
+      ],
+      "loc": null,
+      "range": [
+        0,
+        189
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    189
+  ]
+}

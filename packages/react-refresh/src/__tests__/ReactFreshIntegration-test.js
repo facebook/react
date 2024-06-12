@@ -129,7 +129,7 @@ describe('ReactFreshIntegration', () => {
       testJavaScript,
     ],
     ['TypeScript syntax', executeTypescript, testTypeScript],
-  ])('%s', (language, execute, test) => {
+  ])('%s', (language, execute, runTest) => {
     async function render(source) {
       const Component = execute(source);
       await act(() => {
@@ -175,7 +175,7 @@ describe('ReactFreshIntegration', () => {
       expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    test(render, patch);
+    runTest(render, patch);
   });
 
   function testJavaScript(render, patch) {
@@ -1638,54 +1638,6 @@ describe('ReactFreshIntegration', () => {
         expect(el.textContent).toBe('C2');
       }
     });
-
-    if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-      it('remounts deprecated factory components', async () => {
-        if (__DEV__) {
-          await expect(async () => {
-            await render(`
-              function Parent() {
-                return {
-                  render() {
-                    return <Child prop="A" />;
-                  }
-                };
-              };
-
-              function Child({prop}) {
-                return <h1>{prop}1</h1>;
-              };
-
-              export default Parent;
-            `);
-          }).toErrorDev(
-            'The <Parent /> component appears to be a function component ' +
-              'that returns a class instance.',
-          );
-          const el = container.firstChild;
-          expect(el.textContent).toBe('A1');
-          await patch(`
-            function Parent() {
-              return {
-                render() {
-                  return <Child prop="B" />;
-                }
-              };
-            };
-
-            function Child({prop}) {
-              return <h1>{prop}2</h1>;
-            };
-
-            export default Parent;
-          `);
-          // Like classes, factory components always remount.
-          expect(container.firstChild).not.toBe(el);
-          const newEl = container.firstChild;
-          expect(newEl.textContent).toBe('B2');
-        }
-      });
-    }
 
     describe('with inline requires', () => {
       beforeEach(() => {

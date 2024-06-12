@@ -1,0 +1,208 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/optional-call-with-optional-property-load.js
+---
+Input:
+function Component(props) {
+  return props?.items?.map?.(render)?.filter(Boolean) ?? [];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "LogicalExpression",
+              "operator": "??",
+              "left": {
+                "type": "OptionalCallExpression",
+                "callee": {
+                  "type": "OptionalMemberExpression",
+                  "object": {
+                    "type": "OptionalCallExpression",
+                    "callee": {
+                      "type": "OptionalMemberExpression",
+                      "object": {
+                        "type": "OptionalMemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            37,
+                            42
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "items",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            44,
+                            49
+                          ]
+                        },
+                        "computed": false,
+                        "optional": true,
+                        "loc": null,
+                        "range": [
+                          37,
+                          49
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "map",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          51,
+                          54
+                        ]
+                      },
+                      "computed": false,
+                      "optional": true,
+                      "loc": null,
+                      "range": [
+                        37,
+                        54
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "Identifier",
+                        "name": "render",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          57,
+                          63
+                        ]
+                      }
+                    ],
+                    "optional": true,
+                    "loc": null,
+                    "range": [
+                      37,
+                      64
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "filter",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      66,
+                      72
+                    ]
+                  },
+                  "computed": false,
+                  "optional": true,
+                  "loc": null,
+                  "range": [
+                    37,
+                    72
+                  ]
+                },
+                "arguments": [
+                  {
+                    "type": "Identifier",
+                    "name": "Boolean",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      73,
+                      80
+                    ]
+                  }
+                ],
+                "optional": false,
+                "loc": null,
+                "range": [
+                  37,
+                  81
+                ]
+              },
+              "right": {
+                "type": "ArrayExpression",
+                "elements": [],
+                "loc": null,
+                "range": [
+                  85,
+                  87
+                ]
+              },
+              "loc": null,
+              "range": [
+                37,
+                87
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              88
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          90
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        90
+      ],
+      "loc": null,
+      "range": [
+        0,
+        90
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    90
+  ]
+}

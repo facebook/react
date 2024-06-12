@@ -1,0 +1,269 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ternary-assignment-expression.js
+---
+Input:
+function ternary(props) {
+  let x = 0;
+  const y = props.a ? (x = 1) : (x = 2);
+  return x + y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "ternary",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          16
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            17,
+            22
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    32,
+                    33
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 0.0,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  32,
+                  37
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              28,
+              38
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    47,
+                    48
+                  ]
+                },
+                "init": {
+                  "type": "ConditionalExpression",
+                  "test": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        51,
+                        56
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "a",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        57,
+                        58
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      51,
+                      58
+                    ]
+                  },
+                  "alternate": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        72,
+                        73
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 2.0,
+                      "loc": null,
+                      "range": [
+                        76,
+                        77
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      72,
+                      77
+                    ]
+                  },
+                  "consequent": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        62,
+                        63
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        66,
+                        67
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      62,
+                      67
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    51,
+                    78
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  47,
+                  78
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              41,
+              79
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  89,
+                  90
+                ]
+              },
+              "operator": "+",
+              "right": {
+                "type": "Identifier",
+                "name": "y",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  93,
+                  94
+                ]
+              },
+              "loc": null,
+              "range": [
+                89,
+                94
+              ]
+            },
+            "loc": null,
+            "range": [
+              82,
+              95
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          24,
+          97
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        97
+      ],
+      "loc": null,
+      "range": [
+        0,
+        97
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    97
+  ]
+}
