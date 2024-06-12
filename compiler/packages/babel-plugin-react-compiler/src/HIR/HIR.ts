@@ -335,6 +335,28 @@ export type HIR = {
  * statements and not implicit exceptions which may occur.
  */
 export type BlockKind = "block" | "value" | "loop" | "sequence" | "catch";
+
+/**
+ * Returns true for "block" and "catch" block kinds which correspond to statements
+ * in the source, including BlockStatement, CatchStatement.
+ *
+ * Inverse of isExpressionBlockKind()
+ */
+export function isStatementBlockKind(kind: BlockKind): boolean {
+  return kind === "block" || kind === "catch";
+}
+
+/**
+ * Returns true for "value", "loop", and "sequence" block kinds which correspond to
+ * expressions in the source, such as ConditionalExpression, LogicalExpression, loop
+ * initializer/test/updaters, etc
+ *
+ * Inverse of isStatementBlockKind()
+ */
+export function isExpressionBlockKind(kind: BlockKind): boolean {
+  return !isStatementBlockKind(kind);
+}
+
 export type BasicBlock = {
   kind: BlockKind;
   id: BlockId;
