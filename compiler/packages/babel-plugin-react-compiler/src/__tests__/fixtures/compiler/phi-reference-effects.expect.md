@@ -10,7 +10,7 @@ function Foo(cond) {
     x = [];
   } else {
   }
-  // Here, x = phi(x$null, x$[]) does not receive the correct ValueKind
+  // Here, x = phi(x$null, x$[]) should receive a ValueKind of Mutable
   arrayPush(x, 2);
 
   return x;
