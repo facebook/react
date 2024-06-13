@@ -20,7 +20,6 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses,
   enableAddPropertiesFastPath,
   enableDeferRootSchedulingToMicrotask,
@@ -70,6 +69,7 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
 export const useModernStrictMode = true;
+export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const renameElementSymbol = false;
 

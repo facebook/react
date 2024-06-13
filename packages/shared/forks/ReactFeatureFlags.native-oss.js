@@ -25,7 +25,6 @@ export const disableLegacyMode = __TODO_NEXT_RN_MAJOR__;
 export const useModernStrictMode = __TODO_NEXT_RN_MAJOR__;
 export const enableReactTestRendererWarning = __TODO_NEXT_RN_MAJOR__;
 export const enableAsyncActions = __TODO_NEXT_RN_MAJOR__;
-export const consoleManagedByDevToolsDuringStrictMode = __TODO_NEXT_RN_MAJOR__;
 export const enableDeferRootSchedulingToMicrotask = __TODO_NEXT_RN_MAJOR__;
 export const alwaysThrottleRetries = __TODO_NEXT_RN_MAJOR__;
 export const enableInfiniteRenderLoopDetection = __TODO_NEXT_RN_MAJOR__;
@@ -54,6 +53,7 @@ export const enableFizzExternalRuntime = __NEXT_RN_MAJOR__; // DOM-only
 export const enableBinaryFlight = true;
 export const enableFlightReadableStream = true;
 export const enableServerComponentLogs = __NEXT_RN_MAJOR__;
+export const consoleManagedByDevToolsDuringStrictMode = __NEXT_RN_MAJOR__;
 
 // DEV-only but enabled in the next RN Major.
 // Not supported by flag script to avoid the special case.
