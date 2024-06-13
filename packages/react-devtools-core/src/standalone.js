@@ -280,6 +280,7 @@ function initialize(socket: WebSocket) {
   store = new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
+    supportsClickToInspect: true,
   });
 
   log('Connected');
