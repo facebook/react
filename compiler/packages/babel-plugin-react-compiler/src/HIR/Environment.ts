@@ -410,6 +410,17 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
       continue;
     }
 
+    if (
+      key === "enableChangeDetectionForDebugging" &&
+      (val === undefined || val === "true")
+    ) {
+      maybeConfig[key] = {
+        source: "react-compiler-runtime",
+        importSpecifierName: "$structuralCheck",
+      };
+      continue;
+    }
+
     if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {
       // skip parsing non-boolean properties
       continue;
