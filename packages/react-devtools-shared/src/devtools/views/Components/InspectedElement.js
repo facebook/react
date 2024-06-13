@@ -296,7 +296,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
             <ButtonIcon type="suspend" />
           </Toggle>
         )}
-        {store.supportsNativeInspection && (
+        {store.supportsInspectMatchingDOMElement && (
           <Button
             onClick={highlightElement}
             title="Inspect the matching DOM element">

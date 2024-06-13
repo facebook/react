@@ -97,7 +97,8 @@ function createBridgeAndStore() {
     // At this time, the timeline can only parse Chrome performance profiles.
     supportsTimeline: __IS_CHROME__,
     supportsTraceUpdates: true,
-    supportsNativeInspection: true,
+    supportsInspectMatchingDOMElement: true,
+    supportsClickToInspect: true,
   });
 
   if (!isProfiling) {
