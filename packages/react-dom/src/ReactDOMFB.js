@@ -43,6 +43,5 @@ export {
   render,
   unstable_batchedUpdates,
   findDOMNode,
-  unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
 } from './client/ReactDOMRootFB';

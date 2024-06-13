@@ -856,7 +856,7 @@ export function mapTerminalSuccessors(
       const block = fn(terminal.block);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "scope",
+        kind: terminal.kind,
         scope: terminal.scope,
         block,
         fallthrough,

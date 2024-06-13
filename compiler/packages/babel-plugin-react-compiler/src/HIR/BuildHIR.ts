@@ -1668,6 +1668,15 @@ function lowerExpression(
       const left = lowerExpressionToTemporary(builder, leftPath);
       const right = lowerExpressionToTemporary(builder, expr.get("right"));
       const operator = expr.node.operator;
+      if (operator === "|>") {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Pipe operator not supported`,
+          severity: ErrorSeverity.Todo,
+          loc: leftPath.node.loc ?? null,
+          suggestions: null,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
       return {
         kind: "BinaryExpression",
         operator,
@@ -1893,7 +1902,9 @@ function lowerExpression(
         );
       }
 
-      const operators: { [key: string]: t.BinaryExpression["operator"] } = {
+      const operators: {
+        [key: string]: Exclude<t.BinaryExpression["operator"], "|>">;
+      } = {
         "+=": "+",
         "-=": "-",
         "/=": "/",
@@ -2307,6 +2318,20 @@ function lowerExpression(
           });
           return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
         }
+      } else if (expr.node.operator === "throw") {
+        builder.errors.push({
+          reason: `Throw expressions are not supported`,
+          severity: ErrorSeverity.InvalidJS,
+          loc: expr.node.loc ?? null,
+          suggestions: [
+            {
+              description: "Remove this line",
+              range: [expr.node.start!, expr.node.end!],
+              op: CompilerSuggestionOperation.Remove,
+            },
+          ],
+        });
+        return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
       } else {
         return {
           kind: "UnaryExpression",
