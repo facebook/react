@@ -15,6 +15,12 @@ module.exports = {
   arrowParens: 'avoid',
   overrides: [
     {
+      files: ['*.code-workspace'],
+      options: {
+        parser: 'json-stringify',
+      },
+    },
+    {
       files: esNextPaths,
       options: {
         trailingComma: 'all',

@@ -1,22 +1,12 @@
 import { arrayPush } from "shared-runtime";
 
-/**
- * Evaluator error:
- *   Found differences in evaluator results
- *   Non-forget (expected):
- *   (kind: ok) [2]
- *   [2]
- *   Forget:
- *   (kind: ok) [2]
- *   [2,2]
- */
 function Foo(cond) {
   let x = null;
   if (cond) {
     x = [];
   } else {
   }
-  // Here, x = phi(x$null, x$[]) does not receive the correct ValueKind
+  // Here, x = phi(x$null, x$[]) should receive a ValueKind of Mutable
   arrayPush(x, 2);
 
   return x;

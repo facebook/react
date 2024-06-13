@@ -36,7 +36,7 @@ export const CONST_NUMBER2 = 2;
 export const CONST_TRUE = true;
 export const CONST_FALSE = false;
 
-export function initFbt() {
+export function initFbt(): void {
   const viewerContext: IntlViewerContext = {
     GENDER: IntlVariations.GENDER_UNKNOWN,
     locale: "en_US",
@@ -52,7 +52,7 @@ export function initFbt() {
 
 export function mutate(arg: any): void {
   // don't mutate primitive
-  if (typeof arg === null || typeof arg !== "object") {
+  if (arg == null || typeof arg !== "object") {
     return;
   }
 
@@ -80,7 +80,7 @@ export function mutateAndReturnNewValue<T>(arg: T): string {
 
 export function setProperty(arg: any, property: any): void {
   // don't mutate primitive
-  if (typeof arg === null || typeof arg !== "object") {
+  if (arg == null || typeof arg !== "object") {
     return arg;
   }
 
@@ -123,7 +123,7 @@ export function calculateExpensiveNumber(x: number): number {
 /**
  * Functions that do not mutate their parameters
  */
-export function shallowCopy(obj: Object): object {
+export function shallowCopy(obj: object): object {
   return Object.assign({}, obj);
 }
 
@@ -139,9 +139,11 @@ export function addOne(value: number): number {
   return value + 1;
 }
 
-// Alias console.log, as it is defined as a global and may have
-// different compiler handling than unknown functions
-export function print(...args: Array<unknown>) {
+/*
+ * Alias console.log, as it is defined as a global and may have
+ * different compiler handling than unknown functions
+ */
+export function print(...args: Array<unknown>): void {
   console.log(...args);
 }
 
@@ -153,7 +155,7 @@ export function throwErrorWithMessage(message: string): never {
   throw new Error(message);
 }
 
-export function throwInput(x: Object): never {
+export function throwInput(x: object): never {
   throw x;
 }
 
@@ -167,12 +169,12 @@ export function logValue<T>(value: T): void {
   console.log(value);
 }
 
-export function useHook(): Object {
+export function useHook(): object {
   return makeObject_Primitives();
 }
 
 const noAliasObject = Object.freeze({});
-export function useNoAlias(...args: Array<any>): object {
+export function useNoAlias(..._args: Array<any>): object {
   return noAliasObject;
 }
 
@@ -183,7 +185,7 @@ export function useIdentity<T>(arg: T): T {
 export function invoke<T extends Array<any>, ReturnType>(
   fn: (...input: T) => ReturnType,
   ...params: T
-) {
+): ReturnType {
   return fn(...params);
 }
 
@@ -191,7 +193,7 @@ export function conditionalInvoke<T extends Array<any>, ReturnType>(
   shouldInvoke: boolean,
   fn: (...input: T) => ReturnType,
   ...params: T
-) {
+): ReturnType | null {
   if (shouldInvoke) {
     return fn(...params);
   } else {
@@ -205,21 +207,25 @@ export function conditionalInvoke<T extends Array<any>, ReturnType>(
 export function Text(props: {
   value: string;
   children?: Array<React.ReactNode>;
-}) {
+}): React.ReactElement {
   return React.createElement("div", null, props.value, props.children);
 }
 
-export function StaticText1(props: { children?: Array<React.ReactNode> }) {
+export function StaticText1(props: {
+  children?: Array<React.ReactNode>;
+}): React.ReactElement {
   return React.createElement("div", null, "StaticText1", props.children);
 }
 
-export function StaticText2(props: { children?: Array<React.ReactNode> }) {
+export function StaticText2(props: {
+  children?: Array<React.ReactNode>;
+}): React.ReactElement {
   return React.createElement("div", null, "StaticText2", props.children);
 }
 
 export function RenderPropAsChild(props: {
   items: Array<() => React.ReactNode>;
-}) {
+}): React.ReactElement {
   return React.createElement(
     "div",
     null,
@@ -242,7 +248,7 @@ export function ValidateMemoization({
 }: {
   inputs: Array<any>;
   output: any;
-}) {
+}): React.ReactElement {
   "use no forget";
   const [previousInputs, setPreviousInputs] = React.useState(inputs);
   const [previousOutput, setPreviousOutput] = React.useState(output);
@@ -273,7 +279,7 @@ export function createHookWrapper<TProps, TRet>(
 }
 
 // helper functions
-export function toJSON(value: any, invokeFns: boolean = false) {
+export function toJSON(value: any, invokeFns: boolean = false): string {
   const seen = new Map();
 
   return JSON.stringify(value, (_key: string, val: any) => {
@@ -319,7 +325,7 @@ export const ObjectWithHooks = {
   },
 };
 
-export function useFragment(...args: Array<any>): Object {
+export function useFragment(..._args: Array<any>): object {
   return {
     a: [1, 2, 3],
     b: { c: { d: 4 } },
