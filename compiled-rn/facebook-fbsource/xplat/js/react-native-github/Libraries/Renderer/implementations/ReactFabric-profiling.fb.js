@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0c669f399b7adb5eca1a1c038ece900d>>
+ * @generated SignedSource<<9e7af83234b1614ae9ef1a03b005708a>>
  */
 
 "use strict";
@@ -1228,7 +1228,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_301 = {
+var injectedNamesToPlugins$jscomp$inline_300 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1274,32 +1274,32 @@ var injectedNamesToPlugins$jscomp$inline_301 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_302 = !1,
-  pluginName$jscomp$inline_303;
-for (pluginName$jscomp$inline_303 in injectedNamesToPlugins$jscomp$inline_301)
+  isOrderingDirty$jscomp$inline_301 = !1,
+  pluginName$jscomp$inline_302;
+for (pluginName$jscomp$inline_302 in injectedNamesToPlugins$jscomp$inline_300)
   if (
-    injectedNamesToPlugins$jscomp$inline_301.hasOwnProperty(
-      pluginName$jscomp$inline_303
+    injectedNamesToPlugins$jscomp$inline_300.hasOwnProperty(
+      pluginName$jscomp$inline_302
     )
   ) {
-    var pluginModule$jscomp$inline_304 =
-      injectedNamesToPlugins$jscomp$inline_301[pluginName$jscomp$inline_303];
+    var pluginModule$jscomp$inline_303 =
+      injectedNamesToPlugins$jscomp$inline_300[pluginName$jscomp$inline_302];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_303) ||
-      namesToPlugins[pluginName$jscomp$inline_303] !==
-        pluginModule$jscomp$inline_304
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_302) ||
+      namesToPlugins[pluginName$jscomp$inline_302] !==
+        pluginModule$jscomp$inline_303
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_303])
+      if (namesToPlugins[pluginName$jscomp$inline_302])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_303 + "`.")
+            (pluginName$jscomp$inline_302 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_303] =
-        pluginModule$jscomp$inline_304;
-      isOrderingDirty$jscomp$inline_302 = !0;
+      namesToPlugins[pluginName$jscomp$inline_302] =
+        pluginModule$jscomp$inline_303;
+      isOrderingDirty$jscomp$inline_301 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_302 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_301 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -2030,6 +2030,7 @@ var _nativeFabricUIManage = nativeFabricUIManager,
     ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get,
   nextReactTag = 2;
 registerEventHandler && registerEventHandler(dispatchEvent);
+var PROD_HOST_CONTEXT = { isInAParentText: !0 };
 function createTextInstance(
   text,
   rootContainerInstance,
@@ -2354,7 +2355,7 @@ function pushHostContainer(fiber, nextRootInstance) {
   push(contextFiberStackCursor, fiber);
   push(contextStackCursor, null);
   pop(contextStackCursor);
-  push(contextStackCursor, { isInAParentText: !1 });
+  push(contextStackCursor, PROD_HOST_CONTEXT);
 }
 function popHostContainer() {
   pop(contextStackCursor);
@@ -2364,20 +2365,8 @@ function popHostContainer() {
 function pushHostContext(fiber) {
   null !== fiber.memoizedState && push(hostTransitionProviderCursor, fiber);
   var context = contextStackCursor.current;
-  var JSCompiler_inline_result = fiber.type;
-  JSCompiler_inline_result =
-    "AndroidTextInput" === JSCompiler_inline_result ||
-    "RCTMultilineTextInputView" === JSCompiler_inline_result ||
-    "RCTSinglelineTextInputView" === JSCompiler_inline_result ||
-    "RCTText" === JSCompiler_inline_result ||
-    "RCTVirtualText" === JSCompiler_inline_result;
-  JSCompiler_inline_result =
-    context.isInAParentText !== JSCompiler_inline_result
-      ? { isInAParentText: JSCompiler_inline_result }
-      : context;
-  context !== JSCompiler_inline_result &&
-    (push(contextFiberStackCursor, fiber),
-    push(contextStackCursor, JSCompiler_inline_result));
+  context !== context &&
+    (push(contextFiberStackCursor, fiber), push(contextStackCursor, context));
 }
 function popHostContext(fiber) {
   contextFiberStackCursor.current === fiber &&
@@ -11315,10 +11304,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1223 = {
+  devToolsConfig$jscomp$inline_1217 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-195d5bb99e-20240612",
+    version: "19.0.0-native-fb-3154ec8a38-20240614",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11348,10 +11337,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1223.bundleType,
-  version: devToolsConfig$jscomp$inline_1223.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1223.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1223.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1217.bundleType,
+  version: devToolsConfig$jscomp$inline_1217.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1217.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1217.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11367,14 +11356,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1223.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1217.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-195d5bb99e-20240612"
+  reconcilerVersion: "19.0.0-native-fb-3154ec8a38-20240614"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

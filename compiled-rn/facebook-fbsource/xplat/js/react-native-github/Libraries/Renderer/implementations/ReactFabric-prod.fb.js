@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dd1d99273d865e111317ed207a95e790>>
+ * @generated SignedSource<<61089681f3a7b4551020050cddea9814>>
  */
 
 "use strict";
@@ -1224,7 +1224,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_285 = {
+var injectedNamesToPlugins$jscomp$inline_284 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -1270,32 +1270,32 @@ var injectedNamesToPlugins$jscomp$inline_285 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_286 = !1,
-  pluginName$jscomp$inline_287;
-for (pluginName$jscomp$inline_287 in injectedNamesToPlugins$jscomp$inline_285)
+  isOrderingDirty$jscomp$inline_285 = !1,
+  pluginName$jscomp$inline_286;
+for (pluginName$jscomp$inline_286 in injectedNamesToPlugins$jscomp$inline_284)
   if (
-    injectedNamesToPlugins$jscomp$inline_285.hasOwnProperty(
-      pluginName$jscomp$inline_287
+    injectedNamesToPlugins$jscomp$inline_284.hasOwnProperty(
+      pluginName$jscomp$inline_286
     )
   ) {
-    var pluginModule$jscomp$inline_288 =
-      injectedNamesToPlugins$jscomp$inline_285[pluginName$jscomp$inline_287];
+    var pluginModule$jscomp$inline_287 =
+      injectedNamesToPlugins$jscomp$inline_284[pluginName$jscomp$inline_286];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_287) ||
-      namesToPlugins[pluginName$jscomp$inline_287] !==
-        pluginModule$jscomp$inline_288
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_286) ||
+      namesToPlugins[pluginName$jscomp$inline_286] !==
+        pluginModule$jscomp$inline_287
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_287])
+      if (namesToPlugins[pluginName$jscomp$inline_286])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_287 + "`.")
+            (pluginName$jscomp$inline_286 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_287] =
-        pluginModule$jscomp$inline_288;
-      isOrderingDirty$jscomp$inline_286 = !0;
+      namesToPlugins[pluginName$jscomp$inline_286] =
+        pluginModule$jscomp$inline_287;
+      isOrderingDirty$jscomp$inline_285 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_286 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_285 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -1908,6 +1908,7 @@ var _nativeFabricUIManage = nativeFabricUIManager,
     ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get,
   nextReactTag = 2;
 registerEventHandler && registerEventHandler(dispatchEvent);
+var PROD_HOST_CONTEXT = { isInAParentText: !0 };
 function createTextInstance(
   text,
   rootContainerInstance,
@@ -2232,7 +2233,7 @@ function pushHostContainer(fiber, nextRootInstance) {
   push(contextFiberStackCursor, fiber);
   push(contextStackCursor, null);
   pop(contextStackCursor);
-  push(contextStackCursor, { isInAParentText: !1 });
+  push(contextStackCursor, PROD_HOST_CONTEXT);
 }
 function popHostContainer() {
   pop(contextStackCursor);
@@ -2242,20 +2243,8 @@ function popHostContainer() {
 function pushHostContext(fiber) {
   null !== fiber.memoizedState && push(hostTransitionProviderCursor, fiber);
   var context = contextStackCursor.current;
-  var JSCompiler_inline_result = fiber.type;
-  JSCompiler_inline_result =
-    "AndroidTextInput" === JSCompiler_inline_result ||
-    "RCTMultilineTextInputView" === JSCompiler_inline_result ||
-    "RCTSinglelineTextInputView" === JSCompiler_inline_result ||
-    "RCTText" === JSCompiler_inline_result ||
-    "RCTVirtualText" === JSCompiler_inline_result;
-  JSCompiler_inline_result =
-    context.isInAParentText !== JSCompiler_inline_result
-      ? { isInAParentText: JSCompiler_inline_result }
-      : context;
-  context !== JSCompiler_inline_result &&
-    (push(contextFiberStackCursor, fiber),
-    push(contextStackCursor, JSCompiler_inline_result));
+  context !== context &&
+    (push(contextFiberStackCursor, fiber), push(contextStackCursor, context));
 }
 function popHostContext(fiber) {
   contextFiberStackCursor.current === fiber &&
@@ -10609,10 +10598,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1142 = {
+  devToolsConfig$jscomp$inline_1136 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-195d5bb99e-20240612",
+    version: "19.0.0-native-fb-3154ec8a38-20240614",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10628,11 +10617,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1368 = {
-  bundleType: devToolsConfig$jscomp$inline_1142.bundleType,
-  version: devToolsConfig$jscomp$inline_1142.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1142.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1142.rendererConfig,
+var internals$jscomp$inline_1362 = {
+  bundleType: devToolsConfig$jscomp$inline_1136.bundleType,
+  version: devToolsConfig$jscomp$inline_1136.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1136.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1136.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10648,26 +10637,26 @@ var internals$jscomp$inline_1368 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1142.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1136.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-195d5bb99e-20240612"
+  reconcilerVersion: "19.0.0-native-fb-3154ec8a38-20240614"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1369 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1363 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1369.isDisabled &&
-    hook$jscomp$inline_1369.supportsFiber
+    !hook$jscomp$inline_1363.isDisabled &&
+    hook$jscomp$inline_1363.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1369.inject(
-        internals$jscomp$inline_1368
+      (rendererID = hook$jscomp$inline_1363.inject(
+        internals$jscomp$inline_1362
       )),
-        (injectedHook = hook$jscomp$inline_1369);
+        (injectedHook = hook$jscomp$inline_1363);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

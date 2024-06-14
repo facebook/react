@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<eeb59a95e0ff79fdae2370e89d593d60>>
+ * @generated SignedSource<<1fcc339b6f0c14225ef7ab3bb10f13f0>>
  */
 
 "use strict";
@@ -2165,8 +2165,9 @@ __DEV__ &&
       push(rootInstanceStackCursor, nextRootInstance, fiber);
       push(contextFiberStackCursor, fiber, fiber);
       push(contextStackCursor, null, fiber);
+      nextRootInstance = { isInAParentText: !1 };
       pop(contextStackCursor, fiber);
-      push(contextStackCursor, { isInAParentText: !1 }, fiber);
+      push(contextStackCursor, nextRootInstance, fiber);
     }
     function popHostContainer(fiber) {
       pop(contextStackCursor, fiber);
@@ -16685,12 +16686,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-195d5bb99e-20240612"
+        reconcilerVersion: "19.0.0-native-fb-3154ec8a38-20240614"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-195d5bb99e-20240612",
+      version: "19.0.0-native-fb-3154ec8a38-20240614",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
