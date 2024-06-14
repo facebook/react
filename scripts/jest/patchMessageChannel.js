@@ -20,7 +20,7 @@ export function patchMessageChannel(Scheduler) {
             );
           } else {
             throw new Error(
-              'MessageChannel patch was used without providing a Scheduler implementation. This is useful for tests that require this class to exist but are not actually utilizing the MessageChannel class. However it appears some test is trying to use this class so you should pass a Scheduler implemenation to the patch method'
+              'MessageChannel patch was used without providing a Scheduler implementation. This is useful for tests that require this class to exist but are not actually utilizing the MessageChannel class. However it appears some test is trying to use this class so you should pass a Scheduler implementation to the patch method'
             );
           }
         },
