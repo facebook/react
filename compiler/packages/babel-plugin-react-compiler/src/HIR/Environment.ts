@@ -120,6 +120,18 @@ const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
 
   /**
+   * A list of functions which the application compiles as macros, where
+   * the compiler must ensure they are not compiled to rename the macro or separate the
+   * "function" from its argument.
+   *
+   * For example, Meta has some APIs such as `featureflag("name-of-feature-flag")` which
+   * are rewritten by a plugin. Assigning `featureflag` to a temporary would break the
+   * plugin since it looks specifically for the name of the function being invoked, not
+   * following aliases.
+   */
+  customMacros: z.nullable(z.array(z.string())).default(null),
+
+  /**
    * Enable a check that resets the memoization cache when the source code of the file changes.
    * This is intended to support hot module reloading (HMR), where the same runtime component
    * instance will be reused across different versions of the component source.

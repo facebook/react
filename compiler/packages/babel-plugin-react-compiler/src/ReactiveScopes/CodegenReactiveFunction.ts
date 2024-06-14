@@ -43,7 +43,7 @@ import { Err, Ok, Result } from "../Utils/Result";
 import { GuardKind } from "../Utils/RuntimeDiagnosticConstants";
 import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
-import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtOperandsInSameScope";
+import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtAndMacroOperandsInSameScope";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 export const MEMO_CACHE_SENTINEL = "react.memo_cache_sentinel";
