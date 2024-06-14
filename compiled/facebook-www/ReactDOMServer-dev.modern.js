@@ -2105,20 +2105,70 @@ __DEV__ &&
             }
           target$jscomp$0.push(endOfStartTag);
           return null;
+        case "object":
+          target$jscomp$0.push(startChunkForTag("object"));
+          var children$jscomp$5 = null,
+            innerHTML$jscomp$4 = null,
+            propKey$jscomp$7;
+          for (propKey$jscomp$7 in props)
+            if (hasOwnProperty.call(props, propKey$jscomp$7)) {
+              var propValue$jscomp$7 = props[propKey$jscomp$7];
+              if (null != propValue$jscomp$7)
+                switch (propKey$jscomp$7) {
+                  case "children":
+                    children$jscomp$5 = propValue$jscomp$7;
+                    break;
+                  case "dangerouslySetInnerHTML":
+                    innerHTML$jscomp$4 = propValue$jscomp$7;
+                    break;
+                  case "data":
+                    checkAttributeStringCoercion(propValue$jscomp$7, "data");
+                    var sanitizedValue = sanitizeURL("" + propValue$jscomp$7);
+                    if ("" === sanitizedValue) {
+                      error$jscomp$2(
+                        'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
+                        propKey$jscomp$7,
+                        propKey$jscomp$7
+                      );
+                      break;
+                    }
+                    target$jscomp$0.push(
+                      attributeSeparator,
+                      "data",
+                      attributeAssign,
+                      escapeTextForBrowser(sanitizedValue),
+                      attributeEnd
+                    );
+                    break;
+                  default:
+                    pushAttribute(
+                      target$jscomp$0,
+                      propKey$jscomp$7,
+                      propValue$jscomp$7
+                    );
+                }
+            }
+          target$jscomp$0.push(endOfStartTag);
+          pushInnerHTML(target$jscomp$0, innerHTML$jscomp$4, children$jscomp$5);
+          if ("string" === typeof children$jscomp$5) {
+            target$jscomp$0.push(escapeTextForBrowser(children$jscomp$5));
+            var JSCompiler_inline_result$jscomp$3 = null;
+          } else JSCompiler_inline_result$jscomp$3 = children$jscomp$5;
+          return JSCompiler_inline_result$jscomp$3;
         case "title":
           var insertionMode = formatContext.insertionMode,
             noscriptTagInScope = !!(formatContext.tagScope & 1);
           if (hasOwnProperty.call(props, "children")) {
-            var children$jscomp$5 = props.children,
-              child = Array.isArray(children$jscomp$5)
-                ? 2 > children$jscomp$5.length
-                  ? children$jscomp$5[0]
+            var children$jscomp$6 = props.children,
+              child = Array.isArray(children$jscomp$6)
+                ? 2 > children$jscomp$6.length
+                  ? children$jscomp$6[0]
                   : null
-                : children$jscomp$5;
-            Array.isArray(children$jscomp$5) && 1 < children$jscomp$5.length
+                : children$jscomp$6;
+            Array.isArray(children$jscomp$6) && 1 < children$jscomp$6.length
               ? error$jscomp$2(
                   "React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length %s instead. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes. For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.",
-                  children$jscomp$5.length
+                  children$jscomp$6.length
                 )
               : "function" === typeof child || "symbol" === typeof child
               ? error$jscomp$2(
@@ -2140,16 +2190,16 @@ __DEV__ &&
             noscriptTagInScope ||
             null != props.itemProp
           )
-            var JSCompiler_inline_result$jscomp$3 = pushTitleImpl(
+            var JSCompiler_inline_result$jscomp$4 = pushTitleImpl(
               target$jscomp$0,
               props
             );
           else
             isFallback
-              ? (JSCompiler_inline_result$jscomp$3 = null)
+              ? (JSCompiler_inline_result$jscomp$4 = null)
               : (pushTitleImpl(renderState.hoistableChunks, props),
-                (JSCompiler_inline_result$jscomp$3 = void 0));
-          return JSCompiler_inline_result$jscomp$3;
+                (JSCompiler_inline_result$jscomp$4 = void 0));
+          return JSCompiler_inline_result$jscomp$4;
         case "link":
           var rel = props.rel,
             href = props.href,
@@ -2176,7 +2226,7 @@ __DEV__ &&
                     : 'something with type "' + typeof href + '"'
                 ));
             pushLinkImpl(target$jscomp$0, props);
-            var JSCompiler_inline_result$jscomp$4 = null;
+            var JSCompiler_inline_result$jscomp$5 = null;
           } else if ("stylesheet" === props.rel)
             if (
               "string" !== typeof precedence ||
@@ -2202,7 +2252,7 @@ __DEV__ &&
                     propDescription
                   );
                 }
-              JSCompiler_inline_result$jscomp$4 = pushLinkImpl(
+              JSCompiler_inline_result$jscomp$5 = pushLinkImpl(
                 target$jscomp$0,
                 props
               );
@@ -2248,19 +2298,19 @@ __DEV__ &&
                   hoistableState.stylesheets.add(_resource);
               }
               textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-              JSCompiler_inline_result$jscomp$4 = null;
+              JSCompiler_inline_result$jscomp$5 = null;
             }
           else
             props.onLoad || props.onError
-              ? (JSCompiler_inline_result$jscomp$4 = pushLinkImpl(
+              ? (JSCompiler_inline_result$jscomp$5 = pushLinkImpl(
                   target$jscomp$0,
                   props
                 ))
               : (textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
-                (JSCompiler_inline_result$jscomp$4 = isFallback
+                (JSCompiler_inline_result$jscomp$5 = isFallback
                   ? null
                   : pushLinkImpl(renderState.hoistableChunks, props)));
-          return JSCompiler_inline_result$jscomp$4;
+          return JSCompiler_inline_result$jscomp$5;
         case "script":
           var asyncProp = props.async;
           if (
@@ -2275,7 +2325,7 @@ __DEV__ &&
             formatContext.tagScope & 1 ||
             null != props.itemProp
           )
-            var JSCompiler_inline_result$jscomp$5 = pushScriptImpl(
+            var JSCompiler_inline_result$jscomp$6 = pushScriptImpl(
               target$jscomp$0,
               props
             );
@@ -2306,19 +2356,19 @@ __DEV__ &&
               pushScriptImpl(resource$jscomp$0, scriptProps);
             }
             textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-            JSCompiler_inline_result$jscomp$5 = null;
+            JSCompiler_inline_result$jscomp$6 = null;
           }
-          return JSCompiler_inline_result$jscomp$5;
+          return JSCompiler_inline_result$jscomp$6;
         case "style":
           var insertionMode$jscomp$0 = formatContext.insertionMode,
             noscriptTagInScope$jscomp$0 = !!(formatContext.tagScope & 1);
           if (hasOwnProperty.call(props, "children")) {
-            var children$jscomp$6 = props.children,
-              child$jscomp$0 = Array.isArray(children$jscomp$6)
-                ? 2 > children$jscomp$6.length
-                  ? children$jscomp$6[0]
+            var children$jscomp$7 = props.children,
+              child$jscomp$0 = Array.isArray(children$jscomp$7)
+                ? 2 > children$jscomp$7.length
+                  ? children$jscomp$7[0]
                   : null
-                : children$jscomp$6;
+                : children$jscomp$7;
             ("function" === typeof child$jscomp$0 ||
               "symbol" === typeof child$jscomp$0 ||
               Array.isArray(child$jscomp$0)) &&
@@ -2342,34 +2392,34 @@ __DEV__ &&
             "" === href$jscomp$0
           ) {
             target$jscomp$0.push(startChunkForTag("style"));
-            var children$jscomp$7 = null,
-              innerHTML$jscomp$4 = null,
-              propKey$jscomp$7;
-            for (propKey$jscomp$7 in props)
-              if (hasOwnProperty.call(props, propKey$jscomp$7)) {
-                var propValue$jscomp$7 = props[propKey$jscomp$7];
-                if (null != propValue$jscomp$7)
-                  switch (propKey$jscomp$7) {
+            var children$jscomp$8 = null,
+              innerHTML$jscomp$5 = null,
+              propKey$jscomp$8;
+            for (propKey$jscomp$8 in props)
+              if (hasOwnProperty.call(props, propKey$jscomp$8)) {
+                var propValue$jscomp$8 = props[propKey$jscomp$8];
+                if (null != propValue$jscomp$8)
+                  switch (propKey$jscomp$8) {
                     case "children":
-                      children$jscomp$7 = propValue$jscomp$7;
+                      children$jscomp$8 = propValue$jscomp$8;
                       break;
                     case "dangerouslySetInnerHTML":
-                      innerHTML$jscomp$4 = propValue$jscomp$7;
+                      innerHTML$jscomp$5 = propValue$jscomp$8;
                       break;
                     default:
                       pushAttribute(
                         target$jscomp$0,
-                        propKey$jscomp$7,
-                        propValue$jscomp$7
+                        propKey$jscomp$8,
+                        propValue$jscomp$8
                       );
                   }
               }
             target$jscomp$0.push(endOfStartTag);
-            var child$jscomp$1 = Array.isArray(children$jscomp$7)
-              ? 2 > children$jscomp$7.length
-                ? children$jscomp$7[0]
+            var child$jscomp$1 = Array.isArray(children$jscomp$8)
+              ? 2 > children$jscomp$8.length
+                ? children$jscomp$8[0]
                 : null
-              : children$jscomp$7;
+              : children$jscomp$8;
             "function" !== typeof child$jscomp$1 &&
               "symbol" !== typeof child$jscomp$1 &&
               null !== child$jscomp$1 &&
@@ -2377,11 +2427,11 @@ __DEV__ &&
               target$jscomp$0.push(escapeStyleTextContent(child$jscomp$1));
             pushInnerHTML(
               target$jscomp$0,
-              innerHTML$jscomp$4,
-              children$jscomp$7
+              innerHTML$jscomp$5,
+              children$jscomp$8
             );
             target$jscomp$0.push(endChunkForTag("style"));
-            var JSCompiler_inline_result$jscomp$6 = null;
+            var JSCompiler_inline_result$jscomp$7 = null;
           } else {
             href$jscomp$0.includes(" ") &&
               error$jscomp$2(
@@ -2416,100 +2466,100 @@ __DEV__ &&
                     styleQueue$jscomp$0
                   ));
               var target = styleQueue$jscomp$0.rules,
-                children$jscomp$8 = null,
-                innerHTML$jscomp$5 = null,
-                propKey$jscomp$8;
-              for (propKey$jscomp$8 in props)
-                if (hasOwnProperty.call(props, propKey$jscomp$8)) {
-                  var propValue$jscomp$8 = props[propKey$jscomp$8];
-                  if (null != propValue$jscomp$8)
-                    switch (propKey$jscomp$8) {
+                children$jscomp$9 = null,
+                innerHTML$jscomp$6 = null,
+                propKey$jscomp$9;
+              for (propKey$jscomp$9 in props)
+                if (hasOwnProperty.call(props, propKey$jscomp$9)) {
+                  var propValue$jscomp$9 = props[propKey$jscomp$9];
+                  if (null != propValue$jscomp$9)
+                    switch (propKey$jscomp$9) {
                       case "children":
-                        children$jscomp$8 = propValue$jscomp$8;
+                        children$jscomp$9 = propValue$jscomp$9;
                         break;
                       case "dangerouslySetInnerHTML":
-                        innerHTML$jscomp$5 = propValue$jscomp$8;
+                        innerHTML$jscomp$6 = propValue$jscomp$9;
                     }
                 }
-              var child$jscomp$2 = Array.isArray(children$jscomp$8)
-                ? 2 > children$jscomp$8.length
-                  ? children$jscomp$8[0]
+              var child$jscomp$2 = Array.isArray(children$jscomp$9)
+                ? 2 > children$jscomp$9.length
+                  ? children$jscomp$9[0]
                   : null
-                : children$jscomp$8;
+                : children$jscomp$9;
               "function" !== typeof child$jscomp$2 &&
                 "symbol" !== typeof child$jscomp$2 &&
                 null !== child$jscomp$2 &&
                 void 0 !== child$jscomp$2 &&
                 target.push(escapeStyleTextContent(child$jscomp$2));
-              pushInnerHTML(target, innerHTML$jscomp$5, children$jscomp$8);
+              pushInnerHTML(target, innerHTML$jscomp$6, children$jscomp$9);
             }
             styleQueue$jscomp$0 &&
               hoistableState &&
               hoistableState.styles.add(styleQueue$jscomp$0);
             textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-            JSCompiler_inline_result$jscomp$6 = void 0;
+            JSCompiler_inline_result$jscomp$7 = void 0;
           }
-          return JSCompiler_inline_result$jscomp$6;
+          return JSCompiler_inline_result$jscomp$7;
         case "meta":
           if (
             formatContext.insertionMode === SVG_MODE ||
             formatContext.tagScope & 1 ||
             null != props.itemProp
           )
-            var JSCompiler_inline_result$jscomp$7 = pushSelfClosing(
+            var JSCompiler_inline_result$jscomp$8 = pushSelfClosing(
               target$jscomp$0,
               props,
               "meta"
             );
           else
             textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
-              (JSCompiler_inline_result$jscomp$7 = isFallback
+              (JSCompiler_inline_result$jscomp$8 = isFallback
                 ? null
                 : "string" === typeof props.charSet
                 ? pushSelfClosing(renderState.charsetChunks, props, "meta")
                 : "viewport" === props.name
                 ? pushSelfClosing(renderState.viewportChunks, props, "meta")
                 : pushSelfClosing(renderState.hoistableChunks, props, "meta"));
-          return JSCompiler_inline_result$jscomp$7;
+          return JSCompiler_inline_result$jscomp$8;
         case "listing":
         case "pre":
           target$jscomp$0.push(startChunkForTag(type));
-          var children$jscomp$9 = null,
-            innerHTML$jscomp$6 = null,
-            propKey$jscomp$9;
-          for (propKey$jscomp$9 in props)
-            if (hasOwnProperty.call(props, propKey$jscomp$9)) {
-              var propValue$jscomp$9 = props[propKey$jscomp$9];
-              if (null != propValue$jscomp$9)
-                switch (propKey$jscomp$9) {
+          var children$jscomp$10 = null,
+            innerHTML$jscomp$7 = null,
+            propKey$jscomp$10;
+          for (propKey$jscomp$10 in props)
+            if (hasOwnProperty.call(props, propKey$jscomp$10)) {
+              var propValue$jscomp$10 = props[propKey$jscomp$10];
+              if (null != propValue$jscomp$10)
+                switch (propKey$jscomp$10) {
                   case "children":
-                    children$jscomp$9 = propValue$jscomp$9;
+                    children$jscomp$10 = propValue$jscomp$10;
                     break;
                   case "dangerouslySetInnerHTML":
-                    innerHTML$jscomp$6 = propValue$jscomp$9;
+                    innerHTML$jscomp$7 = propValue$jscomp$10;
                     break;
                   default:
                     pushAttribute(
                       target$jscomp$0,
-                      propKey$jscomp$9,
-                      propValue$jscomp$9
+                      propKey$jscomp$10,
+                      propValue$jscomp$10
                     );
                 }
             }
           target$jscomp$0.push(endOfStartTag);
-          if (null != innerHTML$jscomp$6) {
-            if (null != children$jscomp$9)
+          if (null != innerHTML$jscomp$7) {
+            if (null != children$jscomp$10)
               throw Error(
                 "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
               );
             if (
-              "object" !== typeof innerHTML$jscomp$6 ||
-              !("__html" in innerHTML$jscomp$6)
+              "object" !== typeof innerHTML$jscomp$7 ||
+              !("__html" in innerHTML$jscomp$7)
             )
               throw Error(
                 "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. Please visit https://react.dev/link/dangerously-set-inner-html for more information."
               );
-            var html = innerHTML$jscomp$6.__html;
+            var html = innerHTML$jscomp$7.__html;
             null !== html &&
               void 0 !== html &&
               ("string" === typeof html && 0 < html.length && "\n" === html[0]
@@ -2517,10 +2567,10 @@ __DEV__ &&
                 : (checkHtmlStringCoercion(html),
                   target$jscomp$0.push("" + html)));
           }
-          "string" === typeof children$jscomp$9 &&
-            "\n" === children$jscomp$9[0] &&
+          "string" === typeof children$jscomp$10 &&
+            "\n" === children$jscomp$10[0] &&
             target$jscomp$0.push(leadingNewline);
-          return children$jscomp$9;
+          return children$jscomp$10;
         case "img":
           var src = props.src,
             srcSet = props.srcSet;
@@ -2637,56 +2687,56 @@ __DEV__ &&
             null === renderState.headChunks
           ) {
             renderState.headChunks = [];
-            var JSCompiler_inline_result$jscomp$8 = pushStartGenericElement(
+            var JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
               renderState.headChunks,
               props,
               "head"
             );
           } else
-            JSCompiler_inline_result$jscomp$8 = pushStartGenericElement(
+            JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
               target$jscomp$0,
               props,
               "head"
             );
-          return JSCompiler_inline_result$jscomp$8;
+          return JSCompiler_inline_result$jscomp$9;
         case "html":
           if (
             formatContext.insertionMode === ROOT_HTML_MODE &&
             null === renderState.htmlChunks
           ) {
             renderState.htmlChunks = [doctypeChunk];
-            var JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
+            var JSCompiler_inline_result$jscomp$10 = pushStartGenericElement(
               renderState.htmlChunks,
               props,
               "html"
             );
           } else
-            JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
+            JSCompiler_inline_result$jscomp$10 = pushStartGenericElement(
               target$jscomp$0,
               props,
               "html"
             );
-          return JSCompiler_inline_result$jscomp$9;
+          return JSCompiler_inline_result$jscomp$10;
         default:
           if (-1 !== type.indexOf("-")) {
             target$jscomp$0.push(startChunkForTag(type));
-            var children$jscomp$10 = null,
-              innerHTML$jscomp$7 = null,
-              propKey$jscomp$10;
-            for (propKey$jscomp$10 in props)
-              if (hasOwnProperty.call(props, propKey$jscomp$10)) {
-                var propValue$jscomp$10 = props[propKey$jscomp$10];
-                if (null != propValue$jscomp$10) {
-                  var attributeName = propKey$jscomp$10;
-                  switch (propKey$jscomp$10) {
+            var children$jscomp$11 = null,
+              innerHTML$jscomp$8 = null,
+              propKey$jscomp$11;
+            for (propKey$jscomp$11 in props)
+              if (hasOwnProperty.call(props, propKey$jscomp$11)) {
+                var propValue$jscomp$11 = props[propKey$jscomp$11];
+                if (null != propValue$jscomp$11) {
+                  var attributeName = propKey$jscomp$11;
+                  switch (propKey$jscomp$11) {
                     case "children":
-                      children$jscomp$10 = propValue$jscomp$10;
+                      children$jscomp$11 = propValue$jscomp$11;
                       break;
                     case "dangerouslySetInnerHTML":
-                      innerHTML$jscomp$7 = propValue$jscomp$10;
+                      innerHTML$jscomp$8 = propValue$jscomp$11;
                       break;
                     case "style":
-                      pushStyleAttribute(target$jscomp$0, propValue$jscomp$10);
+                      pushStyleAttribute(target$jscomp$0, propValue$jscomp$11);
                       break;
                     case "suppressContentEditableWarning":
                     case "suppressHydrationWarning":
@@ -2696,20 +2746,20 @@ __DEV__ &&
                       attributeName = "class";
                     default:
                       if (
-                        isAttributeNameSafe(propKey$jscomp$10) &&
-                        "function" !== typeof propValue$jscomp$10 &&
-                        "symbol" !== typeof propValue$jscomp$10 &&
-                        !1 !== propValue$jscomp$10
+                        isAttributeNameSafe(propKey$jscomp$11) &&
+                        "function" !== typeof propValue$jscomp$11 &&
+                        "symbol" !== typeof propValue$jscomp$11 &&
+                        !1 !== propValue$jscomp$11
                       ) {
-                        if (!0 === propValue$jscomp$10)
-                          propValue$jscomp$10 = "";
-                        else if ("object" === typeof propValue$jscomp$10)
+                        if (!0 === propValue$jscomp$11)
+                          propValue$jscomp$11 = "";
+                        else if ("object" === typeof propValue$jscomp$11)
                           continue;
                         target$jscomp$0.push(
                           attributeSeparator,
                           attributeName,
                           attributeAssign,
-                          escapeTextForBrowser(propValue$jscomp$10),
+                          escapeTextForBrowser(propValue$jscomp$11),
                           attributeEnd
                         );
                       }
@@ -2719,10 +2769,10 @@ __DEV__ &&
             target$jscomp$0.push(endOfStartTag);
             pushInnerHTML(
               target$jscomp$0,
-              innerHTML$jscomp$7,
-              children$jscomp$10
+              innerHTML$jscomp$8,
+              children$jscomp$11
             );
-            return children$jscomp$10;
+            return children$jscomp$11;
           }
       }
       return pushStartGenericElement(target$jscomp$0, props, type);
@@ -8677,5 +8727,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-fb9a90fa48-20240614";
+    exports.version = "19.0.0-www-modern-f0e8164410-20240614";
   })();

@@ -14137,6 +14137,11 @@ function setProp(domElement, tag, key, value, props, prevValue) {
     case "style":
       setValueForStyles(domElement, value, prevValue);
       break;
+    case "data":
+      if ("object" !== tag) {
+        setValueForKnownAttribute(domElement, "data", value);
+        break;
+      }
     case "src":
     case "href":
       if ("" === value && ("a" !== tag || "href" !== key)) {
@@ -16782,14 +16787,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1750 = React.version;
 if (
-  "19.0.0-www-classic-fb9a90fa48-20240614" !==
+  "19.0.0-www-classic-f0e8164410-20240614" !==
   isomorphicReactPackageVersion$jscomp$inline_1750
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1750,
-      "19.0.0-www-classic-fb9a90fa48-20240614"
+      "19.0.0-www-classic-f0e8164410-20240614"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -16808,7 +16813,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1752 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-fb9a90fa48-20240614",
+  version: "19.0.0-www-classic-f0e8164410-20240614",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2229 = {
@@ -16838,7 +16843,7 @@ var internals$jscomp$inline_2229 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-fb9a90fa48-20240614"
+  reconcilerVersion: "19.0.0-www-classic-f0e8164410-20240614"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2230 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17209,4 +17214,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-fb9a90fa48-20240614";
+exports.version = "19.0.0-www-classic-f0e8164410-20240614";

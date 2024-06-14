@@ -1256,22 +1256,64 @@ function pushStartInstance(
         }
       target$jscomp$0.push(">");
       return null;
+    case "object":
+      target$jscomp$0.push(startChunkForTag("object"));
+      var children$jscomp$5 = null,
+        innerHTML$jscomp$4 = null,
+        propKey$jscomp$7;
+      for (propKey$jscomp$7 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$7)) {
+          var propValue$jscomp$7 = props[propKey$jscomp$7];
+          if (null != propValue$jscomp$7)
+            switch (propKey$jscomp$7) {
+              case "children":
+                children$jscomp$5 = propValue$jscomp$7;
+                break;
+              case "dangerouslySetInnerHTML":
+                innerHTML$jscomp$4 = propValue$jscomp$7;
+                break;
+              case "data":
+                var sanitizedValue = sanitizeURL("" + propValue$jscomp$7);
+                if ("" === sanitizedValue) break;
+                target$jscomp$0.push(
+                  " ",
+                  "data",
+                  '="',
+                  escapeTextForBrowser(sanitizedValue),
+                  '"'
+                );
+                break;
+              default:
+                pushAttribute(
+                  target$jscomp$0,
+                  propKey$jscomp$7,
+                  propValue$jscomp$7
+                );
+            }
+        }
+      target$jscomp$0.push(">");
+      pushInnerHTML(target$jscomp$0, innerHTML$jscomp$4, children$jscomp$5);
+      if ("string" === typeof children$jscomp$5) {
+        target$jscomp$0.push(escapeTextForBrowser(children$jscomp$5));
+        var JSCompiler_inline_result$jscomp$2 = null;
+      } else JSCompiler_inline_result$jscomp$2 = children$jscomp$5;
+      return JSCompiler_inline_result$jscomp$2;
     case "title":
       if (
         3 === formatContext.insertionMode ||
         formatContext.tagScope & 1 ||
         null != props.itemProp
       )
-        var JSCompiler_inline_result$jscomp$2 = pushTitleImpl(
+        var JSCompiler_inline_result$jscomp$3 = pushTitleImpl(
           target$jscomp$0,
           props
         );
       else
         isFallback
-          ? (JSCompiler_inline_result$jscomp$2 = null)
+          ? (JSCompiler_inline_result$jscomp$3 = null)
           : (pushTitleImpl(renderState.hoistableChunks, props),
-            (JSCompiler_inline_result$jscomp$2 = void 0));
-      return JSCompiler_inline_result$jscomp$2;
+            (JSCompiler_inline_result$jscomp$3 = void 0));
+      return JSCompiler_inline_result$jscomp$3;
     case "link":
       var rel = props.rel,
         href = props.href,
@@ -1285,7 +1327,7 @@ function pushStartInstance(
         "" === href
       ) {
         pushLinkImpl(target$jscomp$0, props);
-        var JSCompiler_inline_result$jscomp$3 = null;
+        var JSCompiler_inline_result$jscomp$4 = null;
       } else if ("stylesheet" === props.rel)
         if (
           "string" !== typeof precedence ||
@@ -1293,7 +1335,7 @@ function pushStartInstance(
           props.onLoad ||
           props.onError
         )
-          JSCompiler_inline_result$jscomp$3 = pushLinkImpl(
+          JSCompiler_inline_result$jscomp$4 = pushLinkImpl(
             target$jscomp$0,
             props
           );
@@ -1336,19 +1378,19 @@ function pushStartInstance(
               hoistableState.stylesheets.add(resource$9);
           }
           textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-          JSCompiler_inline_result$jscomp$3 = null;
+          JSCompiler_inline_result$jscomp$4 = null;
         }
       else
         props.onLoad || props.onError
-          ? (JSCompiler_inline_result$jscomp$3 = pushLinkImpl(
+          ? (JSCompiler_inline_result$jscomp$4 = pushLinkImpl(
               target$jscomp$0,
               props
             ))
           : (textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
-            (JSCompiler_inline_result$jscomp$3 = isFallback
+            (JSCompiler_inline_result$jscomp$4 = isFallback
               ? null
               : pushLinkImpl(renderState.hoistableChunks, props)));
-      return JSCompiler_inline_result$jscomp$3;
+      return JSCompiler_inline_result$jscomp$4;
     case "script":
       var asyncProp = props.async;
       if (
@@ -1363,7 +1405,7 @@ function pushStartInstance(
         formatContext.tagScope & 1 ||
         null != props.itemProp
       )
-        var JSCompiler_inline_result$jscomp$4 = pushScriptImpl(
+        var JSCompiler_inline_result$jscomp$5 = pushScriptImpl(
           target$jscomp$0,
           props
         );
@@ -1393,9 +1435,9 @@ function pushStartInstance(
           pushScriptImpl(resource$jscomp$0, scriptProps);
         }
         textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-        JSCompiler_inline_result$jscomp$4 = null;
+        JSCompiler_inline_result$jscomp$5 = null;
       }
-      return JSCompiler_inline_result$jscomp$4;
+      return JSCompiler_inline_result$jscomp$5;
     case "style":
       var precedence$jscomp$0 = props.precedence,
         href$jscomp$0 = props.href;
@@ -1408,42 +1450,42 @@ function pushStartInstance(
         "" === href$jscomp$0
       ) {
         target$jscomp$0.push(startChunkForTag("style"));
-        var children$jscomp$5 = null,
-          innerHTML$jscomp$4 = null,
-          propKey$jscomp$7;
-        for (propKey$jscomp$7 in props)
-          if (hasOwnProperty.call(props, propKey$jscomp$7)) {
-            var propValue$jscomp$7 = props[propKey$jscomp$7];
-            if (null != propValue$jscomp$7)
-              switch (propKey$jscomp$7) {
+        var children$jscomp$6 = null,
+          innerHTML$jscomp$5 = null,
+          propKey$jscomp$8;
+        for (propKey$jscomp$8 in props)
+          if (hasOwnProperty.call(props, propKey$jscomp$8)) {
+            var propValue$jscomp$8 = props[propKey$jscomp$8];
+            if (null != propValue$jscomp$8)
+              switch (propKey$jscomp$8) {
                 case "children":
-                  children$jscomp$5 = propValue$jscomp$7;
+                  children$jscomp$6 = propValue$jscomp$8;
                   break;
                 case "dangerouslySetInnerHTML":
-                  innerHTML$jscomp$4 = propValue$jscomp$7;
+                  innerHTML$jscomp$5 = propValue$jscomp$8;
                   break;
                 default:
                   pushAttribute(
                     target$jscomp$0,
-                    propKey$jscomp$7,
-                    propValue$jscomp$7
+                    propKey$jscomp$8,
+                    propValue$jscomp$8
                   );
               }
           }
         target$jscomp$0.push(">");
-        var child = Array.isArray(children$jscomp$5)
-          ? 2 > children$jscomp$5.length
-            ? children$jscomp$5[0]
+        var child = Array.isArray(children$jscomp$6)
+          ? 2 > children$jscomp$6.length
+            ? children$jscomp$6[0]
             : null
-          : children$jscomp$5;
+          : children$jscomp$6;
         "function" !== typeof child &&
           "symbol" !== typeof child &&
           null !== child &&
           void 0 !== child &&
           target$jscomp$0.push(("" + child).replace(styleRegex, styleReplacer));
-        pushInnerHTML(target$jscomp$0, innerHTML$jscomp$4, children$jscomp$5);
+        pushInnerHTML(target$jscomp$0, innerHTML$jscomp$5, children$jscomp$6);
         target$jscomp$0.push(endChunkForTag("style"));
-        var JSCompiler_inline_result$jscomp$5 = null;
+        var JSCompiler_inline_result$jscomp$6 = null;
       } else {
         var styleQueue$jscomp$0 = renderState.styles.get(precedence$jscomp$0);
         if (
@@ -1465,26 +1507,26 @@ function pushStartInstance(
               }),
               renderState.styles.set(precedence$jscomp$0, styleQueue$jscomp$0));
           var target = styleQueue$jscomp$0.rules,
-            children$jscomp$6 = null,
-            innerHTML$jscomp$5 = null,
-            propKey$jscomp$8;
-          for (propKey$jscomp$8 in props)
-            if (hasOwnProperty.call(props, propKey$jscomp$8)) {
-              var propValue$jscomp$8 = props[propKey$jscomp$8];
-              if (null != propValue$jscomp$8)
-                switch (propKey$jscomp$8) {
+            children$jscomp$7 = null,
+            innerHTML$jscomp$6 = null,
+            propKey$jscomp$9;
+          for (propKey$jscomp$9 in props)
+            if (hasOwnProperty.call(props, propKey$jscomp$9)) {
+              var propValue$jscomp$9 = props[propKey$jscomp$9];
+              if (null != propValue$jscomp$9)
+                switch (propKey$jscomp$9) {
                   case "children":
-                    children$jscomp$6 = propValue$jscomp$8;
+                    children$jscomp$7 = propValue$jscomp$9;
                     break;
                   case "dangerouslySetInnerHTML":
-                    innerHTML$jscomp$5 = propValue$jscomp$8;
+                    innerHTML$jscomp$6 = propValue$jscomp$9;
                 }
             }
-          var child$jscomp$0 = Array.isArray(children$jscomp$6)
-            ? 2 > children$jscomp$6.length
-              ? children$jscomp$6[0]
+          var child$jscomp$0 = Array.isArray(children$jscomp$7)
+            ? 2 > children$jscomp$7.length
+              ? children$jscomp$7[0]
               : null
-            : children$jscomp$6;
+            : children$jscomp$7;
           "function" !== typeof child$jscomp$0 &&
             "symbol" !== typeof child$jscomp$0 &&
             null !== child$jscomp$0 &&
@@ -1492,85 +1534,85 @@ function pushStartInstance(
             target.push(
               ("" + child$jscomp$0).replace(styleRegex, styleReplacer)
             );
-          pushInnerHTML(target, innerHTML$jscomp$5, children$jscomp$6);
+          pushInnerHTML(target, innerHTML$jscomp$6, children$jscomp$7);
         }
         styleQueue$jscomp$0 &&
           hoistableState &&
           hoistableState.styles.add(styleQueue$jscomp$0);
         textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-        JSCompiler_inline_result$jscomp$5 = void 0;
+        JSCompiler_inline_result$jscomp$6 = void 0;
       }
-      return JSCompiler_inline_result$jscomp$5;
+      return JSCompiler_inline_result$jscomp$6;
     case "meta":
       if (
         3 === formatContext.insertionMode ||
         formatContext.tagScope & 1 ||
         null != props.itemProp
       )
-        var JSCompiler_inline_result$jscomp$6 = pushSelfClosing(
+        var JSCompiler_inline_result$jscomp$7 = pushSelfClosing(
           target$jscomp$0,
           props,
           "meta"
         );
       else
         textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
-          (JSCompiler_inline_result$jscomp$6 = isFallback
+          (JSCompiler_inline_result$jscomp$7 = isFallback
             ? null
             : "string" === typeof props.charSet
             ? pushSelfClosing(renderState.charsetChunks, props, "meta")
             : "viewport" === props.name
             ? pushSelfClosing(renderState.viewportChunks, props, "meta")
             : pushSelfClosing(renderState.hoistableChunks, props, "meta"));
-      return JSCompiler_inline_result$jscomp$6;
+      return JSCompiler_inline_result$jscomp$7;
     case "listing":
     case "pre":
       target$jscomp$0.push(startChunkForTag(type));
-      var children$jscomp$7 = null,
-        innerHTML$jscomp$6 = null,
-        propKey$jscomp$9;
-      for (propKey$jscomp$9 in props)
-        if (hasOwnProperty.call(props, propKey$jscomp$9)) {
-          var propValue$jscomp$9 = props[propKey$jscomp$9];
-          if (null != propValue$jscomp$9)
-            switch (propKey$jscomp$9) {
+      var children$jscomp$8 = null,
+        innerHTML$jscomp$7 = null,
+        propKey$jscomp$10;
+      for (propKey$jscomp$10 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$10)) {
+          var propValue$jscomp$10 = props[propKey$jscomp$10];
+          if (null != propValue$jscomp$10)
+            switch (propKey$jscomp$10) {
               case "children":
-                children$jscomp$7 = propValue$jscomp$9;
+                children$jscomp$8 = propValue$jscomp$10;
                 break;
               case "dangerouslySetInnerHTML":
-                innerHTML$jscomp$6 = propValue$jscomp$9;
+                innerHTML$jscomp$7 = propValue$jscomp$10;
                 break;
               default:
                 pushAttribute(
                   target$jscomp$0,
-                  propKey$jscomp$9,
-                  propValue$jscomp$9
+                  propKey$jscomp$10,
+                  propValue$jscomp$10
                 );
             }
         }
       target$jscomp$0.push(">");
-      if (null != innerHTML$jscomp$6) {
-        if (null != children$jscomp$7)
+      if (null != innerHTML$jscomp$7) {
+        if (null != children$jscomp$8)
           throw Error(
             "Can only set one of `children` or `props.dangerouslySetInnerHTML`."
           );
         if (
-          "object" !== typeof innerHTML$jscomp$6 ||
-          !("__html" in innerHTML$jscomp$6)
+          "object" !== typeof innerHTML$jscomp$7 ||
+          !("__html" in innerHTML$jscomp$7)
         )
           throw Error(
             "`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. Please visit https://react.dev/link/dangerously-set-inner-html for more information."
           );
-        var html = innerHTML$jscomp$6.__html;
+        var html = innerHTML$jscomp$7.__html;
         null !== html &&
           void 0 !== html &&
           ("string" === typeof html && 0 < html.length && "\n" === html[0]
             ? target$jscomp$0.push("\n", html)
             : target$jscomp$0.push("" + html));
       }
-      "string" === typeof children$jscomp$7 &&
-        "\n" === children$jscomp$7[0] &&
+      "string" === typeof children$jscomp$8 &&
+        "\n" === children$jscomp$8[0] &&
         target$jscomp$0.push("\n");
-      return children$jscomp$7;
+      return children$jscomp$8;
     case "img":
       var src = props.src,
         srcSet = props.srcSet;
@@ -1612,7 +1654,7 @@ function pushStartInstance(
         ) {
           resumableState.imageResources[key$jscomp$0] = PRELOAD_NO_CREDS;
           var input = props.crossOrigin;
-          var JSCompiler_inline_result$jscomp$7 =
+          var JSCompiler_inline_result$jscomp$8 =
             "string" === typeof input
               ? "use-credentials" === input
                 ? input
@@ -1627,7 +1669,7 @@ function pushStartInstance(
           ((header = getPreloadAsHeader(src, "image", {
             imageSrcSet: props.srcSet,
             imageSizes: props.sizes,
-            crossOrigin: JSCompiler_inline_result$jscomp$7,
+            crossOrigin: JSCompiler_inline_result$jscomp$8,
             integrity: props.integrity,
             nonce: props.nonce,
             type: props.type,
@@ -1645,7 +1687,7 @@ function pushStartInstance(
                 href: srcSet ? void 0 : src,
                 imageSrcSet: srcSet,
                 imageSizes: sizes,
-                crossOrigin: JSCompiler_inline_result$jscomp$7,
+                crossOrigin: JSCompiler_inline_result$jscomp$8,
                 integrity: props.integrity,
                 type: props.type,
                 fetchPriority: props.fetchPriority,
@@ -1683,56 +1725,56 @@ function pushStartInstance(
     case "head":
       if (2 > formatContext.insertionMode && null === renderState.headChunks) {
         renderState.headChunks = [];
-        var JSCompiler_inline_result$jscomp$8 = pushStartGenericElement(
+        var JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
           renderState.headChunks,
           props,
           "head"
         );
       } else
-        JSCompiler_inline_result$jscomp$8 = pushStartGenericElement(
+        JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
           target$jscomp$0,
           props,
           "head"
         );
-      return JSCompiler_inline_result$jscomp$8;
+      return JSCompiler_inline_result$jscomp$9;
     case "html":
       if (
         0 === formatContext.insertionMode &&
         null === renderState.htmlChunks
       ) {
         renderState.htmlChunks = ["<!DOCTYPE html>"];
-        var JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
+        var JSCompiler_inline_result$jscomp$10 = pushStartGenericElement(
           renderState.htmlChunks,
           props,
           "html"
         );
       } else
-        JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
+        JSCompiler_inline_result$jscomp$10 = pushStartGenericElement(
           target$jscomp$0,
           props,
           "html"
         );
-      return JSCompiler_inline_result$jscomp$9;
+      return JSCompiler_inline_result$jscomp$10;
     default:
       if (-1 !== type.indexOf("-")) {
         target$jscomp$0.push(startChunkForTag(type));
-        var children$jscomp$8 = null,
-          innerHTML$jscomp$7 = null,
-          propKey$jscomp$10;
-        for (propKey$jscomp$10 in props)
-          if (hasOwnProperty.call(props, propKey$jscomp$10)) {
-            var propValue$jscomp$10 = props[propKey$jscomp$10];
-            if (null != propValue$jscomp$10) {
-              var attributeName = propKey$jscomp$10;
-              switch (propKey$jscomp$10) {
+        var children$jscomp$9 = null,
+          innerHTML$jscomp$8 = null,
+          propKey$jscomp$11;
+        for (propKey$jscomp$11 in props)
+          if (hasOwnProperty.call(props, propKey$jscomp$11)) {
+            var propValue$jscomp$11 = props[propKey$jscomp$11];
+            if (null != propValue$jscomp$11) {
+              var attributeName = propKey$jscomp$11;
+              switch (propKey$jscomp$11) {
                 case "children":
-                  children$jscomp$8 = propValue$jscomp$10;
+                  children$jscomp$9 = propValue$jscomp$11;
                   break;
                 case "dangerouslySetInnerHTML":
-                  innerHTML$jscomp$7 = propValue$jscomp$10;
+                  innerHTML$jscomp$8 = propValue$jscomp$11;
                   break;
                 case "style":
-                  pushStyleAttribute(target$jscomp$0, propValue$jscomp$10);
+                  pushStyleAttribute(target$jscomp$0, propValue$jscomp$11);
                   break;
                 case "suppressContentEditableWarning":
                 case "suppressHydrationWarning":
@@ -1742,18 +1784,18 @@ function pushStartInstance(
                   attributeName = "class";
                 default:
                   if (
-                    isAttributeNameSafe(propKey$jscomp$10) &&
-                    "function" !== typeof propValue$jscomp$10 &&
-                    "symbol" !== typeof propValue$jscomp$10 &&
-                    !1 !== propValue$jscomp$10
+                    isAttributeNameSafe(propKey$jscomp$11) &&
+                    "function" !== typeof propValue$jscomp$11 &&
+                    "symbol" !== typeof propValue$jscomp$11 &&
+                    !1 !== propValue$jscomp$11
                   ) {
-                    if (!0 === propValue$jscomp$10) propValue$jscomp$10 = "";
-                    else if ("object" === typeof propValue$jscomp$10) continue;
+                    if (!0 === propValue$jscomp$11) propValue$jscomp$11 = "";
+                    else if ("object" === typeof propValue$jscomp$11) continue;
                     target$jscomp$0.push(
                       " ",
                       attributeName,
                       '="',
-                      escapeTextForBrowser(propValue$jscomp$10),
+                      escapeTextForBrowser(propValue$jscomp$11),
                       '"'
                     );
                   }
@@ -1761,8 +1803,8 @@ function pushStartInstance(
             }
           }
         target$jscomp$0.push(">");
-        pushInnerHTML(target$jscomp$0, innerHTML$jscomp$7, children$jscomp$8);
-        return children$jscomp$8;
+        pushInnerHTML(target$jscomp$0, innerHTML$jscomp$8, children$jscomp$9);
+        return children$jscomp$9;
       }
   }
   return pushStartGenericElement(target$jscomp$0, props, type);
