@@ -85,6 +85,7 @@ export type ViewConfig = $ReadOnly<{
     }>,
     ...
   }>,
+  supportsRawText?: boolean,
   uiViewClassName: string,
   validAttributes: AttributeConfiguration,
 }>;
@@ -92,6 +93,7 @@ export type ViewConfig = $ReadOnly<{
 export type PartialViewConfig = $ReadOnly<{
   bubblingEventTypes?: $PropertyType<ViewConfig, 'bubblingEventTypes'>,
   directEventTypes?: $PropertyType<ViewConfig, 'directEventTypes'>,
+  supportsRawText?: boolean,
   uiViewClassName: string,
   validAttributes?: PartialAttributeConfiguration,
 }>;
