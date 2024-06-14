@@ -857,11 +857,20 @@ describe('ReactTransition', () => {
       updateTransitionPri();
     });
 
-    assertLog([
-      // Suspend.
-      'Suspend! [Async]',
-      'Loading...',
-    ]);
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            // Suspend.
+            'Suspend! [Async]',
+            'Loading...',
+          ]
+        : [
+            // Suspend.
+            'Suspend! [Async]',
+            'Normal pri: 0',
+            'Loading...',
+          ],
+    );
     expect(root).toMatchRenderedOutput('(empty), Normal pri: 0');
 
     await act(async () => {

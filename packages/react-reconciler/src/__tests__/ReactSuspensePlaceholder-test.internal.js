@@ -135,7 +135,11 @@ describe('ReactSuspensePlaceholder', () => {
     // Initial mount
     ReactNoop.render(<App middleText="B" />);
 
-    await waitForAll(['A', 'Suspend! [B]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['A', 'Suspend! [B]', 'Loading...']
+        : ['A', 'Suspend! [B]', 'C', 'Loading...'],
+    );
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
     await act(() => jest.advanceTimersByTime(1000));
@@ -151,7 +155,11 @@ describe('ReactSuspensePlaceholder', () => {
 
     // Update
     ReactNoop.render(<App middleText="B2" />);
-    await waitForAll(['Suspend! [B2]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Suspend! [B2]', 'Loading...']
+        : ['Suspend! [B2]', 'C', 'Loading...'],
+    );
 
     // Time out the update
     jest.advanceTimersByTime(750);
@@ -194,7 +202,11 @@ describe('ReactSuspensePlaceholder', () => {
     // Initial mount
     ReactNoop.render(<App middleText="B" />);
 
-    await waitForAll(['A', 'Suspend! [B]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['A', 'Suspend! [B]', 'Loading...']
+        : ['A', 'Suspend! [B]', 'C', 'Loading...'],
+    );
 
     expect(ReactNoop).not.toMatchRenderedOutput('ABC');
 
@@ -204,7 +216,11 @@ describe('ReactSuspensePlaceholder', () => {
 
     // Update
     ReactNoop.render(<App middleText="B2" />);
-    await waitForAll(['A', 'Suspend! [B2]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['A', 'Suspend! [B2]', 'Loading...']
+        : ['A', 'Suspend! [B2]', 'C', 'Loading...'],
+    );
     // Time out the update
     jest.advanceTimersByTime(750);
     await waitForAll([]);
@@ -237,7 +253,11 @@ describe('ReactSuspensePlaceholder', () => {
     // Initial mount
     ReactNoop.render(<App middleText="b" />);
 
-    await waitForAll(['a', 'Suspend! [b]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['a', 'Suspend! [b]', 'Loading...']
+        : ['a', 'Suspend! [b]', 'c', 'Loading...'],
+    );
 
     expect(ReactNoop).toMatchRenderedOutput(<uppercase>LOADING...</uppercase>);
 
@@ -247,7 +267,11 @@ describe('ReactSuspensePlaceholder', () => {
 
     // Update
     ReactNoop.render(<App middleText="b2" />);
-    await waitForAll(['a', 'Suspend! [b2]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['a', 'Suspend! [b2]', 'Loading...']
+        : ['a', 'Suspend! [b2]', 'c', 'Loading...'],
+    );
     // Time out the update
     jest.advanceTimersByTime(750);
     await waitForAll([]);
@@ -335,12 +359,11 @@ describe('ReactSuspensePlaceholder', () => {
       it('properly accounts for base durations when a suspended times out in a concurrent tree', async () => {
         ReactNoop.render(<App shouldSuspend={true} />);
 
-        await waitForAll([
-          'App',
-          'Suspending',
-          'Suspend! [Loaded]',
-          'Fallback',
-        ]);
+        await waitForAll(
+          gate(flags => flags.disableLegacySuspenseThrowSemantics)
+            ? ['App', 'Suspending', 'Suspend! [Loaded]', 'Fallback']
+            : ['App', 'Suspending', 'Suspend! [Loaded]', 'Text', 'Fallback'],
+        );
         // Since this is initial render we immediately commit the fallback. Another test below
         // deals with the update case where this suspends.
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
@@ -349,7 +372,9 @@ describe('ReactSuspensePlaceholder', () => {
         // Initial mount only shows the "Loading..." Fallback.
         // The treeBaseDuration then should be 10ms spent rendering Fallback,
         // but the actualDuration should also include the 3ms spent rendering the hidden tree.
-        expect(onRender.mock.calls[0][2]).toBe(13);
+        expect(onRender.mock.calls[0][2]).toBe(
+          gate(flags => flags.disableLegacySuspenseThrowSemantics) ? 13 : 18,
+        );
         expect(onRender.mock.calls[0][3]).toBe(10);
 
         // Resolve the pending promise.
@@ -482,12 +507,11 @@ describe('ReactSuspensePlaceholder', () => {
             <Suspense fallback={null} />
           </>,
         );
-        await waitForAll([
-          'App',
-          'Suspending',
-          'Suspend! [Loaded]',
-          'Fallback',
-        ]);
+        await waitForAll(
+          gate(flags => flags.disableLegacySuspenseThrowSemantics)
+            ? ['App', 'Suspending', 'Suspend! [Loaded]', 'Fallback']
+            : ['App', 'Suspending', 'Suspend! [Loaded]', 'Text', 'Fallback'],
+        );
         // Show the fallback UI.
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
         expect(onRender).toHaveBeenCalledTimes(2);
@@ -498,7 +522,9 @@ describe('ReactSuspensePlaceholder', () => {
         // The actual duration should include 10ms spent rendering Fallback,
         // plus the 3ms render all of the partially rendered suspended subtree.
         // But the tree base duration should only include 10ms spent rendering Fallback.
-        expect(onRender.mock.calls[1][2]).toBe(13);
+        expect(onRender.mock.calls[1][2]).toBe(
+          gate(flags => flags.disableLegacySuspenseThrowSemantics) ? 13 : 18,
+        );
         expect(onRender.mock.calls[1][3]).toBe(10);
 
         // Update again while timed out.
@@ -520,13 +546,24 @@ describe('ReactSuspensePlaceholder', () => {
         // from timers.
         Scheduler.unstable_advanceTime(200);
 
-        await waitForAll([
-          'App',
-          'Suspending',
-          'Suspend! [Loaded]',
-          'Fallback',
-          'Suspend! [Sibling]',
-        ]);
+        await waitForAll(
+          gate(flags => flags.disableLegacySuspenseThrowSemantics)
+            ? [
+                'App',
+                'Suspending',
+                'Suspend! [Loaded]',
+                'Fallback',
+                'Suspend! [Sibling]',
+              ]
+            : [
+                'App',
+                'Suspending',
+                'Suspend! [Loaded]',
+                'New',
+                'Fallback',
+                'Suspend! [Sibling]',
+              ],
+        );
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
         expect(onRender).toHaveBeenCalledTimes(3);
 

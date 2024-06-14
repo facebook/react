@@ -397,7 +397,17 @@ describe('ReactConcurrentErrorRecovery', () => {
           );
         });
       });
-      assertLog(['Suspend! [Async]']);
+      assertLog(
+        gate(flags => flags.disableLegacySuspenseThrowSemantics)
+          ? ['Suspend! [Async]']
+          : [
+              'Suspend! [Async]',
+              // TODO: Ideally we would skip this second render pass to render the
+              // error UI, since it's not going to commit anyway. The same goes for
+              // Suspense fallbacks during a refresh transition.
+              'Caught an error: Oops!',
+            ],
+      );
       // The render suspended without committing or surfacing the error.
       expect(root).toMatchRenderedOutput(null);
 
@@ -414,7 +424,11 @@ describe('ReactConcurrentErrorRecovery', () => {
           );
         });
       });
-      assertLog(['Suspend! [Async]']);
+      assertLog(
+        gate(flags => flags.disableLegacySuspenseThrowSemantics)
+          ? ['Suspend! [Async]']
+          : ['Suspend! [Async]', 'Caught an error: Oops!'],
+      );
       expect(root).toMatchRenderedOutput(null);
 
       await act(async () => {

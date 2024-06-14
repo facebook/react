@@ -43,6 +43,7 @@ import {
   disableLegacyMode,
   disableDefaultPropsExceptForClasses,
   disableStringRefs,
+  disableLegacySuspenseThrowSemantics,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -332,6 +333,8 @@ let workInProgressThrownValue: mixed = null;
 // different that whether something suspended, because we don't add multiple
 // listeners to a promise we've already seen (per root and lane).
 let workInProgressRootDidAttachPingListener: boolean = false;
+
+let workInProgressRootSuspendedReason: SuspendedReason = NotSuspended;
 
 // A contextual version of workInProgressRootRenderLanes. It is a superset of
 // the lanes that we started working on at the root. When we enter a subtree
@@ -1639,6 +1642,9 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressSuspendedReason = NotSuspended;
   workInProgressThrownValue = null;
   workInProgressRootDidAttachPingListener = false;
+  if (!disableLegacySuspenseThrowSemantics) {
+    workInProgressRootSuspendedReason = NotSuspended;
+  }
   workInProgressRootExitStatus = RootInProgress;
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootInterleavedUpdatedLanes = NoLanes;
@@ -1738,13 +1744,24 @@ function handleThrow(root: FiberRoot, thrownValue: any): void {
       typeof thrownValue === 'object' &&
       typeof thrownValue.then === 'function';
 
-    workInProgressSuspendedReason = isWakeable
-      ? // A wakeable object was thrown by a legacy Suspense implementation.
-        // This has slightly different behavior than suspending with `use`.
-        SuspendedOnDeprecatedThrowPromise
-      : // This is a regular error. If something earlier in the component already
-        // suspended, we must clear the thenable state to unblock the work loop.
-        SuspendedOnError;
+    if (!disableLegacySuspenseThrowSemantics) {
+      workInProgressSuspendedReason = workInProgressRootSuspendedReason =
+        isWakeable
+          ? // A wakeable object was thrown by a legacy Suspense implementation.
+            // This has slightly different behavior than suspending with `use`.
+            SuspendedOnDeprecatedThrowPromise
+          : // This is a regular error. If something earlier in the component already
+            // suspended, we must clear the thenable state to unblock the work loop.
+            SuspendedOnError;
+    } else {
+      workInProgressSuspendedReason = isWakeable
+        ? // A wakeable object was thrown by a legacy Suspense implementation.
+          // This has slightly different behavior than suspending with `use`.
+          SuspendedOnDeprecatedThrowPromise
+        : // This is a regular error. If something earlier in the component already
+          // suspended, we must clear the thenable state to unblock the work loop.
+          SuspendedOnError;
+    }
   }
 
   workInProgressThrownValue = thrownValue;
@@ -2032,6 +2049,17 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
             workInProgressRootExitStatus = RootDidNotComplete;
             break outer;
           }
+          case SuspendedOnDeprecatedThrowPromise: {
+            // Unwind then continue with the normal work loop.
+            workInProgressSuspendedReason = NotSuspended;
+            if (!disableLegacySuspenseThrowSemantics) {
+              workInProgressRootSuspendedReason =
+                SuspendedOnDeprecatedThrowPromise;
+            }
+            workInProgressThrownValue = null;
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
+            break;
+          }
           case SuspendedOnImmediate:
           case SuspendedOnData: {
             if (!didSuspendInShell && getSuspenseHandler() === null) {
@@ -2293,6 +2321,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // like infinite ping loops. So we maintain the old behavior and
             // always unwind.
             workInProgressSuspendedReason = NotSuspended;
+            if (!disableLegacySuspenseThrowSemantics) {
+              workInProgressRootSuspendedReason =
+                SuspendedOnDeprecatedThrowPromise;
+            }
             workInProgressThrownValue = null;
             throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
@@ -2623,7 +2655,27 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   // sibling. If there are no more siblings, return to the parent fiber.
   let completedWork: Fiber = unitOfWork;
   do {
-    if (__DEV__) {
+    if (!disableLegacySuspenseThrowSemantics) {
+      if (
+        (completedWork.flags & Incomplete) !== NoFlags &&
+        // TODO: Where is the best place to store this?
+        // The root isn't the right place, because if there are `use` calls
+        // then those boundaries show switch to not pre-rendering.
+        workInProgressRootSuspendedReason ===
+          SuspendedOnDeprecatedThrowPromise &&
+        !getIsHydrating()
+      ) {
+        // This fiber did not complete, because one of its children did not
+        // complete. Switch to unwinding the stack instead of completing it.
+        //
+        // The reason "unwind" and "complete" is interleaved is because when
+        // something suspends, we continue rendering the siblings even though
+        // they will be replaced by a fallback.
+        // TODO: Disable sibling prerendering, then remove this branch.
+        unwindUnitOfWork(completedWork);
+        return;
+      }
+    } else if (__DEV__) {
       if ((completedWork.flags & Incomplete) !== NoFlags) {
         // NOTE: If we re-enable sibling prerendering in some cases, this branch
         // is where we would switch to the unwinding path.
@@ -2755,6 +2807,21 @@ function unwindUnitOfWork(unitOfWork: Fiber): void {
     // NOTE: If we re-enable sibling prerendering in some cases, here we
     // would switch to the normal completion path: check if a sibling
     // exists, and if so, begin work on it.
+    if (
+      !disableLegacySuspenseThrowSemantics &&
+      // TODO: Where is the best place to store this?
+      // The root isn't the right place, because if there are `use` calls
+      // then those boundaries show switch to not pre-rendering.
+      workInProgressRootSuspendedReason === SuspendedOnDeprecatedThrowPromise &&
+      !getIsHydrating()
+    ) {
+      const siblingFiber = incompleteWork.sibling;
+      if (siblingFiber !== null) {
+        // This branch will return us to the normal work loop.
+        workInProgress = siblingFiber;
+        return;
+      }
+    }
 
     // Otherwise, return to the parent
     // $FlowFixMe[incompatible-type] we bail out when we get a null

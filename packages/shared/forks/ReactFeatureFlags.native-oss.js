@@ -104,6 +104,7 @@ export const enableAsyncIterableChildren = false;
 export const enableAddPropertiesFastPath = false;
 export const enableShallowPropDiffing = false;
 export const renameElementSymbol = true;
+export const disableLegacySuspenseThrowSemantics = true;
 
 export const enableOwnerStacks = __EXPERIMENTAL__;
 

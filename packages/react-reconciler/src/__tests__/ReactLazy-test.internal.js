@@ -305,7 +305,11 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll(['Suspend! [LazyChildA]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Suspend! [LazyChildA]', 'Loading...']
+        : ['Suspend! [LazyChildA]', 'Suspend! [LazyChildB]', 'Loading...'],
+    );
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(async () => {
@@ -314,9 +318,17 @@ describe('ReactLazy', () => {
       // B suspends even though it happens to share the same import as A.
       // TODO: React.lazy should implement the `status` and `value` fields, so
       // we can unwrap the result synchronously if it already loaded. Like `use`.
-      await waitFor(['A', 'Suspend! [LazyChildB]']);
+      await waitFor(
+        gate(flags => flags.disableLegacySuspenseThrowSemantics)
+          ? ['A', 'Suspend! [LazyChildB]']
+          : ['A', 'B'],
+      );
     });
-    assertLog(['A', 'B', 'Did mount: A', 'Did mount: B']);
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['A', 'B', 'Did mount: A', 'Did mount: B']
+        : ['Did mount: A', 'Did mount: B'],
+    );
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
@@ -1354,12 +1366,19 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
-    await waitForAll(['Init A', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Init A', 'Loading...']
+        : ['Init A', 'Init B', 'Loading...'],
+    );
     expect(root).not.toMatchRenderedOutput('AB');
 
     await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Init B']);
-
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['A', 'Init B']
+        : ['A'],
+    );
     await act(() => resolveFakeImport(ChildB));
     assertLog(['A', 'B', 'Did mount: A', 'Did mount: B']);
     expect(root).toMatchRenderedOutput('AB');

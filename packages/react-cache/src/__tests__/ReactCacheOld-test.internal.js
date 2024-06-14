@@ -203,17 +203,35 @@ describe('ReactCache', () => {
         <AsyncText ms={100} text={3} />
       </Suspense>,
     );
-    await waitForAll(['Suspend! [1]', 'Loading...']);
-    jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [1]']);
-    await waitForAll([1, 'Suspend! [2]']);
+    if (gate(flags => flags.disableLegacySuspenseThrowSemantics)) {
+      await waitForAll(['Suspend! [1]', 'Loading...']);
+      jest.advanceTimersByTime(100);
+      assertLog(['Promise resolved [1]']);
+      await waitForAll([1, 'Suspend! [2]']);
 
-    jest.advanceTimersByTime(100);
-    assertLog(['Promise resolved [2]']);
-    await waitForAll([1, 2, 'Suspend! [3]']);
+      jest.advanceTimersByTime(100);
+      assertLog(['Promise resolved [2]']);
+      await waitForAll([1, 2, 'Suspend! [3]']);
 
-    await act(() => jest.advanceTimersByTime(100));
-    assertLog(['Promise resolved [3]', 1, 2, 3]);
+      await act(() => jest.advanceTimersByTime(100));
+      assertLog(['Promise resolved [3]', 1, 2, 3]);
+    } else {
+      await waitForAll([
+        'Suspend! [1]',
+        'Suspend! [2]',
+        'Suspend! [3]',
+        'Loading...',
+      ]);
+      await act(() => jest.advanceTimersByTime(100));
+      assertLog([
+        'Promise resolved [1]',
+        'Promise resolved [2]',
+        'Promise resolved [3]',
+        1,
+        2,
+        3,
+      ]);
+    }
 
     expect(root).toMatchRenderedOutput('123');
 
@@ -226,19 +244,26 @@ describe('ReactCache', () => {
       </Suspense>,
     );
 
-    await waitForAll([1, 'Suspend! [4]', 'Loading...']);
+    if (gate(flags => flags.disableLegacySuspenseThrowSemantics)) {
+      await waitForAll([1, 'Suspend! [4]', 'Loading...']);
 
-    await act(() => jest.advanceTimersByTime(100));
-    assertLog([
-      'Promise resolved [4]',
-      1,
-      4,
-      'Suspend! [5]',
-      'Promise resolved [5]',
-      1,
-      4,
-      5,
-    ]);
+      await act(() => jest.advanceTimersByTime(100));
+      assertLog([
+        'Promise resolved [4]',
+        1,
+        4,
+        'Suspend! [5]',
+        'Promise resolved [5]',
+        1,
+        4,
+        5,
+      ]);
+    } else {
+      await waitForAll([1, 'Suspend! [4]', 'Suspend! [5]', 'Loading...']);
+
+      await act(() => jest.advanceTimersByTime(100));
+      assertLog(['Promise resolved [4]', 'Promise resolved [5]', 1, 4, 5]);
+    }
 
     expect(root).toMatchRenderedOutput('145');
 
@@ -253,25 +278,39 @@ describe('ReactCache', () => {
       </Suspense>,
     );
 
-    await waitForAll([
-      // 1 is still cached
-      1,
-      // 2 and 3 suspend because they were evicted from the cache
-      'Suspend! [2]',
-      'Loading...',
-    ]);
+    if (gate(flags => flags.disableLegacySuspenseThrowSemantics)) {
+      await waitForAll([
+        // 1 is still cached
+        1,
+        // 2 and 3 suspend because they were evicted from the cache
+        'Suspend! [2]',
+        'Loading...',
+      ]);
 
-    await act(() => jest.advanceTimersByTime(100));
-    assertLog([
-      'Promise resolved [2]',
-      1,
-      2,
-      'Suspend! [3]',
-      'Promise resolved [3]',
-      1,
-      2,
-      3,
-    ]);
+      await act(() => jest.advanceTimersByTime(100));
+      assertLog([
+        'Promise resolved [2]',
+        1,
+        2,
+        'Suspend! [3]',
+        'Promise resolved [3]',
+        1,
+        2,
+        3,
+      ]);
+    } else {
+      await waitForAll([
+        // 1 is still cached
+        1,
+        // 2 and 3 suspend because they were evicted from the cache
+        'Suspend! [2]',
+        'Suspend! [3]',
+        'Loading...',
+      ]);
+
+      await act(() => jest.advanceTimersByTime(100));
+      assertLog(['Promise resolved [2]', 'Promise resolved [3]', 1, 2, 3]);
+    }
     expect(root).toMatchRenderedOutput('123');
   });
 

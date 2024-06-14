@@ -114,6 +114,7 @@ export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
 export const useModernStrictMode = true;
+export const disableLegacySuspenseThrowSemantics = true;
 
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.

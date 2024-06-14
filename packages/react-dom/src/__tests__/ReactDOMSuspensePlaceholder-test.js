@@ -160,7 +160,11 @@ describe('ReactDOMSuspensePlaceholder', () => {
     });
 
     expect(container.textContent).toEqual('Loading...');
-    assertLog(['A', 'Suspend! [B]', 'Loading...']);
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['A', 'Suspend! [B]', 'Loading...']
+        : ['A', 'Suspend! [B]', 'C', 'Loading...'],
+    );
     await act(() => {
       resolveText('B');
     });

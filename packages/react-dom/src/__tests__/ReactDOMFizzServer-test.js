@@ -5222,7 +5222,7 @@ describe('ReactDOMFizzServer', () => {
     );
 
     resolve({default: () => <p>lazy</p>});
-    await waitForAll([]);
+    await waitFor([]);
     expect(errors).toEqual([]);
     expect(getVisibleChildren(container)).toEqual(
       <div>

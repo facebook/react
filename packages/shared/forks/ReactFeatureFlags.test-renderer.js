@@ -96,6 +96,7 @@ export const disableLegacyContext = true;
 export const enableRenderableContext = true;
 export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;
+export const disableLegacySuspenseThrowSemantics = true;
 
 export const enableOwnerStacks = false;
 

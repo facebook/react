@@ -130,13 +130,24 @@ describe('ReactSuspense', () => {
       root.render(<Foo renderBar={true} />);
     });
 
-    await waitForAll([
-      'Foo',
-      'Bar',
-      // A suspends
-      'Suspend! [A]',
-      'Loading...',
-    ]);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            'Foo',
+            'Bar',
+            // A suspends
+            'Suspend! [A]',
+            'Loading...',
+          ]
+        : [
+            'Foo',
+            'Bar',
+            // A suspends
+            'Suspend! [A]',
+            'B',
+            'Loading...',
+          ],
+    );
     expect(container.textContent).toEqual('');
 
     await waitForAll([]);
@@ -271,7 +282,17 @@ describe('ReactSuspense', () => {
       root.render(<Foo />);
     });
 
-    assertLog(['Foo', 'Suspend! [A]', 'Loading...']);
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Foo', 'Suspend! [A]', 'Loading...']
+        : [
+            'Foo',
+            'Suspend! [A]',
+            'Suspend! [B]',
+            'Loading more...',
+            'Loading...',
+          ],
+    );
     expect(container.textContent).toEqual('Loading...');
 
     await resolveText('A');
@@ -316,7 +337,17 @@ describe('ReactSuspense', () => {
     // Render an empty shell
     const root = ReactDOMClient.createRoot(container);
     root.render(<Foo />);
-    await waitForAll(['Foo', 'Suspend! [A]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Foo', 'Suspend! [A]', 'Loading...']
+        : [
+            'Foo',
+            'Suspend! [A]',
+            'Suspend! [B]',
+            'Loading more...',
+            'Loading...',
+          ],
+    );
     expect(container.textContent).toEqual('Loading...');
 
     // Now resolve A
@@ -357,7 +388,17 @@ describe('ReactSuspense', () => {
     await act(() => {
       root.render(<Foo />);
     });
-    assertLog(['Foo', 'Suspend! [A]', 'Loading...']);
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Foo', 'Suspend! [A]', 'Loading...']
+        : [
+            'Foo',
+            'Suspend! [A]',
+            'Suspend! [B]',
+            'Loading more...',
+            'Loading...',
+          ],
+    );
     expect(container.textContent).toEqual('Loading...');
 
     await resolveText('A');
@@ -721,7 +762,11 @@ describe('ReactSuspense', () => {
       root.render(<App />);
     });
 
-    assertLog(['Suspend! [Child 1]', 'Loading...']);
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Suspend! [Child 1]', 'Loading...']
+        : ['Suspend! [Child 1]', 'Suspend! [Child 2]', 'Loading...'],
+    );
     await resolveText('Child 1');
     await waitForAll(['Child 1', 'Suspend! [Child 2]']);
 

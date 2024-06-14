@@ -14,6 +14,7 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // Flags that aren't currently used, but we still want to force variants to keep the
   // code live.
   actual.disableInputAttributeSyncing = __VARIANT__;
+  actual.disableLegacySuspenseThrowSemantics = __VARIANT__;
 
   // These are hardcoded to true for the next release,
   // but still run the tests against both variants until

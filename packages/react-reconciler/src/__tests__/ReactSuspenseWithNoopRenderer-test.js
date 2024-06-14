@@ -221,17 +221,31 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React.startTransition(() => {
       ReactNoop.render(<Foo />);
     });
-    await waitFor([
-      'Foo',
-      'Bar',
-      // A suspends
-      'Suspend! [A]',
-      // We immediately unwind and switch to a fallback without
-      // rendering siblings.
-      'Loading...',
-      'C',
-      // Yield before rendering D
-    ]);
+    await waitFor(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            'Foo',
+            'Bar',
+            // A suspends
+            'Suspend! [A]',
+            // We immediately unwind and switch to a fallback without
+            // rendering siblings.
+            'Loading...',
+            'C',
+            // Yield before rendering D
+          ]
+        : [
+            'Foo',
+            'Bar',
+            // A suspends
+            'Suspend! [A]',
+            // But we keep rendering the siblings
+            'B',
+            'Loading...',
+            'C',
+            // We leave D incomplete.
+          ],
+    );
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Flush the promise completely
@@ -290,15 +304,27 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React.startTransition(() => {
       ReactNoop.render(<Foo renderBar={true} />);
     });
-    await waitForAll([
-      'Foo',
-      'Bar',
-      // A suspends
-      'Suspend! [A]',
-      // We immediately unwind and switch to a fallback without
-      // rendering siblings.
-      'Loading...',
-    ]);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            'Foo',
+            'Bar',
+            // A suspends
+            'Suspend! [A]',
+            // We immediately unwind and switch to a fallback without
+            // rendering siblings.
+            'Loading...',
+          ]
+        : [
+            'Foo',
+            'Bar',
+            // A suspends
+            'Suspend! [A]',
+            // But we keep rendering the siblings
+            'B',
+            'Loading...',
+          ],
+    );
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Resolve the data
@@ -379,7 +405,25 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // B suspends. Render a fallback
-    await waitForAll(['A', 'Suspend! [B]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            'A',
+            // B suspends.
+            'Suspend! [B]',
+            'Loading...',
+          ]
+        : [
+            'A',
+            // B suspends.
+            'Suspend! [B]',
+            // Continue rendering the remaining siblings.
+            'C',
+            'D',
+            'Loading...',
+          ],
+    );
+
     // Did not commit yet.
     expect(ReactNoop).toMatchRenderedOutput(null);
 
@@ -598,7 +642,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React.startTransition(() => {
       ReactNoop.render(<App showA={true} showB={true} />);
     });
-    await waitForAll(['Suspend! [A]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Suspend! [A]', 'Loading...']
+        : ['Suspend! [A]', 'B', 'Loading...'],
+    );
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     await resolveText('A');
@@ -723,12 +771,24 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </Fragment>,
     );
 
-    await waitForAll([
-      'Sync',
-      // The async content suspends
-      'Suspend! [Outer content]',
-      'Loading outer...',
-    ]);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            'Sync',
+            // The async content suspends
+            'Suspend! [Outer content]',
+            'Loading outer...',
+          ]
+        : [
+            'Sync',
+            // The async content suspends
+            'Suspend! [Outer content]',
+            // Continue rendering the remaining siblings.
+            'Suspend! [Inner content]',
+            'Loading inner...',
+            'Loading outer...',
+          ],
+    );
     // The outer loading state finishes immediately.
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -832,11 +892,20 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Fragment>,
       ),
     );
-    assertLog([
-      'Suspend! [Async]',
-      'Suspend! [Loading (inner)...]',
-      'Loading (outer)...',
-    ]);
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            'Suspend! [Async]',
+            'Suspend! [Loading (inner)...]',
+            'Loading (outer)...',
+          ]
+        : [
+            'Suspend! [Async]',
+            'Suspend! [Loading (inner)...]',
+            'Sync',
+            'Loading (outer)...',
+          ],
+    );
     // The tree commits synchronously
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading (outer)..." />);
   });
@@ -904,7 +973,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <AsyncText text="B" />
       </Suspense>,
     );
-    await waitForAll(['Suspend! [A]', 'Loading...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Suspend! [A]', 'Loading...']
+        : ['Suspend! [A]', 'Suspend! [B]', 'Loading...'],
+    );
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
 
     await act(() => {
@@ -1014,7 +1087,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.render(<App />);
-    await waitForAll(['Suspend! [A]']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Suspend! [A]']
+        : ['Suspend! [A]', 'Suspend! [B]', 'Suspend! [C]'],
+    );
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
     await resolveText('A');
@@ -1672,12 +1749,23 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     ReactNoop.render(<Foo />);
     // Start rendering
-    await waitForAll([
-      'Foo',
-      // A suspends
-      'Suspend! [A]',
-      'Loading...',
-    ]);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            'Foo',
+            // A suspends
+            'Suspend! [A]',
+            'Loading...',
+          ]
+        : [
+            'Foo',
+            // A suspends
+            'Suspend! [A]',
+            'Suspend! [B]',
+            'Loading more...',
+            'Loading...',
+          ],
+    );
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
 
     // Wait a long time.
@@ -1730,12 +1818,23 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     ReactNoop.render(<Foo />);
     // Start rendering
-    await waitForAll([
-      'Foo',
-      // A suspends
-      'Suspend! [A]',
-      'Loading...',
-    ]);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? [
+            'Foo',
+            // A suspends
+            'Suspend! [A]',
+            'Loading...',
+          ]
+        : [
+            'Foo',
+            // A suspends
+            'Suspend! [A]',
+            'Suspend! [B]',
+            'Loading more...',
+            'Loading...',
+          ],
+    );
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Loading..." />);
 
     await act(async () => {
@@ -1964,7 +2063,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.flushSync(() => showB());
     });
 
-    assertLog(['Suspend! [A]']);
+    assertLog(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Suspend! [A]']
+        : ['Suspend! [A]', 'Suspend! [B]'],
+    );
   });
 
   // TODO: flip to "warns" when this is implemented again.
@@ -2070,7 +2173,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     ReactNoop.render(<Foo />);
-    await waitForAll(['Foo', 'Suspend! [A]', 'Initial load...']);
+    await waitForAll(
+      gate(flags => flags.disableLegacySuspenseThrowSemantics)
+        ? ['Foo', 'Suspend! [A]', 'Initial load...']
+        : ['Foo', 'Suspend! [A]', 'B', 'Initial load...'],
+    );
     expect(ReactNoop).toMatchRenderedOutput(<span prop="Initial load..." />);
 
     // Eventually we resolve and show the data.
@@ -3354,12 +3461,22 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await act(() => {
         setText('B');
       });
-      assertLog([
-        'Outer text: B',
-        'Outer step: 0',
-        'Suspend! [Inner text: B]',
-        'Loading...',
-      ]);
+      assertLog(
+        gate(flags => flags.disableLegacySuspenseThrowSemantics)
+          ? [
+              'Outer text: B',
+              'Outer step: 0',
+              'Suspend! [Inner text: B]',
+              'Loading...',
+            ]
+          : [
+              'Outer text: B',
+              'Outer step: 0',
+              'Suspend! [Inner text: B]',
+              'Inner step: 0',
+              'Loading...',
+            ],
+      );
       // Commit the placeholder
       await advanceTimers(250);
       expect(root).toMatchRenderedOutput(
@@ -3382,12 +3499,22 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Only the outer part can update. The inner part should still show a
       // fallback because we haven't finished loading B yet. Otherwise, the
       // inner text would be inconsistent with the outer text.
-      assertLog([
-        'Outer text: B',
-        'Outer step: 1',
-        'Suspend! [Inner text: B]',
-        'Loading...',
-      ]);
+      assertLog(
+        gate(flags => flags.disableLegacySuspenseThrowSemantics)
+          ? [
+              'Outer text: B',
+              'Outer step: 1',
+              'Suspend! [Inner text: B]',
+              'Loading...',
+            ]
+          : [
+              'Outer text: B',
+              'Outer step: 1',
+              'Suspend! [Inner text: B]',
+              'Inner step: 1',
+              'Loading...',
+            ],
+      );
       expect(root).toMatchRenderedOutput(
         <>
           <span prop="Outer text: B" />

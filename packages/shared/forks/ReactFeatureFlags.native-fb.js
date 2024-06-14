@@ -100,6 +100,7 @@ export const disableStringRefs = true;
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = false;
 export const enableOwnerStacks = false;
+export const disableLegacySuspenseThrowSemantics = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
