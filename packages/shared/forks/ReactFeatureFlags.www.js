@@ -119,8 +119,7 @@ export const useModernStrictMode = true;
 // because JSX is an extremely hot path.
 export const disableStringRefs = false;
 
-export const disableLegacyMode: boolean =
-  __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
+export const disableLegacyMode = true;
 
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
