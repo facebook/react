@@ -116,7 +116,7 @@ export type Hook = z.infer<typeof HookSchema>;
  *   missing some recursive Object / Function shapeIds
  */
 
-const EnvironmentConfigSchema = z.object({
+export const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
 
   /**
