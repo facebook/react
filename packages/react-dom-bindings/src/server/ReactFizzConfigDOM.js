@@ -27,10 +27,7 @@ import {
 
 import {Children} from 'react';
 
-import {
-  enableFilterEmptyStringAttributesDOM,
-  enableFizzExternalRuntime,
-} from 'shared/ReactFeatureFlags';
+import {enableFizzExternalRuntime} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,
@@ -1204,30 +1201,28 @@ function pushAttribute(
     }
     case 'src':
     case 'href': {
-      if (enableFilterEmptyStringAttributesDOM) {
-        if (value === '') {
-          if (__DEV__) {
-            if (name === 'src') {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'This may cause the browser to download the whole page again over the network. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                name,
-                name,
-              );
-            } else {
-              console.error(
-                'An empty string ("") was passed to the %s attribute. ' +
-                  'To fix this, either do not render the element at all ' +
-                  'or pass null to %s instead of an empty string.',
-                name,
-                name,
-              );
-            }
+      if (value === '') {
+        if (__DEV__) {
+          if (name === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
           }
-          return;
         }
+        return;
       }
     }
     // Fall through to the last case which shouldn't remove empty strings.
@@ -3544,11 +3539,7 @@ export function pushStartInstance(
       // Fast track very common tags
       break;
     case 'a':
-      if (enableFilterEmptyStringAttributesDOM) {
-        return pushStartAnchor(target, props);
-      } else {
-        break;
-      }
+      return pushStartAnchor(target, props);
     case 'g':
     case 'p':
     case 'li':

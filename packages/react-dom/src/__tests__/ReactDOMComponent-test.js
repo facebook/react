@@ -587,133 +587,131 @@ describe('ReactDOMComponent', () => {
       expect(node.hasAttribute('data-foo')).toBe(false);
     });
 
-    if (ReactFeatureFlags.enableFilterEmptyStringAttributesDOM) {
-      it('should not add an empty src attribute', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await expect(async () => {
-          await act(() => {
-            root.render(<img src="" />);
-          });
-        }).toErrorDev(
-          'An empty string ("") was passed to the src attribute. ' +
-            'This may cause the browser to download the whole page again over the network. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to src instead of an empty string.',
+    it('should not add an empty src attribute', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<img src="" />);
+        });
+      }).toErrorDev(
+        'An empty string ("") was passed to the src attribute. ' +
+          'This may cause the browser to download the whole page again over the network. ' +
+          'To fix this, either do not render the element at all ' +
+          'or pass null to src instead of an empty string.',
+      );
+      const node = container.firstChild;
+      expect(node.hasAttribute('src')).toBe(false);
+
+      await act(() => {
+        root.render(<img src="abc" />);
+      });
+      expect(node.hasAttribute('src')).toBe(true);
+
+      await expect(async () => {
+        await act(() => {
+          root.render(<img src="" />);
+        });
+      }).toErrorDev(
+        'An empty string ("") was passed to the src attribute. ' +
+          'This may cause the browser to download the whole page again over the network. ' +
+          'To fix this, either do not render the element at all ' +
+          'or pass null to src instead of an empty string.',
+      );
+      expect(node.hasAttribute('src')).toBe(false);
+    });
+
+    it('should not add an empty href attribute', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<link href="" />);
+        });
+      }).toErrorDev(
+        'An empty string ("") was passed to the href attribute. ' +
+          'To fix this, either do not render the element at all ' +
+          'or pass null to href instead of an empty string.',
+      );
+      const node = container.firstChild;
+      expect(node.hasAttribute('href')).toBe(false);
+
+      await act(() => {
+        root.render(<link href="abc" />);
+      });
+      expect(node.hasAttribute('href')).toBe(true);
+
+      await expect(async () => {
+        await act(() => {
+          root.render(<link href="" />);
+        });
+      }).toErrorDev(
+        'An empty string ("") was passed to the href attribute. ' +
+          'To fix this, either do not render the element at all ' +
+          'or pass null to href instead of an empty string.',
+      );
+      expect(node.hasAttribute('href')).toBe(false);
+    });
+
+    it('should allow an empty href attribute on anchors', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<a href="" />);
+      });
+      const node = container.firstChild;
+      expect(node.getAttribute('href')).toBe('');
+    });
+
+    it('should allow an empty action attribute', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<form action="" />);
+      });
+      const node = container.firstChild;
+      expect(node.getAttribute('action')).toBe('');
+
+      await act(() => {
+        root.render(<form action="abc" />);
+      });
+      expect(node.hasAttribute('action')).toBe(true);
+
+      await act(() => {
+        root.render(<form action="" />);
+      });
+      expect(node.getAttribute('action')).toBe('');
+    });
+
+    it('allows empty string of a formAction to override the default of a parent', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <form action="hello">
+            <button formAction="" />,
+          </form>,
         );
-        const node = container.firstChild;
-        expect(node.hasAttribute('src')).toBe(false);
+      });
+      const node = container.firstChild.firstChild;
+      expect(node.hasAttribute('formaction')).toBe(true);
+      expect(node.getAttribute('formaction')).toBe('');
+    });
 
-        await act(() => {
-          root.render(<img src="abc" />);
-        });
-        expect(node.hasAttribute('src')).toBe(true);
-
-        await expect(async () => {
-          await act(() => {
-            root.render(<img src="" />);
-          });
-        }).toErrorDev(
-          'An empty string ("") was passed to the src attribute. ' +
-            'This may cause the browser to download the whole page again over the network. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to src instead of an empty string.',
+    it('should not filter attributes for custom elements', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <some-custom-element action="" formAction="" href="" src="" />,
         );
-        expect(node.hasAttribute('src')).toBe(false);
       });
-
-      it('should not add an empty href attribute', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await expect(async () => {
-          await act(() => {
-            root.render(<link href="" />);
-          });
-        }).toErrorDev(
-          'An empty string ("") was passed to the href attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to href instead of an empty string.',
-        );
-        const node = container.firstChild;
-        expect(node.hasAttribute('href')).toBe(false);
-
-        await act(() => {
-          root.render(<link href="abc" />);
-        });
-        expect(node.hasAttribute('href')).toBe(true);
-
-        await expect(async () => {
-          await act(() => {
-            root.render(<link href="" />);
-          });
-        }).toErrorDev(
-          'An empty string ("") was passed to the href attribute. ' +
-            'To fix this, either do not render the element at all ' +
-            'or pass null to href instead of an empty string.',
-        );
-        expect(node.hasAttribute('href')).toBe(false);
-      });
-
-      it('should allow an empty href attribute on anchors', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<a href="" />);
-        });
-        const node = container.firstChild;
-        expect(node.getAttribute('href')).toBe('');
-      });
-
-      it('should allow an empty action attribute', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(<form action="" />);
-        });
-        const node = container.firstChild;
-        expect(node.getAttribute('action')).toBe('');
-
-        await act(() => {
-          root.render(<form action="abc" />);
-        });
-        expect(node.hasAttribute('action')).toBe(true);
-
-        await act(() => {
-          root.render(<form action="" />);
-        });
-        expect(node.getAttribute('action')).toBe('');
-      });
-
-      it('allows empty string of a formAction to override the default of a parent', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(
-            <form action="hello">
-              <button formAction="" />,
-            </form>,
-          );
-        });
-        const node = container.firstChild.firstChild;
-        expect(node.hasAttribute('formaction')).toBe(true);
-        expect(node.getAttribute('formaction')).toBe('');
-      });
-
-      it('should not filter attributes for custom elements', async () => {
-        const container = document.createElement('div');
-        const root = ReactDOMClient.createRoot(container);
-        await act(() => {
-          root.render(
-            <some-custom-element action="" formAction="" href="" src="" />,
-          );
-        });
-        const node = container.firstChild;
-        expect(node.hasAttribute('action')).toBe(true);
-        expect(node.hasAttribute('formAction')).toBe(true);
-        expect(node.hasAttribute('href')).toBe(true);
-        expect(node.hasAttribute('src')).toBe(true);
-      });
-    }
+      const node = container.firstChild;
+      expect(node.hasAttribute('action')).toBe(true);
+      expect(node.hasAttribute('formAction')).toBe(true);
+      expect(node.hasAttribute('href')).toBe(true);
+      expect(node.hasAttribute('src')).toBe(true);
+    });
 
     it('should apply React-specific aliases to HTML elements', async () => {
       const container = document.createElement('div');
