@@ -122,9 +122,11 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
     const top = activeInnerBlockRanges.at(-1);
     if (top?.fallthrough === block.id) {
       activeInnerBlockRanges.pop();
-      // All active scopes must have either started before or within the last
-      // block-fallthrough range. In either case, they overlap this block-
-      // fallthrough range and can have their ranges extended.
+      /*
+       * All active scopes must have either started before or within the last
+       * block-fallthrough range. In either case, they overlap this block-
+       * fallthrough range and can have their ranges extended.
+       */
       for (const scope of activeScopes) {
         scope.range.start = makeInstructionId(
           Math.min(scope.range.start, top.range.start)
