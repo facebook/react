@@ -248,7 +248,7 @@ function* runWithEnvironment(
   memoizeFbtOperandsInSameScope(hir);
   yield log({
     kind: "hir",
-    name: "MemoizeFbtOperandsInSameScope",
+    name: "MemoizeFbtAndMacroOperandsInSameScope",
     value: hir,
   });
 
