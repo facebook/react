@@ -21,15 +21,13 @@ const __TODO_NEXT_RN_MAJOR__ = false;
 export const enableRefAsProp = __TODO_NEXT_RN_MAJOR__;
 export const disableStringRefs = __TODO_NEXT_RN_MAJOR__;
 export const enableFastJSX = __TODO_NEXT_RN_MAJOR__;
-export const disableLegacyMode = __TODO_NEXT_RN_MAJOR__;
 export const useModernStrictMode = __TODO_NEXT_RN_MAJOR__;
-export const enableReactTestRendererWarning = __TODO_NEXT_RN_MAJOR__;
 export const enableAsyncActions = __TODO_NEXT_RN_MAJOR__;
 export const consoleManagedByDevToolsDuringStrictMode = __TODO_NEXT_RN_MAJOR__;
 export const enableDeferRootSchedulingToMicrotask = __TODO_NEXT_RN_MAJOR__;
-export const alwaysThrottleRetries = __TODO_NEXT_RN_MAJOR__;
 export const enableInfiniteRenderLoopDetection = __TODO_NEXT_RN_MAJOR__;
 export const enableComponentStackLocations = __TODO_NEXT_RN_MAJOR__;
+export const enableUseDeferredValueInitialArg = __TODO_NEXT_RN_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // These are ready to flip after the next React npm release (or RN switches to
@@ -59,25 +57,25 @@ export const enableServerComponentLogs = __NEXT_RN_MAJOR__;
 // Not supported by flag script to avoid the special case.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
-// TODO: decide on React 19
-export const enableUseMemoCacheHook = true;
-export const enableNoCloningMemoCache = false;
-export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
-
 // -----------------------------------------------------------------------------
 // All other flags
 // -----------------------------------------------------------------------------
+export const alwaysThrottleRetries = false;
 export const enableCPUSuspense = false;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableLegacyCache = false;
+export const enableNoCloningMemoCache = false;
 export const enablePostpone = false;
+export const enableUseMemoCacheHook = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
+export const disableLegacyMode = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
+export const enableReactTestRendererWarning = false;
 export const enableSuspenseCallback = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
