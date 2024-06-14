@@ -504,9 +504,6 @@ __DEV__ &&
           return "SuspenseList";
         case 25:
           return "TracingMarker";
-        case 17:
-        case 28:
-          if (disableLegacyMode) break;
         case 1:
         case 0:
         case 14:
@@ -1199,7 +1196,6 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableFastJSX = dynamicFeatureFlags.enableFastJSX,
-      disableLegacyMode = dynamicFeatureFlags.disableLegacyMode,
       REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1398,36 +1394,20 @@ __DEV__ &&
     exports.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE =
       ReactSharedInternals;
     exports.act = function (callback) {
-      var prevIsBatchingLegacy = disableLegacyMode
-          ? !1
-          : ReactSharedInternals.isBatchingLegacy,
-        prevActQueue = ReactSharedInternals.actQueue,
+      var prevActQueue = ReactSharedInternals.actQueue,
         prevActScopeDepth = actScopeDepth;
       actScopeDepth++;
       var queue = (ReactSharedInternals.actQueue =
-        null !== prevActQueue ? prevActQueue : []);
-      disableLegacyMode || (ReactSharedInternals.isBatchingLegacy = !0);
-      var didAwaitActCall = !1;
+          null !== prevActQueue ? prevActQueue : []),
+        didAwaitActCall = !1;
       try {
-        disableLegacyMode ||
-          (ReactSharedInternals.didScheduleLegacyUpdate = !1);
         var result = callback();
-        var didScheduleLegacyUpdate = disableLegacyMode
-          ? !1
-          : ReactSharedInternals.didScheduleLegacyUpdate;
-        !prevIsBatchingLegacy &&
-          didScheduleLegacyUpdate &&
-          flushActQueue(queue);
-        disableLegacyMode ||
-          (ReactSharedInternals.isBatchingLegacy = prevIsBatchingLegacy);
       } catch (error$3) {
         ReactSharedInternals.thrownErrors.push(error$3);
       }
       if (0 < ReactSharedInternals.thrownErrors.length)
         throw (
-          (disableLegacyMode ||
-            (ReactSharedInternals.isBatchingLegacy = prevIsBatchingLegacy),
-          popActScope(prevActQueue, prevActScopeDepth),
+          (popActScope(prevActQueue, prevActScopeDepth),
           (callback = aggregateErrors(ReactSharedInternals.thrownErrors)),
           (ReactSharedInternals.thrownErrors.length = 0),
           callback)
@@ -1987,7 +1967,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-classic-50e89ec9f2-20240612";
+    exports.version = "19.0.0-www-classic-fb9a90fa48-20240614";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

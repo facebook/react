@@ -418,9 +418,6 @@ __DEV__ &&
           return "SuspenseList";
         case 25:
           return "TracingMarker";
-        case 17:
-        case 28:
-          if (disableLegacyMode) break;
         case 1:
         case 0:
         case 14:
@@ -809,10 +806,9 @@ __DEV__ &&
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-      enableFastJSX = dynamicFeatureFlags.enableFastJSX,
-      disableLegacyMode = dynamicFeatureFlags.disableLegacyMode,
-      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+        dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
+    dynamicFeatureFlags = dynamicFeatureFlags.enableFastJSX;
+    var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -857,7 +853,7 @@ __DEV__ &&
       specialPropKeyWarningShown;
     var didWarnAboutStringRefs = {};
     var didWarnAboutElementRef = {};
-    var enableFastJSXWithStringRefs = enableFastJSX && !0,
+    var enableFastJSXWithStringRefs = dynamicFeatureFlags && !0,
       enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !1,
       didWarnAboutKeySpread = {},
       ownerHasKeyUseWarning = {};
