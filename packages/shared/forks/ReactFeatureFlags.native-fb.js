@@ -31,75 +31,66 @@ export const {
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
+export const allowConcurrentByDefault = false;
+export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
+export const disableClientCache = true;
+export const disableCommentsAsDOMContainers = true;
+export const disableIEWorkarounds = true;
+export const disableInputAttributeSyncing = false;
+export const disableLegacyContext = false;
+export const disableLegacyMode = false;
+export const disableSchedulerTimeoutInWorkLoop = false;
+export const disableStringRefs = true;
+export const disableTextareaChildren = false;
 export const enableAsyncActions = true;
-export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
-export const enableRenderableContext = true;
-export const enableSchedulingProfiler = __PROFILE__;
-export const enableProfilerTimer = __PROFILE__;
-export const enableProfilerCommitHooks = __PROFILE__;
-export const enableProfilerNestedUpdatePhase = __PROFILE__;
-export const enableUpdaterTracking = __PROFILE__;
-export const enableUnifiedSyncLane = true;
+export const enableAsyncIterableChildren = false;
+export const enableBinaryFlight = true;
 export const enableCache = true;
 export const enableComponentStackLocations = true;
-export const enableLegacyCache = false;
-export const enableBinaryFlight = true;
-export const enableFlightReadableStream = true;
-export const enableAsyncIterableChildren = false;
-export const enableTaint = true;
-export const enablePostpone = false;
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
-export const disableCommentsAsDOMContainers = true;
-export const disableInputAttributeSyncing = false;
-export const disableIEWorkarounds = true;
-export const enableScopeAPI = false;
+export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
-export const enableSuspenseCallback = false;
-export const disableLegacyContext = false;
-export const enableTrustedTypesIntegration = false;
-export const disableTextareaChildren = false;
+export const enableDebugTracing = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+export const enableFilterEmptyStringAttributesDOM = true;
+export const enableFizzExternalRuntime = true;
+export const enableFlightReadableStream = true;
+export const enableGetInspectorDataForInstanceInProduction = true;
+export const enableLazyContextPropagation = false;
+export const enableLegacyCache = false;
+export const enableLegacyFBSupport = false;
+export const enableLegacyHidden = false;
+export const enableNoCloningMemoCache = false;
+export const enableOwnerStacks = false;
+export const enablePostpone = false;
+export const enableProfilerCommitHooks = __PROFILE__;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
+export const enableProfilerTimer = __PROFILE__;
+export const enableReactTestRendererWarning = false;
+export const enableRefAsProp = true;
+export const enableRenderableContext = true;
+export const enableRetryLaneExpiration = false;
+export const enableSchedulingProfiler = __PROFILE__;
+export const enableScopeAPI = false;
+export const enableServerComponentLogs = true;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
-export const enableCPUSuspense = true;
-export const enableUseMemoCacheHook = true;
-export const enableNoCloningMemoCache = false;
+export const enableSuspenseCallback = false;
+export const enableTaint = true;
+export const enableTransitionTracing = false;
+export const enableTrustedTypesIntegration = false;
+export const enableUnifiedSyncLane = true;
+export const enableUpdaterTracking = __PROFILE__;
+export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
+export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
-export const enableLegacyFBSupport = false;
-export const enableFilterEmptyStringAttributesDOM = true;
-export const enableGetInspectorDataForInstanceInProduction = true;
-export const useModernStrictMode = true;
-
+export const forceConcurrentByDefaultForTesting = false;
 export const renameElementSymbol = false;
-
-export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-
-export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableLazyContextPropagation = false;
-export const enableLegacyHidden = false;
-export const forceConcurrentByDefaultForTesting = false;
-export const allowConcurrentByDefault = false;
-
-export const enableTransitionTracing = false;
-
-export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-export const enableFizzExternalRuntime = true;
-
-export const enableUseDeferredValueInitialArg = true;
-export const disableClientCache = true;
-
-export const enableServerComponentLogs = true;
-
-export const enableRefAsProp = true;
-export const disableStringRefs = true;
-
-export const enableReactTestRendererWarning = false;
-export const disableLegacyMode = false;
-export const enableOwnerStacks = false;
+export const useModernStrictMode = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
