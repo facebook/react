@@ -46,6 +46,7 @@ function makePluginOptions(
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
   let enableChangeDetectionForDebugging = null;
+  let customMacros = null;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -142,6 +143,18 @@ function makePluginOptions(
     );
   }
 
+  const customMacrosMatch = /@customMacros\(([^)]+)\)/.exec(firstLine);
+  if (
+    customMacrosMatch &&
+    customMacrosMatch.length > 1 &&
+    customMacrosMatch[1].trim().length > 0
+  ) {
+    customMacros = customMacrosMatch[1]
+      .split(" ")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+
   let logs: Array<{ filename: string | null; event: LoggerEvent }> = [];
   let logger: Logger | null = null;
   if (firstLine.includes("@logger")) {
@@ -185,6 +198,7 @@ function makePluginOptions(
           },
         ],
       ]),
+      customMacros,
       enableEmitFreeze,
       enableEmitInstrumentForget,
       enableEmitHookGuards,

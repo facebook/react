@@ -888,7 +888,7 @@ export type InstructionValue =
   | JSXText
   | {
       kind: "BinaryExpression";
-      operator: t.BinaryExpression["operator"];
+      operator: Exclude<t.BinaryExpression["operator"], "|>">;
       left: Place;
       right: Place;
       loc: SourceLocation;
@@ -903,7 +903,7 @@ export type InstructionValue =
   | MethodCall
   | {
       kind: "UnaryExpression";
-      operator: t.UnaryExpression["operator"];
+      operator: Exclude<t.UnaryExpression["operator"], "throw" | "delete">;
       value: Place;
       loc: SourceLocation;
     }

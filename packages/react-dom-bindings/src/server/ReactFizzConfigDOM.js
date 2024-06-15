@@ -1601,6 +1601,73 @@ function pushStartAnchor(
   return children;
 }
 
+function pushStartObject(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+): ReactNodeList {
+  target.push(startChunkForTag('object'));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        case 'data': {
+          if (__DEV__) {
+            checkAttributeStringCoercion(propValue, 'data');
+          }
+          const sanitizedValue = sanitizeURL('' + propValue);
+          if (enableFilterEmptyStringAttributesDOM) {
+            if (sanitizedValue === '') {
+              if (__DEV__) {
+                console.error(
+                  'An empty string ("") was passed to the %s attribute. ' +
+                    'To fix this, either do not render the element at all ' +
+                    'or pass null to %s instead of an empty string.',
+                  propKey,
+                  propKey,
+                );
+              }
+              break;
+            }
+          }
+          target.push(
+            attributeSeparator,
+            stringToChunk('data'),
+            attributeAssign,
+            stringToChunk(escapeTextForBrowser(sanitizedValue)),
+            attributeEnd,
+          );
+          break;
+        }
+        default:
+          pushAttribute(target, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
+  if (typeof children === 'string') {
+    // Special case children as a string to avoid the unnecessary comment.
+    // TODO: Remove this special case after the general optimization is in place.
+    target.push(stringToChunk(encodeHTMLTextNode(children)));
+    return null;
+  }
+  return children;
+}
+
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -3569,6 +3636,8 @@ export function pushStartInstance(
       return pushStartForm(target, props, resumableState, renderState);
     case 'menuitem':
       return pushStartMenuItem(target, props);
+    case 'object':
+      return pushStartObject(target, props);
     case 'title':
       return pushTitle(
         target,
