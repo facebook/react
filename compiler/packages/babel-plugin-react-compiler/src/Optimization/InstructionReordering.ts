@@ -14,7 +14,6 @@ import {
   IdentifierId,
   Instruction,
   InstructionId,
-  MutableRange,
   Place,
   isExpressionBlockKind,
   makeInstructionId,
@@ -26,7 +25,6 @@ import {
   eachInstructionValueLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
-  terminalFallthrough,
 } from "../HIR/visitors";
 import { mayAllocate } from "../ReactiveScopes/InferReactiveScopeVariables";
 import { getOrInsertWith } from "../Utils/utils";
