@@ -53,7 +53,7 @@ fs.writeFileSync(
   `export default '${PLACEHOLDER_REACT_VERSION}';\n`
 );
 
-if (process.env.CIRCLE_NODE_TOTAL) {
+if (process.env.CIRCLE_NODE_TOTAL && process.env.CIRCLE_NODE_TOTAL !== '1') {
   // In CI, we use multiple concurrent processes. Allocate half the processes to
   // build the stable channel, and the other half for experimental. Override
   // the environment variables to "trick" the underlying build script.
