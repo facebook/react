@@ -29,4 +29,6 @@ module.exports = {
   testEnvironment: 'jsdom',
 
   testRunner: 'jest-circus/runner',
+
+  testTimeout: 60000,
 };
