@@ -115,7 +115,7 @@ jobs:
             node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - uses: actions/upload-artifact@v4
         with:
-          name: warning_messages
+          name: build
           path: build
   yarn_check_release_dependencies:
     runs-on: ubuntu-latest
@@ -129,7 +129,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: build
+          path: build
+          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: yarn check-release-dependencies
 
