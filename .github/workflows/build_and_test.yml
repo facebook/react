@@ -117,4 +117,19 @@ jobs:
         with:
           name: warning_messages
           path: build
+  yarn_check_release_dependencies:
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/node:18.20.1-browsers
+    env:
+      TZ: /usr/share/zoneinfo/America/Los_Angeles
+    needs:
+      - yarn_build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
+      - uses: ./.github/actions/setup_node_modules
+      - run: yarn check-release-dependencies
 
