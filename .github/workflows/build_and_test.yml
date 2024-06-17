@@ -1,0 +1,16 @@
+name: build_and_test
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+jobs:
+  yarn_flags:
+    container:
+      image: cimg/node:18.20.1-browsers
+    env:
+      TZ: /usr/share/zoneinfo/America/Los_Angeles
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
