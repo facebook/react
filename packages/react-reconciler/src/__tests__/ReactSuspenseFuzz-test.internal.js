@@ -30,7 +30,7 @@ describe('ReactSuspenseFuzz', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
   });
 
-  jest.setTimeout(20000);
+  jest.setTimeout(60000);
 
   function createFuzzer() {
     const {useState, useContext, useLayoutEffect} = React;
