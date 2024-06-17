@@ -33,8 +33,6 @@ aliases:
       paths:
         - ~/.cache/yarn
 
-  - &TEST_PARALLELISM 20
-
   - &attach_workspace
     at: build
 
@@ -303,7 +301,6 @@ jobs:
   run_devtools_tests_for_versions:
     docker: *docker
     environment: *environment
-    parallelism: *TEST_PARALLELISM
     parameters:
       version:
         type: string
@@ -318,7 +315,6 @@ jobs:
   run_devtools_e2e_tests_for_versions:
     docker: *docker
     environment: *environment
-    parallelism: *TEST_PARALLELISM
     parameters:
       version:
         type: string
@@ -393,7 +389,6 @@ jobs:
   yarn_test:
     docker: *docker
     environment: *environment
-    parallelism: *TEST_PARALLELISM
     parameters:
       args:
         type: string
@@ -405,7 +400,6 @@ jobs:
   yarn_test_build:
     docker: *docker
     environment: *environment
-    parallelism: *TEST_PARALLELISM
     parameters:
       args:
         type: string
