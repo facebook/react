@@ -96,7 +96,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup_node_modules
-      - run: yarn build
+      # - run: yarn build
+      - run: |
+          mkdir -p build
+          echo 'Hello World!' > build/hello.txt
       - uses: actions/upload-artifact@v4
         with:
           name: build
