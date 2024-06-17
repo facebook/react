@@ -31,16 +31,15 @@ import fbt from "fbt";
 const _ = fbt;
 function Component(t0) {
   const $ = _c(2);
+  const { value } = t0;
   let t1;
-  if ($[0] !== t0) {
-    const { value } = t0;
-
+  if ($[0] !== value) {
     t1 = fbt._(
       "Before text {paramName} after text more text and more and more and more and more and more and more and more and more and blah blah blah blah",
       [fbt._param("paramName", value)],
       { hk: "24ZPpO" },
     );
-    $[0] = t0;
+    $[0] = value;
     $[1] = t1;
   } else {
     t1 = $[1];

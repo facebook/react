@@ -26,7 +26,6 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
-import { mayAllocate } from "../ReactiveScopes/InferReactiveScopeVariables";
 import { getOrInsertWith } from "../Utils/utils";
 
 /**
@@ -93,6 +92,7 @@ type Nodes = Map<IdentifierId, Node>;
 type Node = {
   instruction: Instruction | null;
   dependencies: Set<IdentifierId>;
+  reorderability: Reorderability;
   depth: number | null;
 };
 
@@ -173,6 +173,7 @@ function reorderBlock(
   for (const instr of block.instructions) {
     const { lvalue, value } = instr;
     // Get or create a node for this lvalue
+    const reorderability = getReorderability(instr, references);
     const node = getOrInsertWith(
       locals,
       lvalue.identifier.id,
@@ -180,6 +181,7 @@ function reorderBlock(
         ({
           instruction: instr,
           dependencies: new Set(),
+          reorderability,
           depth: null,
         }) as Node
     );
@@ -187,7 +189,7 @@ function reorderBlock(
      * Ensure non-reoderable instructions have their order retained by
      * adding explicit dependencies to the previous such instruction.
      */
-    if (getReoderability(instr, references) === Reorderability.Nonreorderable) {
+    if (reorderability === Reorderability.Nonreorderable) {
       if (previous !== null) {
         node.dependencies.add(previous);
       }
@@ -298,9 +300,7 @@ function reorderBlock(
         continue;
       }
       CompilerError.invariant(
-        node.instruction != null &&
-          getReoderability(node.instruction, references) ===
-            Reorderability.Reorderable,
+        node.reorderability === Reorderability.Reorderable,
         {
           reason: `Expected all remaining instructions to be reorderable`,
           loc: node.instruction?.loc ?? block.terminal.loc,
@@ -355,11 +355,7 @@ function reorderBlock(
       if (node === undefined) {
         continue;
       }
-      if (
-        node.instruction !== null &&
-        getReoderability(node.instruction, references) ===
-          Reorderability.Reorderable
-      ) {
+      if (node.reorderability === Reorderability.Reorderable) {
         DEBUG && console.log(`save shared: $${id}`);
         shared.set(id, node);
       } else {
@@ -383,8 +379,7 @@ function getDepth(env: Environment, nodes: Nodes, id: IdentifierId): number {
     return node.depth;
   }
   node.depth = 0; // in case of cycles
-  let depth =
-    node.instruction != null && mayAllocate(env, node.instruction) ? 1 : 0;
+  let depth = node.reorderability === Reorderability.Reorderable ? 0 : 1;
   for (const dep of node.dependencies) {
     depth += getDepth(env, nodes, dep);
   }
@@ -419,7 +414,7 @@ function print(
     print(env, locals, shared, seen, dep, depth + 1);
   }
   console.log(
-    `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps.map((x) => `$${x}`).join(", ")}]`
+    `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps.map((x) => `$${x}`).join(", ")}] depth=${node.depth}`
   );
 }
 
@@ -470,7 +465,7 @@ enum Reorderability {
   Reorderable,
   Nonreorderable,
 }
-function getReoderability(
+function getReorderability(
   instr: Instruction,
   references: References
 ): Reorderability {

@@ -61,31 +61,31 @@ function Component(t0) {
   }
   const shouldShowMessage = t2;
   let t3;
-  if ($[4] !== shouldShowMessage) {
-    t3 = <div>{shouldShowMessage}</div>;
-    $[4] = shouldShowMessage;
+  if ($[4] !== children) {
+    t3 = <div>{children}</div>;
+    $[4] = children;
     $[5] = t3;
   } else {
     t3 = $[5];
   }
   let t4;
-  if ($[6] !== children) {
-    t4 = <div>{children}</div>;
-    $[6] = children;
+  if ($[6] !== shouldShowMessage) {
+    t4 = <div>{shouldShowMessage}</div>;
+    $[6] = shouldShowMessage;
     $[7] = t4;
   } else {
     t4 = $[7];
   }
   let t5;
-  if ($[8] !== t3 || $[9] !== t4) {
+  if ($[8] !== t4 || $[9] !== t3) {
     t5 = (
       <div>
-        {t3}
         {t4}
+        {t3}
       </div>
     );
-    $[8] = t3;
-    $[9] = t4;
+    $[8] = t4;
+    $[9] = t3;
     $[10] = t5;
   } else {
     t5 = $[10];
