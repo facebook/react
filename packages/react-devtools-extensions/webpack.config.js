@@ -1,6 +1,6 @@
 'use strict';
 
-const {resolve} = require('path');
+const {resolve, isAbsolute, relative} = require('path');
 const Webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const {
@@ -137,7 +137,19 @@ module.exports = {
     }),
     new Webpack.SourceMapDevToolPlugin({
       filename: '[file].map',
+      include: 'installHook.js',
       noSources: !__DEV__,
+      // https://github.com/webpack/webpack/issues/3603#issuecomment-1743147144
+      moduleFilenameTemplate(info) {
+        const {absoluteResourcePath, namespace, resourcePath} = info;
+
+        if (isAbsolute(absoluteResourcePath)) {
+          return relative(__dirname + '/build', absoluteResourcePath);
+        }
+
+        // Mimic Webpack's default behavior:
+        return `webpack://${namespace}/${resourcePath}`;
+      },
     }),
     new SourceMapIgnoreListPlugin({
       shouldIgnoreSource: (assetName, _source) => {
