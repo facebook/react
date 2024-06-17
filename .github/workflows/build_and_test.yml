@@ -15,3 +15,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup_node_modules
+  yarn_test:
+    runs-on: ubuntu-latest
+    container:
+      image: cimg/node:18.20.1-browsers
+    env:
+      TZ: /usr/share/zoneinfo/America/Los_Angeles
+    strategy:
+      matrix:
+        args:
+          # Intentionally passing these as strings instead of creating a
+          # separate parameter per CLI argument, since it's easier to
+          # control/see which combinations we want to run.
+          - "-r=stable --env=development"
+          - "-r=stable --env=production"
+          - "-r=experimental --env=development"
+          - "-r=experimental --env=production"
+          - "-r=www-classic --env=development --variant=false"
+          - "-r=www-classic --env=production --variant=false"
+          - "-r=www-classic --env=development --variant=true"
+          - "-r=www-classic --env=production --variant=true"
+          - "-r=www-modern --env=development --variant=false"
+          - "-r=www-modern --env=production --variant=false"
+          - "-r=www-modern --env=development --variant=true"
+          - "-r=www-modern --env=production --variant=true"
+          - "-r=xplat --env=development --variant=false"
+          - "-r=xplat --env=development --variant=true"
+          - "-r=xplat --env=production --variant=false"
+          - "-r=xplat --env=production --variant=true"
+
+          # TODO: Test more persistent configurations?
+          - '-r=stable --env=development --persistent'
+          - '-r=experimental --env=development --persistent'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+      - run: yarn test ${{ matrix.args }} --ci
+
