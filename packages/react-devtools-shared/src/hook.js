@@ -8,7 +8,6 @@
  * @flow
  */
 
-import type {BrowserTheme} from './frontend/types';
 import type {
   DevToolsHook,
   Handler,
@@ -17,6 +16,11 @@ import type {
   RendererInterface,
   DevToolsBackend,
 } from './backend/types';
+
+import {
+  FIREFOX_CONSOLE_DIMMING_COLOR,
+  ANSI_STYLE_DIMMING_TEMPLATE,
+} from 'react-devtools-shared/src/constants';
 
 declare var window: any;
 
@@ -225,13 +229,9 @@ export function installHook(target: any): DevToolsHook | null {
   // React and DevTools are connecting and the renderer interface isn't avaiable
   // and we want to be able to have consistent logging behavior for double logs
   // during the initial renderer.
-  function patchConsoleForInitialCommitInStrictMode({
-    hideConsoleLogsInStrictMode,
-    browserTheme,
-  }: {
+  function patchConsoleForInitialCommitInStrictMode(
     hideConsoleLogsInStrictMode: boolean,
-    browserTheme: BrowserTheme,
-  }) {
+  ) {
     const overrideConsoleMethods = [
       'error',
       'group',
@@ -266,36 +266,15 @@ export function installHook(target: any): DevToolsHook | null {
           : targetConsole[method]);
 
         const overrideMethod = (...args: $ReadOnlyArray<any>) => {
+          // Dim the text color of the double logs if we're not hiding them.
           if (!hideConsoleLogsInStrictMode) {
-            // Dim the text color of the double logs if we're not
-            // hiding them.
-            let color;
-            switch (method) {
-              case 'warn':
-                color =
-                  browserTheme === 'light'
-                    ? process.env.LIGHT_MODE_DIMMED_WARNING_COLOR
-                    : process.env.DARK_MODE_DIMMED_WARNING_COLOR;
-                break;
-              case 'error':
-                color =
-                  browserTheme === 'light'
-                    ? process.env.LIGHT_MODE_DIMMED_ERROR_COLOR
-                    : process.env.DARK_MODE_DIMMED_ERROR_COLOR;
-                break;
-              case 'log':
-              default:
-                color =
-                  browserTheme === 'light'
-                    ? process.env.LIGHT_MODE_DIMMED_LOG_COLOR
-                    : process.env.DARK_MODE_DIMMED_LOG_COLOR;
-                break;
-            }
-
-            if (color) {
-              originalMethod(...formatWithStyles(args, `color: ${color}`));
+            // Firefox doesn't support ANSI escape sequences
+            if (__IS_FIREFOX__) {
+              originalMethod(
+                ...formatWithStyles(args, FIREFOX_CONSOLE_DIMMING_COLOR),
+              );
             } else {
-              throw Error('Console color is not defined');
+              originalMethod(ANSI_STYLE_DIMMING_TEMPLATE, ...args);
             }
           }
         };
@@ -456,12 +435,8 @@ export function installHook(target: any): DevToolsHook | null {
       if (isStrictMode) {
         const hideConsoleLogsInStrictMode =
           window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
-        const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
 
-        patchConsoleForInitialCommitInStrictMode({
-          hideConsoleLogsInStrictMode,
-          browserTheme,
-        });
+        patchConsoleForInitialCommitInStrictMode(hideConsoleLogsInStrictMode);
       } else {
         unpatchConsoleForInitialCommitInStrictMode();
       }
