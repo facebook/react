@@ -28,8 +28,10 @@ const DEV_ROLLUP_CONFIG = {
   plugins: [
     typescript({
       tsconfig: "./tsconfig.json",
+      exclude: ["**/__tests__/**"],
       compilerOptions: {
         noEmit: true,
+        declaration: true,
       },
     }),
     json(),

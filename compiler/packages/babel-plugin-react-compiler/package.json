@@ -3,6 +3,7 @@
   "version": "0.0.0-experimental-179941d-20240614",
   "description": "Babel plugin for React Compiler.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "files": [
     "dist"
