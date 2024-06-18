@@ -379,7 +379,7 @@ function getDepth(env: Environment, nodes: Nodes, id: IdentifierId): number {
     return node.depth;
   }
   node.depth = 0; // in case of cycles
-  let depth = node.reorderability === Reorderability.Reorderable ? 0 : 1;
+  let depth = node.reorderability === Reorderability.Reorderable ? 1 : 10;
   for (const dep of node.dependencies) {
     depth += getDepth(env, nodes, dep);
   }
