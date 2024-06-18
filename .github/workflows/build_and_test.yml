@@ -137,6 +137,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          path: build
           merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: echo "${{ github.sha }}" >> build/COMMIT_SHA
@@ -176,6 +177,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          path: build
           merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: yarn test --build ${{ matrix.args }} --ci
@@ -192,6 +194,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          path: build
           merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: yarn lint-build
@@ -208,6 +211,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          path: build
           merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: yarn check-release-dependencies
@@ -224,6 +228,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          path: build
           merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: |
@@ -242,6 +247,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          path: build
           merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - name: Restore yarn cache
@@ -275,6 +281,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          path: build
           merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
@@ -301,6 +308,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: devtools
+          path: build
       - uses: ./.github/actions/setup_node_modules
       - run: |
           npx playwright install
@@ -320,6 +328,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
         with:
           merge-multiple: true
