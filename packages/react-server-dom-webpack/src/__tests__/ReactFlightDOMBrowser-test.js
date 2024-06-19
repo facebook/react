@@ -24,6 +24,7 @@ let serverExports;
 let webpackMap;
 let webpackServerMap;
 let act;
+let assertConsoleErrorDev;
 let React;
 let ReactDOM;
 let ReactDOMClient;
@@ -69,6 +70,8 @@ describe('ReactFlightDOMBrowser', () => {
     patchMessageChannel(Scheduler);
 
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -566,6 +569,10 @@ describe('ReactFlightDOMBrowser', () => {
         gamesExpectedValue,
     );
 
+    if (gate(flags => flags.enableOwnerStacks)) {
+      // TODO: assertConsoleServerErrorDev
+      assertConsoleErrorDev([theError.message]);
+    }
     expect(reportedErrors).toEqual([theError]);
     reportedErrors = [];
 
@@ -790,6 +797,10 @@ describe('ReactFlightDOMBrowser', () => {
       : '<p>digest("for reasons")</p>';
     expect(container.innerHTML).toBe(expectedValue);
 
+    if (gate(flags => flags.enableOwnerStacks)) {
+      // TODO: assertConsoleServerErrorDev
+      assertConsoleErrorDev(['for reasons']);
+    }
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
@@ -954,6 +965,11 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe(
       __DEV__ ? 'Oops! + a dev digest' : 'digest("Oops!")',
     );
+
+    if (gate(flags => flags.enableOwnerStacks)) {
+      // TODO: assertConsoleServerErrorDev
+      assertConsoleErrorDev(['Oops!']);
+    }
     expect(reportedErrors.length).toBe(1);
     expect(reportedErrors[0].message).toBe('Oops!');
   });

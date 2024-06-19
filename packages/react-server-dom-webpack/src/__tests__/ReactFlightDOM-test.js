@@ -841,6 +841,10 @@ describe('ReactFlightDOM', () => {
         expectedGamesValue,
     );
 
+    if (gate(flags => flags.enableOwnerStacks)) {
+      // TODO: assertConsoleServerErrorDev
+      assertConsoleErrorDev([theError.message]);
+    }
     expect(reportedErrors).toEqual([theError]);
     reportedErrors = [];
 
@@ -1129,6 +1133,10 @@ describe('ReactFlightDOM', () => {
       expect(container.innerHTML).toBe('<p>digest("for reasons")</p>');
     }
 
+    if (gate(flags => flags.enableOwnerStacks)) {
+      // TODO: assertConsoleServerErrorDev
+      assertConsoleErrorDev(['for reasons']);
+    }
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
@@ -1303,6 +1311,10 @@ describe('ReactFlightDOM', () => {
       expect(container.innerHTML).toBe('<p>digest("bug in the bundler")</p>');
     }
 
+    if (gate(flags => flags.enableOwnerStacks)) {
+      // TODO: assertConsoleServerErrorDev
+      assertConsoleErrorDev(['bug in the bundler']);
+    }
     expect(reportedErrors).toEqual(['bug in the bundler']);
   });
 
@@ -1419,6 +1431,10 @@ describe('ReactFlightDOM', () => {
         ? '<p>Server throw + a dev digest</p>'
         : '<p>digest("Server throw")</p>',
     );
+    if (gate(flags => flags.enableOwnerStacks)) {
+      // TODO: assertConsoleServerErrorDev
+      assertConsoleErrorDev([theError.message]);
+    }
     expect(reportedErrors).toEqual([theError]);
   });
 
