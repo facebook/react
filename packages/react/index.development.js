@@ -75,4 +75,6 @@ export {
   useTransition,
   useActionState,
   version,
+  act, // DEV-only
+  captureOwnerStack, // DEV-only
 } from './src/ReactClient';

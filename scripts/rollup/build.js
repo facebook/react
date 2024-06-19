@@ -567,16 +567,31 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   // .stable.js
   // .experimental.js
   // .js
+  // or any of those plus .development.js
 
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
+    const developmentFBEntry = resolvedFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentFBEntry)) {
+      return developmentFBEntry;
+    }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
     const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    const developmentGenericFBEntry = resolvedGenericFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentGenericFBEntry)) {
+      return developmentGenericFBEntry;
+    }
     if (fs.existsSync(resolvedGenericFBEntry)) {
       return resolvedGenericFBEntry;
     }
@@ -586,6 +601,10 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     '.js',
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
+  const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
+  if (fs.existsSync(devForkedEntry)) {
+    return devForkedEntry;
+  }
   if (fs.existsSync(resolvedForkedEntry)) {
     return resolvedForkedEntry;
   }
@@ -604,7 +623,8 @@ async function createBundle(bundle, bundleType) {
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
-    isFBWWWBundle || isFBRNBundle
+    isFBWWWBundle || isFBRNBundle,
+    !isProductionBundleType(bundleType)
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
