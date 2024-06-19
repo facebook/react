@@ -84,10 +84,16 @@ function createDehydrated(
     preview_long: formatDataForPreview(data, true),
     preview_short: formatDataForPreview(data, false),
     name:
-      !data.constructor || data.constructor.name === 'Object'
+      typeof data.constructor !== 'function' || data.constructor.name === 'Object'
         ? ''
         : data.constructor.name,
   };
+
+  try {
+    structuredClone(dehydrated.name);
+  } catch (_) {
+    dehydrated.name = '';
+  }
 
   if (type === 'array' || type === 'typed_array') {
     dehydrated.size = data.length;
@@ -240,10 +246,16 @@ export function dehydrate(
           preview_short: formatDataForPreview(data, false),
           preview_long: formatDataForPreview(data, true),
           name:
-            !data.constructor || data.constructor.name === 'Object'
+            typeof data.constructor !== 'function' || data.constructor.name === 'Object'
               ? ''
               : data.constructor.name,
         };
+
+        try {
+          structuredClone(unserializableValue.name);
+        } catch (_) {
+          unserializableValue.name = '';
+        }
 
         // TRICKY
         // Don't use [...spread] syntax for this purpose.
@@ -332,8 +344,14 @@ export function dehydrate(
         readonly: true,
         preview_short: formatDataForPreview(data, false),
         preview_long: formatDataForPreview(data, true),
-        name: data.constructor.name,
+        name: typeof data.constructor === 'function' ? data.constructor.name : '',
       };
+
+      try {
+        structuredClone(value.name);
+      } catch (_) {
+        value.name = '';
+      }
 
       getAllEnumerableKeys(data).forEach(key => {
         const keyAsString = key.toString();
