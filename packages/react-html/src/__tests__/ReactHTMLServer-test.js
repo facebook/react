@@ -31,6 +31,6 @@ describe('ReactHTML', () => {
     }
 
     const html = await ReactHTML.renderToMarkup(<Component />);
-    expect(html).toBe('hi');
+    expect(html).toBe('<div>hello world</div>');
   });
 });

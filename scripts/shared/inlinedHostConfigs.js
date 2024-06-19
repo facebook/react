@@ -395,6 +395,7 @@ module.exports = [
     entryPoints: [
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
+      'react-html/react-html.react-server.js',
     ],
     paths: [
       'react-dom',
@@ -404,6 +405,7 @@ module.exports = [
       'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Browser and *Node files
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
+      'react-html',
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
