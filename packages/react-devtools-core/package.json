@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "shell-quote": "^1.6.1",
-    "ws": "^7"
+    "ws": "^8.17.1"
   },
   "devDependencies": {
     "cross-env": "^3.1.4",
