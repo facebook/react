@@ -10,7 +10,9 @@
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {HostDispatcher} from './shared/ReactDOMTypes';
 
-import {NoEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+// This should line up with NoEventPriority from react-reconciler/src/ReactEventPriorities
+// but we can't depend on the react-reconciler from this isomorphic code.
+export const NoEventPriority: EventPriority = (0: any);
 
 type ReactDOMInternals = {
   d /* ReactDOMCurrentDispatcher */: HostDispatcher,
