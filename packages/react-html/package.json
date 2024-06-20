@@ -31,6 +31,8 @@
     ".": {
       "react-server": "./react-dom.react-server.js",
       "default": "./index.js"
-    }
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
   }
 }
