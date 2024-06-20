@@ -43,6 +43,12 @@ module.exports = {
 
     "multiline-comment-style": ["error", "starred-block"],
 
+    /**
+     * We sometimes need to check for control characters in regexes for things like preserving input
+     * strings
+     */
+    "no-control-regex": "off",
+
     "@typescript-eslint/no-empty-function": "off",
 
     /*
@@ -82,7 +88,7 @@ module.exports = {
     ],
     "@typescript-eslint/array-type": ["error", { default: "generic" }],
     "@typescript-eslint/triple-slash-reference": "off",
-    "@typescript-eslint/no-var-requires": "off"
+    "@typescript-eslint/no-var-requires": "off",
   },
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint"],
