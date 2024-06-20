@@ -65,6 +65,7 @@ function transform(file, enc, cb) {
   });
 }
 
+
 gs([
   'packages/**/*.js',
   '!packages/*/npm/**/*.js',
@@ -77,8 +78,7 @@ gs([
   through.obj(transform, cb => {
     const warningsArray = Array.from(warnings);
     warningsArray.sort();
-    process.stdout.write(
-      `/**
+    const outputContent = `/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -90,8 +90,12 @@ gs([
  */
 
 export default ${JSON.stringify(warningsArray, null, 2)};
-`
-    );
+`;
+    if (outputToFile) {
+      fs.writeFileSync(outputFilePath, outputContent); 
+    } else {
+      process.stdout.write(outputContent);
+    }
     cb();
   })
 );
