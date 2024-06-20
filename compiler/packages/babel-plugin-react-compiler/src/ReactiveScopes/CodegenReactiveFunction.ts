@@ -2157,10 +2157,18 @@ function codegenInstructionValue(
 }
 
 /**
- * Due to a bug in earlier Babel versions, JSX string attributes with double quotes or with unicode characters
- * may be escaped unnecessarily. To avoid trigger this Babel bug, we use a JsxExpressionContainer for such strings.
+ * Due to a bug in earlier Babel versions, JSX string attributes with double quotes, unicode characters, or special
+ * control characters such as \n may be escaped unnecessarily. To avoid trigger this Babel bug, we use a
+ * JsxExpressionContainer for such strings.
+ *
+ * u0000 to u001F: C0 control codes
+ * u007F         : Delete character
+ * u0080 to u009F: C1 control codes
+ * u00A0 to uFFFF: All non-basic Latin characters
+ * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
  */
-const STRING_REQUIRES_EXPR_CONTAINER_PATTERN = /[\u{0080}-\u{FFFF}]|"/u;
+const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
+  /[\u{0000}-\u{001F}|\u{007F}|\u{0080}-\u{FFFF}]|"/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute
