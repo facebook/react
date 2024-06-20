@@ -104,7 +104,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
       passName,
       <TextTabContent
         output={text}
-        diff={lastPassOutput ?? null}
+        diff={passName !== "HIR" ? lastPassOutput : null}
         showInfoPanel={true}
       ></TextTabContent>
     );
@@ -195,7 +195,7 @@ function Output({ store, compilerOutput }: Props) {
       if (result.kind === "hir" || result.kind === "reactive") {
         currResult += `function ${result.fnName}\n\n${result.value}`;
       }
-      if (currResult !== lastResult) {
+      if (passName !== "HIR" && currResult !== lastResult) {
         changedPasses.add(passName);
       }
       lastResult = currResult;
