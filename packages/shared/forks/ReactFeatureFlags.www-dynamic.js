@@ -40,6 +40,8 @@ export const disableLegacyMode = __VARIANT__;
 // NOTE: This feature will only work in DEV mode; all callsites are wrapped with __DEV__.
 export const enableDebugTracing = __EXPERIMENTAL__;
 
+export const enableSchedulingProfiler = __VARIANT__;
+
 export const enableInfiniteRenderLoopDetection = __VARIANT__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
