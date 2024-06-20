@@ -8,20 +8,29 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-
-import type {
-  Request,
-  PostponedState,
-  ErrorInfo,
-} from 'react-server/src/ReactFizzServer';
+import type {LazyComponent} from 'react/src/ReactLazy';
 
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
-  startWork,
-  startFlowing,
-  abort,
+  createRequest as createFlightRequest,
+  startWork as startFlightWork,
+  startFlowing as startFlightFlowing,
+  abort as abortFlight,
+} from 'react-server/src/ReactFlightServer';
+
+import {
+  createResponse as createFlightResponse,
+  getRoot as getFlightRoot,
+  processBinaryChunk as processFlightBinaryChunk,
+  close as closeFlight,
+} from 'react-client/src/ReactFlightClient';
+
+import {
+  createRequest as createFizzRequest,
+  startWork as startFizzWork,
+  startFlowing as startFizzFlowing,
+  abort as abortFizz,
 } from 'react-server/src/ReactFizzServer';
 
 import {
@@ -30,20 +39,60 @@ import {
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
 
+type ReactMarkupNodeList =
+  // This is the intersection of ReactNodeList and ReactClientValue minus
+  // Client/ServerReferences.
+  | React$Element<React$AbstractComponent<any, any>>
+  | LazyComponent<ReactMarkupNodeList, any>
+  | React$Element<string>
+  | string
+  | boolean
+  | number
+  | symbol
+  | null
+  | void
+  | bigint
+  | $AsyncIterable<ReactMarkupNodeList, ReactMarkupNodeList, void>
+  | $AsyncIterator<ReactMarkupNodeList, ReactMarkupNodeList, void>
+  | Iterable<ReactMarkupNodeList>
+  | Iterator<ReactMarkupNodeList>
+  | Array<ReactMarkupNodeList>
+  | Promise<ReactMarkupNodeList>; // Thenable<ReactMarkupNodeList>
+
 type MarkupOptions = {
   identifierPrefix?: string,
   signal?: AbortSignal,
 };
 
+function noServerCallOrFormAction() {
+  throw new Error(
+    'renderToMarkup should not have emitted Server References. This is a bug in React.',
+  );
+}
+
 export function renderToMarkup(
-  children: ReactNodeList,
+  children: ReactMarkupNodeList,
   options?: MarkupOptions,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    let didFatal = false;
-    let fatalError = null;
+    const textEncoder = new TextEncoder();
+    const flightDestination = {
+      push(chunk: string | null): boolean {
+        if (chunk !== null) {
+          // TODO: Legacy should not use binary streams.
+          processFlightBinaryChunk(flightResponse, textEncoder.encode(chunk));
+        } else {
+          closeFlight(flightResponse);
+        }
+        return true;
+      },
+      destroy(error: mixed): void {
+        abortFizz(fizzRequest, error);
+        reject(error);
+      },
+    };
     let buffer = '';
-    const destination = {
+    const fizzDestination = {
       // $FlowFixMe[missing-local-annot]
       push(chunk) {
         if (chunk !== null) {
@@ -56,6 +105,7 @@ export function renderToMarkup(
       },
       // $FlowFixMe[missing-local-annot]
       destroy(error) {
+        abortFlight(flightRequest, error);
         reject(error);
       },
     };
@@ -65,12 +115,33 @@ export function renderToMarkup(
       // client rendering mode because there's no client rendering here.
       reject(error);
     }
+    const flightRequest = createFlightRequest(
+      // $FlowFixMe: This should be a subtype but not everything is typed covariant.
+      children,
+      null,
+      onError,
+      options ? options.identifierPrefix : undefined,
+      undefined,
+      'Markup',
+      undefined,
+    );
+    const flightResponse = createFlightResponse(
+      null,
+      null,
+      noServerCallOrFormAction,
+      noServerCallOrFormAction,
+      undefined,
+      undefined,
+      undefined,
+    );
     const resumableState = createResumableState(
       options ? options.identifierPrefix : undefined,
       undefined,
     );
-    const request = createRequest(
-      children,
+    const root = getFlightRoot<ReactNodeList>(flightResponse);
+    const fizzRequest = createFizzRequest(
+      // $FlowFixMe: Thenables as children are supported.
+      root,
       resumableState,
       createRenderState(resumableState, true),
       createRootFormatContext(),
@@ -86,17 +157,21 @@ export function renderToMarkup(
     if (options && options.signal) {
       const signal = options.signal;
       if (signal.aborted) {
-        abort(request, (signal: any).reason);
+        abortFlight(flightRequest, (signal: any).reason);
+        abortFizz(fizzRequest, (signal: any).reason);
       } else {
         const listener = () => {
-          abort(request, (signal: any).reason);
+          abortFlight(flightRequest, (signal: any).reason);
+          abortFizz(fizzRequest, (signal: any).reason);
           signal.removeEventListener('abort', listener);
         };
         signal.addEventListener('abort', listener);
       }
     }
-    startWork(request);
-    startFlowing(request, destination);
+    startFlightWork(flightRequest);
+    startFlightFlowing(flightRequest, flightDestination);
+    startFizzWork(fizzRequest);
+    startFizzFlowing(fizzRequest, fizzDestination);
   });
 }
 

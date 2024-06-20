@@ -7,20 +7,82 @@
  * @flow
  */
 
-export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
-export * from 'react-client/src/ReactClientConsoleConfigBrowser';
-export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
+import type {Thenable} from 'shared/ReactTypes';
 
-export type Response = any;
-export opaque type ModuleLoading = mixed;
-export opaque type SSRModuleMap = mixed;
-export opaque type ServerManifest = mixed;
+export * from 'react-html/src/ReactHTMLLegacyClientStreamConfig.js';
+export * from 'react-client/src/ReactClientConsoleConfigPlain';
+
+export type ModuleLoading = null;
+export type SSRModuleMap = null;
+export opaque type ServerManifest = null;
 export opaque type ServerReferenceId = string;
-export opaque type ClientReferenceMetadata = mixed;
-export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
-export const resolveClientReference: any = null;
-export const resolveServerReference: any = null;
-export const preloadModule: any = null;
-export const requireModule: any = null;
-export const prepareDestinationForModule: any = null;
+export opaque type ClientReferenceMetadata = null;
+export opaque type ClientReference<T> = null; // eslint-disable-line no-unused-vars
+
+export function prepareDestinationForModule(
+  moduleLoading: ModuleLoading,
+  nonce: ?string,
+  metadata: ClientReferenceMetadata,
+) {
+  throw new Error(
+    'renderToMarkup should not have emitted Client References. This is a bug in React.',
+  );
+}
+
+export function resolveClientReference<T>(
+  bundlerConfig: SSRModuleMap,
+  metadata: ClientReferenceMetadata,
+): ClientReference<T> {
+  throw new Error(
+    'renderToMarkup should not have emitted Client References. This is a bug in React.',
+  );
+}
+
+export function resolveServerReference<T>(
+  config: ServerManifest,
+  id: ServerReferenceId,
+): ClientReference<T> {
+  throw new Error(
+    'renderToMarkup should not have emitted Server References. This is a bug in React.',
+  );
+}
+
+export function preloadModule<T>(
+  metadata: ClientReference<T>,
+): null | Thenable<T> {
+  return null;
+}
+
+export function requireModule<T>(metadata: ClientReference<T>): T {
+  throw new Error(
+    'renderToMarkup should not have emitted Client References. This is a bug in React.',
+  );
+}
+
 export const usedWithSSR = true;
+
+type HintCode = string;
+type HintModel<T: HintCode> = null; // eslint-disable-line no-unused-vars
+
+export function dispatchHint<Code: HintCode>(
+  code: Code,
+  model: HintModel<Code>,
+): void {
+  // Should never happen.
+}
+
+export function preinitModuleForSSR(
+  href: string,
+  nonce: ?string,
+  crossOrigin: ?string,
+) {
+  // Should never happen.
+}
+
+export function preinitScriptForSSR(
+  href: string,
+  nonce: ?string,
+  crossOrigin: ?string,
+) {
+  // Should never happen.
+}
