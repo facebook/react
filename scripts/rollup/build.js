@@ -85,9 +85,11 @@ function parseRequestedNames(names, toCase) {
   return result;
 }
 
+const argvType = Array.isArray(argv.type) ? argv.type : [argv.type];
 const requestedBundleTypes = argv.type
-  ? parseRequestedNames([argv.type], 'uppercase')
+  ? parseRequestedNames(argvType, 'uppercase')
   : [];
+
 const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
@@ -528,8 +530,8 @@ function shouldSkipBundle(bundle, bundleType) {
     return true;
   }
   if (requestedBundleTypes.length > 0) {
-    const isAskingForDifferentType = requestedBundleTypes.every(
-      requestedType => bundleType.indexOf(requestedType) === -1
+    const isAskingForDifferentType = requestedBundleTypes.some(
+      requestedType => !bundleType.includes(requestedType)
     );
     if (isAskingForDifferentType) {
       return true;
