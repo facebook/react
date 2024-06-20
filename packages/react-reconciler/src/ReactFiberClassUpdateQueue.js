@@ -478,7 +478,7 @@ export function suspendIfUpdateReadFromEntangledAsyncAction() {
   // need to suspend until the action has finished, so that it's batched
   // together with future updates in the same action.
   // TODO: Once we support hooks inside useMemo (or an equivalent
-  // memoization boundary like Forget), hoist this logic so that it only
+  // memoization boundary like Compiler), hoist this logic so that it only
   // suspends if the memo boundary produces a new value.
   if (didReadFromEntangledAsyncAction) {
     const entangledActionThenable = peekEntangledActionThenable();

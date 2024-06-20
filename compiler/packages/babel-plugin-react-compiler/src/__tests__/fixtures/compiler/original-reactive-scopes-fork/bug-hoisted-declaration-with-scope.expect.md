@@ -13,7 +13,7 @@ import { StaticText1, Stringify, identity, useHook } from "shared-runtime";
  * Found differences in evaluator results
  * Non-forget (expected):
  * (kind: ok) "[[ function params=1 ]]"
- * Forget:
+ * Compiler:
  * (kind: exception) Cannot access 'dispatcher' before initialization
  */
 function useFoo({ onClose }) {
@@ -57,7 +57,7 @@ import { StaticText1, Stringify, identity, useHook } from "shared-runtime";
  * Found differences in evaluator results
  * Non-forget (expected):
  * (kind: ok) "[[ function params=1 ]]"
- * Forget:
+ * Compiler:
  * (kind: exception) Cannot access 'dispatcher' before initialization
  */
 function useFoo(t0) {

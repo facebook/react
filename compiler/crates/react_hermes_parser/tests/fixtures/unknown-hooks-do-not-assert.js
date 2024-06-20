@@ -1,4 +1,4 @@
-// Forget currently bails out when it detects a potential mutation (Effect.Mutate)
+// Compiler currently bails out when it detects a potential mutation (Effect.Mutate)
 // to an immutable value. This should not apply to unknown / untyped hooks.
 
 // Default feature flags:

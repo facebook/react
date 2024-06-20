@@ -4,7 +4,7 @@ expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
 input_file: crates/react_hermes_parser/tests/fixtures/ssa-reassign-in-rval.js
 ---
 Input:
-// Forget should call the original x (x = foo()) to compute result
+// Compiler should call the original x (x = foo()) to compute result
 function Component() {
   let x = foo();
   let result = x((x = bar()), 5);

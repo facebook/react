@@ -90,7 +90,7 @@ import { assertExhaustive } from "../Utils/utils";
  * the control-flow graph. We track whether each IdentifierId is reactive and terminate when
  * there are no changes after a given pass over the CFG.
  *
- * Note that in Forget it's possible to create a "readonly" reference to a value where
+ * Note that in Compiler it's possible to create a "readonly" reference to a value where
  * the reference is created within that value's mutable range:
  *
  * ```javascript

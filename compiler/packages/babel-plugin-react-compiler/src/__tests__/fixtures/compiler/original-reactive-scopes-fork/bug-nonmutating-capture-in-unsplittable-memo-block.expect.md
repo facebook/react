@@ -28,7 +28,7 @@ import { identity, mutate } from "shared-runtime";
  * Non-forget (expected):
  * (kind: ok) [{"wat0":"joe"},3]
  * [{"wat0":"joe"},3]
- * Forget:
+ * Compiler:
  * (kind: ok) [{"wat0":"joe"},3]
  * [[ (exception in render) Error: oh no! ]]
  *
@@ -86,7 +86,7 @@ import { identity, mutate } from "shared-runtime";
  * Non-forget (expected):
  * (kind: ok) [{"wat0":"joe"},3]
  * [{"wat0":"joe"},3]
- * Forget:
+ * Compiler:
  * (kind: ok) [{"wat0":"joe"},3]
  * [[ (exception in render) Error: oh no! ]]
  *

@@ -174,7 +174,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
     makeWatchRunner((state) => onChange(worker, state), opts.filter);
     if (opts.filter) {
       /**
-       * Warm up wormers when in watch mode. Loading the Forget babel plugin
+       * Warm up wormers when in watch mode. Loading the Compiler babel plugin
        * and all of its transitive dependencies takes 1-3s (per worker) on a M1.
        * As jest-worker dispatches tasks using a round-robin strategy, we can
        * avoid an additional 1-3s wait on the first num_workers runs by warming

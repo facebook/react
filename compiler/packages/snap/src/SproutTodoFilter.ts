@@ -7,7 +7,7 @@
 
 const skipFilter = new Set([
   /**
-   * Observable different in logging between Forget and non-Forget
+   * Observable different in logging between Compiler and non-Compiler
    */
   "early-return-no-declarations-reassignments-dependencies",
 

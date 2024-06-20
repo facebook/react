@@ -1,7 +1,7 @@
 // @compilationMode(infer)
 import { useNoAlias } from "shared-runtime";
 
-// This should be compiled by Forget
+// This should be compiled by Compiler
 function useFoo(value1, value2) {
   return {
     value: useNoAlias(value1 + value2),

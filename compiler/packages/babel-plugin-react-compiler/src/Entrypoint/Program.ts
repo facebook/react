@@ -254,8 +254,8 @@ export function compileProgram(
   }
 
   /*
-   * Record lint errors and critical errors as depending on Forget's config,
-   * we may still need to run Forget's analysis on every function (even if we
+   * Record lint errors and critical errors as depending on Compiler's config,
+   * we may still need to run Compiler's analysis on every function (even if we
    * have already encountered errors) for reporting.
    */
   const suppressions = findProgramSuppressions(
@@ -343,7 +343,7 @@ export function compileProgram(
     }
   };
 
-  // Main traversal to compile with Forget
+  // Main traversal to compile with Compiler
   program.traverse(
     {
       ClassDeclaration(node: NodePath<t.ClassDeclaration>) {
@@ -449,7 +449,7 @@ export function compileProgram(
     }
   }
 
-  // Forget compiled the component, we need to update existing imports of useMemoCache
+  // Compiler compiled the component, we need to update existing imports of useMemoCache
   if (compiledFns.length > 0) {
     let needsMemoCacheFunctionImport = false;
     for (const fn of compiledFns) {

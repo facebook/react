@@ -6,7 +6,7 @@
 
 import { useMemo } from "react";
 
-// Here, Forget infers that the memo block dependency is input1
+// Here, Compiler infers that the memo block dependency is input1
 // 1. StartMemoize is emitted before the function expression
 //    (and thus before the depslist arg and its rvalues)
 // 2. x and y's overlapping reactive scopes forces y's reactive

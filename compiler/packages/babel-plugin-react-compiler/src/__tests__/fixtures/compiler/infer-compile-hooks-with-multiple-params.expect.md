@@ -5,7 +5,7 @@
 // @compilationMode(infer)
 import { useNoAlias } from "shared-runtime";
 
-// This should be compiled by Forget
+// This should be compiled by Compiler
 function useFoo(value1, value2) {
   return {
     value: useNoAlias(value1 + value2),
@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime"; // @compilationMode(infer)
 import { useNoAlias } from "shared-runtime";
 
-// This should be compiled by Forget
+// This should be compiled by Compiler
 function useFoo(value1, value2) {
   const $ = _c(2);
 

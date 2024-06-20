@@ -36,7 +36,7 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  * the mutable range of multiple reactive scopes. We prefer to avoid executing instructions twice
  * for performance reasons (side effects are less of a concern bc components are required to be
  * idempotent), so we cannot simply repeat the instruction once for each scope. Instead, the only
- * option is to combine the two scopes into one. This is an area where an eventual Forget IDE
+ * option is to combine the two scopes into one. This is an area where an eventual Compiler IDE
  * could provide real-time feedback to the developer that two computations are accidentally merged.
  *
  * ## Detailed Walkthrough

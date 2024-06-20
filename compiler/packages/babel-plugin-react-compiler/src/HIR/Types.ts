@@ -25,7 +25,7 @@ export type PrimitiveType = { kind: "Primitive" };
  * OwnPropertyDescriptors and properties present in the prototype chain.
  *
  * {@link ObjectShape.functionType} is always present on the shape of a {@link FunctionType},
- * and it represents the call signature of the function. Note that Forget thinks of a
+ * and it represents the call signature of the function. Note that Compiler thinks of a
  * {@link FunctionType} as any "callable object" (not to be confused with objects that
  *   extend the global `Function`.)
  *

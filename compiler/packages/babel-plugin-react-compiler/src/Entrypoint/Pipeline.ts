@@ -476,7 +476,7 @@ function* runWithEnvironment(
 
   /**
    * This flag should be only set for unit / fixture tests to check
-   * that Forget correctly handles unexpected errors (e.g. exceptions
+   * that Compiler correctly handles unexpected errors (e.g. exceptions
    * thrown by babel functions or other unexpected exceptions).
    */
   if (env.config.throwUnknownException__testonly) {

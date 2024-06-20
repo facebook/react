@@ -31,7 +31,7 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  * Note that the scoping is based on the final inferred blocks, not the
  * block scopes that were present in the original source. Thus variables
  * that shadowed in the original source may end up with unique names in the
- * output, if Forget would merge those two blocks into a single scope.
+ * output, if Compiler would merge those two blocks into a single scope.
  *
  * Variables are renamed using their original name followed by a number,
  * starting with 0 and incrementing until a unique name is found. Eg if the

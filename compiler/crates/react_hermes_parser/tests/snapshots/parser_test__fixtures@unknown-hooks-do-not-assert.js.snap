@@ -4,7 +4,7 @@ expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
 input_file: crates/react_hermes_parser/tests/fixtures/unknown-hooks-do-not-assert.js
 ---
 Input:
-// Forget currently bails out when it detects a potential mutation (Effect.Mutate)
+// Compiler currently bails out when it detects a potential mutation (Effect.Mutate)
 // to an immutable value. This should not apply to unknown / untyped hooks.
 
 // Default feature flags:

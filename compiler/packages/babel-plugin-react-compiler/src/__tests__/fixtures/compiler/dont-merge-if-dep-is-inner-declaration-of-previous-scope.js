@@ -1,7 +1,7 @@
 import { ValidateMemoization } from "shared-runtime";
 
-// Achieving Forget's level of memoization precision in this example isn't possible with useMemo
-// without significantly altering the code, so disable the non-Forget evaluation of this fixture.
+// Achieving Compiler's level of memoization precision in this example isn't possible with useMemo
+// without significantly altering the code, so disable the non-Compiler evaluation of this fixture.
 // @disableNonForgetInSprout
 function Component({ a, b, c }) {
   const x = [];

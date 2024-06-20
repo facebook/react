@@ -28,7 +28,7 @@ import { eachReactiveValueOperand } from "./visitors";
  * arguments, notably that variable references may not appear directly — variables
  * must always be wrapped in a `<fbt:param>` or `fbt.param()`.
  *
- * To ensure that Forget doesn't rewrite code to violate this restriction, we force
+ * To ensure that Compiler doesn't rewrite code to violate this restriction, we force
  * operands to fbt tags/calls have the same scope as the tag/call itself.
  *
  * Note that this still allows the props/arguments of `<fbt:param>`/`fbt.param()`

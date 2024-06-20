@@ -202,7 +202,7 @@ export default class HIRBuilder {
    * Maps an Identifier (or JSX identifier) Babel node to an internal `Identifier`
    * which represents the variable being referenced, according to the JS scoping rules.
    *
-   * Because Forget does not preserve _all_ block scopes in the input (only those that
+   * Because Compiler does not preserve _all_ block scopes in the input (only those that
    * happen to occur from control flow), this resolution ensures that different variables
    * with the same name are mapped to a unique name. Concretely, this function maintains
    * the invariant that all references to a given variable will return an `Identifier`

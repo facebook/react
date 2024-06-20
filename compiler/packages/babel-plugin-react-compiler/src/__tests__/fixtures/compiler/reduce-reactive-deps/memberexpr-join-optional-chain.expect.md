@@ -3,7 +3,7 @@
 
 ```javascript
 // To preserve the nullthrows behavior and reactive deps of this code,
-// Forget needs to add `props.a.b` or a subpath as a dependency.
+// Compiler needs to add `props.a.b` or a subpath as a dependency.
 //
 // (1) Since the reactive block producing x unconditionally read props.a.<...>,
 //     reading `props.a.b` outside of the block would still preserve nullthrows
@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // To preserve the nullthrows behavior and reactive deps of this code,
-// Forget needs to add `props.a.b` or a subpath as a dependency.
+// Compiler needs to add `props.a.b` or a subpath as a dependency.
 //
 // (1) Since the reactive block producing x unconditionally read props.a.<...>,
 //     reading `props.a.b` outside of the block would still preserve nullthrows

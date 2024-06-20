@@ -23,7 +23,7 @@ export function addImportsToProgram(
      * validation here
      */
     CompilerError.invariant(identifiers.has(importSpecifierName) === false, {
-      reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
+      reason: `Encountered conflicting import specifier for ${importSpecifierName} in Compiler config.`,
       description: null,
       loc: GeneratedSource,
       suggestions: null,

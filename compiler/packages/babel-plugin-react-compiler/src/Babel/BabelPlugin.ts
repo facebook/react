@@ -13,7 +13,7 @@ import {
 } from "../Entrypoint/Reanimated";
 
 /*
- * The React Forget Babel Plugin
+ * The React Compiler Babel Plugin
  * @param {*} _babel
  * @returns
  */
@@ -26,7 +26,7 @@ export default function BabelPluginReactCompiler(
       /*
        * Note: Babel does some "smart" merging of visitors across plugins, so even if A is inserted
        * prior to B, if A does not have a Program visitor and B does, B will run first. We always
-       * want Forget to run true to source as possible.
+       * want Compiler to run true to source as possible.
        */
       Program(prog, pass): void {
         let opts = parsePluginOptions(pass.opts);

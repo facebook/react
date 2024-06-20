@@ -35,7 +35,7 @@ export type ReactiveScopePropertyDependency = ReactiveScopeDependency & {
  *
  * Correctness properties:
  *   - All dependencies to a ReactiveBlock must be tracked.
- *     We can always truncate a dependency's path to a subpath, due to Forget assuming
+ *     We can always truncate a dependency's path to a subpath, due to Compiler assuming
  *     deep immutability. If the value produced by a subpath has not changed, then
  *     dependency must have not changed.
  *     i.e. props.a === $[..] implies props.a.b === $[..]
@@ -225,7 +225,7 @@ export class ReactiveScopeDependencyTree {
  * Access / Dependency:
  *    - Access: this property is read on the path of a dependency. We do not
  *      need to track change variables for accessed properties. Tracking accesses
- *      helps Forget do more granular dependency tracking.
+ *      helps Compiler do more granular dependency tracking.
  *    - Dependency: this property is read as a dependency and we must track changes
  *      to it for correctness.
  *

@@ -14,15 +14,15 @@ import { hasOwnProperty } from "../Utils/utils";
 const PanicThresholdOptionsSchema = z.enum([
   /*
    * Any errors will panic the compiler by throwing an exception, which will
-   * bubble up to the nearest exception handler above the Forget transform.
-   * If Forget is invoked through `BabelPluginReactCompiler`, this will at the least
-   * skip Forget compilation for the rest of current file.
+   * bubble up to the nearest exception handler above the Compiler transform.
+   * If Compiler is invoked through `BabelPluginReactCompiler`, this will at the least
+   * skip Compiler compilation for the rest of current file.
    */
   "all_errors",
   /*
    * Panic by throwing an exception only on critical or unrecognized errors.
    * For all other errors, skip the erroring function without inserting
-   * a Forget-compiled version (i.e. same behavior as noEmit).
+   * a Compiler-compiled version (i.e. same behavior as noEmit).
    */
   "critical_errors",
   // Never panic by throwing an exception.
@@ -37,7 +37,7 @@ export type PluginOptions = {
   logger: Logger | null;
 
   /*
-   * Specifying a `gating` config, makes Forget compile and emit a separate
+   * Specifying a `gating` config, makes Compiler compile and emit a separate
    * version of the function gated by importing the `gating.importSpecifierName` from the
    * specified `gating.source`.
    *
@@ -61,7 +61,7 @@ export type PluginOptions = {
   panicThreshold: PanicThresholdOptions;
 
   /*
-   * When enabled, Forget will continue statically analyzing and linting code, but skip over codegen
+   * When enabled, Compiler will continue statically analyzing and linting code, but skip over codegen
    * passes.
    *
    * Defaults to false
@@ -83,7 +83,7 @@ export type PluginOptions = {
   compilationMode: CompilationMode;
 
   /*
-   * If enabled, Forget will import `useMemoCache` from the given module
+   * If enabled, Compiler will import `useMemoCache` from the given module
    * instead of `react/compiler-runtime`.
    *
    * ```
@@ -146,10 +146,10 @@ export type CompilationMode = z.infer<typeof CompilationModeSchema>;
  * recorded when a logger is set (through the config).
  * These are the different types of events:
  * CompileError:
- *   Forget skipped compilation of a function / file due to a known todo,
+ *   Compiler skipped compilation of a function / file due to a known todo,
  *   invalid input, or compiler invariant being broken.
  * CompileSuccess:
- *   Forget successfully compiled a function.
+ *   Compiler successfully compiled a function.
  * PipelineError:
  *   Unexpected errors that occurred during compilation (e.g. failures in
  *   babel or other unhandled exceptions).

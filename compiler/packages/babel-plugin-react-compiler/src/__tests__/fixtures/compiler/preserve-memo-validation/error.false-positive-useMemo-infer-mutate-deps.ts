@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { identity } from "shared-runtime";
 
-// This is a false positive as Forget's inferred memoization
+// This is a false positive as Compiler's inferred memoization
 // invalidates strictly less than source. We currently do not
 // track transitive deps / invalidations of manual memo deps
 // because of implementation complexity

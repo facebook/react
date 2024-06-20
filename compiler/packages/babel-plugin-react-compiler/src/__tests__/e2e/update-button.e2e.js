@@ -39,7 +39,7 @@ test("update-button", () => {
 
   // Update the label, but not the theme
   rerender(<Button label="Click again" />);
-  // `computeStyle` should not be called again when Forget is enabled
+  // `computeStyle` should not be called again when Compiler is enabled
   expect(styleComputations).toBe(__FORGET__ ? 1 : 2);
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>

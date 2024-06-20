@@ -1,4 +1,4 @@
-// props.b + 1 is an non-allocating expression, which means Forget can
+// props.b + 1 is an non-allocating expression, which means Compiler can
 // emit it trivially and repeatedly (e.g. no need to memoize props.b + 1
 // separately from props.b)
 // Correctness:

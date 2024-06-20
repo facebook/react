@@ -2,7 +2,7 @@
 // When propagating reactive dependencies of an inner scope up to its parent,
 // we prefer to retain granularity.
 //
-// In this test, we check that Forget propagates the inner scope's conditional
+// In this test, we check that Compiler propagates the inner scope's conditional
 // dependencies (e.g. props.a.b) instead of only its derived minimal
 // unconditional dependencies (e.g. props).
 // ```javascript

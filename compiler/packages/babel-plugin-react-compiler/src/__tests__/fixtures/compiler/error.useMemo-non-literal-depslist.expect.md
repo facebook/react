@@ -5,7 +5,7 @@
 import { useMemo } from "react";
 
 // react-hooks-deps would error on this code (complex expression in depslist),
-// so Forget could bailout here
+// so Compiler could bailout here
 function App({ text, hasDeps }) {
   const resolvedText = useMemo(
     () => {

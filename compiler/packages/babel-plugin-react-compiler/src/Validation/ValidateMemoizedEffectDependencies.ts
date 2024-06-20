@@ -30,9 +30,9 @@ import {
  *   pruned for some reason, such as spanning a hook.
  * - Disallow effect dependencies whose a mutable range that encompasses the effect call.
  *
- * This latter check corresponds to any values which Forget knows may be mutable and may be mutated
- * after the effect. Note that it's possible Forget may miss not memoize a value for some other reason,
- * but in general this is a bug. The only reason Forget would _choose_ to skip memoization of an
+ * This latter check corresponds to any values which Compiler knows may be mutable and may be mutated
+ * after the effect. Note that it's possible Compiler may miss not memoize a value for some other reason,
+ * but in general this is a bug. The only reason Compiler would _choose_ to skip memoization of an
  * effect dependency is because it's mutated later.
  *
  * Example:

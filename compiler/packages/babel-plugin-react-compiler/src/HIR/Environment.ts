@@ -95,7 +95,7 @@ const HookSchema = z.object({
    * - objects whose values are also transitiveMixed
    *
    * Many state management and data-fetching APIs return data that meets
-   * this criteria since this is JSON + undefined. Forget can compile
+   * this criteria since this is JSON + undefined. Compiler can compile
    * hooks that return transitively mixed data more optimally because it
    * can make inferences about some method calls (especially array methods
    * like `data.items.map(...)` since these builtin types have few built-in
@@ -140,7 +140,7 @@ const EnvironmentConfigSchema = z.object({
 
   /**
    * Enable using information from existing useMemo/useCallback to understand when a value is done
-   * being mutated. With this mode enabled, Forget will still discard the actual useMemo/useCallback
+   * being mutated. With this mode enabled, Compiler will still discard the actual useMemo/useCallback
    * calls and may memoize slightly differently. However, it will assume that the values produced
    * are not subsequently modified, guaranteeing that the value will be memoized.
    *
@@ -148,7 +148,7 @@ const EnvironmentConfigSchema = z.object({
    * behavior that depends on referential equality in the original program. Notably, this preserves
    * existing effect behavior (how often effects fire) for effects that rely on referential equality.
    *
-   * When disabled, Forget will not only prune useMemo and useCallback calls but also completely ignore
+   * When disabled, Compiler will not only prune useMemo and useCallback calls but also completely ignore
    * them, not using any information from them to guide compilation. Therefore, disabling this flag
    * will produce output that mimics the result from removing all memoization.
    *
@@ -163,17 +163,17 @@ const EnvironmentConfigSchema = z.object({
   enablePreserveExistingMemoizationGuarantees: z.boolean().default(false),
 
   /**
-   * Validates that all useMemo/useCallback values are also memoized by Forget. This mode can be
+   * Validates that all useMemo/useCallback values are also memoized by Compiler. This mode can be
    * used with or without @enablePreserveExistingMemoizationGuarantees.
    *
    * With enablePreserveExistingMemoizationGuarantees, this validation enables automatically and
-   * verifies that Forget was able to preserve manual memoization semantics under that mode's
+   * verifies that Compiler was able to preserve manual memoization semantics under that mode's
    * additional assumptions about the input.
    *
    * With enablePreserveExistingMemoizationGuarantees off, this validation ignores manual memoization
    * when determining program behavior, and only uses information from useMemo/useCallback to check
    * that the memoization was preserved. This can be useful for determining where referential equalities
-   * may change under Forget.
+   * may change under Compiler.
    */
   validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
 
@@ -189,7 +189,7 @@ const EnvironmentConfigSchema = z.object({
 
   /**
    * Enable use of type annotations in the source to drive type inference. By default
-   * Forget attemps to infer types using only information that is guaranteed correct
+   * Compiler attemps to infer types using only information that is guaranteed correct
    * given the source, and does not trust user-supplied type annotations. This mode
    * enables trusting user type annotations.
    */
@@ -215,7 +215,7 @@ const EnvironmentConfigSchema = z.object({
 
   /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
-   * that Forget does not introduce infinite renders caused by a dependency changing,
+   * that Compiler does not introduce infinite renders caused by a dependency changing,
    * triggering an effect, which triggers re-rendering, which causes a dependency to change,
    * triggering the effect, etc.
    *
@@ -254,7 +254,7 @@ const EnvironmentConfigSchema = z.object({
 
   /*
    * Enables codegen mutability debugging. This emits a dev-mode only to log mutations
-   * to values that Forget assumes are immutable (for Forget compiled code).
+   * to values that Compiler assumes are immutable (for Compiler compiled code).
    * For example:
    *   emitFreeze: {
    *     source: 'ReactForgetRuntime',
@@ -285,7 +285,7 @@ const EnvironmentConfigSchema = z.object({
 
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
-   * instrumentation function, for components and hooks that Forget compiles.
+   * instrumentation function, for components and hooks that Compiler compiles.
    * For example:
    *   instrumentForget: {
    *     import: {
@@ -331,7 +331,7 @@ const EnvironmentConfigSchema = z.object({
   enableChangeVariableCodegen: z.boolean().default(false),
 
   /**
-   * Enable emitting comments that explain Forget's output, and which
+   * Enable emitting comments that explain Compiler's output, and which
    * values are being checked and which values produced by each memo block.
    *
    * Intended for use in demo purposes (incl playground)
@@ -403,7 +403,7 @@ const EnvironmentConfigSchema = z.object({
    * For example, by default `React$useState` would not be treated as a hook. By specifying
    * `hookPattern: 'React$(\w+)'`, the compiler will treat this value equivalently to `useState()`.
    *
-   * This setting is intended for cases where Forget is compiling code that has been prebundled
+   * This setting is intended for cases where Compiler is compiling code that has been prebundled
    * and identifiers have been changed.
    */
   hookPattern: z.string().nullable().default(null),
@@ -681,7 +681,7 @@ export class Environment {
     if (shapeId !== null) {
       /*
        * If an object or function has a shapeId, it must have been assigned
-       * by Forget (and be present in a builtin or user-defined registry)
+       * by Compiler (and be present in a builtin or user-defined registry)
        */
       const shape = this.#shapes.get(shapeId);
       CompilerError.invariant(shape !== undefined, {

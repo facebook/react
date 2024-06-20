@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// Forget should call the original x (x = foo()) to compute result
+// Compiler should call the original x (x = foo()) to compute result
 function Component() {
   let x = foo();
   let result = x((x = bar()), 5);
@@ -14,7 +14,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // Forget should call the original x (x = foo()) to compute result
+import { c as _c } from "react/compiler-runtime"; // Compiler should call the original x (x = foo()) to compute result
 function Component() {
   const $ = _c(1);
   let t0;

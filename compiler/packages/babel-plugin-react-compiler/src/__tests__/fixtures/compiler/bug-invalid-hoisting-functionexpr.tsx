@@ -10,7 +10,7 @@ import { Stringify } from "shared-runtime";
  *  Found differences in evaluator results
  *  Non-forget (expected):
  *  (kind: ok) <div>{"shouldInvokeFns":true,"callback":{"kind":"Function","result":null}}</div>
- *  Forget:
+ *  Compiler:
  *  (kind: exception) Cannot read properties of null (reading 'prop')
  */
 function Component({ obj, isObjNull }) {

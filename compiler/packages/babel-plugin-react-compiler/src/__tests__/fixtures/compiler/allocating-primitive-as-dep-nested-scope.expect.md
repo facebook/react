@@ -3,7 +3,7 @@
 
 ```javascript
 // bar(props.b) is an allocating expression that produces a primitive, which means
-// that Forget should memoize it.
+// that Compiler should memoize it.
 // Correctness:
 
 import { identity, mutate, setProperty } from "shared-runtime";
@@ -38,7 +38,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // bar(props.b) is an allocating expression that produces a primitive, which means
-// that Forget should memoize it.
+// that Compiler should memoize it.
 // Correctness:
 
 import { identity, mutate, setProperty } from "shared-runtime";

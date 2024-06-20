@@ -106,12 +106,12 @@ const guardFrames: Array<unknown> = [];
 /**
  * When `enableEmitHookGuards` is set, this does runtime validation
  * of the no-conditional-hook-calls rule.
- * As Forget needs to statically understand which calls to move out of
- * conditional branches (i.e. Forget cannot memoize the results of hook
+ * As Compiler needs to statically understand which calls to move out of
+ * conditional branches (i.e. Compiler cannot memoize the results of hook
  * calls), its understanding of "the rules of React" are more restrictive.
  * This validation throws on unsound inputs at runtime.
  *
- * Components should only be invoked through React as Forget could memoize
+ * Components should only be invoked through React as Compiler could memoize
  * the call to AnotherComponent, introducing conditional hook calls in its
  * compiled output.
  * ```js

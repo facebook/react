@@ -12,7 +12,7 @@ function Component(props) {
   // the jsx element's tag observes `Tag` after reassignment, but should observe
   // it before the reassignment.
 
-  // Currently, Forget preserves jsx whitespace in the source text.
+  // Currently, Compiler preserves jsx whitespace in the source text.
   // prettier-ignore
   return (
     <Tag>{((Tag = props.alternateComponent), maybeMutate(maybeMutable))}<Tag /></Tag>

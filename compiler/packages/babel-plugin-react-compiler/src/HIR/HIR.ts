@@ -796,13 +796,13 @@ export type FinishMemoize = {
 };
 
 /*
- * Forget currently does not handle MethodCall correctly in
+ * Compiler currently does not handle MethodCall correctly in
  * all cases. Specifically, we do not bind the receiver and method property
  * before calling to args. Until we add a SequenceExpression to inline all
  * instructions generated when lowering args, we have a limited representation
  * with some constraints.
  *
- * Forget currently makes these assumptions (checked in codegen):
+ * Compiler currently makes these assumptions (checked in codegen):
  *   - {@link MethodCall.property} is a temporary produced by a PropertyLoad or ComputedLoad
  *     on {@link MethodCall.receiver}
  *   - {@link MethodCall.property} remains an rval (i.e. never promoted to a

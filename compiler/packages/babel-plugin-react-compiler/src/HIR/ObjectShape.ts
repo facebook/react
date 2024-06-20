@@ -17,7 +17,7 @@ import {
 
 /*
  * This file exports types and defaults for JavaScript object shapes. These are
- * stored and used by a Forget `Environment`. See comments in `Types.ts`,
+ * stored and used by a Compiler `Environment`. See comments in `Types.ts`,
  * `Globals.ts`, and `Environment.ts` for more details.
  */
 

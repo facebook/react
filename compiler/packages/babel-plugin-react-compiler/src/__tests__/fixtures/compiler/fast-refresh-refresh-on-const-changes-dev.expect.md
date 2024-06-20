@@ -25,7 +25,7 @@ function Component() {
   // unsafe, but in this case we're simulating a fast refresh between each render
   unsafeUpdateConst();
 
-  // TODO: In fast refresh mode (@enableResetCacheOnSourceFileChanges) Forget should
+  // TODO: In fast refresh mode (@enableResetCacheOnSourceFileChanges) Compiler should
   // reset on changes to globals that impact the component/hook, effectively memoizing
   // as if value was reactive. However, we don't want to actually treat globals as
   // reactive (though that would be trivial) since it could change compilation too much

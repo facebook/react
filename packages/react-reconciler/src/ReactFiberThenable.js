@@ -121,7 +121,7 @@ export function trackUsedThenable<T>(
           // since this is dev-only, maybe that'd be OK.
           //
           // However, another benefit of doing it this way is we might
-          // eventually have a thenableState per memo/Forget boundary instead
+          // eventually have a thenableState per memo/Compiler boundary instead
           // of per component, so this would allow us to have more
           // granular warnings.
           thenableStateDev.didWarnAboutUncachedPromise = true;
