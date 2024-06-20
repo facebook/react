@@ -696,7 +696,7 @@ function createElement(
       });
 
       let task: null | ConsoleTask = null;
-      if (supportsCreateTask && stack !== null) {
+      if (supportsCreateTask && typeof stack === 'string') {
         const createTaskFn = (console: any).createTask.bind(
           console,
           getTaskName(type),
@@ -1255,7 +1255,7 @@ function parseModelTuple(
       tuple[2],
       tuple[3],
       __DEV__ ? (tuple: any)[4] : null,
-      __DEV__ && enableOwnerStacks ? (tuple: any)[5] : null,
+      __DEV__ && enableOwnerStacks ? (tuple: any)[5] || null : null,
       __DEV__ && enableOwnerStacks ? (tuple: any)[6] : 0,
     );
   }
