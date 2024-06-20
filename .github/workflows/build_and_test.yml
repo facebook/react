@@ -177,8 +177,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: build
           path: build
-          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: yarn test --build ${{ matrix.args }} --ci
   
@@ -190,13 +190,12 @@ jobs:
       TZ: /usr/share/zoneinfo/America/Los_Angeles
     needs:
       - yarn_build
-      - scrape_warning_messages
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: build
           path: build
-          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: yarn lint-build
   
@@ -212,8 +211,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: build
           path: build
-          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: yarn check-release-dependencies
   
@@ -229,8 +228,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: build
           path: build
-          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: |
             yarn extract-errors
@@ -248,8 +247,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: build
           path: build
-          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - name: Restore yarn cache
         uses: actions/cache/restore@v4
@@ -282,8 +281,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: build
           path: build
-          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
       - run: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
         env:
@@ -330,8 +329,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
+          name: build
           path: build
-          merge-multiple: true
       - uses: ./.github/actions/setup_node_modules
         with:
           merge-multiple: true
