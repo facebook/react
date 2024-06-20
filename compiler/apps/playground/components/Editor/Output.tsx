@@ -104,7 +104,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
       passName,
       <TextTabContent
         output={text}
-        diff={lastPassOutput ?? null}
+        diff={passName === "HIR" ? source : lastPassOutput ?? null}
         showInfoPanel={true}
       ></TextTabContent>
     );
