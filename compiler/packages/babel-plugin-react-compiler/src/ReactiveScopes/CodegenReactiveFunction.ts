@@ -2162,7 +2162,7 @@ function codegenInstructionValue(
  * JsxExpressionContainer for such strings.
  *
  * u0000 to u001F: C0 control codes
- * u007F: Delete character
+ * u007F         : Delete character
  * u0080 to u009F: C1 control codes
  * u00A0 to uFFFF: All non-basic Latin characters
  * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
