@@ -774,22 +774,20 @@ __DEV__ &&
       return 0 === x ? 32 : (31 - ((log$2(x) / LN2) | 0)) | 0;
     }
     function getLabelForLane(lane) {
-      if (enableSchedulingProfiler) {
-        if (lane & 1) return "SyncHydrationLane";
-        if (lane & 2) return "Sync";
-        if (lane & 4) return "InputContinuousHydration";
-        if (lane & 8) return "InputContinuous";
-        if (lane & 16) return "DefaultHydration";
-        if (lane & 32) return "Default";
-        if (lane & 64) return "TransitionHydration";
-        if (lane & 4194176) return "Transition";
-        if (lane & 62914560) return "Retry";
-        if (lane & 67108864) return "SelectiveHydration";
-        if (lane & 134217728) return "IdleHydration";
-        if (lane & 268435456) return "Idle";
-        if (lane & 536870912) return "Offscreen";
-        if (lane & 1073741824) return "Deferred";
-      }
+      if (lane & 1) return "SyncHydrationLane";
+      if (lane & 2) return "Sync";
+      if (lane & 4) return "InputContinuousHydration";
+      if (lane & 8) return "InputContinuous";
+      if (lane & 16) return "DefaultHydration";
+      if (lane & 32) return "Default";
+      if (lane & 64) return "TransitionHydration";
+      if (lane & 4194176) return "Transition";
+      if (lane & 62914560) return "Retry";
+      if (lane & 67108864) return "SelectiveHydration";
+      if (lane & 134217728) return "IdleHydration";
+      if (lane & 268435456) return "Idle";
+      if (lane & 536870912) return "Offscreen";
+      if (lane & 1073741824) return "Deferred";
     }
     function getHighestPriorityLanes(lanes) {
       if (enableUnifiedSyncLane) {
@@ -1085,11 +1083,10 @@ __DEV__ &&
           !0
         );
       try {
-        enableSchedulingProfiler &&
-          (internals = assign({}, internals, {
-            getLaneLabelMap: getLaneLabelMap,
-            injectProfilingHooks: injectProfilingHooks
-          })),
+        (internals = assign({}, internals, {
+          getLaneLabelMap: getLaneLabelMap,
+          injectProfilingHooks: injectProfilingHooks
+        })),
           (rendererID = hook.inject(internals)),
           (injectedHook = hook);
       } catch (err) {
@@ -1152,65 +1149,54 @@ __DEV__ &&
       injectedProfilingHooks = profilingHooks;
     }
     function getLaneLabelMap() {
-      if (enableSchedulingProfiler) {
-        for (var map = new Map(), lane = 1, index = 0; 31 > index; index++) {
-          var label = getLabelForLane(lane);
-          map.set(lane, label);
-          lane *= 2;
-        }
-        return map;
+      for (var map = new Map(), lane = 1, index = 0; 31 > index; index++) {
+        var label = getLabelForLane(lane);
+        map.set(lane, label);
+        lane *= 2;
       }
-      return null;
+      return map;
     }
     function markCommitStopped() {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" === typeof injectedProfilingHooks.markCommitStopped &&
         injectedProfilingHooks.markCommitStopped();
     }
     function markComponentRenderStarted(fiber) {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" ===
           typeof injectedProfilingHooks.markComponentRenderStarted &&
         injectedProfilingHooks.markComponentRenderStarted(fiber);
     }
     function markComponentRenderStopped() {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" ===
           typeof injectedProfilingHooks.markComponentRenderStopped &&
         injectedProfilingHooks.markComponentRenderStopped();
     }
     function markComponentLayoutEffectUnmountStarted(fiber) {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" ===
           typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted &&
         injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
     }
     function markComponentLayoutEffectUnmountStopped() {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" ===
           typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped &&
         injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
     }
     function markRenderStarted(lanes) {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" === typeof injectedProfilingHooks.markRenderStarted &&
         injectedProfilingHooks.markRenderStarted(lanes);
     }
     function markRenderStopped() {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" === typeof injectedProfilingHooks.markRenderStopped &&
         injectedProfilingHooks.markRenderStopped();
     }
     function markStateUpdateScheduled(fiber, lane) {
-      enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" === typeof injectedProfilingHooks.markStateUpdateScheduled &&
         injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
     }
@@ -5513,7 +5499,7 @@ __DEV__ &&
         var name = getComponentNameFromFiber(fiber) || "Unknown";
         logStateUpdateScheduled(name, lane, action);
       }
-      enableSchedulingProfiler && markStateUpdateScheduled(fiber, lane);
+      markStateUpdateScheduled(fiber, lane);
     }
     function startProfilerTimer(fiber) {
       profilerStartTime = now();
@@ -6164,7 +6150,7 @@ __DEV__ &&
           "ref" !== key && (propsWithoutRef[key] = nextProps[key]);
       } else propsWithoutRef = nextProps;
       prepareToReadContext(workInProgress, renderLanes);
-      enableSchedulingProfiler && markComponentRenderStarted(workInProgress);
+      markComponentRenderStarted(workInProgress);
       nextProps = renderWithHooks(
         current,
         workInProgress,
@@ -6174,7 +6160,7 @@ __DEV__ &&
         renderLanes
       );
       key = checkDidRenderIdHook();
-      enableSchedulingProfiler && markComponentRenderStopped();
+      markComponentRenderStopped();
       if (null !== current && !didReceiveUpdate)
         return (
           bailoutHooks(current, workInProgress, renderLanes),
@@ -6456,7 +6442,7 @@ __DEV__ &&
             getComponentNameFromType(Component) || "Unknown"
           ));
       prepareToReadContext(workInProgress, renderLanes);
-      enableSchedulingProfiler && markComponentRenderStarted(workInProgress);
+      markComponentRenderStarted(workInProgress);
       Component = renderWithHooks(
         current,
         workInProgress,
@@ -6466,7 +6452,7 @@ __DEV__ &&
         renderLanes
       );
       nextProps = checkDidRenderIdHook();
-      enableSchedulingProfiler && markComponentRenderStopped();
+      markComponentRenderStopped();
       if (null !== current && !didReceiveUpdate)
         return (
           bailoutHooks(current, workInProgress, renderLanes),
@@ -6486,7 +6472,7 @@ __DEV__ &&
       renderLanes
     ) {
       prepareToReadContext(workInProgress, renderLanes);
-      enableSchedulingProfiler && markComponentRenderStarted(workInProgress);
+      markComponentRenderStarted(workInProgress);
       hookTypesUpdateIndexDev = -1;
       ignorePreviousDependencies =
         null !== current && current.type !== workInProgress.type;
@@ -6498,7 +6484,7 @@ __DEV__ &&
       );
       finishRenderingHooks(current, workInProgress);
       Component = checkDidRenderIdHook();
-      enableSchedulingProfiler && markComponentRenderStopped();
+      markComponentRenderStopped();
       if (null !== current && !didReceiveUpdate)
         return (
           bailoutHooks(current, workInProgress, renderLanes),
@@ -7025,8 +7011,7 @@ __DEV__ &&
         if (state && "function" !== typeof Component.getDerivedStateFromError)
           (Component = null), (profilerStartTime = -1);
         else {
-          enableSchedulingProfiler &&
-            markComponentRenderStarted(workInProgress);
+          markComponentRenderStarted(workInProgress);
           Component = callRenderInDEV(lane);
           if (workInProgress.mode & 8) {
             setIsStrictModeForDevtools(!0);
@@ -7036,7 +7021,7 @@ __DEV__ &&
               setIsStrictModeForDevtools(!1);
             }
           }
-          enableSchedulingProfiler && markComponentRenderStopped();
+          markComponentRenderStopped();
         }
         workInProgress.flags |= 1;
         null !== current$jscomp$0 && state
@@ -8626,14 +8611,13 @@ __DEV__ &&
               ),
             prepareToReadContext(workInProgress, renderLanes),
             (prevSibling = readContext(prevSibling)),
-            enableSchedulingProfiler &&
-              markComponentRenderStarted(workInProgress),
+            markComponentRenderStarted(workInProgress),
             (returnFiber = callComponentInDEV(
               returnFiber,
               prevSibling,
               void 0
             )),
-            enableSchedulingProfiler && markComponentRenderStopped(),
+            markComponentRenderStopped(),
             (workInProgress.flags |= 1),
             reconcileChildren(
               current,
@@ -10561,31 +10545,27 @@ __DEV__ &&
               destroy = inst.destroy;
             void 0 !== destroy &&
               ((inst.destroy = void 0),
-              enableSchedulingProfiler &&
-                ((flags & Passive) !== NoFlags
-                  ? enableSchedulingProfiler &&
-                    null !== injectedProfilingHooks &&
-                    "function" ===
-                      typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStarted &&
-                    injectedProfilingHooks.markComponentPassiveEffectUnmountStarted(
-                      finishedWork
-                    )
-                  : (flags & Layout) !== NoFlags &&
-                    markComponentLayoutEffectUnmountStarted(finishedWork)),
+              (flags & Passive) !== NoFlags
+                ? null !== injectedProfilingHooks &&
+                  "function" ===
+                    typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStarted &&
+                  injectedProfilingHooks.markComponentPassiveEffectUnmountStarted(
+                    finishedWork
+                  )
+                : (flags & Layout) !== NoFlags &&
+                  markComponentLayoutEffectUnmountStarted(finishedWork),
               (flags & Insertion) !== NoFlags &&
                 (isRunningInsertionEffect = !0),
               safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy),
               (flags & Insertion) !== NoFlags &&
                 (isRunningInsertionEffect = !1),
-              enableSchedulingProfiler &&
-                ((flags & Passive) !== NoFlags
-                  ? enableSchedulingProfiler &&
-                    null !== injectedProfilingHooks &&
-                    "function" ===
-                      typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStopped &&
-                    injectedProfilingHooks.markComponentPassiveEffectUnmountStopped()
-                  : (flags & Layout) !== NoFlags &&
-                    markComponentLayoutEffectUnmountStopped()));
+              (flags & Passive) !== NoFlags
+                ? null !== injectedProfilingHooks &&
+                  "function" ===
+                    typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStopped &&
+                  injectedProfilingHooks.markComponentPassiveEffectUnmountStopped()
+                : (flags & Layout) !== NoFlags &&
+                  markComponentLayoutEffectUnmountStopped());
           }
           effect = effect.next;
         } while (effect !== updateQueue);
@@ -10598,42 +10578,36 @@ __DEV__ &&
         var effect = (updateQueue = updateQueue.next);
         do {
           if ((effect.tag & flags) === flags) {
-            enableSchedulingProfiler &&
-              ((flags & Passive) !== NoFlags
-                ? enableSchedulingProfiler &&
-                  null !== injectedProfilingHooks &&
-                  "function" ===
-                    typeof injectedProfilingHooks.markComponentPassiveEffectMountStarted &&
-                  injectedProfilingHooks.markComponentPassiveEffectMountStarted(
-                    finishedWork
-                  )
-                : (flags & Layout) !== NoFlags &&
-                  enableSchedulingProfiler &&
-                  null !== injectedProfilingHooks &&
-                  "function" ===
-                    typeof injectedProfilingHooks.markComponentLayoutEffectMountStarted &&
-                  injectedProfilingHooks.markComponentLayoutEffectMountStarted(
-                    finishedWork
-                  ));
+            (flags & Passive) !== NoFlags
+              ? null !== injectedProfilingHooks &&
+                "function" ===
+                  typeof injectedProfilingHooks.markComponentPassiveEffectMountStarted &&
+                injectedProfilingHooks.markComponentPassiveEffectMountStarted(
+                  finishedWork
+                )
+              : (flags & Layout) !== NoFlags &&
+                null !== injectedProfilingHooks &&
+                "function" ===
+                  typeof injectedProfilingHooks.markComponentLayoutEffectMountStarted &&
+                injectedProfilingHooks.markComponentLayoutEffectMountStarted(
+                  finishedWork
+                );
             var create = effect.create;
             (flags & Insertion) !== NoFlags && (isRunningInsertionEffect = !0);
             var inst = effect.inst;
             create = create();
             inst.destroy = create;
             (flags & Insertion) !== NoFlags && (isRunningInsertionEffect = !1);
-            enableSchedulingProfiler &&
-              ((flags & Passive) !== NoFlags
-                ? enableSchedulingProfiler &&
-                  null !== injectedProfilingHooks &&
-                  "function" ===
-                    typeof injectedProfilingHooks.markComponentPassiveEffectMountStopped &&
-                  injectedProfilingHooks.markComponentPassiveEffectMountStopped()
-                : (flags & Layout) !== NoFlags &&
-                  enableSchedulingProfiler &&
-                  null !== injectedProfilingHooks &&
-                  "function" ===
-                    typeof injectedProfilingHooks.markComponentLayoutEffectMountStopped &&
-                  injectedProfilingHooks.markComponentLayoutEffectMountStopped());
+            (flags & Passive) !== NoFlags
+              ? null !== injectedProfilingHooks &&
+                "function" ===
+                  typeof injectedProfilingHooks.markComponentPassiveEffectMountStopped &&
+                injectedProfilingHooks.markComponentPassiveEffectMountStopped()
+              : (flags & Layout) !== NoFlags &&
+                null !== injectedProfilingHooks &&
+                "function" ===
+                  typeof injectedProfilingHooks.markComponentLayoutEffectMountStopped &&
+                injectedProfilingHooks.markComponentLayoutEffectMountStopped();
             void 0 !== create &&
               "function" !== typeof create &&
               ((inst =
@@ -11444,8 +11418,7 @@ __DEV__ &&
                       destroy
                     ))
                   : (tag & Layout) !== NoFlags &&
-                    (enableSchedulingProfiler &&
-                      markComponentLayoutEffectUnmountStarted(deletedFiber),
+                    (markComponentLayoutEffectUnmountStarted(deletedFiber),
                     shouldProfile(deletedFiber)
                       ? (startLayoutEffectTimer(),
                         (inst.destroy = void 0),
@@ -11461,8 +11434,7 @@ __DEV__ &&
                           nearestMountedAncestor,
                           destroy
                         )),
-                    enableSchedulingProfiler &&
-                      markComponentLayoutEffectUnmountStopped()));
+                    markComponentLayoutEffectUnmountStopped()));
               prevHostParentIsContainer = prevHostParentIsContainer.next;
             } while (prevHostParentIsContainer !== prevHostParent);
           }
@@ -13945,15 +13917,15 @@ __DEV__ &&
             root,
             createCapturedValueAtFiber(thrownValue, root.current)
           );
-      else if (
-        (erroredWork.mode & 2 &&
-          stopProfilerTimerIfRunningAndRecordDelta(erroredWork, !0),
-        enableSchedulingProfiler)
-      )
-        switch ((markComponentRenderStopped(), workInProgressSuspendedReason)) {
+      else
+        switch (
+          (erroredWork.mode & 2 &&
+            stopProfilerTimerIfRunningAndRecordDelta(erroredWork, !0),
+          markComponentRenderStopped(),
+          workInProgressSuspendedReason)
+        ) {
           case SuspendedOnError:
-            enableSchedulingProfiler &&
-              null !== injectedProfilingHooks &&
+            null !== injectedProfilingHooks &&
               "function" ===
                 typeof injectedProfilingHooks.markComponentErrored &&
               injectedProfilingHooks.markComponentErrored(
@@ -13966,8 +13938,7 @@ __DEV__ &&
           case SuspendedOnImmediate:
           case SuspendedOnDeprecatedThrowPromise:
           case SuspendedAndReadyToContinue:
-            enableSchedulingProfiler &&
-              null !== injectedProfilingHooks &&
+            null !== injectedProfilingHooks &&
               "function" ===
                 typeof injectedProfilingHooks.markComponentSuspended &&
               injectedProfilingHooks.markComponentSuspended(
@@ -14033,7 +14004,7 @@ __DEV__ &&
         prepareFreshStack(root, lanes);
       }
       enableDebugTracing && logRenderStarted(lanes);
-      enableSchedulingProfiler && markRenderStarted(lanes);
+      markRenderStarted(lanes);
       lanes = !1;
       a: do
         try {
@@ -14075,7 +14046,7 @@ __DEV__ &&
           "Cannot commit an incomplete root. This error is likely caused by a bug in React. Please file an issue."
         );
       enableDebugTracing && enableDebugTracing && groupEnd();
-      enableSchedulingProfiler && markRenderStopped();
+      markRenderStopped();
       workInProgressRoot = null;
       workInProgressRootRenderLanes = 0;
       finishQueueingConcurrentUpdates();
@@ -14105,7 +14076,7 @@ __DEV__ &&
         prepareFreshStack(root, lanes);
       }
       enableDebugTracing && logRenderStarted(lanes);
-      enableSchedulingProfiler && markRenderStarted(lanes);
+      markRenderStarted(lanes);
       a: do
         try {
           if (
@@ -14221,14 +14192,12 @@ __DEV__ &&
       enableDebugTracing && enableDebugTracing && groupEnd();
       if (null !== workInProgress)
         return (
-          enableSchedulingProfiler &&
-            enableSchedulingProfiler &&
-            null !== injectedProfilingHooks &&
+          null !== injectedProfilingHooks &&
             "function" === typeof injectedProfilingHooks.markRenderYielded &&
             injectedProfilingHooks.markRenderYielded(),
           RootInProgress
         );
-      enableSchedulingProfiler && markRenderStopped();
+      markRenderStopped();
       workInProgressRoot = null;
       workInProgressRootRenderLanes = 0;
       finishQueueingConcurrentUpdates();
@@ -14482,15 +14451,13 @@ __DEV__ &&
           "",
           "font-weight: normal;"
         );
-      enableSchedulingProfiler &&
-        enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" === typeof injectedProfilingHooks.markCommitStarted &&
         injectedProfilingHooks.markCommitStarted(lanes);
       if (null === finishedWork)
         return (
           enableDebugTracing && enableDebugTracing && groupEnd(),
-          enableSchedulingProfiler && markCommitStopped(),
+          markCommitStopped(),
           null
         );
       0 === lanes &&
@@ -14548,17 +14515,13 @@ __DEV__ &&
             "",
             "font-weight: normal;"
           );
-        enableSchedulingProfiler &&
-          enableSchedulingProfiler &&
-          null !== injectedProfilingHooks &&
+        null !== injectedProfilingHooks &&
           "function" ===
             typeof injectedProfilingHooks.markLayoutEffectsStarted &&
           injectedProfilingHooks.markLayoutEffectsStarted(lanes);
         commitLayoutEffects(finishedWork, root, lanes);
         enableDebugTracing && enableDebugTracing && groupEnd();
-        enableSchedulingProfiler &&
-          enableSchedulingProfiler &&
-          null !== injectedProfilingHooks &&
+        null !== injectedProfilingHooks &&
           "function" ===
             typeof injectedProfilingHooks.markLayoutEffectsStopped &&
           injectedProfilingHooks.markLayoutEffectsStopped();
@@ -14607,7 +14570,7 @@ __DEV__ &&
         : (nestedUpdateCount = 0);
       flushSyncWorkAcrossRoots_impl(!1);
       enableDebugTracing && enableDebugTracing && groupEnd();
-      enableSchedulingProfiler && markCommitStopped();
+      markCommitStopped();
       if (enableTransitionTracing) {
         var prevRootTransitionCallbacks = root.transitionCallbacks;
         null !== prevRootTransitionCallbacks &&
@@ -14697,9 +14660,7 @@ __DEV__ &&
           "",
           "font-weight: normal;"
         );
-      enableSchedulingProfiler &&
-        enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" ===
           typeof injectedProfilingHooks.markPassiveEffectsStarted &&
         injectedProfilingHooks.markPassiveEffectsStarted(lanes);
@@ -14712,9 +14673,7 @@ __DEV__ &&
       for (lanes = 0; lanes < transitions.length; lanes++)
         commitPassiveEffectDurations(root, transitions[lanes]);
       enableDebugTracing && enableDebugTracing && groupEnd();
-      enableSchedulingProfiler &&
-        enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" ===
           typeof injectedProfilingHooks.markPassiveEffectsStopped &&
         injectedProfilingHooks.markPassiveEffectsStopped();
@@ -15783,9 +15742,7 @@ __DEV__ &&
               err
             ));
         }
-      enableSchedulingProfiler &&
-        enableSchedulingProfiler &&
-        null !== injectedProfilingHooks &&
+      null !== injectedProfilingHooks &&
         "function" === typeof injectedProfilingHooks.markRenderScheduled &&
         injectedProfilingHooks.markRenderScheduled(lane);
       parentComponent = getContextForSubtree(parentComponent);
@@ -15871,7 +15828,6 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
-      enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -17579,7 +17535,7 @@ __DEV__ &&
             inst.mode & 4 &&
             ((callback = getComponentNameFromFiber(inst) || "Unknown"),
             logStateUpdateScheduled(callback, lane, payload));
-          enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
+          markStateUpdateScheduled(inst, lane);
         },
         enqueueReplaceState: function (inst, payload, callback) {
           inst = inst._reactInternals;
@@ -17598,7 +17554,7 @@ __DEV__ &&
             inst.mode & 4 &&
             ((callback = getComponentNameFromFiber(inst) || "Unknown"),
             logStateUpdateScheduled(callback, lane, payload));
-          enableSchedulingProfiler && markStateUpdateScheduled(inst, lane);
+          markStateUpdateScheduled(inst, lane);
         },
         enqueueForceUpdate: function (inst, callback) {
           inst = inst._reactInternals;
@@ -17626,9 +17582,7 @@ __DEV__ &&
                 "color: #db2e1f; font-weight: bold;",
                 ""
               ));
-          enableSchedulingProfiler &&
-            enableSchedulingProfiler &&
-            null !== injectedProfilingHooks &&
+          null !== injectedProfilingHooks &&
             "function" ===
               typeof injectedProfilingHooks.markForceUpdateScheduled &&
             injectedProfilingHooks.markForceUpdateScheduled(inst, lane);
@@ -18371,7 +18325,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-88959fd54a-20240614"
+        reconcilerVersion: "19.0.0-www-modern-babe5a2f1b-20240620"
       });
     };
     exports.isAlreadyRendering = function () {
