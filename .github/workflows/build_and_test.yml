@@ -101,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup_node_modules
-      - run: mkdir build && echo "yarn build" > build/yarn_build
+      - run: yarn build
       - uses: actions/upload-artifact@v4
         with:
           name: build
@@ -139,8 +139,6 @@ jobs:
         with:
           path: build
           merge-multiple: true
-      - run: ls -al
-      - run: ls -al build
       - uses: ./.github/actions/setup_node_modules
       - run: echo "${{ github.sha }}" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
