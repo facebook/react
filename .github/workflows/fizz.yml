@@ -1,0 +1,30 @@
+name: Fizz
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - 'compiler/**'
+
+jobs:
+  check_generated_fizz_runtime:
+    name: Confirm generated inline Fizz runtime is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: |
+          yarn generate-inline-fizz-runtime
+          git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
