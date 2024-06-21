@@ -46,7 +46,7 @@ jobs:
     needs: build_test_params
     strategy:
       matrix:
-        params: ${{ fromJSON(needs.build_test_params.outputs) }}
+        params: ${{ fromJSON(needs.build_test_params.outputs.params) }}
     continue-on-error: true
     outputs:
       test_names: ${{ steps.chunk-test-files.outputs }}
@@ -73,8 +73,8 @@ jobs:
     needs: [build_test_params, chunk_tests]
     strategy:
       matrix:
-        params: ${{ fromJSON(needs.build_test_params.outputs) }}
-        test_names: ${{ fromJSON(needs.chunk_tests.outputs ) }}
+        params: ${{ fromJSON(needs.build_test_params.outputs.params) }}
+        test_names: ${{ fromJSON(needs.chunk_tests.outputs.test_names) }}
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -90,4 +90,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test ${{ matrix.params }} --ci=github ${{ matrix.test_names  }}
+      - run: echo $CHUNKS | jq '.[${{ matrix.test_names }}] | .[] | @text' | xargs yarn test ${{ matrix.params }} --ci=github
