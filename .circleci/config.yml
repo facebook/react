@@ -74,17 +74,6 @@ parameters:
     default: ''
 
 jobs:
-  yarn_flow:
-    docker: *docker
-    environment: *environment
-    parallelism: 5
-
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: node ./scripts/tasks/flow-ci
-
-
   yarn_flags:
     docker: *docker
     environment: *environment
@@ -453,11 +442,6 @@ workflows:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - yarn_flags:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - yarn_flow:
           filters:
             branches:
               ignore:
