@@ -283,7 +283,9 @@ function print(
     print(env, locals, shared, seen, dep, depth + 1);
   }
   console.log(
-    `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps.map((x) => `$${x}`).join(", ")}]`
+    `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps
+      .map((x) => `$${x}`)
+      .join(", ")}]`
   );
 }
 
