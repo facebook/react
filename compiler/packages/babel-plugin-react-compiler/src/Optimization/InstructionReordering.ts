@@ -103,7 +103,6 @@ type References = {
 };
 type LastAssignments = Map<string, InstructionId>;
 type SingleUseIdentifiers = Set<IdentifierId>;
-type Range = { start: InstructionId; end: InstructionId };
 enum ReferenceKind {
   Read,
   Write,
