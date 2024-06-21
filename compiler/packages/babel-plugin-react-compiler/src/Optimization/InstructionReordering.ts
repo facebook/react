@@ -328,8 +328,8 @@ function reorderBlock(
      *
      * Ie where there is some pair of nonreorderable+reorderable values, with some intervening
      * also non-reorderable instruction. If we emit all non-reorderable instructions first,
-     * then we'll keep the original order. But reordering instructions don't just mean moving
-     * them later: we can also move then _earlier_. By starting from terminal operands, we
+     * then we'll keep the original order. But reordering instructions doesn't just mean moving
+     * them later: we can also move them _earlier_. By starting from terminal operands we
      * end up emitting:
      *
      * ```
@@ -414,7 +414,9 @@ function print(
   }
   DEBUG &&
     console.log(
-      `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps.map((x) => `$${x}`).join(", ")}] depth=${node.depth}`
+      `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps
+        .map((x) => `$${x}`)
+        .join(", ")}] depth=${node.depth}`
     );
 }
 

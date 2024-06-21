@@ -29,7 +29,6 @@ global._test_react_version_focus = (range, testName, callback) => {
   const shouldPass = semver.satisfies(ReactVersionTestingAgainst, range);
 
   if (shouldPass) {
-    // eslint-disable-next-line jest/no-focused-tests
     test.only(testName, callback);
   } else {
     test.skip(testName, callback);

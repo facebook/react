@@ -125,10 +125,10 @@ if (__DEV__) {
   hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
-    /* eslint-disable no-new */
+    // eslint-disable-next-line no-new
     new Map([[nonExtensibleObject, null]]);
+    // eslint-disable-next-line no-new
     new Set([nonExtensibleObject]);
-    /* eslint-enable no-new */
   } catch (e) {
     // TODO: Consider warning about bad polyfills
     hasBadMapPolyfill = true;
