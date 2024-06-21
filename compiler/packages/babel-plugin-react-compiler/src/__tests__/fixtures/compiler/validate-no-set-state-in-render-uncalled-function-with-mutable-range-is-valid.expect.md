@@ -80,6 +80,7 @@ function Component(props) {
       return t2;
     }
     default: {
+      logEvent("Invalid step");
       let t1;
       if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
         t1 = <OtherComponent data={null} />;
@@ -87,7 +88,6 @@ function Component(props) {
       } else {
         t1 = $[6];
       }
-      logEvent("Invalid step");
       return t1;
     }
   }

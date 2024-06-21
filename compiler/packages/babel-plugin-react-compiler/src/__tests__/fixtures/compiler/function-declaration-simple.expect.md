@@ -25,28 +25,27 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(3);
-  let t0;
+  let t;
   if ($[0] !== a) {
-    const t = { a };
-    let t1;
+    t = { a };
+    let t0;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = function x(p) {
+      t0 = function x(p) {
         p.foo();
       };
-      $[2] = t1;
+      $[2] = t0;
     } else {
-      t1 = $[2];
+      t0 = $[2];
     }
-    const x = t1;
+    const x = t0;
 
-    t0 = t;
     x(t);
     $[0] = a;
-    $[1] = t0;
+    $[1] = t;
   } else {
-    t0 = $[1];
+    t = $[1];
   }
-  return t0;
+  return t;
 }
 
 export const FIXTURE_ENTRYPOINT = {

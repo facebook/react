@@ -32,20 +32,18 @@ import { c as _c } from "react/compiler-runtime";
 import { arrayPush } from "shared-runtime";
 function foo(props) {
   const $ = _c(2);
-  let t0;
+  let x;
   if ($[0] !== props) {
-    let x = [];
+    x = [];
     x.push(props.bar);
     props.cond ? ((x = []), x.push(props.foo)) : ((x = []), x.push(props.bar));
-
-    t0 = x;
     arrayPush(x, 4);
     $[0] = props;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

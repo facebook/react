@@ -33,32 +33,31 @@ import { c as _c } from "react/compiler-runtime";
 function useFoo(t0) {
   const $ = _c(4);
   const { obj, objIsNull } = t0;
+  let x;
   let t1;
-  let t2;
   if ($[0] !== objIsNull || $[1] !== obj) {
-    t2 = Symbol.for("react.early_return_sentinel");
+    t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      const x = [];
+      x = [];
       if (objIsNull) {
-        t2 = undefined;
+        t1 = undefined;
         break bb0;
       }
 
-      t1 = x;
       x.push(obj.b);
     }
     $[0] = objIsNull;
     $[1] = obj;
-    $[2] = t1;
-    $[3] = t2;
+    $[2] = x;
+    $[3] = t1;
   } else {
-    t1 = $[2];
-    t2 = $[3];
+    x = $[2];
+    t1 = $[3];
   }
-  if (t2 !== Symbol.for("react.early_return_sentinel")) {
-    return t2;
+  if (t1 !== Symbol.for("react.early_return_sentinel")) {
+    return t1;
   }
-  return t1;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -47,29 +47,29 @@ function useCustomRef() {
 
 function Foo() {
   const $ = _c(3);
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div>foo</div>;
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
   const ref = useCustomRef();
+  let t0;
   let t1;
-  let t2;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = () => {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = () => {
       ref.current?.click();
     };
-    t2 = [];
+    t1 = [];
+    $[0] = t0;
     $[1] = t1;
+  } else {
+    t0 = $[0];
+    t1 = $[1];
+  }
+  useEffect(t0, t1);
+  let t2;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = <div>foo</div>;
     $[2] = t2;
   } else {
-    t1 = $[1];
     t2 = $[2];
   }
-  useEffect(t1, t2);
-  return t0;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

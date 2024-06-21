@@ -24,23 +24,21 @@ import { c as _c } from "react/compiler-runtime"; // @enableEmitFreeze true
 
 function MyComponentName(props) {
   const $ = _c(3);
-  let t0;
+  let y;
   if ($[0] !== props.a || $[1] !== props.b) {
     const x = {};
     foo(x, props.a);
     foo(x, props.b);
 
-    const y = [];
-
-    t0 = y;
+    y = [];
     y.push(x);
     $[0] = props.a;
     $[1] = props.b;
-    $[2] = __DEV__ ? makeReadOnly(t0, "MyComponentName") : t0;
+    $[2] = __DEV__ ? makeReadOnly(y, "MyComponentName") : y;
   } else {
-    t0 = $[2];
+    y = $[2];
   }
-  return t0;
+  return y;
 }
 
 ```

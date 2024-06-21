@@ -54,32 +54,31 @@ import { mutate } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(5);
   const { a, b } = t0;
-  let t1;
+  let z;
   if ($[0] !== a || $[1] !== b) {
     const x = { a };
     const y = [b];
     mutate(x);
 
-    const t2 = mutate(y);
-    let t3;
-    if ($[3] !== t2) {
-      t3 = [t2];
-      $[3] = t2;
-      $[4] = t3;
+    const t1 = mutate(y);
+    let t2;
+    if ($[3] !== t1) {
+      t2 = [t1];
+      $[3] = t1;
+      $[4] = t2;
     } else {
-      t3 = $[4];
+      t2 = $[4];
     }
-    const z = t3;
+    z = t2;
 
-    t1 = z;
     mutate(y);
     $[0] = a;
     $[1] = b;
-    $[2] = t1;
+    $[2] = z;
   } else {
-    t1 = $[2];
+    z = $[2];
   }
-  return t1;
+  return z;
 }
 
 export const FIXTURE_ENTRYPOINT = {
