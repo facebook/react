@@ -49,7 +49,8 @@ jobs:
         params: ${{ fromJSON(needs.build_test_params.outputs.params) }}
     continue-on-error: true
     outputs:
-      test_names: ${{ steps.chunk-test-files.outputs }}
+      chunks: ${{ steps.chunks.outputs }}
+      chunk_ids: ${{ steps.chunk_ids.outputs }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -64,17 +65,23 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - id: chunk-test-files
-        run: yarn --silent test ${{ matrix.params }} --listTests --json --silent --ci=github | jq '[_nwise(length / 5 | ceil)]' >> $GITHUB_OUTPUT
+      - id: chunks
+        name: Set chunks
+        run: echo "chunks=$(yarn --silent test ${{ matrix.params }} --listTests --json --ci=github | jq -cM '[_nwise(length / 2 | ceil)]')" >> $GITHUB_OUTPUT
+      - id: chunk_ids
+        name: Set chunk IDs
+        run: echo "$chunk_ids=$(echo $CHUNKS | jq -cM 'to_entries | map(.key)')" >> $GITHUB_OUTPUT
+        env:
+          CHUNKS: ${{ steps.chunks.outputs }}
 
   test:
-    name: yarn test ${{ needs.build_test_params.outputs.params }}
+    name: yarn test ${{ matrix.params }} (${{ matrix.chunk_ids }})
     runs-on: ubuntu-latest
     needs: [build_test_params, chunk_tests]
     strategy:
       matrix:
         params: ${{ fromJSON(needs.build_test_params.outputs.params) }}
-        test_names: ${{ fromJSON(needs.chunk_tests.outputs.test_names) }}
+        chunk_ids: ${{ fromJSON(needs.chunk_tests.outputs.chunk_ids) }}
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -90,4 +97,6 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: echo $CHUNKS | jq '.[${{ matrix.test_names }}] | .[] | @text' | xargs yarn test ${{ matrix.params }} --ci=github
+      - run: echo $CHUNKS | jq '.[${{ matrix.chunk_ids }}] | .[] | @text' | xargs yarn test ${{ matrix.params }} --ci=github
+        env:
+          CHUNKS: ${{ needs.chunk_tests.outputs.chunks }}
