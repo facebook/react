@@ -282,9 +282,9 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case "pruned-scope": {
-      value = `<pruned> Scope ${printReactiveScopeSummary(terminal.scope)} block=bb${
-        terminal.block
-      } fallthrough=bb${terminal.fallthrough}`;
+      value = `<pruned> Scope ${printReactiveScopeSummary(
+        terminal.scope
+      )} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "try": {

@@ -22,8 +22,6 @@
     "build": "yarn workspaces run build",
     "dev": "concurrently --kill-others -n compiler,runtime,playground \"yarn workspace babel-plugin-react-compiler run build --watch\" \"yarn workspace react-compiler-runtime run build --watch\" \"wait-on packages/babel-plugin-react-compiler/dist/index.js && yarn workspace playground run dev\"",
     "test": "yarn workspaces run test",
-    "prettier:write": "prettier --write . --log-level=warn",
-    "prettier:ci": "prettier --check . --log-level=warn",
     "snap": "yarn workspace babel-plugin-react-compiler run snap",
     "snap:build": "yarn workspace snap run build",
     "postinstall": "perl -p -i -e 's/react\\.element/react.transitional.element/' packages/snap/node_modules/fbt/lib/FbtReactUtil.js && perl -p -i -e 's/didWarnAboutUsingAct = false;/didWarnAboutUsingAct = true;/' packages/babel-plugin-react-compiler/node_modules/react-dom/cjs/react-dom-test-utils.development.js",
