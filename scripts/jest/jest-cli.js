@@ -93,7 +93,6 @@ const argv = yargs
       requiresArg: false,
       type: 'choices',
       choices: ['circleci', 'github'],
-      default: false,
     },
     compactConsole: {
       alias: 'c',
