@@ -86,12 +86,6 @@ __DEV__ &&
         eventLog.set(entries, offset);
       }
     }
-    function startLoggingProfilingEvents() {
-      eventLogSize = 131072;
-      eventLogBuffer = new ArrayBuffer(4 * eventLogSize);
-      eventLog = new Int32Array(eventLogBuffer);
-      eventLogIndex = 0;
-    }
     function stopLoggingProfilingEvents() {
       var buffer = eventLogBuffer;
       eventLogSize = 0;
@@ -106,11 +100,9 @@ __DEV__ &&
           pop(timerQueue),
             (timer.sortIndex = timer.expirationTime),
             push(taskQueue, timer),
-            enableProfiling &&
-              (enableProfiling &&
-                null !== eventLog &&
-                logEvent([1, 1e3 * currentTime, timer.id, timer.priorityLevel]),
-              (timer.isQueued = !0));
+            null !== eventLog &&
+              logEvent([1, 1e3 * currentTime, timer.id, timer.priorityLevel]),
+            (timer.isQueued = !0);
         else break;
         timer = peek(timerQueue);
       }
@@ -130,9 +122,7 @@ __DEV__ &&
         }
     }
     function flushWork(hasTimeRemaining, initialTime) {
-      enableProfiling &&
-        enableProfiling &&
-        null !== eventLog &&
+      null !== eventLog &&
         logEvent([8, 1e3 * initialTime, mainThreadIdCounter]);
       isHostCallbackScheduled = !1;
       isHostTimeoutScheduled &&
@@ -142,88 +132,87 @@ __DEV__ &&
       isPerformingWork = !0;
       var previousPriorityLevel = currentPriorityLevel;
       try {
-        if (enableProfiling)
-          try {
-            return workLoop(hasTimeRemaining, initialTime);
-          } catch (error) {
-            throw (
-              (null !== currentTask &&
-                ((hasTimeRemaining = currentMockTime),
-                enableProfiling &&
+        try {
+          a: {
+            advanceTimers(initialTime);
+            for (
+              currentTask = peek(taskQueue);
+              !(
+                null === currentTask ||
+                isSchedulerPaused ||
+                (currentTask.expirationTime > initialTime &&
+                  (!hasTimeRemaining || shouldYieldToHost()))
+              );
+
+            ) {
+              var callback = currentTask.callback;
+              if ("function" === typeof callback) {
+                currentTask.callback = null;
+                currentPriorityLevel = currentTask.priorityLevel;
+                var didUserCallbackTimeout =
+                    currentTask.expirationTime <= initialTime,
+                  task = currentTask,
+                  ms = initialTime;
+                runIdCounter++;
+                null !== eventLog &&
+                  logEvent([5, 1e3 * ms, task.id, runIdCounter]);
+                var continuationCallback = callback(didUserCallbackTimeout);
+                initialTime = currentMockTime;
+                if ("function" === typeof continuationCallback) {
+                  if (
+                    ((currentTask.callback = continuationCallback),
+                    null !== eventLog &&
+                      logEvent([
+                        6,
+                        1e3 * initialTime,
+                        currentTask.id,
+                        runIdCounter
+                      ]),
+                    advanceTimers(initialTime),
+                    shouldYieldForPaint)
+                  ) {
+                    var JSCompiler_inline_result = (needsPaint = !0);
+                    break a;
+                  }
+                } else
                   null !== eventLog &&
-                  logEvent([3, 1e3 * hasTimeRemaining, currentTask.id]),
-                (currentTask.isQueued = !1)),
-              error)
-            );
+                    logEvent([2, 1e3 * initialTime, currentTask.id]),
+                    (currentTask.isQueued = !1),
+                    currentTask === peek(taskQueue) && pop(taskQueue),
+                    advanceTimers(initialTime);
+              } else pop(taskQueue);
+              currentTask = peek(taskQueue);
+            }
+            if (null !== currentTask) JSCompiler_inline_result = !0;
+            else {
+              var firstTimer = peek(timerQueue);
+              if (null !== firstTimer) {
+                var ms$jscomp$0 = firstTimer.startTime - initialTime;
+                scheduledTimeout = handleTimeout;
+                timeoutTime = currentMockTime + ms$jscomp$0;
+              }
+              JSCompiler_inline_result = !1;
+            }
           }
-        else return workLoop(hasTimeRemaining, initialTime);
+          return JSCompiler_inline_result;
+        } catch (error) {
+          throw (
+            (null !== currentTask &&
+              ((hasTimeRemaining = currentMockTime),
+              null !== eventLog &&
+                logEvent([3, 1e3 * hasTimeRemaining, currentTask.id]),
+              (currentTask.isQueued = !1)),
+            error)
+          );
+        }
       } finally {
         (currentTask = null),
           (currentPriorityLevel = previousPriorityLevel),
           (isPerformingWork = !1),
-          enableProfiling &&
-            enableProfiling &&
-            (mainThreadIdCounter++,
-            null !== eventLog &&
-              logEvent([7, 1e3 * currentMockTime, mainThreadIdCounter]));
+          mainThreadIdCounter++,
+          null !== eventLog &&
+            logEvent([7, 1e3 * currentMockTime, mainThreadIdCounter]);
       }
-    }
-    function workLoop(hasTimeRemaining, initialTime) {
-      advanceTimers(initialTime);
-      for (
-        currentTask = peek(taskQueue);
-        !(
-          null === currentTask ||
-          isSchedulerPaused ||
-          (currentTask.expirationTime > initialTime &&
-            (!hasTimeRemaining || shouldYieldToHost()))
-        );
-
-      ) {
-        var callback = currentTask.callback;
-        if ("function" === typeof callback) {
-          currentTask.callback = null;
-          currentPriorityLevel = currentTask.priorityLevel;
-          var didUserCallbackTimeout =
-            currentTask.expirationTime <= initialTime;
-          if (enableProfiling) {
-            var task = currentTask;
-            enableProfiling &&
-              (runIdCounter++,
-              null !== eventLog &&
-                logEvent([5, 1e3 * initialTime, task.id, runIdCounter]));
-          }
-          callback = callback(didUserCallbackTimeout);
-          initialTime = currentMockTime;
-          if ("function" === typeof callback) {
-            if (
-              ((currentTask.callback = callback),
-              enableProfiling &&
-                enableProfiling &&
-                null !== eventLog &&
-                logEvent([6, 1e3 * initialTime, currentTask.id, runIdCounter]),
-              advanceTimers(initialTime),
-              shouldYieldForPaint)
-            )
-              return (needsPaint = !0);
-          } else
-            enableProfiling &&
-              (enableProfiling &&
-                null !== eventLog &&
-                logEvent([2, 1e3 * initialTime, currentTask.id]),
-              (currentTask.isQueued = !1)),
-              currentTask === peek(taskQueue) && pop(taskQueue),
-              advanceTimers(initialTime);
-        } else pop(taskQueue);
-        currentTask = peek(taskQueue);
-      }
-      if (null !== currentTask) return !0;
-      hasTimeRemaining = peek(timerQueue);
-      null !== hasTimeRemaining &&
-        ((hasTimeRemaining = hasTimeRemaining.startTime - initialTime),
-        (scheduledTimeout = handleTimeout),
-        (timeoutTime = currentMockTime + hasTimeRemaining));
-      return !1;
     }
     function shouldYieldToHost() {
       return (0 === expectedNumberOfYields && null === yieldedValues) ||
@@ -250,8 +239,8 @@ __DEV__ &&
         }
       } else return !1;
     }
-    var enableProfiling = require("SchedulerFeatureFlags").enableProfiling,
-      runIdCounter = 0,
+    require("SchedulerFeatureFlags");
+    var runIdCounter = 0,
       mainThreadIdCounter = 0,
       eventLogSize = 0,
       eventLogBuffer = null,
@@ -277,12 +266,15 @@ __DEV__ &&
       needsPaint = !1,
       shouldYieldForPaint = !1,
       disableYieldValue = !1,
-      unstable_Profiling = enableProfiling
-        ? {
-            startLoggingProfilingEvents: startLoggingProfilingEvents,
-            stopLoggingProfilingEvents: stopLoggingProfilingEvents
-          }
-        : null;
+      unstable_Profiling = {
+        startLoggingProfilingEvents: function () {
+          eventLogSize = 131072;
+          eventLogBuffer = new ArrayBuffer(4 * eventLogSize);
+          eventLog = new Int32Array(eventLogBuffer);
+          eventLogIndex = 0;
+        },
+        stopLoggingProfilingEvents: stopLoggingProfilingEvents
+      };
     exports.log = function (value) {
       "disabledLog" === console.log.name ||
         disableYieldValue ||
@@ -316,11 +308,9 @@ __DEV__ &&
           (scheduledTimeout = null)));
     };
     exports.unstable_cancelCallback = function (task) {
-      if (enableProfiling && task.isQueued) {
+      if (task.isQueued) {
         var currentTime = currentMockTime;
-        enableProfiling &&
-          null !== eventLog &&
-          logEvent([4, 1e3 * currentTime, task.id]);
+        null !== eventLog && logEvent([4, 1e3 * currentTime, task.id]);
         task.isQueued = !1;
       }
       task.callback = null;
@@ -487,9 +477,9 @@ __DEV__ &&
         priorityLevel: priorityLevel,
         startTime: options,
         expirationTime: timeout,
-        sortIndex: -1
+        sortIndex: -1,
+        isQueued: !1
       };
-      enableProfiling && (priorityLevel.isQueued = !1);
       options > currentTime
         ? ((priorityLevel.sortIndex = options),
           push(timerQueue, priorityLevel),
@@ -502,16 +492,14 @@ __DEV__ &&
             (timeoutTime = currentMockTime + (options - currentTime))))
         : ((priorityLevel.sortIndex = timeout),
           push(taskQueue, priorityLevel),
-          enableProfiling &&
-            (enableProfiling &&
-              null !== eventLog &&
-              logEvent([
-                1,
-                1e3 * currentTime,
-                priorityLevel.id,
-                priorityLevel.priorityLevel
-              ]),
-            (priorityLevel.isQueued = !0)),
+          null !== eventLog &&
+            logEvent([
+              1,
+              1e3 * currentTime,
+              priorityLevel.id,
+              priorityLevel.priorityLevel
+            ]),
+          (priorityLevel.isQueued = !0),
           isHostCallbackScheduled ||
             isPerformingWork ||
             ((isHostCallbackScheduled = !0), (scheduledCallback = flushWork)));

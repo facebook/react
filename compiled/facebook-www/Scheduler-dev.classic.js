@@ -20,9 +20,7 @@ __DEV__ &&
         var hasMoreWork = !0;
         try {
           a: {
-            enableProfiling &&
-              enableProfiling &&
-              null !== eventLog &&
+            null !== eventLog &&
               logEvent([8, 1e3 * currentTime, mainThreadIdCounter]);
             isHostCallbackScheduled = !1;
             isHostTimeoutScheduled &&
@@ -32,37 +30,84 @@ __DEV__ &&
             isPerformingWork = !0;
             var previousPriorityLevel = currentPriorityLevel;
             try {
-              if (enableProfiling)
-                try {
-                  hasMoreWork = workLoop(currentTime);
-                  break a;
-                } catch (error) {
-                  if (null !== currentTask) {
-                    var currentTime$jscomp$0 = exports.unstable_now();
-                    enableProfiling &&
+              try {
+                b: {
+                  advanceTimers(currentTime);
+                  for (
+                    currentTask = peek(taskQueue);
+                    !(
+                      null === currentTask ||
+                      isSchedulerPaused ||
+                      (currentTask.expirationTime > currentTime &&
+                        shouldYieldToHost())
+                    );
+
+                  ) {
+                    var callback = currentTask.callback;
+                    if ("function" === typeof callback) {
+                      currentTask.callback = null;
+                      currentPriorityLevel = currentTask.priorityLevel;
+                      var didUserCallbackTimeout =
+                          currentTask.expirationTime <= currentTime,
+                        task = currentTask,
+                        ms = currentTime;
+                      runIdCounter++;
                       null !== eventLog &&
-                      logEvent([3, 1e3 * currentTime$jscomp$0, currentTask.id]);
-                    currentTask.isQueued = !1;
+                        logEvent([5, 1e3 * ms, task.id, runIdCounter]);
+                      var continuationCallback = callback(
+                        didUserCallbackTimeout
+                      );
+                      currentTime = exports.unstable_now();
+                      if ("function" === typeof continuationCallback) {
+                        currentTask.callback = continuationCallback;
+                        null !== eventLog &&
+                          logEvent([
+                            6,
+                            1e3 * currentTime,
+                            currentTask.id,
+                            runIdCounter
+                          ]);
+                        advanceTimers(currentTime);
+                        hasMoreWork = !0;
+                        break b;
+                      }
+                      null !== eventLog &&
+                        logEvent([2, 1e3 * currentTime, currentTask.id]);
+                      currentTask.isQueued = !1;
+                      currentTask === peek(taskQueue) && pop(taskQueue);
+                      advanceTimers(currentTime);
+                    } else pop(taskQueue);
+                    currentTask = peek(taskQueue);
                   }
-                  throw error;
+                  if (null !== currentTask) hasMoreWork = !0;
+                  else {
+                    var firstTimer = peek(timerQueue);
+                    null !== firstTimer &&
+                      requestHostTimeout(
+                        handleTimeout,
+                        firstTimer.startTime - currentTime
+                      );
+                    hasMoreWork = !1;
+                  }
                 }
-              else {
-                hasMoreWork = workLoop(currentTime);
                 break a;
+              } catch (error) {
+                if (null !== currentTask) {
+                  var currentTime$jscomp$0 = exports.unstable_now();
+                  null !== eventLog &&
+                    logEvent([3, 1e3 * currentTime$jscomp$0, currentTask.id]);
+                  currentTask.isQueued = !1;
+                }
+                throw error;
               }
             } finally {
-              if (
-                ((currentTask = null),
-                (currentPriorityLevel = previousPriorityLevel),
-                (isPerformingWork = !1),
-                enableProfiling)
-              ) {
-                var ms = exports.unstable_now();
-                enableProfiling &&
-                  (mainThreadIdCounter++,
-                  null !== eventLog &&
-                    logEvent([7, 1e3 * ms, mainThreadIdCounter]));
-              }
+              currentTask = null;
+              currentPriorityLevel = previousPriorityLevel;
+              isPerformingWork = !1;
+              var ms$jscomp$0 = exports.unstable_now();
+              mainThreadIdCounter++;
+              null !== eventLog &&
+                logEvent([7, 1e3 * ms$jscomp$0, mainThreadIdCounter]);
             }
             hasMoreWork = void 0;
           }
@@ -146,12 +191,6 @@ __DEV__ &&
         eventLog.set(entries, offset);
       }
     }
-    function startLoggingProfilingEvents() {
-      eventLogSize = 131072;
-      eventLogBuffer = new ArrayBuffer(4 * eventLogSize);
-      eventLog = new Int32Array(eventLogBuffer);
-      eventLogIndex = 0;
-    }
     function stopLoggingProfilingEvents() {
       var buffer = eventLogBuffer;
       eventLogSize = 0;
@@ -166,11 +205,9 @@ __DEV__ &&
           pop(timerQueue),
             (timer.sortIndex = timer.expirationTime),
             push(taskQueue, timer),
-            enableProfiling &&
-              (enableProfiling &&
-                null !== eventLog &&
-                logEvent([1, 1e3 * currentTime, timer.id, timer.priorityLevel]),
-              (timer.isQueued = !0));
+            null !== eventLog &&
+              logEvent([1, 1e3 * currentTime, timer.id, timer.priorityLevel]),
+            (timer.isQueued = !0);
         else break;
         timer = peek(timerQueue);
       }
@@ -189,58 +226,6 @@ __DEV__ &&
               firstTimer.startTime - currentTime
             );
         }
-    }
-    function workLoop(initialTime) {
-      advanceTimers(initialTime);
-      for (
-        currentTask = peek(taskQueue);
-        !(
-          null === currentTask ||
-          isSchedulerPaused ||
-          (currentTask.expirationTime > initialTime && shouldYieldToHost())
-        );
-
-      ) {
-        var callback = currentTask.callback;
-        if ("function" === typeof callback) {
-          currentTask.callback = null;
-          currentPriorityLevel = currentTask.priorityLevel;
-          var didUserCallbackTimeout =
-            currentTask.expirationTime <= initialTime;
-          if (enableProfiling) {
-            var task = currentTask;
-            enableProfiling &&
-              (runIdCounter++,
-              null !== eventLog &&
-                logEvent([5, 1e3 * initialTime, task.id, runIdCounter]));
-          }
-          callback = callback(didUserCallbackTimeout);
-          initialTime = exports.unstable_now();
-          if ("function" === typeof callback)
-            return (
-              (currentTask.callback = callback),
-              enableProfiling &&
-                enableProfiling &&
-                null !== eventLog &&
-                logEvent([6, 1e3 * initialTime, currentTask.id, runIdCounter]),
-              advanceTimers(initialTime),
-              !0
-            );
-          enableProfiling &&
-            (enableProfiling &&
-              null !== eventLog &&
-              logEvent([2, 1e3 * initialTime, currentTask.id]),
-            (currentTask.isQueued = !1));
-          currentTask === peek(taskQueue) && pop(taskQueue);
-          advanceTimers(initialTime);
-        } else pop(taskQueue);
-        currentTask = peek(taskQueue);
-      }
-      if (null !== currentTask) return !0;
-      callback = peek(timerQueue);
-      null !== callback &&
-        requestHostTimeout(handleTimeout, callback.startTime - initialTime);
-      return !1;
     }
     function shouldYieldToHost() {
       return exports.unstable_now() - startTime < frameInterval ? !1 : !0;
@@ -263,7 +248,6 @@ __DEV__ &&
         dynamicFeatureFlags.userBlockingPriorityTimeout,
       normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
       lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout,
-      enableProfiling = dynamicFeatureFlags.enableProfiling,
       runIdCounter = 0,
       mainThreadIdCounter = 0,
       eventLogSize = 0,
@@ -319,12 +303,15 @@ __DEV__ &&
       schedulePerformWorkUntilDeadline = function () {
         localSetTimeout(performWorkUntilDeadline, 0);
       };
-    dynamicFeatureFlags = enableProfiling
-      ? {
-          startLoggingProfilingEvents: startLoggingProfilingEvents,
-          stopLoggingProfilingEvents: stopLoggingProfilingEvents
-        }
-      : null;
+    dynamicFeatureFlags = {
+      startLoggingProfilingEvents: function () {
+        eventLogSize = 131072;
+        eventLogBuffer = new ArrayBuffer(4 * eventLogSize);
+        eventLog = new Int32Array(eventLogBuffer);
+        eventLogIndex = 0;
+      },
+      stopLoggingProfilingEvents: stopLoggingProfilingEvents
+    };
     exports.unstable_IdlePriority = 5;
     exports.unstable_ImmediatePriority = 1;
     exports.unstable_LowPriority = 4;
@@ -332,11 +319,9 @@ __DEV__ &&
     exports.unstable_Profiling = dynamicFeatureFlags;
     exports.unstable_UserBlockingPriority = 2;
     exports.unstable_cancelCallback = function (task) {
-      if (enableProfiling && task.isQueued) {
+      if (task.isQueued) {
         var currentTime = exports.unstable_now();
-        enableProfiling &&
-          null !== eventLog &&
-          logEvent([4, 1e3 * currentTime, task.id]);
+        null !== eventLog && logEvent([4, 1e3 * currentTime, task.id]);
         task.isQueued = !1;
       }
       task.callback = null;
@@ -437,9 +422,9 @@ __DEV__ &&
         priorityLevel: priorityLevel,
         startTime: options,
         expirationTime: timeout,
-        sortIndex: -1
+        sortIndex: -1,
+        isQueued: !1
       };
-      enableProfiling && (priorityLevel.isQueued = !1);
       options > currentTime
         ? ((priorityLevel.sortIndex = options),
           push(timerQueue, priorityLevel),
@@ -451,16 +436,14 @@ __DEV__ &&
             requestHostTimeout(handleTimeout, options - currentTime)))
         : ((priorityLevel.sortIndex = timeout),
           push(taskQueue, priorityLevel),
-          enableProfiling &&
-            (enableProfiling &&
-              null !== eventLog &&
-              logEvent([
-                1,
-                1e3 * currentTime,
-                priorityLevel.id,
-                priorityLevel.priorityLevel
-              ]),
-            (priorityLevel.isQueued = !0)),
+          null !== eventLog &&
+            logEvent([
+              1,
+              1e3 * currentTime,
+              priorityLevel.id,
+              priorityLevel.priorityLevel
+            ]),
+          (priorityLevel.isQueued = !0),
           isHostCallbackScheduled ||
             isPerformingWork ||
             ((isHostCallbackScheduled = !0), requestHostCallback()));
