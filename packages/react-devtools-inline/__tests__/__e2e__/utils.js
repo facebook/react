@@ -7,7 +7,6 @@ const config = require('../../playwright.config');
 const {test} = require('@playwright/test');
 
 function runOnlyForReactRange(range) {
-  // eslint-disable-next-line jest/no-disabled-tests
   test.skip(
     !semver.satisfies(config.use.react_version, range),
     `This test requires a React version of ${range} to run. ` +

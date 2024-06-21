@@ -971,7 +971,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function onRecoverableError(error) {
     // TODO: Turn this on once tests are fixed
-    // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
     // console.error(error);
   }
 
