@@ -314,7 +314,7 @@ function getCommandArgs() {
   }
 
   if (argv.ci === 'github') {
-    args.push('--maxConcurrency=10 --workerThreads=true');
+    args.push('--maxConcurrency=10');
   }
 
   // Push the remaining args onto the command.
