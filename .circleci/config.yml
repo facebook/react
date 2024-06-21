@@ -345,19 +345,6 @@ jobs:
             yarn extract-errors
             git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
 
-  check_generated_fizz_runtime:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - setup_node_modules
-      - run:
-          name: Confirm generated inline Fizz runtime is up to date
-          command: |
-            yarn generate-inline-fizz-runtime
-            git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
-
   yarn_test_build:
     docker: *docker
     environment: *environment
@@ -420,11 +407,6 @@ workflows:
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - check_generated_fizz_runtime:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
       - yarn_build:
           filters:
             branches:
