@@ -14,11 +14,13 @@ process.on('unhandledRejection', err => {
 const runFlow = require('../flow/runFlow');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
-async function check(idx) {
-  if (idx == null) {
-    throw new Error('Expected an inlinedHostConfig index');
+async function check(shortName) {
+  if (shortName == null) {
+    throw new Error('Expected an inlinedHostConfig shortName');
   }
-  const rendererInfo = inlinedHostConfigs[+idx];
+  const rendererInfo = inlinedHostConfigs.find(
+    config => config.shortName === shortName
+  );
   if (rendererInfo.isFlowTyped) {
     await runFlow(rendererInfo.shortName, ['check']);
     console.log();
