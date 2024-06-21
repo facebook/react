@@ -72,7 +72,7 @@ jobs:
         name: Set chunk IDs
         run: echo "$chunk_ids=$(echo $CHUNKS | jq -cM 'to_entries | map(.key)')" >> $GITHUB_OUTPUT
         env:
-          CHUNKS: ${{ steps.chunks.outputs }}
+          CHUNKS: ${{ steps.chunks.outputs.chunks }}
 
   test:
     name: yarn test ${{ matrix.params }} (${{ matrix.chunk_ids }})
