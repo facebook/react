@@ -98,18 +98,18 @@ type Node = {
 
 // Inclusive start and end
 type References = {
-  accessedRanges: AccessedRanges;
+  singleUseIdentifiers: SingleUseIdentifiers;
   lastAssignments: LastAssignments;
 };
 type LastAssignments = Map<string, InstructionId>;
-type AccessedRanges = Map<IdentifierId, Range>;
+type SingleUseIdentifiers = Set<IdentifierId>;
 type Range = { start: InstructionId; end: InstructionId };
 enum ReferenceKind {
   Read,
   Write,
 }
 function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
-  const accessedRanges: AccessedRanges = new Map();
+  const singleUseIdentifiers = new Map<IdentifierId, number>();
   const lastAssignments: LastAssignments = new Map();
   function reference(
     instr: InstructionId,
@@ -134,15 +134,8 @@ function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
       }
       return;
     } else if (kind === ReferenceKind.Read) {
-      const range = getOrInsertWith(
-        accessedRanges,
-        place.identifier.id,
-        () => ({
-          start: instr,
-          end: instr,
-        })
-      );
-      range.end = instr;
+      const previousCount = singleUseIdentifiers.get(place.identifier.id) ?? 0;
+      singleUseIdentifiers.set(place.identifier.id, previousCount + 1);
     }
   }
   for (const [, block] of fn.body.blocks) {
@@ -158,7 +151,14 @@ function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
       reference(block.terminal.id, operand, ReferenceKind.Read);
     }
   }
-  return { accessedRanges, lastAssignments };
+  return {
+    singleUseIdentifiers: new Set(
+      [...singleUseIdentifiers]
+        .filter(([, count]) => count === 1)
+        .map(([id]) => id)
+    ),
+    lastAssignments,
+  };
 }
 
 function reorderBlock(
@@ -485,12 +485,10 @@ function getReorderability(
       const name = instr.value.place.identifier.name;
       if (name !== null && name.kind === "named") {
         const lastAssignment = references.lastAssignments.get(name.value);
-        const range = references.accessedRanges.get(instr.lvalue.identifier.id);
         if (
           lastAssignment !== undefined &&
           lastAssignment < instr.id &&
-          range !== undefined &&
-          range.end === range.start // this LoadLocal is used exactly once
+          references.singleUseIdentifiers.has(instr.lvalue.identifier.id)
         ) {
           return Reorderability.Reorderable;
         }
