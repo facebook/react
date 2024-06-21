@@ -15,7 +15,7 @@ jobs:
     outputs:
       params: ${{ steps.define-params.outputs.result }}
       # How many chunks to group tests into
-      parallelism: 5
+      parallelism: 10
     steps:
       - uses: actions/github-script@v7
         id: define-params
