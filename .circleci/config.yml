@@ -74,18 +74,6 @@ parameters:
     default: ''
 
 jobs:
-  yarn_lint:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: node ./scripts/prettier/index
-      - run: node ./scripts/tasks/eslint
-      - run: ./scripts/circleci/check_license.sh
-      - run: ./scripts/circleci/test_print_warnings.sh
-
   yarn_flow:
     docker: *docker
     environment: *environment
@@ -475,11 +463,6 @@ workflows:
               ignore:
                 - builds/facebook-www
       - check_generated_fizz_runtime:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - yarn_lint:
           filters:
             branches:
               ignore:
