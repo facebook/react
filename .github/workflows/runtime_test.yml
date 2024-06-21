@@ -1,0 +1,55 @@
+name: React Runtime (Test)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - 'compiler/**'
+
+jobs:
+  test:
+    name: yarn test
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        # Intentionally passing these as strings instead of creating a
+        # separate parameter per CLI argument, since it's easier to
+        # control/see which combinations we want to run.
+        params: [
+          "-r=stable --env=development",
+          "-r=stable --env=production",
+          "-r=experimental --env=development",
+          "-r=experimental --env=production",
+          "-r=www-classic --env=development --variant=false",
+          "-r=www-classic --env=production --variant=false",
+          "-r=www-classic --env=development --variant=true",
+          "-r=www-classic --env=production --variant=true",
+          "-r=www-modern --env=development --variant=false",
+          "-r=www-modern --env=production --variant=false",
+          "-r=www-modern --env=development --variant=true",
+          "-r=www-modern --env=production --variant=true",
+          "-r=xplat --env=development --variant=false",
+          "-r=xplat --env=development --variant=true",
+          "-r=xplat --env=production --variant=false",
+          "-r=xplat --env=production --variant=true",
+          # TODO: Test more persistent configurations?
+          "-r=stable --env=development --persistent",
+          "-r=experimental --env=development --persistent"
+        ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn test ${{ matrix.params }} --ci
