@@ -91,7 +91,8 @@ const argv = yargs
     ci: {
       describe: 'Run tests in CI',
       requiresArg: false,
-      type: 'boolean',
+      type: 'choices',
+      choices: ['circleci', 'github'],
       default: false,
     },
     compactConsole: {
@@ -309,7 +310,7 @@ function getCommandArgs() {
   }
 
   // CI Environments have limited workers.
-  if (argv.ci) {
+  if (argv.ci === 'circleci') {
     args.push('--maxWorkers=2');
   }
 

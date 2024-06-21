@@ -52,4 +52,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test ${{ matrix.params }} --ci
+      - run: yarn test ${{ matrix.params }} --ci=github
