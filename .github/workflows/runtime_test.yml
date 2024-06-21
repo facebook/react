@@ -65,7 +65,7 @@ jobs:
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - id: chunk-test-files
-        run: yarn --silent test ${{ matrix.params }} --listTests --json --silent | jq '[_nwise(length / 5 | ceil)]' >> $GITHUB_OUTPUT
+        run: yarn --silent test ${{ matrix.params }} --listTests --json --silent --ci=github | jq '[_nwise(length / 5 | ceil)]' >> $GITHUB_OUTPUT
 
   test:
     name: yarn test ${{ needs.build_test_params.outputs.params }}
