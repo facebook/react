@@ -49,8 +49,8 @@ jobs:
         params: ${{ fromJSON(needs.build_test_params.outputs.params) }}
     continue-on-error: true
     outputs:
-      chunks: ${{ steps.chunks.outputs }}
-      chunk_ids: ${{ steps.chunk_ids.outputs }}
+      chunks: ${{ steps.chunks.outputs.chunks }}
+      chunk_ids: ${{ steps.chunk_ids.outputs.chunk_ids }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
