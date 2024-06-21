@@ -23,25 +23,6 @@ jobs:
       - id: set-matrix
         run: echo "matrix=$(find packages -mindepth 1 -maxdepth 1 -type d | sed 's!packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
 
-  # Hardcoded to improve parallelism for babel-plugin-react-compiler
-  prettier:
-    name: Run prettier
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18.x
-          cache: "yarn"
-          cache-dependency-path: compiler/yarn.lock
-      - name: Restore cached node_modules
-        uses: actions/cache@v4
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
-      - run: yarn install --frozen-lockfile
-      - run: yarn prettier:ci
-
   # Hardcoded to improve parallelism
   lint:
     name: Lint babel-plugin-react-compiler
