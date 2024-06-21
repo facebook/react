@@ -21,9 +21,11 @@ async function check(shortName) {
   const rendererInfo = inlinedHostConfigs.find(
     config => config.shortName === shortName
   );
+  if (rendererInfo == null) {
+    throw new Error(`Could not find inlinedHostConfig for ${shortName}`);
+  }
   if (rendererInfo.isFlowTyped) {
     await runFlow(rendererInfo.shortName, ['check']);
-    console.log();
   }
 }
 
