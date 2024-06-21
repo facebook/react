@@ -44,7 +44,7 @@ export function getCurrentParentStackInDev(): string {
   return '';
 }
 
-function getCurrentFiberStackInDev(stack: Error): string {
+function getCurrentFiberStackInDev(stack: null | Error): string {
   if (__DEV__) {
     if (current === null) {
       return '';

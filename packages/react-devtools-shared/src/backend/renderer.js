@@ -40,6 +40,7 @@ import {
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {
+  formatConsoleArgumentsToSingleString,
   gt,
   gte,
   parseSourceFromComponentStack,
@@ -95,7 +96,6 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
 } from './ReactSymbols';
-import {format} from './utils';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -851,7 +851,14 @@ export function attach(
         return;
       }
     }
-    const message = format(...args);
+
+    // We can't really use this message as a unique key, since we can't distinguish
+    // different objects in this implementation. We have to delegate displaying of the objects
+    // to the environment, the browser console, for example, so this is why this should be kept
+    // as an array of arguments, instead of the plain string.
+    // [Warning: %o, {...}] and [Warning: %o, {...}] will be considered as the same message,
+    // even if objects are different
+    const message = formatConsoleArgumentsToSingleString(...args);
     if (__DEBUG__) {
       debug('onErrorOrWarning', fiber, null, `${type}: "${message}"`);
     }
