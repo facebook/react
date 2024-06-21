@@ -70,7 +70,7 @@ jobs:
         run: echo "chunks=$(yarn --silent test ${{ matrix.params }} --listTests --json --ci=github | jq -cM '[_nwise(length / 2 | ceil)]')" >> $GITHUB_OUTPUT
       - id: chunk_ids
         name: Set chunk IDs
-        run: echo "$chunk_ids=$(echo $CHUNKS | jq -cM 'to_entries | map(.key)')" >> $GITHUB_OUTPUT
+        run: echo "chunk_ids=$(echo $CHUNKS | jq -cM 'to_entries | map(.key)')" >> $GITHUB_OUTPUT
         env:
           CHUNKS: ${{ steps.chunks.outputs.chunks }}
 
