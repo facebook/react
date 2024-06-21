@@ -7,8 +7,6 @@
  * @emails react-core
  */
 
-/* eslint-disable no-for-of-loops/no-for-of-loops */
-
 'use strict';
 
 let React;

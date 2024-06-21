@@ -625,7 +625,6 @@ describe('Concurrent Mode', () => {
       async () => await act(() => root.render(<StrictRoot />)),
     ).toErrorDev(
       [
-        /* eslint-disable max-len */
         `Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
@@ -642,7 +641,6 @@ Please update the following components: Bar, Foo`,
 * Move data fetching code or side effects to componentDidUpdate.
 
 Please update the following components: App`,
-        /* eslint-enable max-len */
       ],
       {withoutStack: true},
     );
@@ -689,7 +687,6 @@ Please update the following components: App`,
         async () => await act(() => root.render(<StrictRoot />)),
       ).toErrorDev(
         [
-          /* eslint-disable max-len */
           `Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
@@ -706,13 +703,11 @@ Please update the following components: Child`,
 * Move data fetching code or side effects to componentDidUpdate.
 
 Please update the following components: App`,
-          /* eslint-enable max-len */
         ],
         {withoutStack: true},
       );
     }).toWarnDev(
       [
-        /* eslint-disable max-len */
         `componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
@@ -732,7 +727,6 @@ Please update the following components: Parent`,
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: Parent`,
-        /* eslint-enable max-len */
       ],
       {withoutStack: true},
     );

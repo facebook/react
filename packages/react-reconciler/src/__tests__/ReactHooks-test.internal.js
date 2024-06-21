@@ -1563,7 +1563,6 @@ describe('ReactHooks', () => {
 
       it(`warns on using differently ordered hooks (${hookNameA}, ${hookNameB}) on subsequent renders`, async () => {
         function App(props) {
-          /* eslint-disable no-unused-vars */
           if (props.update) {
             secondHelper();
             firstHelper();
@@ -1574,7 +1573,6 @@ describe('ReactHooks', () => {
           // This should not appear in the warning message because it occurs after the first mismatch
           useRefHelper();
           return null;
-          /* eslint-enable no-unused-vars */
         }
         let root;
         await act(() => {
@@ -1616,7 +1614,6 @@ describe('ReactHooks', () => {
 
       it(`warns when more hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, async () => {
         function App(props) {
-          /* eslint-disable no-unused-vars */
           if (props.update) {
             firstHelper();
             secondHelper();
@@ -1624,7 +1621,6 @@ describe('ReactHooks', () => {
             firstHelper();
           }
           return null;
-          /* eslint-enable no-unused-vars */
         }
         let root;
         await act(() => {
@@ -1671,7 +1667,6 @@ describe('ReactHooks', () => {
 
       it(`warns when fewer hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, async () => {
         function App(props) {
-          /* eslint-disable no-unused-vars */
           if (props.update) {
             firstHelper();
           } else {
@@ -1679,7 +1674,6 @@ describe('ReactHooks', () => {
             secondHelper();
           }
           return null;
-          /* eslint-enable no-unused-vars */
         }
         let root;
         await act(() => {
@@ -1701,7 +1695,6 @@ describe('ReactHooks', () => {
         '(useImperativeHandleHelper, useMemoHelper) on subsequent renders',
       async () => {
         function App(props) {
-          /* eslint-disable no-unused-vars */
           if (props.update) {
             useMemoHelper();
             useImperativeHandleHelper();
@@ -1712,7 +1705,6 @@ describe('ReactHooks', () => {
           // This should not appear in the warning message because it occurs after the first mismatch
           useRefHelper();
           return null;
-          /* eslint-enable no-unused-vars */
         }
         let root;
         await act(() => {
@@ -1753,7 +1745,6 @@ describe('ReactHooks', () => {
         useState(0);
       }
       function App(props) {
-        /* eslint-disable no-unused-vars */
         if (props.update) {
           useCustomHook();
           useReducer((s, a) => a, 0);
@@ -1763,7 +1754,6 @@ describe('ReactHooks', () => {
           useCustomHook();
         }
         return null;
-        /* eslint-enable no-unused-vars */
       }
       let root;
       await act(() => {
