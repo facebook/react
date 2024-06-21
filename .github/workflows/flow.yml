@@ -27,7 +27,7 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        flow_inline_config_shortname: ${{ needs.discover_flow_inline_configs.outputs }}
+        flow_inline_config_shortname: ${{ needs.discover_flow_inline_configs.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
