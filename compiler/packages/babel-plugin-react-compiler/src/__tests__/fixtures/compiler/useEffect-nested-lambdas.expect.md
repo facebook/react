@@ -36,23 +36,30 @@ import { c as _c } from "react/compiler-runtime"; // @enableTransitivelyFreezeFu
 
 function Component(props) {
   const $ = _c(9);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = <div />;
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
   useFreeze(dispatch);
-  let t0;
-  if ($[0] !== dispatch) {
-    t0 = () => {
+  let t1;
+  if ($[1] !== dispatch) {
+    t1 = () => {
       dispatch(createExitAction());
     };
-    $[0] = dispatch;
-    $[1] = t0;
+    $[1] = dispatch;
+    $[2] = t1;
   } else {
-    t0 = $[1];
+    t1 = $[2];
   }
-  const exit = t0;
-  let t1;
-  if ($[2] !== item.value || $[3] !== exit) {
-    t1 = () => {
+  const exit = t1;
+  let t2;
+  if ($[3] !== item.value || $[4] !== exit) {
+    t2 = () => {
       const cleanup = GlobalEventEmitter.addListener("onInput", () => {
         if (item.value) {
           exit();
@@ -60,32 +67,24 @@ function Component(props) {
       });
       return () => cleanup.remove();
     };
-    $[2] = item.value;
-    $[3] = exit;
-    $[4] = t1;
+    $[3] = item.value;
+    $[4] = exit;
+    $[5] = t2;
   } else {
-    t1 = $[4];
+    t2 = $[5];
   }
-  let t2;
-  if ($[5] !== exit || $[6] !== item) {
-    t2 = [exit, item];
-    $[5] = exit;
-    $[6] = item;
-    $[7] = t2;
-  } else {
-    t2 = $[7];
-  }
-  useEffect(t1, t2);
-
-  maybeMutate(item);
   let t3;
-  if ($[8] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = <div />;
+  if ($[6] !== exit || $[7] !== item) {
+    t3 = [exit, item];
+    $[6] = exit;
+    $[7] = item;
     $[8] = t3;
   } else {
     t3 = $[8];
   }
-  return t3;
+  useEffect(t2, t3);
+  maybeMutate(item);
+  return t0;
 }
 
 ```

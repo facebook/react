@@ -26,7 +26,6 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
-import { mayAllocate } from "../ReactiveScopes/InferReactiveScopeVariables";
 import { getOrInsertWith } from "../Utils/utils";
 
 /**
@@ -93,6 +92,7 @@ type Nodes = Map<IdentifierId, Node>;
 type Node = {
   instruction: Instruction | null;
   dependencies: Set<IdentifierId>;
+  reorderability: Reorderability;
   depth: number | null;
 };
 
@@ -173,6 +173,7 @@ function reorderBlock(
   for (const instr of block.instructions) {
     const { lvalue, value } = instr;
     // Get or create a node for this lvalue
+    const reorderability = getReorderability(instr, references);
     const node = getOrInsertWith(
       locals,
       lvalue.identifier.id,
@@ -180,6 +181,7 @@ function reorderBlock(
         ({
           instruction: instr,
           dependencies: new Set(),
+          reorderability,
           depth: null,
         }) as Node
     );
@@ -187,7 +189,7 @@ function reorderBlock(
      * Ensure non-reoderable instructions have their order retained by
      * adding explicit dependencies to the previous such instruction.
      */
-    if (getReoderability(instr, references) === Reorderability.Nonreorderable) {
+    if (reorderability === Reorderability.Nonreorderable) {
       if (previous !== null) {
         node.dependencies.add(previous);
       }
@@ -243,67 +245,125 @@ function reorderBlock(
 
   DEBUG && console.log(`bb${block.id}`);
 
-  // First emit everything that can't be reordered
-  if (previous !== null) {
-    DEBUG && console.log(`(last non-reorderable instruction)`);
-    DEBUG && print(env, locals, shared, seen, previous);
-    emit(env, locals, shared, nextInstructions, previous);
-  }
-  /*
-   * For "value" blocks the final instruction represents its value, so we have to be
-   * careful to not change the ordering. Emit the last instruction explicitly.
-   * Any non-reorderable instructions will get emitted first, and any unused
-   * reorderable instructions can be deferred to the shared node list.
+  /**
+   * The ideal order for emitting instructions may change the final instruction,
+   * but value blocks have special semantics for the final instruction of a block -
+   * that's the expression's value!. So we choose between a less optimal strategy
+   * for value blocks which preserves the final instruction order OR a more optimal
+   * ordering for statement-y blocks.
    */
-  if (isExpressionBlockKind(block.kind) && block.instructions.length !== 0) {
-    DEBUG && console.log(`(block value)`);
-    DEBUG &&
-      print(
+  if (isExpressionBlockKind(block.kind)) {
+    // First emit everything that can't be reordered
+    if (previous !== null) {
+      DEBUG && console.log(`(last non-reorderable instruction)`);
+      DEBUG && print(env, locals, shared, seen, previous);
+      emit(env, locals, shared, nextInstructions, previous);
+    }
+    /*
+     * For "value" blocks the final instruction represents its value, so we have to be
+     * careful to not change the ordering. Emit the last instruction explicitly.
+     * Any non-reorderable instructions will get emitted first, and any unused
+     * reorderable instructions can be deferred to the shared node list.
+     */
+    if (block.instructions.length !== 0) {
+      DEBUG && console.log(`(block value)`);
+      DEBUG &&
+        print(
+          env,
+          locals,
+          shared,
+          seen,
+          block.instructions.at(-1)!.lvalue.identifier.id
+        );
+      emit(
         env,
         locals,
         shared,
-        seen,
+        nextInstructions,
         block.instructions.at(-1)!.lvalue.identifier.id
       );
-    emit(
-      env,
-      locals,
-      shared,
-      nextInstructions,
-      block.instructions.at(-1)!.lvalue.identifier.id
-    );
-  }
-  /*
-   * Then emit the dependencies of the terminal operand. In many cases they will have
-   * already been emitted in the previous step and this is a no-op.
-   * TODO: sort the dependencies based on weight, like we do for other nodes. Not a big
-   * deal though since most terminals have a single operand
-   */
-  for (const operand of eachTerminalOperand(block.terminal)) {
-    DEBUG && console.log(`(terminal operand)`);
-    DEBUG && print(env, locals, shared, seen, operand.identifier.id);
-    emit(env, locals, shared, nextInstructions, operand.identifier.id);
-  }
-  // Anything not emitted yet is globally reorderable
-  for (const [id, node] of locals) {
-    if (node.instruction == null) {
-      continue;
     }
-    CompilerError.invariant(
-      node.instruction != null &&
-        getReoderability(node.instruction, references) ===
-          Reorderability.Reorderable,
-      {
-        reason: `Expected all remaining instructions to be reorderable`,
-        loc: node.instruction?.loc ?? block.terminal.loc,
-        description:
-          node.instruction != null
-            ? `Instruction [${node.instruction.id}] was not emitted yet but is not reorderable`
-            : `Lvalue $${id} was not emitted yet but is not reorderable`,
+    /*
+     * Then emit the dependencies of the terminal operand. In many cases they will have
+     * already been emitted in the previous step and this is a no-op.
+     * TODO: sort the dependencies based on weight, like we do for other nodes. Not a big
+     * deal though since most terminals have a single operand
+     */
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      DEBUG && console.log(`(terminal operand)`);
+      DEBUG && print(env, locals, shared, seen, operand.identifier.id);
+      emit(env, locals, shared, nextInstructions, operand.identifier.id);
+    }
+    // Anything not emitted yet is globally reorderable
+    for (const [id, node] of locals) {
+      if (node.instruction == null) {
+        continue;
       }
-    );
-    DEBUG && console.log(`save shared: $${id}`);
-    shared.set(id, node);
+      CompilerError.invariant(
+        node.reorderability === Reorderability.Reorderable,
+        {
+          reason: `Expected all remaining instructions to be reorderable`,
+          loc: node.instruction?.loc ?? block.terminal.loc,
+          description:
+            node.instruction != null
+              ? `Instruction [${node.instruction.id}] was not emitted yet but is not reorderable`
+              : `Lvalue $${id} was not emitted yet but is not reorderable`,
+        }
+      );
+
+      DEBUG && console.log(`save shared: $${id}`);
+      shared.set(id, node);
+    }
+  } else {
+    /**
+     * If this is not a value block, then the order within the block doesn't matter
+     * and we can optimize more. The observation is that blocks often have instructions
+     * such as:
+     *
+     * ```
+     * t$0 = nonreorderable
+     * t$1 = nonreorderable <-- this gets in the way of merging t$0 and t$2
+     * t$2 = reorderable deps[ t$0 ]
+     * return t$2
+     * ```
+     *
+     * Ie where there is some pair of nonreorderable+reorderable values, with some intervening
+     * also non-reorderable instruction. If we emit all non-reorderable instructions first,
+     * then we'll keep the original order. But reordering instructions don't just mean moving
+     * them later: we can also move then _earlier_. By starting from terminal operands, we
+     * end up emitting:
+     *
+     * ```
+     * t$0 = nonreorderable // dep of t$2
+     * t$2 = reorderable deps[ t$0 ]
+     * t$1 = nonreorderable <-- not in the way of merging anymore!
+     * return t$2
+     * ```
+     *
+     * Ie all nonreorderable transitive deps of the terminal operands will get emitted first,
+     * but we'll be able to intersperse the depending reorderable instructions in between
+     * them in a way that works better with scope merging.
+     */
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      DEBUG && console.log(`(terminal operand)`);
+      DEBUG && print(env, locals, shared, seen, operand.identifier.id);
+      emit(env, locals, shared, nextInstructions, operand.identifier.id);
+    }
+    // Anything not emitted yet is globally reorderable
+    for (const id of Array.from(locals.keys()).reverse()) {
+      const node = locals.get(id);
+      if (node === undefined) {
+        continue;
+      }
+      if (node.reorderability === Reorderability.Reorderable) {
+        DEBUG && console.log(`save shared: $${id}`);
+        shared.set(id, node);
+      } else {
+        DEBUG && console.log("leftover");
+        DEBUG && print(env, locals, shared, seen, id);
+        emit(env, locals, shared, nextInstructions, id);
+      }
+    }
   }
 
   block.instructions = nextInstructions;
@@ -319,8 +379,7 @@ function getDepth(env: Environment, nodes: Nodes, id: IdentifierId): number {
     return node.depth;
   }
   node.depth = 0; // in case of cycles
-  let depth =
-    node.instruction != null && mayAllocate(env, node.instruction) ? 1 : 0;
+  let depth = node.reorderability === Reorderability.Reorderable ? 1 : 10;
   for (const dep of node.dependencies) {
     depth += getDepth(env, nodes, dep);
   }
@@ -355,7 +414,7 @@ function print(
     print(env, locals, shared, seen, dep, depth + 1);
   }
   console.log(
-    `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps.map((x) => `$${x}`).join(", ")}]`
+    `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps.map((x) => `$${x}`).join(", ")}] depth=${node.depth}`
   );
 }
 
@@ -406,7 +465,7 @@ enum Reorderability {
   Reorderable,
   Nonreorderable,
 }
-function getReoderability(
+function getReorderability(
   instr: Instruction,
   references: References
 ): Reorderability {
@@ -432,7 +491,6 @@ function getReoderability(
           range !== undefined &&
           range.end === range.start // this LoadLocal is used exactly once
         ) {
-          console.log(`reorderable: ${name.value}`);
           return Reorderability.Reorderable;
         }
       }

@@ -24,69 +24,50 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(15);
+  const $ = _c(7);
   const item = useFragment(FRAGMENT, props.item);
   useFreeze(item);
   let t0;
-  let T0;
-  let t1;
-  let T1;
   if ($[0] !== item) {
     const count = new MaybeMutable(item);
 
-    T1 = View;
-    T0 = View;
-    if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = <span>Text</span>;
-      $[5] = t1;
-    } else {
-      t1 = $[5];
-    }
     t0 = maybeMutate(count);
     $[0] = item;
     $[1] = t0;
-    $[2] = T0;
-    $[3] = t1;
-    $[4] = T1;
   } else {
     t0 = $[1];
-    T0 = $[2];
+  }
+  let t1;
+  if ($[2] !== t0) {
+    t1 = <span>{t0}</span>;
+    $[2] = t0;
+    $[3] = t1;
+  } else {
     t1 = $[3];
-    T1 = $[4];
   }
   let t2;
-  if ($[6] !== t0) {
-    t2 = <span>{t0}</span>;
-    $[6] = t0;
-    $[7] = t2;
+  if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = <span>Text</span>;
+    $[4] = t2;
   } else {
-    t2 = $[7];
+    t2 = $[4];
   }
   let t3;
-  if ($[8] !== T0 || $[9] !== t1 || $[10] !== t2) {
+  if ($[5] !== t1) {
     t3 = (
-      <T0>
-        {t1}
-        {t2}
-      </T0>
+      <View>
+        <View>
+          {t2}
+          {t1}
+        </View>
+      </View>
     );
-    $[8] = T0;
-    $[9] = t1;
-    $[10] = t2;
-    $[11] = t3;
+    $[5] = t1;
+    $[6] = t3;
   } else {
-    t3 = $[11];
+    t3 = $[6];
   }
-  let t4;
-  if ($[12] !== T1 || $[13] !== t3) {
-    t4 = <T1>{t3}</T1>;
-    $[12] = T1;
-    $[13] = t3;
-    $[14] = t4;
-  } else {
-    t4 = $[14];
-  }
-  return t4;
+  return t3;
 }
 
 ```

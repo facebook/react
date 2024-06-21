@@ -42,12 +42,12 @@ import { mutate, setProperty, throwErrorWithMessageIf } from "shared-runtime";
 function useFoo(t0) {
   const $ = _c(6);
   const { value, cond } = t0;
-  let y;
   let t1;
+  let t2;
   if ($[0] !== value || $[1] !== cond) {
-    t1 = Symbol.for("react.early_return_sentinel");
+    t2 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      y = [value];
+      const y = [value];
       let x;
       if ($[4] !== cond) {
         x = { cond };
@@ -56,7 +56,7 @@ function useFoo(t0) {
           throwErrorWithMessageIf(x.cond, "error");
         } catch {
           setProperty(x, "henderson");
-          t1 = x;
+          t2 = x;
           break bb0;
         }
 
@@ -66,20 +66,22 @@ function useFoo(t0) {
       } else {
         x = $[5];
       }
+
+      t1 = y;
       y.push(x);
     }
     $[0] = value;
     $[1] = cond;
-    $[2] = y;
-    $[3] = t1;
+    $[2] = t1;
+    $[3] = t2;
   } else {
-    y = $[2];
-    t1 = $[3];
+    t1 = $[2];
+    t2 = $[3];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
-    return t1;
+  if (t2 !== Symbol.for("react.early_return_sentinel")) {
+    return t2;
   }
-  return y;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

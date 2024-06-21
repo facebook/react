@@ -51,31 +51,31 @@ function Component() {
   }
   const onClick = t0;
   let t1;
-  if ($[1] !== ref) {
-    t1 = <input ref={ref} />;
-    $[1] = ref;
+  if ($[1] !== onClick) {
+    t1 = <button onClick={onClick} />;
+    $[1] = onClick;
     $[2] = t1;
   } else {
     t1 = $[2];
   }
   let t2;
-  if ($[3] !== onClick) {
-    t2 = <button onClick={onClick} />;
-    $[3] = onClick;
+  if ($[3] !== ref) {
+    t2 = <input ref={ref} />;
+    $[3] = ref;
     $[4] = t2;
   } else {
     t2 = $[4];
   }
   let t3;
-  if ($[5] !== t1 || $[6] !== t2) {
+  if ($[5] !== t2 || $[6] !== t1) {
     t3 = (
       <>
-        {t1}
         {t2}
+        {t1}
       </>
     );
-    $[5] = t1;
-    $[6] = t2;
+    $[5] = t2;
+    $[6] = t1;
     $[7] = t3;
   } else {
     t3 = $[7];

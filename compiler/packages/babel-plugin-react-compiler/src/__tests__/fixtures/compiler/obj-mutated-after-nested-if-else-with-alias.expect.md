@@ -31,8 +31,9 @@ import { c as _c } from "react/compiler-runtime";
 function foo(a, b, c, d) {
   const $ = _c(3);
   someObj();
-  let x;
+  let t0;
   if ($[0] !== a || $[1] !== b) {
+    let x;
     if (a) {
       let z;
       if (b) {
@@ -47,14 +48,15 @@ function foo(a, b, c, d) {
       x = someObj();
     }
 
+    t0 = x;
     x.f = 1;
     $[0] = a;
     $[1] = b;
-    $[2] = x;
+    $[2] = t0;
   } else {
-    x = $[2];
+    t0 = $[2];
   }
-  return x;
+  return t0;
 }
 
 ```

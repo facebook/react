@@ -22,18 +22,20 @@ import { c as _c } from "react/compiler-runtime"; // x's mutable range should ex
 
 function Component(props) {
   const $ = _c(2);
-  let x;
+  let t0;
   if ($[0] !== props.b) {
-    x = [42, {}];
+    const x = [42, {}];
     const idx = foo(props.b);
+
+    t0 = x;
     const y = x.at(idx);
     mutate(y);
     $[0] = props.b;
-    $[1] = x;
+    $[1] = t0;
   } else {
-    x = $[1];
+    t0 = $[1];
   }
-  return x;
+  return t0;
 }
 
 ```

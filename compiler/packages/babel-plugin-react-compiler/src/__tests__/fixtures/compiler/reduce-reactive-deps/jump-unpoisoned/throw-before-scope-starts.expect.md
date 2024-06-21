@@ -44,16 +44,18 @@ function useFoo(t0) {
   if (cond) {
     throw new Error("throw with error!");
   }
-  let x;
+  let t1;
   if ($[0] !== input.a.b) {
-    x = [];
+    const x = [];
+
+    t1 = x;
     arrayPush(x, input.a.b);
     $[0] = input.a.b;
-    $[1] = x;
+    $[1] = t1;
   } else {
-    x = $[1];
+    t1 = $[1];
   }
-  return x;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

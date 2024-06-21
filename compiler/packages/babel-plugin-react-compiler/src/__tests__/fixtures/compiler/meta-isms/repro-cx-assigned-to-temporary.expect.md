@@ -53,22 +53,27 @@ import { identity } from "shared-runtime";
 const DARK = "dark";
 
 function Component() {
-  const $ = _c(2);
+  const $ = _c(4);
   const theme = useTheme();
 
-  const t0 = cx({
-    "styles/light": true,
-    "styles/dark": theme.getTheme() === DARK,
-  });
+  const t0 = theme.getTheme();
   let t1;
   if ($[0] !== t0) {
-    t1 = <div className={t0} />;
+    t1 = cx({ "styles/light": true, "styles/dark": t0 === DARK });
     $[0] = t0;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
-  return t1;
+  let t2;
+  if ($[2] !== t1) {
+    t2 = <div className={t1} />;
+    $[2] = t1;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  return t2;
 }
 
 function cx(obj) {
