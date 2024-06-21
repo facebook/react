@@ -1,4 +1,4 @@
-name: Runtime (Test)
+name: (Runtime) Test
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Runtime (Flags)
+name: (Runtime) Flags
 
 on:
   push:
