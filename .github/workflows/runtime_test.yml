@@ -15,7 +15,7 @@ jobs:
     outputs:
       params: ${{ steps.define-params.outputs.result }}
       # How many chunks to group tests into
-      parallelism: 7
+      parallelism: 5
     steps:
       - uses: actions/github-script@v7
         id: define-params
@@ -34,10 +34,11 @@ jobs:
               "-r=www-modern --env=production --variant=false",
               "-r=www-modern --env=development --variant=true",
               "-r=www-modern --env=production --variant=true",
-              "-r=xplat --env=development --variant=false",
-              "-r=xplat --env=development --variant=true",
-              "-r=xplat --env=production --variant=false",
-              "-r=xplat --env=production --variant=true",
+              // Chunks may include only react-dom tests which xplat doesn't run
+              "-r=xplat --env=development --variant=false --passWithNoTests",
+              "-r=xplat --env=development --variant=true --passWithNoTests",
+              "-r=xplat --env=production --variant=false --passWithNoTests",
+              "-r=xplat --env=production --variant=true --passWithNoTests",
               // TODO: Test more persistent configurations?
               "-r=stable --env=development --persistent",
               "-r=experimental --env=development --persistent"
