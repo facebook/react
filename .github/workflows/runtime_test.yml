@@ -8,36 +8,48 @@ on:
       - 'compiler/**'
 
 jobs:
-  test:
-    name: yarn test
+  build_test_params:
+    name: Build test params
     runs-on: ubuntu-latest
-    continue-on-error: true
+    outputs:
+      params: ${{ steps.define-params.outputs.result }}
+    steps:
+      - uses: actions/github-script@v7
+        id: define-params
+        with:
+          script: |
+            return [
+              "-r=stable --env=development",
+              "-r=stable --env=production",
+              "-r=experimental --env=development",
+              "-r=experimental --env=production",
+              "-r=www-classic --env=development --variant=false",
+              "-r=www-classic --env=production --variant=false",
+              "-r=www-classic --env=development --variant=true",
+              "-r=www-classic --env=production --variant=true",
+              "-r=www-modern --env=development --variant=false",
+              "-r=www-modern --env=production --variant=false",
+              "-r=www-modern --env=development --variant=true",
+              "-r=www-modern --env=production --variant=true",
+              "-r=xplat --env=development --variant=false",
+              "-r=xplat --env=development --variant=true",
+              "-r=xplat --env=production --variant=false",
+              "-r=xplat --env=production --variant=true",
+              // TODO: Test more persistent configurations?
+              "-r=stable --env=development --persistent",
+              "-r=experimental --env=development --persistent"
+            ];
+
+  chunk_tests:
+    name: Chunk tests
+    runs-on: ubuntu-latest
+    needs: build_test_params
     strategy:
       matrix:
-        # Intentionally passing these as strings instead of creating a
-        # separate parameter per CLI argument, since it's easier to
-        # control/see which combinations we want to run.
-        params: [
-          "-r=stable --env=development",
-          "-r=stable --env=production",
-          "-r=experimental --env=development",
-          "-r=experimental --env=production",
-          "-r=www-classic --env=development --variant=false",
-          "-r=www-classic --env=production --variant=false",
-          "-r=www-classic --env=development --variant=true",
-          "-r=www-classic --env=production --variant=true",
-          "-r=www-modern --env=development --variant=false",
-          "-r=www-modern --env=production --variant=false",
-          "-r=www-modern --env=development --variant=true",
-          "-r=www-modern --env=production --variant=true",
-          "-r=xplat --env=development --variant=false",
-          "-r=xplat --env=development --variant=true",
-          "-r=xplat --env=production --variant=false",
-          "-r=xplat --env=production --variant=true",
-          # TODO: Test more persistent configurations?
-          "-r=stable --env=development --persistent",
-          "-r=experimental --env=development --persistent"
-        ]
+        params: ${{ fromJSON(needs.build_test_params.outputs) }}
+    continue-on-error: true
+    outputs:
+      test_names: ${{ steps.chunk-test-files.outputs }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,4 +64,30 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test ${{ matrix.params }} --ci=github
+      - id: chunk-test-files
+        run: yarn --silent test ${{ matrix.params }} --listTests --json --silent | jq '[_nwise(length / 5 | ceil)]' >> $GITHUB_OUTPUT
+
+  test:
+    name: yarn test ${{ needs.build_test_params.outputs.params }}
+    runs-on: ubuntu-latest
+    needs: [build_test_params, chunk_tests]
+    strategy:
+      matrix:
+        params: ${{ fromJSON(needs.build_test_params.outputs) }}
+        test_names: ${{ fromJSON(needs.chunk_tests.outputs ) }}
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn test ${{ matrix.params }} --ci=github ${{ matrix.test_names  }}
