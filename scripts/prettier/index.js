@@ -51,11 +51,15 @@ const ignoredPathsListedInPrettierIgnoreInGlobFormat =
   });
 
 const files = glob
-  .sync('**/*.js', {
+  .sync('**/*.{js,jsx,ts,tsx}', {
     ignore: [
+      '**/*.d.ts',
       '**/node_modules/**',
       '**/cjs/**',
-      'compiler/**',
+      'packages/**/*.ts',
+      'compiler/**/node_modules/**',
+      'compiler/**/dist/**',
+      'compiler/**/__snapshots__/**',
       ...ignoredPathsListedInPrettierIgnoreInGlobFormat,
     ],
   })
