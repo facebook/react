@@ -57,7 +57,8 @@ export type PhiType = {
 };
 export type PropType = {
   kind: "Property";
-  object: Type;
+  objectType: Type;
+  objectName: string;
   propertyName: string;
 };
 
@@ -124,7 +125,8 @@ export function duplicateType(type: Type): Type {
     case "Property": {
       return {
         kind: "Property",
-        object: duplicateType(type.object),
+        objectType: duplicateType(type.objectType),
+        objectName: type.objectName,
         propertyName: type.propertyName,
       };
     }
@@ -165,11 +167,13 @@ function objectMethodTypeEquals(tA: Type, tB: Type): boolean {
 
 function propTypeEquals(tA: Type, tB: Type): boolean {
   if (tA.kind === "Property" && tB.kind === "Property") {
-    if (!typeEquals(tA.object, tB.object)) {
+    if (!typeEquals(tA.objectType, tB.objectType)) {
       return false;
     }
 
-    return tA.propertyName === tB.propertyName;
+    return (
+      tA.propertyName === tB.propertyName && tA.objectName === tB.objectName
+    );
   }
 
   return false;
