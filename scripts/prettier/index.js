@@ -56,10 +56,9 @@ const files = glob
       '**/*.d.ts',
       '**/node_modules/**',
       '**/cjs/**',
-      'packages/**/*.ts',
-      'compiler/**/node_modules/**',
-      'compiler/**/dist/**',
-      'compiler/**/__snapshots__/**',
+      '**/dist/**',
+      '**/__snapshots__/**',
+      'packages/**/*.ts', // runtime prettier uses Flow parser
       ...ignoredPathsListedInPrettierIgnoreInGlobFormat,
     ],
   })
