@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+    paths-ignore:
+      - 'compiler/**'
 
 jobs:
   discover_flow_inline_configs:
