@@ -1,3 +1,4 @@
+# react runtime
 build
 
 packages/react-devtools-core/dist
@@ -13,3 +14,26 @@ packages/react-devtools-shared/src/hooks/__tests__/__source__/__untransformed__/
 packages/react-devtools-shell/dist
 packages/react-devtools-timeline/dist
 packages/react-devtools-timeline/static
+
+# react compiler
+compiler/**/dist
+compiler/**/__tests__/fixtures/**/*.expect.md
+compiler/**/__tests__/fixtures/**/*.flow.js
+compiler/**/.next
+
+compiler/crates
+compiler/apps/playground/public
+
+compiler/**/LICENSE
+compiler/.*
+compiler/*.md*
+compiler/*.json
+compiler/*.css
+compiler/*.webmanifest
+compiler/*.map
+compiler/*.sh
+compiler/*.txt
+compiler/*.ico
+compiler/*.svg
+compiler/*.lock
+compiler/*.toml
