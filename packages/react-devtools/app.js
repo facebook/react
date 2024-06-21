@@ -46,7 +46,7 @@ app.on('ready', function () {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadURL('file://' + __dirname + '/app.html'); // eslint-disable-line no-path-concat
+  mainWindow.loadURL('file://' + __dirname + '/app.html');
   // $FlowFixMe[incompatible-use] found when upgrading Flow
   mainWindow.webContents.executeJavaScript(
     // We use this so that RN can keep relative JSX __source filenames
