@@ -1,12 +1,6 @@
 const {resolve} = require('path');
 const Webpack = require('webpack');
 const {
-  DARK_MODE_DIMMED_WARNING_COLOR,
-  DARK_MODE_DIMMED_ERROR_COLOR,
-  DARK_MODE_DIMMED_LOG_COLOR,
-  LIGHT_MODE_DIMMED_WARNING_COLOR,
-  LIGHT_MODE_DIMMED_ERROR_COLOR,
-  LIGHT_MODE_DIMMED_LOG_COLOR,
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
@@ -93,12 +87,6 @@ module.exports = {
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
-      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
     }),
   ],
   module: {

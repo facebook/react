@@ -9,6 +9,7 @@ import { Effect, ValueKind, ValueReason } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInUseActionStateId,
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
@@ -262,6 +263,18 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       returnType: { kind: "Object", shapeId: BuiltInUseStateId },
       calleeEffect: Effect.Read,
       hookKind: "useState",
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.State,
+    }),
+  ],
+  [
+    "useActionState",
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Object", shapeId: BuiltInUseActionStateId },
+      calleeEffect: Effect.Read,
+      hookKind: "useActionState",
       returnValueKind: ValueKind.Frozen,
       returnValueReason: ValueReason.State,
     }),

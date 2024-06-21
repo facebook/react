@@ -61,6 +61,7 @@ import {
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
+import {captureOwnerStack} from './ReactOwnerStack';
 
 const Children = {
   map,
@@ -121,5 +122,6 @@ export {
   // enableTransitionTracing
   REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
   useId,
-  act,
+  act, // DEV-only
+  captureOwnerStack, // DEV-only
 };
