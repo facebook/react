@@ -310,13 +310,13 @@ describe('ReactDOMServerIntegration', () => {
             <div id="child2" />
           </div>,
           // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
         ));
 
       it('should error reconnecting a div with children separated by different whitespace on the server', () =>
         expectMarkupMismatch(
           // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
           <div id="parent">
             <div id="child1" />
             <div id="child2" />
@@ -329,7 +329,7 @@ describe('ReactDOMServerIntegration', () => {
             <div id="child1" /> <div id="child2" />
           </div>,
           // prettier-ignore
-          <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
+          <div id="parent"><div id="child1" />      <div id="child2" /></div>,
         ));
 
       it('can distinguish an empty component from a dom node', () =>

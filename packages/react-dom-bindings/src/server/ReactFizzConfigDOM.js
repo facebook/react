@@ -1464,7 +1464,7 @@ function pushAttribute(
         // shouldRemoveAttribute
         switch (typeof value) {
           case 'function':
-          case 'symbol': // eslint-disable-line
+          case 'symbol':
             return;
           case 'boolean': {
             const prefix = attributeName.toLowerCase().slice(0, 5);
@@ -2808,7 +2808,6 @@ function pushStyleImpl(
     child !== null &&
     child !== undefined
   ) {
-    // eslint-disable-next-line react-internal/safe-string-coercion
     target.push(stringToChunk(escapeStyleTextContent(child)));
   }
   pushInnerHTML(target, innerHTML, children);
@@ -2850,7 +2849,6 @@ function pushStyleContents(
     child !== null &&
     child !== undefined
   ) {
-    // eslint-disable-next-line react-internal/safe-string-coercion
     target.push(stringToChunk(escapeStyleTextContent(child)));
   }
   pushInnerHTML(target, innerHTML, children);

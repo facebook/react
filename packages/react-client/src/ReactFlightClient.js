@@ -1839,7 +1839,6 @@ function resolveHint<Code: HintCode>(
   dispatchHint(code, hintModel);
 }
 
-// eslint-disable-next-line react-internal/no-production-logging
 const supportsCreateTask =
   __DEV__ && enableOwnerStacks && !!(console: any).createTask;
 
@@ -1977,7 +1976,6 @@ function initializeFakeTask(
       ? null
       : initializeFakeTask(response, componentInfo.owner);
 
-  // eslint-disable-next-line react-internal/no-production-logging
   const createTaskFn = (console: any).createTask.bind(
     console,
     getServerComponentTaskName(componentInfo),
