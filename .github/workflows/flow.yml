@@ -18,7 +18,7 @@ jobs:
         with:
           script: |
             const inlinedHostConfigs = require('./scripts/shared/inlinedHostConfigs.js');
-            return inlineHostConfigs.map(config => config.shortName);
+            return inlinedHostConfigs.map(config => config.shortName);
 
   Flow:
     name: Flow check ${{ matrix.flow_inline_config_shortname }}
