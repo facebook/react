@@ -36,16 +36,16 @@ describe('Timeline profiler', () => {
   });
 
   describe('User Timing API', () => {
-    let clearedMarks;
+    let currentlyNotClearedMarks;
+    let registeredMarks;
     let featureDetectionMarkName = null;
-    let marks;
     let setPerformanceMock;
 
     function createUserTimingPolyfill() {
       featureDetectionMarkName = null;
 
-      clearedMarks = [];
-      marks = [];
+      currentlyNotClearedMarks = [];
+      registeredMarks = [];
 
       // Remove file-system specific bits or version-specific bits of information from the module range marks.
       function filterMarkData(markName) {
@@ -66,8 +66,9 @@ describe('Timeline profiler', () => {
         clearMarks(markName) {
           markName = filterMarkData(markName);
 
-          clearedMarks.push(markName);
-          marks = marks.filter(mark => mark !== markName);
+          currentlyNotClearedMarks = currentlyNotClearedMarks.filter(
+            mark => mark !== markName,
+          );
         },
         mark(markName, markOptions) {
           markName = filterMarkData(markName);
@@ -76,7 +77,8 @@ describe('Timeline profiler', () => {
             featureDetectionMarkName = markName;
           }
 
-          marks.push(markName);
+          registeredMarks.push(markName);
+          currentlyNotClearedMarks.push(markName);
 
           if (markOptions != null) {
             // This is triggers the feature detection.
@@ -86,8 +88,8 @@ describe('Timeline profiler', () => {
       };
     }
 
-    function clearPendingMarks() {
-      clearedMarks.splice(0);
+    function eraseRegisteredMarks() {
+      registeredMarks.splice(0);
     }
 
     function dispatchAndSetCurrentEvent(element, event) {
@@ -107,7 +109,7 @@ describe('Timeline profiler', () => {
 
     afterEach(() => {
       // Verify all logged marks also get cleared.
-      expect(marks).toHaveLength(0);
+      expect(currentlyNotClearedMarks).toHaveLength(0);
 
       setPerformanceMock(null);
     });
@@ -120,7 +122,7 @@ describe('Timeline profiler', () => {
       it('should mark sync render without suspends or state updates', () => {
         legacyRender(<div />);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-1",
                     "--render-start-1",
@@ -154,7 +156,7 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-2",
                     "--render-start-2",
@@ -174,10 +176,10 @@ describe('Timeline profiler', () => {
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await fakeSuspensePromise;
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                 [
                   "--suspense-resolved-0-Example",
                 ]
@@ -200,7 +202,7 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-2",
                     "--render-start-2",
@@ -220,10 +222,10 @@ describe('Timeline profiler', () => {
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await expect(fakeSuspensePromise).rejects.toThrow();
-        expect(clearedMarks).toContain(`--suspense-rejected-0-Example`);
+        expect(registeredMarks).toContain(`--suspense-rejected-0-Example`);
       });
 
       // @reactVersion <= 18.2
@@ -254,7 +256,7 @@ describe('Timeline profiler', () => {
           </ErrorBoundary>,
         );
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-1",
                     "--render-start-1",
@@ -310,17 +312,17 @@ describe('Timeline profiler', () => {
       it('should mark concurrent render without suspends or state updates', async () => {
         modernRender(<div />);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForPaint([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--render-stop",
@@ -356,7 +358,7 @@ describe('Timeline profiler', () => {
 
         await waitFor(['Foo']);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-128",
                     "--render-start-128",
@@ -383,17 +385,17 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForPaint([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--component-render-start-Example",
@@ -414,10 +416,10 @@ describe('Timeline profiler', () => {
           ]
         `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await resolveFakePromise();
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
             [
               "--suspense-resolved-0-Example",
             ]
@@ -440,17 +442,17 @@ describe('Timeline profiler', () => {
           </React.Suspense>,
         );
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForPaint([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--component-render-start-Example",
@@ -471,13 +473,13 @@ describe('Timeline profiler', () => {
           ]
         `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await expect(() => {
           rejectFakePromise(new Error('error'));
           return fakeSuspensePromise;
         }).rejects.toThrow();
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                 [
                   "--suspense-rejected-0-Example",
                 ]
@@ -497,17 +499,17 @@ describe('Timeline profiler', () => {
 
         modernRender(<Example />);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForPaint([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--component-render-start-Example",
@@ -554,17 +556,17 @@ describe('Timeline profiler', () => {
 
         modernRender(<Example />);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForPaint([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--component-render-start-Example",
@@ -612,13 +614,13 @@ describe('Timeline profiler', () => {
 
         modernRender(<Example />);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         let errorMessage;
         jest.spyOn(console, 'error').mockImplementation(message => {
@@ -632,7 +634,7 @@ describe('Timeline profiler', () => {
           'Cannot update during an existing state transition',
         );
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--component-render-start-Example",
@@ -668,13 +670,13 @@ describe('Timeline profiler', () => {
 
         modernRender(<Example />);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         let errorMessage;
         jest.spyOn(console, 'error').mockImplementation(message => {
@@ -688,7 +690,7 @@ describe('Timeline profiler', () => {
           'Cannot update during an existing state transition',
         );
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--component-render-start-Example",
@@ -721,17 +723,17 @@ describe('Timeline profiler', () => {
 
         modernRender(<Example />);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForPaint([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--component-render-start-Example",
@@ -781,7 +783,7 @@ describe('Timeline profiler', () => {
 
         await waitForAll([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--schedule-render-32",
             "--render-start-32",
@@ -834,7 +836,7 @@ describe('Timeline profiler', () => {
 
         await waitForAll([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--schedule-render-32",
             "--render-start-32",
@@ -884,17 +886,17 @@ describe('Timeline profiler', () => {
           </ErrorBoundary>,
         );
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--schedule-render-32",
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForPaint([]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--render-start-32",
             "--component-render-start-ErrorBoundary",
@@ -983,7 +985,7 @@ describe('Timeline profiler', () => {
 
         await waitForPaint(['layout 1 mount', 'layout 2 mount']);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--schedule-render-32",
             "--render-start-32",
@@ -1008,7 +1010,7 @@ describe('Timeline profiler', () => {
           ]
         `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForAll([
           'passive 1 mount',
@@ -1016,7 +1018,7 @@ describe('Timeline profiler', () => {
           'passive 3 mount',
         ]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
                   [
                     "--passive-effects-start-32",
                     "--component-passive-effect-mount-start-ComponentWithEffects",
@@ -1029,7 +1031,7 @@ describe('Timeline profiler', () => {
                   ]
               `);
 
-        clearPendingMarks();
+        eraseRegisteredMarks();
 
         await waitForAll([]);
 
@@ -1043,7 +1045,7 @@ describe('Timeline profiler', () => {
           'passive 3 unmount',
         ]);
 
-        expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(registeredMarks).toMatchInlineSnapshot(`
           [
             "--schedule-render-2",
             "--render-start-2",
@@ -1085,7 +1087,7 @@ describe('Timeline profiler', () => {
         it('regression test SyncLane', () => {
           legacyRender(<div />);
 
-          expect(clearedMarks).toMatchInlineSnapshot(`
+          expect(registeredMarks).toMatchInlineSnapshot(`
                       [
                         "--schedule-render-1",
                         "--render-start-1",
@@ -1116,7 +1118,7 @@ describe('Timeline profiler', () => {
 
         it('regression test DefaultLane', () => {
           modernRender(<div />);
-          expect(clearedMarks).toMatchInlineSnapshot(`
+          expect(registeredMarks).toMatchInlineSnapshot(`
                       [
                         "--schedule-render-32",
                       ]
@@ -1137,14 +1139,14 @@ describe('Timeline profiler', () => {
           modernRender(<App />);
           await waitForAll([]);
 
-          clearedMarks.splice(0);
+          eraseRegisteredMarks();
 
           targetRef.current.click();
 
           // Wait a frame, for React to process the "click" update.
           await Promise.resolve();
 
-          expect(clearedMarks).toMatchInlineSnapshot(`
+          expect(registeredMarks).toMatchInlineSnapshot(`
             [
               "--schedule-state-update-2-App",
               "--render-start-2",
@@ -1178,7 +1180,7 @@ describe('Timeline profiler', () => {
           modernRender(<App />);
           await waitForAll([]);
 
-          clearedMarks.splice(0);
+          eraseRegisteredMarks();
 
           const event = document.createEvent('MouseEvents');
           event.initEvent('mouseover', true, true);
@@ -1186,7 +1188,7 @@ describe('Timeline profiler', () => {
 
           await waitForAll([]);
 
-          expect(clearedMarks).toMatchInlineSnapshot(`
+          expect(registeredMarks).toMatchInlineSnapshot(`
             [
               "--schedule-state-update-8-App",
               "--render-start-8",

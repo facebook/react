@@ -15,7 +15,6 @@ import {
 import { eachReactiveValueOperand } from "./visitors";
 
 /**
- * This pass supports the
  * This pass supports the `fbt` translation system (https://facebook.github.io/fbt/)
  * as well as similar user-configurable macro-like APIs where it's important that
  * the name of the function not be changed, and it's literal arguments not be turned
@@ -75,7 +74,7 @@ function visit(
     for (const instruction of block.instructions) {
       const { lvalue, value } = instruction;
       if (lvalue === null) {
-        return;
+        continue;
       }
       if (
         value.kind === "Primitive" &&
@@ -96,7 +95,7 @@ function visit(
       } else if (isFbtCallExpression(fbtValues, value)) {
         const fbtScope = lvalue.identifier.scope;
         if (fbtScope === null) {
-          return;
+          continue;
         }
 
         /*
@@ -122,7 +121,7 @@ function visit(
       ) {
         const fbtScope = lvalue.identifier.scope;
         if (fbtScope === null) {
-          return;
+          continue;
         }
 
         /*

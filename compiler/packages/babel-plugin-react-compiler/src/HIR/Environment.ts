@@ -407,6 +407,23 @@ const EnvironmentConfigSchema = z.object({
    * and identifiers have been changed.
    */
   hookPattern: z.string().nullable().default(null),
+
+  /**
+   * If enabled, this will treat objects named as `ref` or if their names end with the substring `Ref`,
+   * and contain a property named `current`, as React refs.
+   *
+   * ```
+   * const ref = useMyRef();
+   * const myRef = useMyRef2();
+   * useEffect(() => {
+   *   ref.current = ...;
+   *   myRef.current = ...;
+   * })
+   * ```
+   *
+   * Here the variables `ref` and `myRef` will be typed as Refs.
+   */
+  enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;

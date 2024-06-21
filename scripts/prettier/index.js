@@ -55,6 +55,7 @@ const files = glob
     ignore: [
       '**/node_modules/**',
       '**/cjs/**',
+      'compiler/**',
       ...ignoredPathsListedInPrettierIgnoreInGlobFormat,
     ],
   })
