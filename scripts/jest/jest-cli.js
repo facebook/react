@@ -313,6 +313,10 @@ function getCommandArgs() {
     args.push('--maxWorkers=2');
   }
 
+  if (argv.ci === 'github') {
+    args.push('--maxConcurrency=10 --workerThreads=true');
+  }
+
   // Push the remaining args onto the command.
   // This will send args like `--watch` to Jest.
   args.push(...argv._);
