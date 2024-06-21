@@ -13,11 +13,15 @@ import {
   HIRFunction,
   IdentifierId,
   Instruction,
+  InstructionId,
+  Place,
   isExpressionBlockKind,
+  makeInstructionId,
   markInstructionIds,
 } from "../HIR";
 import { printInstruction } from "../HIR/PrintHIR";
 import {
+  eachInstructionLValue,
   eachInstructionValueLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
@@ -69,8 +73,9 @@ import { getOrInsertWith } from "../Utils/utils";
 export function instructionReordering(fn: HIRFunction): void {
   // Shared nodes are emitted when they are first used
   const shared: Nodes = new Map();
+  const references = findReferencedRangeOfTemporaries(fn);
   for (const [, block] of fn.body.blocks) {
-    reorderBlock(fn.env, block, shared);
+    reorderBlock(fn.env, block, shared, references);
   }
   CompilerError.invariant(shared.size === 0, {
     reason: `InstructionReordering: expected all reorderable nodes to have been emitted`,
@@ -91,10 +96,76 @@ type Node = {
   depth: number | null;
 };
 
+// Inclusive start and end
+type References = {
+  accessedRanges: AccessedRanges;
+  lastAssignments: LastAssignments;
+};
+type LastAssignments = Map<string, InstructionId>;
+type AccessedRanges = Map<IdentifierId, Range>;
+type Range = { start: InstructionId; end: InstructionId };
+enum ReferenceKind {
+  Read,
+  Write,
+}
+function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
+  const accessedRanges: AccessedRanges = new Map();
+  const lastAssignments: LastAssignments = new Map();
+  function reference(
+    instr: InstructionId,
+    place: Place,
+    kind: ReferenceKind
+  ): void {
+    if (
+      place.identifier.name !== null &&
+      place.identifier.name.kind === "named"
+    ) {
+      if (kind === ReferenceKind.Write) {
+        const name = place.identifier.name.value;
+        const previous = lastAssignments.get(name);
+        if (previous === undefined) {
+          lastAssignments.set(name, instr);
+        } else {
+          lastAssignments.set(
+            name,
+            makeInstructionId(Math.max(previous, instr))
+          );
+        }
+      }
+      return;
+    } else if (kind === ReferenceKind.Read) {
+      const range = getOrInsertWith(
+        accessedRanges,
+        place.identifier.id,
+        () => ({
+          start: instr,
+          end: instr,
+        })
+      );
+      range.end = instr;
+    }
+  }
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      for (const operand of eachInstructionValueLValue(instr.value)) {
+        reference(instr.id, operand, ReferenceKind.Read);
+      }
+      for (const lvalue of eachInstructionLValue(instr)) {
+        reference(instr.id, lvalue, ReferenceKind.Write);
+      }
+    }
+    for (const operand of eachTerminalOperand(block.terminal)) {
+      reference(block.terminal.id, operand, ReferenceKind.Read);
+    }
+  }
+  return { accessedRanges, lastAssignments };
+}
+
 function reorderBlock(
   env: Environment,
   block: BasicBlock,
-  shared: Nodes
+  shared: Nodes,
+  references: References
 ): void {
   const locals: Nodes = new Map();
   const named: Map<string, IdentifierId> = new Map();
@@ -116,7 +187,7 @@ function reorderBlock(
      * Ensure non-reoderable instructions have their order retained by
      * adding explicit dependencies to the previous such instruction.
      */
-    if (getReoderability(instr) === Reorderability.Nonreorderable) {
+    if (getReoderability(instr, references) === Reorderability.Nonreorderable) {
       if (previous !== null) {
         node.dependencies.add(previous);
       }
@@ -220,7 +291,8 @@ function reorderBlock(
     }
     CompilerError.invariant(
       node.instruction != null &&
-        getReoderability(node.instruction) === Reorderability.Reorderable,
+        getReoderability(node.instruction, references) ===
+          Reorderability.Reorderable,
       {
         reason: `Expected all remaining instructions to be reorderable`,
         loc: node.instruction?.loc ?? block.terminal.loc,
@@ -334,7 +406,10 @@ enum Reorderability {
   Reorderable,
   Nonreorderable,
 }
-function getReoderability(instr: Instruction): Reorderability {
+function getReoderability(
+  instr: Instruction,
+  references: References
+): Reorderability {
   switch (instr.value.kind) {
     case "JsxExpression":
     case "JsxFragment":
@@ -345,6 +420,23 @@ function getReoderability(instr: Instruction): Reorderability {
     case "BinaryExpression":
     case "UnaryExpression": {
       return Reorderability.Reorderable;
+    }
+    case "LoadLocal": {
+      const name = instr.value.place.identifier.name;
+      if (name !== null && name.kind === "named") {
+        const lastAssignment = references.lastAssignments.get(name.value);
+        const range = references.accessedRanges.get(instr.lvalue.identifier.id);
+        if (
+          lastAssignment !== undefined &&
+          lastAssignment < instr.id &&
+          range !== undefined &&
+          range.end === range.start // this LoadLocal is used exactly once
+        ) {
+          console.log(`reorderable: ${name.value}`);
+          return Reorderability.Reorderable;
+        }
+      }
+      return Reorderability.Nonreorderable;
     }
     default: {
       return Reorderability.Nonreorderable;
