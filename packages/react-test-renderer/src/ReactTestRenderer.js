@@ -61,6 +61,7 @@ import {
   disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
+// $FlowFixMe[prop-missing]: This is only in the development export.
 const act = React.act;
 
 // TODO: Remove from public bundle
