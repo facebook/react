@@ -22,7 +22,7 @@ jobs:
             const inlinedHostConfigs = require('./scripts/shared/inlinedHostConfigs.js');
             return inlinedHostConfigs.map(config => config.shortName);
 
-  Flow:
+  flow:
     name: Flow check ${{ matrix.flow_inline_config_shortname }}
     needs: discover_flow_inline_configs
     runs-on: ubuntu-latest
