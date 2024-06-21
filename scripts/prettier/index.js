@@ -51,11 +51,14 @@ const ignoredPathsListedInPrettierIgnoreInGlobFormat =
   });
 
 const files = glob
-  .sync('**/*.js', {
+  .sync('**/*.{js,jsx,ts,tsx}', {
     ignore: [
+      '**/*.d.ts',
       '**/node_modules/**',
       '**/cjs/**',
-      'compiler/**',
+      '**/dist/**',
+      '**/__snapshots__/**',
+      'packages/**/*.ts', // runtime prettier uses Flow parser
       ...ignoredPathsListedInPrettierIgnoreInGlobFormat,
     ],
   })

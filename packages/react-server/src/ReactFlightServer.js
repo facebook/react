@@ -118,9 +118,7 @@ import {
   objectName,
 } from 'shared/ReactSerializationErrors';
 
-import type {SharedStateServer} from 'react/src/ReactSharedInternalsServer';
-import ReactSharedInternalsImpl from 'shared/ReactSharedInternals';
-const ReactSharedInternals: SharedStateServer = (ReactSharedInternalsImpl: any);
+import ReactSharedInternals from './ReactSharedInternalsServer';
 import isArray from 'shared/isArray';
 import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
