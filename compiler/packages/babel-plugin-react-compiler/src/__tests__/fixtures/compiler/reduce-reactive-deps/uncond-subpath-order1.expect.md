@@ -26,20 +26,18 @@ import { c as _c } from "react/compiler-runtime"; // Determine that we only need
 // Ordering of access should not matter
 function TestDepsSubpathOrder1(props) {
   const $ = _c(2);
-  let t0;
+  let x;
   if ($[0] !== props.a) {
-    const x = {};
+    x = {};
     x.b = props.a.b;
     x.a = props.a;
-
-    t0 = x;
     x.c = props.a.b.c;
     $[0] = props.a;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -28,24 +28,24 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 function component(a) {
   const $ = _c(2);
-  let t0;
+  let z;
   if ($[0] !== a) {
-    const z = { a };
-
-    t0 = z;
+    z = { a };
     const f0 = function () {
       const f1 = function () {
         z.b = 1;
       };
+
       f1();
     };
+
     f0();
     $[0] = a;
-    $[1] = t0;
+    $[1] = z;
   } else {
-    t0 = $[1];
+    z = $[1];
   }
-  return t0;
+  return z;
 }
 
 export const FIXTURE_ENTRYPOINT = {

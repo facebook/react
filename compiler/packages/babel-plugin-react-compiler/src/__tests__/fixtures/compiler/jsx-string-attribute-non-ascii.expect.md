@@ -54,31 +54,31 @@ function Post(t0) {
   const $ = _c(7);
   const { author, text } = t0;
   let t1;
-  if ($[0] !== text) {
-    t1 = <span>{text}</span>;
-    $[0] = text;
+  if ($[0] !== author) {
+    t1 = <h1>{author}</h1>;
+    $[0] = author;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
   let t2;
-  if ($[2] !== author) {
-    t2 = <h1>{author}</h1>;
-    $[2] = author;
+  if ($[2] !== text) {
+    t2 = <span>{text}</span>;
+    $[2] = text;
     $[3] = t2;
   } else {
     t2 = $[3];
   }
   let t3;
-  if ($[4] !== t2 || $[5] !== t1) {
+  if ($[4] !== t1 || $[5] !== t2) {
     t3 = (
       <div>
-        {t2}
         {t1}
+        {t2}
       </div>
     );
-    $[4] = t2;
-    $[5] = t1;
+    $[4] = t1;
+    $[5] = t2;
     $[6] = t3;
   } else {
     t3 = $[6];

@@ -39,22 +39,21 @@ import { identity } from "shared-runtime";
 // ordering of accesses should not matter
 function useConditionalSubpath2(props, other) {
   const $ = _c(3);
-  let t0;
+  let x;
   if ($[0] !== other || $[1] !== props.a) {
-    const x = {};
+    x = {};
     if (identity(other)) {
       x.a = props.a;
     }
 
-    t0 = x;
     x.b = props.a.b;
     $[0] = other;
     $[1] = props.a;
-    $[2] = t0;
+    $[2] = x;
   } else {
-    t0 = $[2];
+    x = $[2];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

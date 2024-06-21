@@ -52,12 +52,11 @@ import { Stringify, identity, makeArray, mutate } from "shared-runtime";
  * handles this correctly.
  */
 function Foo(t0) {
-  const $ = _c(3);
+  const $ = _c(4);
   const { cond1, cond2 } = t0;
+  const arr = makeArray({ a: 2 }, 2, []);
   let t1;
-  if ($[0] !== cond1 || $[1] !== cond2) {
-    const arr = makeArray({ a: 2 }, 2, []);
-
+  if ($[0] !== cond1 || $[1] !== cond2 || $[2] !== arr) {
     t1 = cond1 ? (
       <>
         <div>{identity("foo")}</div>
@@ -66,9 +65,10 @@ function Foo(t0) {
     ) : null;
     $[0] = cond1;
     $[1] = cond2;
-    $[2] = t1;
+    $[2] = arr;
+    $[3] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[3];
   }
   return t1;
 }

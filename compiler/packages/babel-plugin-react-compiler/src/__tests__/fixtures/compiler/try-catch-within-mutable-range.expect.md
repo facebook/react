@@ -30,37 +30,36 @@ const { throwErrorWithMessage, shallowCopy } = require("shared-runtime");
 
 function Component(props) {
   const $ = _c(4);
-  let t0;
+  let x;
   if ($[0] !== props.value) {
-    const x = [];
+    x = [];
     try {
-      let t1;
+      let t0;
       if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = throwErrorWithMessage("oops");
-        $[2] = t1;
+        t0 = throwErrorWithMessage("oops");
+        $[2] = t0;
       } else {
-        t1 = $[2];
+        t0 = $[2];
       }
-      x.push(t1);
+      x.push(t0);
     } catch {
-      let t1;
+      let t0;
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = shallowCopy({});
-        $[3] = t1;
+        t0 = shallowCopy({});
+        $[3] = t0;
       } else {
-        t1 = $[3];
+        t0 = $[3];
       }
-      x.push(t1);
+      x.push(t0);
     }
 
-    t0 = x;
     x.push(props.value);
     $[0] = props.value;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

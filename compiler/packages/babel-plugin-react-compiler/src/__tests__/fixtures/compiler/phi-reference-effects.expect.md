@@ -32,21 +32,20 @@ import { arrayPush } from "shared-runtime";
 
 function Foo(cond) {
   const $ = _c(2);
-  let t0;
+  let x;
   if ($[0] !== cond) {
-    let x = null;
+    x = null;
     if (cond) {
       x = [];
     }
 
-    t0 = x;
     arrayPush(x, 2);
     $[0] = cond;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

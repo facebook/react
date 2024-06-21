@@ -71,32 +71,31 @@ import { c as _c } from "react/compiler-runtime"; /**
  */
 function ComponentA(props) {
   const $ = _c(3);
+  let a_DEBUG;
   let t0;
-  let t1;
   if ($[0] !== props) {
-    t1 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      const a_DEBUG = [];
+      a_DEBUG = [];
       a_DEBUG.push(props.a);
       if (props.b) {
-        t1 = null;
+        t0 = null;
         break bb0;
       }
 
-      t0 = a_DEBUG;
       a_DEBUG.push(props.d);
     }
     $[0] = props;
-    $[1] = t0;
-    $[2] = t1;
+    $[1] = a_DEBUG;
+    $[2] = t0;
   } else {
-    t0 = $[1];
-    t1 = $[2];
+    a_DEBUG = $[1];
+    t0 = $[2];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
-    return t1;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
-  return t0;
+  return a_DEBUG;
 }
 
 /**
@@ -104,22 +103,21 @@ function ComponentA(props) {
  */
 function ComponentB(props) {
   const $ = _c(2);
-  let t0;
+  let a;
   if ($[0] !== props) {
-    const a = [];
+    a = [];
     a.push(props.a);
     if (props.b) {
       a.push(props.c);
     }
 
-    t0 = a;
     a.push(props.d);
     $[0] = props;
-    $[1] = t0;
+    $[1] = a;
   } else {
-    t0 = $[1];
+    a = $[1];
   }
-  return t0;
+  return a;
 }
 
 /**
@@ -127,33 +125,32 @@ function ComponentB(props) {
  */
 function ComponentC(props) {
   const $ = _c(3);
+  let a;
   let t0;
-  let t1;
   if ($[0] !== props) {
-    t1 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      const a = [];
+      a = [];
       a.push(props.a);
       if (props.b) {
         a.push(props.c);
-        t1 = null;
+        t0 = null;
         break bb0;
       }
 
-      t0 = a;
       a.push(props.d);
     }
     $[0] = props;
-    $[1] = t0;
-    $[2] = t1;
+    $[1] = a;
+    $[2] = t0;
   } else {
-    t0 = $[1];
-    t1 = $[2];
+    a = $[1];
+    t0 = $[2];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
-    return t1;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
-  return t0;
+  return a;
 }
 
 /**
@@ -161,33 +158,32 @@ function ComponentC(props) {
  */
 function ComponentD(props) {
   const $ = _c(3);
+  let a;
   let t0;
-  let t1;
   if ($[0] !== props) {
-    t1 = Symbol.for("react.early_return_sentinel");
+    t0 = Symbol.for("react.early_return_sentinel");
     bb0: {
-      const a = [];
+      a = [];
       a.push(props.a);
       if (props.b) {
         a.push(props.c);
-        t1 = a;
+        t0 = a;
         break bb0;
       }
 
-      t0 = a;
       a.push(props.d);
     }
     $[0] = props;
-    $[1] = t0;
-    $[2] = t1;
+    $[1] = a;
+    $[2] = t0;
   } else {
-    t0 = $[1];
-    t1 = $[2];
+    a = $[1];
+    t0 = $[2];
   }
-  if (t1 !== Symbol.for("react.early_return_sentinel")) {
-    return t1;
+  if (t0 !== Symbol.for("react.early_return_sentinel")) {
+    return t0;
   }
-  return t0;
+  return a;
 }
 
 export const FIXTURE_ENTRYPOINT = {

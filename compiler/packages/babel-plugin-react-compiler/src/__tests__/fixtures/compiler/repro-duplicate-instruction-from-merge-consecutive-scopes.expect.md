@@ -29,39 +29,30 @@ import { c as _c } from "react/compiler-runtime";
 import { Stringify } from "shared-runtime";
 
 function Component(t0) {
-  const $ = _c(5);
+  const $ = _c(3);
   const { id } = t0;
-
-  const t1 = id ? true : false;
-  let t2;
-  if ($[0] !== t1) {
-    t2 = <Stringify title={t1} />;
+  let t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = <Stringify title={undefined} />;
     $[0] = t1;
-    $[1] = t2;
   } else {
-    t2 = $[1];
+    t1 = $[0];
   }
+  const t2 = id ? true : false;
   let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = <Stringify title={undefined} />;
+  if ($[1] !== t2) {
+    t3 = (
+      <>
+        {t1}
+        <Stringify title={t2} />
+      </>
+    );
+    $[1] = t2;
     $[2] = t3;
   } else {
     t3 = $[2];
   }
-  let t4;
-  if ($[3] !== t2) {
-    t4 = (
-      <>
-        {t3}
-        {t2}
-      </>
-    );
-    $[3] = t2;
-    $[4] = t4;
-  } else {
-    t4 = $[4];
-  }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

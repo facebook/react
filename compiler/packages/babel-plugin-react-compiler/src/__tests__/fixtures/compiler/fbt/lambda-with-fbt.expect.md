@@ -42,10 +42,10 @@ import { c as _c } from "react/compiler-runtime";
 import { fbt } from "fbt";
 
 function Component() {
-  const $ = _c(1);
+  const $ = _c(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const buttonLabel = () => {
+    t0 = () => {
       if (!someCondition) {
         return fbt._("Purchase as a gift", null, { hk: "1gHj4g" });
       } else {
@@ -66,17 +66,23 @@ function Component() {
         }
       }
     };
-
-    t0 = (
-      <View>
-        <Button text={buttonLabel()} />
-      </View>
-    );
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  return t0;
+  const buttonLabel = t0;
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = (
+      <View>
+        <Button text={buttonLabel()} />
+      </View>
+    );
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  return t1;
 }
 
 ```

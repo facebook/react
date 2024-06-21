@@ -31,24 +31,23 @@ import { mutate } from "shared-runtime";
 
 function component(foo, bar) {
   const $ = _c(3);
-  let t0;
+  let x;
   if ($[0] !== foo || $[1] !== bar) {
-    const x = { foo };
+    x = { foo };
     const y = { bar };
 
     const a = { y };
     const b = x;
     a.x = b;
 
-    t0 = x;
     mutate(y);
     $[0] = foo;
     $[1] = bar;
-    $[2] = t0;
+    $[2] = x;
   } else {
-    t0 = $[2];
+    x = $[2];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

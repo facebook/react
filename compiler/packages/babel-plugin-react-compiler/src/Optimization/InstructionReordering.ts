@@ -396,7 +396,7 @@ function print(
   depth: number = 0
 ): void {
   if (seen.has(id)) {
-    console.log(`${"|   ".repeat(depth)}$${id} <skipped>`);
+    DEBUG && console.log(`${"|   ".repeat(depth)}$${id} <skipped>`);
     return;
   }
   seen.add(id);
@@ -413,9 +413,10 @@ function print(
   for (const dep of deps) {
     print(env, locals, shared, seen, dep, depth + 1);
   }
-  console.log(
-    `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps.map((x) => `$${x}`).join(", ")}] depth=${node.depth}`
-  );
+  DEBUG &&
+    console.log(
+      `${"|   ".repeat(depth)}$${id} ${printNode(node)} deps=[${deps.map((x) => `$${x}`).join(", ")}] depth=${node.depth}`
+    );
 }
 
 function printNode(node: Node): string {

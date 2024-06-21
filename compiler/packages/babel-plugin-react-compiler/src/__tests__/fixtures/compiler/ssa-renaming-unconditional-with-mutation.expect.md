@@ -26,9 +26,9 @@ function foo(props) {
 import { c as _c } from "react/compiler-runtime";
 function foo(props) {
   const $ = _c(2);
-  let t0;
+  let x;
   if ($[0] !== props) {
-    let x = [];
+    x = [];
     x.push(props.bar);
     if (props.cond) {
       x = [];
@@ -38,14 +38,13 @@ function foo(props) {
       x.push(props.bar);
     }
 
-    t0 = x;
     mut(x);
     $[0] = props;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  return t0;
+  return x;
 }
 
 ```

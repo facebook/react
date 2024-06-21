@@ -26,20 +26,18 @@ import { c as _c } from "react/compiler-runtime"; // Test that we correctly trac
 // a dependency
 function TestOverlappingTracked(props) {
   const $ = _c(2);
-  let t0;
+  let x;
   if ($[0] !== props.a) {
-    const x = {};
+    x = {};
     x.b = props.a.b;
     x.c = props.a.c;
-
-    t0 = x;
     x.a = props.a;
     $[0] = props.a;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {

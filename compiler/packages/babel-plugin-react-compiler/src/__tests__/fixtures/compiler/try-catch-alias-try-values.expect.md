@@ -33,25 +33,24 @@ const { throwInput } = require("shared-runtime");
 
 function Component(props) {
   const $ = _c(1);
-  let t0;
+  let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     let y;
-    const x = [];
+    x = [];
     try {
       throwInput(x);
-    } catch (t1) {
-      const e = t1;
+    } catch (t0) {
+      const e = t0;
 
       y = e;
     }
 
-    t0 = x;
     y.push(null);
-    $[0] = t0;
+    $[0] = x;
   } else {
-    t0 = $[0];
+    x = $[0];
   }
-  return t0;
+  return x;
 }
 
 export const FIXTURE_ENTRYPOINT = {
