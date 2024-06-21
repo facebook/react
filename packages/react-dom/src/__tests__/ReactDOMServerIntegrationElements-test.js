@@ -744,7 +744,7 @@ describe('ReactDOMServerIntegration', () => {
         'a div with a single child surrounded by whitespace',
         async render => {
           // prettier-ignore
-          const e = await render(<div id="parent">  <div id="child" />   </div>); // eslint-disable-line no-multi-spaces
+          const e = await render(<div id="parent">  <div id="child" />   </div>);
           expect(e.childNodes.length).toBe(3);
           const textNode1 = e.childNodes[0];
           const child = e.childNodes[1];
