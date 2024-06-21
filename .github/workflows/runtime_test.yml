@@ -8,13 +8,14 @@ on:
       - 'compiler/**'
 
 jobs:
+  # Define the various test parameters and parallelism for this workflow
   build_test_params:
     name: Build test params
     runs-on: ubuntu-latest
     outputs:
       params: ${{ steps.define-params.outputs.result }}
       # How many chunks to group tests into
-      parallelism: 3
+      parallelism: 4
     steps:
       - uses: actions/github-script@v7
         id: define-params
@@ -42,6 +43,7 @@ jobs:
               "-r=experimental --env=development --persistent"
             ];
 
+  # Chunk tests into groups for parallelism
   chunk_tests:
     name: Chunk tests
     runs-on: ubuntu-latest
@@ -76,6 +78,7 @@ jobs:
         env:
           CHUNKS: ${{ steps.chunks.outputs.chunks }}
 
+  # Spawn a job for each set of test param and number of chunks
   test:
     name: yarn test ${{ matrix.params }} (Chunk ${{ matrix.chunk_ids }})
     runs-on: ubuntu-latest
