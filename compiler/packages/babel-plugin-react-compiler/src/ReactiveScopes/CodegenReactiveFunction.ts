@@ -565,7 +565,9 @@ function codegenReactiveScope(
 
     CompilerError.invariant(identifier.name != null, {
       reason: `Expected scope declaration identifier to be named`,
-      description: `Declaration \`${printIdentifier(identifier)}\` is unnamed in scope @${scope.id}`,
+      description: `Declaration \`${printIdentifier(
+        identifier
+      )}\` is unnamed in scope @${scope.id}`,
       loc: null,
       suggestions: null,
     });
