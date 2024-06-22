@@ -628,7 +628,7 @@ describe('ReactFlightDOM', () => {
       Component: function () {},
     });
     async function read() {
-      return await ClientModule.then(mod => mod.Component);
+      return await ClientModule.Component;
     }
     expect(read).toThrowError(
       `Cannot await or return from a thenable. ` +
