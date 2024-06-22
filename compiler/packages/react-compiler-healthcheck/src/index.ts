@@ -38,10 +38,10 @@ async function main() {
     ],
   };
 
-  let paths = [];
+  const paths = new Set();
   for (const pattern of argv.src) {
     const resolvedPaths = await glob(pattern, globOptions);
-    paths.push(...resolvedPaths);
+    paths.add(...resolvedPaths);
   }
 
   for (const path of paths) {
