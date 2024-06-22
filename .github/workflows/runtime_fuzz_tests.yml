@@ -1,4 +1,4 @@
-name: facebook/react/fuzz_tests
+name: (Runtime) Fuzz tests
 on:
   schedule:
   - cron: 0 * * * *

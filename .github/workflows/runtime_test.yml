@@ -1,4 +1,4 @@
-name: React Runtime (Test)
+name: (Runtime) Test
 
 on:
   push:

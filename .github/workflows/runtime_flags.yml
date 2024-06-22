@@ -1,4 +1,4 @@
-name: Fizz
+name: (Runtime) Flags
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
       - 'compiler/**'
 
 jobs:
-  check_generated_fizz_runtime:
-    name: Confirm generated inline Fizz runtime is up to date
+  flags:
+    name: Check flags
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +25,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: |
-          yarn generate-inline-fizz-runtime
-          git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+      - run: yarn flags
