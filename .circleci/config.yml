@@ -281,7 +281,7 @@ jobs:
           at: .
       - setup_node_modules
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
-      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci=circleci
 
   run_devtools_e2e_tests_for_versions:
     docker: *docker
@@ -368,7 +368,7 @@ jobs:
     steps:
       - checkout
       - setup_node_modules
-      - run: yarn test <<parameters.args>> --ci
+      - run: yarn test <<parameters.args>> --ci=circleci
 
   yarn_test_build:
     docker: *docker
@@ -382,7 +382,7 @@ jobs:
       - attach_workspace:
           at: .
       - setup_node_modules
-      - run: yarn test --build <<parameters.args>> --ci
+      - run: yarn test --build <<parameters.args>> --ci=circleci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
     docker: *docker

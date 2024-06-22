@@ -7,37 +7,67 @@ on:
     paths-ignore:
       - 'compiler/**'
 
+env:
+  # Number of workers (one per shard) to spawn
+  SHARD_COUNT: 5
+
 jobs:
-  test:
-    name: yarn test
+  # Define the various test parameters and parallelism for this workflow
+  build_test_params:
+    name: Build test params
     runs-on: ubuntu-latest
-    continue-on-error: true
+    outputs:
+      params: ${{ steps.define-params.outputs.result }}
+      shard_id: ${{ steps.define-shards.outputs.result }}
+    steps:
+      - uses: actions/github-script@v7
+        id: define-shards
+        with:
+          script: |
+            function range(from, to) {
+              const arr = [];
+              for (let n = from; n <= to; n++) {
+                arr.push(n);
+              }
+              return arr;
+            }
+            return range(1, process.env.SHARD_COUNT);
+      - uses: actions/github-script@v7
+        id: define-params
+        with:
+          script: |
+            return [
+              "-r=stable --env=development",
+              "-r=stable --env=production",
+              "-r=experimental --env=development",
+              "-r=experimental --env=production",
+              "-r=www-classic --env=development --variant=false",
+              "-r=www-classic --env=production --variant=false",
+              "-r=www-classic --env=development --variant=true",
+              "-r=www-classic --env=production --variant=true",
+              "-r=www-modern --env=development --variant=false",
+              "-r=www-modern --env=production --variant=false",
+              "-r=www-modern --env=development --variant=true",
+              "-r=www-modern --env=production --variant=true",
+              "-r=xplat --env=development --variant=false",
+              "-r=xplat --env=development --variant=true",
+              "-r=xplat --env=production --variant=false",
+              "-r=xplat --env=production --variant=true",
+              // TODO: Test more persistent configurations?
+              "-r=stable --env=development --persistent",
+              "-r=experimental --env=development --persistent"
+            ];
+
+  # Spawn a job for each shard for a given set of test params
+  test:
+    name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard_id }})
+    runs-on: ubuntu-latest
+    needs: build_test_params
     strategy:
       matrix:
-        # Intentionally passing these as strings instead of creating a
-        # separate parameter per CLI argument, since it's easier to
-        # control/see which combinations we want to run.
-        params: [
-          "-r=stable --env=development",
-          "-r=stable --env=production",
-          "-r=experimental --env=development",
-          "-r=experimental --env=production",
-          "-r=www-classic --env=development --variant=false",
-          "-r=www-classic --env=production --variant=false",
-          "-r=www-classic --env=development --variant=true",
-          "-r=www-classic --env=production --variant=true",
-          "-r=www-modern --env=development --variant=false",
-          "-r=www-modern --env=production --variant=false",
-          "-r=www-modern --env=development --variant=true",
-          "-r=www-modern --env=production --variant=true",
-          "-r=xplat --env=development --variant=false",
-          "-r=xplat --env=development --variant=true",
-          "-r=xplat --env=production --variant=false",
-          "-r=xplat --env=production --variant=true",
-          # TODO: Test more persistent configurations?
-          "-r=stable --env=development --persistent",
-          "-r=experimental --env=development --persistent"
-        ]
+        params: ${{ fromJSON(needs.build_test_params.outputs.params) }}
+        shard_id: ${{ fromJSON(needs.build_test_params.outputs.shard_id) }}
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,4 +82,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test ${{ matrix.params }} --ci
+      - run: yarn test ${{ matrix.params }} --ci=github --shard=${{ matrix.shard_id }}/${{ env.SHARD_COUNT }}
