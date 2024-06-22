@@ -18,20 +18,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       params: ${{ steps.define-params.outputs.result }}
-      shard_id: ${{ steps.define-chunks.outputs.result }}
+      shard_id: ${{ steps.define-shards.outputs.result }}
     steps:
       - uses: actions/github-script@v7
-        id: define-chunks
+        id: define-shards
         with:
           script: |
             function range(from, to) {
               const arr = [];
-              for (let n = from; n < to; n++) {
+              for (let n = from; n <= to; n++) {
                 arr.push(n);
               }
               return arr;
             }
-            return range(0, process.env.SHARD_COUNT);
+            return range(1, process.env.SHARD_COUNT);
       - uses: actions/github-script@v7
         id: define-params
         with:
@@ -60,7 +60,7 @@ jobs:
 
   # Spawn a job for each shard for a given set of test params
   test:
-    name: yarn test ${{ matrix.params }} (Chunk ${{ matrix.shard_id }})
+    name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard_id }})
     runs-on: ubuntu-latest
     needs: build_test_params
     strategy:
