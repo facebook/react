@@ -34,11 +34,10 @@ jobs:
               "-r=www-modern --env=production --variant=false",
               "-r=www-modern --env=development --variant=true",
               "-r=www-modern --env=production --variant=true",
-              // Chunks may include only react-dom tests which xplat doesn't run
-              "-r=xplat --env=development --variant=false --passWithNoTests",
-              "-r=xplat --env=development --variant=true --passWithNoTests",
-              "-r=xplat --env=production --variant=false --passWithNoTests",
-              "-r=xplat --env=production --variant=true --passWithNoTests",
+              "-r=xplat --env=development --variant=false",
+              "-r=xplat --env=development --variant=true",
+              "-r=xplat --env=production --variant=false",
+              "-r=xplat --env=production --variant=true",
               // TODO: Test more persistent configurations?
               "-r=stable --env=development --persistent",
               "-r=experimental --env=development --persistent"
@@ -87,6 +86,7 @@ jobs:
     strategy:
       matrix:
         params: ${{ fromJSON(needs.build_test_params.outputs.params) }}
+        chunks: ${{ fromJSON(needs.chunk_tests.outputs.chunks) }}
         chunk_ids: ${{ fromJSON(needs.chunk_tests.outputs.chunk_ids) }}
     continue-on-error: true
     steps:
@@ -105,4 +105,4 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: echo $CHUNKS | jq '.[${{ matrix.chunk_ids }}] | .[] | @text' | xargs yarn test ${{ matrix.params }} --ci=github
         env:
-          CHUNKS: ${{ needs.chunk_tests.outputs.chunks }}
+          CHUNKS: ${{ matrix.chunks }}
