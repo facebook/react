@@ -5,7 +5,7 @@ const {
   esNextPaths,
   typescriptPaths,
 } = require('./scripts/shared/pathsByLanguageVersion');
-
+//
 module.exports = {
   bracketSpacing: false,
   singleQuote: true,
