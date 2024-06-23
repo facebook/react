@@ -2155,6 +2155,19 @@ through@^2.3.8:
   resolved "https://registry.yarnpkg.com/through/-/through-2.3.8.tgz#0dd4c9ffaabc357960b1b724115d7e0e86a2e1f5"
   integrity sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==
 
+<<<<<< snyk-fix-049f8677e79143706eaea3bec7836bb8
+tldts-core@^6.1.28:
+  version "6.1.28"
+  resolved "https://registry.yarnpkg.com/tldts-core/-/tldts-core-6.1.28.tgz#123e125ff1a4cb65a685d6140c7957641bfb616b"
+  integrity sha512-MJIfu8oVA4GVEuZKxk1GaaLpdq45w8b/UoWwuq3k+oIWbFBFtFG37xCTe3qz7D/ZBcHFZ2LmQb66grE1/Q93Hw==
+
+tldts-icann@^6.1.0:
+  version "6.1.28"
+  resolved "https://registry.yarnpkg.com/tldts-icann/-/tldts-icann-6.1.28.tgz#1c39c654cd3359d2ae986db8c408e4eee21e3e44"
+  integrity sha512-SSfJKL9q0ZyW32JApyeC6ad96sXRJ+jo1QLcAMsCPcD03vjJqAqY0wddeI4VhQZRkaLr5gUOu59BOAgIcYRp+A==
+  dependencies:
+    tldts-core "^6.1.28"
+=======
 tldts-core@^6.1.29:
   version "6.1.29"
   resolved "https://registry.yarnpkg.com/tldts-core/-/tldts-core-6.1.29.tgz#a37a5ff726cc5169579ca7a607fbeee1464314c2"
@@ -2166,6 +2179,7 @@ tldts-icann@^6.1.0:
   integrity sha512-EMN6Y25sN+pgwYaisBvorac27NAY80OAQ9CLF6ae82oS8ak0IKDQMis3DnT5ExrFWUirZbaKEq5f1ryHcJNdMQ==
   dependencies:
     tldts-core "^6.1.29"
+>>>>>> master
 
 to-buffer@^1.1.1:
   version "1.1.1"
