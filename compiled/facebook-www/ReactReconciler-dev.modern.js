@@ -792,10 +792,8 @@ __DEV__ &&
       }
     }
     function getHighestPriorityLanes(lanes) {
-      if (enableUnifiedSyncLane) {
-        var pendingSyncLanes = lanes & SyncUpdateLanes;
-        if (0 !== pendingSyncLanes) return pendingSyncLanes;
-      }
+      var pendingSyncLanes = lanes & 42;
+      if (0 !== pendingSyncLanes) return pendingSyncLanes;
       switch (lanes & -lanes) {
         case 1:
           return 1;
@@ -7364,8 +7362,7 @@ __DEV__ &&
           JSCompiler_temp = workInProgressRoot;
           if (null !== JSCompiler_temp) {
             nextProps = renderLanes & -renderLanes;
-            if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
-              nextProps = 1;
+            if (0 !== (nextProps & 42)) nextProps = 1;
             else
               switch (nextProps) {
                 case 2:
@@ -14599,7 +14596,7 @@ __DEV__ &&
       remainingLanes = root.pendingLanes;
       (enableInfiniteRenderLoopDetection &&
         (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-      (0 !== (lanes & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes))
+      (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
         ? ((nestedUpdateScheduled = !0),
           root === rootWithNestedUpdates
             ? nestedUpdateCount++
@@ -15847,7 +15844,6 @@ __DEV__ &&
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableLazyContextPropagation =
         dynamicFeatureFlags.enableLazyContextPropagation,
-      enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableDeferRootSchedulingToMicrotask =
@@ -16045,7 +16041,6 @@ __DEV__ &&
     var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
       log$2 = Math.log,
       LN2 = Math.LN2,
-      SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2,
       nextTransitionLane = 128,
       nextRetryLane = 4194304,
       scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
@@ -18371,7 +18366,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-0b724e9e9c-20240621"
+        reconcilerVersion: "19.0.0-www-modern-c21bcd627b-20240624"
       });
     };
     exports.isAlreadyRendering = function () {

@@ -38,7 +38,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
@@ -569,14 +568,11 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2,
-  nextTransitionLane = 128,
+var nextTransitionLane = 128,
   nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & SyncUpdateLanes;
-    if (0 !== pendingSyncLanes) return pendingSyncLanes;
-  }
+  var pendingSyncLanes = lanes & 42;
+  if (0 !== pendingSyncLanes) return pendingSyncLanes;
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -6173,8 +6169,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       JSCompiler_temp = workInProgressRoot;
       if (null !== JSCompiler_temp) {
         nextProps = renderLanes & -renderLanes;
-        if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
-          nextProps = 1;
+        if (0 !== (nextProps & 42)) nextProps = 1;
         else
           switch (nextProps) {
             case 2:
@@ -11810,7 +11805,7 @@ function commitRootImpl(
   remainingLanes = root.pendingLanes;
   (enableInfiniteRenderLoopDetection &&
     (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes))
+  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -17154,14 +17149,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1769 = React.version;
 if (
-  "19.0.0-www-classic-0b724e9e9c-20240621" !==
+  "19.0.0-www-classic-c21bcd627b-20240624" !==
   isomorphicReactPackageVersion$jscomp$inline_1769
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1769,
-      "19.0.0-www-classic-0b724e9e9c-20240621"
+      "19.0.0-www-classic-c21bcd627b-20240624"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17207,7 +17202,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1776 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-0b724e9e9c-20240621",
+  version: "19.0.0-www-classic-c21bcd627b-20240624",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2220 = {
@@ -17237,7 +17232,7 @@ var internals$jscomp$inline_2220 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-0b724e9e9c-20240621"
+  reconcilerVersion: "19.0.0-www-classic-c21bcd627b-20240624"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2221 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17701,4 +17696,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-0b724e9e9c-20240621";
+exports.version = "19.0.0-www-classic-c21bcd627b-20240624";

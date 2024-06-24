@@ -63,7 +63,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
-  enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
   enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
@@ -473,14 +472,11 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2,
-  nextTransitionLane = 128,
+var nextTransitionLane = 128,
   nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & SyncUpdateLanes;
-    if (0 !== pendingSyncLanes) return pendingSyncLanes;
-  }
+  var pendingSyncLanes = lanes & 42;
+  if (0 !== pendingSyncLanes) return pendingSyncLanes;
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -4837,8 +4833,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       JSCompiler_temp = workInProgressRoot;
       if (null !== JSCompiler_temp) {
         nextProps = renderLanes & -renderLanes;
-        if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
-          nextProps = 1;
+        if (0 !== (nextProps & 42)) nextProps = 1;
         else
           switch (nextProps) {
             case 2:
@@ -9469,7 +9464,7 @@ function commitRootImpl(
   remainingLanes = root.pendingLanes;
   (enableInfiniteRenderLoopDetection &&
     (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes))
+  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -10162,7 +10157,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-0b724e9e9c-20240621",
+    version: "19.0.0-www-modern-c21bcd627b-20240624",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1372 = {
@@ -10193,7 +10188,7 @@ var internals$jscomp$inline_1372 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-0b724e9e9c-20240621"
+  reconcilerVersion: "19.0.0-www-modern-c21bcd627b-20240624"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1373 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

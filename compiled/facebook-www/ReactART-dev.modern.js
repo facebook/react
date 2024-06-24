@@ -937,10 +937,8 @@ __DEV__ &&
       }
     }
     function getHighestPriorityLanes(lanes) {
-      if (enableUnifiedSyncLane) {
-        var pendingSyncLanes = lanes & SyncUpdateLanes;
-        if (0 !== pendingSyncLanes) return pendingSyncLanes;
-      }
+      var pendingSyncLanes = lanes & SyncUpdateLanes;
+      if (0 !== pendingSyncLanes) return pendingSyncLanes;
       switch (lanes & -lanes) {
         case SyncHydrationLane:
           return SyncHydrationLane;
@@ -7088,7 +7086,7 @@ __DEV__ &&
           JSCompiler_temp = workInProgressRoot;
           if (null !== JSCompiler_temp) {
             nextProps = renderLanes & -renderLanes;
-            if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
+            if (0 !== (nextProps & SyncUpdateLanes))
               nextProps = SyncHydrationLane;
             else
               switch (nextProps) {
@@ -14294,7 +14292,6 @@ __DEV__ &&
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableLazyContextPropagation =
         dynamicFeatureFlags.enableLazyContextPropagation,
-      enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableDeferRootSchedulingToMicrotask =
@@ -14398,9 +14395,7 @@ __DEV__ &&
       InputContinuousLane = 8,
       DefaultHydrationLane = 16,
       DefaultLane = 32,
-      SyncUpdateLanes = enableUnifiedSyncLane
-        ? SyncLane | InputContinuousLane | DefaultLane
-        : SyncLane,
+      SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane,
       TransitionHydrationLane = 64,
       TransitionLanes = 4194176,
       RetryLanes = 62914560,
@@ -16364,14 +16359,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-0b724e9e9c-20240621"
+        reconcilerVersion: "19.0.0-www-modern-c21bcd627b-20240624"
       });
     })({
       findFiberByHostInstance: function () {
         return null;
       },
       bundleType: 1,
-      version: "19.0.0-www-modern-0b724e9e9c-20240621",
+      version: "19.0.0-www-modern-c21bcd627b-20240624",
       rendererPackageName: "react-art"
     });
     var ClippingRectangle = TYPES.CLIPPING_RECTANGLE,

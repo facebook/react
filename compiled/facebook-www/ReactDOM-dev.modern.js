@@ -934,10 +934,8 @@ __DEV__ &&
       }
     }
     function getHighestPriorityLanes(lanes) {
-      if (enableUnifiedSyncLane) {
-        var pendingSyncLanes = lanes & SyncUpdateLanes;
-        if (0 !== pendingSyncLanes) return pendingSyncLanes;
-      }
+      var pendingSyncLanes = lanes & SyncUpdateLanes;
+      if (0 !== pendingSyncLanes) return pendingSyncLanes;
       switch (lanes & -lanes) {
         case SyncHydrationLane:
           return SyncHydrationLane;
@@ -9046,10 +9044,7 @@ __DEV__ &&
           JSCompiler_object_inline_digest_2452 = workInProgressRoot;
           if (null !== JSCompiler_object_inline_digest_2452) {
             JSCompiler_object_inline_stack_2453 = renderLanes & -renderLanes;
-            if (
-              enableUnifiedSyncLane &&
-              0 !== (JSCompiler_object_inline_stack_2453 & SyncUpdateLanes)
-            )
+            if (0 !== (JSCompiler_object_inline_stack_2453 & SyncUpdateLanes))
               JSCompiler_object_inline_stack_2453 = SyncHydrationLane;
             else
               switch (JSCompiler_object_inline_stack_2453) {
@@ -22952,7 +22947,6 @@ __DEV__ &&
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableLazyContextPropagation =
         dynamicFeatureFlags.enableLazyContextPropagation,
-      enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableDeferRootSchedulingToMicrotask =
@@ -23046,9 +23040,7 @@ __DEV__ &&
       InputContinuousLane = 8,
       DefaultHydrationLane = 16,
       DefaultLane = 32,
-      SyncUpdateLanes = enableUnifiedSyncLane
-        ? SyncLane | InputContinuousLane | DefaultLane
-        : SyncLane,
+      SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane,
       TransitionHydrationLane = 64,
       TransitionLanes = 4194176,
       RetryLanes = 62914560,
@@ -26520,11 +26512,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-0b724e9e9c-20240621" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-c21bcd627b-20240624" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-0b724e9e9c-20240621\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-c21bcd627b-20240624\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26589,12 +26581,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-0b724e9e9c-20240621"
+          reconcilerVersion: "19.0.0-www-modern-c21bcd627b-20240624"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-0b724e9e9c-20240621",
+        version: "19.0.0-www-modern-c21bcd627b-20240624",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27190,7 +27182,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-0b724e9e9c-20240621";
+    exports.version = "19.0.0-www-modern-c21bcd627b-20240624";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

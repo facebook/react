@@ -429,10 +429,8 @@ module.exports = function ($$$config) {
     return 0 === x ? 32 : (31 - ((log$1(x) / LN2) | 0)) | 0;
   }
   function getHighestPriorityLanes(lanes) {
-    if (enableUnifiedSyncLane) {
-      var pendingSyncLanes = lanes & SyncUpdateLanes;
-      if (0 !== pendingSyncLanes) return pendingSyncLanes;
-    }
+    var pendingSyncLanes = lanes & 42;
+    if (0 !== pendingSyncLanes) return pendingSyncLanes;
     switch (lanes & -lanes) {
       case 1:
         return 1;
@@ -4605,8 +4603,7 @@ module.exports = function ($$$config) {
         JSCompiler_temp = workInProgressRoot;
         if (null !== JSCompiler_temp) {
           nextProps = renderLanes & -renderLanes;
-          if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
-            nextProps = 1;
+          if (0 !== (nextProps & 42)) nextProps = 1;
           else
             switch (nextProps) {
               case 2:
@@ -10335,7 +10332,7 @@ module.exports = function ($$$config) {
     remainingLanes = root.pendingLanes;
     (enableInfiniteRenderLoopDetection &&
       (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
-    (0 !== (lanes & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes))
+    (0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42))
       ? root === rootWithNestedUpdates
         ? nestedUpdateCount++
         : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -11036,7 +11033,6 @@ module.exports = function ($$$config) {
     enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
     enableLazyContextPropagation =
       dynamicFeatureFlags.enableLazyContextPropagation,
-    enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
     enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
     enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
     enableDeferRootSchedulingToMicrotask =
@@ -11215,7 +11211,6 @@ module.exports = function ($$$config) {
     clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
     log$1 = Math.log,
     LN2 = Math.LN2,
-    SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2,
     nextTransitionLane = 128,
     nextRetryLane = 4194304,
     scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
@@ -12188,7 +12183,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-0b724e9e9c-20240621"
+      reconcilerVersion: "19.0.0-www-modern-c21bcd627b-20240624"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;
