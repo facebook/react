@@ -60,11 +60,7 @@ jobs:
 
   lint_build:
     name: yarn lint-build
-    needs: [define_build_params, build]
-    strategy:
-      matrix:
-        bundle_type: ${{ fromJSON(needs.define_build_params.outputs.bundle_type) }}
-        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -82,8 +78,8 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
           path: build
+          merge-multiple: true
       - name: Display structure of build
         run: ls -R build
       - run: yarn install --frozen-lockfile
@@ -91,11 +87,9 @@ jobs:
 
   test_build:
     name: yarn test-build
-    needs: [define_build_params, build]
+    needs: build
     strategy:
       matrix:
-        bundle_type: ${{ fromJSON(needs.define_build_params.outputs.bundle_type) }}
-        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
         test_params: [
           # Intentionally passing these as strings instead of creating a
           # separate parameter per CLI argument, since it's easier to
@@ -143,8 +137,8 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
           path: build
+          merge-multiple: true
       - name: Display structure of build
         run: ls -R build
       - run: yarn install --frozen-lockfile
