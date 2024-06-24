@@ -17,7 +17,8 @@
     // ideally turn off only during dev, or on a per-file basis
     "noUnusedLocals": false,
     "composite": true,
-    "removeComments": true
+    "removeComments": true,
+    "sourceMap": true,
   },
   "exclude": [
     "node_modules",
