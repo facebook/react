@@ -846,9 +846,7 @@ async function buildEverything(bundleTypeToBuild) {
   );
 
   await Promise.all(
-    bundles.map(([bundle, bundleType]) => {
-      return createBundle(bundle, bundleType);
-    })
+    bundles.map(([bundle, bundleType]) => createBundle(bundle, bundleType))
   );
 
   await Packaging.copyAllShims();
