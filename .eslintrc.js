@@ -17,6 +17,8 @@ module.exports = {
   // Stop ESLint from looking for a configuration file in parent folders
   root: true,
 
+  reportUnusedDisableDirectives: true,
+
   plugins: [
     'babel',
     'ft-flow',
@@ -484,7 +486,11 @@ module.exports = {
       },
     },
     {
-      files: ['packages/react-devtools-extensions/**/*.js'],
+      files: [
+        'packages/react-devtools-extensions/**/*.js',
+        'packages/react-devtools-shared/src/hook.js',
+        'packages/react-devtools-shared/src/backend/console.js',
+      ],
       globals: {
         __IS_CHROME__: 'readonly',
         __IS_FIREFOX__: 'readonly',

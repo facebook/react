@@ -186,11 +186,15 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
         }
         case "instruction": {
           switch (instr.instruction.value.kind) {
+            case "BinaryExpression":
             case "ComputedLoad":
             case "JSXText":
+            case "LoadGlobal":
             case "LoadLocal":
             case "Primitive":
-            case "PropertyLoad": {
+            case "PropertyLoad":
+            case "TemplateLiteral":
+            case "UnaryExpression": {
               /*
                * We can merge two scopes if there are intervening instructions, but:
                * - Only if the instructions are simple and it's okay to make them
