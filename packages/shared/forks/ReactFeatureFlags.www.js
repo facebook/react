@@ -18,7 +18,6 @@ export const {
   enableTrustedTypesIntegration,
   enableDebugTracing,
   enableLazyContextPropagation,
-  enableUnifiedSyncLane,
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,

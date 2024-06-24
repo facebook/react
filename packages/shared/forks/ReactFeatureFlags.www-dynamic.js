@@ -16,7 +16,6 @@
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
 export const forceConcurrentByDefaultForTesting = __VARIANT__;
-export const enableUnifiedSyncLane = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const alwaysThrottleRetries = true;
