@@ -60,7 +60,11 @@ jobs:
 
   lint_build:
     name: yarn lint-build
-    needs: build
+    needs: [define_build_params, build]
+    strategy:
+      matrix:
+        bundle_type: ${{ fromJSON(needs.define_build_params.outputs.bundle_type) }}
+        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -75,14 +79,14 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
           path: build
-          merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: yarn install --frozen-lockfile
       - run: yarn lint-build
 
   test_build:
@@ -134,6 +138,7 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -141,6 +146,5 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: yarn install --frozen-lockfile
       - run: yarn test --build ${{ matrix.test_params }} --ci=github
 
