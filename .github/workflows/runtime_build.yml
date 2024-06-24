@@ -54,7 +54,7 @@ jobs:
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.bundle_type }}-${{ matrix.release_channel }}
+          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
           path: |
             build/**
 
@@ -82,6 +82,65 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.bundle_type }}-${{ matrix.release_channel }}
+          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
       - run: yarn install --frozen-lockfile
       - run: yarn lint-build
+
+  test_build:
+    name: yarn test-build
+    needs: [define_build_params, build]
+    strategy:
+      matrix:
+        bundle_type: ${{ fromJSON(needs.define_build_params.outputs.bundle_type) }}
+        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
+        test_params: [
+          # Intentionally passing these as strings instead of creating a
+          # separate parameter per CLI argument, since it's easier to
+          # control/see which combinations we want to run.
+          -r=stable --env=development,
+          -r=stable --env=production,
+          -r=experimental --env=development,
+          -r=experimental --env=production,
+
+          # Dev Tools
+          --project=devtools -r=experimental,
+
+          # TODO: Update test config to support www build tests
+          # - "-r=www-classic --env=development --variant=false"
+          # - "-r=www-classic --env=production --variant=false"
+          # - "-r=www-classic --env=development --variant=true"
+          # - "-r=www-classic --env=production --variant=true"
+          # - "-r=www-modern --env=development --variant=false"
+          # - "-r=www-modern --env=production --variant=false"
+          # - "-r=www-modern --env=development --variant=true"
+          # - "-r=www-modern --env=production --variant=true"
+
+          # TODO: Update test config to support xplat build tests
+          # - "-r=xplat --env=development --variant=false"
+          # - "-r=xplat --env=development --variant=true"
+          # - "-r=xplat --env=production --variant=false"
+          # - "-r=xplat --env=production --variant=true"
+
+          # TODO: Test more persistent configurations?
+        ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn test --build ${{ matrix.test_params }} --ci=github
+
