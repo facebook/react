@@ -89,7 +89,7 @@ jobs:
       - run: yarn lint-build
 
   process_artifacts_combined:
-    name: yarn lint-build
+    name: Process artifacts combined
     needs: build
     runs-on: ubuntu-latest
     steps:
