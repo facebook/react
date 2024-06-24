@@ -26,7 +26,7 @@ jobs:
         id: define_release_channels
         with:
           script: |
-            return ['stable', 'experimental'];
+            return ["stable", "experimental"];
 
   build:
     name: yarn build
@@ -51,12 +51,14 @@ jobs:
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn build --b=${{ matrix.bundle_type }} --r=${{ matrix.release_channel }} --ci=github
+        env:
+          CI: github
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.bundle_type }}-${{ matrix.release_channel }}
+          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
           path: |
-            build/**
+            build
 
   lint_build:
     name: yarn lint-build
@@ -82,6 +84,30 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.bundle_type }}-${{ matrix.release_channel }}
+          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
       - run: yarn install --frozen-lockfile
       - run: yarn lint-build
+
+  process_artifacts_combined:
+    name: yarn lint-build
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+      # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build.tgz ./build
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: cp ./build.tgz ./build2.tgz
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined_artifacts_${{ github.sha }}
+          path: |
+            ./build.tgz
+            ./build2.tgz
