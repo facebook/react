@@ -237,7 +237,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
         kind: "Object",
         shapeId: BuiltInArrayId,
       },
-      calleeEffect: Effect.Read,
+      calleeEffect: Effect.Capture,
       returnValueKind: ValueKind.Mutable,
     }),
   ],
