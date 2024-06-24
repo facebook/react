@@ -18,7 +18,7 @@ const currentBuildResults = {
 };
 
 function saveResults() {
-  if (process.env.CIRCLE_NODE_TOTAL) {
+  if (process.env.CIRCLE_NODE_TOTAL || process.env.CI === 'github') {
     // In CI, write the bundle sizes to a subdirectory and append the node index
     // to the filename. A downstream job will consolidate these into a
     // single file.
