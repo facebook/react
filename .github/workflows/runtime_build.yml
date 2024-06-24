@@ -51,6 +51,8 @@ jobs:
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn build --b=${{ matrix.bundle_type }} --r=${{ matrix.release_channel }} --ci=github
+        env:
+          CI: github
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
@@ -146,8 +148,9 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          path: build-temp
+          path: build
+          merge-multiple: true
       - name: Display structure of build
-        run: ls -R build-temp
-      # - run: yarn test --build ${{ matrix.test_params }} --ci=github
+        run: ls -R build
+      - run: yarn test --build ${{ matrix.test_params }} --ci=github
 
