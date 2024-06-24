@@ -25,7 +25,6 @@ export const consoleManagedByDevToolsDuringStrictMode = true;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableDefaultPropsExceptForClasses = true;
-export const disableIEWorkarounds = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = true;
 export const disableLegacyMode = false;

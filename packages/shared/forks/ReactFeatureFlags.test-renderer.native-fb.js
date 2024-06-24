@@ -17,7 +17,6 @@ export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
 export const disableDefaultPropsExceptForClasses = false;
-export const disableIEWorkarounds = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = false;
 export const disableLegacyMode = false;

@@ -232,7 +232,6 @@ describe('when Trusted Types are available in global object', () => {
       );
     });
 
-    // @gate !disableIEWorkarounds
     it('should log a warning', async () => {
       class Component extends React.Component {
         render() {
