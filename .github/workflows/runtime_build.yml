@@ -157,7 +157,7 @@ jobs:
       - run: yarn test --build ${{ matrix.test_params }} --ci=github
 
   process_artifacts_combined:
-    name: yarn lint-build
+    name: Process artifacts combined
     needs: build
     runs-on: ubuntu-latest
     steps:
