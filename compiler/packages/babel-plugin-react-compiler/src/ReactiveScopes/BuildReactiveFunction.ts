@@ -921,14 +921,17 @@ class Driver {
         });
       } else if (defaultBlock.instructions.length === 1) {
         const instr = defaultBlock.instructions[0]!;
-        let place: Place = instr.lvalue!;
+        let place: Place = instr.lvalue;
         let value: ReactiveValue = instr.value;
-        if (instr.value.kind === "StoreLocal") {
-          place = instr.value.lvalue.place;
+        if (
+          value.kind === "StoreLocal" &&
+          value.lvalue.place.identifier.name === null
+        ) {
+          place = value.lvalue.place;
           value = {
             kind: "LoadLocal",
-            place: instr.value.value,
-            loc: instr.value.value.loc,
+            place: value.value,
+            loc: value.value.loc,
           };
         }
         return {
@@ -939,14 +942,17 @@ class Driver {
         };
       } else {
         const instr = defaultBlock.instructions.at(-1)!;
-        let place: Place = instr.lvalue!;
+        let place: Place = instr.lvalue;
         let value: ReactiveValue = instr.value;
-        if (instr.value.kind === "StoreLocal") {
-          place = instr.value.lvalue.place;
+        if (
+          value.kind === "StoreLocal" &&
+          value.lvalue.place.identifier.name === null
+        ) {
+          place = value.lvalue.place;
           value = {
             kind: "LoadLocal",
-            place: instr.value.value,
-            loc: instr.value.value.loc,
+            place: value.value,
+            loc: value.value.loc,
           };
         }
         const sequence: ReactiveSequenceValue = {
