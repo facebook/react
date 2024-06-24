@@ -52,7 +52,6 @@ type TestRendererOptions = {
 };
 
 declare module 'react-test-renderer' {
-  // eslint-disable-next-line no-inner-declarations
   declare export type ReactTestRenderer = {
     toJSON(): null | ReactTestRendererJSON,
     toTree(): null | ReactTestRendererTree,

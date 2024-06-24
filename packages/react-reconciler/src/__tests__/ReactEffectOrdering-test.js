@@ -8,8 +8,6 @@
  * @jest-environment node
  */
 
-/* eslint-disable no-func-assign */
-
 'use strict';
 
 let React;
