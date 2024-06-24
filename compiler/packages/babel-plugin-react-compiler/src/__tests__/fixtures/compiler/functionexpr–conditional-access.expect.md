@@ -25,11 +25,11 @@ import { c as _c } from "react/compiler-runtime"; // @enableTreatFunctionDepsAsC
 function Component(props) {
   const $ = _c(5);
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.bar) {
     t0 = function getLength() {
       return props.bar.length;
     };
-    $[0] = props;
+    $[0] = props.bar;
     $[1] = t0;
   } else {
     t0 = $[1];

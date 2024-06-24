@@ -96,6 +96,7 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
+import { propagateScopeDependenciesHIR } from "../HIR/PropagateScopeDepsHIR";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -306,6 +307,13 @@ function* runWithEnvironment(
     });
     assertTerminalSuccessorsExist(hir);
     assertTerminalPredsExist(hir);
+
+    propagateScopeDependenciesHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "PropagateScopeDependenciesHIR",
+      value: hir,
+    });
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
@@ -359,16 +367,15 @@ function* runWithEnvironment(
       name: "FlattenScopesWithHooks",
       value: reactiveFunction,
     });
+    assertScopeInstructionsWithinScopes(reactiveFunction);
+
+    propagateScopeDependencies(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "PropagateScopeDependencies",
+      value: reactiveFunction,
+    });
   }
-
-  assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  propagateScopeDependencies(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "PropagateScopeDependencies",
-    value: reactiveFunction,
-  });
 
   pruneNonEscapingScopes(reactiveFunction);
   yield log({

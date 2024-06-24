@@ -32,7 +32,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @debug
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(6);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};
@@ -42,7 +42,7 @@ function Component(props) {
   }
   const x = t0;
   let y;
-  if ($[1] !== props) {
+  if ($[1] !== props.cond || $[2] !== props.a) {
     if (props.cond) {
       y = {};
     } else {
@@ -50,18 +50,19 @@ function Component(props) {
     }
 
     y.x = x;
-    $[1] = props;
-    $[2] = y;
+    $[1] = props.cond;
+    $[2] = props.a;
+    $[3] = y;
   } else {
-    y = $[2];
+    y = $[3];
   }
   let t1;
-  if ($[3] !== y) {
+  if ($[4] !== y) {
     t1 = [x, y];
-    $[3] = y;
-    $[4] = t1;
+    $[4] = y;
+    $[5] = t1;
   } else {
-    t1 = $[4];
+    t1 = $[5];
   }
   return t1;
 }
