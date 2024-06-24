@@ -44,7 +44,11 @@ var React = require("react"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_ELEMENT_TYPE = renameElementSymbol
+    ? Symbol.for("react.transitional.element")
+    : REACT_LEGACY_ELEMENT_TYPE,
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -4208,7 +4212,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
   ) {
     if ("object" === typeof node$jscomp$0) {
       switch (node$jscomp$0.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           var type = node$jscomp$0.type,
             key = node$jscomp$0.key,
             props = node$jscomp$0.props;

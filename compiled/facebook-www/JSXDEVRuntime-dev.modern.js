@@ -806,9 +806,13 @@ __DEV__ &&
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses;
-    dynamicFeatureFlags = dynamicFeatureFlags.enableFastJSX;
-    var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+      enableFastJSX = dynamicFeatureFlags.enableFastJSX;
+    dynamicFeatureFlags = dynamicFeatureFlags.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFeatureFlags
+        ? Symbol.for("react.transitional.element")
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -853,7 +857,7 @@ __DEV__ &&
       specialPropKeyWarningShown;
     var didWarnAboutStringRefs = {};
     var didWarnAboutElementRef = {};
-    var enableFastJSXWithStringRefs = dynamicFeatureFlags && !0,
+    var enableFastJSXWithStringRefs = enableFastJSX && !0,
       enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !1,
       didWarnAboutKeySpread = {},
       ownerHasKeyUseWarning = {};

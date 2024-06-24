@@ -60,7 +60,11 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
+  renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_ELEMENT_TYPE = renameElementSymbol
+    ? Symbol.for("react.transitional.element")
+    : REACT_LEGACY_ELEMENT_TYPE,
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -2560,7 +2564,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return (
             (lanes = createFiberFromTypeAndProps(
               newChild.type,
@@ -2624,7 +2628,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         : updateTextNode(returnFiber, oldFiber, "" + newChild, lanes);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return newChild.key === key
             ? updateElement(returnFiber, oldFiber, newChild, lanes)
             : null;
@@ -2679,7 +2683,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       );
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           return (
             (existingChildren =
               existingChildren.get(
@@ -2915,7 +2919,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       (newChild = newChild.props.children);
     if ("object" === typeof newChild && null !== newChild) {
       switch (newChild.$$typeof) {
-        case REACT_LEGACY_ELEMENT_TYPE:
+        case REACT_ELEMENT_TYPE:
           a: {
             for (
               var key = newChild.key, child = currentFirstChild;
@@ -16852,14 +16856,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1770 = React.version;
 if (
-  "19.0.0-www-modern-c21bcd627b-20240624" !==
+  "19.0.0-www-modern-89580f209c-20240624" !==
   isomorphicReactPackageVersion$jscomp$inline_1770
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1770,
-      "19.0.0-www-modern-c21bcd627b-20240624"
+      "19.0.0-www-modern-89580f209c-20240624"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -16878,7 +16882,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1772 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-c21bcd627b-20240624",
+  version: "19.0.0-www-modern-89580f209c-20240624",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2246 = {
@@ -16908,7 +16912,7 @@ var internals$jscomp$inline_2246 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-c21bcd627b-20240624"
+  reconcilerVersion: "19.0.0-www-modern-89580f209c-20240624"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2247 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17430,4 +17434,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-c21bcd627b-20240624";
+exports.version = "19.0.0-www-modern-89580f209c-20240624";

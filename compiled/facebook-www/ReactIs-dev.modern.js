@@ -48,8 +48,12 @@ __DEV__ &&
     var dynamicFeatureFlags = require("ReactFeatureFlags"),
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+    dynamicFeatureFlags = dynamicFeatureFlags.renameElementSymbol;
+    var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+      REACT_ELEMENT_TYPE = dynamicFeatureFlags
+        ? Symbol.for("react.transitional.element")
+        : REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),

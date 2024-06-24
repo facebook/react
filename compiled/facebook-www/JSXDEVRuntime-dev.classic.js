@@ -811,8 +811,12 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableFastJSX = dynamicFeatureFlags.enableFastJSX,
-      disableLegacyMode = dynamicFeatureFlags.disableLegacyMode,
-      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
+      disableLegacyMode = dynamicFeatureFlags.disableLegacyMode;
+    dynamicFeatureFlags = Symbol.for("react.element");
+    var REACT_ELEMENT_TYPE = renameElementSymbol
+        ? Symbol.for("react.transitional.element")
+        : dynamicFeatureFlags,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),

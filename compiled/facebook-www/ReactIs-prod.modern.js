@@ -15,7 +15,11 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_ELEMENT_TYPE = renameElementSymbol
+    ? Symbol.for("react.transitional.element")
+    : REACT_LEGACY_ELEMENT_TYPE,
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -38,7 +42,7 @@ function typeOf(object) {
   if ("object" === typeof object && null !== object) {
     var $$typeof = object.$$typeof;
     switch ($$typeof) {
-      case REACT_LEGACY_ELEMENT_TYPE:
+      case REACT_ELEMENT_TYPE:
         switch (((object = object.type), object)) {
           case REACT_FRAGMENT_TYPE:
           case REACT_PROFILER_TYPE:
@@ -73,7 +77,7 @@ exports.ContextConsumer = enableRenderableContext
   ? REACT_CONSUMER_TYPE
   : REACT_CONTEXT_TYPE;
 exports.ContextProvider = ContextProvider;
-exports.Element = REACT_LEGACY_ELEMENT_TYPE;
+exports.Element = REACT_ELEMENT_TYPE;
 exports.ForwardRef = REACT_FORWARD_REF_TYPE;
 exports.Fragment = REACT_FRAGMENT_TYPE;
 exports.Lazy = REACT_LAZY_TYPE;
@@ -97,7 +101,7 @@ exports.isElement = function (object) {
   return (
     "object" === typeof object &&
     null !== object &&
-    object.$$typeof === REACT_LEGACY_ELEMENT_TYPE
+    object.$$typeof === REACT_ELEMENT_TYPE
   );
 };
 exports.isForwardRef = function (object) {

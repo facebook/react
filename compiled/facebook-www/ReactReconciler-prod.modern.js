@@ -11055,8 +11055,11 @@ module.exports = function ($$$config) {
     disableDefaultPropsExceptForClasses =
       dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
     enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
+    renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
     REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-    REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
+    REACT_ELEMENT_TYPE = renameElementSymbol
+      ? Symbol.for("react.transitional.element")
+      : REACT_LEGACY_ELEMENT_TYPE,
     REACT_PORTAL_TYPE = Symbol.for("react.portal"),
     REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
     REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -12183,7 +12186,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-c21bcd627b-20240624"
+      reconcilerVersion: "19.0.0-www-modern-89580f209c-20240624"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;
