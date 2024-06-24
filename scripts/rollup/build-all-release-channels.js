@@ -15,6 +15,9 @@ const {
   canaryChannelLabel,
   rcNumber,
 } = require('../../ReactVersions');
+const yargs = require('yargs');
+const Bundles = require('./bundles');
+const {buildEverything} = require('./build-ghaction');
 
 // Runs the build script for both stable and experimental release channels,
 // by configuring an environment variable.
@@ -53,44 +56,87 @@ fs.writeFileSync(
   `export default '${PLACEHOLDER_REACT_VERSION}';\n`
 );
 
-if (process.env.CIRCLE_NODE_TOTAL) {
-  // In CI, we use multiple concurrent processes. Allocate half the processes to
-  // build the stable channel, and the other half for experimental. Override
-  // the environment variables to "trick" the underlying build script.
-  const total = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
-  const halfTotal = Math.floor(total / 2);
-  const index = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
-  if (index < halfTotal) {
-    const nodeTotal = halfTotal;
-    const nodeIndex = index;
-    buildForChannel('stable', nodeTotal, nodeIndex);
-    processStable('./build');
+const argv = yargs.wrap(yargs.terminalWidth()).options({
+  releaseChannel: {
+    alias: 'r',
+    describe: 'Build the given release channel.',
+    requiresArg: true,
+    type: 'string',
+    default: 'experimental',
+    choices: ['experimental', 'stable'],
+  },
+  bundleType: {
+    alias: 'b',
+    describe: 'Build the given bundle type.',
+    requiresArg: true,
+    type: 'string',
+    choices: Object.values(Bundles.bundleTypes),
+  },
+  ci: {
+    describe: 'Run tests in CI',
+    requiresArg: false,
+    type: 'choices',
+    choices: ['circleci', 'github'],
+  },
+}).argv;
+
+async function main() {
+  if (argv.ci === 'github') {
+    // ./scripts/rollup/build was being used by spawning a new process and passing via ENV variables
+    // so let's just preserve this for now and rewrite it later to just take a function arg
+    process.env.RELEASE_CHANNEL = argv.releaseChannel;
+    await buildEverything(argv.bundleType);
+    switch (argv.releaseChannel) {
+      case 'stable': {
+        processStable('./build');
+        break;
+      }
+      case 'experimental': {
+        processExperimental('./build');
+        break;
+      }
+      default:
+        throw new Error(`Unknown release channel ${argv.releaseChannel}`);
+    }
+  } else if (argv.ci === 'circleci') {
+    // In CI, we use multiple concurrent processes. Allocate half the processes to
+    // build the stable channel, and the other half for experimental. Override
+    // the environment variables to "trick" the underlying build script.
+    const total = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
+    const halfTotal = Math.floor(total / 2);
+    const index = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
+    if (index < halfTotal) {
+      const nodeTotal = halfTotal;
+      const nodeIndex = index;
+      buildForChannel('stable', nodeTotal, nodeIndex);
+      processStable('./build');
+    } else {
+      const nodeTotal = total - halfTotal;
+      const nodeIndex = index - halfTotal;
+      buildForChannel('experimental', nodeTotal, nodeIndex);
+      processExperimental('./build');
+    }
   } else {
-    const nodeTotal = total - halfTotal;
-    const nodeIndex = index - halfTotal;
-    buildForChannel('experimental', nodeTotal, nodeIndex);
-    processExperimental('./build');
+    // Running locally, no concurrency. Move each channel's build artifacts into
+    // a temporary directory so that they don't conflict.
+    buildForChannel('stable', '', '');
+    const stableDir = tmp.dirSync().name;
+    crossDeviceRenameSync('./build', stableDir);
+    processStable(stableDir);
+    buildForChannel('experimental', '', '');
+    const experimentalDir = tmp.dirSync().name;
+    crossDeviceRenameSync('./build', experimentalDir);
+    processExperimental(experimentalDir);
+
+    // Then merge the experimental folder into the stable one. processExperimental
+    // will have already removed conflicting files.
+    //
+    // In CI, merging is handled automatically by CircleCI's workspace feature.
+    mergeDirsSync(experimentalDir + '/', stableDir + '/');
+
+    // Now restore the combined directory back to its original name
+    crossDeviceRenameSync(stableDir, './build');
   }
-} else {
-  // Running locally, no concurrency. Move each channel's build artifacts into
-  // a temporary directory so that they don't conflict.
-  buildForChannel('stable', '', '');
-  const stableDir = tmp.dirSync().name;
-  crossDeviceRenameSync('./build', stableDir);
-  processStable(stableDir);
-  buildForChannel('experimental', '', '');
-  const experimentalDir = tmp.dirSync().name;
-  crossDeviceRenameSync('./build', experimentalDir);
-  processExperimental(experimentalDir);
-
-  // Then merge the experimental folder into the stable one. processExperimental
-  // will have already removed conflicting files.
-  //
-  // In CI, merging is handled automatically by CircleCI's workspace feature.
-  mergeDirsSync(experimentalDir + '/', stableDir + '/');
-
-  // Now restore the combined directory back to its original name
-  crossDeviceRenameSync(stableDir, './build');
 }
 
 function buildForChannel(channel, nodeTotal, nodeIndex) {
@@ -457,3 +503,5 @@ function mergeDirsSync(source, destination) {
     }
   }
 }
+
+main();
