@@ -8,9 +8,33 @@ on:
       - 'compiler/**'
 
 jobs:
+  define_build_params:
+    name: Build build params
+    runs-on: ubuntu-latest
+    outputs:
+      bundle_type: ${{ steps.define_bundle_types.outputs.result }}
+      release_channel:  ${{ steps.define_release_channels.outputs.result }}
+    steps:
+      - uses: actions/github-script@v7
+        id: define_bundle_types
+        with:
+          script: |
+            const {bundleTypes} = require('.scripts/rollup/bundles');
+            return Object.values(bundleTypes);
+      - uses: actions/github-script@v7
+        id: define_release_channels
+        with:
+          script: |
+            return ['stable', 'experimental'];
+
   build:
     name: yarn build
     runs-on: ubuntu-latest
+    needs: define_build_params
+    strategy:
+      matrix:
+        bundle_type: ${{ fromJSON(needs.define_build_params.outputs.bundle_type) }}
+        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,17 +49,17 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build
-      - name: Cache build
-        uses: actions/cache@v4
-        id: build_cache
+      - run: yarn build --b=${{ matrix.bundle_type }} --r=${{ matrix.release_channel }} --ci=github
+      - name: Archive build
+        uses: actions/upload-artifact@v4
         with:
-          path: "build/**"
-          key: yarn-build-${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          name: build-${{ matrix.release_channel }}-${{ matrix.bundle_type }}
+          path: |
+            build/**
 
   lint_build:
     name: yarn lint-build
-    needs: build
+    needs: [define_build_params, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,11 +74,9 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - name: Restore cached build
-        uses: actions/cache@v4
-        id: build_cache
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
         with:
-          path: "build/**"
-          key: yarn-build-${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          name: build-${{ needs.define_build_params.outputs.release_channel }}-${{ needs.define_build_params.outputs.bundle_type }}
       - run: yarn install --frozen-lockfile
       - run: yarn lint-build

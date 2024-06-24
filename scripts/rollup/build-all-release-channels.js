@@ -15,6 +15,9 @@ const {
   canaryChannelLabel,
   rcNumber,
 } = require('../../ReactVersions');
+const yargs = require('yargs');
+const Bundles = require('./bundles');
+const {buildEverything} = require('./build-ghaction');
 
 // Runs the build script for both stable and experimental release channels,
 // by configuring an environment variable.
@@ -53,7 +56,48 @@ fs.writeFileSync(
   `export default '${PLACEHOLDER_REACT_VERSION}';\n`
 );
 
-if (process.env.CIRCLE_NODE_TOTAL) {
+const argv = yargs.wrap(yargs.terminalWidth()).options({
+  releaseChannel: {
+    alias: 'r',
+    describe: 'Build the given release channel.',
+    requiresArg: true,
+    type: 'string',
+    default: 'experimental',
+    choices: ['experimental', 'stable'],
+  },
+  bundleType: {
+    alias: 'b',
+    describe: 'Build the given bundle type.',
+    requiresArg: true,
+    type: 'string',
+    choices: Object.values(Bundles.bundleTypes),
+  },
+  ci: {
+    describe: 'Run tests in CI',
+    requiresArg: false,
+    type: 'choices',
+    choices: ['circleci', 'github'],
+  },
+}).argv;
+
+if (argv.ci === 'github') {
+  // ./scripts/rollup/build was being used by spawning a new process and passing via ENV variables
+  // so let's just preserve this for now and rewrite it later to just take a function arg
+  process.env.RELEASE_CHANNEL = argv.releaseChannel;
+  buildEverything(argv.bundleType);
+  switch (argv.releaseChannel) {
+    case 'stable': {
+      processStable('./build');
+      break;
+    }
+    case 'experimental': {
+      processExperimental('./build');
+      break;
+    }
+    default:
+      throw new Error(`Unknown release channel ${argv.releaseChannel}`);
+  }
+} else if (argv.ci === 'circleci') {
   // In CI, we use multiple concurrent processes. Allocate half the processes to
   // build the stable channel, and the other half for experimental. Override
   // the environment variables to "trick" the underlying build script.
