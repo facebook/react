@@ -516,7 +516,6 @@ function validateTextNesting(childText: string, parentTag: string): boolean {
       return true;
     }
 
-    // eslint-disable-next-line react-internal/safe-string-coercion
     const warnKey = '#text|' + parentTag;
     if (didWarn[warnKey]) {
       return false;

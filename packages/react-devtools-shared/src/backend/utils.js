@@ -164,6 +164,7 @@ export function serializeToString(data: any): string {
   );
 }
 
+// NOTE: KEEP IN SYNC with src/hook.js
 // Formats an array of args with a style for console methods, using
 // the following algorithm:
 //     1. The first param is a string that contains %c
@@ -220,11 +221,72 @@ export function formatWithStyles(
   }
 }
 
+// NOTE: KEEP IN SYNC with src/hook.js
+// Skips CSS and object arguments, inlines other in the first argument as a template string
+export function formatConsoleArguments(
+  maybeMessage: any,
+  ...inputArgs: $ReadOnlyArray<any>
+): $ReadOnlyArray<any> {
+  if (inputArgs.length === 0 || typeof maybeMessage !== 'string') {
+    return [maybeMessage, ...inputArgs];
+  }
+
+  const args = inputArgs.slice();
+
+  let template = '';
+  let argumentsPointer = 0;
+  for (let i = 0; i < maybeMessage.length; ++i) {
+    const currentChar = maybeMessage[i];
+    if (currentChar !== '%') {
+      template += currentChar;
+      continue;
+    }
+
+    const nextChar = maybeMessage[i + 1];
+    ++i;
+
+    // Only keep CSS and objects, inline other arguments
+    switch (nextChar) {
+      case 'c':
+      case 'O':
+      case 'o': {
+        ++argumentsPointer;
+        template += `%${nextChar}`;
+
+        break;
+      }
+      case 'd':
+      case 'i': {
+        const [arg] = args.splice(argumentsPointer, 1);
+        template += parseInt(arg, 10).toString();
+
+        break;
+      }
+      case 'f': {
+        const [arg] = args.splice(argumentsPointer, 1);
+        template += parseFloat(arg).toString();
+
+        break;
+      }
+      case 's': {
+        const [arg] = args.splice(argumentsPointer, 1);
+        template += arg.toString();
+
+        break;
+      }
+
+      default:
+        template += `%${nextChar}`;
+    }
+  }
+
+  return [template, ...args];
+}
+
 // based on https://github.com/tmpfs/format-util/blob/0e62d430efb0a1c51448709abd3e2406c14d8401/format.js#L1
 // based on https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
 // Implements s, d, i and f placeholders
-// NOTE: KEEP IN SYNC with src/hook.js
-export function format(
+export function formatConsoleArgumentsToSingleString(
   maybeMessage: any,
   ...inputArgs: $ReadOnlyArray<any>
 ): string {

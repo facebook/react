@@ -335,6 +335,28 @@ export type HIR = {
  * statements and not implicit exceptions which may occur.
  */
 export type BlockKind = "block" | "value" | "loop" | "sequence" | "catch";
+
+/**
+ * Returns true for "block" and "catch" block kinds which correspond to statements
+ * in the source, including BlockStatement, CatchStatement.
+ *
+ * Inverse of isExpressionBlockKind()
+ */
+export function isStatementBlockKind(kind: BlockKind): boolean {
+  return kind === "block" || kind === "catch";
+}
+
+/**
+ * Returns true for "value", "loop", and "sequence" block kinds which correspond to
+ * expressions in the source, such as ConditionalExpression, LogicalExpression, loop
+ * initializer/test/updaters, etc
+ *
+ * Inverse of isStatementBlockKind()
+ */
+export function isExpressionBlockKind(kind: BlockKind): boolean {
+  return !isStatementBlockKind(kind);
+}
+
 export type BasicBlock = {
   kind: BlockKind;
   id: BlockId;
@@ -1521,12 +1543,28 @@ export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
 }
 
+export function isUseActionStateType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Object" && id.type.shapeId === "BuiltInUseActionState"
+  );
+}
+
+export function isSetActionStateType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Function" && id.type.shapeId === "BuiltInSetActionState"
+  );
+}
+
 export function isUseReducerType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInUseReducer";
 }
 
 export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInDispatch";
+}
+
+export function isStableType(id: Identifier): boolean {
+  return isSetStateType(id) || isSetActionStateType(id) || isDispatcherType(id);
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

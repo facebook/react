@@ -30,7 +30,7 @@ export function getValueForAttribute(
       // shouldRemoveAttribute
       switch (typeof expected) {
         case 'function':
-        case 'symbol': // eslint-disable-line
+        case 'symbol':
           return expected;
         case 'boolean': {
           const prefix = name.toLowerCase().slice(0, 5);
@@ -109,7 +109,7 @@ export function setValueForAttribute(
     switch (typeof value) {
       case 'undefined':
       case 'function':
-      case 'symbol': // eslint-disable-line
+      case 'symbol':
         node.removeAttribute(name);
         return;
       case 'boolean': {
