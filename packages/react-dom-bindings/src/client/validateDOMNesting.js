@@ -484,7 +484,7 @@ function validateDOMNesting(
       // TODO: Format this as a linkified "diff view" with props instead of
       // a stack trace since the stack trace format is now for owner stacks.
       console['error'](
-        'Warning: In HTML, %s cannot be a child of <%s>.%s\n' +
+        'In HTML, %s cannot be a child of <%s>.%s\n' +
           'This will cause a hydration error.%s',
         tagDisplayName,
         ancestorTag,
@@ -498,7 +498,7 @@ function validateDOMNesting(
       // TODO: Format this as a linkified "diff view" with props instead of
       // a stack trace since the stack trace format is now for owner stacks.
       console['error'](
-        'Warning: In HTML, %s cannot be a descendant of <%s>.\n' +
+        'In HTML, %s cannot be a descendant of <%s>.\n' +
           'This will cause a hydration error.%s',
         tagDisplayName,
         ancestorTag,
@@ -516,7 +516,6 @@ function validateTextNesting(childText: string, parentTag: string): boolean {
       return true;
     }
 
-    // eslint-disable-next-line react-internal/safe-string-coercion
     const warnKey = '#text|' + parentTag;
     if (didWarn[warnKey]) {
       return false;
@@ -530,7 +529,7 @@ function validateTextNesting(childText: string, parentTag: string): boolean {
       // TODO: Format this as a linkified "diff view" with props instead of
       // a stack trace since the stack trace format is now for owner stacks.
       console['error'](
-        'Warning: In HTML, text nodes cannot be a child of <%s>.\n' +
+        'In HTML, text nodes cannot be a child of <%s>.\n' +
           'This will cause a hydration error.%s',
         parentTag,
         getCurrentParentStackInDev(),
@@ -542,7 +541,7 @@ function validateTextNesting(childText: string, parentTag: string): boolean {
       // TODO: Format this as a linkified "diff view" with props instead of
       // a stack trace since the stack trace format is now for owner stacks.
       console['error'](
-        'Warning: In HTML, whitespace text nodes cannot be a child of <%s>. ' +
+        'In HTML, whitespace text nodes cannot be a child of <%s>. ' +
           "Make sure you don't have any extra whitespace between tags on " +
           'each line of your source code.\n' +
           'This will cause a hydration error.%s',

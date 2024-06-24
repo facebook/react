@@ -760,7 +760,6 @@ describe('ReactUpdates', () => {
       });
     });
 
-    /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
       'Inner-render-0-0',
@@ -789,7 +788,6 @@ describe('ReactUpdates', () => {
       'Inner-didUpdate-2-2',
       'Inner-callback-2',
     ]);
-    /* eslint-enable indent */
   });
 
   it('should flush updates in the correct order across roots', async () => {
@@ -1804,7 +1802,7 @@ describe('ReactUpdates', () => {
         await act(() => ReactDOM.flushSync(() => root.render(<App />)));
       }).rejects.toThrow('Maximum update depth exceeded');
     }).toErrorDev(
-      'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
+      'Cannot update a component (`App`) while rendering a different component (`Child`)',
     );
   });
 
@@ -1839,7 +1837,7 @@ describe('ReactUpdates', () => {
       }
       expect(error.message).toMatch('Maximum update depth exceeded');
     }).toErrorDev(
-      'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
+      'Cannot update a component (`App`) while rendering a different component (`Child`)',
     );
   });
 

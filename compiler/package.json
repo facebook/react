@@ -15,8 +15,6 @@
     "url": "git+https://github.com/facebook/react-forget.git"
   },
   "scripts": {
-    "bundle:meta": "scripts/bundle-meta.sh",
-    "bundle:oss": "scripts/bundle-oss.sh",
     "copyright": "node scripts/copyright.js",
     "hash": "scripts/hash.sh",
     "start": "yarn workspace playground run start",
@@ -40,6 +38,7 @@
     "concurrently": "^7.4.0",
     "folder-hash": "^4.0.4",
     "ora": "5.4.1",
+    "prettier": "^3.2.5",
     "prompt-promise": "^1.0.3",
     "rollup": "^4.13.2",
     "rollup-plugin-banner2": "^1.2.3",

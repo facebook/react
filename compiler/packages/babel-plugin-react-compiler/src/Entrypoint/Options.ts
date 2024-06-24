@@ -111,6 +111,12 @@ export type PluginOptions = {
   ignoreUseNoForget: boolean;
 
   sources?: Array<string> | ((filename: string) => boolean) | null;
+
+  /**
+   * The compiler has customized support for react-native-reanimated, intended as a temporary workaround.
+   * Set this flag (on by default) to automatically check for this library and activate the support.
+   */
+  enableReanimatedCheck: boolean;
 };
 
 const CompilationModeSchema = z.enum([
@@ -125,6 +131,8 @@ const CompilationModeSchema = z.enum([
    * This is the default mode
    */
   "infer",
+  // Compile only components using Flow component syntax and hooks using hook syntax.
+  "syntax",
   // Compile only functions which are explicitly annotated with "use forget"
   "annotation",
   // Compile all top-level functions
@@ -163,6 +171,9 @@ export type LoggerEvent =
       fnName: string | null;
       memoSlots: number;
       memoBlocks: number;
+      memoValues: number;
+      prunedMemoBlocks: number;
+      prunedMemoValues: number;
     }
   | {
       kind: "PipelineError";
@@ -188,6 +199,7 @@ export const defaultOptions: PluginOptions = {
   sources: (filename) => {
     return filename.indexOf("node_modules") === -1;
   },
+  enableReanimatedCheck: true,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

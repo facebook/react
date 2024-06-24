@@ -120,6 +120,18 @@ const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
 
   /**
+   * A list of functions which the application compiles as macros, where
+   * the compiler must ensure they are not compiled to rename the macro or separate the
+   * "function" from its argument.
+   *
+   * For example, Meta has some APIs such as `featureflag("name-of-feature-flag")` which
+   * are rewritten by a plugin. Assigning `featureflag` to a temporary would break the
+   * plugin since it looks specifically for the name of the function being invoked, not
+   * following aliases.
+   */
+  customMacros: z.nullable(z.array(z.string())).default(null),
+
+  /**
    * Enable a check that resets the memoization cache when the source code of the file changes.
    * This is intended to support hot module reloading (HMR), where the same runtime component
    * instance will be reused across different versions of the component source.
@@ -164,6 +176,13 @@ const EnvironmentConfigSchema = z.object({
    * may change under Forget.
    */
   validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
+
+  /**
+   * When this is true, rather than pruning existing manual memoization but ensuring or validating
+   * that the memoized values remain memoized, the compiler will simply not prune existing calls to
+   * useMemo/useCallback.
+   */
+  enablePreserveExistingManualUseMemo: z.boolean().default(false),
 
   // 🌲
   enableForest: z.boolean().default(false),
@@ -258,6 +277,12 @@ const EnvironmentConfigSchema = z.object({
 
   enableEmitHookGuards: ExternalFunctionSchema.nullish(),
 
+  /**
+   * Enable instruction reordering. See InstructionReordering.ts for the details
+   * of the approach.
+   */
+  enableInstructionReordering: z.boolean().default(false),
+
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
    * instrumentation function, for components and hooks that Forget compiles.
@@ -344,6 +369,23 @@ const EnvironmentConfigSchema = z.object({
   enableTreatFunctionDepsAsConditional: z.boolean().default(false),
 
   /**
+   * When true, always act as though the dependencies of a memoized value
+   * have changed. This makes the compiler not actually perform any optimizations,
+   * but is useful for debugging. Implicitly also sets
+   * @enablePreserveExistingManualUseMemo, because otherwise memoization in the
+   * original source will be disabled as well.
+   */
+  disableMemoizationForDebugging: z.boolean().default(false),
+
+  /**
+   * When true, rather using memoized values, the compiler will always re-compute
+   * values, and then use a heuristic to compare the memoized value to the newly
+   * computed one. This detects cases where rules of react violations may cause the
+   * compiled code to behave differently than the original.
+   */
+  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
+
+  /**
    * The react native re-animated library uses custom Babel transforms that
    * requires the calls to library API remain unmodified.
    *
@@ -365,6 +407,23 @@ const EnvironmentConfigSchema = z.object({
    * and identifiers have been changed.
    */
   hookPattern: z.string().nullable().default(null),
+
+  /**
+   * If enabled, this will treat objects named as `ref` or if their names end with the substring `Ref`,
+   * and contain a property named `current`, as React refs.
+   *
+   * ```
+   * const ref = useMyRef();
+   * const myRef = useMyRef2();
+   * useEffect(() => {
+   *   ref.current = ...;
+   *   myRef.current = ...;
+   * })
+   * ```
+   *
+   * Here the variables `ref` and `myRef` will be typed as Refs.
+   */
+  enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
@@ -383,6 +442,17 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
 
     if (key === "validateNoCapitalizedCalls") {
       maybeConfig[key] = [];
+      continue;
+    }
+
+    if (
+      key === "enableChangeDetectionForDebugging" &&
+      (val === undefined || val === "true")
+    ) {
+      maybeConfig[key] = {
+        source: "react-compiler-runtime",
+        importSpecifierName: "$structuralCheck",
+      };
       continue;
     }
 
@@ -461,6 +531,18 @@ export class Environment {
     this.useMemoCacheIdentifier = useMemoCacheIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
+
+    if (
+      config.disableMemoizationForDebugging &&
+      config.enableChangeDetectionForDebugging != null
+    ) {
+      CompilerError.throwInvalidConfig({
+        reason: `Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+    }
 
     for (const [hookName, hook] of this.config.customHooks) {
       CompilerError.invariant(!this.#globals.has(hookName), {

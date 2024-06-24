@@ -174,13 +174,27 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
           }
           break;
         }
+        case "pruned-scope": {
+          // For now we don't merge across pruned scopes
+          if (current !== null) {
+            log(
+              `Reset scope @${current.block.scope.id} from pruned scope @${instr.scope.id}`
+            );
+            reset();
+          }
+          break;
+        }
         case "instruction": {
           switch (instr.instruction.value.kind) {
+            case "BinaryExpression":
             case "ComputedLoad":
             case "JSXText":
+            case "LoadGlobal":
             case "LoadLocal":
             case "Primitive":
-            case "PropertyLoad": {
+            case "PropertyLoad":
+            case "TemplateLiteral":
+            case "UnaryExpression": {
               /*
                * We can merge two scopes if there are intervening instructions, but:
                * - Only if the instructions are simple and it's okay to make them

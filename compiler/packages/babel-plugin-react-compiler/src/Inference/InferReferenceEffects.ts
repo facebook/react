@@ -29,6 +29,8 @@ import {
   isArrayType,
   isMutableEffect,
   isObjectType,
+  isRefValueType,
+  isUseRefType,
 } from "../HIR/HIR";
 import { FunctionSignature } from "../HIR/ObjectShape";
 import {
@@ -199,7 +201,7 @@ export default function inferReferenceEffects(
     let queuedState = queuedStates.get(blockId);
     if (queuedState != null) {
       // merge the queued states for this block
-      state = queuedState.merge(state) ?? state;
+      state = queuedState.merge(state) ?? queuedState;
       queuedStates.set(blockId, state);
     } else {
       /*
@@ -521,7 +523,12 @@ class InferenceState {
         break;
       }
       case Effect.Mutate: {
-        if (valueKind.kind === ValueKind.Context) {
+        if (
+          isRefValueType(place.identifier) ||
+          isUseRefType(place.identifier)
+        ) {
+          // no-op: refs are validate via ValidateNoRefAccessInRender
+        } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
             kind: "ContextMutation",
             loc: place.loc,
@@ -560,7 +567,12 @@ class InferenceState {
         break;
       }
       case Effect.Store: {
-        if (valueKind.kind === ValueKind.Context) {
+        if (
+          isRefValueType(place.identifier) ||
+          isUseRefType(place.identifier)
+        ) {
+          // no-op: refs are validate via ValidateNoRefAccessInRender
+        } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
             kind: "ContextMutation",
             loc: place.loc,
@@ -753,7 +765,7 @@ class InferenceState {
       result.values[id] = { kind, value: printMixedHIR(value) };
     }
     for (const [variable, values] of this.#variables) {
-      result.variables[variable] = [...values].map(identify);
+      result.variables[`$${variable}`] = [...values].map(identify);
     }
     return result;
   }
@@ -1103,13 +1115,56 @@ function inferBlock(
         break;
       }
       case "JsxExpression": {
-        valueKind = {
+        if (instrValue.tag.kind === "Identifier") {
+          state.referenceAndRecordEffects(
+            instrValue.tag,
+            Effect.Freeze,
+            ValueReason.JsxCaptured,
+            functionEffects
+          );
+        }
+        if (instrValue.children !== null) {
+          for (const child of instrValue.children) {
+            state.referenceAndRecordEffects(
+              child,
+              Effect.Freeze,
+              ValueReason.JsxCaptured,
+              functionEffects
+            );
+          }
+        }
+        for (const attr of instrValue.props) {
+          if (attr.kind === "JsxSpreadAttribute") {
+            state.referenceAndRecordEffects(
+              attr.argument,
+              Effect.Freeze,
+              ValueReason.JsxCaptured,
+              functionEffects
+            );
+          } else {
+            const propEffects: Array<FunctionEffect> = [];
+            state.referenceAndRecordEffects(
+              attr.place,
+              Effect.Freeze,
+              ValueReason.JsxCaptured,
+              propEffects
+            );
+            functionEffects.push(
+              ...propEffects.filter(
+                (propEffect) => propEffect.kind !== "GlobalMutation"
+              )
+            );
+          }
+        }
+
+        state.initialize(instrValue, {
           kind: ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
-        };
-        effect = { kind: Effect.Freeze, reason: ValueReason.JsxCaptured };
-        break;
+        });
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.ConditionallyMutate;
+        continue;
       }
       case "JsxFragment": {
         valueKind = {
@@ -1158,6 +1213,18 @@ function inferBlock(
         effect = {
           kind: Effect.ConditionallyMutate,
           reason: ValueReason.Other,
+        };
+        break;
+      }
+      case "MetaProperty": {
+        if (instrValue.meta !== "import" || instrValue.property !== "meta") {
+          continue;
+        }
+
+        valueKind = {
+          kind: ValueKind.Global,
+          reason: new Set([ValueReason.Global]),
+          context: new Set(),
         };
         break;
       }
@@ -2074,6 +2141,8 @@ function getWriteErrorReason(abstractValue: AbstractValue): string {
     return "Mutating component props or hook arguments is not allowed. Consider using a local variable instead";
   } else if (abstractValue.reason.has(ValueReason.State)) {
     return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
+  } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
+    return "Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead";
   } else {
     return "This mutates a variable that React considers immutable";
   }

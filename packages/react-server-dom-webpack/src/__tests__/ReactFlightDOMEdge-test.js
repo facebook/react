@@ -224,14 +224,12 @@ describe('ReactFlightDOMEdge', () => {
       this: {is: 'a large objected'},
       with: {many: 'properties in it'},
     };
-    const props = {
-      items: new Array(30).fill(obj),
-    };
+    const props = {root: <div>{new Array(30).fill(obj)}</div>};
     const stream = ReactServerDOMServer.renderToReadableStream(props);
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(470);
+    expect(serializedContent.length).toBeLessThan(1100);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
@@ -242,10 +240,13 @@ describe('ReactFlightDOMEdge', () => {
         },
       },
     );
+    // TODO: Cyclic references currently cause a Lazy wrapper which is not ideal.
+    const resultElement = result.root._init(result.root._payload);
     // Should still match the result when parsed
-    expect(result).toEqual(props);
-    expect(result.items[5]).toBe(result.items[10]); // two random items are the same instance
-    // TODO: items[0] is not the same as the others in this case
+    expect(resultElement).toEqual(props.root);
+    expect(resultElement.props.children[5]).toBe(
+      resultElement.props.children[10],
+    ); // two random items are the same instance
   });
 
   it('should execute repeated server components only once', async () => {

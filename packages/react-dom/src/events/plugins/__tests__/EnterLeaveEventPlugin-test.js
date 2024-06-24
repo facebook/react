@@ -295,7 +295,7 @@ describe('EnterLeaveEventPlugin', () => {
     expect(onMouseLeave).toHaveBeenCalledTimes(1);
   });
 
-  it('should work with portals that have onMouseEnter outside of the root ', async () => {
+  it('should work with portals that have onMouseEnter outside of the root', async () => {
     const divRef = React.createRef();
     const otherDivRef = React.createRef();
     const onMouseEnter = jest.fn();

@@ -181,7 +181,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('should inspect the currently selected element (legacy render)', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should inspect the currently selected element (legacy render)', async () => {
     const Example = () => {
       const [count] = React.useState(1);
       return count;
@@ -664,7 +665,6 @@ describe('InspectedElement', () => {
           anonymous_fn={instance.anonymousFunction}
           array_buffer={arrayBuffer}
           array_of_arrays={arrayOfArrays}
-          // eslint-disable-next-line no-undef
           big_int={BigInt(123)}
           bound_fn={exampleFunction.bind(this)}
           data_view={dataView}
@@ -1653,7 +1653,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('should inspect hooks for components that only use context (legacy render)', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should inspect hooks for components that only use context (legacy render)', async () => {
     const Context = React.createContext(true);
     const Example = () => {
       const value = React.useContext(Context);
@@ -1874,7 +1875,7 @@ describe('InspectedElement', () => {
         xyz: 1,
       },
     });
-    const bigInt = BigInt(123); // eslint-disable-line no-undef
+    const bigInt = BigInt(123);
 
     await utils.actAsync(() =>
       render(
@@ -2031,7 +2032,8 @@ describe('InspectedElement', () => {
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // Regression test for github.com/facebook/react/issues/22099
   // @reactVersion <= 18.2
-  xit('should not error when an unchanged component is re-inspected after component filters changed (legacy render)', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should not error when an unchanged component is re-inspected after component filters changed (legacy render)', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => legacyRender(<Example />));
@@ -2152,7 +2154,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('should display the root type for ReactDOM.hydrate', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should display the root type for ReactDOM.hydrate', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
@@ -2172,7 +2175,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('should display the root type for ReactDOM.render', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should display the root type for ReactDOM.render', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
@@ -2551,7 +2555,7 @@ describe('InspectedElement', () => {
       };
 
       await withErrorsOrWarningsIgnored(
-        ['Warning: Each child in a list should have a unique "key" prop.'],
+        ['Each child in a list should have a unique "key" prop.'],
         async () => {
           await utils.actAsync(() =>
             render(<Example repeatWarningCount={1} />),
@@ -2789,7 +2793,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('inspecting nested renderers should not throw (legacy render)', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('inspecting nested renderers should not throw (legacy render)', async () => {
     // Ignoring react art warnings
     jest.spyOn(console, 'error').mockImplementation(() => {});
     const ReactArt = require('react-art');

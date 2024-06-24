@@ -127,7 +127,11 @@ function buildMakeReadOnly(
       Object.getOwnPropertyDescriptors(o)
     )) {
       if (!cache.has(k) && isWriteable(prop)) {
-        if (prop.hasOwnProperty("set") || prop.hasOwnProperty("get") || k === "current") {
+        if (
+          prop.hasOwnProperty("set") ||
+          prop.hasOwnProperty("get") ||
+          k === "current"
+        ) {
           // - we currently don't handle accessor properties
           // - we currently have no other way of checking whether an object
           // is a `ref` (i.e. returned by useRef).

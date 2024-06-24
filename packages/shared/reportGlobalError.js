@@ -45,7 +45,6 @@ const reportGlobalError: (error: mixed) => void =
           process.emit('uncaughtException', error);
           return;
         }
-        // eslint-disable-next-line react-internal/no-production-logging
         console['error'](error);
       };
 

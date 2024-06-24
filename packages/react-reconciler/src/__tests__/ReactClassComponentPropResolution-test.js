@@ -31,7 +31,7 @@ describe('ReactClassComponentPropResolution', () => {
     return text;
   }
 
-  test('resolves ref and default props before calling lifecycle methods', async () => {
+  it('resolves ref and default props before calling lifecycle methods', async () => {
     const root = ReactNoop.createRoot();
 
     function getPropKeys(props) {

@@ -95,12 +95,12 @@ describe('ReactElementValidator', () => {
     }).toErrorDev(
       gate(flags => flags.enableOwnerStacks)
         ? // For owner stacks the parent being validated is the div.
-          'Warning: Each child in a list should have a unique ' +
+          'Each child in a list should have a unique ' +
             '"key" prop.' +
             '\n\nCheck the top-level render call using <div>. ' +
             'See https://react.dev/link/warning-keys for more information.\n' +
             '    in div (at **)'
-        : 'Warning: Each child in a list should have a unique ' +
+        : 'Each child in a list should have a unique ' +
             '"key" prop. See https://react.dev/link/warning-keys for more information.\n' +
             '    in div (at **)',
     );
@@ -114,7 +114,7 @@ describe('ReactElementValidator', () => {
 
       await act(() => root.render(<div>{divs}</div>));
     }).toErrorDev(
-      'Warning: Each child in a list should have a unique ' +
+      'Each child in a list should have a unique ' +
         '"key" prop.\n\nCheck the top-level render call using <div>. See ' +
         'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)',
@@ -138,7 +138,7 @@ describe('ReactElementValidator', () => {
       const root = ReactDOMClient.createRoot(document.createElement('div'));
       await act(() => root.render(<GrandParent />));
     }).toErrorDev(
-      'Warning: Each child in a list should have a unique ' +
+      'Each child in a list should have a unique ' +
         '"key" prop.\n\nCheck the render method of `Component`. See ' +
         'https://react.dev/link/warning-keys for more information.\n' +
         '    in div (at **)\n' +
@@ -297,38 +297,38 @@ describe('ReactElementValidator', () => {
         ? // We don't need these extra warnings because we already have the errors.
           []
         : [
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: undefined. You likely forgot to export your ' +
               "component from the file it's defined in, or you might have mixed up " +
               'default and named imports.',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: null.',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: boolean.',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: object.',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: object. You likely forgot to export your ' +
               "component from the file it's defined in, or you might have mixed up " +
               'default and named imports.',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: <div />. Did you accidentally export a JSX literal ' +
               'instead of a component?',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: <Foo />. Did you accidentally export a JSX literal ' +
               'instead of a component?',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: <Context.Consumer />. Did you accidentally ' +
               'export a JSX literal instead of a component?',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: object.',
           ],
@@ -427,11 +427,11 @@ describe('ReactElementValidator', () => {
         ? // We don't need these extra warnings because we already have the errors.
           []
         : [
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: null.\n' +
               '    in ParentComp (at **)',
-            'Warning: React.createElement: type is invalid -- expected a string ' +
+            'React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: null.\n' +
               '    in ParentComp (at **)',
@@ -515,7 +515,7 @@ describe('ReactElementValidator', () => {
     expect(() => {
       void (<Foo>{[<div />]}</Foo>);
     }).toErrorDev(
-      'Warning: React.jsx: type is invalid -- expected a string ' +
+      'React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +

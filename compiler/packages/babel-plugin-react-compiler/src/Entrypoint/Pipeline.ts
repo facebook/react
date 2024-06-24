@@ -41,6 +41,7 @@ import {
   deadCodeElimination,
   pruneMaybeThrows,
 } from "../Optimization";
+import { instructionReordering } from "../Optimization/InstructionReordering";
 import {
   CodegenFunction,
   alignObjectMethodScopes,
@@ -70,7 +71,10 @@ import {
 } from "../ReactiveScopes";
 import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
 import { alignReactiveScopesToBlockScopesHIR } from "../ReactiveScopes/AlignReactiveScopesToBlockScopesHIR";
+import { flattenReactiveLoopsHIR } from "../ReactiveScopes/FlattenReactiveLoopsHIR";
+import { flattenScopesWithHooksOrUseHIR } from "../ReactiveScopes/FlattenScopesWithHooksOrUseHIR";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
+import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 import { stabilizeBlockIds } from "../ReactiveScopes/StabilizeBlockIds";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -147,8 +151,14 @@ function* runWithEnvironment(
   validateContextVariableLValues(hir);
   validateUseMemo(hir);
 
-  dropManualMemoization(hir);
-  yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
+  if (
+    !env.config.enablePreserveExistingManualUseMemo &&
+    !env.config.disableMemoizationForDebugging &&
+    !env.config.enableChangeDetectionForDebugging
+  ) {
+    dropManualMemoization(hir);
+    yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
+  }
 
   inlineImmediatelyInvokedFunctionExpressions(hir);
   yield log({
@@ -195,6 +205,11 @@ function* runWithEnvironment(
   deadCodeElimination(hir);
   yield log({ kind: "hir", name: "DeadCodeElimination", value: hir });
 
+  if (env.config.enableInstructionReordering) {
+    instructionReordering(hir);
+    yield log({ kind: "hir", name: "InstructionReordering", value: hir });
+  }
+
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
 
@@ -239,7 +254,7 @@ function* runWithEnvironment(
   memoizeFbtOperandsInSameScope(hir);
   yield log({
     kind: "hir",
-    name: "MemoizeFbtOperandsInSameScope",
+    name: "MemoizeFbtAndMacroOperandsInSameScope",
     value: hir,
   });
 
@@ -274,6 +289,20 @@ function* runWithEnvironment(
     });
 
     assertValidBlockNesting(hir);
+
+    flattenReactiveLoopsHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "FlattenReactiveLoopsHIR",
+      value: hir,
+    });
+
+    flattenScopesWithHooksOrUseHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "FlattenScopesWithHooksOrUseHIR",
+      value: hir,
+    });
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
@@ -313,23 +342,23 @@ function* runWithEnvironment(
       name: "BuildReactiveBlocks",
       value: reactiveFunction,
     });
+
+    flattenReactiveLoops(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "FlattenReactiveLoops",
+      value: reactiveFunction,
+    });
+
+    flattenScopesWithHooksOrUse(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "FlattenScopesWithHooks",
+      value: reactiveFunction,
+    });
   }
 
-  flattenReactiveLoops(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "FlattenReactiveLoops",
-    value: reactiveFunction,
-  });
-
   assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  flattenScopesWithHooksOrUse(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "FlattenScopesWithHooks",
-    value: reactiveFunction,
-  });
 
   propagateScopeDependencies(reactiveFunction);
   yield log({
@@ -372,6 +401,15 @@ function* runWithEnvironment(
     name: "PruneAlwaysInvalidatingScopes",
     value: reactiveFunction,
   });
+
+  if (env.config.enableChangeDetectionForDebugging != null) {
+    pruneInitializationDependencies(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "PruneInitializationDependencies",
+      value: reactiveFunction,
+    });
+  }
 
   propagateEarlyReturns(reactiveFunction);
   yield log({

@@ -72,6 +72,7 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  Throw,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -1689,22 +1690,36 @@ function updateHostHoistable(
   renderLanes: Lanes,
 ) {
   markRef(current, workInProgress);
-  const currentProps = current === null ? null : current.memoizedProps;
-  const resource = (workInProgress.memoizedState = getResource(
-    workInProgress.type,
-    currentProps,
-    workInProgress.pendingProps,
-  ));
+
   if (current === null) {
-    if (!getIsHydrating() && resource === null) {
-      // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
-      workInProgress.stateNode = createHoistableInstance(
-        workInProgress.type,
-        workInProgress.pendingProps,
-        getRootHostContainer(),
-        workInProgress,
-      );
+    const resource = getResource(
+      workInProgress.type,
+      null,
+      workInProgress.pendingProps,
+      null,
+    );
+    if (resource) {
+      workInProgress.memoizedState = resource;
+    } else {
+      if (!getIsHydrating()) {
+        // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
+        workInProgress.stateNode = createHoistableInstance(
+          workInProgress.type,
+          workInProgress.pendingProps,
+          getRootHostContainer(),
+          workInProgress,
+        );
+      }
     }
+  } else {
+    // Get Resource may or may not return a resource. either way we stash the result
+    // on memoized state.
+    workInProgress.memoizedState = getResource(
+      workInProgress.type,
+      current.memoizedProps,
+      workInProgress.pendingProps,
+      current.memoizedState,
+    );
   }
 
   // Resources never have reconciler managed children. It is possible for
@@ -4111,6 +4126,11 @@ function beginWork(
         );
       }
       break;
+    }
+    case Throw: {
+      // This represents a Component that threw in the reconciliation phase.
+      // So we'll rethrow here. This might be a Thenable.
+      throw workInProgress.pendingProps;
     }
   }
 

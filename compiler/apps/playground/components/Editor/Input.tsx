@@ -76,7 +76,7 @@ export default function Input({ errors }: Props) {
       allowSyntheticDefaultImports: true,
     };
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions(
-      tscOptions,
+      tscOptions
     );
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       ...tscOptions,

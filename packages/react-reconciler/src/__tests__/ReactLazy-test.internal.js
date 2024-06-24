@@ -228,18 +228,10 @@ describe('ReactLazy', () => {
 
     expect(error.message).toMatch('Element type is invalid');
     assertLog(['Loading...']);
-    assertConsoleErrorDev(
-      [
-        'Expected the result of a dynamic import() call',
-        'Expected the result of a dynamic import() call',
-      ],
-      gate(flags => flags.enableOwnerStacks)
-        ? {
-            // There's no owner
-            withoutStack: true,
-          }
-        : undefined,
-    );
+    assertConsoleErrorDev([
+      'Expected the result of a dynamic import() call',
+      'Expected the result of a dynamic import() call',
+    ]);
     expect(root).not.toMatchRenderedOutput('Hi');
   });
 
@@ -711,7 +703,7 @@ describe('ReactLazy', () => {
       await act(() => resolveFakeImport(T));
       assertLog(['Hi Bye']);
     }).toErrorDev(
-      'Warning: T: Support for defaultProps ' +
+      'T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );

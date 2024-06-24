@@ -1,6 +1,5 @@
 'use strict';
 
-const {signFile, getSigningToken} = require('signedsource');
 const {bundleTypes, moduleTypes} = require('./bundles');
 
 const {
@@ -392,86 +391,80 @@ ${source}`;
 
   /****************** RN_OSS_DEV ******************/
   [RN_OSS_DEV](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
  */
 
-${source}`);
+${source}`;
   },
 
   /****************** RN_OSS_PROD ******************/
   [RN_OSS_PROD](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
  */
 
-${source}`);
+${source}`;
   },
 
   /****************** RN_OSS_PROFILING ******************/
   [RN_OSS_PROFILING](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
  */
 
-${source}`);
+${source}`;
   },
 
   /****************** RN_FB_DEV ******************/
   [RN_FB_DEV](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
  */
 
-${source}`);
+${source}`;
   },
 
   /****************** RN_FB_PROD ******************/
   [RN_FB_PROD](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
  */
 
-${source}`);
+${source}`;
   },
 
   /****************** RN_FB_PROFILING ******************/
   [RN_FB_PROFILING](source, globalName, filename, moduleType) {
-    return signFile(`/**
+    return `/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${getSigningToken()}
  */
 
-${source}`);
+${source}`;
   },
 };
 

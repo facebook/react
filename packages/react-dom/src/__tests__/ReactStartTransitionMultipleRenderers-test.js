@@ -95,7 +95,7 @@ describe('ReactStartTransitionMultipleRenderers', () => {
   // built, it only works when running tests using the actual build artifacts,
   // not the source files.
   // @gate !source
-  test('React.startTransition works across multiple renderers', async () => {
+  it('React.startTransition works across multiple renderers', async () => {
     const ReactNoop = require('react-noop-renderer');
 
     const setIsPendings = new Set();

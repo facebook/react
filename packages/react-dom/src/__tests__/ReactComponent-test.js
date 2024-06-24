@@ -217,7 +217,7 @@ describe('ReactComponent', () => {
         root.render(<Component />);
       });
     }).toErrorDev([
-      'Warning: Component "Component" contains the string ref "inner". ' +
+      'Component "Component" contains the string ref "inner". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
@@ -468,7 +468,6 @@ describe('ReactComponent', () => {
       root.unmount();
     });
 
-    /* eslint-disable indent */
     expect(log).toEqual([
       'start mount',
       'inner 1 render',
@@ -497,7 +496,6 @@ describe('ReactComponent', () => {
       'ref 2 got null',
       'inner 2 componentWillUnmount',
     ]);
-    /* eslint-enable indent */
   });
 
   // @gate !disableLegacyMode
@@ -711,7 +709,7 @@ describe('ReactComponent', () => {
           root.render(<Foo />);
         });
       }).toErrorDev(
-        'Warning: Functions are not valid as a React child. This may happen if ' +
+        'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <Foo>{Foo}</Foo>\n' +
@@ -733,7 +731,7 @@ describe('ReactComponent', () => {
           root.render(<Foo />);
         });
       }).toErrorDev(
-        'Warning: Functions are not valid as a React child. This may happen if ' +
+        'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <Foo>{Foo}</Foo>\n' +
@@ -756,7 +754,7 @@ describe('ReactComponent', () => {
           root.render(<Foo />);
         });
       }).toErrorDev(
-        'Warning: Functions are not valid as a React child. This may happen if ' +
+        'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <span>{Foo}</span>\n' +
@@ -811,13 +809,13 @@ describe('ReactComponent', () => {
           root.render(<Foo ref={current => (component = current)} />);
         });
       }).toErrorDev([
-        'Warning: Functions are not valid as a React child. This may happen if ' +
+        'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <div>{Foo}</div>\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
-        'Warning: Functions are not valid as a React child. This may happen if ' +
+        'Functions are not valid as a React child. This may happen if ' +
           'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '  <span>{Foo}</span>\n' +

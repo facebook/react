@@ -49,7 +49,7 @@ import {
 } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(1);
+  const $ = _c(2);
   const object = makeObject_Primitives();
 
   useHook();
@@ -64,11 +64,12 @@ function Component(props) {
 
   identity(object);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== onClick) {
     t0 = <div onClick={onClick} />;
-    $[0] = t0;
+    $[0] = onClick;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   return t0;
 }

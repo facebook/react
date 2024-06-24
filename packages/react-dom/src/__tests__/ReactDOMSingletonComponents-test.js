@@ -165,7 +165,7 @@ describe('ReactDOM HostSingleton', () => {
     await expect(async () => {
       await waitForAll([]);
     }).toErrorDev(
-      'Warning: You are mounting a new head component when a previous one has not first unmounted. It is an error to render more than one head component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <head> and if you need to mount a new one, ensure any previous ones have unmounted first',
+      'You are mounting a new head component when a previous one has not first unmounted. It is an error to render more than one head component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <head> and if you need to mount a new one, ensure any previous ones have unmounted first',
     );
     expect(getVisibleChildren(document)).toEqual(
       <html>
@@ -590,7 +590,8 @@ describe('ReactDOM HostSingleton', () => {
   });
 
   // This test is not supported in this implementation. If we reintroduce insertion edge we should revisit
-  xit('is able to maintain insertions in head and body between tree-adjacent Nodes', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('is able to maintain insertions in head and body between tree-adjacent Nodes', async () => {
     // Server render some html and hydrate on the client
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(

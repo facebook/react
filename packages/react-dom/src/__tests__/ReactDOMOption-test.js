@@ -134,7 +134,7 @@ describe('ReactDOMOption', () => {
     }).rejects.toThrow('Objects are not valid as a React child');
   });
 
-  // @gate www
+  // @gate www && !renameElementSymbol
   it('should support element-ish child', async () => {
     // This is similar to <fbt>.
     // We don't toString it because you must instead provide a value prop.
@@ -266,7 +266,7 @@ describe('ReactDOMOption', () => {
           onRecoverableError: () => {},
         });
       });
-    }).toErrorDev(['Warning: In HTML, <div> cannot be a child of <option>']);
+    }).toErrorDev(['In HTML, <div> cannot be a child of <option>']);
     option = container.firstChild.firstChild;
 
     expect(option.textContent).toBe('BarFooBaz');

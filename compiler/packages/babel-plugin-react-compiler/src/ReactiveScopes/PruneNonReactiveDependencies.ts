@@ -10,7 +10,7 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
-  isSetStateType,
+  isStableType,
 } from "../HIR";
 import { eachPatternOperand } from "../HIR/visitors";
 import { collectReactiveIdentifiers } from "./CollectReactiveIdentifiers";
@@ -56,7 +56,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
       case "Destructure": {
         if (state.has(value.value.identifier.id)) {
           for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
-            if (isSetStateType(lvalue.identifier)) {
+            if (isStableType(lvalue.identifier)) {
               continue;
             }
             state.add(lvalue.identifier.id);
@@ -71,7 +71,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
         if (
           lvalue !== null &&
           state.has(value.object.identifier.id) &&
-          !isSetStateType(lvalue.identifier)
+          !isStableType(lvalue.identifier)
         ) {
           state.add(lvalue.identifier.id);
         }

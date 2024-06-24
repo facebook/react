@@ -34,7 +34,14 @@ class Transform extends ReactiveFunctionTransform<boolean> {
   ): Transformed<ReactiveStatement> {
     this.visitScope(scope, isWithinLoop);
     if (isWithinLoop) {
-      return { kind: "replace-many", value: scope.instructions };
+      return {
+        kind: "replace",
+        value: {
+          kind: "pruned-scope",
+          scope: scope.scope,
+          instructions: scope.instructions,
+        },
+      };
     } else {
       return { kind: "keep" };
     }

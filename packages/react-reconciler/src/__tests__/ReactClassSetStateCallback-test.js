@@ -22,7 +22,7 @@ describe('ReactClassSetStateCallback', () => {
     return text;
   }
 
-  test('regression: setState callback (2nd arg) should only fire once, even after a rebase', async () => {
+  it('regression: setState callback (2nd arg) should only fire once, even after a rebase', async () => {
     let app;
     class App extends React.Component {
       state = {step: 0};
@@ -39,13 +39,9 @@ describe('ReactClassSetStateCallback', () => {
     assertLog([0]);
 
     await act(() => {
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        React.startTransition(() => {
-          app.setState({step: 1}, () => Scheduler.log('Callback 1'));
-        });
-      } else {
+      React.startTransition(() => {
         app.setState({step: 1}, () => Scheduler.log('Callback 1'));
-      }
+      });
       ReactNoop.flushSync(() => {
         app.setState({step: 2}, () => Scheduler.log('Callback 2'));
       });

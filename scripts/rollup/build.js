@@ -85,9 +85,11 @@ function parseRequestedNames(names, toCase) {
   return result;
 }
 
+const argvType = Array.isArray(argv.type) ? argv.type : [argv.type];
 const requestedBundleTypes = argv.type
-  ? parseRequestedNames([argv.type], 'uppercase')
+  ? parseRequestedNames(argvType, 'uppercase')
   : [];
+
 const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
@@ -361,7 +363,8 @@ function getPlugins(
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
-    const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
+    const needsMinifiedByClosure =
+      bundleType !== ESM_PROD && bundleType !== ESM_DEV;
 
     return [
       // Keep dynamic imports as externals
@@ -527,8 +530,8 @@ function shouldSkipBundle(bundle, bundleType) {
     return true;
   }
   if (requestedBundleTypes.length > 0) {
-    const isAskingForDifferentType = requestedBundleTypes.every(
-      requestedType => bundleType.indexOf(requestedType) === -1
+    const isAskingForDifferentType = requestedBundleTypes.some(
+      requestedType => !bundleType.includes(requestedType)
     );
     if (isAskingForDifferentType) {
       return true;
@@ -566,16 +569,31 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   // .stable.js
   // .experimental.js
   // .js
+  // or any of those plus .development.js
 
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
+    const developmentFBEntry = resolvedFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentFBEntry)) {
+      return developmentFBEntry;
+    }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
     const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    const developmentGenericFBEntry = resolvedGenericFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentGenericFBEntry)) {
+      return developmentGenericFBEntry;
+    }
     if (fs.existsSync(resolvedGenericFBEntry)) {
       return resolvedGenericFBEntry;
     }
@@ -585,6 +603,10 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     '.js',
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
+  const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
+  if (fs.existsSync(devForkedEntry)) {
+    return devForkedEntry;
+  }
   if (fs.existsSync(resolvedForkedEntry)) {
     return resolvedForkedEntry;
   }
@@ -603,7 +625,8 @@ async function createBundle(bundle, bundleType) {
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
-    isFBWWWBundle || isFBRNBundle
+    isFBWWWBundle || isFBRNBundle,
+    !isProductionBundleType(bundleType)
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);

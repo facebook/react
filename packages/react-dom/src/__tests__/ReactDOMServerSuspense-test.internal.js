@@ -153,7 +153,7 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB).toBe(divB2);
   });
 
-  it('it throws when rendering a suspending component outside a Suspense node', async () => {
+  it('throws when rendering a suspending component outside a Suspense node', async () => {
     expect(() => {
       ReactDOMServer.renderToString(
         <div>

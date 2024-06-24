@@ -118,6 +118,8 @@ function addShape(
 export type HookKind =
   | "useContext"
   | "useState"
+  | "useActionState"
+  | "useReducer"
   | "useRef"
   | "useEffect"
   | "useLayoutEffect"
@@ -187,12 +189,15 @@ export type ObjectShape = {
  * the inferred types for [] and {}.
  */
 export type ShapeRegistry = Map<string, ObjectShape>;
+export const BuiltInPropsId = "BuiltInProps";
 export const BuiltInArrayId = "BuiltInArray";
 export const BuiltInFunctionId = "BuiltInFunction";
 export const BuiltInJsxId = "BuiltInJsx";
 export const BuiltInObjectId = "BuiltInObject";
 export const BuiltInUseStateId = "BuiltInUseState";
 export const BuiltInSetStateId = "BuiltInSetState";
+export const BuiltInUseActionStateId = "BuiltInUseActionState";
+export const BuiltInSetActionStateId = "BuiltInSetActionState";
 export const BuiltInUseRefId = "BuiltInUseRefId";
 export const BuiltInRefValueId = "BuiltInRefValue";
 export const BuiltInMixedReadonlyId = "BuiltInMixedReadonly";
@@ -200,9 +205,16 @@ export const BuiltInUseEffectHookId = "BuiltInUseEffectHook";
 export const BuiltInUseLayoutEffectHookId = "BuiltInUseLayoutEffectHook";
 export const BuiltInUseInsertionEffectHookId = "BuiltInUseInsertionEffectHook";
 export const BuiltInUseOperatorId = "BuiltInUseOperator";
+export const BuiltInUseReducerId = "BuiltInUseReducer";
+export const BuiltInDispatchId = "BuiltInDispatch";
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
+
+// If the `ref` prop exists, it has the ref type
+addObject(BUILTIN_SHAPES, BuiltInPropsId, [
+  ["ref", { kind: "Object", shapeId: BuiltInUseRefId }],
+]);
 
 /* Built-in array shape */
 addObject(BUILTIN_SHAPES, BuiltInArrayId, [
@@ -387,6 +399,44 @@ addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
   ],
 ]);
 
+addObject(BUILTIN_SHAPES, BuiltInUseActionStateId, [
+  ["0", { kind: "Poly" }],
+  [
+    "1",
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInSetActionStateId
+    ),
+  ],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInUseReducerId, [
+  ["0", { kind: "Poly" }],
+  [
+    "1",
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInDispatchId
+    ),
+  ],
+]);
+
 addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
   ["current", { kind: "Object", shapeId: BuiltInRefValueId }],
 ]);
@@ -430,6 +480,9 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   ],
   ["*", { kind: "Object", shapeId: BuiltInMixedReadonlyId }],
 ]);
+
+addObject(BUILTIN_SHAPES, BuiltInJsxId, []);
+addObject(BUILTIN_SHAPES, BuiltInFunctionId, []);
 
 export const DefaultMutatingHook = addHook(
   BUILTIN_SHAPES,

@@ -6,7 +6,7 @@ function formatLanes(laneArray) {
   return '0b' + lanes.toString(2).padStart(31, '0');
 }
 
-// test() is part of Jest's serializer API
+// `test` is part of Jest's serializer API
 export function test(maybeTimelineData) {
   if (
     maybeTimelineData != null &&

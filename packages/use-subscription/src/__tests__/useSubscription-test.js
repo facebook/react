@@ -434,13 +434,9 @@ describe('useSubscription', () => {
       observableA.next('a-2');
 
       // Update again
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        React.startTransition(() => {
-          root.render(<Parent observed={observableA} />);
-        });
-      } else {
+      React.startTransition(() => {
         root.render(<Parent observed={observableA} />);
-      }
+      });
 
       // Flush everything and ensure that the correct subscribable is used
       await waitForAll([

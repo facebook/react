@@ -744,7 +744,7 @@ describe('ReactDOMServerIntegration', () => {
         'a div with a single child surrounded by whitespace',
         async render => {
           // prettier-ignore
-          const e = await render(<div id="parent">  <div id="child" />   </div>); // eslint-disable-line no-multi-spaces
+          const e = await render(<div id="parent">  <div id="child" />   </div>);
           expect(e.childNodes.length).toBe(3);
           const textNode1 = e.childNodes[0];
           const child = e.childNodes[1];
@@ -987,7 +987,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             EmptyComponent = <EmptyComponent />;
           }).toErrorDev(
-            'Warning: React.jsx: type is invalid -- expected a string ' +
+            'React.jsx: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: object. You likely forgot to export your ' +
               "component from the file it's defined in, or you might have mixed up " +
@@ -1011,7 +1011,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             NullComponent = <NullComponent />;
           }).toErrorDev(
-            'Warning: React.jsx: type is invalid -- expected a string ' +
+            'React.jsx: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: null.',
             {withoutStack: true},
@@ -1029,7 +1029,7 @@ describe('ReactDOMServerIntegration', () => {
           expect(() => {
             UndefinedComponent = <UndefinedComponent />;
           }).toErrorDev(
-            'Warning: React.jsx: type is invalid -- expected a string ' +
+            'React.jsx: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: undefined. You likely forgot to export your ' +
               "component from the file it's defined in, or you might have mixed up " +

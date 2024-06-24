@@ -968,7 +968,7 @@ describe('ReactFlightDOMForm', () => {
     }
 
     await expect(submitTheForm).toErrorDev(
-      'Warning: Failed to serialize an action for progressive enhancement:\n' +
+      'Failed to serialize an action for progressive enhancement:\n' +
         'Error: React Element cannot be passed to Server Functions from the Client without a temporary reference set. Pass a TemporaryReferenceSet to the options.\n' +
         '  [<div/>]\n' +
         '   ^^^^^^',
@@ -1045,7 +1045,7 @@ describe('ReactFlightDOMForm', () => {
     }
 
     await expect(submitTheForm).toErrorDev(
-      'Warning: Failed to serialize an action for progressive enhancement:\n' +
+      'Failed to serialize an action for progressive enhancement:\n' +
         'Error: File/Blob fields are not yet supported in progressive forms. Will fallback to client hydration.',
     );
 

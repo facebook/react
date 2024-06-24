@@ -9,10 +9,12 @@ import { Effect, ValueKind, ValueReason } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInUseActionStateId,
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
   BuiltInUseOperatorId,
+  BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
   ShapeRegistry,
@@ -263,6 +265,30 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       hookKind: "useState",
       returnValueKind: ValueKind.Frozen,
       returnValueReason: ValueReason.State,
+    }),
+  ],
+  [
+    "useActionState",
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Object", shapeId: BuiltInUseActionStateId },
+      calleeEffect: Effect.Read,
+      hookKind: "useActionState",
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.State,
+    }),
+  ],
+  [
+    "useReducer",
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Object", shapeId: BuiltInUseReducerId },
+      calleeEffect: Effect.Read,
+      hookKind: "useReducer",
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.ReducerState,
     }),
   ],
   [

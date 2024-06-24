@@ -67,6 +67,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   TracingMarkerComponent,
+  Throw,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
@@ -124,10 +125,10 @@ if (__DEV__) {
   hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
-    /* eslint-disable no-new */
+    // eslint-disable-next-line no-new
     new Map([[nonExtensibleObject, null]]);
+    // eslint-disable-next-line no-new
     new Set([nonExtensibleObject]);
-    /* eslint-enable no-new */
   } catch (e) {
     // TODO: Consider warning about bad polyfills
     hasBadMapPolyfill = true;
@@ -877,5 +878,15 @@ export function createFiberFromPortal(
     pendingChildren: null, // Used by persistent updates
     implementation: portal.implementation,
   };
+  return fiber;
+}
+
+export function createFiberFromThrow(
+  error: mixed,
+  mode: TypeOfMode,
+  lanes: Lanes,
+): Fiber {
+  const fiber = createFiber(Throw, error, null, mode);
+  fiber.lanes = lanes;
   return fiber;
 }

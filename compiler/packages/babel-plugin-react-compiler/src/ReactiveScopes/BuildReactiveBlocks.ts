@@ -183,6 +183,7 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
         context.append(stmt, stmt.label);
         break;
       }
+      case "pruned-scope":
       case "scope": {
         CompilerError.invariant(false, {
           reason: "Expected the function to not have scopes already assigned",
