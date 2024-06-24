@@ -148,6 +148,6 @@ jobs:
         with:
           path: build-temp
       - name: Display structure of build
-        run: ls -R build
+        run: ls -R build-temp
       # - run: yarn test --build ${{ matrix.test_params }} --ci=github
 
