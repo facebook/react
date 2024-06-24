@@ -55,8 +55,6 @@ jobs:
           CI: github
       - name: Display structure of build
         run: ls -R build
-        env:
-          CI: github
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
