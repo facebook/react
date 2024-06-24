@@ -271,7 +271,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
         }
       }
       case 'function':
-      case 'symbol': // eslint-disable-line
+      case 'symbol':
         // Warn when a known attribute is a bad type
         warnedProperties[name] = true;
         return false;

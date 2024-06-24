@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableInstructionReordering
 import { useState } from "react";
 
 function Component() {
@@ -22,7 +23,7 @@ function Component() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enableInstructionReordering
 import { useState } from "react";
 
 function Component() {

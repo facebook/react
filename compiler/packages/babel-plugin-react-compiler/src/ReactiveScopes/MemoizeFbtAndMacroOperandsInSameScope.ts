@@ -14,8 +14,14 @@ import {
 } from "../HIR";
 import { eachReactiveValueOperand } from "./visitors";
 
-/*
- * This pass supports the `fbt` translation system (https://facebook.github.io/fbt/).
+/**
+ * This pass supports the `fbt` translation system (https://facebook.github.io/fbt/)
+ * as well as similar user-configurable macro-like APIs where it's important that
+ * the name of the function not be changed, and it's literal arguments not be turned
+ * into temporaries.
+ *
+ * ## FBT
+ *
  * FBT provides the `<fbt>` JSX element and `fbt()` calls (which take params in the
  * form of `<fbt:param>` children or `fbt.param()` arguments, respectively). These
  * tags/functions have restrictions on what types of syntax may appear as props/children/
@@ -26,13 +32,22 @@ import { eachReactiveValueOperand } from "./visitors";
  * operands to fbt tags/calls have the same scope as the tag/call itself.
  *
  * Note that this still allows the props/arguments of `<fbt:param>`/`fbt.param()`
- * to be independently memoized
+ * to be independently memoized.
+ *
+ * ## User-defined macro-like function
+ *
+ * Users can also specify their own functions to be treated similarly to fbt via the
+ * `customMacros` environment configuration.
  */
-export function memoizeFbtOperandsInSameScope(fn: HIRFunction): void {
+export function memoizeFbtAndMacroOperandsInSameScope(fn: HIRFunction): void {
+  const fbtMacroTags = new Set([
+    ...FBT_TAGS,
+    ...(fn.env.config.customMacros ?? []),
+  ]);
   const fbtValues: Set<IdentifierId> = new Set();
   while (true) {
     let size = fbtValues.size;
-    visit(fn, fbtValues);
+    visit(fn, fbtMacroTags, fbtValues);
     if (size === fbtValues.size) {
       break;
     }
@@ -50,17 +65,21 @@ export const SINGLE_CHILD_FBT_TAGS: Set<string> = new Set([
   "fbs:param",
 ]);
 
-function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
+function visit(
+  fn: HIRFunction,
+  fbtMacroTags: Set<string>,
+  fbtValues: Set<IdentifierId>
+): void {
   for (const [, block] of fn.body.blocks) {
     for (const instruction of block.instructions) {
       const { lvalue, value } = instruction;
       if (lvalue === null) {
-        return;
+        continue;
       }
       if (
         value.kind === "Primitive" &&
         typeof value.value === "string" &&
-        FBT_TAGS.has(value.value)
+        fbtMacroTags.has(value.value)
       ) {
         /*
          * We don't distinguish between tag names and strings, so record
@@ -69,14 +88,14 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
         fbtValues.add(lvalue.identifier.id);
       } else if (
         value.kind === "LoadGlobal" &&
-        FBT_TAGS.has(value.binding.name)
+        fbtMacroTags.has(value.binding.name)
       ) {
         // Record references to `fbt` as a global
         fbtValues.add(lvalue.identifier.id);
       } else if (isFbtCallExpression(fbtValues, value)) {
         const fbtScope = lvalue.identifier.scope;
         if (fbtScope === null) {
-          return;
+          continue;
         }
 
         /*
@@ -94,14 +113,15 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
               operand.identifier.mutableRange.start
             )
           );
+          fbtValues.add(operand.identifier.id);
         }
       } else if (
-        isFbtJsxExpression(fbtValues, value) ||
+        isFbtJsxExpression(fbtMacroTags, fbtValues, value) ||
         isFbtJsxChild(fbtValues, lvalue, value)
       ) {
         const fbtScope = lvalue.identifier.scope;
         if (fbtScope === null) {
-          return;
+          continue;
         }
 
         /*
@@ -126,6 +146,33 @@ function visit(fn: HIRFunction, fbtValues: Set<IdentifierId>): void {
            */
           fbtValues.add(operand.identifier.id);
         }
+      } else if (fbtValues.has(lvalue.identifier.id)) {
+        const fbtScope = lvalue.identifier.scope;
+        if (fbtScope === null) {
+          return;
+        }
+
+        for (const operand of eachReactiveValueOperand(value)) {
+          if (
+            operand.identifier.name !== null &&
+            operand.identifier.name.kind === "named"
+          ) {
+            /*
+             * named identifiers were already locals, we only have to force temporaries
+             * into the same scope
+             */
+            continue;
+          }
+          operand.identifier.scope = fbtScope;
+
+          // Expand the jsx element's range to account for its operands
+          fbtScope.range.start = makeInstructionId(
+            Math.min(
+              fbtScope.range.start,
+              operand.identifier.mutableRange.start
+            )
+          );
+        }
       }
     }
   }
@@ -141,6 +188,7 @@ function isFbtCallExpression(
 }
 
 function isFbtJsxExpression(
+  fbtMacroTags: Set<string>,
   fbtValues: Set<IdentifierId>,
   value: ReactiveValue
 ): boolean {
@@ -148,7 +196,7 @@ function isFbtJsxExpression(
     value.kind === "JsxExpression" &&
     ((value.tag.kind === "Identifier" &&
       fbtValues.has(value.tag.identifier.id)) ||
-      (value.tag.kind === "BuiltinTag" && FBT_TAGS.has(value.tag.name)))
+      (value.tag.kind === "BuiltinTag" && fbtMacroTags.has(value.tag.name)))
   );
 }
 

@@ -1503,7 +1503,6 @@ describe('ReactComponentLifeCycle', () => {
       });
     }).toWarnDev(
       [
-        /* eslint-disable max-len */
         `componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
@@ -1523,7 +1522,6 @@ Please update the following components: MyComponent`,
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: MyComponent`,
-        /* eslint-enable max-len */
       ],
       {withoutStack: true},
     );

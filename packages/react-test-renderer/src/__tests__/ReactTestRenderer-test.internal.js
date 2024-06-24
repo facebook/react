@@ -43,7 +43,6 @@ function cleanNodeOrArray(node) {
     node.instance = null;
   }
   if (node && node.props && node.props.children) {
-    // eslint-disable-next-line no-unused-vars
     const {children, ...props} = node.props;
     node.props = props;
   }

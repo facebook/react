@@ -13,7 +13,6 @@
  * It should always be imported from "react-devtools-feature-flags".
  ************************************************************************/
 
-export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableLogger = true;
 export const enableStyleXFeatures = true;
 export const isInternalFacebookBuild = true;

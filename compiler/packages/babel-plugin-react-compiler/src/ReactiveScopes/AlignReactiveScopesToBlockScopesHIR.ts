@@ -22,19 +22,10 @@ import {
   mapTerminalSuccessors,
   terminalFallthrough,
 } from "../HIR/visitors";
+import { retainWhere_Set } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
 
 type InstructionRange = MutableRange;
-function retainWhere_Set<T>(
-  items: Set<T>,
-  predicate: (item: T) => boolean
-): void {
-  for (const item of items) {
-    if (!predicate(item)) {
-      items.delete(item);
-    }
-  }
-}
 /*
  * Note: this is the 2nd of 4 passes that determine how to break a function into discrete
  * reactive scopes (independently memoizeable units of code):
@@ -77,7 +68,7 @@ function retainWhere_Set<T>(
  * will be the updated end for that scope).
  */
 export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
-  const activeInnerBlockRanges: Array<{
+  const activeBlockFallthroughRanges: Array<{
     range: InstructionRange;
     fallthrough: BlockId;
   }> = [];
@@ -118,10 +109,10 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
 
   for (const [, block] of fn.body.blocks) {
     const startingId = block.instructions[0]?.id ?? block.terminal.id;
-    retainWhere_Set(activeScopes, (scope) => scope.range.end >= startingId);
-    const top = activeInnerBlockRanges.at(-1);
+    retainWhere_Set(activeScopes, (scope) => scope.range.end > startingId);
+    const top = activeBlockFallthroughRanges.at(-1);
     if (top?.fallthrough === block.id) {
-      activeInnerBlockRanges.pop();
+      activeBlockFallthroughRanges.pop();
       /*
        * All active scopes must have either started before or within the last
        * block-fallthrough range. In either case, they overlap this block-
@@ -169,7 +160,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
        * We also record the block-fallthrough range for future scopes that begin
        * within the range (and overlap with the range end).
        */
-      activeInnerBlockRanges.push({
+      activeBlockFallthroughRanges.push({
         fallthrough,
         range: {
           start: terminal.id,

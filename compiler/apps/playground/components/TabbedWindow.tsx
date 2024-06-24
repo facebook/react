@@ -78,7 +78,9 @@ function TabbedWindowItem({
             title="Minimize tab"
             aria-label="Minimize tab"
             onClick={toggleTabs}
-            className={`p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 ${hasChanged ? "font-bold" : "font-light"} text-secondary hover:text-link`}
+            className={`p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 ${
+              hasChanged ? "font-bold" : "font-light"
+            } text-secondary hover:text-link`}
           >
             - {name}
           </h2>
@@ -91,7 +93,9 @@ function TabbedWindowItem({
             aria-label={`Expand compiler tab: ${name}`}
             style={{ transform: "rotate(90deg) translate(-50%)" }}
             onClick={toggleTabs}
-            className={`flex-grow-0 w-5 transition-colors duration-150 ease-in ${hasChanged ? "font-bold" : "font-light"} text-secondary hover:text-link`}
+            className={`flex-grow-0 w-5 transition-colors duration-150 ease-in ${
+              hasChanged ? "font-bold" : "font-light"
+            } text-secondary hover:text-link`}
           >
             {name}
           </button>
