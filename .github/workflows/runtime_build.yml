@@ -100,7 +100,7 @@ jobs:
           path: build
           merge-multiple: true
       - run: echo ${{ github.sha }} >> build/COMMIT_SHA
-      # Compress build directory into a single tarball for easy download
+        # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build.tgz ./build
         # TODO: Migrate scripts to use `build` directory instead of `build2`
       - run: cp ./build.tgz ./build2.tgz
