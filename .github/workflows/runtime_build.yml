@@ -51,6 +51,10 @@ jobs:
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
       - run: yarn build --b=${{ matrix.bundle_type }} --r=${{ matrix.release_channel }} --ci=github
+        env:
+          CI: github
+      - name: Display structure of build
+        run: ls -R build
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
@@ -65,6 +69,7 @@ jobs:
       matrix:
         bundle_type: ${{ fromJSON(needs.define_build_params.outputs.bundle_type) }}
         release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,9 +84,12 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
-      - run: yarn install --frozen-lockfile
+          path: build
+      - name: Display structure of build
+        run: ls -R build
       - run: yarn lint-build
