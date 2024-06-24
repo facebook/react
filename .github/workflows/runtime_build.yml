@@ -54,13 +54,17 @@ jobs:
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.release_channel }}-${{ matrix.bundle_type }}
+          name: ${{ matrix.bundle_type }}-${{ matrix.release_channel }}
           path: |
             build/**
 
   lint_build:
     name: yarn lint-build
     needs: [define_build_params, build]
+    strategy:
+      matrix:
+        bundle_type: ${{ fromJSON(needs.define_build_params.outputs.bundle_type) }}
+        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -78,6 +82,6 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          name: build-${{ needs.define_build_params.outputs.release_channel }}-${{ needs.define_build_params.outputs.bundle_type }}
+          name: ${{ needs.define_build_params.outputs.bundle_type }}-${{ needs.define_build_params.outputs.release_channel }}
       - run: yarn install --frozen-lockfile
       - run: yarn lint-build
