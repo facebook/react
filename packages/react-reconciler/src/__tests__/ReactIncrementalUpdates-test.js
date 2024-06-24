@@ -156,17 +156,11 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    if (gate(flags => !flags.forceConcurrentByDefaultForTesting)) {
-      React.startTransition(() => {
-        instance.setState(createUpdate('a'));
-        instance.setState(createUpdate('b'));
-        instance.setState(createUpdate('c'));
-      });
-    } else {
+    React.startTransition(() => {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    }
+    });
 
     // Begin the updates but don't flush them yet
     await waitFor(['a', 'b', 'c']);
@@ -183,14 +177,8 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // The sync updates should have flushed, but not the async ones.
-    if (gate(flags => !flags.forceConcurrentByDefaultForTesting)) {
-      assertLog(['d', 'e', 'f']);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop="def" />);
-    } else {
-      // Update d was dropped and replaced by e.
-      assertLog(['e', 'f']);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop="ef" />);
-    }
+    assertLog(['d', 'e', 'f']);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="def" />);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
@@ -231,17 +219,11 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    if (gate(flags => !flags.forceConcurrentByDefaultForTesting)) {
-      React.startTransition(() => {
-        instance.setState(createUpdate('a'));
-        instance.setState(createUpdate('b'));
-        instance.setState(createUpdate('c'));
-      });
-    } else {
+    React.startTransition(() => {
       instance.setState(createUpdate('a'));
       instance.setState(createUpdate('b'));
       instance.setState(createUpdate('c'));
-    }
+    });
 
     // Begin the updates but don't flush them yet
     await waitFor(['a', 'b', 'c']);
@@ -261,45 +243,22 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     // The sync updates should have flushed, but not the async ones.
-    if (gate(flags => !flags.forceConcurrentByDefaultForTesting)) {
-      assertLog(['d', 'e', 'f']);
-    } else {
-      // Update d was dropped and replaced by e.
-      assertLog(['e', 'f']);
-    }
+    assertLog(['d', 'e', 'f']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="f" />);
 
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
-    if (gate(flags => !flags.forceConcurrentByDefaultForTesting)) {
-      await waitForAll([
-        // Since 'g' is in a transition, we'll process 'd' separately first.
-        // That causes us to process 'd' with 'e' and 'f' rebased.
-        'd',
-        'e',
-        'f',
-        // Then we'll re-process everything for 'g'.
-        'a',
-        'b',
-        'c',
-        'd',
-        'e',
-        'f',
-        'g',
-      ]);
-    } else {
-      await waitForAll([
-        // Then we'll re-process everything for 'g'.
-        'a',
-        'b',
-        'c',
-        'd',
-        'e',
-        'f',
-        'g',
-      ]);
-    }
+    await waitForAll([
+      // Then we'll re-process everything for 'g'.
+      'a',
+      'b',
+      'c',
+      'd',
+      'e',
+      'f',
+      'g',
+    ]);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="fg" />);
   });
 
