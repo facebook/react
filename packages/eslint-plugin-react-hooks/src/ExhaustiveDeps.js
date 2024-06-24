@@ -181,8 +181,6 @@ export default {
       //               ^^^ true for this reference
       // const [state, dispatch] = useActionState() / React.useActionState()
       //               ^^^ true for this reference
-      // const [state, dispatch] = useFormState() / ReactDOM.useFormState()
-      //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
       // const onStuff = useEffectEvent(() => {})
@@ -236,11 +234,10 @@ export default {
           return false;
         }
         let callee = init.callee;
-        // Step into `= React(DOM).something` initializer.
+        // Step into `= React.something` initializer.
         if (
           callee.type === 'MemberExpression' &&
-          (callee.object.name === 'React' ||
-            callee.object.name === 'ReactDOM') &&
+          callee.object.name === 'React' &&
           callee.property != null &&
           !callee.computed
         ) {
@@ -268,7 +265,6 @@ export default {
         } else if (
           name === 'useState' ||
           name === 'useReducer' ||
-          name === 'useFormState' ||
           name === 'useActionState'
         ) {
           // Only consider second value in initializing tuple stable.

@@ -607,8 +607,6 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
-          const [state7, dispatch3] = useFormState();
-          const [state8, dispatch4] = ReactDOM.useFormState();
           const [state9, dispatch5] = useActionState();
           const [state10, dispatch6] = React.useActionState();
           const [isPending1] = useTransition();
@@ -628,8 +626,6 @@ const tests = {
             setState2();
             dispatch1();
             dispatch2();
-            dispatch3();
-            dispatch4();
             dispatch5();
             dispatch6();
             startTransition1();
@@ -654,7 +650,7 @@ const tests = {
             maybeDispatch();
           }, [
             // Dynamic
-            state1, state2, state3, state4, state5, state6, state7, state8, state9, state10,
+            state1, state2, state3, state4, state5, state6, state9, state10,
             maybeRef1, maybeRef2,
             isPending2, isPending4,
 
@@ -1495,6 +1491,51 @@ const tests = {
                   useCallback(() => {
                     console.log(props.foo?.toString());
                   }, [props.foo]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      // Affected code should use React.useActionState instead
+      code: normalizeIndent`
+        function ComponentUsingFormState(props) {
+          const [state7, dispatch3] = useFormState();
+          const [state8, dispatch4] = ReactDOM.useFormState();
+          useEffect(() => {
+            dispatch3();
+            dispatch4();
+
+            // dynamic
+            console.log(state7);
+            console.log(state8);
+
+          }, [state7, state8]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has missing dependencies: 'dispatch3' and 'dispatch4'. " +
+            'Either include them or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [dispatch3, dispatch4, state7, state8]',
+              output: normalizeIndent`
+                function ComponentUsingFormState(props) {
+                  const [state7, dispatch3] = useFormState();
+                  const [state8, dispatch4] = ReactDOM.useFormState();
+                  useEffect(() => {
+                    dispatch3();
+                    dispatch4();
+
+                    // dynamic
+                    console.log(state7);
+                    console.log(state8);
+
+                  }, [dispatch3, dispatch4, state7, state8]);
                 }
               `,
             },
