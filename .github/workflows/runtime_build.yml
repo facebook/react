@@ -19,7 +19,7 @@ jobs:
         id: define_bundle_types
         with:
           script: |
-            const {bundleTypes} = require('.scripts/rollup/bundles');
+            const {bundleTypes} = require('./scripts/rollup/bundles');
             return Object.values(bundleTypes);
       - uses: actions/github-script@v7
         id: define_release_channels
