@@ -82,6 +82,6 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.define_build_params.outputs.bundle_type }}-${{ needs.define_build_params.outputs.release_channel }}
+          name: ${{ matrix.bundle_type }}-${{ matrix.release_channel }}
       - run: yarn install --frozen-lockfile
       - run: yarn lint-build
