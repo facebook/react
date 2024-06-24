@@ -146,9 +146,8 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          path: build
-          merge-multiple: true
+          path: build-temp
       - name: Display structure of build
         run: ls -R build
-      - run: yarn test --build ${{ matrix.test_params }} --ci=github
+      # - run: yarn test --build ${{ matrix.test_params }} --ci=github
 

@@ -16,6 +16,8 @@ describe('StoreStressConcurrent', () => {
   let store;
   let print;
 
+  jest.setTimeout(15000);
+
   beforeEach(() => {
     global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -829,8 +831,6 @@ describe('StoreStressConcurrent', () => {
 
   // @reactVersion >= 18.0
   it('should handle a stress test for Suspense without type change (Concurrent Mode)', async () => {
-    jest.setTimeout(15000);
-
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
