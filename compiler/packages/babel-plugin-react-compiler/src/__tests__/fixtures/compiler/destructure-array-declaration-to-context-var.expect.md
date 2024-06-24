@@ -29,7 +29,7 @@ import { identity } from "shared-runtime";
 function Component(props) {
   const $ = _c(4);
   let x;
-  if ($[0] !== props.value) {
+  if ($[0] !== props) {
     const [t0] = props.value;
     x = t0;
     const foo = () => {
@@ -37,7 +37,7 @@ function Component(props) {
     };
 
     foo();
-    $[0] = props.value;
+    $[0] = props;
     $[1] = x;
   } else {
     x = $[1];

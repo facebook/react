@@ -36,9 +36,9 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(3);
   let t0;
-  if ($[0] !== props) {
+  if ($[0] !== props.cond || $[1] !== props.value) {
     const x = {};
     let y;
     if (props.cond) {
@@ -50,10 +50,11 @@ function Component(props) {
     y.push(x);
 
     t0 = [x, y];
-    $[0] = props;
-    $[1] = t0;
+    $[0] = props.cond;
+    $[1] = props.value;
+    $[2] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[2];
   }
   return t0;
 }

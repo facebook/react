@@ -78,21 +78,29 @@ export function mutateAndReturnNewValue<T>(arg: T): string {
   return "hello!";
 }
 
-export function setProperty(arg: any, property: any): void {
+export function setProperty(
+  arg: any,
+  property: any,
+  propertyName?: string
+): void {
   // don't mutate primitive
   if (arg == null || typeof arg !== "object") {
     return arg;
   }
 
-  let count: number = 0;
-  let key;
-  while (true) {
-    key = "wat" + count;
-    if (!Object.hasOwn(arg, key)) {
-      arg[key] = property;
-      return arg;
+  if (propertyName != null && typeof propertyName === "string") {
+    arg[propertyName] = property;
+  } else {
+    let count: number = 0;
+    let key;
+    while (true) {
+      key = "wat" + count;
+      if (!Object.hasOwn(arg, key)) {
+        arg[key] = property;
+        return arg;
+      }
+      count++;
     }
-    count++;
   }
 }
 
