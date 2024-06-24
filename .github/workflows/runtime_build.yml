@@ -83,6 +83,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
+          path: build
+      - name: Display structure of build
+        run: ls -R build
       - run: yarn install --frozen-lockfile
       - run: yarn lint-build
 
@@ -141,6 +144,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
+          path: build
+      - name: Display structure of build
+        run: ls -R build
       - run: yarn install --frozen-lockfile
       - run: yarn test --build ${{ matrix.test_params }} --ci=github
 
