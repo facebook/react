@@ -13,6 +13,7 @@ import {
   HIRFunction,
   ReactiveFunction,
   assertConsistentIdentifiers,
+  assertTerminalPredsExist,
   assertTerminalSuccessorsExist,
   assertValidBlockNesting,
   assertValidMutableRanges,
@@ -303,6 +304,8 @@ function* runWithEnvironment(
       name: "FlattenScopesWithHooksOrUseHIR",
       value: hir,
     });
+    assertTerminalSuccessorsExist(hir);
+    assertTerminalPredsExist(hir);
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
