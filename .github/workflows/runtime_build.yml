@@ -1,0 +1,60 @@
+name: (Runtime) Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - 'compiler/**'
+
+jobs:
+  build:
+    name: yarn build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - name: Cache build
+        uses: actions/cache@v4
+        id: build_cache
+        with:
+          path: "build/**"
+          key: yarn-build-${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+
+  lint_build:
+    name: yarn lint-build
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - name: Restore cached build
+        uses: actions/cache@v4
+        id: build_cache
+        with:
+          path: "build/**"
+          key: yarn-build-${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn lint-build
