@@ -123,6 +123,7 @@ export type HookKind =
   | "useRef"
   | "useEffect"
   | "useLayoutEffect"
+  | "useInsertionEffect"
   | "useMemo"
   | "useCallback"
   | "Custom";
