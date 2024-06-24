@@ -312,6 +312,22 @@ export function toJSON(value: any, invokeFns: boolean = false): string {
     return val;
   });
 }
+export class Builder {
+  vals: Array<any> = [];
+  static makeBuilder(isNull: boolean, ...args: Array<any>): Builder | null {
+    if (isNull) {
+      return null;
+    } else {
+      const builder = new Builder();
+      builder.push(...args);
+      return builder;
+    }
+  }
+  push(...args: Array<any>): Builder {
+    this.vals.push(...args);
+    return this;
+  }
+}
 
 export const ObjectWithHooks = {
   useFoo(): number {
