@@ -26,7 +26,7 @@ jobs:
         id: define_release_channels
         with:
           script: |
-            return ['stable', 'experimental'];
+            return ["stable", "experimental"];
 
   build:
     name: yarn build
@@ -54,9 +54,9 @@ jobs:
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.bundle_type }}-${{ matrix.release_channel }}
+          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
           path: |
-            build/**
+            build
 
   lint_build:
     name: yarn lint-build
@@ -82,6 +82,6 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.bundle_type }}-${{ matrix.release_channel }}
+          name: ${{ matrix.bundle_type }}_${{ matrix.release_channel }}
       - run: yarn install --frozen-lockfile
       - run: yarn lint-build
