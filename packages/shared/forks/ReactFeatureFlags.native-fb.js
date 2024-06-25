@@ -79,7 +79,6 @@ export const enableSuspenseCallback = false;
 export const enableTaint = true;
 export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
-export const enableUnifiedSyncLane = true;
 export const enableUpdaterTracking = __PROFILE__;
 export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
