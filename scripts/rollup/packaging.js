@@ -15,98 +15,11 @@ const {
   asyncRimRaf,
 } = require('./utils');
 
-const {
-  NODE_ES2015,
-  ESM_DEV,
-  ESM_PROD,
-  NODE_DEV,
-  NODE_PROD,
-  NODE_PROFILING,
-  BUN_DEV,
-  BUN_PROD,
-  FB_WWW_DEV,
-  FB_WWW_PROD,
-  FB_WWW_PROFILING,
-  RN_OSS_DEV,
-  RN_OSS_PROD,
-  RN_OSS_PROFILING,
-  RN_FB_DEV,
-  RN_FB_PROD,
-  RN_FB_PROFILING,
-  BROWSER_SCRIPT,
-} = Bundles.bundleTypes;
-
 function getPackageName(name) {
   if (name.indexOf('/') !== -1) {
     return name.split('/')[0];
   }
   return name;
-}
-
-function getBundleOutputPath(bundle, bundleType, filename, packageName) {
-  switch (bundleType) {
-    case NODE_ES2015:
-      return `build/node_modules/${packageName}/cjs/${filename}`;
-    case ESM_DEV:
-    case ESM_PROD:
-      return `build/node_modules/${packageName}/esm/${filename}`;
-    case BUN_DEV:
-    case BUN_PROD:
-      return `build/node_modules/${packageName}/cjs/${filename}`;
-    case NODE_DEV:
-    case NODE_PROD:
-    case NODE_PROFILING:
-      return `build/node_modules/${packageName}/cjs/${filename}`;
-    case FB_WWW_DEV:
-    case FB_WWW_PROD:
-    case FB_WWW_PROFILING:
-      return `build/facebook-www/${filename}`;
-    case RN_OSS_DEV:
-    case RN_OSS_PROD:
-    case RN_OSS_PROFILING:
-      switch (packageName) {
-        case 'react-native-renderer':
-          return `build/react-native/implementations/${filename}`;
-        default:
-          throw new Error('Unknown RN package.');
-      }
-    case RN_FB_DEV:
-    case RN_FB_PROD:
-    case RN_FB_PROFILING:
-      switch (packageName) {
-        case 'scheduler':
-        case 'react':
-        case 'react-is':
-        case 'react-test-renderer':
-          return `build/facebook-react-native/${packageName}/cjs/${filename}`;
-        case 'react-native-renderer':
-          return `build/react-native/implementations/${filename.replace(
-            /\.js$/,
-            '.fb.js'
-          )}`;
-        default:
-          throw new Error('Unknown RN package.');
-      }
-    case BROWSER_SCRIPT: {
-      // Bundles that are served as browser scripts need to be able to be sent
-      // straight to the browser with any additional bundling. We shouldn't use
-      // a module to re-export. Depending on how they are served, they also may
-      // not go through package.json module resolution, so we shouldn't rely on
-      // that either. We should consider the output path as part of the public
-      // contract, and explicitly specify its location within the package's
-      // directory structure.
-      const outputPath = bundle.outputPath;
-      if (!outputPath) {
-        throw new Error(
-          'Bundles with type BROWSER_SCRIPT must specific an explicit ' +
-            'output path.'
-        );
-      }
-      return `build/node_modules/${packageName}/${outputPath}`;
-    }
-    default:
-      throw new Error('Unknown bundle type.');
-  }
 }
 
 async function copyWWWShims() {
@@ -155,10 +68,7 @@ let entryPointsToHasBundle = new Map();
 for (const bundle of Bundles.bundles) {
   let hasBundle = entryPointsToHasBundle.get(bundle.entry);
   if (!hasBundle) {
-    const hasNonFBBundleTypes = bundle.bundleTypes.some(
-      type =>
-        type !== FB_WWW_DEV && type !== FB_WWW_PROD && type !== FB_WWW_PROFILING
-    );
+    const hasNonFBBundleTypes = bundle.hasNonFBBundleTypes();
     entryPointsToHasBundle.set(bundle.entry, hasNonFBBundleTypes);
   }
 }
@@ -281,6 +191,5 @@ async function prepareNpmPackages() {
 module.exports = {
   copyAllShims,
   getPackageName,
-  getBundleOutputPath,
   prepareNpmPackages,
 };

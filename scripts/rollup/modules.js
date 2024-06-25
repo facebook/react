@@ -35,7 +35,7 @@ const knownGlobals = Object.freeze({
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
-function getPeerGlobals(externals, bundleType) {
+function getPeerGlobals(externals) {
   const peerGlobals = {};
   externals.forEach(name => {
     peerGlobals[name] = knownGlobals[name];
@@ -44,7 +44,7 @@ function getPeerGlobals(externals, bundleType) {
 }
 
 // Determines node_modules packages that are safe to assume will exist.
-function getDependencies(bundleType, entry) {
+function getDependencies(entry) {
   // Replaces any part of the entry that follow the package name (like
   // "/server" in "react-dom/server") by the path to the package settings
   const packageJson = require(entry.replace(/(\/.*)?$/, '/package.json'));
@@ -58,12 +58,12 @@ function getDependencies(bundleType, entry) {
 }
 
 // Hijacks some modules for optimization and integration reasons.
-function getForks(bundleType, entry, moduleType, bundle) {
+function getForks(entry, moduleType, bundle) {
   const forksForBundle = {};
   Object.keys(forks).forEach(srcModule => {
-    const dependencies = getDependencies(bundleType, entry);
+    const dependencies = getDependencies(entry);
     const targetModule = forks[srcModule](
-      bundleType,
+      bundle.bundleType,
       entry,
       dependencies,
       moduleType,

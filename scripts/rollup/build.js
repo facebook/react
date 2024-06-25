@@ -42,29 +42,6 @@ process.on('unhandledRejection', err => {
   throw err;
 });
 
-const {
-  NODE_ES2015,
-  ESM_DEV,
-  ESM_PROD,
-  NODE_DEV,
-  NODE_PROD,
-  NODE_PROFILING,
-  BUN_DEV,
-  BUN_PROD,
-  FB_WWW_DEV,
-  FB_WWW_PROD,
-  FB_WWW_PROFILING,
-  RN_OSS_DEV,
-  RN_OSS_PROD,
-  RN_OSS_PROFILING,
-  RN_FB_DEV,
-  RN_FB_PROD,
-  RN_FB_PROFILING,
-  BROWSER_SCRIPT,
-} = Bundles.bundleTypes;
-
-const {getFilename} = Bundles;
-
 function parseRequestedNames(names, toCase) {
   let result = [];
   for (let i = 0; i < names.length; i++) {
@@ -131,7 +108,6 @@ const babelToES5Plugins = [
 
 function getBabelConfig(
   updateBabelOptions,
-  bundleType,
   packageName,
   externals,
   isDevelopment,
@@ -206,9 +182,9 @@ function getRollupOutputOptions(
   format,
   globals,
   globalName,
-  bundleType
+  bundle
 ) {
-  const isProduction = isProductionBundleType(bundleType);
+  const isProduction = bundle.isProductionBundleType();
 
   return {
     file: outputPath,
@@ -223,114 +199,7 @@ function getRollupOutputOptions(
   };
 }
 
-function getFormat(bundleType) {
-  switch (bundleType) {
-    case NODE_ES2015:
-    case NODE_DEV:
-    case NODE_PROD:
-    case NODE_PROFILING:
-    case BUN_DEV:
-    case BUN_PROD:
-    case FB_WWW_DEV:
-    case FB_WWW_PROD:
-    case FB_WWW_PROFILING:
-    case RN_OSS_DEV:
-    case RN_OSS_PROD:
-    case RN_OSS_PROFILING:
-    case RN_FB_DEV:
-    case RN_FB_PROD:
-    case RN_FB_PROFILING:
-      return `cjs`;
-    case ESM_DEV:
-    case ESM_PROD:
-      return `es`;
-    case BROWSER_SCRIPT:
-      return `iife`;
-  }
-}
 
-function isProductionBundleType(bundleType) {
-  switch (bundleType) {
-    case NODE_ES2015:
-      return true;
-    case ESM_DEV:
-    case NODE_DEV:
-    case BUN_DEV:
-    case FB_WWW_DEV:
-    case RN_OSS_DEV:
-    case RN_FB_DEV:
-      return false;
-    case ESM_PROD:
-    case NODE_PROD:
-    case BUN_PROD:
-    case NODE_PROFILING:
-    case FB_WWW_PROD:
-    case FB_WWW_PROFILING:
-    case RN_OSS_PROD:
-    case RN_OSS_PROFILING:
-    case RN_FB_PROD:
-    case RN_FB_PROFILING:
-    case BROWSER_SCRIPT:
-      return true;
-    default:
-      throw new Error(`Unknown type: ${bundleType}`);
-  }
-}
-
-function isProfilingBundleType(bundleType) {
-  switch (bundleType) {
-    case NODE_ES2015:
-    case FB_WWW_DEV:
-    case FB_WWW_PROD:
-    case NODE_DEV:
-    case NODE_PROD:
-    case BUN_DEV:
-    case BUN_PROD:
-    case RN_FB_DEV:
-    case RN_FB_PROD:
-    case RN_OSS_DEV:
-    case RN_OSS_PROD:
-    case ESM_DEV:
-    case ESM_PROD:
-    case BROWSER_SCRIPT:
-      return false;
-    case FB_WWW_PROFILING:
-    case NODE_PROFILING:
-    case RN_FB_PROFILING:
-    case RN_OSS_PROFILING:
-      return true;
-    default:
-      throw new Error(`Unknown type: ${bundleType}`);
-  }
-}
-
-function getBundleTypeFlags(bundleType) {
-  const isFBWWWBundle =
-    bundleType === FB_WWW_DEV ||
-    bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING;
-  const isRNBundle =
-    bundleType === RN_OSS_DEV ||
-    bundleType === RN_OSS_PROD ||
-    bundleType === RN_OSS_PROFILING ||
-    bundleType === RN_FB_DEV ||
-    bundleType === RN_FB_PROD ||
-    bundleType === RN_FB_PROFILING;
-
-  const isFBRNBundle =
-    bundleType === RN_FB_DEV ||
-    bundleType === RN_FB_PROD ||
-    bundleType === RN_FB_PROFILING;
-
-  const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
-
-  return {
-    isFBWWWBundle,
-    isRNBundle,
-    isFBRNBundle,
-    shouldStayReadable,
-  };
-}
 
 function forbidFBJSImports() {
   return {
@@ -352,19 +221,17 @@ function getPlugins(
   updateBabelOptions,
   filename,
   packageName,
-  bundleType,
   globalName,
   moduleType,
   pureExternalModules,
   bundle
 ) {
   try {
-    const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
-    const isProduction = isProductionBundleType(bundleType);
-    const isProfiling = isProfilingBundleType(bundleType);
+    const forks = Modules.getForks(entry, moduleType, bundle);
+    const isProduction = bundle.isProductionBundleType();
+    const isProfiling = bundle.isProfilingBundleType();
 
-    const needsMinifiedByClosure =
-      bundleType !== ESM_PROD && bundleType !== ESM_DEV;
+    const needsMinifiedByClosure = bundle.needsMinifiedByClosure();
 
     return [
       // Keep dynamic imports as externals
@@ -395,7 +262,6 @@ function getPlugins(
       babel(
         getBabelConfig(
           updateBabelOptions,
-          bundleType,
           packageName,
           externals,
           !isProduction,
@@ -426,7 +292,7 @@ function getPlugins(
         renderChunk(source) {
           return Wrappers.wrapWithTopLevelDefinitions(
             source,
-            bundleType,
+            bundle.bundleType,
             globalName,
             filename,
             moduleType,
@@ -449,16 +315,8 @@ function getPlugins(
         closure({
           compilation_level: 'SIMPLE',
           language_in: 'ECMASCRIPT_2020',
-          language_out:
-            bundleType === NODE_ES2015
-              ? 'ECMASCRIPT_2020'
-              : bundleType === BROWSER_SCRIPT
-              ? 'ECMASCRIPT5'
-              : 'ECMASCRIPT5_STRICT',
-          emit_use_strict:
-            bundleType !== BROWSER_SCRIPT &&
-            bundleType !== ESM_PROD &&
-            bundleType !== ESM_DEV,
+          language_out: bundle.languageOut(),
+          emit_use_strict: bundle.emitUseStrict(),
           env: 'CUSTOM',
           warning_level: 'QUIET',
           source_map_include_content: true,
@@ -490,7 +348,7 @@ function getPlugins(
         renderChunk(source) {
           return Wrappers.wrapWithLicenseHeader(
             source,
-            bundleType,
+            bundle.bundleType,
             globalName,
             filename,
             moduleType
@@ -503,12 +361,12 @@ function getPlugins(
           const currentSizes = Stats.currentBuildResults.bundleSizes;
           const recordIndex = currentSizes.findIndex(
             record =>
-              record.filename === filename && record.bundleType === bundleType
+              record.filename === filename && record.bundleType === bundle.bundleType
           );
           const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
           currentSizes[index] = {
             filename,
-            bundleType,
+            bundleType: bundle.bundleType,
             packageName,
             size,
             gzip,
@@ -524,14 +382,10 @@ function getPlugins(
   }
 }
 
-function shouldSkipBundle(bundle, bundleType) {
-  const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
-  if (shouldSkipBundleType) {
-    return true;
-  }
+function shouldSkipBundle(bundle) {
   if (requestedBundleTypes.length > 0) {
     const isAskingForDifferentType = requestedBundleTypes.some(
-      requestedType => !bundleType.includes(requestedType)
+      requestedType => !bundle.bundleType.includes(requestedType)
     );
     if (isAskingForDifferentType) {
       return true;
@@ -614,25 +468,25 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   return resolvedEntry;
 }
 
-async function createBundle(bundle, bundleType) {
-  const filename = getFilename(bundle, bundleType);
+async function createBundle(bundle) {
+  const filename = bundle.getFilename();
   const logKey =
-    chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
-  const format = getFormat(bundleType);
+    chalk.white.bold(filename) + chalk.dim(` (${bundle.bundleType.toLowerCase()})`);
+  const format = bundle.getFormat();
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  const {isFBWWWBundle, isFBRNBundle} = getBundleTypeFlags(bundleType);
+  const {isFBWWWBundle, isFBRNBundle} = bundle.getBundleTypeFlags(forcePrettyOutput);
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle,
-    !isProductionBundleType(bundleType)
+    !bundle.isProductionBundleType()
   );
 
-  const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
+  const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundle.bundleType);
   let externals = Object.keys(peerGlobals);
 
-  const deps = Modules.getDependencies(bundleType, bundle.entry);
+  const deps = Modules.getDependencies(bundle.entry);
   externals = externals.concat(deps);
 
   const importSideEffects = Modules.getImportSideEffects();
@@ -673,7 +527,6 @@ async function createBundle(bundle, bundleType) {
       bundle.babel,
       filename,
       packageName,
-      bundleType,
       bundle.global,
       bundle.moduleType,
       pureExternalModules,
@@ -686,9 +539,7 @@ async function createBundle(bundle, bundleType) {
       esModule: false,
     },
   };
-  const mainOutputPath = Packaging.getBundleOutputPath(
-    bundle,
-    bundleType,
+  const mainOutputPath = bundle.getBundleOutputPath(
     filename,
     packageName
   );
@@ -698,7 +549,7 @@ async function createBundle(bundle, bundleType) {
     format,
     peerGlobals,
     bundle.global,
-    bundleType
+    bundle
   );
 
   if (isWatchMode) {
@@ -811,33 +662,8 @@ async function buildEverything() {
   // Run them serially for better console output
   // and to avoid any potential race conditions.
 
-  let bundles = [];
-  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (const bundle of Bundles.bundles) {
-    bundles.push(
-      [bundle, NODE_ES2015],
-      [bundle, ESM_DEV],
-      [bundle, ESM_PROD],
-      [bundle, NODE_DEV],
-      [bundle, NODE_PROD],
-      [bundle, NODE_PROFILING],
-      [bundle, BUN_DEV],
-      [bundle, BUN_PROD],
-      [bundle, FB_WWW_DEV],
-      [bundle, FB_WWW_PROD],
-      [bundle, FB_WWW_PROFILING],
-      [bundle, RN_OSS_DEV],
-      [bundle, RN_OSS_PROD],
-      [bundle, RN_OSS_PROFILING],
-      [bundle, RN_FB_DEV],
-      [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING],
-      [bundle, BROWSER_SCRIPT]
-    );
-  }
-
-  bundles = bundles.filter(([bundle, bundleType]) => {
-    return !shouldSkipBundle(bundle, bundleType);
+  let bundles = Bundles.bundles.filter(bundle => {
+    return !shouldSkipBundle(bundle);
   });
 
   if (process.env.CIRCLE_NODE_TOTAL) {
@@ -848,8 +674,8 @@ async function buildEverything() {
   }
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (const [bundle, bundleType] of bundles) {
-    await createBundle(bundle, bundleType);
+  for (const bundle of bundles) {
+    await createBundle(bundle);
   }
 
   await Packaging.copyAllShims();
