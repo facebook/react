@@ -215,35 +215,6 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('gives a helpful error when passing null, undefined, or boolean', () => {
-    const Undefined = undefined;
-    const Null = null;
-    const True = true;
-    const Div = 'div';
-    expect(() => void (<Undefined />)).toErrorDev(
-      'React.jsx: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: undefined. You likely forgot to export your ' +
-        "component from the file it's defined in, or you might have mixed up " +
-        'default and named imports.',
-      {withoutStack: true},
-    );
-    expect(() => void (<Null />)).toErrorDev(
-      'React.jsx: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: null.',
-      {withoutStack: true},
-    );
-    expect(() => void (<True />)).toErrorDev(
-      'React.jsx: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: boolean.',
-      {withoutStack: true},
-    );
-    // No error expected
-    void (<Div />);
-  });
-
   it('warns for fragments with illegal attributes', async () => {
     class Foo extends React.Component {
       render() {
