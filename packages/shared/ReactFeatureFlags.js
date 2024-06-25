@@ -210,8 +210,6 @@ export const enableUseDeferredValueInitialArg = true;
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const forceConcurrentByDefaultForTesting = false;
 
-export const enableUnifiedSyncLane = true;
-
 // Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;
 
