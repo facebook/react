@@ -1971,6 +1971,13 @@ function inferBlock(
         };
         break;
       }
+      case "OutlinedFunctionExpression": {
+        CompilerError.invariant(false, {
+          reason:
+            "OutlinedFunctionExpressions should only be created after InferReferenceEffects",
+          loc: null,
+        });
+      }
       default: {
         assertExhaustive(instrValue, "Unexpected instruction kind");
       }

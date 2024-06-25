@@ -380,7 +380,8 @@ function* generateInstructionTypes(
     case "UnsupportedNode":
     case "Debugger":
     case "FinishMemoize":
-    case "StartMemoize": {
+    case "StartMemoize":
+    case "OutlinedFunctionExpression": {
       break;
     }
     default:

@@ -987,6 +987,7 @@ export type InstructionValue =
   | LoadGlobal
   | StoreGlobal
   | FunctionExpression
+  | OutlinedFunctionExpression
   | {
       kind: "TaggedTemplateExpression";
       tag: Place;

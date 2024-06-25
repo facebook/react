@@ -236,6 +236,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "ObjectExpression":
     case "UnsupportedNode":
     case "ObjectMethod":
+    case "OutlinedFunctionExpression":
     case "FunctionExpression":
     case "TaggedTemplateExpression": {
       return true;
