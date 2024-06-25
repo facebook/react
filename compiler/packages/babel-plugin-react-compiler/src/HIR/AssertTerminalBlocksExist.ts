@@ -8,7 +8,7 @@
 import { CompilerError } from "../CompilerError";
 import { GeneratedSource, HIRFunction } from "./HIR";
 import { printTerminal } from "./PrintHIR";
-import { mapTerminalSuccessors } from "./visitors";
+import { eachTerminalSuccessor, mapTerminalSuccessors } from "./visitors";
 
 export function assertTerminalSuccessorsExist(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
@@ -23,5 +23,25 @@ export function assertTerminalSuccessorsExist(fn: HIRFunction): void {
       });
       return successor;
     });
+  }
+}
+
+export function assertTerminalPredsExist(fn: HIRFunction): void {
+  for (const [, block] of fn.body.blocks) {
+    for (const pred of block.preds) {
+      const predBlock = fn.body.blocks.get(pred);
+      CompilerError.invariant(predBlock != null, {
+        reason: "Expected predecessor block to exist",
+        description: `Block ${block.id} references non-existent ${pred}`,
+        loc: GeneratedSource,
+      });
+      CompilerError.invariant(
+        [...eachTerminalSuccessor(predBlock.terminal)].includes(block.id),
+        {
+          reason: "Terminal successor does not reference correct predecessor",
+          loc: GeneratedSource,
+        }
+      );
+    }
   }
 }
