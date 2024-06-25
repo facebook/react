@@ -332,7 +332,10 @@ export function dehydrate(
         readonly: true,
         preview_short: formatDataForPreview(data, false),
         preview_long: formatDataForPreview(data, true),
-        name: typeof data.constructor === 'function' && typeof data.constructor.name === 'string' ? data.constructor.name : '',
+        name: 
+          typeof data.constructor !== 'function' || typeof data.constructor.name !== 'string'
+            ? ''
+            : data.constructor.name,
       };
 
       getAllEnumerableKeys(data).forEach(key => {
