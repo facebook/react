@@ -541,13 +541,8 @@ describe('ReactHooks', () => {
       });
     };
 
-    if (gate(flags => flags.enableUnifiedSyncLane)) {
-      // Update at transition priority
-      React.startTransition(() => update(n => n * 100));
-    } else {
-      // Update at normal priority
-      ReactTestRenderer.unstable_batchedUpdates(() => update(n => n * 100));
-    }
+    // Update at transition priority
+    React.startTransition(() => update(n => n * 100));
     // The new state is eagerly computed.
     assertLog(['Compute state (1 -> 100)']);
 

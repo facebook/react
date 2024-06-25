@@ -899,15 +899,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.flushSync(() => {
         counter.current.dispatch(INCREMENT);
       });
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        assertLog(['Count: 4']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 4" />);
-      } else {
-        assertLog(['Count: 1']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
-        await waitForAll(['Count: 4']);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 4" />);
-      }
+      assertLog(['Count: 4']);
+      expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 4" />);
     });
   });
 
@@ -1613,11 +1606,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // As a result we, somewhat surprisingly, commit them in the opposite order.
       // This should be fine because any non-discrete set of work doesn't guarantee order
       // and easily could've happened slightly later too.
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        assertLog(['Will set count to 1', 'Count: 1']);
-      } else {
-        assertLog(['Will set count to 1', 'Count: 2', 'Count: 1']);
-      }
+      assertLog(['Will set count to 1', 'Count: 1']);
 
       expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
     });
