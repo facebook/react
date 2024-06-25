@@ -351,7 +351,7 @@ export function compileProgram(
 
   const compiledFns: Array<CompileResult> = [];
 
-  function traverseFunction(fn: BabelFn, pass: CompilerPass) {
+  function traverseFunction(fn: BabelFn, pass: CompilerPass): void {
     const result = traverseFunctionImpl(fn, pass, useMemoCacheIdentifier);
     if (!result) return;
     compiledFns.push(result);
