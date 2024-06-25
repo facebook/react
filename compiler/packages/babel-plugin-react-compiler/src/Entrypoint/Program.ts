@@ -213,6 +213,103 @@ function isFilePartOfSources(
   return false;
 }
 
+function traverseFunctionImpl(
+  fn: BabelFn,
+  pass: CompilerPass,
+  useMemoCacheIdentifier: t.Identifier
+): CompileResult | null {
+  const fnType = getReactFunctionType(fn, pass);
+  /*
+   * Record lint errors and critical errors as depending on Forget's config,
+   * we may still need to run Forget's analysis on every function (even if we
+   * have already encountered errors) for reporting.
+   */
+  const suppressions = findProgramSuppressions(
+    pass.comments,
+    pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
+    pass.opts.flowSuppressions
+  );
+
+  const lintError = suppressionsToCompilerError(suppressions);
+  let hasCriticalError = lintError != null;
+  const environment = parseEnvironmentConfig(pass.opts.environment ?? {});
+
+  if (fnType === null || ALREADY_COMPILED.has(fn.node)) {
+    return null;
+  }
+
+  /*
+   * We may be generating a new FunctionDeclaration node, so we must skip over it or this
+   * traversal will loop infinitely.
+   * Ensure we avoid visiting the original function again.
+   */
+  ALREADY_COMPILED.add(fn.node);
+  fn.skip();
+
+  if (lintError != null) {
+    /**
+     * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
+     * Program node itself. We need to figure out whether an eslint suppression range
+     * applies to this function first.
+     */
+    const suppressionsInFunction = filterSuppressionsThatAffectFunction(
+      suppressions,
+      fn
+    );
+    if (suppressionsInFunction.length > 0) {
+      handleError(lintError, pass, fn.node.loc ?? null);
+    }
+  }
+
+  let compiledFn: CodegenFunction;
+  try {
+    /*
+     * TODO(lauren): Remove pass.opts.environment nullcheck once PluginOptions
+     * is validated
+     */
+    if (environment.isErr()) {
+      CompilerError.throwInvalidConfig({
+        reason:
+          "Error in validating environment config. This is an advanced setting and not meant to be used directly",
+        description: environment.unwrapErr().toString(),
+        suggestions: null,
+        loc: null,
+      });
+    }
+    const config = environment.unwrap();
+
+    compiledFn = compileFn(
+      fn,
+      config,
+      fnType,
+      useMemoCacheIdentifier.name,
+      pass.opts.logger,
+      pass.filename,
+      pass.code
+    );
+    pass.opts.logger?.logEvent(pass.filename, {
+      kind: "CompileSuccess",
+      fnLoc: fn.node.loc ?? null,
+      fnName: compiledFn.id?.name ?? null,
+      memoSlots: compiledFn.memoSlotsUsed,
+      memoBlocks: compiledFn.memoBlocks,
+      memoValues: compiledFn.memoValues,
+      prunedMemoBlocks: compiledFn.prunedMemoBlocks,
+      prunedMemoValues: compiledFn.prunedMemoValues,
+    });
+  } catch (err) {
+    hasCriticalError ||= isCriticalError(err);
+    handleError(err, pass, fn.node.loc ?? null);
+    return null;
+  }
+
+  if (!pass.opts.noEmit && !hasCriticalError) {
+    return { originalFn: fn, compiledFn };
+  }
+
+  return null;
+}
+
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass
@@ -246,102 +343,19 @@ export function compileProgram(
     return;
   }
 
-  const environment = parseEnvironmentConfig(pass.opts.environment ?? {});
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier("c");
   const moduleName = pass.opts.runtimeModule ?? "react/compiler-runtime";
   if (hasMemoCacheFunctionImport(program, moduleName)) {
     return;
   }
 
-  /*
-   * Record lint errors and critical errors as depending on Forget's config,
-   * we may still need to run Forget's analysis on every function (even if we
-   * have already encountered errors) for reporting.
-   */
-  const suppressions = findProgramSuppressions(
-    pass.comments,
-    pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
-    pass.opts.flowSuppressions
-  );
-  const lintError = suppressionsToCompilerError(suppressions);
-  let hasCriticalError = lintError != null;
   const compiledFns: Array<CompileResult> = [];
 
-  const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
-    const fnType = getReactFunctionType(fn, pass);
-    if (fnType === null || ALREADY_COMPILED.has(fn.node)) {
-      return;
-    }
-
-    /*
-     * We may be generating a new FunctionDeclaration node, so we must skip over it or this
-     * traversal will loop infinitely.
-     * Ensure we avoid visiting the original function again.
-     */
-    ALREADY_COMPILED.add(fn.node);
-    fn.skip();
-
-    if (lintError != null) {
-      /**
-       * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
-       * Program node itself. We need to figure out whether an eslint suppression range
-       * applies to this function first.
-       */
-      const suppressionsInFunction = filterSuppressionsThatAffectFunction(
-        suppressions,
-        fn
-      );
-      if (suppressionsInFunction.length > 0) {
-        handleError(lintError, pass, fn.node.loc ?? null);
-      }
-    }
-
-    let compiledFn: CodegenFunction;
-    try {
-      /*
-       * TODO(lauren): Remove pass.opts.environment nullcheck once PluginOptions
-       * is validated
-       */
-      if (environment.isErr()) {
-        CompilerError.throwInvalidConfig({
-          reason:
-            "Error in validating environment config. This is an advanced setting and not meant to be used directly",
-          description: environment.unwrapErr().toString(),
-          suggestions: null,
-          loc: null,
-        });
-      }
-      const config = environment.unwrap();
-
-      compiledFn = compileFn(
-        fn,
-        config,
-        fnType,
-        useMemoCacheIdentifier.name,
-        pass.opts.logger,
-        pass.filename,
-        pass.code
-      );
-      pass.opts.logger?.logEvent(pass.filename, {
-        kind: "CompileSuccess",
-        fnLoc: fn.node.loc ?? null,
-        fnName: compiledFn.id?.name ?? null,
-        memoSlots: compiledFn.memoSlotsUsed,
-        memoBlocks: compiledFn.memoBlocks,
-        memoValues: compiledFn.memoValues,
-        prunedMemoBlocks: compiledFn.prunedMemoBlocks,
-        prunedMemoValues: compiledFn.prunedMemoValues,
-      });
-    } catch (err) {
-      hasCriticalError ||= isCriticalError(err);
-      handleError(err, pass, fn.node.loc ?? null);
-      return;
-    }
-
-    if (!pass.opts.noEmit && !hasCriticalError) {
-      compiledFns.push({ originalFn: fn, compiledFn });
-    }
-  };
+  function traverseFunction(fn: BabelFn, pass: CompilerPass): void {
+    const result = traverseFunctionImpl(fn, pass, useMemoCacheIdentifier);
+    if (!result) return;
+    compiledFns.push(result);
+  }
 
   // Main traversal to compile with Forget
   program.traverse(
