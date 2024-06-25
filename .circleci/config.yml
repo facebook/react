@@ -12,6 +12,8 @@ workflows:
           name: Ignore compiler-only changes
           config-path: .circleci/runtime_config_DEPRECATED.yml
           mapping: |
+            compiler                enabled false
+
             .circleci/*             enabled true
             .codesandbox/*          enabled true
             fixtures/*              enabled true
