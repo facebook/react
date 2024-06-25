@@ -3232,7 +3232,7 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
 
 export function flushPassiveEffects(): boolean {
   // Returns whether passive effects were flushed.
-  // TODO: Combine this check with the one in flushPassiveEFfectsImpl. We should
+  // TODO: Combine this check with the one in flushPassiveEffectsImpl. We should
   // probably just combine the two functions. I believe they were only separate
   // in the first place because we used to wrap it with
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
