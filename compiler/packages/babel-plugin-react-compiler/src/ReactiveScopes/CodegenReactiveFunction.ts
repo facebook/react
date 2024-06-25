@@ -14,6 +14,7 @@ import {
   ArrayPattern,
   BlockId,
   GeneratedSource,
+  HIRFunction,
   Identifier,
   IdentifierId,
   InstructionKind,
@@ -1933,39 +1934,12 @@ function codegenInstructionValue(
       break;
     }
     case "FunctionExpression": {
-      const loweredFunc = instrValue.loweredFunc.func;
-      const reactiveFunction = buildReactiveFunction(loweredFunc);
-      pruneUnusedLabels(reactiveFunction);
-      pruneUnusedLValues(reactiveFunction);
-      pruneHoistedContexts(reactiveFunction);
-      const fn = codegenReactiveFunction(
-        new Context(
-          cx.env,
-          reactiveFunction.id ?? "[[ anonymous ]]",
-          cx.uniqueIdentifiers,
-          cx.temp
-        ),
-        reactiveFunction
-      ).unwrap();
-      if (instrValue.expr.type === "ArrowFunctionExpression") {
-        let body: t.BlockStatement | t.Expression = fn.body;
-        if (body.body.length === 1 && loweredFunc.directives.length == 0) {
-          const stmt = body.body[0]!;
-          if (stmt.type === "ReturnStatement" && stmt.argument != null) {
-            body = stmt.argument;
-          }
-        }
-        value = t.arrowFunctionExpression(fn.params, body, fn.async);
-      } else {
-        value = t.functionExpression(
-          fn.id ??
-            (instrValue.name != null ? t.identifier(instrValue.name) : null),
-          fn.params,
-          fn.body,
-          fn.generator,
-          fn.async
-        );
-      }
+      value = codegenloweredFunc(
+        cx,
+        instrValue.loweredFunc.func,
+        instrValue.expr.type,
+        instrValue.name
+      );
       break;
     }
     case "TaggedTemplateExpression": {
@@ -2171,6 +2145,45 @@ function codegenInstructionValue(
  */
 const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
   /[\u{0000}-\u{001F}|\u{007F}|\u{0080}-\u{FFFF}]|"/u;
+
+function codegenloweredFunc(
+  cx: Context,
+  loweredFunc: HIRFunction,
+  fnType: string,
+  name: string | null
+): t.FunctionExpression | t.ArrowFunctionExpression {
+  const reactiveFunction = buildReactiveFunction(loweredFunc);
+  pruneUnusedLabels(reactiveFunction);
+  pruneUnusedLValues(reactiveFunction);
+  pruneHoistedContexts(reactiveFunction);
+  const fn = codegenReactiveFunction(
+    new Context(
+      cx.env,
+      reactiveFunction.id ?? "[[ anonymous ]]",
+      cx.uniqueIdentifiers,
+      cx.temp
+    ),
+    reactiveFunction
+  ).unwrap();
+  if (fnType === "ArrowFunctionExpression") {
+    let body: t.BlockStatement | t.Expression = fn.body;
+    if (body.body.length === 1 && loweredFunc.directives.length == 0) {
+      const stmt = body.body[0]!;
+      if (stmt.type === "ReturnStatement" && stmt.argument != null) {
+        body = stmt.argument;
+      }
+    }
+    return t.arrowFunctionExpression(fn.params, body, fn.async);
+  }
+  return t.functionExpression(
+    fn.id ?? (name != null ? t.identifier(name) : null),
+    fn.params,
+    fn.body,
+    fn.generator,
+    fn.async
+  );
+}
+
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute
