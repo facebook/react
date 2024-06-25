@@ -5,17 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Visitor } from "@babel/core";
 import { CompilerError } from "..";
 import {
   BlockId,
   HIRFunction,
   LabelTerminal,
+  PrunedReactiveScopeBlock,
   PrunedScopeTerminal,
+  ReactiveFunction,
   ReactiveScope,
+  ReactiveScopeBlock,
+  ScopeId,
   getHookKind,
   isUseOperator,
 } from "../HIR";
 import { retainWhere } from "../Utils/utils";
+import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 /**
  * For simplicity the majority of compiler passes do not treat hooks specially. However, hooks are different
@@ -100,13 +106,63 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
       continue;
     }
 
-    block.terminal = {
-      kind: "pruned-scope",
-      block: terminal.block,
-      fallthrough: terminal.fallthrough,
-      id: terminal.id,
-      loc: terminal.loc,
-      scope: terminal.scope,
-    } as PrunedScopeTerminal;
+    if (!(globalThis as any).DISABLE_FLATTEN_HOOKS) {
+      /**
+       * Sanity checking
+       */
+      // fn.env.logger?.logEvent(fn.env.filename, {
+      //   kind: "CompileDiagnostic",
+      //   fnLoc: typeof fn.loc === "symbol" ? null : fn.loc,
+      //   detail: {
+      //     reason: `pruned scope terminal due to hooks`,
+      //     loc: terminal.loc,
+      //   },
+      // });
+
+      block.terminal = {
+        kind: "pruned-scope",
+        block: terminal.block,
+        fallthrough: terminal.fallthrough,
+        id: terminal.id,
+        loc: terminal.loc,
+        scope: terminal.scope,
+      } as PrunedScopeTerminal;
+    }
   }
+}
+
+class Visitor extends ReactiveFunctionVisitor<{
+  pruned: Set<ScopeId>;
+  scopes: Set<ScopeId>;
+}> {
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    { pruned }: { pruned: Set<ScopeId>; scopes: Set<ScopeId> }
+  ): void {
+    pruned.add(scopeBlock.scope.id);
+  }
+  override visitScope(
+    scope: ReactiveScopeBlock,
+    { scopes }: { pruned: Set<ScopeId>; scopes: Set<ScopeId> }
+  ): void {
+    scopes.add(scope.scope.id);
+  }
+}
+
+export function logPrunedScopes(fn: ReactiveFunction): void {
+  const scopes = {
+    pruned: new Set<ScopeId>(),
+    scopes: new Set<ScopeId>(),
+  };
+  visitReactiveFunction(fn, new Visitor(), scopes);
+
+  fn.env.logger?.logEvent(fn.env.filename, {
+    kind: "CompileDiagnostic",
+    fnLoc: typeof fn.loc === "symbol" ? null : fn.loc,
+    detail: {
+      reason: `{pruned: ${scopes.pruned.size}, total: ${scopes.pruned.size + scopes.scopes.size}}`,
+      description: `${fn.env.filename}:${typeof fn.loc === "symbol" ? "" : `${fn.loc.start.line}:${fn.loc.start.column}`}`,
+      loc: null,
+    },
+  });
 }
