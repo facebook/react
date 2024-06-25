@@ -1083,6 +1083,18 @@ export type FunctionExpression = {
   loc: SourceLocation;
 };
 
+export type OutlinedFunctionExpression = {
+  kind: "OutlinedFunctionExpression";
+  name: string | null;
+  loweredFunc: LoweredFunction;
+  outlinedFunc: HIRFunction;
+  expr:
+    | t.ArrowFunctionExpression
+    | t.FunctionExpression
+    | t.FunctionDeclaration;
+  loc: SourceLocation;
+};
+
 export type Destructure = {
   kind: "Destructure";
   lvalue: LValuePattern;
