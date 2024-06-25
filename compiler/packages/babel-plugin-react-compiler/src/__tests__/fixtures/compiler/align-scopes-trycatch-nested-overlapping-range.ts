@@ -9,6 +9,7 @@ function Foo() {
     if (CONST_TRUE) {
       mutate(thing);
     }
+    return thing;
   } catch {}
 }
 
