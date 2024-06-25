@@ -488,7 +488,6 @@ const skipFilter = new Set([
   "original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block",
   "original-reactive-scopes-fork/bug-hoisted-declaration-with-scope",
   "bug-codegen-inline-iife",
-  "bug-array-concat-should-capture",
 
   // 'react-compiler-runtime' not yet supported
   "flag-enable-emit-hook-guards",
