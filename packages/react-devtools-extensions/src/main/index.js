@@ -412,13 +412,19 @@ chrome.devtools.network.onNavigated.addListener(syncSavedPreferences);
 // into subscribing to the same events from Bridge and window multiple times
 // In this case, we will handle `operations` event twice or more and user will see
 // `Cannot add node "1" because a node with that id is already in the Store.`
-const debouncedOnNavigatedListener = debounce(() => {
+const debouncedMountReactDevToolsCallback = debounce(
+  mountReactDevToolsWhenReactHasLoaded,
+  500,
+);
+
+// Clean up everything, but start mounting React DevTools panels if user stays at this page
+function onNavigatedToOtherPage() {
   performInTabNavigationCleanup();
-  mountReactDevToolsWhenReactHasLoaded();
-}, 500);
+  debouncedMountReactDevToolsCallback();
+}
 
 // Cleanup previous page state and remount everything
-chrome.devtools.network.onNavigated.addListener(debouncedOnNavigatedListener);
+chrome.devtools.network.onNavigated.addListener(onNavigatedToOtherPage);
 
 // Should be emitted when browser DevTools are closed
 if (__IS_FIREFOX__) {
