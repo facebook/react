@@ -13,4 +13,4 @@ workflows:
           config-path: .circleci/runtime_config_DEPRECATED.yml
           # mappings are executed in order, so if
           mapping: |
-            ^(?!compiler).*$ enabled true
+            ^((?!compiler).)*$ enabled true
