@@ -444,7 +444,6 @@ const skipFilter = new Set([
   "loop-unused-let",
   "reanimated-no-memo-arg",
 
-  // Tested e2e in forget-feedback repo
   "userspace-use-memo-cache",
   "transitive-freeze-function-expressions",
 

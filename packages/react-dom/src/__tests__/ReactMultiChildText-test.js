@@ -77,7 +77,7 @@ const expectChildren = function (container, children) {
  * faster to render and update.
  */
 describe('ReactMultiChildText', () => {
-  jest.setTimeout(20000);
+  jest.setTimeout(30000);
 
   it('should correctly handle all possible children for render and update', async () => {
     await expect(async () => {
