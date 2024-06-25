@@ -1103,6 +1103,17 @@ export function cloneElement(element, config, children) {
  */
 function validateChildKeys(node, parentType) {
   if (__DEV__) {
+    if (enableOwnerStacks) {
+      // When owner stacks is enabled no warnings happens. All we do is
+      // mark elements as being in a valid static child position so they
+      // don't need keys.
+      if (isValidElement(node)) {
+        if (node._store) {
+          node._store.validated = 1;
+        }
+      }
+      return;
+    }
     if (typeof node !== 'object' || !node) {
       return;
     }
