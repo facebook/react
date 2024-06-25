@@ -68,7 +68,7 @@ commands:
 # you want. CircleCI recommends this workaround here:
 # https://support.circleci.com/hc/en-us/articles/360050351292-How-to-trigger-a-workflow-via-CircleCI-API-v2-
 parameters:
-  enabled:
+  skip-ci:
     type: boolean
     default: false
   # This is only set when triggering the CI pipeline via an API request.
@@ -408,9 +408,10 @@ jobs:
 workflows:
 
   build_and_test:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    when:
-      - << pipeline.parameters.enabled >>
+    unless:
+      or:
+        - << pipeline.parameters.prerelease_commit_sha >>
+        - << pipeline.parameters.skip_ci >>
     jobs:
       - yarn_build:
           filters:
