@@ -9,8 +9,8 @@ workflows:
   filter-compiler:
     jobs:
       - path-filtering/filter:
-        name: Ignore compiler-only changes
-        config-path: .circleci/runtime_config_DEPRECATED.yml
-        mapping: |
-          compiler/.* skip_ci true
-          .* skip_ci false
+          name: Ignore compiler-only changes
+          config-path: .circleci/runtime_config_DEPRECATED.yml
+          mapping: |
+            compiler/.* skip_ci true
+            .* skip_ci false
