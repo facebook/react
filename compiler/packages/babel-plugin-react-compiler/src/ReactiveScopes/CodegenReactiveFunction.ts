@@ -14,6 +14,7 @@ import {
   ArrayPattern,
   BlockId,
   GeneratedSource,
+  HIRFunction,
   Identifier,
   IdentifierId,
   InstructionKind,
