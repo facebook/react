@@ -1501,19 +1501,11 @@ function renderElement(
       jsxChildrenParents.set(props.children, type);
     }
   }
-  if (typeof type === 'function') {
-    if (isClientReference(type) || isOpaqueTemporaryReference(type)) {
-      // This is a reference to a Client Component.
-      return renderClientElement(
-        task,
-        type,
-        key,
-        props,
-        owner,
-        stack,
-        validated,
-      );
-    }
+  if (
+    typeof type === 'function' &&
+    !isClientReference(type) &&
+    !isOpaqueTemporaryReference(type)
+  ) {
     // This is a Server Component.
     return renderFunctionComponent(
       request,
@@ -1525,43 +1517,27 @@ function renderElement(
       stack,
       validated,
     );
-  } else if (typeof type === 'string') {
-    // This is a host element. E.g. HTML.
-    return renderClientElement(task, type, key, props, owner, stack, validated);
-  } else if (typeof type === 'symbol') {
-    if (type === REACT_FRAGMENT_TYPE && key === null) {
-      // For key-less fragments, we add a small optimization to avoid serializing
-      // it as a wrapper.
-      const prevImplicitSlot = task.implicitSlot;
-      if (task.keyPath === null) {
-        task.implicitSlot = true;
-      }
-      const json = renderModelDestructive(
-        request,
-        task,
-        emptyRoot,
-        '',
-        props.children,
-      );
-      task.implicitSlot = prevImplicitSlot;
-      return json;
+  } else if (type === REACT_FRAGMENT_TYPE && key === null) {
+    // For key-less fragments, we add a small optimization to avoid serializing
+    // it as a wrapper.
+    const prevImplicitSlot = task.implicitSlot;
+    if (task.keyPath === null) {
+      task.implicitSlot = true;
     }
-    // This might be a built-in React component. We'll let the client decide.
-    // Any built-in works as long as its props are serializable.
-    return renderClientElement(task, type, key, props, owner, stack, validated);
-  } else if (type != null && typeof type === 'object') {
-    if (isClientReference(type)) {
-      // This is a reference to a Client Component.
-      return renderClientElement(
-        task,
-        type,
-        key,
-        props,
-        owner,
-        stack,
-        validated,
-      );
-    }
+    const json = renderModelDestructive(
+      request,
+      task,
+      emptyRoot,
+      '',
+      props.children,
+    );
+    task.implicitSlot = prevImplicitSlot;
+    return json;
+  } else if (
+    type != null &&
+    typeof type === 'object' &&
+    !isClientReference(type)
+  ) {
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
         let wrappedType;
@@ -1617,9 +1593,11 @@ function renderElement(
       }
     }
   }
-  throw new Error(
-    `Unsupported Server Component type: ${describeValueForErrorMessage(type)}`,
-  );
+  // For anything else, try it on the client instead.
+  // We don't know if the client will support it or not. This might error on the
+  // client or error during serialization but the stack will point back to the
+  // server.
+  return renderClientElement(task, type, key, props, owner, stack, validated);
 }
 
 function pingTask(request: Request, task: Task): void {
