@@ -1,4 +1,4 @@
-name: Flow
+name: (Runtime) Flow
 
 on:
   push:
@@ -44,4 +44,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: node ./scripts/tasks/flow-ci-ghaction ${{ matrix.flow_inline_config_shortname }}
+      - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
