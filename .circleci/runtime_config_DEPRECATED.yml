@@ -68,7 +68,8 @@ commands:
 # you want. CircleCI recommends this workaround here:
 # https://support.circleci.com/hc/en-us/articles/360050351292-How-to-trigger-a-workflow-via-CircleCI-API-v2-
 parameters:
-  skip-ci:
+  # This is set via `config.yml` when non-compiler paths are modified
+  enabled:
     type: boolean
     default: false
   # This is only set when triggering the CI pipeline via an API request.
@@ -408,10 +409,8 @@ jobs:
 workflows:
 
   build_and_test:
-    unless:
-      or:
-        - << pipeline.parameters.prerelease_commit_sha >>
-        - << pipeline.parameters.skip_ci >>
+    when: << pipeline.parameters.enabled >>
+    unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - yarn_build:
           filters:
