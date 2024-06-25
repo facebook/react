@@ -73,7 +73,7 @@ import {
 import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
 import { alignReactiveScopesToBlockScopesHIR } from "../ReactiveScopes/AlignReactiveScopesToBlockScopesHIR";
 import { flattenReactiveLoopsHIR } from "../ReactiveScopes/FlattenReactiveLoopsHIR";
-import { flattenScopesWithHooksOrUseHIR } from "../ReactiveScopes/FlattenScopesWithHooksOrUseHIR";
+import { flattenScopesWithHooksOrUseHIR, logPrunedScopes } from "../ReactiveScopes/FlattenScopesWithHooksOrUseHIR";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
 import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 import { stabilizeBlockIds } from "../ReactiveScopes/StabilizeBlockIds";
@@ -473,6 +473,8 @@ function* runWithEnvironment(
   ) {
     validatePreservedManualMemoization(reactiveFunction);
   }
+
+  logPrunedScopes(reactiveFunction);
 
   const ast = codegenFunction(reactiveFunction, uniqueIdentifiers).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
