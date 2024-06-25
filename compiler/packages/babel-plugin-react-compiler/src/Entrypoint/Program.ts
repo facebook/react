@@ -454,13 +454,7 @@ export function compileProgram(
    * error elsewhere in the file, regardless of bailout mode.
    */
   for (const { originalFn, compiledFn } of compiledFns) {
-    const transformedFn = createNewFunctionNode(originalFn, compiledFn);
-
-    if (gating != null) {
-      insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
-    } else {
-      originalFn.replaceWith(transformedFn);
-    }
+    insertCompiledFn(originalFn, compiledFn, gating);
   }
 
   // Forget compiled the component, we need to update existing imports of useMemoCache
@@ -481,6 +475,19 @@ export function compileProgram(
       );
     }
     addImportsToProgram(program, externalFunctions);
+  }
+}
+
+function insertCompiledFn(
+  originalFn: BabelFn,
+  compiledFn: CodegenFunction,
+  gating: ExternalFunction | null
+): void {
+  const transformedFn = createNewFunctionNode(originalFn, compiledFn);
+  if (gating != null) {
+    insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
+  } else {
+    originalFn.replaceWith(transformedFn);
   }
 }
 
