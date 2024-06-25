@@ -24,6 +24,7 @@ import type {
   MutableRange,
   ObjectMethod,
   ObjectPropertyKey,
+  OutlinedFunctionExpression,
   Pattern,
   Phi,
   Place,
@@ -519,6 +520,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "ObjectMethod":
+    case "OutlinedFunctionExpression":
     case "FunctionExpression": {
       const kind =
         instrValue.kind === "FunctionExpression" ? "Function" : "ObjectMethod";
@@ -888,11 +890,12 @@ export function printAliases(aliases: DisjointSet<Identifier>): string {
 }
 
 function getFunctionName(
-  instrValue: ObjectMethod | FunctionExpression,
+  instrValue: ObjectMethod | FunctionExpression | OutlinedFunctionExpression,
   defaultValue: string
 ): string {
   switch (instrValue.kind) {
     case "FunctionExpression":
+    case "OutlinedFunctionExpression":
       return instrValue.name ?? defaultValue;
     case "ObjectMethod":
       return defaultValue;

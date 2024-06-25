@@ -14,6 +14,7 @@ import {
   ArrayPattern,
   BlockId,
   GeneratedSource,
+  HIRFunction,
   Identifier,
   IdentifierId,
   InstructionKind,
@@ -2113,6 +2114,7 @@ function codegenInstructionValue(
     case "DeclareContext":
     case "Destructure":
     case "ObjectMethod":
+    case "OutlinedFunctionExpression":
     case "StoreContext": {
       CompilerError.invariant(false, {
         reason: `Unexpected ${instrValue.kind} in codegenInstructionValue`,

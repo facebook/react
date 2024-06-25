@@ -188,6 +188,7 @@ export function* eachInstructionValueOperand(
       break;
     }
     case "ObjectMethod":
+    case "OutlinedFunctionExpression":
     case "FunctionExpression": {
       yield* instrValue.loweredFunc.dependencies;
       break;
@@ -512,6 +513,7 @@ export function mapInstructionValueOperands(
       break;
     }
     case "ObjectMethod":
+    case "OutlinedFunctionExpression":
     case "FunctionExpression": {
       instrValue.loweredFunc.dependencies =
         instrValue.loweredFunc.dependencies.map((d) => fn(d));
