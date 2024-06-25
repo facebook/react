@@ -11,6 +11,5 @@ workflows:
       - path-filtering/filter:
           name: Ignore compiler-only changes
           config-path: .circleci/runtime_config_DEPRECATED.yml
-          # mappings are executed in order, so if
           mapping: |
-            ^((?!compiler).)*$ enabled true
+            ^((?!compiler\/).)*$ enabled true
