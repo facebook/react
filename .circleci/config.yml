@@ -11,6 +11,7 @@ workflows:
       - path-filtering/filter:
           name: Ignore compiler-only changes
           config-path: .circleci/runtime_config_DEPRECATED.yml
+          base-revision: << pipeline.git.branch >>
           mapping: |
             compiler/.*             enabled false
 
