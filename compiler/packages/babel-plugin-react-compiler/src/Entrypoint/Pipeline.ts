@@ -96,6 +96,7 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
+import { validateLocalsNotReassignedAfterRender } from "../Validation/ValidateLocalsNotReassignedAfterRender";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -195,6 +196,8 @@ function* runWithEnvironment(
   if (env.config.validateNoCapitalizedCalls) {
     validateNoCapitalizedCalls(hir);
   }
+
+  validateLocalsNotReassignedAfterRender(hir);
 
   analyseFunctions(hir);
   yield log({ kind: "hir", name: "AnalyseFunctions", value: hir });

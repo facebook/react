@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+import { useEffect } from "react";
+
 function Component() {
   let local;
 
@@ -9,7 +11,7 @@ function Component() {
     local = newValue;
   };
 
-  const onClick = (newValue) => {
+  const onMount = (newValue) => {
     reassignLocal("hello");
 
     if (local === newValue) {
@@ -32,46 +34,26 @@ function Component() {
     }
   };
 
-  return <button onClick={onClick}>Submit</button>;
+  useEffect(() => {
+    onMount();
+  }, [onMount]);
+
+  return "ok";
 }
 
 ```
 
-## Code
 
-```javascript
-import { c as _c } from "react/compiler-runtime";
-function Component() {
-  const $ = _c(2);
-  let local;
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = (newValue) => {
-      local = newValue;
-    };
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const reassignLocal = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    const onClick = (newValue_0) => {
-      reassignLocal("hello");
-      if (local === newValue_0) {
-        console.log("`local` was updated!");
-      } else {
-        throw new Error("`local` not updated!");
-      }
-    };
-
-    t1 = <button onClick={onClick}>Submit</button>;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  return t1;
-}
+## Error
 
 ```
+   5 |
+   6 |   const reassignLocal = (newValue) => {
+>  7 |     local = newValue;
+     |     ^^^^^ InvalidJS: This potentially reassigns a local variable after render has completed. Local variables may not be changed after render. . Variable `local` cannot be reassigned after render (7:7)
+   8 |   };
+   9 |
+  10 |   const onMount = (newValue) => {
+```
+          
       

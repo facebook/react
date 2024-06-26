@@ -44,53 +44,17 @@ function Component() {
 
 ```
 
-## Code
 
-```javascript
-import { c as _c } from "react/compiler-runtime";
-import { useEffect } from "react";
-import { useIdentity } from "shared-runtime";
-
-function Component() {
-  const $ = _c(3);
-  let local;
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = (newValue) => {
-      local = newValue;
-    };
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const reassignLocal = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (newValue_0) => {
-      reassignLocal("hello");
-      if (local === newValue_0) {
-        console.log("`local` was updated!");
-      } else {
-        throw new Error("`local` not updated!");
-      }
-    };
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const callback = t1;
-  let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = () => {
-      callback();
-    };
-    $[2] = t2;
-  } else {
-    t2 = $[2];
-  }
-  useIdentity(t2);
-  return "ok";
-}
+## Error
 
 ```
+   6 |
+   7 |   const reassignLocal = (newValue) => {
+>  8 |     local = newValue;
+     |     ^^^^^ InvalidJS: This potentially reassigns a local variable after render has completed. Local variables may not be changed after render. . Variable `local` cannot be reassigned after render (8:8)
+   9 |   };
+  10 |
+  11 |   const callback = (newValue) => {
+```
+          
       
