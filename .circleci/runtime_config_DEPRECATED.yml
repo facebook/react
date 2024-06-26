@@ -409,10 +409,10 @@ jobs:
 workflows:
 
   build_and_test:
-    when:
+    unless:
       or:
-        - << pipeline.parameters.enabled >>
-        - not: << pipeline.parameters.prerelease_commit_sha >>
+        - not: << pipeline.parameters.enabled >>
+        - << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - yarn_build:
           filters:
