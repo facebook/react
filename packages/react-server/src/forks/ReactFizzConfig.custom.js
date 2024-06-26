@@ -40,6 +40,8 @@ export const isPrimaryRenderer = false;
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
+export const printToConsole = $$$config.printToConsole;
+
 export const resetResumableState = $$$config.resetResumableState;
 export const completeResumableState = $$$config.completeResumableState;
 export const getChildFormatContext = $$$config.getChildFormatContext;
