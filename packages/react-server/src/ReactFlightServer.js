@@ -110,7 +110,6 @@ import {
 } from 'shared/ReactSymbols';
 
 import {
-  describeValueForErrorMessage,
   describeObjectForErrorMessage,
   isSimpleObject,
   jsxPropsParents,
@@ -1590,6 +1589,14 @@ function renderElement(
           stack,
           validated,
         );
+      }
+      case REACT_ELEMENT_TYPE: {
+        // This is invalid but we'll let the client determine that it is.
+        if (__DEV__) {
+          // Disable the key warning that would happen otherwise because this
+          // element gets serialized inside an array. We'll error later anyway.
+          type._store.validated = 1;
+        }
       }
     }
   }
