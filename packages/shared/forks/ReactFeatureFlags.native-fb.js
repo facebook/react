@@ -23,9 +23,7 @@ export const {
   consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses,
   enableAddPropertiesFastPath,
-  enableDeferRootSchedulingToMicrotask,
   enableFastJSX,
-  enableInfiniteRenderLoopDetection,
   enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
 } = dynamicFlags;
@@ -51,11 +49,13 @@ export const enableComponentStackLocations = true;
 export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
 export const enableDebugTracing = false;
+export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
+export const enableInfiniteRenderLoopDetection = true;
 export const enableLazyContextPropagation = false;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
