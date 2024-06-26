@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b6931b3bb183da0853877c53a8075688>>
+ * @generated SignedSource<<403cf1ae9c62045508f4ce88e72dc3c9>>
  */
 
 "use strict";
@@ -2691,8 +2691,6 @@ __DEV__ &&
         : didScheduleMicrotask ||
           ((didScheduleMicrotask = !0),
           scheduleImmediateTask(processRootScheduleInMicrotask));
-      enableDeferRootSchedulingToMicrotask ||
-        scheduleTaskForRootDuringMicrotask(root, now$1());
       ReactSharedInternals.isBatchingLegacy &&
         0 === root.tag &&
         (ReactSharedInternals.didScheduleLegacyUpdate = !0);
@@ -12011,12 +12009,11 @@ __DEV__ &&
       root.pendingLanes |= updatedLanes;
       updatedLanes !== IdleLane &&
         ((root.suspendedLanes = 0), (root.pingedLanes = 0));
-      enableInfiniteRenderLoopDetection &&
-        (executionContext & RenderContext
-          ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
-          : executionContext & CommitContext &&
-            (didIncludeCommitPhaseUpdate = !0),
-        throwIfInfiniteUpdateLoopDetected());
+      executionContext & RenderContext
+        ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
+        : executionContext & CommitContext &&
+          (didIncludeCommitPhaseUpdate = !0);
+      throwIfInfiniteUpdateLoopDetected();
     }
     function markRootSuspended(root, suspendedLanes, spawnedLane) {
       suspendedLanes &= ~workInProgressRootPingedLanes;
@@ -12783,8 +12780,8 @@ __DEV__ &&
         0 !== root.tag &&
         flushPassiveEffects();
       remainingLanes = root.pendingLanes;
-      (enableInfiniteRenderLoopDetection &&
-        (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
+      didIncludeRenderPhaseUpdate ||
+      didIncludeCommitPhaseUpdate ||
       (0 !== (lanes & UpdateLanes) && 0 !== (remainingLanes & SyncUpdateLanes))
         ? ((nestedUpdateScheduled = !0),
           root === rootWithNestedUpdates
@@ -13054,12 +13051,11 @@ __DEV__ &&
       var pingCache = root.pingCache;
       null !== pingCache && pingCache.delete(wakeable);
       root.pingedLanes |= root.suspendedLanes & pingedLanes;
-      enableInfiniteRenderLoopDetection &&
-        (executionContext & RenderContext
-          ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
-          : executionContext & CommitContext &&
-            (didIncludeCommitPhaseUpdate = !0),
-        throwIfInfiniteUpdateLoopDetected());
+      executionContext & RenderContext
+        ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
+        : executionContext & CommitContext &&
+          (didIncludeCommitPhaseUpdate = !0);
+      throwIfInfiniteUpdateLoopDetected();
       0 !== root.tag &&
         isConcurrentActEnvironment() &&
         null === ReactSharedInternals.actQueue &&
@@ -13120,8 +13116,7 @@ __DEV__ &&
         throw (
           ((nestedPassiveUpdateCount = nestedUpdateCount = 0),
           (rootWithPassiveNestedUpdates = rootWithNestedUpdates = null),
-          enableInfiniteRenderLoopDetection &&
-            executionContext & RenderContext &&
+          executionContext & RenderContext &&
             null !== workInProgressRoot &&
             (workInProgressRoot.errorRecoveryDisabledLanes |=
               workInProgressRootRenderLanes),
@@ -14263,10 +14258,6 @@ __DEV__ &&
         dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
       disableDefaultPropsExceptForClasses =
         dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-      enableDeferRootSchedulingToMicrotask =
-        dynamicFlagsUntyped.enableDeferRootSchedulingToMicrotask,
-      enableInfiniteRenderLoopDetection =
-        dynamicFlagsUntyped.enableInfiniteRenderLoopDetection,
       suppressWarning = !1,
       isArrayImpl = Array.isArray,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -16874,11 +16865,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-3154ec8a38-20240614" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-ef0f44ecff-20240626" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-3154ec8a38-20240614\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-ef0f44ecff-20240626\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16926,12 +16917,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-3154ec8a38-20240614"
+        reconcilerVersion: "19.0.0-native-fb-ef0f44ecff-20240626"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-3154ec8a38-20240614",
+      version: "19.0.0-native-fb-ef0f44ecff-20240626",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
