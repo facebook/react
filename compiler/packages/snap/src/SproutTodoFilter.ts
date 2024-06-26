@@ -487,6 +487,7 @@ const skipFilter = new Set([
   "todo.invalid-reassign-local-variable-in-jsx-callback",
   "todo.invalid-reassign-local-variable-in-hook-argument",
   "todo.invalid-reassign-local-variable-in-effect",
+  "todo.invalid-reassign-local-variable-in-async-callback",
 
   // bugs
   "bug-invalid-hoisting-functionexpr",
