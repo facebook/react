@@ -2,6 +2,9 @@
 ## Input
 
 ```javascript
+import { useEffect } from "react";
+import { useIdentity } from "shared-runtime";
+
 function Component() {
   let local;
 
@@ -9,7 +12,7 @@ function Component() {
     local = newValue;
   };
 
-  const onClick = (newValue) => {
+  const callback = (newValue) => {
     reassignLocal("hello");
 
     if (local === newValue) {
@@ -32,46 +35,26 @@ function Component() {
     }
   };
 
-  return <button onClick={onClick}>Submit</button>;
+  useIdentity(() => {
+    callback();
+  });
+
+  return "ok";
 }
 
 ```
 
-## Code
 
-```javascript
-import { c as _c } from "react/compiler-runtime";
-function Component() {
-  const $ = _c(2);
-  let local;
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = (newValue) => {
-      local = newValue;
-    };
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const reassignLocal = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    const onClick = (newValue_0) => {
-      reassignLocal("hello");
-      if (local === newValue_0) {
-        console.log("`local` was updated!");
-      } else {
-        throw new Error("`local` not updated!");
-      }
-    };
-
-    t1 = <button onClick={onClick}>Submit</button>;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  return t1;
-}
+## Error
 
 ```
+   6 |
+   7 |   const reassignLocal = (newValue) => {
+>  8 |     local = newValue;
+     |     ^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (8:8)
+   9 |   };
+  10 |
+  11 |   const callback = (newValue) => {
+```
+          
       

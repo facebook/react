@@ -96,6 +96,7 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
+import { validateLocalsNotReassignedAfterRender } from "../Validation/ValidateLocalsNotReassignedAfterRender";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -201,6 +202,8 @@ function* runWithEnvironment(
 
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
+
+  validateLocalsNotReassignedAfterRender(hir);
 
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
