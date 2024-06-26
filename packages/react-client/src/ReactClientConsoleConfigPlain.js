@@ -47,10 +47,8 @@ export function printToConsole(
   }
 
   if (methodName === 'error') {
-    // eslint-disable-next-line react-internal/no-production-logging
     error.apply(console, newArgs);
   } else if (methodName === 'warn') {
-    // eslint-disable-next-line react-internal/no-production-logging
     warn.apply(console, newArgs);
   } else {
     // eslint-disable-next-line react-internal/no-production-logging
