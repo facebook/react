@@ -2684,6 +2684,7 @@ function hoistStyleQueueDependency(styleQueue) {
 function hoistStylesheetDependency(stylesheet) {
   this.stylesheets.add(stylesheet);
 }
+function error() {}
 var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
   if (null == type) return null;
@@ -3394,8 +3395,33 @@ function describeNativeComponentFrame(fn, construct) {
     ? describeBuiltInComponentFrame(previousPrepareStackTrace)
     : "";
 }
-function defaultErrorHandler(error) {
-  console.error(error);
+function defaultErrorHandler(error$jscomp$0) {
+  if (
+    "object" === typeof error$jscomp$0 &&
+    null !== error$jscomp$0 &&
+    "string" === typeof error$jscomp$0.environmentName
+  ) {
+    var badgeName = error$jscomp$0.environmentName;
+    error$jscomp$0 = [error$jscomp$0].slice(0);
+    "string" === typeof error$jscomp$0[0]
+      ? error$jscomp$0.splice(
+          0,
+          1,
+          "%c%s%c " + error$jscomp$0[0],
+          "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
+          " " + badgeName + " ",
+          ""
+        )
+      : error$jscomp$0.splice(
+          0,
+          0,
+          "%c%s%c ",
+          "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
+          " " + badgeName + " ",
+          ""
+        );
+    error.apply(console, error$jscomp$0);
+  } else console.error(error$jscomp$0);
   return null;
 }
 function noop() {}
@@ -3765,9 +3791,9 @@ function renderElement(request, task, keyPath, type, props, ref) {
             JSCompiler_inline_result,
             props
           ));
-        for (var propName$31 in defaultProps)
-          void 0 === JSCompiler_inline_result[propName$31] &&
-            (JSCompiler_inline_result[propName$31] = defaultProps[propName$31]);
+        for (var propName$33 in defaultProps)
+          void 0 === JSCompiler_inline_result[propName$33] &&
+            (JSCompiler_inline_result[propName$33] = defaultProps[propName$33]);
       }
       props = task.componentStack;
       task.componentStack = { tag: 2, parent: task.componentStack, type: type };
@@ -3777,10 +3803,10 @@ function renderElement(request, task, keyPath, type, props, ref) {
         null !== ref &&
         (defaultProps = ref._currentValue);
       defaultProps = new type(JSCompiler_inline_result, defaultProps);
-      propName$31 = void 0 !== defaultProps.state ? defaultProps.state : null;
+      propName$33 = void 0 !== defaultProps.state ? defaultProps.state : null;
       defaultProps.updater = classComponentUpdater;
       defaultProps.props = JSCompiler_inline_result;
-      defaultProps.state = propName$31;
+      defaultProps.state = propName$33;
       ref = { queue: [], replace: !1 };
       defaultProps._reactInternals = ref;
       var contextType = type.contextType;
@@ -3790,12 +3816,12 @@ function renderElement(request, task, keyPath, type, props, ref) {
           : emptyContextObject;
       contextType = type.getDerivedStateFromProps;
       "function" === typeof contextType &&
-        ((contextType = contextType(JSCompiler_inline_result, propName$31)),
-        (propName$31 =
+        ((contextType = contextType(JSCompiler_inline_result, propName$33)),
+        (propName$33 =
           null === contextType || void 0 === contextType
-            ? propName$31
-            : assign({}, propName$31, contextType)),
-        (defaultProps.state = propName$31));
+            ? propName$33
+            : assign({}, propName$33, contextType)),
+        (defaultProps.state = propName$33));
       if (
         "function" !== typeof type.getDerivedStateFromProps &&
         "function" !== typeof defaultProps.getSnapshotBeforeUpdate &&
@@ -3826,7 +3852,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
             defaultProps.state = type[0];
           else {
             ref = contextType ? type[0] : defaultProps.state;
-            propName$31 = !0;
+            propName$33 = !0;
             for (
               contextType = contextType ? 1 : 0;
               contextType < type.length;
@@ -3843,8 +3869,8 @@ function renderElement(request, task, keyPath, type, props, ref) {
                       )
                     : propName),
                 null != propName &&
-                  (propName$31
-                    ? ((propName$31 = !1), (ref = assign({}, ref, propName)))
+                  (propName$33
+                    ? ((propName$33 = !1), (ref = assign({}, ref, propName)))
                     : assign(ref, propName));
             defaultProps.state = ref;
           }
@@ -3880,14 +3906,14 @@ function renderElement(request, task, keyPath, type, props, ref) {
     if (null === defaultProps)
       (defaultProps = props.children),
         (ref = task.formatContext),
-        (propName$31 = task.keyPath),
+        (propName$33 = task.keyPath),
         (task.formatContext = getChildFormatContext(ref, type, props)),
         (task.keyPath = keyPath),
         renderNode(request, task, defaultProps, -1),
         (task.formatContext = ref),
-        (task.keyPath = propName$31);
+        (task.keyPath = propName$33);
     else {
-      propName$31 = pushStartInstance(
+      propName$33 = pushStartInstance(
         defaultProps.chunks,
         type,
         props,
@@ -3903,7 +3929,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
       contextType = task.keyPath;
       task.formatContext = getChildFormatContext(ref, type, props);
       task.keyPath = keyPath;
-      renderNode(request, task, propName$31, -1);
+      renderNode(request, task, propName$33, -1);
       task.formatContext = ref;
       task.keyPath = contextType;
       a: {
@@ -4000,7 +4026,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           ref = task.blockedBoundary;
           var parentHoistableState = task.hoistableState,
             parentSegment = task.blockedSegment;
-          propName$31 = props.fallback;
+          propName$33 = props.fallback;
           var content = props.children;
           props = new Set();
           contextType = createSuspenseBoundary(request, props);
@@ -4043,7 +4069,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
               task.componentStack = previousComponentStack;
               break a;
             }
-          } catch (error) {
+          } catch (error$28) {
             (contentRootSegment.status = 4),
               (contextType.status = 4),
               (JSCompiler_inline_result = getThrownInfo(
@@ -4052,7 +4078,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
               )),
               (defaultProps = logRecoverableError(
                 request,
-                error,
+                error$28,
                 JSCompiler_inline_result
               )),
               (contextType.errorDigest = defaultProps),
@@ -4088,7 +4114,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           task = createRenderTask(
             request,
             null,
-            propName$31,
+            propName$33,
             -1,
             ref,
             propName,
@@ -4342,7 +4368,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                           request.completedBoundaries.push(resumedBoundary);
                           break b;
                         }
-                      } catch (error) {
+                      } catch (error$29) {
                         (resumedBoundary.status = 4),
                           (childNodes = getThrownInfo(
                             request,
@@ -4350,7 +4376,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                           )),
                           (replay = logRecoverableError(
                             request,
-                            error,
+                            error$29,
                             childNodes
                           )),
                           (resumedBoundary.errorDigest = replay),
@@ -4619,15 +4645,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$43) {
+    } catch (thrownValue$45) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$43 === SuspenseException
+          thrownValue$45 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$43),
+            : thrownValue$45),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -4833,8 +4859,8 @@ function safelyEmitEarlyPreloads(request, shellComplete) {
         linkHeader ? onHeaders({ Link: linkHeader }) : onHeaders({});
       }
     }
-  } catch (error) {
-    logRecoverableError(request, error, {});
+  } catch (error$48) {
+    logRecoverableError(request, error$48, {});
   }
 }
 function completeShell(request) {
@@ -5286,11 +5312,11 @@ function flushCompletedQueues(request, destination) {
       completedBoundaries.splice(0, i);
       var partialBoundaries = request.partialBoundaries;
       for (i = 0; i < partialBoundaries.length; i++) {
-        var boundary$47 = partialBoundaries[i];
+        var boundary$51 = partialBoundaries[i];
         a: {
           clientRenderedBoundaries = request;
           boundary = destination;
-          var completedSegments = boundary$47.completedSegments;
+          var completedSegments = boundary$51.completedSegments;
           for (
             JSCompiler_inline_result = 0;
             JSCompiler_inline_result < completedSegments.length;
@@ -5300,7 +5326,7 @@ function flushCompletedQueues(request, destination) {
               !flushPartiallyCompletedSegment(
                 clientRenderedBoundaries,
                 boundary,
-                boundary$47,
+                boundary$51,
                 completedSegments[JSCompiler_inline_result]
               )
             ) {
@@ -5312,7 +5338,7 @@ function flushCompletedQueues(request, destination) {
           completedSegments.splice(0, JSCompiler_inline_result);
           JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
             boundary,
-            boundary$47.contentState,
+            boundary$51.contentState,
             clientRenderedBoundaries.renderState
           );
         }
@@ -5357,19 +5383,19 @@ function abort(request, reason) {
   try {
     var abortableTasks = request.abortableTasks;
     if (0 < abortableTasks.size) {
-      var error =
+      var error$54 =
         void 0 === reason
           ? Error("The render was aborted by the server without a reason.")
           : reason;
       abortableTasks.forEach(function (task) {
-        return abortTask(task, request, error);
+        return abortTask(task, request, error$54);
       });
       abortableTasks.clear();
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$49) {
-    logRecoverableError(request, error$49, {}), fatalError(request, error$49);
+  } catch (error$55) {
+    logRecoverableError(request, error$55, {}), fatalError(request, error$55);
   }
 }
 exports.abortStream = function (stream, reason) {
@@ -5553,8 +5579,8 @@ exports.renderNextChunk = function (stream) {
       pingedTasks.splice(0, i);
       null !== request.destination &&
         flushCompletedQueues(request, request.destination);
-    } catch (error) {
-      logRecoverableError(request, error, {}), fatalError(request, error);
+    } catch (error$49) {
+      logRecoverableError(request, error$49, {}), fatalError(request, error$49);
     } finally {
       (currentResumableState = prevResumableState),
         (ReactSharedInternals.H = prevDispatcher),
@@ -5573,8 +5599,8 @@ exports.renderNextChunk = function (stream) {
     request.destination = stream;
     try {
       flushCompletedQueues(request, stream);
-    } catch (error) {
-      logRecoverableError(request, error, {}), fatalError(request, error);
+    } catch (error$53) {
+      logRecoverableError(request, error$53, {}), fatalError(request, error$53);
     }
   }
   if (stream.fatal) throw stream.error;

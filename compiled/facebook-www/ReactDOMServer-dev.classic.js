@@ -4271,7 +4271,18 @@ __DEV__ &&
       }
     }
     function defaultErrorHandler(error) {
-      console.error(error);
+      if (
+        "object" === typeof error &&
+        null !== error &&
+        "string" === typeof error.environmentName
+      ) {
+        var badgeName = error.environmentName;
+        error = [error].slice(0);
+        "string" === typeof error[0]
+          ? error.splice(0, 1, "[%s] " + error[0], " " + badgeName + " ")
+          : error.splice(0, 0, "[%s] ", " " + badgeName + " ");
+        error$jscomp$2.apply(console, error);
+      } else console.error(error);
       return null;
     }
     function noop() {}
@@ -8775,5 +8786,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-89580f209c-20240624";
+    exports.version = "19.0.0-www-classic-349a99a7a3-20240626";
   })();

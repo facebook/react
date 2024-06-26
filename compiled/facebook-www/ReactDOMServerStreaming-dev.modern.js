@@ -4058,7 +4058,32 @@ __DEV__ &&
       }
     }
     function defaultErrorHandler(error) {
-      console.error(error);
+      if (
+        "object" === typeof error &&
+        null !== error &&
+        "string" === typeof error.environmentName
+      ) {
+        var badgeName = error.environmentName;
+        error = [error].slice(0);
+        "string" === typeof error[0]
+          ? error.splice(
+              0,
+              1,
+              "%c%s%c " + error[0],
+              "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
+              " " + badgeName + " ",
+              ""
+            )
+          : error.splice(
+              0,
+              0,
+              "%c%s%c ",
+              "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
+              " " + badgeName + " ",
+              ""
+            );
+        error$jscomp$2.apply(console, error);
+      } else console.error(error);
       return null;
     }
     function noop() {}

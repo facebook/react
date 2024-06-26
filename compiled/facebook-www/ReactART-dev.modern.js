@@ -16362,14 +16362,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-89580f209c-20240624"
+        reconcilerVersion: "19.0.0-www-modern-349a99a7a3-20240626"
       });
     })({
       findFiberByHostInstance: function () {
         return null;
       },
       bundleType: 1,
-      version: "19.0.0-www-modern-89580f209c-20240624",
+      version: "19.0.0-www-modern-349a99a7a3-20240626",
       rendererPackageName: "react-art"
     });
     var ClippingRectangle = TYPES.CLIPPING_RECTANGLE,

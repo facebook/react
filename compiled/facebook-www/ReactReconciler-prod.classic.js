@@ -11614,8 +11614,9 @@ module.exports = function ($$$config) {
     suspendInstance = $$$config.suspendInstance,
     waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
     NotPendingTransition = $$$config.NotPendingTransition,
-    resetFormInstance = $$$config.resetFormInstance,
-    supportsMicrotasks = $$$config.supportsMicrotasks,
+    resetFormInstance = $$$config.resetFormInstance;
+  $$$config.printToConsole;
+  var supportsMicrotasks = $$$config.supportsMicrotasks,
     scheduleMicrotask = $$$config.scheduleMicrotask,
     supportsTestSelectors = $$$config.supportsTestSelectors,
     findFiberRoot = $$$config.findFiberRoot,
@@ -12694,7 +12695,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-89580f209c-20240624"
+      reconcilerVersion: "19.0.0-www-classic-349a99a7a3-20240626"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;
