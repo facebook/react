@@ -5,20 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import prettyFormat from "pretty-format";
 import { CompilerError, Effect } from "..";
-import {
-  HIRFunction,
-  IdentifierId,
-  Place,
-  getHookKind,
-  isUseOperator,
-} from "../HIR";
+import { HIRFunction, IdentifierId, Place } from "../HIR";
 import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
-import { isEffectHook } from "./ValidateMemoizedEffectDependencies";
 
 /**
  * Validates that local variables cannot be reassigned after render.
@@ -111,8 +103,10 @@ function getContextReassignment(
               return value.lvalue.place;
             }
           } else {
-            // We only track reassignments of variables defined in the outer
-            // component or hook.
+            /*
+             * We only track reassignments of variables defined in the outer
+             * component or hook.
+             */
             contextVariables.add(value.lvalue.place.identifier.id);
           }
           break;
@@ -130,8 +124,10 @@ function getContextReassignment(
               reassignment !== undefined &&
               operand.effect === Effect.Freeze
             ) {
-              // Functions that reassign local variables are inherently mutable and are unsafe to pass
-              // to a place that expects a frozen value. Propagate the reassignment upward.
+              /*
+               * Functions that reassign local variables are inherently mutable and are unsafe to pass
+               * to a place that expects a frozen value. Propagate the reassignment upward.
+               */
               return reassignment;
             }
           }
