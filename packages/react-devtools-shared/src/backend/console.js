@@ -51,7 +51,7 @@ const STYLE_DIRECTIVE_REGEX = /^%c/;
 // method has been overridden by the patchForStrictMode function.
 // If it has we'll need to do some special formatting of the arguments
 // so the console color stays consistent
-function isStrictModeOverride(args: Array<string>): boolean {
+function isStrictModeOverride(args: Array<any>): boolean {
   if (__IS_FIREFOX__) {
     return (
       args.length >= 2 &&
@@ -60,6 +60,21 @@ function isStrictModeOverride(args: Array<string>): boolean {
     );
   } else {
     return args.length >= 2 && args[0] === ANSI_STYLE_DIMMING_TEMPLATE;
+  }
+}
+
+function restorePotentiallyModifiedArgs(args: Array<any>): Array<any> {
+  // If the arguments don't have any styles applied, then just copy
+  if (!isStrictModeOverride(args)) {
+    return args.slice();
+  }
+
+  if (__IS_FIREFOX__) {
+    // Filter out %c from the start of the first argument and color as a second argument
+    return [args[0].slice(2)].concat(args.slice(2));
+  } else {
+    // Filter out the `\x1b...%s\x1b` template
+    return args.slice(1);
   }
 }
 
@@ -220,8 +235,8 @@ export function patch({
                     onErrorOrWarning(
                       current,
                       ((method: any): 'error' | 'warn'),
-                      // Copy args before we mutate them (e.g. adding the component stack)
-                      args.slice(),
+                      // Restore and copy args before we mutate them (e.g. adding the component stack)
+                      restorePotentiallyModifiedArgs(args),
                     );
                   }
                 }
