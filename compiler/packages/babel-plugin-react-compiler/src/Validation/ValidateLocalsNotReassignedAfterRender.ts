@@ -6,7 +6,7 @@
  */
 
 import prettyFormat from "pretty-format";
-import { CompilerError } from "..";
+import { CompilerError, Effect } from "..";
 import {
   HIRFunction,
   IdentifierId,
@@ -31,7 +31,7 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
   if (reassignment !== null) {
     CompilerError.throwInvalidJS({
       reason:
-        "This potentially reassigns a local variable after render has completed. Local variables may not be changed after render. ",
+        "Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead",
       description:
         reassignment.identifier.name !== null &&
         reassignment.identifier.name.kind === "named"
@@ -54,22 +54,26 @@ function getContextReassignment(
       switch (value.kind) {
         case "FunctionExpression":
         case "ObjectMethod": {
-          const reassignment = getContextReassignment(
+          let reassignment = getContextReassignment(
             value.loweredFunc.func,
             contextVariables,
             true
           );
+          if (reassignment === null) {
+            // If the function itself doesn't reassign, does one of its dependencies?
+            for (const operand of eachInstructionValueOperand(value)) {
+              const reassignmentFromOperand = reassigningFunctions.get(
+                operand.identifier.id
+              );
+              if (reassignmentFromOperand !== undefined) {
+                reassignment = reassignmentFromOperand;
+                break;
+              }
+            }
+          }
+          // if the function or its depends reassign, propagate that fact on the lvalue
           if (reassignment !== null) {
             reassigningFunctions.set(lvalue.identifier.id, reassignment);
-          }
-          for (const operand of eachInstructionValueOperand(value)) {
-            const reassignment = reassigningFunctions.get(
-              operand.identifier.id
-            );
-            if (reassignment !== undefined) {
-              reassigningFunctions.set(lvalue.identifier.id, reassignment);
-              break;
-            }
           }
           break;
         }
@@ -95,19 +99,6 @@ function getContextReassignment(
           }
           break;
         }
-        case "ArrayExpression":
-        case "ObjectExpression": {
-          for (const operand of eachInstructionValueOperand(value)) {
-            const reassignment = reassigningFunctions.get(
-              operand.identifier.id
-            );
-            if (reassignment !== undefined) {
-              reassigningFunctions.set(lvalue.identifier.id, reassignment);
-              break;
-            }
-          }
-          break;
-        }
         case "DeclareContext": {
           if (!isFunctionExpression) {
             contextVariables.add(value.lvalue.place.identifier.id);
@@ -120,51 +111,28 @@ function getContextReassignment(
               return value.lvalue.place;
             }
           } else {
+            // We only track reassignments of variables defined in the outer
+            // component or hook.
             contextVariables.add(value.lvalue.place.identifier.id);
-          }
-          break;
-        }
-        case "MethodCall":
-        case "CallExpression": {
-          const callee =
-            value.kind === "MethodCall" ? value.property : value.callee;
-          const isHook =
-            getHookKind(fn.env, callee.identifier) != null ||
-            isUseOperator(callee.identifier);
-          for (const operand of eachInstructionValueOperand(value)) {
-            const reassignment = reassigningFunctions.get(
-              operand.identifier.id
-            );
-            if (reassignment !== undefined) {
-              if (isHook) {
-                return reassignment;
-              } else {
-                // reassigningFunctions.set(lvalue.identifier.id, reassignment);
-              }
-            }
-          }
-          break;
-        }
-        case "JsxFragment":
-        case "JsxExpression": {
-          for (const operand of eachInstructionValueOperand(value)) {
-            const reassignment = reassigningFunctions.get(
-              operand.identifier.id
-            );
-            if (reassignment !== undefined) {
-              reassigningFunctions.set(lvalue.identifier.id, reassignment);
-            }
           }
           break;
         }
         default: {
           for (const operand of eachInstructionValueOperand(value)) {
+            CompilerError.invariant(operand.effect !== Effect.Unknown, {
+              reason: `Expected effects to be inferred prior to ValidateLocalsNotReassignedAfterRender`,
+              loc: operand.loc,
+            });
             const reassignment = reassigningFunctions.get(
               operand.identifier.id
             );
-            if (reassignment !== undefined) {
-              reassigningFunctions.set(lvalue.identifier.id, reassignment);
-              break;
+            if (
+              reassignment !== undefined &&
+              operand.effect === Effect.Freeze
+            ) {
+              // Functions that reassign local variables are inherently mutable and are unsafe to pass
+              // to a place that expects a frozen value. Propagate the reassignment upward.
+              return reassignment;
             }
           }
           break;

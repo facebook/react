@@ -197,13 +197,13 @@ function* runWithEnvironment(
     validateNoCapitalizedCalls(hir);
   }
 
-  validateLocalsNotReassignedAfterRender(hir);
-
   analyseFunctions(hir);
   yield log({ kind: "hir", name: "AnalyseFunctions", value: hir });
 
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
+
+  validateLocalsNotReassignedAfterRender(hir);
 
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);

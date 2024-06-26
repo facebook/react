@@ -51,7 +51,7 @@ function Component() {
    6 |
    7 |   const reassignLocal = (newValue) => {
 >  8 |     local = newValue;
-     |     ^^^^^ InvalidJS: This potentially reassigns a local variable after render has completed. Local variables may not be changed after render. . Variable `local` cannot be reassigned after render (8:8)
+     |     ^^^^^ InvalidJS: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (8:8)
    9 |   };
   10 |
   11 |   const callback = (newValue) => {
