@@ -134,8 +134,6 @@ describe('ReactComponent', () => {
 
   // @gate !disableStringRefs
   it('string refs do not detach and reattach on every render', async () => {
-    spyOnDev(console, 'error').mockImplementation(() => {});
-
     let refVal;
     class Child extends React.Component {
       componentDidUpdate() {
@@ -173,6 +171,8 @@ describe('ReactComponent', () => {
     await act(() => {
       root.render(<Parent />);
     });
+
+    assertConsoleErrorDev(['contains the string ref']);
 
     expect(refVal).toBe(undefined);
     await act(() => {
