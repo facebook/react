@@ -21,7 +21,7 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
   const contextVariables = new Set<IdentifierId>();
   const reassignment = getContextReassignment(fn, contextVariables, false);
   if (reassignment !== null) {
-    CompilerError.throwInvalidJS({
+    CompilerError.throwInvalidReact({
       reason:
         "Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead",
       description:
