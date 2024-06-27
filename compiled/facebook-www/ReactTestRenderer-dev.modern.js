@@ -2376,6 +2376,7 @@ __DEV__ &&
         if ("children" !== key && "key" !== key) {
           null === fiber &&
             ((fiber = createFiberFromElement(element, returnFiber.mode, 0)),
+            (fiber._debugInfo = currentDebugInfo),
             (fiber.return = returnFiber));
           runWithFiberInDEV(
             fiber,
@@ -12193,13 +12194,14 @@ __DEV__ &&
             break;
           case REACT_PROFILER_TYPE:
             return (
-              (type = mode),
-              "string" !== typeof pendingProps.id &&
+              (type = pendingProps),
+              (owner = mode),
+              "string" !== typeof type.id &&
                 error$jscomp$0(
                   'Profiler must specify an "id" of type `string` as a prop. Received the type `%s` instead.',
-                  typeof pendingProps.id
+                  typeof type.id
                 ),
-              (type = createFiber(12, pendingProps, key, type | 2)),
+              (type = createFiber(12, type, key, owner | 2)),
               (type.elementType = REACT_PROFILER_TYPE),
               (type.lanes = lanes),
               (type.stateNode = {
@@ -12227,11 +12229,11 @@ __DEV__ &&
           case REACT_LEGACY_HIDDEN_TYPE:
           case REACT_SCOPE_TYPE:
             return (
-              (owner = createFiber(21, pendingProps, key, mode)),
-              (owner.type = type),
-              (owner.elementType = type),
-              (owner.lanes = lanes),
-              owner
+              (key = createFiber(21, pendingProps, key, mode)),
+              (key.type = type),
+              (key.elementType = type),
+              (key.lanes = lanes),
+              key
             );
           default:
             if ("object" === typeof type && null !== type)
@@ -12255,40 +12257,43 @@ __DEV__ &&
                   resolvedType = null;
                   break a;
               }
-            lanes = "";
+            resolvedType = "";
             if (
               void 0 === type ||
               ("object" === typeof type &&
                 null !== type &&
                 0 === Object.keys(type).length)
             )
-              lanes +=
+              resolvedType +=
                 " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.";
             null === type
-              ? (type = "null")
+              ? (pendingProps = "null")
               : isArrayImpl(type)
-              ? (type = "array")
+              ? (pendingProps = "array")
               : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
-              ? ((type =
+              ? ((pendingProps =
                   "<" +
                   (getComponentNameFromType(type.type) || "Unknown") +
                   " />"),
-                (lanes =
+                (resolvedType =
                   " Did you accidentally export a JSX literal instead of a component?"))
-              : (type = typeof type);
-            owner = owner
+              : (pendingProps = typeof type);
+            fiberTag = owner
               ? "number" === typeof owner.tag
                 ? getComponentNameFromFiber(owner)
                 : "string" === typeof owner.name
                 ? owner.name
                 : null
               : null;
-            owner &&
-              (lanes += "\n\nCheck the render method of `" + owner + "`.");
-            throw Error(
+            fiberTag &&
+              (resolvedType +=
+                "\n\nCheck the render method of `" + fiberTag + "`.");
+            fiberTag = 29;
+            pendingProps = Error(
               "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: " +
-                (type + "." + lanes)
+                (pendingProps + "." + resolvedType)
             );
+            resolvedType = null;
         }
       key = createFiber(fiberTag, pendingProps, key, mode);
       key.elementType = type;
@@ -14712,14 +14717,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-349a99a7a3-20240626"
+        reconcilerVersion: "19.0.0-www-modern-e02baf6c92-20240627"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-www-modern-349a99a7a3-20240626",
+      version: "19.0.0-www-modern-e02baf6c92-20240627",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

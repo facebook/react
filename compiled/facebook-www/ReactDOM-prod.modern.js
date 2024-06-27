@@ -11647,26 +11647,27 @@ function createFiberFromTypeAndProps(
         return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
       case REACT_SCOPE_TYPE:
         return (
-          (pendingProps = createFiber(21, pendingProps, key, mode)),
-          (pendingProps.type = type),
-          (pendingProps.elementType = type),
-          (pendingProps.lanes = lanes),
-          pendingProps
+          (key = createFiber(21, pendingProps, key, mode)),
+          (key.type = type),
+          (key.elementType = type),
+          (key.lanes = lanes),
+          key
         );
       case REACT_TRACING_MARKER_TYPE:
         if (enableTransitionTracing)
           return (
-            (type = createFiber(25, pendingProps, key, mode)),
-            (type.elementType = REACT_TRACING_MARKER_TYPE),
-            (type.lanes = lanes),
-            (type.stateNode = {
+            (type = pendingProps),
+            (key = createFiber(25, type, key, mode)),
+            (key.elementType = REACT_TRACING_MARKER_TYPE),
+            (key.lanes = lanes),
+            (key.stateNode = {
               tag: 1,
               transitions: null,
               pendingBoundaries: null,
               aborts: null,
-              name: pendingProps.name
+              name: type.name
             }),
-            type
+            key
           );
       case REACT_DEBUG_TRACING_MODE_TYPE:
         if (enableDebugTracing) {
@@ -11701,15 +11702,17 @@ function createFiberFromTypeAndProps(
               owner = null;
               break a;
           }
-        throw Error(
+        fiberTag = 29;
+        pendingProps = Error(
           formatProdErrorMessage(130, null === type ? "null" : typeof type, "")
         );
+        owner = null;
     }
-  pendingProps = createFiber(fiberTag, pendingProps, key, mode);
-  pendingProps.elementType = type;
-  pendingProps.type = owner;
-  pendingProps.lanes = lanes;
-  return pendingProps;
+  key = createFiber(fiberTag, pendingProps, key, mode);
+  key.elementType = type;
+  key.type = owner;
+  key.lanes = lanes;
+  return key;
 }
 function createFiberFromFragment(elements, mode, lanes, key) {
   elements = createFiber(7, elements, key, mode);
@@ -16468,14 +16471,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1740 = React.version;
 if (
-  "19.0.0-www-modern-349a99a7a3-20240626" !==
+  "19.0.0-www-modern-e02baf6c92-20240627" !==
   isomorphicReactPackageVersion$jscomp$inline_1740
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1740,
-      "19.0.0-www-modern-349a99a7a3-20240626"
+      "19.0.0-www-modern-e02baf6c92-20240627"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -16494,7 +16497,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1742 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-349a99a7a3-20240626",
+  version: "19.0.0-www-modern-e02baf6c92-20240627",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2211 = {
@@ -16524,7 +16527,7 @@ var internals$jscomp$inline_2211 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-349a99a7a3-20240626"
+  reconcilerVersion: "19.0.0-www-modern-e02baf6c92-20240627"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2212 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16895,4 +16898,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-349a99a7a3-20240626";
+exports.version = "19.0.0-www-modern-e02baf6c92-20240627";
