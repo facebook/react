@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c46fe24487d3b639d3f58189945d6b49>>
+ * @generated SignedSource<<af4ea00784664da9aaa9bc4db9dca3f0>>
  */
 
 "use strict";
@@ -9484,10 +9484,12 @@ function createFiberFromTypeAndProps(
               owner = null;
               break a;
           }
-        throw Error(
+        fiberTag = 29;
+        pendingProps = Error(
           "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: " +
             ((null === type ? "null" : typeof type) + ".")
         );
+        owner = null;
     }
   key = createFiber(fiberTag, pendingProps, key, mode);
   key.elementType = type;
@@ -10017,7 +10019,7 @@ var devToolsConfig$jscomp$inline_1117 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-ffec9ec5b5-20240627",
+  version: "19.0.0-native-fb-e02baf6c92-20240627",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -10061,7 +10063,7 @@ var devToolsConfig$jscomp$inline_1117 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-ffec9ec5b5-20240627"
+  reconcilerVersion: "19.0.0-native-fb-e02baf6c92-20240627"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

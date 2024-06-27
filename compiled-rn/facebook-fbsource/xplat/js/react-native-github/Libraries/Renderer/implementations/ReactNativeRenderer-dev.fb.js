@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<445c2206894a08f72ad954a38aa6f395>>
+ * @generated SignedSource<<d8440b40e936886834ad4d01de6ab9ff>>
  */
 
 "use strict";
@@ -3326,6 +3326,7 @@ __DEV__ &&
         if ("children" !== key && "key" !== key) {
           null === fiber &&
             ((fiber = createFiberFromElement(element, returnFiber.mode, 0)),
+            (fiber._debugInfo = currentDebugInfo),
             (fiber.return = returnFiber));
           runWithFiberInDEV(
             fiber,
@@ -13643,34 +13644,32 @@ __DEV__ &&
             break;
           case REACT_PROFILER_TYPE:
             return (
+              (type = pendingProps),
               (owner = mode),
-              "string" !== typeof pendingProps.id &&
+              "string" !== typeof type.id &&
                 error$jscomp$0(
                   'Profiler must specify an "id" of type `string` as a prop. Received the type `%s` instead.',
-                  typeof pendingProps.id
+                  typeof type.id
                 ),
-              (owner = createFiber(12, pendingProps, key, owner | 2)),
-              (owner.elementType = REACT_PROFILER_TYPE),
-              (owner.lanes = lanes),
-              (owner.stateNode = {
-                effectDuration: 0,
-                passiveEffectDuration: 0
-              }),
-              owner
+              (key = createFiber(12, type, key, owner | 2)),
+              (key.elementType = REACT_PROFILER_TYPE),
+              (key.lanes = lanes),
+              (key.stateNode = { effectDuration: 0, passiveEffectDuration: 0 }),
+              key
             );
           case REACT_SUSPENSE_TYPE:
             return (
-              (owner = createFiber(13, pendingProps, key, mode)),
-              (owner.elementType = REACT_SUSPENSE_TYPE),
-              (owner.lanes = lanes),
-              owner
+              (key = createFiber(13, pendingProps, key, mode)),
+              (key.elementType = REACT_SUSPENSE_TYPE),
+              (key.lanes = lanes),
+              key
             );
           case REACT_SUSPENSE_LIST_TYPE:
             return (
-              (owner = createFiber(19, pendingProps, key, mode)),
-              (owner.elementType = REACT_SUSPENSE_LIST_TYPE),
-              (owner.lanes = lanes),
-              owner
+              (key = createFiber(19, pendingProps, key, mode)),
+              (key.elementType = REACT_SUSPENSE_LIST_TYPE),
+              (key.lanes = lanes),
+              key
             );
           case REACT_OFFSCREEN_TYPE:
             return createFiberFromOffscreen(pendingProps, mode, lanes, key);
@@ -13696,40 +13695,43 @@ __DEV__ &&
                   resolvedType = null;
                   break a;
               }
-            lanes = "";
+            resolvedType = "";
             if (
               void 0 === type ||
               ("object" === typeof type &&
                 null !== type &&
                 0 === Object.keys(type).length)
             )
-              lanes +=
+              resolvedType +=
                 " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.";
             null === type
-              ? (type = "null")
+              ? (pendingProps = "null")
               : isArrayImpl(type)
-              ? (type = "array")
+              ? (pendingProps = "array")
               : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
-              ? ((type =
+              ? ((pendingProps =
                   "<" +
                   (getComponentNameFromType(type.type) || "Unknown") +
                   " />"),
-                (lanes =
+                (resolvedType =
                   " Did you accidentally export a JSX literal instead of a component?"))
-              : (type = typeof type);
-            owner = owner
+              : (pendingProps = typeof type);
+            fiberTag = owner
               ? "number" === typeof owner.tag
                 ? getComponentNameFromFiber(owner)
                 : "string" === typeof owner.name
                 ? owner.name
                 : null
               : null;
-            owner &&
-              (lanes += "\n\nCheck the render method of `" + owner + "`.");
-            throw Error(
+            fiberTag &&
+              (resolvedType +=
+                "\n\nCheck the render method of `" + fiberTag + "`.");
+            fiberTag = 29;
+            pendingProps = Error(
               "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: " +
-                (type + "." + lanes)
+                (pendingProps + "." + resolvedType)
             );
+            resolvedType = null;
         }
       key = createFiber(fiberTag, pendingProps, key, mode);
       key.elementType = type;
@@ -16865,11 +16867,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-ffec9ec5b5-20240627" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-e02baf6c92-20240627" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-ffec9ec5b5-20240627\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-e02baf6c92-20240627\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16917,12 +16919,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ffec9ec5b5-20240627"
+        reconcilerVersion: "19.0.0-native-fb-e02baf6c92-20240627"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-ffec9ec5b5-20240627",
+      version: "19.0.0-native-fb-e02baf6c92-20240627",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

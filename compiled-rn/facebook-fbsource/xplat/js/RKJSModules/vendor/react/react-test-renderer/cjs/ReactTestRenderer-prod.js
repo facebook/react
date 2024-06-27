@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<718ff5e34ce4342f80f8cd32c0855485>>
+ * @generated SignedSource<<f5de4052aa29bedfe407f3611b05a317>>
  */
 
 "use strict";
@@ -8869,10 +8869,12 @@ function createFiberFromTypeAndProps(
               owner = null;
               break a;
           }
-        throw Error(
+        fiberTag = 29;
+        pendingProps = Error(
           "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: " +
             ((null === type ? "null" : typeof type) + ".")
         );
+        owner = null;
     }
   key = createFiber(fiberTag, pendingProps, key, mode);
   key.elementType = type;
@@ -9397,7 +9399,7 @@ var devToolsConfig$jscomp$inline_1034 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-ffec9ec5b5-20240627",
+  version: "19.0.0-native-fb-e02baf6c92-20240627",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1223 = {
@@ -9428,7 +9430,7 @@ var internals$jscomp$inline_1223 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-ffec9ec5b5-20240627"
+  reconcilerVersion: "19.0.0-native-fb-e02baf6c92-20240627"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1224 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

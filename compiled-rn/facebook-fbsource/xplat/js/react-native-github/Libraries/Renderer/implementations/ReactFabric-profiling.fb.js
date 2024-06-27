@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<427638dcd086a328cea1303054a94dcd>>
+ * @generated SignedSource<<3b22c4c9bbdc85d394760e31e09a8df9>>
  */
 
 "use strict";
@@ -10915,10 +10915,12 @@ function createFiberFromTypeAndProps(
               owner = null;
               break a;
           }
-        throw Error(
+        fiberTag = 29;
+        pendingProps = Error(
           "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: " +
             ((null === type ? "null" : typeof type) + ".")
         );
+        owner = null;
     }
   key = createFiber(fiberTag, pendingProps, key, mode);
   key.elementType = type;
@@ -11298,7 +11300,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1217 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-ffec9ec5b5-20240627",
+    version: "19.0.0-native-fb-e02baf6c92-20240627",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11354,7 +11356,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-ffec9ec5b5-20240627"
+  reconcilerVersion: "19.0.0-native-fb-e02baf6c92-20240627"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
