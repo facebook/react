@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aab04c9643867184839b11163a5e0f35>>
+ * @generated SignedSource<<edddfbebe4baeaf2a11989f07bae8f87>>
  */
 
 "use strict";
@@ -16677,12 +16677,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ef0f44ecff-20240626"
+        reconcilerVersion: "19.0.0-native-fb-ffec9ec5b5-20240627"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-ef0f44ecff-20240626",
+      version: "19.0.0-native-fb-ffec9ec5b5-20240627",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
