@@ -22,7 +22,7 @@ import {
   createResumableState,
   createRenderState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
+} from './ReactFizzConfigHTML';
 
 type MarkupOptions = {
   identifierPrefix?: string,
@@ -62,7 +62,14 @@ export function renderToMarkup(
     const fizzRequest = createFizzRequest(
       children,
       resumableState,
-      createRenderState(resumableState, true),
+      createRenderState(
+        resumableState,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+      ),
       createRootFormatContext(),
       Infinity,
       onError,

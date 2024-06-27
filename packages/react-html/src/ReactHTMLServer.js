@@ -37,7 +37,7 @@ import {
   createResumableState,
   createRenderState,
   createRootFormatContext,
-} from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
+} from './ReactFizzConfigHTML';
 
 type ReactMarkupNodeList =
   // This is the intersection of ReactNodeList and ReactClientValue minus
@@ -143,7 +143,14 @@ export function renderToMarkup(
       // $FlowFixMe: Thenables as children are supported.
       root,
       resumableState,
-      createRenderState(resumableState, true),
+      createRenderState(
+        resumableState,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+      ),
       createRootFormatContext(),
       Infinity,
       onError,
