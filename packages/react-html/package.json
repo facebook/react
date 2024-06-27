@@ -29,7 +29,7 @@
   ],
   "exports": {
     ".": {
-      "react-server": "./react-dom.react-server.js",
+      "react-server": "./react-html.react-server.js",
       "default": "./index.js"
     },
     "./src/*": "./src/*",
