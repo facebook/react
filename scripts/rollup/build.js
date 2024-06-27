@@ -364,7 +364,9 @@ function getPlugins(
     const isProfiling = isProfilingBundleType(bundleType);
 
     const needsMinifiedByClosure =
-      bundleType !== ESM_PROD && bundleType !== ESM_DEV;
+      packageName !== 'react-test-renderer' &&
+      bundleType !== ESM_PROD &&
+      bundleType !== ESM_DEV;
 
     return [
       // Keep dynamic imports as externals
