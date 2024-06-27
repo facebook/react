@@ -428,7 +428,8 @@ module.exports = [
     entryPoints: [
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
-      'react-html/src/ReactHTMLServer.js',
+      'react-html/src/ReactHTMLClient.js', // react-html
+      'react-html/src/ReactHTMLServer.js', // react-html/react-html.react-server
     ],
     paths: [
       'react-dom',

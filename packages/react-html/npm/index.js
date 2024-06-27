@@ -1,5 +1,7 @@
 'use strict';
 
-throw new Error(
-  'react-html is not supported outside a React Server Components environment.'
-);
+if (process.env.NODE_ENV === 'production') {
+  module.exports = require('./cjs/react-html.production.js');
+} else {
+  module.exports = require('./cjs/react-html.development.js');
+}

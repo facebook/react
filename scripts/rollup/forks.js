@@ -100,6 +100,7 @@ const forks = Object.freeze({
       entry === 'react-dom/src/ReactDOMFB.js' ||
       entry === 'react-dom/src/ReactDOMTestingFB.js' ||
       entry === 'react-dom/src/ReactDOMServer.js' ||
+      entry === 'react-html/src/ReactHTMLClient.js' ||
       entry === 'react-html/src/ReactHTMLServer.js'
     ) {
       if (
