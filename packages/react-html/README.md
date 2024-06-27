@@ -1,6 +1,6 @@
 # `react-html`
 
-This package provides the ability to render standalone HTML from Server Components for use in embedded contexts such as e-mails and RSS/Atom feeds. It cannot use Client Components and aren't hydrated. It is intended to be paired with the generic React package, which is shipped as `react` to npm.
+This package provides the ability to render standalone HTML from Server Components for use in embedded contexts such as e-mails and RSS/Atom feeds. It cannot use Client Components and does not hydrate. It is intended to be paired with the generic React package, which is shipped as `react` to npm.
 
 ## Installation
 
@@ -23,7 +23,7 @@ async function action(email, name) {
 }
 ```
 
-Note that this is an async function that need to be awaited - unlike the legacy `renderToString` in `react-dom`.
+Note that this is an async function that needs to be awaited - unlike the legacy `renderToString` in `react-dom`.
 
 ## API
 
