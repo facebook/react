@@ -11,10 +11,6 @@ import type {Request} from 'react-server/src/ReactFlightServer';
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 
-// Used to distinguish these contexts from ones used in other renderers.
-// E.g. this can be used to distinguish legacy renderers from this modern one.
-export const isPrimaryRenderer = true;
-
 export type HintCode = string;
 export type HintModel<T: HintCode> = null; // eslint-disable-line no-unused-vars
 export type Hints = null;
