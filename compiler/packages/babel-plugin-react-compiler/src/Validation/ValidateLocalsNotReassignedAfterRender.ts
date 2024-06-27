@@ -19,7 +19,12 @@ import {
  */
 export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
   const contextVariables = new Set<IdentifierId>();
-  const reassignment = getContextReassignment(fn, contextVariables, false);
+  const reassignment = getContextReassignment(
+    fn,
+    contextVariables,
+    false,
+    false
+  );
   if (reassignment !== null) {
     CompilerError.throwInvalidReact({
       reason:
@@ -37,7 +42,8 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
 function getContextReassignment(
   fn: HIRFunction,
   contextVariables: Set<IdentifierId>,
-  isFunctionExpression: boolean
+  isFunctionExpression: boolean,
+  isAsync: boolean
 ): Place | null {
   const reassigningFunctions = new Map<IdentifierId, Place>();
   for (const [, block] of fn.body.blocks) {
@@ -49,7 +55,8 @@ function getContextReassignment(
           let reassignment = getContextReassignment(
             value.loweredFunc.func,
             contextVariables,
-            true
+            true,
+            isAsync || value.loweredFunc.func.async
           );
           if (reassignment === null) {
             // If the function itself doesn't reassign, does one of its dependencies?
@@ -65,6 +72,18 @@ function getContextReassignment(
           }
           // if the function or its depends reassign, propagate that fact on the lvalue
           if (reassignment !== null) {
+            if (isAsync || value.loweredFunc.func.async) {
+              CompilerError.throwInvalidReact({
+                reason:
+                  "Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead",
+                description:
+                  reassignment.identifier.name !== null &&
+                  reassignment.identifier.name.kind === "named"
+                    ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
+                    : "",
+                loc: reassignment.loc,
+              });
+            }
             reassigningFunctions.set(lvalue.identifier.id, reassignment);
           }
           break;

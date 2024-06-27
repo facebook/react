@@ -483,12 +483,6 @@ const skipFilter = new Set([
   "rules-of-hooks/rules-of-hooks-93dc5d5e538a",
   "rules-of-hooks/rules-of-hooks-69521d94fa03",
 
-  // should error
-  "todo.invalid-reassign-local-variable-in-jsx-callback",
-  "todo.invalid-reassign-local-variable-in-hook-argument",
-  "todo.invalid-reassign-local-variable-in-effect",
-  "todo.invalid-reassign-local-variable-in-async-callback",
-
   // bugs
   "bug-invalid-hoisting-functionexpr",
   "original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block",
