@@ -7,7 +7,7 @@ function Component() {
       local = newValue;
     };
     return reassignLocal;
-  }
+  };
   const reassignLocal = mk_reassignlocal();
   const onMount = (newValue) => {
     reassignLocal("hello");
