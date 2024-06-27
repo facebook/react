@@ -506,6 +506,8 @@ const skipFilter = new Set([
 
   // needs to be executed as a module
   "meta-property",
+
+  "todo.invalid-nested-function-reassign-local-variable-in-effect",
 ]);
 
 export default skipFilter;
