@@ -28,6 +28,8 @@ import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions
 
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
+import hasOwnProperty from 'shared/hasOwnProperty';
+
 // Allow embedding inside another Fizz render.
 export const isPrimaryRenderer = false;
 
@@ -91,7 +93,25 @@ export function pushStartInstance(
   textEmbedded: boolean,
   isFallback: boolean,
 ): ReactNodeList {
-  // TODO: Error for invalid props.
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propKey === 'ref' && propValue != null) {
+        throw new Error(
+          'Cannot pass ref in renderToMarkup because they will never be hydrated.',
+        );
+      }
+      if (typeof propValue === 'function') {
+        throw new Error(
+          'Cannot pass event handlers (' +
+            propKey +
+            ') in renderToMarkup because ' +
+            'the HTML will never be hydrated so they can never get called.',
+        );
+      }
+    }
+  }
+
   return pushStartInstanceImpl(
     target,
     type,
