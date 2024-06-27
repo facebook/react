@@ -19,7 +19,12 @@ import {
  */
 export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
   const contextVariables = new Set<IdentifierId>();
-  const reassignment = getContextReassignment(fn, contextVariables, false, false);
+  const reassignment = getContextReassignment(
+    fn,
+    contextVariables,
+    false,
+    false
+  );
   if (reassignment !== null) {
     CompilerError.throwInvalidReact({
       reason:
@@ -38,7 +43,7 @@ function getContextReassignment(
   fn: HIRFunction,
   contextVariables: Set<IdentifierId>,
   isFunctionExpression: boolean,
-  isAsync: boolean,
+  isAsync: boolean
 ): Place | null {
   const reassigningFunctions = new Map<IdentifierId, Place>();
   for (const [, block] of fn.body.blocks) {
@@ -51,7 +56,7 @@ function getContextReassignment(
             value.loweredFunc.func,
             contextVariables,
             true,
-            isAsync || value.loweredFunc.func.async,
+            isAsync || value.loweredFunc.func.async
           );
           if (reassignment === null) {
             // If the function itself doesn't reassign, does one of its dependencies?
