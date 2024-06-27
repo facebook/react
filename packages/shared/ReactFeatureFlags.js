@@ -87,6 +87,11 @@ export const enableTaint = __EXPERIMENTAL__;
 
 export const enablePostpone = __EXPERIMENTAL__;
 
+/**
+ * Switches Fiber creation to a simple object instead of a constructor.
+ */
+export const enableObjectFiber = false;
+
 export const enableTransitionTracing = false;
 
 // No known bugs, but needs performance testing

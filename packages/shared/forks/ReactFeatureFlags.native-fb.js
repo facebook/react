@@ -24,6 +24,7 @@ export const {
   disableDefaultPropsExceptForClasses,
   enableAddPropertiesFastPath,
   enableFastJSX,
+  enableObjectFiber,
   enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
 } = dynamicFlags;

@@ -38,6 +38,7 @@ import {
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableRenderableContext,
   disableLegacyMode,
+  enableObjectFiber,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
@@ -232,7 +233,7 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-function createFiber(
+function createFiberImplClass(
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
@@ -241,6 +242,75 @@ function createFiber(
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
 }
+
+function createFiberImplObject(
+  tag: WorkTag,
+  pendingProps: mixed,
+  key: null | string,
+  mode: TypeOfMode,
+): Fiber {
+  const fiber: Fiber = {
+    // Instance
+    // tag, key - defined at the bottom as dynamic properties
+    elementType: null,
+    type: null,
+    stateNode: null,
+
+    // Fiber
+    return: null,
+    child: null,
+    sibling: null,
+    index: 0,
+
+    ref: null,
+    refCleanup: null,
+
+    // pendingProps - defined at the bottom as dynamic properties
+    memoizedProps: null,
+    updateQueue: null,
+    memoizedState: null,
+    dependencies: null,
+
+    // Effects
+    flags: NoFlags,
+    subtreeFlags: NoFlags,
+    deletions: null,
+
+    lanes: NoLanes,
+    childLanes: NoLanes,
+
+    alternate: null,
+
+    // dynamic properties at the end for more efficient hermes bytecode
+    tag,
+    key,
+    pendingProps,
+    mode,
+  };
+
+  if (enableProfilerTimer) {
+    fiber.actualDuration = 0;
+    fiber.actualStartTime = -1;
+    fiber.selfBaseDuration = 0;
+    fiber.treeBaseDuration = 0;
+  }
+
+  if (__DEV__) {
+    fiber._debugInfo = null;
+    fiber._debugOwner = null;
+    fiber._debugNeedsRemount = false;
+    fiber._debugHookTypes = null;
+
+    if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(fiber);
+    }
+  }
+  return fiber;
+}
+
+const createFiber = enableObjectFiber
+  ? createFiberImplObject
+  : createFiberImplClass;
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
