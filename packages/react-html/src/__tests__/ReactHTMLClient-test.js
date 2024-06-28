@@ -9,56 +9,44 @@
 
 'use strict';
 
-global.TextDecoder = require('util').TextDecoder;
-global.TextEncoder = require('util').TextEncoder;
-
 let React;
 let ReactHTML;
 
 describe('ReactHTML', () => {
   beforeEach(() => {
     jest.resetModules();
-    // We run in the react-server condition.
-    jest.mock('react', () => require('react/react.react-server'));
-    jest.mock('react-html', () =>
-      require('react-html/react-html.react-server'),
-    );
-
     React = require('react');
     ReactHTML = require('react-html');
   });
 
   it('should be able to render a simple component', async () => {
     function Component() {
-      // We can't use JSX because that's client-JSX in our tests.
-      return React.createElement('div', null, 'hello world');
+      return <div>hello world</div>;
     }
 
-    const html = await ReactHTML.renderToMarkup(React.createElement(Component));
+    const html = await ReactHTML.renderToMarkup(<Component />);
     expect(html).toBe('<div>hello world</div>');
   });
 
   it('should error on useState', async () => {
     function Component() {
       const [state] = React.useState('hello');
-      // We can't use JSX because that's client-JSX in our tests.
-      return React.createElement('div', null, state);
+      return <div>{state}</div>;
     }
 
     await expect(async () => {
-      await ReactHTML.renderToMarkup(React.createElement(Component));
+      await ReactHTML.renderToMarkup(<Component />);
     }).rejects.toThrow();
   });
 
   it('should error on refs passed to host components', async () => {
     function Component() {
       const ref = React.createRef();
-      // We can't use JSX because that's client-JSX in our tests.
-      return React.createElement('div', {ref});
+      return <div ref={ref} />;
     }
 
     await expect(async () => {
-      await ReactHTML.renderToMarkup(React.createElement(Component));
+      await ReactHTML.renderToMarkup(<Component />);
     }).rejects.toThrow();
   });
 
@@ -67,12 +55,11 @@ describe('ReactHTML', () => {
       function onClick() {
         // This won't be able to be called.
       }
-      // We can't use JSX because that's client-JSX in our tests.
-      return React.createElement('div', {onClick});
+      return <div onClick={onClick} />;
     }
 
     await expect(async () => {
-      await ReactHTML.renderToMarkup(React.createElement(Component));
+      await ReactHTML.renderToMarkup(<Component />);
     }).rejects.toThrow();
   });
 
@@ -80,7 +67,6 @@ describe('ReactHTML', () => {
     function Component() {
       const firstNameId = React.useId();
       const lastNameId = React.useId();
-      // We can't use JSX because that's client-JSX in our tests.
       return React.createElement(
         'div',
         null,
@@ -115,7 +101,7 @@ describe('ReactHTML', () => {
       );
     }
 
-    const html = await ReactHTML.renderToMarkup(React.createElement(Component));
+    const html = await ReactHTML.renderToMarkup(<Component />);
     const container = document.createElement('div');
     container.innerHTML = html;
 
@@ -132,8 +118,8 @@ describe('ReactHTML', () => {
     );
   });
 
-  // @gate enableCache
-  it('supports cache', async () => {
+  // @gate disableClientCache
+  it('does NOT support cache yet because it is a client component', async () => {
     let counter = 0;
     const getCount = React.cache(() => {
       return counter++;
@@ -141,10 +127,15 @@ describe('ReactHTML', () => {
     function Component() {
       const a = getCount();
       const b = getCount();
-      return React.createElement('div', null, a, b);
+      return (
+        <div>
+          {a}
+          {b}
+        </div>
+      );
     }
 
-    const html = await ReactHTML.renderToMarkup(React.createElement(Component));
-    expect(html).toBe('<div>00</div>');
+    const html = await ReactHTML.renderToMarkup(<Component />);
+    expect(html).toBe('<div>01</div>');
   });
 });

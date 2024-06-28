@@ -428,16 +428,29 @@ module.exports = [
     entryPoints: [
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
-      'react-html/src/ReactHTMLServer.js',
     ],
     paths: [
       'react-dom',
       'react-dom/src/ReactDOMReactServer.js',
       'react-dom-bindings',
-      'react-server-dom-webpack',
       'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Browser and *Node files
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'markup',
+    entryPoints: [
+      'react-html/src/ReactHTMLClient.js', // react-html
+      'react-html/src/ReactHTMLServer.js', // react-html/react-html.react-server
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/src/ReactDOMReactServer.js',
+      'react-dom-bindings',
       'react-html',
       'shared/ReactDOMSharedInternals',
     ],
