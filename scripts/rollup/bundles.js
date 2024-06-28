@@ -365,7 +365,7 @@ const bundles = [
 
   /******* React HTML RSC *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-html/src/ReactHTMLServer.js',
     name: 'react-html.react-server',
@@ -378,7 +378,7 @@ const bundles = [
 
   /******* React HTML Client *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-html/src/ReactHTMLClient.js',
     name: 'react-html',
