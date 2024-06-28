@@ -15,6 +15,7 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
     "./lib/forgetMonacoDiagnostics.ts",
   ],
+  darkMode: ["class"],
   theme: {
     extend: {
       colors,

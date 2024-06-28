@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { ThemeProvider } from "../providers/theme-provider";
 import "../styles/globals.css";
 
 export default function RootLayout({
@@ -42,7 +43,11 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="font-sans h-screen overflow-y-hidden">{children}</body>
+      <body className="overflow-y-hidden h-screen font-sans">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
