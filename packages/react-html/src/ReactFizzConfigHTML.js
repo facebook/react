@@ -36,14 +36,7 @@ export const isPrimaryRenderer = false;
 // Disable Client Hooks
 export const supportsClientAPIs = false;
 
-import {
-  stringToChunk,
-  stringToPrecomputedChunk,
-} from 'react-server/src/ReactServerStreamConfig';
-
-// this chunk is empty on purpose because we do not want to emit the DOCTYPE
-// when markup is rendering HTML
-export const doctypeChunk: PrecomputedChunk = stringToPrecomputedChunk('');
+import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
 
 export type {
   RenderState,
@@ -81,6 +74,7 @@ export {
   resetResumableState,
   completeResumableState,
   emitEarlyPreloads,
+  doctypeChunk,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
 import escapeTextForBrowser from 'react-dom-bindings/src/server/escapeTextForBrowser';

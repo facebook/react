@@ -38,6 +38,20 @@ describe('ReactHTML', () => {
     expect(html).toBe('<div>hello world</div>');
   });
 
+  it('should prefix html tags with a doctype', async () => {
+    const html = await ReactHTML.renderToMarkup(
+      // We can't use JSX because that's client-JSX in our tests.
+      React.createElement(
+        'html',
+        null,
+        React.createElement('body', null, 'hello'),
+      ),
+    );
+    expect(html).toBe(
+      '<!DOCTYPE html><html><head></head><body>hello</body></html>',
+    );
+  });
+
   it('should error on useState', async () => {
     function Component() {
       const [state] = React.useState('hello');

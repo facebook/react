@@ -28,6 +28,17 @@ describe('ReactHTML', () => {
     expect(html).toBe('<div>hello world</div>');
   });
 
+  it('should prefix html tags with a doctype', async () => {
+    const html = await ReactHTML.renderToMarkup(
+      <html>
+        <body>hello</body>
+      </html>,
+    );
+    expect(html).toBe(
+      '<!DOCTYPE html><html><head></head><body>hello</body></html>',
+    );
+  });
+
   it('should error on useState', async () => {
     function Component() {
       const [state] = React.useState('hello');
