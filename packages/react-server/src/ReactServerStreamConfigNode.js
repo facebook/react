@@ -63,7 +63,8 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
       currentView = new Uint8Array(VIEW_SIZE);
       writtenBytes = 0;
     }
-    writeToDestination(destination, textEncoder.encode(stringChunk));
+    // Write the raw string chunk and let the consumer handle the encoding.
+    writeToDestination(destination, stringChunk);
     return;
   }
 
