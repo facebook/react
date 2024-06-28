@@ -156,64 +156,25 @@ export function codegenFunction(
       // HMR detection is enabled, emit code to reset the memo cache on source changes
       const index = cx.synthesizeName("$i");
       preface.push(
-        t.ifStatement(
-          t.binaryExpression(
-            "!==",
-            t.memberExpression(
-              t.identifier(cx.synthesizeName("$")),
-              t.numericLiteral(fastRefreshState.cacheIndex),
-              true
-            ),
-            t.stringLiteral(fastRefreshState.hash)
-          ),
-          t.blockStatement([
-            t.forStatement(
-              t.variableDeclaration("let", [
-                t.variableDeclarator(t.identifier(index), t.numericLiteral(0)),
+        t.variableDeclaration("const", [
+          t.variableDeclarator(
+            t.identifier(index),
+            t.logicalExpression(
+              "||",
+              t.callExpression(t.identifier("u"), [
+                t.identifier(cx.synthesizeName("$")),
+                t.arrayExpression([]),
+                t.arrayExpression([]),
+                t.arrayExpression([]),
               ]),
-              t.binaryExpression(
-                "<",
-                t.identifier(index),
-                t.numericLiteral(cacheCount)
-              ),
-              t.assignmentExpression(
-                "+=",
-                t.identifier(index),
-                t.numericLiteral(1)
-              ),
-              t.blockStatement([
-                t.expressionStatement(
-                  t.assignmentExpression(
-                    "=",
-                    t.memberExpression(
-                      t.identifier(cx.synthesizeName("$")),
-                      t.identifier(index),
-                      true
-                    ),
-                    t.callExpression(
-                      t.memberExpression(
-                        t.identifier("Symbol"),
-                        t.identifier("for")
-                      ),
-                      [t.stringLiteral(MEMO_CACHE_SENTINEL)]
-                    )
-                  )
-                ),
-              ])
-            ),
-            t.expressionStatement(
-              t.assignmentExpression(
-                "=",
-                t.memberExpression(
-                  t.identifier(cx.synthesizeName("$")),
-                  t.numericLiteral(fastRefreshState.cacheIndex),
-                  true
-                ),
-                t.stringLiteral(fastRefreshState.hash)
+              t.memberExpression(
+                t.identifier(cx.synthesizeName("$")),
+                t.numericLiteral(fastRefreshState.cacheIndex),
+                true
               )
-            ),
-          ])
-        )
+            )
+          ),
+        ])
       );
     }
     compiled.body.body.unshift(...preface);
@@ -274,7 +235,7 @@ function codegenReactiveFunction(
   }
 
   const params = fn.params.map((param) => convertParameter(param));
-  const body: t.BlockStatement = codegenBlock(cx, fn.body);
+  const body: t.BlockStatement = codegenBlock(cx, fn.body); // 生成块
   body.directives = fn.directives.map((d) =>
     t.directive(t.directiveLiteral(d))
   );
@@ -291,6 +252,7 @@ function codegenReactiveFunction(
   }
 
   const countMemoBlockVisitor = new CountMemoBlockVisitor(fn.env);
+
   visitReactiveFunction(fn, countMemoBlockVisitor, undefined);
 
   return Ok({
@@ -400,6 +362,7 @@ class Context {
 function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
   const temp = new Map(cx.temp);
   const result = codegenBlockNoReset(cx, block);
+
   /*
    * Check that the block only added new temporaries and did not update the
    * value of any existing temporary
@@ -431,9 +394,11 @@ function codegenBlockNoReset(
   block: ReactiveBlock
 ): t.BlockStatement {
   const statements: Array<t.Statement> = [];
+  //TODO: hack to generate
   for (const item of block) {
     switch (item.kind) {
       case "instruction": {
+        // like a = b + c
         const statement = codegenInstructionNullable(cx, item.instruction);
         if (statement !== null) {
           statements.push(statement);
@@ -446,12 +411,14 @@ function codegenBlockNoReset(
         break;
       }
       case "scope": {
+        // like if, for, while
         const temp = new Map(cx.temp);
         codegenReactiveScope(cx, statements, item.scope, item.instructions);
         cx.temp = temp;
         break;
       }
       case "terminal": {
+        // like break, continue, return
         const statement = codegenTerminal(cx, item.terminal);
         if (statement === null) {
           break;
@@ -498,6 +465,7 @@ function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
   }
 }
 
+const count: 0 | 1 = 1;
 function codegenReactiveScope(
   cx: Context,
   statements: Array<t.Statement>,
@@ -514,6 +482,151 @@ function codegenReactiveScope(
   const changeExpressions: Array<t.Expression> = [];
   const changeExpressionComments: Array<string> = [];
   const outputComments: Array<string> = [];
+
+  // #region taking
+
+  if (count === 1) {
+    const indices: t.NumericLiteral[] = [];
+    const newValues: t.Expression[] = [];
+    const updateIndexs: t.NumericLiteral[] = [];
+    const source: (t.Expression | null | undefined)[] = [];
+
+    for (const dep of scope.dependencies) {
+      const index = cx.nextCacheIndex;
+      indices.push(t.numericLiteral(index));
+      newValues.push(codegenDependency(cx, dep));
+      const comparison = t.binaryExpression(
+        "!==",
+        t.memberExpression(
+          t.identifier(cx.synthesizeName("$")),
+          t.numericLiteral(index),
+          true
+        ),
+        codegenDependency(cx, dep)
+      );
+      changeExpressions.push(comparison);
+      updateIndexs.push(t.numericLiteral(index));
+      source.push(codegenDependency(cx, dep));
+    }
+
+    const arr: t.Identifier[] = [];
+    const index = cx.nextCacheIndex;
+    for (const [, { identifier }] of scope.declarations) {
+      const name = convertIdentifier(identifier);
+      arr.push(name);
+      cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
+    }
+
+    for (const reassignment of scope.reassignments) {
+      const index = cx.nextCacheIndex;
+      const name = convertIdentifier(reassignment);
+      cacheLoads.push({ name, index, value: wrapCacheDep(cx, name) });
+    }
+
+    let testCondition = (changeExpressions as Array<t.Expression>).reduce(
+      (acc: t.Expression | null, ident: t.Expression) => {
+        if (acc == null) {
+          return ident;
+        }
+        return t.logicalExpression("||", acc, ident);
+      },
+      null as t.Expression | null
+    );
+
+    // quick
+    let computationBlock = codegenBlock(cx, block);
+
+    const [variableDeclaration] = computationBlock.body;
+    const bd: (t.Expression | t.SpreadElement | null | undefined)[] = [];
+    if ("declarations" in variableDeclaration) {
+      for (let i = 0; i < variableDeclaration.declarations.length; i++) {
+        const declaration = variableDeclaration.declarations[i];
+        if (declaration.id.type === "ObjectPattern") {
+          const returnIdentifiers = declaration.id.properties.map((item) => {
+            if (item.type === "ObjectProperty") {
+              return item.value;
+            }
+            return item.argument;
+          }) as t.Identifier[];
+
+          returnIdentifiers.sort((ida, idb) => {
+            const a = arr.findIndex((item) => item.name === ida.name);
+            const b = arr.findIndex((item) => item.name === idb.name);
+            return a - b;
+          });
+
+          bd.push(
+            t.spreadElement(
+              t.callExpression(
+                t.arrowFunctionExpression(
+                  [],
+                  t.blockStatement([
+                    t.variableDeclaration("const", [
+                      t.variableDeclarator(declaration.id, declaration.init),
+                    ]),
+                    t.returnStatement(t.arrayExpression(returnIdentifiers)),
+                  ])
+                ),
+                []
+              )
+            )
+          );
+          continue;
+        }
+        bd.push(declaration.init);
+      }
+    }
+
+    const back: t.MemberExpression[] = [];
+    for (const { index, value } of cacheLoads) {
+      source.push(value);
+      updateIndexs.push(t.numericLiteral(index));
+      back.push(
+        t.memberExpression(
+          t.identifier(cx.synthesizeName("$")),
+          t.numericLiteral(index),
+          true
+        )
+      );
+    }
+
+    const initName = arr.map((item) => item.name);
+    const elements = t.variableDeclaration("const", [
+      t.variableDeclarator(
+        t.arrayPattern(arr),
+        t.logicalExpression(
+          "||",
+          t.callExpression(t.identifier("u"), [
+            t.identifier(cx.synthesizeName("$")),
+            t.arrowFunctionExpression(
+              [],
+              t.arrayExpression(bd as t.Expression[])
+            ),
+            t.arrayExpression(indices),
+            testCondition ? t.arrayExpression(newValues) : t.nullLiteral(),
+            t.arrayExpression(updateIndexs),
+            t.arrowFunctionExpression(
+              [],
+              t.arrayExpression(
+                source.filter((s) => {
+                  if (s?.type === "Identifier") {
+                    return !initName.includes(s.name);
+                  }
+                  return true;
+                }) as t.Expression[]
+              )
+            ),
+          ]),
+          t.arrayExpression(back)
+        )
+      ),
+    ]);
+
+    statements.push(elements);
+    return;
+  }
+  // #endregion
+
   for (const dep of scope.dependencies) {
     const index = cx.nextCacheIndex;
     changeExpressionComments.push(printDependencyComment(dep));
@@ -556,6 +669,7 @@ function codegenReactiveScope(
       )
     );
   }
+
   let firstOutputIndex: number | null = null;
   for (const [, { identifier }] of scope.declarations) {
     const index = cx.nextCacheIndex;
@@ -574,6 +688,7 @@ function codegenReactiveScope(
 
     const name = convertIdentifier(identifier);
     outputComments.push(name.name);
+    // !!! const t4
     if (!cx.hasDeclared(identifier)) {
       statements.push(
         t.variableDeclaration("let", [t.variableDeclarator(name)])
@@ -637,8 +752,8 @@ function codegenReactiveScope(
       t.booleanLiteral(true)
     );
   }
-  let computationBlock = codegenBlock(cx, block);
 
+  let computationBlock = codegenBlock(cx, block);
   let memoStatement;
   if (
     cx.env.config.enableChangeDetectionForDebugging != null &&
@@ -749,6 +864,7 @@ function codegenReactiveScope(
       );
     }
     computationBlock.body.push(...cacheStoreStatements);
+
     memoStatement = t.ifStatement(
       testCondition,
       computationBlock,
@@ -820,6 +936,11 @@ function codegenReactiveScope(
     );
     const name: ValidIdentifierName = earlyReturnValue.value.name.value;
     statements.push(
+      /**
+       * if (name !== Symbol.for("EARLY_RETURN_SENTINEL")) {
+       *  return name;
+       * }
+       */
       t.ifStatement(
         t.binaryExpression(
           "!==",
@@ -1119,6 +1240,7 @@ function codegenInstructionNullable(
   cx: Context,
   instr: ReactiveInstruction
 ): t.Statement | null {
+  // TODO: know
   if (
     instr.value.kind === "StoreLocal" ||
     instr.value.kind === "StoreContext" ||
@@ -1176,6 +1298,7 @@ function codegenInstructionNullable(
       }
       value = codegenPlaceToExpression(cx, instr.value.value);
     }
+
     switch (kind) {
       case InstructionKind.Const: {
         CompilerError.invariant(instr.lvalue === null, {
@@ -1294,6 +1417,7 @@ function codegenForInit(
         instruction,
       }))
     ).body;
+
     const declarators: Array<t.VariableDeclarator> = [];
     let kind: "let" | "const" = "const";
     body.forEach((instr) => {
