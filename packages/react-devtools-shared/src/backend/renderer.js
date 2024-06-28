@@ -1604,7 +1604,6 @@ export function attach(
     return changedKeys;
   }
 
-  // eslint-disable-next-line no-unused-vars
   function didFiberRender(prevFiber: Fiber, nextFiber: Fiber): boolean {
     switch (nextFiber.tag) {
       case ClassComponent:

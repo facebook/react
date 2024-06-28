@@ -652,7 +652,6 @@ describe('ReactLegacyUpdates', () => {
       });
     });
 
-    /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
       'Inner-render-0-0',
@@ -681,7 +680,6 @@ describe('ReactLegacyUpdates', () => {
       'Inner-didUpdate-2-2',
       'Inner-callback-2',
     ]);
-    /* eslint-enable indent */
   });
 
   // @gate !disableLegacyMode

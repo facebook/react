@@ -78,6 +78,7 @@ import {
   resetResumableState,
   completeResumableState,
   emitEarlyPreloads,
+  printToConsole,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -363,7 +364,17 @@ export opaque type Request = {
 const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 
 function defaultErrorHandler(error: mixed) {
-  console['error'](error); // Don't transform to our wrapper
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    typeof error.environmentName === 'string'
+  ) {
+    // This was a Server error. We print the environment name in a badge just like we do with
+    // replays of console logs to indicate that the source of this throw as actually the Server.
+    printToConsole('error', [error], error.environmentName);
+  } else {
+    console['error'](error); // Don't transform to our wrapper
+  }
   return null;
 }
 

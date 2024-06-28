@@ -74,6 +74,9 @@ module.exports = {
       'process.env.IS_CHROME': IS_CHROME,
       'process.env.IS_FIREFOX': IS_FIREFOX,
       'process.env.IS_EDGE': IS_EDGE,
+      __IS_CHROME__: IS_CHROME,
+      __IS_FIREFOX__: IS_FIREFOX,
+      __IS_EDGE__: IS_EDGE,
     }),
     new Webpack.SourceMapDevToolPlugin({
       filename: '[file].map',

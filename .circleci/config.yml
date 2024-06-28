@@ -74,38 +74,6 @@ parameters:
     default: ''
 
 jobs:
-  yarn_lint:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: node ./scripts/prettier/index
-      - run: node ./scripts/tasks/eslint
-      - run: ./scripts/circleci/check_license.sh
-      - run: ./scripts/circleci/test_print_warnings.sh
-
-  yarn_flow:
-    docker: *docker
-    environment: *environment
-    parallelism: 5
-
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: node ./scripts/tasks/flow-ci
-
-
-  yarn_flags:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: yarn flags
-
   scrape_warning_messages:
     docker: *docker
     environment: *environment
@@ -313,7 +281,7 @@ jobs:
           at: .
       - setup_node_modules
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
-      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci=circleci
 
   run_devtools_e2e_tests_for_versions:
     docker: *docker
@@ -377,31 +345,6 @@ jobs:
             yarn extract-errors
             git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
 
-  check_generated_fizz_runtime:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - setup_node_modules
-      - run:
-          name: Confirm generated inline Fizz runtime is up to date
-          command: |
-            yarn generate-inline-fizz-runtime
-            git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
-
-  yarn_test:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    parameters:
-      args:
-        type: string
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: yarn test <<parameters.args>> --ci
-
   yarn_test_build:
     docker: *docker
     environment: *environment
@@ -414,7 +357,7 @@ jobs:
       - attach_workspace:
           at: .
       - setup_node_modules
-      - run: yarn test --build <<parameters.args>> --ci
+      - run: yarn test --build <<parameters.args>> --ci=circleci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
     docker: *docker
@@ -464,57 +407,6 @@ workflows:
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - yarn_flags:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - yarn_flow:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - check_generated_fizz_runtime:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - yarn_lint:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - yarn_test:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-          matrix:
-            parameters:
-              args:
-                # Intentionally passing these as strings instead of creating a
-                # separate parameter per CLI argument, since it's easier to
-                # control/see which combinations we want to run.
-                - "-r=stable --env=development"
-                - "-r=stable --env=production"
-                - "-r=experimental --env=development"
-                - "-r=experimental --env=production"
-                - "-r=www-classic --env=development --variant=false"
-                - "-r=www-classic --env=production --variant=false"
-                - "-r=www-classic --env=development --variant=true"
-                - "-r=www-classic --env=production --variant=true"
-                - "-r=www-modern --env=development --variant=false"
-                - "-r=www-modern --env=production --variant=false"
-                - "-r=www-modern --env=development --variant=true"
-                - "-r=www-modern --env=production --variant=true"
-                - "-r=xplat --env=development --variant=false"
-                - "-r=xplat --env=development --variant=true"
-                - "-r=xplat --env=production --variant=false"
-                - "-r=xplat --env=production --variant=true"
-
-                # TODO: Test more persistent configurations?
-                - '-r=stable --env=development --persistent'
-                - '-r=experimental --env=development --persistent'
       - yarn_build:
           filters:
             branches:
