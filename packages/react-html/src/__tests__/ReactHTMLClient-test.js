@@ -118,6 +118,7 @@ describe('ReactHTML', () => {
     );
   });
 
+  // @gate disableClientCache
   it('does NOT support cache yet because it is a client component', async () => {
     let counter = 0;
     const getCount = React.cache(() => {
