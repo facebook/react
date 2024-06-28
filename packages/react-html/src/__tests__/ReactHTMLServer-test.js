@@ -61,6 +61,18 @@ if (!__EXPERIMENTAL__) {
       expect(html).toBe('<div>hello world</div>');
     });
 
+    it('should be able to render a large string', async () => {
+      function Component() {
+        // We can't use JSX because that's client-JSX in our tests.
+        return React.createElement('div', null, 'hello '.repeat(200) + 'world');
+      }
+
+      const html = await ReactHTML.renderToMarkup(
+        React.createElement(Component),
+      );
+      expect(html).toBe('<div>' + ('hello '.repeat(200) + 'world') + '</div>');
+    });
+
     it('should prefix html tags with a doctype', async () => {
       const html = await ReactHTML.renderToMarkup(
         // We can't use JSX because that's client-JSX in our tests.

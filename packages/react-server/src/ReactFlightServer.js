@@ -2541,7 +2541,7 @@ function renderModelDestructive(
         return serializeDateFromDateJSON(value);
       }
     }
-    if (value.length >= 1024) {
+    if (value.length >= 1024 && byteLengthOfChunk !== null) {
       // For large strings, we encode them outside the JSON payload so that we
       // don't have to double encode and double parse the strings. This can also
       // be more compact in case the string has a lot of escaped characters.
@@ -2892,6 +2892,12 @@ function emitTypedArrayChunk(
 }
 
 function emitTextChunk(request: Request, id: number, text: string): void {
+  if (byteLengthOfChunk === null) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'Existence of byteLengthOfChunk should have already been checked. This is a bug in React.',
+    );
+  }
   request.pendingChunks++; // Extra chunk for the header.
   const textChunk = stringToChunk(text);
   const binaryLength = byteLengthOfChunk(textChunk);
@@ -3289,7 +3295,7 @@ function emitChunk(
   const id = task.id;
   // For certain types we have special types, we typically outlined them but
   // we can emit them directly for this row instead of through an indirection.
-  if (typeof value === 'string') {
+  if (typeof value === 'string' && byteLengthOfChunk !== null) {
     if (enableTaint) {
       const tainted = TaintRegistryValues.get(value);
       if (tainted !== undefined) {
