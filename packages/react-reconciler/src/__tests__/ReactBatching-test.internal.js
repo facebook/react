@@ -159,17 +159,7 @@ describe('ReactBlockingMode', () => {
     );
 
     // Now flush the first update
-    if (gate(flags => flags.enableUnifiedSyncLane)) {
-      assertLog(['A1', 'B1']);
-      expect(root).toMatchRenderedOutput('A1B1');
-    } else {
-      // Only the second update should have flushed synchronously
-      assertLog(['B1']);
-      expect(root).toMatchRenderedOutput('A0B1');
-
-      // Now flush the first update
-      await waitForAll(['A1']);
-      expect(root).toMatchRenderedOutput('A1B1');
-    }
+    assertLog(['A1', 'B1']);
+    expect(root).toMatchRenderedOutput('A1B1');
   });
 });

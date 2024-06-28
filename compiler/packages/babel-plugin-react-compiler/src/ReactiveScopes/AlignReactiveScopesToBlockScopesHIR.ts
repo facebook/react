@@ -22,8 +22,10 @@ import {
   mapTerminalSuccessors,
   terminalFallthrough,
 } from "../HIR/visitors";
+import { retainWhere_Set } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
 
+type InstructionRange = MutableRange;
 /*
  * Note: this is the 2nd of 4 passes that determine how to break a function into discrete
  * reactive scopes (independently memoizeable units of code):
@@ -66,18 +68,20 @@ import { getPlaceScope } from "./BuildReactiveBlocks";
  * will be the updated end for that scope).
  */
 export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
-  const blockNodes = new Map<BlockId, BlockNode>();
-  const rootNode: BlockNode = {
-    kind: "node",
-    valueRange: null,
-    children: [],
-    id: makeInstructionId(0),
-  };
-  blockNodes.set(fn.body.entry, rootNode);
+  const activeBlockFallthroughRanges: Array<{
+    range: InstructionRange;
+    fallthrough: BlockId;
+  }> = [];
+  const activeScopes = new Set<ReactiveScope>();
   const seen = new Set<ReactiveScope>();
+  const valueBlockNodes = new Map<BlockId, ValueBlockNode>();
   const placeScopes = new Map<Place, ReactiveScope>();
 
-  function recordPlace(id: InstructionId, place: Place, node: BlockNode): void {
+  function recordPlace(
+    id: InstructionId,
+    place: Place,
+    node: ValueBlockNode | null
+  ): void {
     if (place.identifier.scope !== null) {
       placeScopes.set(place, place.identifier.scope);
     }
@@ -86,13 +90,14 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
     if (scope == null) {
       return;
     }
-    node.children.push({ kind: "scope", scope, id });
+    activeScopes.add(scope);
+    node?.children.push({ kind: "scope", scope, id });
 
     if (seen.has(scope)) {
       return;
     }
     seen.add(scope);
-    if (node.valueRange !== null) {
+    if (node != null && node.valueRange !== null) {
       scope.range.start = makeInstructionId(
         Math.min(node.valueRange.start, scope.range.start)
       );
@@ -103,16 +108,25 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
   }
 
   for (const [, block] of fn.body.blocks) {
-    const { instructions, terminal } = block;
-    const node = blockNodes.get(block.id);
-    if (node === undefined) {
-      CompilerError.invariant(false, {
-        reason: `Expected a node to be initialized for block`,
-        loc: instructions[0]?.loc ?? terminal.loc,
-        description: `No node for block bb${block.id} (${block.kind})`,
-      });
+    const startingId = block.instructions[0]?.id ?? block.terminal.id;
+    retainWhere_Set(activeScopes, (scope) => scope.range.end > startingId);
+    const top = activeBlockFallthroughRanges.at(-1);
+    if (top?.fallthrough === block.id) {
+      activeBlockFallthroughRanges.pop();
+      /*
+       * All active scopes must have either started before or within the last
+       * block-fallthrough range. In either case, they overlap this block-
+       * fallthrough range and can have their ranges extended.
+       */
+      for (const scope of activeScopes) {
+        scope.range.start = makeInstructionId(
+          Math.min(scope.range.start, top.range.start)
+        );
+      }
     }
 
+    const { instructions, terminal } = block;
+    const node = valueBlockNodes.get(block.id) ?? null;
     for (const instr of instructions) {
       for (const lvalue of eachInstructionLValue(instr)) {
         recordPlace(instr.id, lvalue, node);
@@ -125,36 +139,42 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
       recordPlace(terminal.id, operand, node);
     }
 
-    // Save the current node for the fallback block, where this block scope continues
     const fallthrough = terminalFallthrough(terminal);
-    if (fallthrough !== null && !blockNodes.has(fallthrough)) {
+    if (fallthrough !== null) {
       /*
-       * Any scopes that carried over across a terminal->fallback need their range extended
-       * to at least the first instruction of the fallback
-       *
-       * Note that it's possible for a terminal such as an if or switch to have a null fallback,
-       * indicating that all control-flow paths diverge instead of reaching the fallthrough.
-       * In this case there isn't an instruction id in the program that we can point to for the
-       * updated range. Since the output is correct in this case we leave it, but it would be
-       * more correct to find the maximum instuction id in the whole program and set the range.end
-       * to one greater. Alternatively, we could leave in an unreachable fallthrough (with a new
-       * "unreachable" terminal variant, perhaps) and use that instruction id.
+       * Any currently active scopes that overlaps the block-fallthrough range
+       * need their range extended to at least the first instruction of the
+       * fallthrough
        */
       const fallthroughBlock = fn.body.blocks.get(fallthrough)!;
       const nextId =
         fallthroughBlock.instructions[0]?.id ?? fallthroughBlock.terminal.id;
-      for (const child of node.children) {
-        if (child.kind !== "scope") {
-          continue;
-        }
-        const scope = child.scope;
+      for (const scope of activeScopes) {
         if (scope.range.end > terminal.id) {
           scope.range.end = makeInstructionId(
             Math.max(scope.range.end, nextId)
           );
         }
       }
-      blockNodes.set(fallthrough, node);
+      /**
+       * We also record the block-fallthrough range for future scopes that begin
+       * within the range (and overlap with the range end).
+       */
+      activeBlockFallthroughRanges.push({
+        fallthrough,
+        range: {
+          start: terminal.id,
+          end: nextId,
+        },
+      });
+
+      CompilerError.invariant(!valueBlockNodes.has(fallthrough), {
+        reason: "Expect hir blocks to have unique fallthroughs",
+        loc: terminal.loc,
+      });
+      if (node != null) {
+        valueBlockNodes.set(fallthrough, node);
+      }
     }
 
     /*
@@ -166,48 +186,35 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
      * just those that are direct successors for normal control-flow ordering.
      */
     mapTerminalSuccessors(terminal, (successor) => {
-      if (blockNodes.has(successor)) {
+      if (valueBlockNodes.has(successor)) {
         return successor;
       }
 
       const successorBlock = fn.body.blocks.get(successor)!;
-      /*
-       * we need the block kind check here because the do..while terminal's successor
-       * is a block, and try's successor is a catch block
-       */
       if (successorBlock.kind === "block" || successorBlock.kind === "catch") {
-        const childNode: BlockNode = {
-          kind: "node",
-          id: terminal.id,
-          children: [],
-          valueRange: null,
-        };
-        node.children.push(childNode);
-        blockNodes.set(successor, childNode);
+        /*
+         * we need the block kind check here because the do..while terminal's
+         * successor is a block, and try's successor is a catch block
+         */
       } else if (
-        node.valueRange === null ||
+        node == null ||
         terminal.kind === "ternary" ||
         terminal.kind === "logical" ||
         terminal.kind === "optional"
       ) {
         /**
-         * Create a new scope node whenever we transition from block scope -> value scope.
+         * Create a new node whenever we transition from non-value -> value block.
          *
          * For compatibility with the previous ReactiveFunction-based scope merging logic,
          * we also create new scope nodes for ternary, logical, and optional terminals.
-         * However, inside value blocks we always store a range (valueRange) that is the
+         * Inside value blocks we always store a range (valueRange) that is the
          * start/end instruction ids at the nearest parent block scope level, so that
          * scopes inside the value blocks can be extended to align with block scope
          * instructions.
          */
-        const childNode = {
-          kind: "node",
-          id: terminal.id,
-          children: [],
-          valueRange: null,
-        } as BlockNode;
-        if (node.valueRange === null) {
-          // Transition from block->value scope, derive the outer block scope range
+        let valueRange: MutableRange;
+        if (node == null) {
+          // Transition from block->value block, derive the outer block range
           CompilerError.invariant(fallthrough !== null, {
             reason: `Expected a fallthrough for value block`,
             loc: terminal.loc,
@@ -216,32 +223,36 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
           const nextId =
             fallthroughBlock.instructions[0]?.id ??
             fallthroughBlock.terminal.id;
-          childNode.valueRange = {
+          valueRange = {
             start: terminal.id,
             end: nextId,
           };
         } else {
           // else value->value transition, reuse the range
-          childNode.valueRange = node.valueRange;
+          valueRange = node.valueRange;
         }
-        node.children.push(childNode);
-        blockNodes.set(successor, childNode);
+        const childNode: ValueBlockNode = {
+          kind: "node",
+          id: terminal.id,
+          children: [],
+          valueRange,
+        };
+        node?.children.push(childNode);
+        valueBlockNodes.set(successor, childNode);
       } else {
         // this is a value -> value block transition, reuse the node
-        blockNodes.set(successor, node);
+        valueBlockNodes.set(successor, node);
       }
       return successor;
     });
   }
-
-  // console.log(_debug(rootNode));
 }
 
-type BlockNode = {
+type ValueBlockNode = {
   kind: "node";
   id: InstructionId;
-  valueRange: MutableRange | null;
-  children: Array<BlockNode | ReactiveScopeNode>;
+  valueRange: MutableRange;
+  children: Array<ValueBlockNode | ReactiveScopeNode>;
 };
 type ReactiveScopeNode = {
   kind: "scope";
@@ -249,13 +260,13 @@ type ReactiveScopeNode = {
   scope: ReactiveScope;
 };
 
-function _debug(node: BlockNode): string {
+function _debug(node: ValueBlockNode): string {
   const buf: Array<string> = [];
   _printNode(node, buf, 0);
   return buf.join("\n");
 }
 function _printNode(
-  node: BlockNode | ReactiveScopeNode,
+  node: ValueBlockNode | ReactiveScopeNode,
   out: Array<string>,
   depth: number = 0
 ): void {
@@ -265,10 +276,7 @@ function _printNode(
       `${prefix}[${node.id}] @${node.scope.id} [${node.scope.range.start}:${node.scope.range.end}]`
     );
   } else {
-    let range =
-      node.valueRange !== null
-        ? ` [${node.valueRange.start}:${node.valueRange.end}]`
-        : "";
+    let range = ` (range=[${node.valueRange.start}:${node.valueRange.end}])`;
     out.push(`${prefix}[${node.id}] node${range} [`);
     for (const child of node.children) {
       _printNode(child, out, depth + 1);

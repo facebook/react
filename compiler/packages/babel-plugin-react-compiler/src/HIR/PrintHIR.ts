@@ -194,7 +194,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case "optional": {
-      value = `[${terminal.id}] Optional test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
+      value = `[${terminal.id}] Optional (optional=${terminal.optional}) test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "throw": {

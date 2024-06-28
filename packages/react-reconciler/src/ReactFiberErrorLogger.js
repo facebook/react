@@ -20,6 +20,8 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
+import {printToConsole} from './ReactFiberConfig';
+
 // Side-channel since I'm not sure we want to make this part of the public API
 let componentName: null | string = null;
 let errorBoundaryName: null | string = null;
@@ -94,13 +96,33 @@ export function defaultOnCaughtError(
       }.`;
 
     if (enableOwnerStacks) {
-      console.error(
-        '%o\n\n%s\n\n%s\n',
-        error,
-        componentNameMessage,
-        recreateMessage,
-        // We let our consoleWithStackDev wrapper add the component stack to the end.
-      );
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        typeof error.environmentName === 'string'
+      ) {
+        // This was a Server error. We print the environment name in a badge just like we do with
+        // replays of console logs to indicate that the source of this throw as actually the Server.
+        printToConsole(
+          'error',
+          [
+            '%o\n\n%s\n\n%s\n',
+            error,
+            componentNameMessage,
+            recreateMessage,
+            // We let our consoleWithStackDev wrapper add the component stack to the end.
+          ],
+          error.environmentName,
+        );
+      } else {
+        console.error(
+          '%o\n\n%s\n\n%s\n',
+          error,
+          componentNameMessage,
+          recreateMessage,
+          // We let our consoleWithStackDev wrapper add the component stack to the end.
+        );
+      }
     } else {
       // The current Fiber is disconnected at this point which means that console printing
       // cannot add a component stack since it terminates at the deletion node. This is not

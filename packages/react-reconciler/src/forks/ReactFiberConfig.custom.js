@@ -80,6 +80,7 @@ export const suspendInstance = $$$config.suspendInstance;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
 export const NotPendingTransition = $$$config.NotPendingTransition;
 export const resetFormInstance = $$$config.resetFormInstance;
+export const printToConsole = $$$config.printToConsole;
 
 // -------------------
 //      Microtasks
