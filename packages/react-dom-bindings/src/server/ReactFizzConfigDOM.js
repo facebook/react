@@ -108,6 +108,8 @@ export type HeadersDescriptor = {
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
 
+export const supportsClientAPIs = true;
+
 export type StreamingFormat = 0 | 1;
 const ScriptStreamingFormat: StreamingFormat = 0;
 const DataStreamingFormat: StreamingFormat = 1;

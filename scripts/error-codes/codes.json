@@ -522,5 +522,6 @@
   "534": "renderToMarkup should not have emitted Client References. This is a bug in React.",
   "535": "renderToMarkup should not have emitted Server References. This is a bug in React.",
   "536": "Cannot pass ref in renderToMarkup because they will never be hydrated.",
-  "537": "Cannot pass event handlers (%s) in renderToMarkup because the HTML will never be hydrated so they can never get called."
+  "537": "Cannot pass event handlers (%s) in renderToMarkup because the HTML will never be hydrated so they can never get called.",
+  "538": "Cannot use state or effect Hooks in renderToMarkup because this component will never be hydrated."
 }

@@ -37,6 +37,8 @@ export type {TransitionStatus};
 
 export const isPrimaryRenderer = false;
 
+export const supportsClientAPIs = true;
+
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 

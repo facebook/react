@@ -33,6 +33,9 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 // Allow embedding inside another Fizz render.
 export const isPrimaryRenderer = false;
 
+// Disable Client Hooks
+export const supportsClientAPIs = false;
+
 import {
   stringToChunk,
   stringToPrecomputedChunk,
