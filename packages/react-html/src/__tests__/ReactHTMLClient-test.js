@@ -38,6 +38,17 @@ if (!__EXPERIMENTAL__) {
       expect(html).toBe('<div>hello world</div>');
     });
 
+    it('should be able to render a large string', async () => {
+      function Component() {
+        return <div>{'hello '.repeat(200)}world</div>;
+      }
+
+      const html = await ReactHTML.renderToMarkup(
+        React.createElement(Component),
+      );
+      expect(html).toBe('<div>' + ('hello '.repeat(200) + 'world') + '</div>');
+    });
+
     it('should prefix html tags with a doctype', async () => {
       const html = await ReactHTML.renderToMarkup(
         <html>
