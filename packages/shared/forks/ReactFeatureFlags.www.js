@@ -15,15 +15,9 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  disableInputAttributeSyncing,
-  disableIEWorkarounds,
-  enableBigIntSupport,
   enableTrustedTypesIntegration,
-  enableLegacyFBSupport,
   enableDebugTracing,
-  enableUseRefAccessWarning,
   enableLazyContextPropagation,
-  enableUnifiedSyncLane,
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,
@@ -36,9 +30,12 @@ export const {
   transitionLaneExpirationMs,
   enableInfiniteRenderLoopDetection,
   enableRenderableContext,
-  useModernStrictMode,
-  enableRefAsProp,
   favorSafetyOverHydrationPerf,
+  disableDefaultPropsExceptForClasses,
+  enableNoCloningMemoCache,
+  enableAddPropertiesFastPath,
+  enableFastJSX,
+  renameElementSymbol,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -53,11 +50,14 @@ export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
+export const disableIEWorkarounds = true;
 export const enableCPUSuspense = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableAsyncActions = true;
+export const disableInputAttributeSyncing = false;
+export const enableLegacyFBSupport = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
@@ -68,10 +68,11 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableCache = true;
 export const enableLegacyCache = true;
-export const enableCacheElement = true;
-export const enableFetchInstrumentation = false;
 
-export const enableBinaryFlight = false;
+export const enableBinaryFlight = true;
+export const enableFlightReadableStream = true;
+export const enableAsyncIterableChildren = false;
+
 export const enableTaint = false;
 
 export const enablePostpone = false;
@@ -90,6 +91,8 @@ export const enableLegacyHidden = true;
 
 export const enableComponentStackLocations = true;
 
+export const enableRefAsProp = true;
+
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const allowConcurrentByDefault = true;
@@ -105,18 +108,20 @@ export const passChildrenWhenCloningPersistedNodes = false;
 export const enableAsyncDebugInfo = false;
 export const disableClientCache = true;
 
-export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
+export const useModernStrictMode = true;
 
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.
 export const disableStringRefs = false;
 
-export const disableLegacyMode = false;
+export const disableLegacyMode: boolean =
+  __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
 
-export const disableDOMTestUtils = false;
+export const enableOwnerStacks = false;
+export const enableShallowPropDiffing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

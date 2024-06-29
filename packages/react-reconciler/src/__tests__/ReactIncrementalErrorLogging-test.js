@@ -85,18 +85,20 @@ describe('ReactIncrementalErrorLogging', () => {
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('%s'),
         expect.stringContaining(
-          'An error occurred in the <ErrorThrowingComponent> component:',
-        ),
-        expect.stringMatching(
-          new RegExp(
-            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-              '\\s+(in|at) span(.*)\n' +
-              '\\s+(in|at) div(.*)',
-          ),
+          'An error occurred in the <ErrorThrowingComponent> component.',
         ),
         expect.stringContaining(
           'Consider adding an error boundary to your tree ' +
             'to customize error handling behavior.',
+        ),
+        expect.stringMatching(
+          new RegExp(
+            gate(flags => flags.enableOwnerStacks)
+              ? '\\s+(in|at) ErrorThrowingComponent'
+              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) div(.*)',
+          ),
         ),
       );
     }
@@ -131,18 +133,20 @@ describe('ReactIncrementalErrorLogging', () => {
       expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining('%s'),
         expect.stringContaining(
-          'An error occurred in the <ErrorThrowingComponent> component:',
-        ),
-        expect.stringMatching(
-          new RegExp(
-            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-              '\\s+(in|at) span(.*)\n' +
-              '\\s+(in|at) div(.*)',
-          ),
+          'An error occurred in the <ErrorThrowingComponent> component.',
         ),
         expect.stringContaining(
           'Consider adding an error boundary to your tree ' +
             'to customize error handling behavior.',
+        ),
+        expect.stringMatching(
+          new RegExp(
+            gate(flags => flags.enableOwnerStacks)
+              ? '\\s+(in|at) ErrorThrowingComponent'
+              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) div(.*)',
+          ),
         ),
       );
     }
@@ -189,19 +193,21 @@ describe('ReactIncrementalErrorLogging', () => {
           message: 'render error',
         }),
         expect.stringContaining(
-          'The above error occurred in the <ErrorThrowingComponent> component:',
-        ),
-        expect.stringMatching(
-          new RegExp(
-            '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
-              '\\s+(in|at) span(.*)\n' +
-              '\\s+(in|at) ErrorBoundary(.*)\n' +
-              '\\s+(in|at) div(.*)',
-          ),
+          'The above error occurred in the <ErrorThrowingComponent> component.',
         ),
         expect.stringContaining(
           'React will try to recreate this component tree from scratch ' +
             'using the error boundary you provided, ErrorBoundary.',
+        ),
+        expect.stringMatching(
+          new RegExp(
+            gate(flags => flags.enableOwnerStacks)
+              ? '\\s+(in|at) ErrorThrowingComponent'
+              : '\\s+(in|at) ErrorThrowingComponent (.*)\n' +
+                '\\s+(in|at) span(.*)\n' +
+                '\\s+(in|at) ErrorBoundary(.*)\n' +
+                '\\s+(in|at) div(.*)',
+          ),
         ),
       );
     } else {
@@ -270,16 +276,18 @@ describe('ReactIncrementalErrorLogging', () => {
           message: 'oops',
         }),
         expect.stringContaining(
-          'The above error occurred in the <Foo> component:',
-        ),
-        expect.stringMatching(
-          new RegExp(
-            '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
-          ),
+          'The above error occurred in the <Foo> component.',
         ),
         expect.stringContaining(
           'React will try to recreate this component tree from scratch ' +
             'using the error boundary you provided, ErrorBoundary.',
+        ),
+        expect.stringMatching(
+          gate(flag => flag.enableOwnerStacks)
+            ? new RegExp('\\s+(in|at) Foo')
+            : new RegExp(
+                '\\s+(in|at) Foo (.*)\n' + '\\s+(in|at) ErrorBoundary(.*)',
+              ),
         ),
       );
     } else {

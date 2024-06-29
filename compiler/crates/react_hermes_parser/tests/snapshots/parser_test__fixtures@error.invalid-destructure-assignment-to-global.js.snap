@@ -1,0 +1,169 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-destructure-assignment-to-global.js
+---
+Input:
+function useFoo(props) {
+  [x] = props;
+  return { x };
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "useFoo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          15
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            16,
+            21
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "ArrayPattern",
+                "elements": [
+                  {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      28,
+                      29
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  27,
+                  30
+                ]
+              },
+              "right": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  33,
+                  38
+                ]
+              },
+              "loc": null,
+              "range": [
+                27,
+                38
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              27,
+              39
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ObjectExpression",
+              "properties": [
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      51,
+                      52
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      51,
+                      52
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    51,
+                    52
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                49,
+                54
+              ]
+            },
+            "loc": null,
+            "range": [
+              42,
+              55
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          23,
+          57
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        57
+      ],
+      "loc": null,
+      "range": [
+        0,
+        57
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    57
+  ]
+}

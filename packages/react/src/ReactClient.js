@@ -18,7 +18,6 @@ import {
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -37,7 +36,6 @@ import {memo} from './ReactMemo';
 import {cache} from './ReactCacheClient';
 import {postpone} from './ReactPostpone';
 import {
-  getCacheSignal,
   getCacheForType,
   useCallback,
   useContext,
@@ -57,13 +55,13 @@ import {
   useId,
   useCacheRefresh,
   use,
-  useMemoCache,
   useOptimistic,
   useActionState,
 } from './ReactHooks';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
+import {captureOwnerStack} from './ReactOwnerStack';
 
 const Children = {
   map,
@@ -108,7 +106,7 @@ export {
   cloneElement,
   isValidElement,
   ReactVersion as version,
-  ReactSharedInternals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  ReactSharedInternals as __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   // Concurrent Mode
   useTransition,
   startTransition,
@@ -116,16 +114,14 @@ export {
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   REACT_OFFSCREEN_TYPE as unstable_Activity,
-  getCacheSignal as unstable_getCacheSignal,
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
-  REACT_CACHE_TYPE as unstable_Cache,
   use,
-  useMemoCache as unstable_useMemoCache,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
   // enableTransitionTracing
   REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
   useId,
-  act,
+  act, // DEV-only
+  captureOwnerStack, // DEV-only
 };

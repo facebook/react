@@ -167,7 +167,7 @@ describe('ReactDOMFizzShellHydration', () => {
     textCache = new Map();
   }
 
-  test('suspending in the shell during hydration', async () => {
+  it('suspending in the shell during hydration', async () => {
     const div = React.createRef(null);
 
     function App() {
@@ -207,7 +207,7 @@ describe('ReactDOMFizzShellHydration', () => {
     expect(container.textContent).toBe('Shell');
   });
 
-  test('suspending in the shell during a normal client render', async () => {
+  it('suspending in the shell during a normal client render', async () => {
     // Same as previous test but during a normal client render, no hydration
     function App() {
       return <AsyncText text="Shell" />;
@@ -226,7 +226,7 @@ describe('ReactDOMFizzShellHydration', () => {
     expect(container.textContent).toBe('Shell');
   });
 
-  test(
+  it(
     'updating the root at lower priority than initial hydration does not ' +
       'force a client render',
     async () => {
@@ -255,7 +255,7 @@ describe('ReactDOMFizzShellHydration', () => {
     },
   );
 
-  test('updating the root while the shell is suspended forces a client render', async () => {
+  it('updating the root while the shell is suspended forces a client render', async () => {
     function App() {
       return <AsyncText text="Shell" />;
     }
@@ -293,7 +293,7 @@ describe('ReactDOMFizzShellHydration', () => {
     expect(container.textContent).toBe('New screen');
   });
 
-  test('TODO: A large component stack causes SSR to stack overflow', async () => {
+  it('TODO: A large component stack causes SSR to stack overflow', async () => {
     spyOnDevAndProd(console, 'error').mockImplementation(() => {});
 
     function NestedComponent({depth}: {depth: number}) {
@@ -397,6 +397,9 @@ describe('ReactDOMFizzShellHydration', () => {
         },
         onRecoverableError(error) {
           Scheduler.log('onRecoverableError: ' + error.message);
+          if (error.cause) {
+            Scheduler.log('Cause: ' + error.cause.message);
+          }
         },
       });
     });
@@ -462,6 +465,9 @@ describe('ReactDOMFizzShellHydration', () => {
         },
         onRecoverableError(error) {
           Scheduler.log('onRecoverableError: ' + error.message);
+          if (error.cause) {
+            Scheduler.log('Cause: ' + error.cause.message);
+          }
         },
       });
     });
@@ -529,14 +535,92 @@ describe('ReactDOMFizzShellHydration', () => {
         },
         onRecoverableError(error) {
           Scheduler.log('onRecoverableError: ' + error.message);
+          if (error.cause) {
+            Scheduler.log('Cause: ' + error.cause.message);
+          }
         },
       });
     });
 
     assertLog([
-      'onRecoverableError: plain error',
-      'onRecoverableError: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+      'onRecoverableError: There was an error while hydrating but React was able to recover by instead client rendering the entire root.',
+      'Cause: plain error',
     ]);
     expect(container.textContent).toBe('Hello world');
   });
+
+  it(
+    'handles suspending while recovering from a hydration error (in the ' +
+      'shell, no Suspense boundary)',
+    async () => {
+      const useSyncExternalStore = React.useSyncExternalStore;
+
+      let isClient = false;
+
+      let resolve;
+      const clientPromise = new Promise(res => {
+        resolve = res;
+      });
+
+      function App() {
+        const state = useSyncExternalStore(
+          function subscribe() {
+            return () => {};
+          },
+          function getSnapshot() {
+            return 'Client';
+          },
+          function getServerSnapshot() {
+            const isHydrating = isClient;
+            if (isHydrating) {
+              // This triggers an error during hydration
+              throw new Error('Oops!');
+            }
+            return 'Server';
+          },
+        );
+
+        if (state === 'Client') {
+          return React.use(clientPromise);
+        }
+
+        return state;
+      }
+
+      // Server render
+      await serverAct(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      assertLog([]);
+
+      expect(container.innerHTML).toBe('Server');
+
+      // During hydration, an error is thrown. React attempts to recover by
+      // switching to client render
+      isClient = true;
+      await clientAct(async () => {
+        ReactDOMClient.hydrateRoot(container, <App />, {
+          onRecoverableError(error) {
+            Scheduler.log('onRecoverableError: ' + error.message);
+            if (error.cause) {
+              Scheduler.log('Cause: ' + error.cause.message);
+            }
+          },
+        });
+      });
+      expect(container.innerHTML).toBe('Server'); // Still suspended
+      assertLog([]);
+
+      await clientAct(async () => {
+        resolve('Client');
+      });
+      assertLog([
+        'onRecoverableError: There was an error while hydrating but React was ' +
+          'able to recover by instead client rendering the entire root.',
+        'Cause: Oops!',
+      ]);
+      expect(container.innerHTML).toBe('Client');
+    },
+  );
 });

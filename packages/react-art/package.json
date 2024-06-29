@@ -34,7 +34,6 @@
     "README.md",
     "index.js",
     "cjs/",
-    "umd/",
     "Circle.js",
     "Rectangle.js",
     "Wedge.js"

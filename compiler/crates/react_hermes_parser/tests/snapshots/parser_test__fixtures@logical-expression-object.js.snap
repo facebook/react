@@ -1,0 +1,503 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/logical-expression-object.js
+---
+Input:
+function component(props) {
+  // The mutable range for a extens the entire body.
+  // commenting out the last line of InferMutableRanges fixes it.
+  // my guess of what's going on is that a is aliased into the return value object literal,
+  // and that alias makes it look like the range of a needs to be extended to that point.
+  // but what's weird is that the end of a's range doesn't quite extend to the object.
+  let a = props.a || (props.b && props.c && props.d);
+  let b = (props.a && props.b && props.c) || props.d;
+  return { a, b };
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    422,
+                    423
+                  ]
+                },
+                "init": {
+                  "type": "LogicalExpression",
+                  "operator": "||",
+                  "left": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        426,
+                        431
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "a",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        432,
+                        433
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      426,
+                      433
+                    ]
+                  },
+                  "right": {
+                    "type": "LogicalExpression",
+                    "operator": "&&",
+                    "left": {
+                      "type": "LogicalExpression",
+                      "operator": "&&",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            438,
+                            443
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "b",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            444,
+                            445
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          438,
+                          445
+                        ]
+                      },
+                      "right": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            449,
+                            454
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "c",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            455,
+                            456
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          449,
+                          456
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        438,
+                        456
+                      ]
+                    },
+                    "right": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          460,
+                          465
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "d",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          466,
+                          467
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        460,
+                        467
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      438,
+                      467
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    426,
+                    468
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  422,
+                  468
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              418,
+              469
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    476,
+                    477
+                  ]
+                },
+                "init": {
+                  "type": "LogicalExpression",
+                  "operator": "||",
+                  "left": {
+                    "type": "LogicalExpression",
+                    "operator": "&&",
+                    "left": {
+                      "type": "LogicalExpression",
+                      "operator": "&&",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            481,
+                            486
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "a",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            487,
+                            488
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          481,
+                          488
+                        ]
+                      },
+                      "right": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            492,
+                            497
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "b",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            498,
+                            499
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          492,
+                          499
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        481,
+                        499
+                      ]
+                    },
+                    "right": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "props",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          503,
+                          508
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "c",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          509,
+                          510
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        503,
+                        510
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      481,
+                      510
+                    ]
+                  },
+                  "right": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        515,
+                        520
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "d",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        521,
+                        522
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      515,
+                      522
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    480,
+                    522
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  476,
+                  522
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              472,
+              523
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ObjectExpression",
+              "properties": [
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "a",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      535,
+                      536
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "a",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      535,
+                      536
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    535,
+                    536
+                  ]
+                },
+                {
+                  "type": "Property",
+                  "key": {
+                    "type": "Identifier",
+                    "name": "b",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      538,
+                      539
+                    ]
+                  },
+                  "value": {
+                    "type": "Identifier",
+                    "name": "b",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      538,
+                      539
+                    ]
+                  },
+                  "kind": "init",
+                  "method": false,
+                  "shorthand": true,
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    538,
+                    539
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                533,
+                541
+              ]
+            },
+            "loc": null,
+            "range": [
+              526,
+              542
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          544
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        544
+      ],
+      "loc": null,
+      "range": [
+        0,
+        544
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    544
+  ]
+}

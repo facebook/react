@@ -40,6 +40,9 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 // those can be fixed.
 export const enableDeferRootSchedulingToMicrotask = true;
 
+// TODO: Land at Meta before removing.
+export const disableDefaultPropsExceptForClasses = true;
+
 // -----------------------------------------------------------------------------
 // Slated for removal in the future (significant effort)
 //
@@ -75,10 +78,10 @@ export const enableLegacyFBSupport = false;
 
 export const enableCache = true;
 export const enableLegacyCache = __EXPERIMENTAL__;
-export const enableCacheElement = __EXPERIMENTAL__;
-export const enableFetchInstrumentation = true;
 
-export const enableBinaryFlight = __EXPERIMENTAL__;
+export const enableBinaryFlight = true;
+export const enableFlightReadableStream = true;
+export const enableAsyncIterableChildren = __EXPERIMENTAL__;
 
 export const enableTaint = __EXPERIMENTAL__;
 
@@ -99,24 +102,30 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-// Enables unstable_useMemoCache hook, intended as a compilation target for
+// Enables useMemoCache hook, intended as a compilation target for
 // auto-memoization.
-export const enableUseMemoCacheHook = __EXPERIMENTAL__;
+export const enableUseMemoCacheHook = true;
+// Test this at Meta before enabling.
+export const enableNoCloningMemoCache = false;
 
 export const enableUseEffectEventHook = __EXPERIMENTAL__;
 
 // Test in www before enabling in open source.
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
-export const enableFizzExternalRuntime = true;
+export const enableFizzExternalRuntime = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
-export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
-
 export const enableServerComponentLogs = __EXPERIMENTAL__;
+
+export const enableAddPropertiesFastPath = false;
+
+export const enableOwnerStacks = __EXPERIMENTAL__;
+
+export const enableShallowPropDiffing = false;
 
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
@@ -131,33 +140,36 @@ export const transitionLaneExpirationMs = 5000;
 //
 // Alias __NEXT_MAJOR__ to __EXPERIMENTAL__ for easier skimming.
 // -----------------------------------------------------------------------------
-const __NEXT_MAJOR__ = __EXPERIMENTAL__;
+
+// TODO: Anything that's set to `true` in this section should either be cleaned
+// up (if it's on everywhere, including Meta and RN builds) or moved to a
+// different section of this file.
+
+// const __NEXT_MAJOR__ = __EXPERIMENTAL__;
+
+// Renames the internal symbol for elements since they have changed signature/constructor
+export const renameElementSymbol = true;
 
 // Removes legacy style context
-export const disableLegacyContext = __NEXT_MAJOR__;
+export const disableLegacyContext = true;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = __NEXT_MAJOR__;
+export const useModernStrictMode = true;
 
 // Not ready to break experimental yet.
 // Remove IE and MsApp specific workarounds for innerHTML
-export const disableIEWorkarounds = __NEXT_MAJOR__;
+export const disableIEWorkarounds = true;
 
 // Filter certain DOM attributes (e.g. src, href) if their values are empty
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
+export const enableFilterEmptyStringAttributesDOM = true;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
-export const disableClientCache = false;
-
-// Changes Server Components Reconciliation when they have keys
-export const enableServerComponentKeys = __NEXT_MAJOR__;
-
-export const enableBigIntSupport = __NEXT_MAJOR__;
+export const disableClientCache = true;
 
 /**
  * Enables a new error detection for infinite render loops from updates caused
@@ -170,21 +182,23 @@ export const enableInfiniteRenderLoopDetection = true;
 
 // Passes `ref` as a normal prop instead of stripping it from the props object
 // during element creation.
-export const enableRefAsProp = __NEXT_MAJOR__;
-export const disableStringRefs = __NEXT_MAJOR__;
+export const enableRefAsProp = true;
+export const disableStringRefs = true;
+export const enableFastJSX = true;
 
 // Warn on any usage of ReactTestRenderer
-export const enableReactTestRendererWarning = __NEXT_MAJOR__;
+export const enableReactTestRendererWarning = true;
 
 // Disables legacy mode
 // This allows us to land breaking changes to remove legacy mode APIs in experimental builds
 // before removing them in stable in the next Major
-export const disableLegacyMode = __NEXT_MAJOR__;
-
-export const disableDOMTestUtils = __NEXT_MAJOR__;
+export const disableLegacyMode = true;
 
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
-export const enableRenderableContext = __NEXT_MAJOR__;
+export const enableRenderableContext = true;
+
+// Enables the `initialValue` option for `useDeferredValue`
+export const enableUseDeferredValueInitialArg = true;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -193,12 +207,8 @@ export const enableRenderableContext = __NEXT_MAJOR__;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
-export const enableUseRefAccessWarning = false;
-
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const forceConcurrentByDefaultForTesting = false;
-
-export const enableUnifiedSyncLane = true;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;

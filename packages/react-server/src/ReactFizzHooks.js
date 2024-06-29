@@ -25,9 +25,17 @@ import type {TransitionStatus} from './ReactFizzConfig';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
-import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
+import {
+  createThenableState,
+  trackUsedThenable,
+  readPreviousThenable,
+} from './ReactFizzThenable';
 
-import {makeId, NotPendingTransition} from './ReactFizzConfig';
+import {
+  makeId,
+  NotPendingTransition,
+  supportsClientAPIs,
+} from './ReactFizzConfig';
 import {createFastHash} from './ReactServerStreamConfig';
 
 import {
@@ -225,6 +233,13 @@ export function prepareToUseHooks(
   localIdCounter = 0;
   actionStateCounter = 0;
   actionStateMatchingIndex = -1;
+  thenableIndexCounter = 0;
+  thenableState = prevThenableState;
+}
+
+export function prepareToUseThenableState(
+  prevThenableState: ThenableState | null,
+): void {
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
 }
@@ -765,6 +780,15 @@ export function unwrapThenable<T>(thenable: Thenable<T>): T {
   return trackUsedThenable(thenableState, thenable, index);
 }
 
+export function readPreviousThenableFromState<T>(): T | void {
+  const index = thenableIndexCounter;
+  thenableIndexCounter += 1;
+  if (thenableState === null) {
+    return undefined;
+  }
+  return readPreviousThenable(thenableState, index);
+}
+
 function unsupportedRefresh() {
   throw new Error('Cache cannot be refreshed during server rendering.');
 }
@@ -783,29 +807,56 @@ function useMemoCache(size: number): Array<any> {
 
 function noop(): void {}
 
-export const HooksDispatcher: Dispatcher = {
-  readContext,
-  use,
-  useContext,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-  useInsertionEffect: noop,
-  useLayoutEffect: noop,
-  useCallback,
-  // useImperativeHandle is not run in the server environment
-  useImperativeHandle: noop,
-  // Effects are not run in the server environment.
-  useEffect: noop,
-  // Debugging effect
-  useDebugValue: noop,
-  useDeferredValue,
-  useTransition,
-  useId,
-  // Subscriptions are not setup in a server environment.
-  useSyncExternalStore,
-};
+function clientHookNotSupported() {
+  throw new Error(
+    'Cannot use state or effect Hooks in renderToMarkup because ' +
+      'this component will never be hydrated.',
+  );
+}
+
+export const HooksDispatcher: Dispatcher = supportsClientAPIs
+  ? {
+      readContext,
+      use,
+      useContext,
+      useMemo,
+      useReducer,
+      useRef,
+      useState,
+      useInsertionEffect: noop,
+      useLayoutEffect: noop,
+      useCallback,
+      // useImperativeHandle is not run in the server environment
+      useImperativeHandle: noop,
+      // Effects are not run in the server environment.
+      useEffect: noop,
+      // Debugging effect
+      useDebugValue: noop,
+      useDeferredValue,
+      useTransition,
+      useId,
+      // Subscriptions are not setup in a server environment.
+      useSyncExternalStore,
+    }
+  : {
+      readContext,
+      use,
+      useContext,
+      useMemo,
+      useReducer: clientHookNotSupported,
+      useRef: clientHookNotSupported,
+      useState: clientHookNotSupported,
+      useInsertionEffect: clientHookNotSupported,
+      useLayoutEffect: clientHookNotSupported,
+      useCallback,
+      useImperativeHandle: clientHookNotSupported,
+      useEffect: clientHookNotSupported,
+      useDebugValue: noop,
+      useDeferredValue: clientHookNotSupported,
+      useTransition: clientHookNotSupported,
+      useId,
+      useSyncExternalStore: clientHookNotSupported,
+    };
 
 if (enableCache) {
   HooksDispatcher.useCacheRefresh = useCacheRefresh;

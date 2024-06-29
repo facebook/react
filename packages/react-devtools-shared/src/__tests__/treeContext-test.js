@@ -2549,7 +2549,7 @@ describe('TreeListContext', () => {
     });
 
     describe('error boundaries', () => {
-      it('should properly handle errors/warnings from components that dont mount because of an error', () => {
+      it('should properly handle errors from components that dont mount because of an error', () => {
         class ErrorBoundary extends React.Component {
           state = {error: null};
           static getDerivedStateFromError(error) {
@@ -2586,16 +2586,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 1
           [root]
-              <ErrorBoundary> ✕
+              <ErrorBoundary>
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 1
           [root]
-          →    <ErrorBoundary> ✕
+               <ErrorBoundary>
         `);
 
         utils.act(() => unmount());
@@ -2606,7 +2604,7 @@ describe('TreeListContext', () => {
         expect(state).toMatchInlineSnapshot(``);
       });
 
-      it('should properly handle errors/warnings from components that dont mount because of an error', () => {
+      it('should properly handle warnings from components that dont mount because of an error', () => {
         class ErrorBoundary extends React.Component {
           state = {error: null};
           static getDerivedStateFromError(error) {
@@ -2648,16 +2646,14 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 1
           [root]
-              <ErrorBoundary> ✕
+              <ErrorBoundary>
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 1, ⚠ 1
           [root]
-          →    <ErrorBoundary> ✕
+               <ErrorBoundary>
         `);
 
         utils.act(() => unmount());
@@ -2705,18 +2701,18 @@ describe('TreeListContext', () => {
         utils.act(() => TestRenderer.create(<Contexts />));
 
         expect(store).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 1
+          ✕ 1, ⚠ 0
           [root]
-            ▾ <ErrorBoundary> ✕
+            ▾ <ErrorBoundary>
                 <Child> ✕
         `);
 
         selectNextErrorOrWarning();
         expect(state).toMatchInlineSnapshot(`
-          ✕ 2, ⚠ 1
+          ✕ 1, ⚠ 0
           [root]
-          →  ▾ <ErrorBoundary> ✕
-                 <Child> ✕
+             ▾ <ErrorBoundary>
+          →      <Child> ✕
         `);
       });
     });

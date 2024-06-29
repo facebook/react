@@ -19,6 +19,8 @@ import type {Thenable} from 'shared/ReactTypes';
 import * as Scheduler from 'scheduler/unstable_mock';
 
 import enqueueTask from './enqueueTask';
+import {assertConsoleLogsCleared} from './consoleMock';
+import {diff} from 'jest-diff';
 
 export let actingUpdatesScopeDepth: number = 0;
 
@@ -44,6 +46,22 @@ export async function act<T>(scope: () => Thenable<T>): Thenable<T> {
       'This version of `act` requires a special mock build of Scheduler.',
     );
   }
+
+  const actualYields = Scheduler.unstable_clearLog();
+  if (actualYields.length !== 0) {
+    const error = Error(
+      'Log of yielded values is not empty. Call assertLog first.\n\n' +
+        `Received:\n${diff('', actualYields.join('\n'), {
+          omitAnnotationLines: true,
+        })}`,
+    );
+    Error.captureStackTrace(error, act);
+    throw error;
+  }
+
+  // We require every `act` call to assert console logs
+  // with one of the assertion helpers. Fails if not empty.
+  assertConsoleLogsCleared();
 
   // $FlowFixMe[cannot-resolve-name]: Flow doesn't know about global Jest object
   if (!jest.isMockFunction(setTimeout)) {

@@ -16,12 +16,13 @@ describe('DOMPropertyOperations', () => {
   let React;
   let ReactDOMClient;
   let act;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ({act} = require('internal-test-utils'));
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   // Sets a value in a way that React doesn't see,
@@ -1230,7 +1231,7 @@ describe('DOMPropertyOperations', () => {
       });
       customelement.dispatchEvent(new Event('customevent'));
       expect(oncustomevent).toHaveBeenCalledTimes(2);
-      expect(customelement.oncustomevent).toBe(null);
+      expect(customelement.oncustomevent).toBe(undefined);
       expect(customelement.getAttribute('oncustomevent')).toBe(null);
     });
 
@@ -1290,11 +1291,59 @@ describe('DOMPropertyOperations', () => {
       await act(() => {
         root.render(<my-custom-element />);
       });
-      expect(customElement.foo).toBe(null);
+      expect(customElement.foo).toBe(undefined);
       await act(() => {
         root.render(<my-custom-element foo={myFunction} />);
       });
       expect(customElement.foo).toBe(myFunction);
+    });
+
+    it('switching between null and undefined should update a property', async () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<my-custom-element foo={undefined} />);
+      });
+      const customElement = container.querySelector('my-custom-element');
+      customElement.foo = undefined;
+
+      await act(() => {
+        root.render(<my-custom-element foo={null} />);
+      });
+      expect(customElement.foo).toBe(null);
+
+      await act(() => {
+        root.render(<my-custom-element foo={undefined} />);
+      });
+      expect(customElement.foo).toBe(undefined);
+    });
+
+    it('warns when using popoverTarget={HTMLElement}', async () => {
+      const popoverTarget = document.createElement('div');
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(
+          <button key="one" popoverTarget={popoverTarget}>
+            Toggle popover
+          </button>,
+        );
+      });
+
+      assertConsoleErrorDev([
+        'The `popoverTarget` prop expects the ID of an Element as a string. Received HTMLDivElement {} instead.',
+      ]);
+
+      // Dedupe warning
+      await act(() => {
+        root.render(
+          <button key="two" popoverTarget={popoverTarget}>
+            Toggle popover
+          </button>,
+        );
+      });
     });
   });
 
@@ -1348,6 +1397,54 @@ describe('DOMPropertyOperations', () => {
         root.render(<my-icon size="5px" />);
       });
       expect(container.firstChild.getAttribute('size')).toBe('5px');
+    });
+
+    it('custom elements should remove by setting undefined to restore defaults', async () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<my-custom-element />);
+      });
+      const customElement = container.querySelector('my-custom-element');
+
+      // Non-setter but existing property to active the `in` heuristic
+      customElement.raw = 1;
+
+      // Install a setter to activate the `in` heuristic
+      Object.defineProperty(customElement, 'object', {
+        set: function (value = null) {
+          this._object = value;
+        },
+        get: function () {
+          return this._object;
+        },
+      });
+
+      Object.defineProperty(customElement, 'string', {
+        set: function (value = '') {
+          this._string = value;
+        },
+        get: function () {
+          return this._string;
+        },
+      });
+
+      const obj = {};
+      await act(() => {
+        root.render(<my-custom-element raw={2} object={obj} string="hi" />);
+      });
+      expect(customElement.raw).toBe(2);
+      expect(customElement.object).toBe(obj);
+      expect(customElement.string).toBe('hi');
+
+      // Removing the properties should reset to defaults by passing undefined
+      await act(() => {
+        root.render(<my-custom-element />);
+      });
+      expect(customElement.raw).toBe(undefined);
+      expect(customElement.object).toBe(null);
+      expect(customElement.string).toBe('');
     });
   });
 });

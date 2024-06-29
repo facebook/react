@@ -749,6 +749,57 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onTransitionRun', async () => {
+      await testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionRun',
+        reactEventType: 'transitionrun',
+        nativeEvent: 'transitionrun',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitionrun', {
+              bubbles: true,
+              cancelable: false,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onTransitionStart', async () => {
+      await testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionStart',
+        reactEventType: 'transitionstart',
+        nativeEvent: 'transitionstart',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitionstart', {
+              bubbles: true,
+              cancelable: false,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onTransitionCancel', async () => {
+      await testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionCancel',
+        reactEventType: 'transitioncancel',
+        nativeEvent: 'transitioncancel',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitioncancel', {
+              bubbles: true,
+              cancelable: false,
+            }),
+          );
+        },
+      });
+    });
+
     it('onTransitionEnd', async () => {
       await testNativeBubblingEvent({
         type: 'div',
@@ -759,7 +810,7 @@ describe('ReactDOMEventListener', () => {
           node.dispatchEvent(
             new Event('transitionend', {
               bubbles: true,
-              cancelable: true,
+              cancelable: false,
             }),
           );
         },
@@ -1204,6 +1255,40 @@ describe('ReactDOMEventListener', () => {
     it('onToggle', async () => {
       await testEmulatedBubblingEvent({
         type: 'details',
+        reactEvent: 'onToggle',
+        reactEventType: 'toggle',
+        nativeEvent: 'toggle',
+        dispatch(node) {
+          const e = new Event('toggle', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onBeforeToggle Popover API', async () => {
+      await testEmulatedBubblingEvent({
+        type: 'div',
+        targetProps: {popover: 'any'},
+        reactEvent: 'onBeforeToggle',
+        reactEventType: 'beforetoggle',
+        nativeEvent: 'beforetoggle',
+        dispatch(node) {
+          const e = new Event('beforetoggle', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onToggle Popover API', async () => {
+      await testEmulatedBubblingEvent({
+        type: 'div',
+        targetProps: {popover: 'any'},
         reactEvent: 'onToggle',
         reactEventType: 'toggle',
         nativeEvent: 'toggle',
@@ -1918,6 +2003,7 @@ describe('ReactDOMEventListener', () => {
         type={eventConfig.type}
         targetRef={targetRef}
         targetProps={{
+          ...eventConfig.targetProps,
           [eventConfig.reactEvent]: e => {
             log.push('---- inner');
           },
@@ -2084,11 +2170,10 @@ describe('ReactDOMEventListener', () => {
       <Fixture
         type={eventConfig.type}
         targetRef={targetRef}
-        targetProps={
-          {
-            // No listener on the target itself.
-          }
-        }
+        targetProps={{
+          ...eventConfig.targetProps,
+          // No listener on the target itself.
+        }}
         parentProps={{
           [eventConfig.reactEvent]: e => {
             log.push('--- inner parent');
@@ -2317,6 +2402,7 @@ describe('ReactDOMEventListener', () => {
         type={eventConfig.type}
         targetRef={targetRef}
         targetProps={{
+          ...eventConfig.targetProps,
           [eventConfig.reactEvent]: e => {
             e.stopPropagation(); // <---------
             log.push('---- inner');
@@ -2654,6 +2740,7 @@ describe('ReactDOMEventListener', () => {
           }
         }}
         targetProps={{
+          ...eventConfig.targetProps,
           [eventConfig.reactEvent]: e => {
             log.push('---- inner');
           },

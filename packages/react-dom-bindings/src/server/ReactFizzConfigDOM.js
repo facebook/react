@@ -28,7 +28,6 @@ import {
 import {Children} from 'react';
 
 import {
-  enableBigIntSupport,
   enableFilterEmptyStringAttributesDOM,
   enableFizzExternalRuntime,
 } from 'shared/ReactFeatureFlags';
@@ -84,18 +83,19 @@ import {getValueDescriptorExpectingObjectForWarning} from '../shared/ReactDOMRes
 import {NotPending} from '../shared/ReactDOMFormActions';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher =
-  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
-const previousDispatcher = ReactDOMCurrentDispatcher.current;
-ReactDOMCurrentDispatcher.current = {
-  prefetchDNS,
-  preconnect,
-  preload,
-  preloadModule,
-  preinitScript,
-  preinitStyle,
-  preinitModuleScript,
+const previousDispatcher =
+  ReactDOMSharedInternals.d; /* ReactDOMCurrentDispatcher */
+ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */ = {
+  f /* flushSyncWork */: previousDispatcher.f /* flushSyncWork */,
+  r /* requestFormReset */: previousDispatcher.r /* requestFormReset */,
+  D /* prefetchDNS */: prefetchDNS,
+  C /* preconnect */: preconnect,
+  L /* preload */: preload,
+  m /* preloadModule */: preloadModule,
+  X /* preinitScript */: preinitScript,
+  S /* preinitStyle */: preinitStyle,
+  M /* preinitModuleScript */: preinitModuleScript,
 };
 
 // We make every property of the descriptor optional because it is not a contract that
@@ -107,6 +107,8 @@ export type HeadersDescriptor = {
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
 export const isPrimaryRenderer = true;
+
+export const supportsClientAPIs = true;
 
 export type StreamingFormat = 0 | 1;
 const ScriptStreamingFormat: StreamingFormat = 0;
@@ -294,8 +296,8 @@ const scriptCrossOrigin = stringToPrecomputedChunk('" crossorigin="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
 /**
- * This escaping function is designed to work with bootstrapScriptContent and importMap only.
- * because we know we are escaping the entire script. We can avoid for instance
+ * This escaping function is designed to work with with inline scripts where the entire
+ * contents are escaped. Because we know we are escaping the entire script we can avoid for instance
  * escaping html comment string sequences that are valid javascript as well because
  * if there are no sebsequent <script sequences the html parser will never enter
  * script data double escaped state (see: https://www.w3.org/TR/html53/syntax.html#script-data-double-escaped-state)
@@ -303,7 +305,7 @@ const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
  * While untrusted script content should be made safe before using this api it will
  * ensure that the script cannot be early terminated or never terminated state
  */
-function escapeBootstrapAndImportMapScriptContent(scriptText: string) {
+function escapeEntireInlineScriptContent(scriptText: string) {
   if (__DEV__) {
     checkHtmlStringCoercion(scriptText);
   }
@@ -372,9 +374,7 @@ export function createRenderState(
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
       inlineScriptWithNonce,
-      stringToChunk(
-        escapeBootstrapAndImportMapScriptContent(bootstrapScriptContent),
-      ),
+      stringToChunk(escapeEntireInlineScriptContent(bootstrapScriptContent)),
       endInlineScript,
     );
   }
@@ -411,9 +411,7 @@ export function createRenderState(
     const map = importMap;
     importMapChunks.push(importMapScriptStart);
     importMapChunks.push(
-      stringToChunk(
-        escapeBootstrapAndImportMapScriptContent(JSON.stringify(map)),
-      ),
+      stringToChunk(escapeEntireInlineScriptContent(JSON.stringify(map))),
     );
     importMapChunks.push(importMapScriptEnd);
   }
@@ -1023,12 +1021,7 @@ function pushAdditionalFormField(
 ): void {
   const target: Array<Chunk | PrecomputedChunk> = this;
   target.push(startHiddenInputChunk);
-  if (typeof value !== 'string') {
-    throw new Error(
-      'File/Blob fields are not yet supported in progressive forms. ' +
-        'It probably means you are closing over binary data or FormData in a Server Action.',
-    );
-  }
+  validateAdditionalFormField(value, key);
   pushStringAttribute(target, 'name', key);
   pushStringAttribute(target, 'value', value);
   target.push(endOfStartTagSelfClosing);
@@ -1044,6 +1037,23 @@ function pushAdditionalFormFields(
   }
 }
 
+function validateAdditionalFormField(value: string | File, key: string): void {
+  if (typeof value !== 'string') {
+    throw new Error(
+      'File/Blob fields are not yet supported in progressive forms. ' +
+        'Will fallback to client hydration.',
+    );
+  }
+}
+
+function validateAdditionalFormFields(formData: void | null | FormData) {
+  if (formData != null) {
+    // $FlowFixMe[prop-missing]: FormData has forEach.
+    formData.forEach(validateAdditionalFormField);
+  }
+  return formData;
+}
+
 function getCustomFormFields(
   resumableState: ResumableState,
   formAction: any,
@@ -1052,7 +1062,11 @@ function getCustomFormFields(
   if (typeof customAction === 'function') {
     const prefix = makeFormFieldPrefix(resumableState);
     try {
-      return formAction.$$FORM_ACTION(prefix);
+      const customFields = formAction.$$FORM_ACTION(prefix);
+      if (customFields) {
+        validateAdditionalFormFields(customFields.data);
+      }
+      return customFields;
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Rethrow suspense.
@@ -1301,6 +1315,21 @@ function pushAttribute(
       }
       return;
     }
+    case 'inert': {
+      if (__DEV__) {
+        if (value === '' && !didWarnForNewBooleanPropsWithEmptyValue[name]) {
+          didWarnForNewBooleanPropsWithEmptyValue[name] = true;
+          console.error(
+            'Received an empty string for a boolean attribute `%s`. ' +
+              'This will treat the attribute as if it were false. ' +
+              'Either pass `false` to silence this warning, or ' +
+              'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+            name,
+          );
+        }
+      }
+    }
+    // Fallthrough for boolean props that don't have a warning for empty strings.
     case 'allowFullScreen':
     case 'async':
     case 'autoPlay':
@@ -1421,30 +1450,6 @@ function pushAttribute(
     case 'xmlSpace':
       pushStringAttribute(target, 'xml:space', value);
       return;
-    case 'inert': {
-      if (__DEV__) {
-        if (value === '' && !didWarnForNewBooleanPropsWithEmptyValue[name]) {
-          didWarnForNewBooleanPropsWithEmptyValue[name] = true;
-          console.error(
-            'Received an empty string for a boolean attribute `%s`. ' +
-              'This will treat the attribute as if it were false. ' +
-              'Either pass `false` to silence this warning, or ' +
-              'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
-            name,
-          );
-        }
-      }
-      // Boolean
-      if (value && typeof value !== 'function' && typeof value !== 'symbol') {
-        target.push(
-          attributeSeparator,
-          stringToChunk(name),
-          attributeEmptyString,
-        );
-      }
-      return;
-    }
-    // fallthrough for new boolean props without the flag on
     default:
       if (
         // shouldIgnoreAttribute
@@ -1461,7 +1466,7 @@ function pushAttribute(
         // shouldRemoveAttribute
         switch (typeof value) {
           case 'function':
-          case 'symbol': // eslint-disable-line
+          case 'symbol':
             return;
           case 'boolean': {
             const prefix = attributeName.toLowerCase().slice(0, 5);
@@ -1598,6 +1603,73 @@ function pushStartAnchor(
   return children;
 }
 
+function pushStartObject(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+): ReactNodeList {
+  target.push(startChunkForTag('object'));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        case 'data': {
+          if (__DEV__) {
+            checkAttributeStringCoercion(propValue, 'data');
+          }
+          const sanitizedValue = sanitizeURL('' + propValue);
+          if (enableFilterEmptyStringAttributesDOM) {
+            if (sanitizedValue === '') {
+              if (__DEV__) {
+                console.error(
+                  'An empty string ("") was passed to the %s attribute. ' +
+                    'To fix this, either do not render the element at all ' +
+                    'or pass null to %s instead of an empty string.',
+                  propKey,
+                  propKey,
+                );
+              }
+              break;
+            }
+          }
+          target.push(
+            attributeSeparator,
+            stringToChunk('data'),
+            attributeAssign,
+            stringToChunk(escapeTextForBrowser(sanitizedValue)),
+            attributeEnd,
+          );
+          break;
+        }
+        default:
+          pushAttribute(target, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
+  if (typeof children === 'string') {
+    // Special case children as a string to avoid the unnecessary comment.
+    // TODO: Remove this special case after the general optimization is in place.
+    target.push(stringToChunk(encodeHTMLTextNode(children)));
+    return null;
+  }
+  return children;
+}
+
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -1673,8 +1745,7 @@ function flattenOptionChildren(children: mixed): string {
         !didWarnInvalidOptionChildren &&
         typeof child !== 'string' &&
         typeof child !== 'number' &&
-        ((enableBigIntSupport && typeof child !== 'bigint') ||
-          !enableBigIntSupport)
+        typeof child !== 'bigint'
       ) {
         didWarnInvalidOptionChildren = true;
         console.error(
@@ -2679,6 +2750,26 @@ function pushStyle(
   }
 }
 
+/**
+ * This escaping function is designed to work with style tag textContent only.
+ *
+ * While untrusted style content should be made safe before using this api it will
+ * ensure that the style cannot be early terminated or never terminated state
+ */
+function escapeStyleTextContent(styleText: string) {
+  if (__DEV__) {
+    checkHtmlStringCoercion(styleText);
+  }
+  return ('' + styleText).replace(styleRegex, styleReplacer);
+}
+const styleRegex = /(<\/|<)(s)(tyle)/gi;
+const styleReplacer = (
+  match: string,
+  prefix: string,
+  s: string,
+  suffix: string,
+) => `${prefix}${s === 's' ? '\\73 ' : '\\53 '}${suffix}`;
+
 function pushStyleImpl(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -2719,8 +2810,7 @@ function pushStyleImpl(
     child !== null &&
     child !== undefined
   ) {
-    // eslint-disable-next-line react-internal/safe-string-coercion
-    target.push(stringToChunk(escapeTextForBrowser('' + child)));
+    target.push(stringToChunk(escapeStyleTextContent(child)));
   }
   pushInnerHTML(target, innerHTML, children);
   target.push(endChunkForTag('style'));
@@ -2761,8 +2851,7 @@ function pushStyleContents(
     child !== null &&
     child !== undefined
   ) {
-    // eslint-disable-next-line react-internal/safe-string-coercion
-    target.push(stringToChunk(escapeTextForBrowser('' + child)));
+    target.push(stringToChunk(escapeStyleTextContent(child)));
   }
   pushInnerHTML(target, innerHTML, children);
   return;
@@ -2773,7 +2862,7 @@ function pushImg(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
-  pictureTagInScope: boolean,
+  pictureOrNoScriptTagInScope: boolean,
 ): null {
   const {src, srcSet} = props;
   if (
@@ -2782,7 +2871,7 @@ function pushImg(
     (typeof src === 'string' || src == null) &&
     (typeof srcSet === 'string' || srcSet == null) &&
     props.fetchPriority !== 'low' &&
-    pictureTagInScope === false &&
+    pictureOrNoScriptTagInScope === false &&
     // We exclude data URIs in src and srcSet since these should not be preloaded
     !(
       typeof src === 'string' &&
@@ -2992,40 +3081,36 @@ function pushTitle(
 
       if (Array.isArray(children) && children.length > 1) {
         console.error(
-          'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an Array with length %s instead.' +
+          'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an Array with length %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert `children` of <title> tags to a single string value' +
             ' which is why Arrays of length greater than 1 are not supported. When using JSX it can be commong to combine text nodes and value nodes.' +
             ' For example: <title>hello {nameOfUser}</title>. While not immediately apparent, `children` in this case is an Array with length 2. If your `children` prop' +
             ' is using this form try rewriting it using a template string: <title>{`hello ${nameOfUser}`}</title>.',
-          enableBigIntSupport ? ', bigint' : '',
           children.length,
         );
       } else if (typeof child === 'function' || typeof child === 'symbol') {
         const childType =
           typeof child === 'function' ? 'a Function' : 'a Sybmol';
         console.error(
-          'React expect children of <title> tags to be a string, number%s, or object with a novel `toString` method but found %s instead.' +
+          'React expect children of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found %s instead.' +
             ' Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title>' +
             ' tags to a single string value.',
-          enableBigIntSupport ? ', bigint' : '',
           childType,
         );
       } else if (child && child.toString === {}.toString) {
         if (child.$$typeof != null) {
           console.error(
-            'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an object that appears to be' +
+            'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an object that appears to be' +
               ' a React element which never implements a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to' +
               ' be able to convert children of <title> tags to a single string value which is why rendering React elements is not supported. If the `children` of <title> is' +
               ' a React Component try moving the <title> tag into that component. If the `children` of <title> is some HTML markup change it to be Text only to be valid HTML.',
-            enableBigIntSupport ? ', bigint' : '',
           );
         } else {
           console.error(
-            'React expects the `children` prop of <title> tags to be a string, number%s, or object with a novel `toString` method but found an object that does not implement' +
+            'React expects the `children` prop of <title> tags to be a string, number, bigint, or object with a novel `toString` method but found an object that does not implement' +
               ' a suitable `toString` method. Browsers treat all child Nodes of <title> tags as Text content and React expects to be able to convert children of <title> tags' +
               ' to a single string value. Using the default `toString` method available on every object is almost certainly an error. Consider whether the `children` of this <title>' +
               ' is an object in error and change it to a string or number value if so. Otherwise implement a `toString` method that React can use to produce a valid <title>.',
-            enableBigIntSupport ? ', bigint' : '',
           );
         }
       }
@@ -3260,7 +3345,7 @@ function pushScriptImpl(
 
   pushInnerHTML(target, innerHTML, children);
   if (typeof children === 'string') {
-    target.push(stringToChunk(encodeHTMLTextNode(children)));
+    target.push(stringToChunk(escapeEntireInlineScriptContent(children)));
   }
   target.push(endChunkForTag('script'));
   return null;
@@ -3551,6 +3636,8 @@ export function pushStartInstance(
       return pushStartForm(target, props, resumableState, renderState);
     case 'menuitem':
       return pushStartMenuItem(target, props);
+    case 'object':
+      return pushStartObject(target, props);
     case 'title':
       return pushTitle(
         target,
@@ -3614,7 +3701,7 @@ export function pushStartInstance(
         props,
         resumableState,
         renderState,
-        !!(formatContext.tagScope & PICTURE_SCOPE),
+        !!(formatContext.tagScope & (PICTURE_SCOPE | NOSCRIPT_SCOPE)),
       );
     }
     // Omitted close tags
@@ -5281,7 +5368,7 @@ function prefetchDNS(href: string) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
-    previousDispatcher.prefetchDNS(href);
+    previousDispatcher.D(/* prefetchDNS */ href);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5334,7 +5421,7 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
-    previousDispatcher.preconnect(href, crossOrigin);
+    previousDispatcher.C(/* preconnect */ href, crossOrigin);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5395,7 +5482,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
-    previousDispatcher.preload(href, as, options);
+    previousDispatcher.L(/* preload */ href, as, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5596,7 +5683,7 @@ function preloadModule(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
-    previousDispatcher.preloadModule(href, options);
+    previousDispatcher.m(/* preloadModule */ href, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5670,7 +5757,7 @@ function preinitStyle(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
-    previousDispatcher.preinitStyle(href, precedence, options);
+    previousDispatcher.S(/* preinitStyle */ href, precedence, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5755,7 +5842,7 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions): void {
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
-    previousDispatcher.preinitScript(src, options);
+    previousDispatcher.X(/* preinitScript */ src, options);
     return;
   }
   const resumableState = getResumableState(request);
@@ -5818,7 +5905,7 @@ function preinitModuleScript(
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
     // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
     // fetching) and we don't want to warn in those cases.
-    previousDispatcher.preinitModuleScript(src, options);
+    previousDispatcher.M(/* preinitModuleScript */ src, options);
     return;
   }
   const resumableState = getResumableState(request);

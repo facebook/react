@@ -152,21 +152,6 @@ describe('ReactCompositeComponent-state', () => {
       root.render(<TestComponent />);
     });
 
-    await act(() => {
-      root.render(<TestComponent nextColor="green" />);
-    });
-
-    await act(() => {
-      testComponentInstance.setFavoriteColor('blue');
-    });
-    await act(() => {
-      testComponentInstance.forceUpdate(
-        testComponentInstance.peekAtCallback('forceUpdate'),
-      );
-    });
-
-    root.unmount();
-
     assertLog([
       // there is no state when getInitialState() is called
       'getInitialState undefined',
@@ -198,6 +183,13 @@ describe('ReactCompositeComponent-state', () => {
       'componentDidUpdate-prevState orange',
       'setState-yellow yellow',
       'commit yellow',
+    ]);
+
+    await act(() => {
+      root.render(<TestComponent nextColor="green" />);
+    });
+
+    assertLog([
       'componentWillReceiveProps-start yellow',
       // setState({color:'green'}) only enqueues a pending state.
       'componentWillReceiveProps-end yellow',
@@ -216,6 +208,13 @@ describe('ReactCompositeComponent-state', () => {
       'componentDidUpdate-prevState yellow',
       'setState-receiveProps green',
       'commit green',
+    ]);
+
+    await act(() => {
+      testComponentInstance.setFavoriteColor('blue');
+    });
+
+    assertLog([
       // setFavoriteColor('blue')
       'shouldComponentUpdate-currentState green',
       'shouldComponentUpdate-nextState blue',
@@ -226,6 +225,13 @@ describe('ReactCompositeComponent-state', () => {
       'componentDidUpdate-prevState green',
       'setFavoriteColor blue',
       'commit blue',
+    ]);
+    await act(() => {
+      testComponentInstance.forceUpdate(
+        testComponentInstance.peekAtCallback('forceUpdate'),
+      );
+    });
+    assertLog([
       // forceUpdate()
       'componentWillUpdate-currentState blue',
       'componentWillUpdate-nextState blue',
@@ -234,7 +240,12 @@ describe('ReactCompositeComponent-state', () => {
       'componentDidUpdate-prevState blue',
       'forceUpdate blue',
       'commit blue',
-      // unmountComponent()
+    ]);
+
+    root.unmount();
+
+    assertLog([
+      // unmount()
       // state is available within `componentWillUnmount()`
       'componentWillUnmount blue',
     ]);
@@ -375,13 +386,13 @@ describe('ReactCompositeComponent-state', () => {
     await act(() => {
       root.render(<Parent />);
     });
+
+    assertLog(['parent render one', 'child render one']);
     await act(() => {
       root.render(<Parent />);
     });
 
     assertLog([
-      'parent render one',
-      'child render one',
       'parent render one',
       'child componentWillReceiveProps one',
       'child componentWillReceiveProps done one',
@@ -463,7 +474,7 @@ describe('ReactCompositeComponent-state', () => {
         root.render(<Test />);
       });
     }).toErrorDev(
-      'Warning: Test.componentWillReceiveProps(): Assigning directly to ' +
+      'Test.componentWillReceiveProps(): Assigning directly to ' +
         "this.state is deprecated (except inside a component's constructor). " +
         'Use setState instead.',
     );
@@ -512,7 +523,7 @@ describe('ReactCompositeComponent-state', () => {
         root.render(<Test />);
       });
     }).toErrorDev(
-      'Warning: Test.componentWillMount(): Assigning directly to ' +
+      'Test.componentWillMount(): Assigning directly to ' +
         "this.state is deprecated (except inside a component's constructor). " +
         'Use setState instead.',
     );
@@ -560,7 +571,7 @@ describe('ReactCompositeComponent-state', () => {
         root.render(<B />);
       });
     }).toErrorDev(
-      "Warning: Can't perform a React state update on a component that hasn't mounted yet",
+      "Can't perform a React state update on a component that hasn't mounted yet",
     );
   });
 

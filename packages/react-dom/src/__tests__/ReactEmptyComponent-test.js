@@ -26,9 +26,10 @@ describe('ReactEmptyComponent', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    findDOMNode =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactDOMClient = require('react-dom/client');
+    findDOMNode =
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode;
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     act = InternalTestUtils.act;
@@ -114,17 +115,14 @@ describe('ReactEmptyComponent', () => {
         root1.render(instance1);
       });
 
+      assertLog(['mount undefined', 'update DIV']);
+
       const root2 = ReactDOMClient.createRoot(container2);
       await act(() => {
         root2.render(instance2);
       });
 
-      assertLog([
-        'mount undefined',
-        'update DIV',
-        'mount DIV',
-        'update undefined',
-      ]);
+      assertLog(['mount DIV', 'update undefined']);
     });
 
     it('should be able to switch in a list of children', async () => {

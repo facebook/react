@@ -1,0 +1,656 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/computed-call-evaluation-order.js
+---
+Input:
+// Should print A, B, arg, original
+function Component() {
+  const changeF = (o) => {
+    o.f = () => console.log("new");
+  };
+  const x = {
+    f: () => console.log("original"),
+  };
+
+  (console.log("A"), x)[(console.log("B"), "f")](
+    (changeF(x), console.log("arg"), 1)
+  );
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          45,
+          54
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "changeF",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    67,
+                    74
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [
+                    {
+                      "type": "Identifier",
+                      "name": "o",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        78,
+                        79
+                      ]
+                    }
+                  ],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "o",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                90,
+                                91
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "f",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                92,
+                                93
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              90,
+                              93
+                            ]
+                          },
+                          "right": {
+                            "type": "ArrowFunctionExpression",
+                            "id": null,
+                            "params": [],
+                            "body": {
+                              "type": "CallExpression",
+                              "callee": {
+                                "type": "MemberExpression",
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "console",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    102,
+                                    109
+                                  ]
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "log",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    110,
+                                    113
+                                  ]
+                                },
+                                "computed": false,
+                                "loc": null,
+                                "range": [
+                                  102,
+                                  113
+                                ]
+                              },
+                              "arguments": [
+                                {
+                                  "type": "StringLiteral",
+                                  "value": "new",
+                                  "loc": null,
+                                  "range": [
+                                    114,
+                                    119
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                102,
+                                120
+                              ]
+                            },
+                            "generator": true,
+                            "async": false,
+                            "loc": null,
+                            "range": [
+                              96,
+                              120
+                            ],
+                            "expression": true,
+                            "loc": null,
+                            "range": [
+                              96,
+                              120
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            90,
+                            120
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          90,
+                          121
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      84,
+                      125
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    77,
+                    125
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    77,
+                    125
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  67,
+                  125
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              61,
+              126
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    135,
+                    136
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "f",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          145,
+                          146
+                        ]
+                      },
+                      "value": {
+                        "type": "ArrowFunctionExpression",
+                        "id": null,
+                        "params": [],
+                        "body": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "console",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                154,
+                                161
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "log",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                162,
+                                165
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              154,
+                              165
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "StringLiteral",
+                              "value": "original",
+                              "loc": null,
+                              "range": [
+                                166,
+                                176
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            154,
+                            177
+                          ]
+                        },
+                        "generator": true,
+                        "async": false,
+                        "loc": null,
+                        "range": [
+                          148,
+                          177
+                        ],
+                        "expression": true,
+                        "loc": null,
+                        "range": [
+                          148,
+                          177
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": false,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        145,
+                        177
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    139,
+                    182
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  135,
+                  182
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              129,
+              183
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "SequenceExpression",
+                  "expressions": [
+                    {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "console",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            188,
+                            195
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "log",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            196,
+                            199
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          188,
+                          199
+                        ]
+                      },
+                      "arguments": [
+                        {
+                          "type": "StringLiteral",
+                          "value": "A",
+                          "loc": null,
+                          "range": [
+                            200,
+                            203
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        188,
+                        204
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        206,
+                        207
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    188,
+                    207
+                  ]
+                },
+                "property": {
+                  "type": "SequenceExpression",
+                  "expressions": [
+                    {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "console",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            210,
+                            217
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "log",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            218,
+                            221
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          210,
+                          221
+                        ]
+                      },
+                      "arguments": [
+                        {
+                          "type": "StringLiteral",
+                          "value": "B",
+                          "loc": null,
+                          "range": [
+                            222,
+                            225
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        210,
+                        226
+                      ]
+                    },
+                    {
+                      "type": "StringLiteral",
+                      "value": "f",
+                      "loc": null,
+                      "range": [
+                        228,
+                        231
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    210,
+                    231
+                  ]
+                },
+                "computed": true,
+                "loc": null,
+                "range": [
+                  187,
+                  233
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "SequenceExpression",
+                  "expressions": [
+                    {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "Identifier",
+                        "name": "changeF",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          240,
+                          247
+                        ]
+                      },
+                      "arguments": [
+                        {
+                          "type": "Identifier",
+                          "name": "x",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            248,
+                            249
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        240,
+                        250
+                      ]
+                    },
+                    {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "console",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            252,
+                            259
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "log",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            260,
+                            263
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          252,
+                          263
+                        ]
+                      },
+                      "arguments": [
+                        {
+                          "type": "StringLiteral",
+                          "value": "arg",
+                          "loc": null,
+                          "range": [
+                            264,
+                            269
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        252,
+                        270
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        272,
+                        273
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    240,
+                    273
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                187,
+                278
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              187,
+              279
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                289,
+                290
+              ]
+            },
+            "loc": null,
+            "range": [
+              282,
+              291
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          57,
+          293
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        36,
+        293
+      ],
+      "loc": null,
+      "range": [
+        36,
+        293
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    36,
+    293
+  ]
+}

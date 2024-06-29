@@ -260,7 +260,7 @@ describe('ReactDOMServerLifecycles', () => {
         '<div>1-2</div>',
       );
     }).toErrorDev(
-      'Warning: Can only update a mounting component. This ' +
+      'Can only update a mounting component. This ' +
         'usually means you called setState() outside componentWillMount() on ' +
         'the server. This is a no-op.\n\n' +
         'Please check the code for the Outer component.',

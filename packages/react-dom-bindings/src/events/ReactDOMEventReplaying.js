@@ -37,15 +37,15 @@ import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {isRootDehydrated} from 'react-reconciler/src/ReactFiberShellHydration';
 import {dispatchReplayedFormAction} from './plugins/FormActionEventPlugin';
+import {
+  resolveUpdatePriority,
+  runWithPriority as attemptHydrationAtPriority,
+} from '../client/ReactDOMUpdatePriority';
 
 import {
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import {
-  runWithPriority as attemptHydrationAtPriority,
-  getCurrentUpdatePriority,
-} from 'react-reconciler/src/ReactEventPriorities';
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
@@ -333,10 +333,7 @@ function attemptExplicitHydrationTarget(
 }
 
 export function queueExplicitHydrationTarget(target: Node): void {
-  // TODO: This will read the priority if it's dispatched by the React
-  // event system but not native events. Should read window.event.type, like
-  // we do for updates (getCurrentEventPriority).
-  const updatePriority = getCurrentUpdatePriority();
+  const updatePriority = resolveUpdatePriority();
   const queuedTarget: QueuedHydrationTarget = {
     blockedOn: null,
     target: target,

@@ -49,8 +49,7 @@ describe('ReactNewContext', () => {
 
   function readContext(Context) {
     const dispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .ReactCurrentDispatcher.current;
+      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE.H;
     return dispatcher.readContext(Context);
   }
 
@@ -700,7 +699,7 @@ describe('ReactNewContext', () => {
         );
       });
 
-      // @gate www
+      // @gate enableLegacyHidden
       it("context consumer doesn't bail out inside hidden subtree", async () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);

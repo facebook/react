@@ -12,9 +12,10 @@ import type {
   TouchedViewDataAtPoint,
   ViewConfig,
 } from './ReactNativeTypes';
-import {create, diff} from './ReactNativeAttributePayload';
+import {create, diff} from './ReactNativeAttributePayloadFabric';
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
+  NoEventPriority,
   DefaultEventPriority,
   DiscreteEventPriority,
   type EventPriority,
@@ -131,6 +132,8 @@ export function appendInitialChild(
   appendChildNode(parentInstance.node, child.node);
 }
 
+const PROD_HOST_CONTEXT: HostContext = {isInAParentText: true};
+
 export function createInstance(
   type: string,
   props: Props,
@@ -219,29 +222,35 @@ export function finalizeInitialChildren(
 export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
-  return {isInAParentText: false};
+  if (__DEV__) {
+    return {isInAParentText: false};
+  }
+
+  return PROD_HOST_CONTEXT;
 }
 
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
 ): HostContext {
-  const prevIsInAParentText = parentHostContext.isInAParentText;
-  const isInAParentText =
-    type === 'AndroidTextInput' || // Android
-    type === 'RCTMultilineTextInputView' || // iOS
-    type === 'RCTSinglelineTextInputView' || // iOS
-    type === 'RCTText' ||
-    type === 'RCTVirtualText';
+  if (__DEV__) {
+    const prevIsInAParentText = parentHostContext.isInAParentText;
+    const isInAParentText =
+      type === 'AndroidTextInput' || // Android
+      type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSinglelineTextInputView' || // iOS
+      type === 'RCTText' ||
+      type === 'RCTVirtualText';
 
-  // TODO: If this is an offscreen host container, we should reuse the
-  // parent context.
+    // TODO: If this is an offscreen host container, we should reuse the
+    // parent context.
 
-  if (prevIsInAParentText !== isInAParentText) {
-    return {isInAParentText};
-  } else {
-    return parentHostContext;
+    if (prevIsInAParentText !== isInAParentText) {
+      return {isInAParentText};
+    }
   }
+
+  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): null | PublicInstance {
@@ -311,7 +320,20 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function getCurrentEventPriority(): EventPriority {
+let currentUpdatePriority: EventPriority = NoEventPriority;
+export function setCurrentUpdatePriority(newPriority: EventPriority): void {
+  currentUpdatePriority = newPriority;
+}
+
+export function getCurrentUpdatePriority(): EventPriority {
+  return currentUpdatePriority;
+}
+
+export function resolveUpdatePriority(): EventPriority {
+  if (currentUpdatePriority !== NoEventPriority) {
+    return currentUpdatePriority;
+  }
+
   const currentEventPriority = fabricGetCurrentEventPriority
     ? fabricGetCurrentEventPriority()
     : null;
@@ -500,6 +522,9 @@ export function waitForCommitToBeReady(): null {
 }
 
 export const NotPendingTransition: TransitionStatus = null;
+
+export type FormInstance = Instance;
+export function resetFormInstance(form: Instance): void {}
 
 // -------------------
 //     Microtasks

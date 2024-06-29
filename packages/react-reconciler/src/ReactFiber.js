@@ -28,7 +28,6 @@ import {
   isHostSingletonType,
 } from './ReactFiberConfig';
 import {
-  enableCache,
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
@@ -38,11 +37,12 @@ import {
   enableDebugTracing,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableRenderableContext,
+  disableLegacyMode,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
 import {
-  IndeterminateComponent,
   ClassComponent,
   HostRoot,
   HostComponent,
@@ -66,11 +66,11 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
-  CacheComponent,
   TracingMarkerComponent,
+  Throw,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
   resolveClassForHotReloading,
@@ -104,8 +104,8 @@ import {
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-  REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
+  REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 import {TransitionTracingMarker} from './ReactFiberTracingMarkerComponent';
 import {
@@ -113,6 +113,9 @@ import {
   attachOffscreenInstance,
 } from './ReactFiberCommitWork';
 import {getHostContext} from './ReactFiberHostContext';
+import type {ReactComponentInfo} from '../../shared/ReactTypes';
+import isArray from 'shared/isArray';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 export type {Fiber};
 
@@ -122,10 +125,10 @@ if (__DEV__) {
   hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
-    /* eslint-disable no-new */
+    // eslint-disable-next-line no-new
     new Map([[nonExtensibleObject, null]]);
+    // eslint-disable-next-line no-new
     new Set([nonExtensibleObject]);
-    /* eslint-enable no-new */
   } catch (e) {
     // TODO: Consider warning about bad polyfills
     hasBadMapPolyfill = true;
@@ -204,6 +207,10 @@ function FiberNode(
     // This isn't directly used but is handy for debugging internals:
     this._debugInfo = null;
     this._debugOwner = null;
+    if (enableOwnerStacks) {
+      this._debugStack = null;
+      this._debugTask = null;
+    }
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
@@ -248,19 +255,10 @@ export function isSimpleFunctionComponent(type: any): boolean {
   );
 }
 
-export function resolveLazyComponentTag(Component: Function): WorkTag {
-  if (typeof Component === 'function') {
-    return shouldConstruct(Component) ? ClassComponent : FunctionComponent;
-  } else if (Component !== undefined && Component !== null) {
-    const $$typeof = Component.$$typeof;
-    if ($$typeof === REACT_FORWARD_REF_TYPE) {
-      return ForwardRef;
-    }
-    if ($$typeof === REACT_MEMO_TYPE) {
-      return MemoComponent;
-    }
-  }
-  return IndeterminateComponent;
+export function isFunctionClassComponent(
+  type: (...args: Array<any>) => mixed,
+): boolean {
+  return shouldConstruct(type);
 }
 
 // This is used to create an alternate fiber to do work on.
@@ -286,6 +284,10 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // DEV-only fields
 
       workInProgress._debugOwner = current._debugOwner;
+      if (enableOwnerStacks) {
+        workInProgress._debugStack = current._debugStack;
+        workInProgress._debugTask = current._debugTask;
+      }
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
 
@@ -351,7 +353,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress._debugInfo = current._debugInfo;
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
     switch (workInProgress.tag) {
-      case IndeterminateComponent:
       case FunctionComponent:
       case SimpleMemoComponent:
         workInProgress.type = resolveFunctionForHotReloading(current.type);
@@ -453,7 +454,7 @@ export function createHostRootFiber(
   concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
-  if (tag === ConcurrentRoot) {
+  if (disableLegacyMode || tag === ConcurrentRoot) {
     mode = ConcurrentMode;
     if (isStrictMode === true) {
       mode |= StrictLegacyMode | StrictEffectsMode;
@@ -484,15 +485,16 @@ export function createHostRootFiber(
   return createFiber(HostRoot, null, null, mode);
 }
 
+// TODO: Get rid of this helper. Only createFiberFromElement should exist.
 export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
-  owner: null | Fiber,
+  owner: null | ReactComponentInfo | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let fiberTag = IndeterminateComponent;
+  let fiberTag = FunctionComponent;
   // The resolved type is set if we know what the final type will be. I.e. it's not lazy.
   let resolvedType = type;
   if (typeof type === 'function') {
@@ -531,7 +533,7 @@ export function createFiberFromTypeAndProps(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictLegacyMode;
-        if ((mode & ConcurrentMode) !== NoMode) {
+        if (disableLegacyMode || (mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
           if (
@@ -558,11 +560,6 @@ export function createFiberFromTypeAndProps(
       case REACT_SCOPE_TYPE:
         if (enableScopeAPI) {
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
-        }
-      // Fall through
-      case REACT_CACHE_TYPE:
-        if (enableCache) {
-          return createFiberFromCache(pendingProps, mode, lanes, key);
         }
       // Fall through
       case REACT_TRACING_MARKER_TYPE:
@@ -616,6 +613,7 @@ export function createFiberFromTypeAndProps(
           }
         }
         let info = '';
+        let typeString;
         if (__DEV__) {
           if (
             type === undefined ||
@@ -625,20 +623,46 @@ export function createFiberFromTypeAndProps(
           ) {
             info +=
               ' You likely forgot to export your component from the file ' +
-              "it's defined in, or you might have mixed up default and " +
-              'named imports.';
+              "it's defined in, or you might have mixed up default and named imports.";
           }
-          const ownerName = owner ? getComponentNameFromFiber(owner) : null;
+
+          if (type === null) {
+            typeString = 'null';
+          } else if (isArray(type)) {
+            typeString = 'array';
+          } else if (
+            type !== undefined &&
+            type.$$typeof === REACT_ELEMENT_TYPE
+          ) {
+            typeString = `<${
+              getComponentNameFromType(type.type) || 'Unknown'
+            } />`;
+            info =
+              ' Did you accidentally export a JSX literal instead of a component?';
+          } else {
+            typeString = typeof type;
+          }
+
+          const ownerName = owner ? getComponentNameFromOwner(owner) : null;
           if (ownerName) {
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
+        } else {
+          typeString = type === null ? 'null' : typeof type;
         }
 
-        throw new Error(
+        // The type is invalid but it's conceptually a child that errored and not the
+        // current component itself so we create a virtual child that throws in its
+        // begin phase. This is the same thing we do in ReactChildFiber if we throw
+        // but we do it here so that we can assign the debug owner and stack from the
+        // element itself. That way the error stack will point to the JSX callsite.
+        fiberTag = Throw;
+        pendingProps = new Error(
           'Element type is invalid: expected a string (for built-in ' +
             'components) or a class/function (for composite components) ' +
-            `but got: ${type == null ? type : typeof type}.${info}`,
+            `but got: ${typeString}.${info}`,
         );
+        resolvedType = null;
       }
     }
   }
@@ -677,6 +701,10 @@ export function createFiberFromElement(
   );
   if (__DEV__) {
     fiber._debugOwner = element._owner;
+    if (enableOwnerStacks) {
+      fiber._debugStack = element._debugStack;
+      fiber._debugTask = element._debugTask;
+    }
   }
   return fiber;
 }
@@ -807,18 +835,6 @@ export function createFiberFromLegacyHidden(
   return fiber;
 }
 
-export function createFiberFromCache(
-  pendingProps: any,
-  mode: TypeOfMode,
-  lanes: Lanes,
-  key: null | string,
-): Fiber {
-  const fiber = createFiber(CacheComponent, pendingProps, key, mode);
-  fiber.elementType = REACT_CACHE_TYPE;
-  fiber.lanes = lanes;
-  return fiber;
-}
-
 export function createFiberFromTracingMarker(
   pendingProps: any,
   mode: TypeOfMode,
@@ -870,5 +886,15 @@ export function createFiberFromPortal(
     pendingChildren: null, // Used by persistent updates
     implementation: portal.implementation,
   };
+  return fiber;
+}
+
+export function createFiberFromThrow(
+  error: mixed,
+  mode: TypeOfMode,
+  lanes: Lanes,
+): Fiber {
+  const fiber = createFiber(Throw, error, null, mode);
+  fiber.lanes = lanes;
   return fiber;
 }

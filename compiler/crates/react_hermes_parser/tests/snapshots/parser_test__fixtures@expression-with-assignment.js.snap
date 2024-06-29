@@ -1,0 +1,172 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/expression-with-assignment.js
+---
+Input:
+function f() {
+  let x = 1;
+  return x + (x = 2) + x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "f",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          10
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    21,
+                    22
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    25,
+                    26
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  21,
+                  26
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              17,
+              27
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "BinaryExpression",
+                "left": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    37,
+                    38
+                  ]
+                },
+                "operator": "+",
+                "right": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      42,
+                      43
+                    ]
+                  },
+                  "right": {
+                    "type": "NumericLiteral",
+                    "value": 2.0,
+                    "loc": null,
+                    "range": [
+                      46,
+                      47
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    42,
+                    47
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  37,
+                  48
+                ]
+              },
+              "operator": "+",
+              "right": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  51,
+                  52
+                ]
+              },
+              "loc": null,
+              "range": [
+                37,
+                52
+              ]
+            },
+            "loc": null,
+            "range": [
+              30,
+              53
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          13,
+          55
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        55
+      ],
+      "loc": null,
+      "range": [
+        0,
+        55
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    55
+  ]
+}

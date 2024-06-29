@@ -47,28 +47,6 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
   });
 
-  // @gate !classic || !__DEV__
-  it('warns if you import createRoot from react-dom', async () => {
-    expect(() => ReactDOM.createRoot(container)).toErrorDev(
-      'You are importing createRoot from "react-dom" which is not supported. ' +
-        'You should instead import it from "react-dom/client".',
-      {
-        withoutStack: true,
-      },
-    );
-  });
-
-  // @gate !classic || !__DEV__
-  it('warns if you import hydrateRoot from react-dom', async () => {
-    expect(() => ReactDOM.hydrateRoot(container, null)).toErrorDev(
-      'You are importing hydrateRoot from "react-dom" which is not supported. ' +
-        'You should instead import it from "react-dom/client".',
-      {
-        withoutStack: true,
-      },
-    );
-  });
-
   it('warns if a callback parameter is provided to render', async () => {
     const callback = jest.fn();
     const root = ReactDOMClient.createRoot(container);
@@ -81,7 +59,7 @@ describe('ReactDOMRoot', () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('warn if a container is passed to root.render(...)', async () => {
+  it('warn if a object is passed to root.render(...)', async () => {
     function App() {
       return 'Child';
     }
@@ -342,12 +320,13 @@ describe('ReactDOMRoot', () => {
       root.render(<Foo value="a" />);
     });
 
+    assertLog(['a']);
     expect(container.textContent).toEqual('a');
 
     await act(async () => {
       root.render(<Foo value="b" />);
 
-      assertLog(['a']);
+      assertLog([]);
       expect(container.textContent).toEqual('a');
 
       await waitFor(['b']);

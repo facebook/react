@@ -1,0 +1,205 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/for-of-break.js
+---
+Input:
+function Component() {
+  const x = [];
+  for (const item of [1, 2]) {
+    break;
+  }
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    31,
+                    32
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    35,
+                    37
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  31,
+                  37
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              38
+            ]
+          },
+          {
+            "type": "ForOfStatement",
+            "await": false,
+            "left": {
+              "type": "VariableDeclaration",
+              "kind": "const",
+              "declarations": [
+                {
+                  "type": "VariableDeclarator",
+                  "id": {
+                    "type": "Identifier",
+                    "name": "item",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      52,
+                      56
+                    ]
+                  },
+                  "init": null,
+                  "loc": null,
+                  "range": [
+                    52,
+                    56
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                46,
+                56
+              ]
+            },
+            "right": {
+              "type": "ArrayExpression",
+              "elements": [
+                {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    61,
+                    62
+                  ]
+                },
+                {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    64,
+                    65
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                60,
+                66
+              ]
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "BreakStatement",
+                  "label": null,
+                  "loc": null,
+                  "range": [
+                    74,
+                    80
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                68,
+                84
+              ]
+            },
+            "loc": null,
+            "range": [
+              41,
+              84
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                94,
+                95
+              ]
+            },
+            "loc": null,
+            "range": [
+              87,
+              96
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          98
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        98
+      ],
+      "loc": null,
+      "range": [
+        0,
+        98
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    98
+  ]
+}

@@ -24,7 +24,8 @@ describe('ReactLegacyUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     findDOMNode =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
+      ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
+        .findDOMNode;
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
@@ -651,7 +652,6 @@ describe('ReactLegacyUpdates', () => {
       });
     });
 
-    /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
       'Inner-render-0-0',
@@ -680,7 +680,6 @@ describe('ReactLegacyUpdates', () => {
       'Inner-didUpdate-2-2',
       'Inner-callback-2',
     ]);
-    /* eslint-enable indent */
   });
 
   // @gate !disableLegacyMode
@@ -934,7 +933,7 @@ describe('ReactLegacyUpdates', () => {
       );
     }).toErrorDev(
       'Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
+        "a function. Instead received: { foo: 'bar' }.",
       {withoutStack: 1},
     );
     // Make sure the warning is deduplicated and doesn't fire again
@@ -995,7 +994,7 @@ describe('ReactLegacyUpdates', () => {
       );
     }).toErrorDev(
       'Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
+        "a function. Instead received: { foo: 'bar' }.",
       {withoutStack: 1},
     );
     // Make sure the warning is deduplicated and doesn't fire again
@@ -1667,6 +1666,7 @@ describe('ReactLegacyUpdates', () => {
       await act(() => {
         ReactDOM.render(<Terminating />, container);
       });
+      assertLog(Array.from({length: LIMIT + 1}, (_, k) => k));
       expect(container.textContent).toBe('50');
       await act(() => {
         _setStep(0);

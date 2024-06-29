@@ -118,7 +118,7 @@ describe('Activity', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden && !disableLegacyMode
   it('does not defer in legacy mode', async () => {
     let setState;
     function Foo() {
@@ -163,7 +163,7 @@ describe('Activity', () => {
     );
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('does defer in concurrent mode', async () => {
     let setState;
     function Foo() {
@@ -698,15 +698,10 @@ describe('Activity', () => {
       );
 
       // Before the inner update can finish, we receive another pair of updates.
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        React.startTransition(() => {
-          setOuter(2);
-          setInner(2);
-        });
-      } else {
+      React.startTransition(() => {
         setOuter(2);
         setInner(2);
-      }
+      });
 
       // Also, before either of these new updates are processed, the hidden
       // tree is revealed at high priority.
@@ -1241,6 +1236,7 @@ describe('Activity', () => {
   // either an option or a heuristic to mount passive effects inside a hidden
   // tree after a delay.
   // @gate enableActivity
+  // eslint-disable-next-line jest/no-disabled-tests
   it.skip("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
     function Child({label}) {
       useEffect(() => {

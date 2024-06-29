@@ -10,7 +10,6 @@
 /* eslint-disable */
 
 declare const __PROFILE__: boolean;
-declare const __UMD__: boolean;
 declare const __EXPERIMENTAL__: boolean;
 declare const __VARIANT__: boolean;
 
@@ -28,6 +27,10 @@ declare const FinalizationRegistry: any;
 
 declare module 'create-react-class' {
   declare const exports: React$CreateClass;
+}
+
+declare interface ConsoleTask {
+  run<T>(f: () => T): T;
 }
 
 // Flow hides the props of React$Element, this overrides it to unhide
@@ -330,6 +333,31 @@ declare module 'node:worker_threads' {
     port1: MessagePort;
     port2: MessagePort;
   }
+}
+
+declare module 'jest-diff' {
+  declare type CompareKeys = ((a: string, b: string) => number) | void;
+  declare type DiffOptions = {
+    aAnnotation?: string,
+    aColor?: (arg: string) => string,
+    aIndicator?: string,
+    bAnnotation?: string,
+    bColor?: (arg: string) => string,
+    bIndicator?: string,
+    changeColor?: (arg: string) => string,
+    changeLineTrailingSpaceColor?: (arg: string) => string,
+    commonColor?: (arg: string) => string,
+    commonIndicator?: string,
+    commonLineTrailingSpaceColor?: (arg: string) => string,
+    contextLines?: number,
+    emptyFirstOrLastLinePlaceholder?: string,
+    expand?: boolean,
+    includeChangeCounts?: boolean,
+    omitAnnotationLines?: boolean,
+    patchColor?: (arg: string) => string,
+    compareKeys?: CompareKeys,
+  };
+  declare function diff(a: any, b: any, options?: DiffOptions): string;
 }
 
 declare const Bun: {

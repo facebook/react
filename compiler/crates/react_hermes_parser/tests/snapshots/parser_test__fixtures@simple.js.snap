@@ -1,0 +1,213 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/simple.js
+---
+Input:
+export default function foo(x, y) {
+  if (x) {
+    return foo(false, y);
+  }
+  return [y * 10];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "ExportDefaultDeclaration",
+      "declaration": {
+        "type": "FunctionDeclaration",
+        "id": {
+          "type": "Identifier",
+          "name": "foo",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            24,
+            27
+          ]
+        },
+        "params": [
+          {
+            "type": "Identifier",
+            "name": "x",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              28,
+              29
+            ]
+          },
+          {
+            "type": "Identifier",
+            "name": "y",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              31,
+              32
+            ]
+          }
+        ],
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "IfStatement",
+              "test": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  42,
+                  43
+                ]
+              },
+              "consequent": {
+                "type": "BlockStatement",
+                "body": [
+                  {
+                    "type": "ReturnStatement",
+                    "argument": {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "Identifier",
+                        "name": "foo",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          58,
+                          61
+                        ]
+                      },
+                      "arguments": [
+                        {
+                          "type": "BooleanLiteral",
+                          "value": false,
+                          "loc": null,
+                          "range": [
+                            62,
+                            67
+                          ]
+                        },
+                        {
+                          "type": "Identifier",
+                          "name": "y",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            69,
+                            70
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        58,
+                        71
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      51,
+                      72
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  45,
+                  76
+                ]
+              },
+              "alternate": null,
+              "loc": null,
+              "range": [
+                38,
+                76
+              ]
+            },
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "ArrayExpression",
+                "elements": [
+                  {
+                    "type": "BinaryExpression",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "y",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        87,
+                        88
+                      ]
+                    },
+                    "operator": "*",
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 10.0,
+                      "loc": null,
+                      "range": [
+                        91,
+                        93
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      87,
+                      93
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  86,
+                  94
+                ]
+              },
+              "loc": null,
+              "range": [
+                79,
+                95
+              ]
+            }
+          ],
+          "loc": null,
+          "range": [
+            34,
+            97
+          ]
+        },
+        "generator": false,
+        "async": false,
+        "loc": null,
+        "range": [
+          15,
+          97
+        ],
+        "loc": null,
+        "range": [
+          15,
+          97
+        ]
+      },
+      "loc": null,
+      "range": [
+        0,
+        97
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    97
+  ]
+}

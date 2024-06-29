@@ -43,7 +43,6 @@ function cleanNodeOrArray(node) {
     node.instance = null;
   }
   if (node && node.props && node.props.children) {
-    // eslint-disable-next-line no-unused-vars
     const {children, ...props} = node.props;
     node.props = props;
   }
@@ -60,26 +59,25 @@ describe('ReactTestRenderer', () => {
     ReactFeatureFlags.enableReactTestRendererWarning = false;
   });
 
+  // @gate __DEV__
   it('should warn if enableReactTestRendererWarning is enabled', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     ReactFeatureFlags.enableReactTestRendererWarning = true;
-    expect(() => {
-      ReactTestRenderer.create(<div />);
-    }).toWarnDev(
-      'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
-      {withoutStack: true},
+    ReactTestRenderer.create(<div />);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error.mock.calls[0][0]).toContain(
+      'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
     );
+    console.error.mockRestore();
   });
 
-  // @gate __DEV__
   it('should not warn if enableReactTestRendererWarning is enabled but the RN global is set', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     global.IS_REACT_NATIVE_TEST_ENVIRONMENT = true;
     ReactFeatureFlags.enableReactTestRendererWarning = true;
-    expect(() => {
-      ReactTestRenderer.create(<div />);
-    }).not.toWarnDev(
-      'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
-      {withoutStack: true},
-    );
+    ReactTestRenderer.create(<div />);
+    expect(console.error).toHaveBeenCalledTimes(0);
+    console.error.mockRestore();
   });
 
   describe('root tags', () => {
@@ -413,7 +411,7 @@ describe('ReactTestRenderer', () => {
         ReactTestRenderer.create(<Foo />);
       });
     }).toErrorDev(
-      'Warning: Function components cannot be given refs. Attempts ' +
+      'Function components cannot be given refs. Attempts ' +
         'to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n' +
         '    in Bar (at **)\n' +

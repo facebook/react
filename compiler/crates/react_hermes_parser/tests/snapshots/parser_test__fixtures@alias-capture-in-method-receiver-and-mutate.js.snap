@@ -1,0 +1,288 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/alias-capture-in-method-receiver-and-mutate.js
+---
+Input:
+function Component() {
+  // a's mutable range should be the same as x's mutable range,
+  // since a is captured into x (which gets mutated later)
+  let a = someObj();
+
+  let x = [];
+  x.push(a);
+
+  mutate(x);
+  return [x, a];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    152,
+                    153
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "someObj",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      156,
+                      163
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    156,
+                    165
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  152,
+                  165
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              148,
+              166
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    174,
+                    175
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    178,
+                    180
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  174,
+                  180
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              170,
+              181
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    184,
+                    185
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "push",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    186,
+                    190
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  184,
+                  190
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    191,
+                    192
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                184,
+                193
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              184,
+              194
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "mutate",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  198,
+                  204
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    205,
+                    206
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                198,
+                207
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              198,
+              208
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ArrayExpression",
+              "elements": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    219,
+                    220
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    222,
+                    223
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                218,
+                224
+              ]
+            },
+            "loc": null,
+            "range": [
+              211,
+              225
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          227
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        227
+      ],
+      "loc": null,
+      "range": [
+        0,
+        227
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    227
+  ]
+}

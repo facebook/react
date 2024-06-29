@@ -12,17 +12,57 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   // .stable.js
   // .experimental.js
   // .js
+  // or any of those plus .development.js
 
   if (isFBBundle) {
-    if (__EXPERIMENTAL__) {
-      // We can't currently use the true modern entry point because too many tests fail.
-      // TODO: Fix tests to not use ReactDOM.render or gate them. Then we can remove this.
-      return resolvedEntry;
+    // FB builds for react-dom need to alias both react-dom and react-dom/client to the same
+    // entrypoint since there is only a single build for them.
+    if (
+      resolvedEntry.endsWith('react-dom/index.js') ||
+      resolvedEntry.endsWith('react-dom/client.js') ||
+      resolvedEntry.endsWith('react-dom/unstable_testing.js')
+    ) {
+      let specifier;
+      let entrypoint;
+      if (resolvedEntry.endsWith('index.js')) {
+        specifier = 'react-dom';
+        entrypoint = __EXPERIMENTAL__
+          ? 'src/ReactDOMFB.modern.js'
+          : 'src/ReactDOMFB.js';
+      } else if (resolvedEntry.endsWith('client.js')) {
+        specifier = 'react-dom/client';
+        entrypoint = __EXPERIMENTAL__
+          ? 'src/ReactDOMFB.modern.js'
+          : 'src/ReactDOMFB.js';
+      } else {
+        // must be unstable_testing
+        specifier = 'react-dom/unstable_testing';
+        entrypoint = __EXPERIMENTAL__
+          ? 'src/ReactDOMTestingFB.modern.js'
+          : 'src/ReactDOMTestingFB.js';
+      }
+
+      resolvedEntry = nodePath.join(resolvedEntry, '..', entrypoint);
+      const developmentEntry = resolvedEntry.replace('.js', '.development.js');
+      if (fs.existsSync(developmentEntry)) {
+        return developmentEntry;
+      }
+      if (fs.existsSync(resolvedEntry)) {
+        return resolvedEntry;
+      }
+      const fbReleaseChannel = __EXPERIMENTAL__ ? 'www-modern' : 'www-classic';
+      throw new Error(
+        `${fbReleaseChannel} tests are expected to alias ${specifier} to ${entrypoint} but this file was not found`
+      );
     }
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
+    const devFBEntry = resolvedFBEntry.replace('.js', '.development.js');
+    if (fs.existsSync(devFBEntry)) {
+      return devFBEntry;
+    }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
@@ -36,8 +76,16 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     '.js',
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
+  const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
+  if (fs.existsSync(devForkedEntry)) {
+    return devForkedEntry;
+  }
   if (fs.existsSync(resolvedForkedEntry)) {
     return resolvedForkedEntry;
+  }
+  const plainDevEntry = resolvedEntry.replace('.js', '.development.js');
+  if (fs.existsSync(plainDevEntry)) {
+    return plainDevEntry;
   }
   // Just use the plain .js one.
   return resolvedEntry;
@@ -47,9 +95,15 @@ function mockReact() {
   jest.mock('react', () => {
     const resolvedEntryPoint = resolveEntryFork(
       require.resolve('react'),
-      global.__WWW__
+      global.__WWW__ || global.__XPLAT__,
+      global.__DEV__
     );
     return jest.requireActual(resolvedEntryPoint);
+  });
+  // Make it possible to import this module inside
+  // the React package itself.
+  jest.mock('shared/ReactSharedInternals', () => {
+    return jest.requireActual('react/src/ReactSharedInternalsClient');
   });
 }
 
@@ -59,9 +113,14 @@ global.__unmockReact = mockReact;
 mockReact();
 
 jest.mock('react/react.react-server', () => {
+  // If we're requiring an RSC environment, use those internals instead.
+  jest.mock('shared/ReactSharedInternals', () => {
+    return jest.requireActual('react/src/ReactSharedInternalsServer');
+  });
   const resolvedEntryPoint = resolveEntryFork(
     require.resolve('react/src/ReactServer'),
-    global.__WWW__
+    global.__WWW__ || global.__XPLAT__,
+    global.__DEV__
   );
   return jest.requireActual(resolvedEntryPoint);
 });
@@ -159,18 +218,21 @@ inlinedHostConfigs.forEach(rendererInfo => {
       mockAllConfigs(rendererInfo);
       const resolvedEntryPoint = resolveEntryFork(
         require.resolve(entryPoint),
-        global.__WWW__
+        global.__WWW__ || global.__XPLAT__,
+        global.__DEV__
       );
       return jest.requireActual(resolvedEntryPoint);
     });
   });
 });
 
-// Make it possible to import this module inside
-// the React package itself.
-jest.mock('shared/ReactSharedInternals', () =>
-  jest.requireActual('react/src/ReactSharedInternalsClient')
-);
+jest.mock('react-server/src/ReactFlightServer', () => {
+  // If we're requiring an RSC environment, use those internals instead.
+  jest.mock('shared/ReactSharedInternals', () => {
+    return jest.requireActual('react/src/ReactSharedInternalsServer');
+  });
+  return jest.requireActual('react-server/src/ReactFlightServer');
+});
 
 // Make it possible to import this module inside
 // the ReactDOM package itself.

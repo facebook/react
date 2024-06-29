@@ -195,7 +195,7 @@ describe('parseHookNames', () => {
 
   describe('inline, external and bundle source maps', () => {
     it('should work for simple components', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -203,17 +203,17 @@ describe('parseHookNames', () => {
         ]);
       }
 
-      await test('./__source__/Example'); // original source (uncompiled)
-      await test('./__source__/__compiled__/inline/Example'); // inline source map
-      await test('./__source__/__compiled__/external/Example'); // external source map
-      await test('./__source__/__compiled__/inline/index-map/Example'); // inline index map source map
-      await test('./__source__/__compiled__/external/index-map/Example'); // external index map source map
-      await test('./__source__/__compiled__/bundle/index', 'Example'); // bundle source map
-      await test('./__source__/__compiled__/no-columns/Example'); // simulated Webpack 'cheap-module-source-map'
+      await testFor('./__source__/Example'); // original source (uncompiled)
+      await testFor('./__source__/__compiled__/inline/Example'); // inline source map
+      await testFor('./__source__/__compiled__/external/Example'); // external source map
+      await testFor('./__source__/__compiled__/inline/index-map/Example'); // inline index map source map
+      await testFor('./__source__/__compiled__/external/index-map/Example'); // external index map source map
+      await testFor('./__source__/__compiled__/bundle/index', 'Example'); // bundle source map
+      await testFor('./__source__/__compiled__/no-columns/Example'); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work with more complex files and components', async () => {
-      async function test(path, name = undefined) {
+      async function testFor(path, name = undefined) {
         const components = name != null ? require(path)[name] : require(path);
 
         let hookNames = await getHookNamesForComponent(components.List);
@@ -237,17 +237,17 @@ describe('parseHookNames', () => {
         ]);
       }
 
-      await test('./__source__/ToDoList'); // original source (uncompiled)
-      await test('./__source__/__compiled__/inline/ToDoList'); // inline source map
-      await test('./__source__/__compiled__/external/ToDoList'); // external source map
-      await test('./__source__/__compiled__/inline/index-map/ToDoList'); // inline index map source map
-      await test('./__source__/__compiled__/external/index-map/ToDoList'); // external index map source map
-      await test('./__source__/__compiled__/bundle', 'ToDoList'); // bundle source map
-      await test('./__source__/__compiled__/no-columns/ToDoList'); // simulated Webpack 'cheap-module-source-map'
+      await testFor('./__source__/ToDoList'); // original source (uncompiled)
+      await testFor('./__source__/__compiled__/inline/ToDoList'); // inline source map
+      await testFor('./__source__/__compiled__/external/ToDoList'); // external source map
+      await testFor('./__source__/__compiled__/inline/index-map/ToDoList'); // inline index map source map
+      await testFor('./__source__/__compiled__/external/index-map/ToDoList'); // external index map source map
+      await testFor('./__source__/__compiled__/bundle', 'ToDoList'); // bundle source map
+      await testFor('./__source__/__compiled__/no-columns/ToDoList'); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work for custom hook', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -258,23 +258,28 @@ describe('parseHookNames', () => {
         ]);
       }
 
-      await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
-      await test('./__source__/__compiled__/inline/ComponentWithCustomHook'); // inline source map
-      await test('./__source__/__compiled__/external/ComponentWithCustomHook'); // external source map
-      await test(
+      await testFor('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
+      await testFor('./__source__/__compiled__/inline/ComponentWithCustomHook'); // inline source map
+      await testFor(
+        './__source__/__compiled__/external/ComponentWithCustomHook',
+      ); // external source map
+      await testFor(
         './__source__/__compiled__/inline/index-map/ComponentWithCustomHook',
       ); // inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/index-map/ComponentWithCustomHook',
       ); // external index map source map
-      await test('./__source__/__compiled__/bundle', 'ComponentWithCustomHook'); // bundle source map
-      await test(
+      await testFor(
+        './__source__/__compiled__/bundle',
+        'ComponentWithCustomHook',
+      ); // bundle source map
+      await testFor(
         './__source__/__compiled__/no-columns/ComponentWithCustomHook',
       ); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work when code is using hooks indirectly', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -284,29 +289,29 @@ describe('parseHookNames', () => {
         ]);
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/ComponentUsingHooksIndirectly',
       ); // inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/ComponentUsingHooksIndirectly',
       ); // external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/index-map/ComponentUsingHooksIndirectly',
       ); // inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/index-map/ComponentUsingHooksIndirectly',
       ); // external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/bundle',
         'ComponentUsingHooksIndirectly',
       ); // bundle source map
-      await test(
+      await testFor(
         './__source__/__compiled__/no-columns/ComponentUsingHooksIndirectly',
       ); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work when code is using nested hooks', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         let InnerComponent;
         const hookNames = await getHookNamesForComponent(Component, {
@@ -323,25 +328,29 @@ describe('parseHookNames', () => {
         ]);
       }
 
-      await test('./__source__/__compiled__/inline/ComponentWithNestedHooks'); // inline source map
-      await test('./__source__/__compiled__/external/ComponentWithNestedHooks'); // external source map
-      await test(
+      await testFor(
+        './__source__/__compiled__/inline/ComponentWithNestedHooks',
+      ); // inline source map
+      await testFor(
+        './__source__/__compiled__/external/ComponentWithNestedHooks',
+      ); // external source map
+      await testFor(
         './__source__/__compiled__/inline/index-map/ComponentWithNestedHooks',
       ); // inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/index-map/ComponentWithNestedHooks',
       ); // external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/bundle',
         'ComponentWithNestedHooks',
       ); // bundle source map
-      await test(
+      await testFor(
         './__source__/__compiled__/no-columns/ComponentWithNestedHooks',
       ); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work for external hooks', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -353,29 +362,29 @@ describe('parseHookNames', () => {
       // We can't test the uncompiled source here, because it either needs to get transformed,
       // which would break the source mapping, or the import statements will fail.
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/ComponentWithExternalCustomHooks',
       ); // inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/ComponentWithExternalCustomHooks',
       ); // external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/index-map/ComponentWithExternalCustomHooks',
       ); // inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/index-map/ComponentWithExternalCustomHooks',
       ); // external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/bundle',
         'ComponentWithExternalCustomHooks',
       ); // bundle source map
-      await test(
+      await testFor(
         './__source__/__compiled__/no-columns/ComponentWithExternalCustomHooks',
       ); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work when multiple hooks are on a line', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -386,24 +395,24 @@ describe('parseHookNames', () => {
         ]);
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/ComponentWithMultipleHooksPerLine',
       ); // inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/ComponentWithMultipleHooksPerLine',
       ); // external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/index-map/ComponentWithMultipleHooksPerLine',
       ); // inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/index-map/ComponentWithMultipleHooksPerLine',
       ); // external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/bundle',
         'ComponentWithMultipleHooksPerLine',
       ); // bundle source map
 
-      async function noColumnTest(path, name = 'Component') {
+      async function noColumntest(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -417,7 +426,7 @@ describe('parseHookNames', () => {
       // Note that this test is expected to only match the first two hooks
       // because the 3rd and 4th hook are on the same line,
       // and this type of source map doesn't have column numbers.
-      await noColumnTest(
+      await noColumntest(
         './__source__/__compiled__/no-columns/ComponentWithMultipleHooksPerLine',
       ); // simulated Webpack 'cheap-module-source-map'
     });
@@ -425,8 +434,9 @@ describe('parseHookNames', () => {
     // TODO Inline require (e.g. require("react").useState()) isn't supported yet.
     // Maybe this isn't an important use case to support,
     // since inline requires are most likely to exist in compiled source (if at all).
-    xit('should work for inline requires', async () => {
-      async function test(path, name = 'Component') {
+    // eslint-disable-next-line jest/no-disabled-tests
+    it.skip('should work for inline requires', async () => {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -434,17 +444,19 @@ describe('parseHookNames', () => {
         ]);
       }
 
-      await test('./__source__/InlineRequire'); // original source (uncompiled)
-      await test('./__source__/__compiled__/inline/InlineRequire'); // inline source map
-      await test('./__source__/__compiled__/external/InlineRequire'); // external source map
-      await test('./__source__/__compiled__/inline/index-map/InlineRequire'); // inline index map source map
-      await test('./__source__/__compiled__/external/index-map/InlineRequire'); // external index map source map
-      await test('./__source__/__compiled__/bundle', 'InlineRequire'); // bundle source map
-      await test('./__source__/__compiled__/no-columns/InlineRequire'); // simulated Webpack 'cheap-module-source-map'
+      await testFor('./__source__/InlineRequire'); // original source (uncompiled)
+      await testFor('./__source__/__compiled__/inline/InlineRequire'); // inline source map
+      await testFor('./__source__/__compiled__/external/InlineRequire'); // external source map
+      await testFor('./__source__/__compiled__/inline/index-map/InlineRequire'); // inline index map source map
+      await testFor(
+        './__source__/__compiled__/external/index-map/InlineRequire',
+      ); // external index map source map
+      await testFor('./__source__/__compiled__/bundle', 'InlineRequire'); // bundle source map
+      await testFor('./__source__/__compiled__/no-columns/InlineRequire'); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should support sources that contain the string "sourceMappingURL="', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -455,24 +467,24 @@ describe('parseHookNames', () => {
       // We expect the inline sourceMappingURL to be invalid in this case; mute the warning.
       console.warn = () => {};
 
-      await test('./__source__/ContainingStringSourceMappingURL'); // original source (uncompiled)
-      await test(
+      await testFor('./__source__/ContainingStringSourceMappingURL'); // original source (uncompiled)
+      await testFor(
         './__source__/__compiled__/inline/ContainingStringSourceMappingURL',
       ); // inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/ContainingStringSourceMappingURL',
       ); // external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/index-map/ContainingStringSourceMappingURL',
       ); // inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/index-map/ContainingStringSourceMappingURL',
       ); // external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/bundle',
         'ContainingStringSourceMappingURL',
       ); // bundle source map
-      await test(
+      await testFor(
         './__source__/__compiled__/no-columns/ContainingStringSourceMappingURL',
       ); // simulated Webpack 'cheap-module-source-map'
     });
@@ -487,7 +499,7 @@ describe('parseHookNames', () => {
     });
 
     it('should work for simple components', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -497,30 +509,30 @@ describe('parseHookNames', () => {
         expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/Example',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/Example',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/Example',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/Example',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/Example',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/Example',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/Example',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/Example',
       ); // x_react_sources extended external index map source map
 
@@ -528,7 +540,7 @@ describe('parseHookNames', () => {
     });
 
     it('should work with more complex files and components', async () => {
-      async function test(path, name = undefined) {
+      async function testFor(path, name = undefined) {
         const components = name != null ? require(path)[name] : require(path);
 
         let hookNames = await getHookNamesForComponent(components.List);
@@ -555,30 +567,30 @@ describe('parseHookNames', () => {
         expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/ToDoList',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/ToDoList',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/ToDoList',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/ToDoList',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/ToDoList',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/ToDoList',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/ToDoList',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/ToDoList',
       ); // x_react_sources extended external index map source map
 
@@ -586,7 +598,7 @@ describe('parseHookNames', () => {
     });
 
     it('should work for custom hook', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -599,30 +611,30 @@ describe('parseHookNames', () => {
         expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithCustomHook',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithCustomHook',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithCustomHook',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithCustomHook',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithCustomHook',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithCustomHook',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithCustomHook',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithCustomHook',
       ); // x_react_sources extended external index map source map
 
@@ -630,7 +642,7 @@ describe('parseHookNames', () => {
     });
 
     it('should work when code is using hooks indirectly', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -642,30 +654,30 @@ describe('parseHookNames', () => {
         expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentUsingHooksIndirectly',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/ComponentUsingHooksIndirectly',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/ComponentUsingHooksIndirectly',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/ComponentUsingHooksIndirectly',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentUsingHooksIndirectly',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentUsingHooksIndirectly',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentUsingHooksIndirectly',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/ComponentUsingHooksIndirectly',
       ); // x_react_sources extended external index map source map
 
@@ -673,7 +685,7 @@ describe('parseHookNames', () => {
     });
 
     it('should work when code is using nested hooks', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         let InnerComponent;
         const hookNames = await getHookNamesForComponent(Component, {
@@ -692,30 +704,30 @@ describe('parseHookNames', () => {
         expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithNestedHooks',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithNestedHooks',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithNestedHooks',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithNestedHooks',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithNestedHooks',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithNestedHooks',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithNestedHooks',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithNestedHooks',
       ); // x_react_sources extended external index map source map
 
@@ -723,7 +735,7 @@ describe('parseHookNames', () => {
     });
 
     it('should work for external hooks', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -737,30 +749,30 @@ describe('parseHookNames', () => {
       // We can't test the uncompiled source here, because it either needs to get transformed,
       // which would break the source mapping, or the import statements will fail.
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithExternalCustomHooks',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithExternalCustomHooks',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithExternalCustomHooks',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithExternalCustomHooks',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithExternalCustomHooks',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithExternalCustomHooks',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithExternalCustomHooks',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithExternalCustomHooks',
       ); // x_react_sources extended external index map source map
 
@@ -768,7 +780,7 @@ describe('parseHookNames', () => {
     });
 
     it('should work when multiple hooks are on a line', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -781,30 +793,30 @@ describe('parseHookNames', () => {
         expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithMultipleHooksPerLine',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithMultipleHooksPerLine',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithMultipleHooksPerLine',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithMultipleHooksPerLine',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
       ); // x_react_sources extended external index map source map
 
@@ -814,8 +826,9 @@ describe('parseHookNames', () => {
     // TODO Inline require (e.g. require("react").useState()) isn't supported yet.
     // Maybe this isn't an important use case to support,
     // since inline requires are most likely to exist in compiled source (if at all).
-    xit('should work for inline requires', async () => {
-      async function test(path, name = 'Component') {
+    // eslint-disable-next-line jest/no-disabled-tests
+    it.skip('should work for inline requires', async () => {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -825,30 +838,30 @@ describe('parseHookNames', () => {
         expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/InlineRequire',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/InlineRequire',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/InlineRequire',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/InlineRequire',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/InlineRequire',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/InlineRequire',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/InlineRequire',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/InlineRequire',
       ); // x_react_sources extended external index map source map
 
@@ -856,7 +869,7 @@ describe('parseHookNames', () => {
     });
 
     it('should support sources that contain the string "sourceMappingURL="', async () => {
-      async function test(path, name = 'Component') {
+      async function testFor(path, name = 'Component') {
         const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
@@ -869,30 +882,30 @@ describe('parseHookNames', () => {
       // We expect the inline sourceMappingURL to be invalid in this case; mute the warning.
       console.warn = () => {};
 
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/ContainingStringSourceMappingURL',
       ); // x_facebook_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/ContainingStringSourceMappingURL',
       ); // x_facebook_sources extended external source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/ContainingStringSourceMappingURL',
       ); // x_react_sources extended inline source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/ContainingStringSourceMappingURL',
       ); // x_react_sources extended external source map
 
       // Using index map format for source maps
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/fb-sources-extended/index-map/ContainingStringSourceMappingURL',
       ); // x_facebook_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/fb-sources-extended/index-map/ContainingStringSourceMappingURL',
       ); // x_facebook_sources extended external index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/inline/react-sources-extended/index-map/ContainingStringSourceMappingURL',
       ); // x_react_sources extended inline index map source map
-      await test(
+      await testFor(
         './__source__/__compiled__/external/react-sources-extended/index-map/ContainingStringSourceMappingURL',
       ); // x_react_sources extended external index map source map
 

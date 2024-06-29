@@ -10,6 +10,7 @@
 import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
 import type {ElementRef, Element, ElementType} from 'react';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {RenderRootOptions} from './ReactNativeTypes';
 
 import './ReactNativeInjection';
 
@@ -50,8 +51,24 @@ import {
   isChildPublicInstance,
 } from './ReactNativePublicCompat';
 
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
+
 // Module provided by RN:
 import {ReactFiberErrorDialog} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+
+import reactNativePackageVersion from 'shared/ReactVersion';
+import * as IsomorphicReactPackage from 'react';
+
+const isomorphicReactPackageVersion = IsomorphicReactPackage.version;
+if (isomorphicReactPackageVersion !== reactNativePackageVersion) {
+  throw new Error(
+    'Incompatible React versions: The "react" and "react-native-renderer" packages must ' +
+      'have the exact same version. Instead got:\n' +
+      `  - react:                  ${isomorphicReactPackageVersion}\n` +
+      `  - react-native-renderer:  ${reactNativePackageVersion}\n` +
+      'Learn more: https://react.dev/warnings/version-mismatch',
+  );
+}
 
 if (typeof ReactFiberErrorDialog.showErrorDialog !== 'function') {
   throw new Error(
@@ -108,10 +125,32 @@ function render(
   element: Element<ElementType>,
   containerTag: number,
   callback: ?() => void,
+  options: ?RenderRootOptions,
 ): ?ElementRef<ElementType> {
+  if (disableLegacyMode) {
+    throw new Error('render: Unsupported Legacy Mode API.');
+  }
+
   let root = roots.get(containerTag);
 
   if (!root) {
+    // TODO: these defaults are for backwards compatibility.
+    // Once RN implements these options internally,
+    // we can remove the defaults and ReactFiberErrorDialog.
+    let onUncaughtError = nativeOnUncaughtError;
+    let onCaughtError = nativeOnCaughtError;
+    let onRecoverableError = defaultOnRecoverableError;
+
+    if (options && options.onUncaughtError !== undefined) {
+      onUncaughtError = options.onUncaughtError;
+    }
+    if (options && options.onCaughtError !== undefined) {
+      onCaughtError = options.onCaughtError;
+    }
+    if (options && options.onRecoverableError !== undefined) {
+      onRecoverableError = options.onRecoverableError;
+    }
+
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
     root = createContainer(
@@ -121,9 +160,9 @@ function render(
       false,
       null,
       '',
-      nativeOnUncaughtError,
-      nativeOnCaughtError,
-      defaultOnRecoverableError,
+      onUncaughtError,
+      onCaughtError,
+      onRecoverableError,
       null,
     );
     roots.set(containerTag, root);

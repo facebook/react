@@ -7,12 +7,7 @@
  * @flow
  */
 
-// Patch fetch
-import './ReactFetch';
-
-export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './ReactSharedInternalsServer';
-
-export {default as __SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './ReactServerSharedInternals';
+export {default as __SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE} from './ReactSharedInternalsServer';
 
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import {
@@ -35,7 +30,6 @@ import {
   useDebugValue,
   useMemo,
   useActionState,
-  getCacheSignal,
   getCacheForType,
 } from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
@@ -78,7 +72,6 @@ export {
   startTransition,
   REACT_DEBUG_TRACING_MODE_TYPE as unstable_DebugTracingMode,
   REACT_SUSPENSE_TYPE as unstable_SuspenseList,
-  getCacheSignal as unstable_getCacheSignal,
   getCacheForType as unstable_getCacheForType,
   postpone as unstable_postpone,
   useId,

@@ -7,37 +7,48 @@
  * @flow
  */
 
-import type {FindDOMNodeType} from './client/ReactDOMLegacy.js';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {HostDispatcher} from './shared/ReactDOMTypes';
 
-type InternalsType = {
-  usingClientEntryPoint: boolean,
-  Events: [any, any, any, any, any, any],
-  ReactDOMCurrentDispatcher: {
-    current: HostDispatcher,
-  },
-  findDOMNode: null | FindDOMNodeType,
+// This should line up with NoEventPriority from react-reconciler/src/ReactEventPriorities
+// but we can't depend on the react-reconciler from this isomorphic code.
+export const NoEventPriority: EventPriority = (0: any);
+
+type ReactDOMInternals = {
+  d /* ReactDOMCurrentDispatcher */: HostDispatcher,
+  p /* currentUpdatePriority */: EventPriority,
+  findDOMNode:
+    | null
+    | ((
+        componentOrElement: React$Component<any, any>,
+      ) => null | Element | Text),
 };
 
 function noop() {}
 
+function requestFormReset(element: HTMLFormElement) {
+  throw new Error(
+    'Invalid form element. requestFormReset must be passed a form that was ' +
+      'rendered by React.',
+  );
+}
+
 const DefaultDispatcher: HostDispatcher = {
-  prefetchDNS: noop,
-  preconnect: noop,
-  preload: noop,
-  preloadModule: noop,
-  preinitScript: noop,
-  preinitStyle: noop,
-  preinitModuleScript: noop,
+  f /* flushSyncWork */: noop,
+  r /* requestFormReset */: requestFormReset,
+  D /* prefetchDNS */: noop,
+  C /* preconnect */: noop,
+  L /* preload */: noop,
+  m /* preloadModule */: noop,
+  X /* preinitScript */: noop,
+  S /* preinitStyle */: noop,
+  M /* preinitModuleScript */: noop,
 };
 
-const Internals: InternalsType = ({
-  usingClientEntryPoint: false,
-  Events: null,
-  ReactDOMCurrentDispatcher: {
-    current: DefaultDispatcher,
-  },
+const Internals: ReactDOMInternals = {
+  d /* ReactDOMCurrentDispatcher */: DefaultDispatcher,
+  p /* currentUpdatePriority */: NoEventPriority,
   findDOMNode: null,
-}: any);
+};
 
 export default Internals;

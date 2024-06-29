@@ -14,7 +14,7 @@ describe('ReactDOMRoot', () => {
   });
 
   // @gate !disableLegacyMode
-  test('deprecation warning for ReactDOM.render', () => {
+  it('deprecation warning for ReactDOM.render', () => {
     spyOnDev(console, 'error');
 
     ReactDOM.render('Hi', container);

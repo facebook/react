@@ -3,21 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @jest-environment node
  */
 
 'use strict';
 
-const ESLintTester = require('eslint').RuleTester;
+const ESLintTesterV7 = require('eslint-v7').RuleTester;
+const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
+const BabelEslintParser = require('@babel/eslint-parser');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];
-
-ESLintTester.setDefaultConfig({
-  parser: require.resolve('babel-eslint'),
-  parserOptions: {
-    ecmaVersion: 6,
-    sourceType: 'module',
-  },
-});
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
@@ -1461,5 +1457,20 @@ if (!process.env.CI) {
   tests.invalid = tests.invalid.filter(predicate);
 }
 
-const eslintTester = new ESLintTester();
-eslintTester.run('react-hooks', ReactHooksESLintRule, tests);
+describe('rules-of-hooks/rules-of-hooks', () => {
+  new ESLintTesterV7({
+    parser: require.resolve('babel-eslint'),
+    parserOptions: {
+      ecmaVersion: 6,
+      sourceType: 'module',
+    },
+  }).run('eslint: v7', ReactHooksESLintRule, tests);
+
+  new ESLintTesterV9({
+    languageOptions: {
+      parser: BabelEslintParser,
+      ecmaVersion: 6,
+      sourceType: 'module',
+    },
+  }).run('eslint: v9', ReactHooksESLintRule, tests);
+});

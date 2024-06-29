@@ -66,7 +66,6 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import sanitizeURL from '../shared/sanitizeURL';
 
 import {
-  enableBigIntSupport,
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
@@ -83,6 +82,7 @@ let didWarnFormActionName = false;
 let didWarnFormActionTarget = false;
 let didWarnFormActionMethod = false;
 let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
+let didWarnPopoverTargetObject = false;
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
   didWarnForNewBooleanPropsWithEmptyValue = {};
@@ -370,10 +370,7 @@ function setProp(
         if (canSetTextContent) {
           setTextContent(domElement, value);
         }
-      } else if (
-        typeof value === 'number' ||
-        (enableBigIntSupport && typeof value === 'bigint')
-      ) {
+      } else if (typeof value === 'number' || typeof value === 'bigint') {
         if (__DEV__) {
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           validateTextNesting('' + value, tag);
@@ -409,6 +406,12 @@ function setProp(
       break;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
+    case 'data':
+      if (tag !== 'object') {
+        setValueForKnownAttribute(domElement, 'data', value);
+        break;
+      }
+    // fallthrough
     case 'src':
     case 'href': {
       if (enableFilterEmptyStringAttributesDOM) {
@@ -681,7 +684,7 @@ function setProp(
         }
       }
     }
-    // fallthrough for new boolean props without the flag on
+    // Fallthrough for boolean props that don't have a warning for empty strings.
     case 'allowFullScreen':
     case 'async':
     case 'autoPlay':
@@ -774,6 +777,11 @@ function setProp(
       }
       break;
     }
+    case 'popover':
+      listenToNonDelegatedEvent('beforetoggle', domElement);
+      listenToNonDelegatedEvent('toggle', domElement);
+      setValueForAttribute(domElement, 'popover', value);
+      break;
     case 'xlinkActuate':
       setValueForNamespacedAttribute(
         domElement,
@@ -865,6 +873,20 @@ function setProp(
     case 'innerText':
     case 'textContent':
       break;
+    case 'popoverTarget':
+      if (__DEV__) {
+        if (
+          !didWarnPopoverTargetObject &&
+          value != null &&
+          typeof value === 'object'
+        ) {
+          didWarnPopoverTargetObject = true;
+          console.error(
+            'The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.',
+            value,
+          );
+        }
+      }
     // Fall through
     default: {
       if (
@@ -929,10 +951,7 @@ function setPropOnCustomElement(
     case 'children': {
       if (typeof value === 'string') {
         setTextContent(domElement, value);
-      } else if (
-        typeof value === 'number' ||
-        (enableBigIntSupport && typeof value === 'bigint')
-      ) {
+      } else if (typeof value === 'number' || typeof value === 'bigint') {
         // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
       }
@@ -1301,7 +1320,7 @@ export function setInitialProperties(
             continue;
           }
           const propValue = props[propKey];
-          if (propValue == null) {
+          if (propValue === undefined) {
             continue;
           }
           setPropOnCustomElement(
@@ -1310,7 +1329,7 @@ export function setInitialProperties(
             propKey,
             propValue,
             props,
-            null,
+            undefined,
           );
         }
         return;
@@ -1741,14 +1760,14 @@ export function updateProperties(
           const lastProp = lastProps[propKey];
           if (
             lastProps.hasOwnProperty(propKey) &&
-            lastProp != null &&
+            lastProp !== undefined &&
             !nextProps.hasOwnProperty(propKey)
           ) {
             setPropOnCustomElement(
               domElement,
               tag,
               propKey,
-              null,
+              undefined,
               nextProps,
               lastProp,
             );
@@ -1760,7 +1779,7 @@ export function updateProperties(
           if (
             nextProps.hasOwnProperty(propKey) &&
             nextProp !== lastProp &&
-            (nextProp != null || lastProp != null)
+            (nextProp !== undefined || lastProp !== undefined)
           ) {
             setPropOnCustomElement(
               domElement,
@@ -2440,13 +2459,22 @@ function diffHydratedGenericElement(
         warnForPropDifference(propKey, serverValue, value, serverDifferences);
         continue;
       }
+      case 'data':
+        if (tag !== 'object') {
+          extraAttributes.delete(propKey);
+          const serverValue = (domElement: any).getAttribute('data');
+          warnForPropDifference(propKey, serverValue, value, serverDifferences);
+          continue;
+        }
+      // fallthrough
       case 'src':
       case 'href':
         if (enableFilterEmptyStringAttributesDOM) {
           if (
             value === '' &&
             // <a href=""> is fine for "reload" links.
-            !(tag === 'a' && propKey === 'href')
+            !(tag === 'a' && propKey === 'href') &&
+            !(tag === 'object' && propKey === 'data')
           ) {
             if (__DEV__) {
               if (propKey === 'src') {
@@ -2783,7 +2811,6 @@ function diffHydratedGenericElement(
           serverDifferences,
         );
         continue;
-      // fallthrough for new boolean props without the flag on
       default: {
         if (
           // shouldIgnoreAttribute
@@ -2949,7 +2976,7 @@ export function hydrateProperties(
   if (
     typeof children === 'string' ||
     typeof children === 'number' ||
-    (enableBigIntSupport && typeof children === 'bigint')
+    typeof children === 'bigint'
   ) {
     if (
       // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
@@ -2959,6 +2986,13 @@ export function hydrateProperties(
     ) {
       return false;
     }
+  }
+
+  if (props.popover != null) {
+    // We listen to this event in case to ensure emulated bubble
+    // listeners still fire for the toggle event.
+    listenToNonDelegatedEvent('beforetoggle', domElement);
+    listenToNonDelegatedEvent('toggle', domElement);
   }
 
   if (props.onScroll != null) {

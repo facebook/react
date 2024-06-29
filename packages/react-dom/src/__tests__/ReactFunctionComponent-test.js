@@ -185,18 +185,10 @@ describe('ReactFunctionComponent', () => {
       act(() => {
         root.render(<Child test="test" />);
       }),
-    ).rejects.toThrowError(
-      __DEV__
-        ? 'Function components cannot have string refs. We recommend using useRef() instead.'
-        : // It happens because we don't save _owner in production for
-          // function components.
-          'Element ref was specified as a string (me) but no owner was set. This could happen for one of' +
-            ' the following reasons:\n' +
-            '1. You may be adding a ref to a function component\n' +
-            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-            '3. You have multiple copies of React loaded\n' +
-            'See https://react.dev/link/refs-must-have-owner for more information.',
-    );
+    )
+      // TODO: This throws an AggregateError. Need to update test infra to
+      // support matching against AggregateError.
+      .rejects.toThrowError();
   });
 
   // @gate !enableRefAsProp || !__DEV__
@@ -222,7 +214,7 @@ describe('ReactFunctionComponent', () => {
         root.render(<ParentUsingStringRef />);
       });
     }).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
+      'Function components cannot be given refs. ' +
         'Attempts to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n\n' +
         'Check the render method ' +
@@ -265,7 +257,7 @@ describe('ReactFunctionComponent', () => {
         root.render(<ParentUsingFunctionRef />);
       });
     }).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
+      'Function components cannot be given refs. ' +
         'Attempts to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n\n' +
         'Check the render method ' +
@@ -305,7 +297,7 @@ describe('ReactFunctionComponent', () => {
           <AnonymousParentUsingJSX ref={current => (instance1 = current)} />,
         );
       });
-    }).toErrorDev('Warning: Function components cannot be given refs.');
+    }).toErrorDev('Function components cannot be given refs.');
     // Should be deduped (offending element is on the same line):
     instance1.forceUpdate();
     // Should also be deduped (offending element is on the same line):
@@ -334,7 +326,7 @@ describe('ReactFunctionComponent', () => {
           <AnonymousParentNotUsingJSX ref={current => (instance2 = current)} />,
         );
       });
-    }).toErrorDev('Warning: Function components cannot be given refs.');
+    }).toErrorDev('Function components cannot be given refs.');
     // Should be deduped (same internal instance, no additional warnings)
     instance2.forceUpdate();
     // Could not be differentiated (since owner is anonymous and no source location)
@@ -362,7 +354,7 @@ describe('ReactFunctionComponent', () => {
           <NamedParentNotUsingJSX ref={current => (instance3 = current)} />,
         );
       });
-    }).toErrorDev('Warning: Function components cannot be given refs.');
+    }).toErrorDev('Function components cannot be given refs.');
     // Should be deduped (same owner name, no additional warnings):
     instance3.forceUpdate();
     // Should also be deduped (same owner name, no additional warnings):
@@ -406,7 +398,7 @@ describe('ReactFunctionComponent', () => {
         root.render(<Parent />);
       });
     }).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
+      'Function components cannot be given refs. ' +
         'Attempts to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n\n' +
         'Check the render method ' +
@@ -433,6 +425,7 @@ describe('ReactFunctionComponent', () => {
     );
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('should support default props', async () => {
     function Child(props) {
       return <div>{props.test}</div>;
@@ -446,8 +439,9 @@ describe('ReactFunctionComponent', () => {
       await act(() => {
         root.render(<Child />);
       });
+      expect(container.textContent).toBe('2');
     }).toErrorDev([
-      'Warning: Child: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+      'Child: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
     ]);
   });
 

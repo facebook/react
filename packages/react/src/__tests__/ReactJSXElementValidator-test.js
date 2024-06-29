@@ -28,7 +28,7 @@ describe('ReactJSXElementValidator', () => {
 
     Component = class extends React.Component {
       render() {
-        return <div />;
+        return <div>{this.props.children}</div>;
       }
     };
 
@@ -72,7 +72,11 @@ describe('ReactJSXElementValidator', () => {
       });
     }).toErrorDev([
       'Each child in a list should have a unique "key" prop.' +
-        '\n\nCheck the render method of `InnerComponent`. ' +
+        '\n\nCheck the render method of `' +
+        (gate(flag => flag.enableOwnerStacks)
+          ? 'Component'
+          : 'InnerComponent') +
+        '`. ' +
         'It was passed a child from ComponentWrapper. ',
     ]);
   });
@@ -97,7 +101,17 @@ describe('ReactJSXElementValidator', () => {
       await act(() => {
         root.render(<Component>{iterable}</Component>);
       });
-    }).toErrorDev('Each child in a list should have a unique "key" prop.');
+    }).toErrorDev(
+      gate(flag => flag.enableOwnerStacks)
+        ? ['Each child in a list should have a unique "key" prop.']
+        : // Since each pass generates a new element, it doesn't get marked as
+          // validated and it gets rechecked each time.
+          [
+            'Each child in a list should have a unique "key" prop.',
+            'Each child in a list should have a unique "key" prop.',
+            'Each child in a list should have a unique "key" prop.',
+          ],
+    );
   });
 
   it('does not warn for arrays of elements with keys', async () => {
@@ -151,11 +165,9 @@ describe('ReactJSXElementValidator', () => {
     };
     iterable.entries = iterable['@@iterator'];
 
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<Component>{iterable}</Component>);
-    });
+    // This only applies to the warning during construction.
+    // We do warn if it's actually rendered.
+    <Component>{iterable}</Component>;
   });
 
   it('does not warn when the element is directly as children', async () => {
@@ -194,40 +206,13 @@ describe('ReactJSXElementValidator', () => {
         root.render(<ParentComp />);
       });
     }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. ' +
+      'Each child in a list should have a unique "key" prop.' +
+        '\n\nCheck the render method of `ParentComp`. It was passed a child from MyComp. ' +
         'See https://react.dev/link/warning-keys for more information.\n' +
+        '    in div (at **)\n' +
         '    in MyComp (at **)\n' +
         '    in ParentComp (at **)',
     );
-  });
-
-  it('gives a helpful error when passing null, undefined, or boolean', () => {
-    const Undefined = undefined;
-    const Null = null;
-    const True = true;
-    const Div = 'div';
-    expect(() => void (<Undefined />)).toErrorDev(
-      'Warning: React.jsx: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: undefined. You likely forgot to export your ' +
-        "component from the file it's defined in, or you might have mixed up " +
-        'default and named imports.',
-      {withoutStack: true},
-    );
-    expect(() => void (<Null />)).toErrorDev(
-      'Warning: React.jsx: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: null.',
-      {withoutStack: true},
-    );
-    expect(() => void (<True />)).toErrorDev(
-      'Warning: React.jsx: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: boolean.',
-      {withoutStack: true},
-    );
-    // No error expected
-    void (<Div />);
   });
 
   it('warns for fragments with illegal attributes', async () => {
@@ -308,9 +293,7 @@ describe('ReactJSXElementValidator', () => {
           </>,
         );
       });
-    }).toErrorDev('Encountered two children with the same key, `a`.', {
-      withoutStack: true,
-    });
+    }).toErrorDev('Encountered two children with the same key, `a`.');
   });
 
   it('does not call lazy initializers eagerly', () => {

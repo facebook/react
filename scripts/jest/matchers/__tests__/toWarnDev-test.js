@@ -416,3 +416,20 @@ describe('toWarnDev', () => {
     });
   }
 });
+
+describe('toLogDev', () => {
+  it('does not fail if warnings do not include a stack', () => {
+    expect(() => {
+      if (__DEV__) {
+        console.log('Hello');
+      }
+    }).toLogDev('Hello');
+    expect(() => {
+      if (__DEV__) {
+        console.log('Hello');
+        console.log('Good day');
+        console.log('Bye');
+      }
+    }).toLogDev(['Hello', 'Good day', 'Bye']);
+  });
+});

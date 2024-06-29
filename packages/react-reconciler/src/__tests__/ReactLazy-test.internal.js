@@ -7,6 +7,7 @@ let waitFor;
 let waitForAll;
 let waitForThrow;
 let assertLog;
+let assertConsoleErrorDev;
 let act;
 
 let fakeModuleCache;
@@ -34,6 +35,7 @@ describe('ReactLazy', () => {
     waitForAll = InternalTestUtils.waitForAll;
     waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     act = InternalTestUtils.act;
 
     fakeModuleCache = new Map();
@@ -205,8 +207,6 @@ describe('ReactLazy', () => {
   });
 
   it('does not support arbitrary promises, only module objects', async () => {
-    spyOnDev(console, 'error').mockImplementation(() => {});
-
     const LazyText = lazy(async () => Text);
 
     const root = ReactTestRenderer.create(null, {
@@ -228,13 +228,11 @@ describe('ReactLazy', () => {
 
     expect(error.message).toMatch('Element type is invalid');
     assertLog(['Loading...']);
+    assertConsoleErrorDev([
+      'Expected the result of a dynamic import() call',
+      'Expected the result of a dynamic import() call',
+    ]);
     expect(root).not.toMatchRenderedOutput('Hi');
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.mock.calls[0][0]).toContain(
-        'Expected the result of a dynamic import() call',
-      );
-    }
   });
 
   it('throws if promise rejects', async () => {
@@ -328,8 +326,10 @@ describe('ReactLazy', () => {
   });
 
   it('resolves defaultProps, on mount and update', async () => {
-    function T(props) {
-      return <Text {...props} />;
+    class T extends React.Component {
+      render() {
+        return <Text {...this.props} />;
+      }
     }
     T.defaultProps = {text: 'Hi'};
     const LazyText = lazy(() => fakeImport(T));
@@ -346,14 +346,8 @@ describe('ReactLazy', () => {
     await waitForAll(['Loading...']);
     expect(root).not.toMatchRenderedOutput('Hi');
 
-    await expect(async () => {
-      await act(() => resolveFakeImport(T));
-      assertLog(['Hi']);
-    }).toErrorDev(
-      'Warning: T: Support for defaultProps ' +
-        'will be removed from function components in a future major ' +
-        'release. Use JavaScript default parameters instead.',
-    );
+    await act(() => resolveFakeImport(T));
+    assertLog(['Hi']);
 
     expect(root).toMatchRenderedOutput('Hi');
 
@@ -368,14 +362,16 @@ describe('ReactLazy', () => {
   });
 
   it('resolves defaultProps without breaking memoization', async () => {
-    function LazyImpl(props) {
-      Scheduler.log('Lazy');
-      return (
-        <>
-          <Text text={props.siblingText} />
-          {props.children}
-        </>
-      );
+    class LazyImpl extends React.Component {
+      render() {
+        Scheduler.log('Lazy');
+        return (
+          <>
+            <Text text={this.props.siblingText} />
+            {this.props.children}
+          </>
+        );
+      }
     }
     LazyImpl.defaultProps = {siblingText: 'Sibling'};
     const Lazy = lazy(() => fakeImport(LazyImpl));
@@ -402,14 +398,8 @@ describe('ReactLazy', () => {
     await waitForAll(['Loading...']);
     expect(root).not.toMatchRenderedOutput('SiblingA');
 
-    await expect(async () => {
-      await act(() => resolveFakeImport(LazyImpl));
-      assertLog(['Lazy', 'Sibling', 'A']);
-    }).toErrorDev(
-      'Warning: LazyImpl: Support for defaultProps ' +
-        'will be removed from function components in a future major ' +
-        'release. Use JavaScript default parameters instead.',
-    );
+    await act(() => resolveFakeImport(LazyImpl));
+    assertLog(['Lazy', 'Sibling', 'A']);
 
     expect(root).toMatchRenderedOutput('SiblingA');
 
@@ -680,6 +670,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('A3');
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('resolves defaultProps on the outer wrapper but warns', async () => {
     function T(props) {
       Scheduler.log(props.inner + ' ' + props.outer);
@@ -712,7 +703,7 @@ describe('ReactLazy', () => {
       await act(() => resolveFakeImport(T));
       assertLog(['Hi Bye']);
     }).toErrorDev(
-      'Warning: T: Support for defaultProps ' +
+      'T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );
@@ -837,6 +828,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('0');
   }
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('resolves props for function component with defaultProps', async () => {
     function Add(props) {
       expect(props.innerWithDefault).toBe(42);
@@ -877,6 +869,7 @@ describe('ReactLazy', () => {
     await verifyResolvesProps(Add);
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('resolves props for forwardRef component with defaultProps', async () => {
     const Add = React.forwardRef((props, ref) => {
       expect(props.innerWithDefault).toBe(42);
@@ -897,6 +890,7 @@ describe('ReactLazy', () => {
     await verifyResolvesProps(Add);
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('resolves props for outer memo component with defaultProps', async () => {
     let Add = props => {
       expect(props.innerWithDefault).toBe(42);
@@ -917,6 +911,7 @@ describe('ReactLazy', () => {
     await verifyResolvesProps(Add);
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('resolves props for inner memo component with defaultProps', async () => {
     const Add = props => {
       expect(props.innerWithDefault).toBe(42);
@@ -937,6 +932,7 @@ describe('ReactLazy', () => {
     await verifyResolvesProps(React.memo(Add));
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('uses outer resolved props on memo', async () => {
     let T = props => {
       return <Text text={props.text} />;
@@ -999,7 +995,10 @@ describe('ReactLazy', () => {
     await expect(async () => {
       await act(() => resolveFakeImport(Foo));
       assertLog(['A', 'B']);
-    }).toErrorDev('    in Text (at **)\n' + '    in Foo (at **)');
+    }).toErrorDev(
+      (gate(flags => flags.enableOwnerStacks) ? '' : '    in Text (at **)\n') +
+        '    in Foo (at **)',
+    );
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 
@@ -1052,6 +1051,7 @@ describe('ReactLazy', () => {
   });
 
   // Regression test for #14310
+  // @gate !disableDefaultPropsExceptForClasses
   it('supports defaultProps defined on the memo() return value', async () => {
     const Add = React.memo(props => {
       return props.inner + props.outer;
@@ -1134,6 +1134,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('3');
   });
 
+  // @gate !disableDefaultPropsExceptForClasses
   it('merges defaultProps in the correct order', async () => {
     let Add = React.memo(props => {
       return props.inner + props.outer;

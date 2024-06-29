@@ -134,6 +134,7 @@ describe('ReactDOMOption', () => {
     }).rejects.toThrow('Objects are not valid as a React child');
   });
 
+  // @gate www && !renameElementSymbol
   it('should support element-ish child', async () => {
     // This is similar to <fbt>.
     // We don't toString it because you must instead provide a value prop.
@@ -171,7 +172,6 @@ describe('ReactDOMOption', () => {
     expect(container.firstChild.value).toBe('hello');
   });
 
-  // @gate enableBigIntSupport
   it('should support bigint values', async () => {
     const container = await renderIntoDocument(<option>{5n}</option>);
     expect(container.firstChild.innerHTML).toBe('5');
@@ -266,7 +266,7 @@ describe('ReactDOMOption', () => {
           onRecoverableError: () => {},
         });
       });
-    }).toErrorDev(['Warning: In HTML, <div> cannot be a child of <option>']);
+    }).toErrorDev(['In HTML, <div> cannot be a child of <option>']);
     option = container.firstChild.firstChild;
 
     expect(option.textContent).toBe('BarFooBaz');

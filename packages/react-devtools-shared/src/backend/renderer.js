@@ -40,6 +40,7 @@ import {
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {
+  formatConsoleArgumentsToSingleString,
   gt,
   gte,
   parseSourceFromComponentStack,
@@ -86,6 +87,7 @@ import {
   STRICT_MODE_SYMBOL_STRING,
   PROFILER_NUMBER,
   PROFILER_SYMBOL_STRING,
+  REACT_MEMO_CACHE_SENTINEL,
   SCOPE_NUMBER,
   SCOPE_SYMBOL_STRING,
   FORWARD_REF_NUMBER,
@@ -94,7 +96,6 @@ import {
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
 } from './ReactSymbols';
-import {format} from './utils';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -119,6 +120,8 @@ import type {
   RendererInterface,
   SerializedElement,
   WorkTagMap,
+  CurrentDispatcherRef,
+  LegacyDispatcherRef,
 } from './types';
 import type {
   ComponentFilter,
@@ -139,6 +142,31 @@ type ReactPriorityLevelsType = {
   IdlePriority: number,
   NoPriority: number,
 };
+
+export function getDispatcherRef(renderer: {
+  +currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
+  ...
+}): void | CurrentDispatcherRef {
+  if (renderer.currentDispatcherRef === undefined) {
+    return undefined;
+  }
+  const injectedRef = renderer.currentDispatcherRef;
+  if (
+    typeof injectedRef.H === 'undefined' &&
+    typeof injectedRef.current !== 'undefined'
+  ) {
+    // We got a legacy dispatcher injected, let's create a wrapper proxy to translate.
+    return {
+      get H() {
+        return (injectedRef: any).current;
+      },
+      set H(value) {
+        (injectedRef: any).current = value;
+      },
+    };
+  }
+  return (injectedRef: any);
+}
 
 function getFiberFlags(fiber: Fiber): number {
   // The name of this field changed from "effectTag" to "flags"
@@ -225,7 +253,8 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: 27, // Same as above
       HostText: 6,
       IncompleteClassComponent: 17,
-      IndeterminateComponent: 2,
+      IncompleteFunctionComponent: 28,
+      IndeterminateComponent: 2, // removed in 19.0.0
       LazyComponent: 16,
       LegacyHiddenComponent: 23,
       MemoComponent: 14,
@@ -239,6 +268,7 @@ export function getInternalReactConstants(version: string): {
       TracingMarkerComponent: 25, // Experimental - This is technically in 18 but we don't
       // want to fork again so we're adding it here instead
       YieldComponent: -1, // Removed
+      Throw: 29,
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
@@ -259,6 +289,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
+      IncompleteFunctionComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 2,
       LazyComponent: 16,
       LegacyHiddenComponent: 24,
@@ -272,6 +303,7 @@ export function getInternalReactConstants(version: string): {
       SuspenseListComponent: 19, // Experimental
       TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
+      Throw: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
@@ -292,6 +324,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: 17,
+      IncompleteFunctionComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 2,
       LazyComponent: 16,
       LegacyHiddenComponent: -1,
@@ -305,6 +338,7 @@ export function getInternalReactConstants(version: string): {
       SuspenseListComponent: 19, // Experimental
       TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
+      Throw: -1, // Doesn't exist yet
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
@@ -325,6 +359,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: -1, // Doesn't exist yet
       HostText: 8,
       IncompleteClassComponent: -1, // Doesn't exist yet
+      IncompleteFunctionComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 4,
       LazyComponent: -1, // Doesn't exist yet
       LegacyHiddenComponent: -1,
@@ -338,6 +373,7 @@ export function getInternalReactConstants(version: string): {
       SuspenseListComponent: -1, // Doesn't exist yet
       TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
+      Throw: -1, // Doesn't exist yet
     };
   } else {
     ReactTypeOfWork = {
@@ -358,6 +394,7 @@ export function getInternalReactConstants(version: string): {
       HostSingleton: -1, // Doesn't exist yet
       HostText: 6,
       IncompleteClassComponent: -1, // Doesn't exist yet
+      IncompleteFunctionComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 0,
       LazyComponent: -1, // Doesn't exist yet
       LegacyHiddenComponent: -1,
@@ -371,6 +408,7 @@ export function getInternalReactConstants(version: string): {
       SuspenseListComponent: -1, // Doesn't exist yet
       TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: 9,
+      Throw: -1, // Doesn't exist yet
     };
   }
   // **********************************************************
@@ -391,6 +429,7 @@ export function getInternalReactConstants(version: string): {
     CacheComponent,
     ClassComponent,
     IncompleteClassComponent,
+    IncompleteFunctionComponent,
     FunctionComponent,
     IndeterminateComponent,
     ForwardRef,
@@ -411,6 +450,7 @@ export function getInternalReactConstants(version: string): {
     SuspenseComponent,
     SuspenseListComponent,
     TracingMarkerComponent,
+    Throw,
   } = ReactTypeOfWork;
 
   function resolveFiberType(type: any): $FlowFixMe {
@@ -441,8 +481,12 @@ export function getInternalReactConstants(version: string): {
     }
 
     let resolvedContext: any = null;
-    // $FlowFixMe[incompatible-type] fiber.updateQueue is mixed
-    if (!shouldSkipForgetCheck && fiber.updateQueue?.memoCache != null) {
+    if (
+      !shouldSkipForgetCheck &&
+      // $FlowFixMe[incompatible-type] fiber.updateQueue is mixed
+      (fiber.updateQueue?.memoCache != null ||
+        fiber.memoizedState?.memoizedState?.[REACT_MEMO_CACHE_SENTINEL])
+    ) {
       const displayNameWithoutForgetWrapper = getDisplayNameForFiber(
         fiber,
         true,
@@ -459,6 +503,7 @@ export function getInternalReactConstants(version: string): {
         return 'Cache';
       case ClassComponent:
       case IncompleteClassComponent:
+      case IncompleteFunctionComponent:
       case FunctionComponent:
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
@@ -512,6 +557,9 @@ export function getInternalReactConstants(version: string): {
         return 'Profiler';
       case TracingMarkerComponent:
         return 'TracingMarker';
+      case Throw:
+        // This should really never be visible.
+        return 'Error';
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -624,6 +672,7 @@ export function attach(
     HostComponent,
     HostText,
     IncompleteClassComponent,
+    IncompleteFunctionComponent,
     IndeterminateComponent,
     LegacyHiddenComponent,
     MemoComponent,
@@ -632,6 +681,7 @@ export function attach(
     SuspenseComponent,
     SuspenseListComponent,
     TracingMarkerComponent,
+    Throw,
   } = ReactTypeOfWork;
   const {
     ImmediatePriority,
@@ -686,7 +736,7 @@ export function attach(
       getDisplayNameForFiber,
       getIsProfiling: () => isProfiling,
       getLaneLabelMap,
-      currentDispatcherRef: renderer.currentDispatcherRef,
+      currentDispatcherRef: getDispatcherRef(renderer),
       workTagMap: ReactTypeOfWork,
       reactVersion: version,
     });
@@ -801,7 +851,14 @@ export function attach(
         return;
       }
     }
-    const message = format(...args);
+
+    // We can't really use this message as a unique key, since we can't distinguish
+    // different objects in this implementation. We have to delegate displaying of the objects
+    // to the environment, the browser console, for example, so this is why this should be kept
+    // as an array of arguments, instead of the plain string.
+    // [Warning: %o, {...}] and [Warning: %o, {...}] will be considered as the same message,
+    // even if objects are different
+    const message = formatConsoleArgumentsToSingleString(...args);
     if (__DEBUG__) {
       debug('onErrorOrWarning', fiber, null, `${type}: "${message}"`);
     }
@@ -996,6 +1053,7 @@ export function attach(
       case HostText:
       case LegacyHiddenComponent:
       case OffscreenComponent:
+      case Throw:
         return true;
       case HostRoot:
         // It is never valid to filter the root element.
@@ -1061,6 +1119,7 @@ export function attach(
       case ClassComponent:
       case IncompleteClassComponent:
         return ElementTypeClass;
+      case IncompleteFunctionComponent:
       case FunctionComponent:
       case IndeterminateComponent:
         return ElementTypeFunction;
@@ -1545,7 +1604,6 @@ export function attach(
     return changedKeys;
   }
 
-  // eslint-disable-next-line no-unused-vars
   function didFiberRender(prevFiber: Fiber, nextFiber: Fiber): boolean {
     switch (nextFiber.tag) {
       case ClassComponent:
@@ -1943,15 +2001,24 @@ export function attach(
       const {key} = fiber;
       const displayName = getDisplayNameForFiber(fiber);
       const elementType = getElementTypeForFiber(fiber);
-      const {_debugOwner} = fiber;
+      const debugOwner = fiber._debugOwner;
 
       // Ideally we should call getFiberIDThrows() for _debugOwner,
       // since owners are almost always higher in the tree (and so have already been processed),
       // but in some (rare) instances reported in open source, a descendant mounts before an owner.
       // Since this is a DEV only field it's probably okay to also just lazily generate and ID here if needed.
       // See https://github.com/facebook/react/issues/21445
-      const ownerID =
-        _debugOwner != null ? getOrGenerateFiberID(_debugOwner) : 0;
+      let ownerID: number;
+      if (debugOwner != null) {
+        if (typeof debugOwner.tag === 'number') {
+          ownerID = getOrGenerateFiberID((debugOwner: any));
+        } else {
+          // TODO: Track Server Component Owners.
+          ownerID = 0;
+        }
+      } else {
+        ownerID = 0;
+      }
       const parentID = parentFiber ? getFiberIDThrows(parentFiber) : 0;
 
       const displayNameStringID = getStringID(displayName);
@@ -3059,6 +3126,7 @@ export function attach(
     switch (tag) {
       case ClassComponent:
       case IncompleteClassComponent:
+      case IncompleteFunctionComponent:
       case IndeterminateComponent:
       case FunctionComponent:
         global.$type = type;
@@ -3094,15 +3162,17 @@ export function attach(
       return null;
     }
 
-    const {_debugOwner} = fiber;
-
     const owners: Array<SerializedElement> = [fiberToSerializedElement(fiber)];
 
-    if (_debugOwner) {
-      let owner: null | Fiber = _debugOwner;
-      while (owner !== null) {
-        owners.unshift(fiberToSerializedElement(owner));
-        owner = owner._debugOwner || null;
+    let owner = fiber._debugOwner;
+    while (owner != null) {
+      if (typeof owner.tag === 'number') {
+        const ownerFiber: Fiber = (owner: any); // Refined
+        owners.unshift(fiberToSerializedElement(ownerFiber));
+        owner = ownerFiber._debugOwner;
+      } else {
+        // TODO: Track Server Component Owners.
+        break;
       }
     }
 
@@ -3163,7 +3233,7 @@ export function attach(
     }
 
     const {
-      _debugOwner,
+      _debugOwner: debugOwner,
       stateNode,
       key,
       memoizedProps,
@@ -3193,6 +3263,7 @@ export function attach(
       tag === ClassComponent ||
       tag === FunctionComponent ||
       tag === IncompleteClassComponent ||
+      tag === IncompleteFunctionComponent ||
       tag === IndeterminateComponent ||
       tag === MemoComponent ||
       tag === ForwardRef ||
@@ -3289,13 +3360,19 @@ export function attach(
       context = {value: context};
     }
 
-    let owners = null;
-    if (_debugOwner) {
-      owners = ([]: Array<SerializedElement>);
-      let owner: null | Fiber = _debugOwner;
-      while (owner !== null) {
-        owners.push(fiberToSerializedElement(owner));
-        owner = owner._debugOwner || null;
+    let owners: null | Array<SerializedElement> = null;
+    let owner = debugOwner;
+    while (owner != null) {
+      if (typeof owner.tag === 'number') {
+        const ownerFiber: Fiber = (owner: any); // Refined
+        if (owners === null) {
+          owners = [];
+        }
+        owners.push(fiberToSerializedElement(ownerFiber));
+        owner = ownerFiber._debugOwner;
+      } else {
+        // TODO: Track Server Component Owners.
+        break;
       }
     }
 
@@ -3316,10 +3393,7 @@ export function attach(
       }
 
       try {
-        hooks = inspectHooksOfFiber(
-          fiber,
-          (renderer.currentDispatcherRef: any),
-        );
+        hooks = inspectHooksOfFiber(fiber, getDispatcherRef(renderer));
       } finally {
         // Restore original console functionality.
         for (const method in originalConsoleMethods) {
@@ -3540,6 +3614,7 @@ export function attach(
       case IndeterminateComponent:
         global.$r = stateNode;
         break;
+      case IncompleteFunctionComponent:
       case FunctionComponent:
         global.$r = {
           hooks,
@@ -4542,7 +4617,7 @@ export function attach(
   function getComponentStackForFiber(fiber: Fiber): string | null {
     let componentStack = fiberToComponentStackMap.get(fiber);
     if (componentStack == null) {
-      const dispatcherRef = renderer.currentDispatcherRef;
+      const dispatcherRef = getDispatcherRef(renderer);
       if (dispatcherRef == null) {
         return null;
       }

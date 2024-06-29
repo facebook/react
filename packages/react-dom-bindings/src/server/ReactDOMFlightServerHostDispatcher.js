@@ -23,18 +23,19 @@ import {
 } from 'react-server/src/ReactFlightServer';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher =
-  ReactDOMSharedInternals.ReactDOMCurrentDispatcher;
 
-const previousDispatcher = ReactDOMCurrentDispatcher.current;
-ReactDOMCurrentDispatcher.current = {
-  prefetchDNS,
-  preconnect,
-  preload,
-  preloadModule,
-  preinitStyle,
-  preinitScript,
-  preinitModuleScript,
+const previousDispatcher =
+  ReactDOMSharedInternals.d; /* ReactDOMCurrentDispatcher */
+ReactDOMSharedInternals.d /* ReactDOMCurrentDispatcher */ = {
+  f /* flushSyncWork */: previousDispatcher.f /* flushSyncWork */,
+  r /* requestFormReset */: previousDispatcher.r /* requestFormReset */,
+  D /* prefetchDNS */: prefetchDNS,
+  C /* preconnect */: preconnect,
+  L /* preload */: preload,
+  m /* preloadModule */: preloadModule,
+  X /* preinitScript */: preinitScript,
+  S /* preinitStyle */: preinitStyle,
+  M /* preinitModuleScript */: preinitModuleScript,
 };
 
 function prefetchDNS(href: string) {
@@ -50,7 +51,7 @@ function prefetchDNS(href: string) {
       hints.add(key);
       emitHint(request, 'D', href);
     } else {
-      previousDispatcher.prefetchDNS(href);
+      previousDispatcher.D(/* prefetchDNS */ href);
     }
   }
 }
@@ -73,7 +74,7 @@ function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
         emitHint(request, 'C', href);
       }
     } else {
-      previousDispatcher.preconnect(href, crossOrigin);
+      previousDispatcher.C(/* preconnect */ href, crossOrigin);
     }
   }
 }
@@ -106,7 +107,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         emitHint(request, 'L', [href, as]);
       }
     } else {
-      previousDispatcher.preload(href, as, options);
+      previousDispatcher.L(/* preload */ href, as, options);
     }
   }
 }
@@ -130,7 +131,7 @@ function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
         return emitHint(request, 'm', href);
       }
     } else {
-      previousDispatcher.preloadModule(href, options);
+      previousDispatcher.m(/* preloadModule */ href, options);
     }
   }
 }
@@ -164,7 +165,7 @@ function preinitStyle(
         return emitHint(request, 'S', href);
       }
     } else {
-      previousDispatcher.preinitStyle(href, precedence, options);
+      previousDispatcher.S(/* preinitStyle */ href, precedence, options);
     }
   }
 }
@@ -188,7 +189,7 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions) {
         return emitHint(request, 'X', src);
       }
     } else {
-      previousDispatcher.preinitScript(src, options);
+      previousDispatcher.X(/* preinitScript */ src, options);
     }
   }
 }
@@ -215,7 +216,7 @@ function preinitModuleScript(
         return emitHint(request, 'M', src);
       }
     } else {
-      previousDispatcher.preinitModuleScript(src, options);
+      previousDispatcher.M(/* preinitModuleScript */ src, options);
     }
   }
 }

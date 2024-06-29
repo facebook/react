@@ -31,7 +31,7 @@ const immutable = Immutable.fromJS({
     xyz: 1,
   },
 });
-const bigInt = BigInt(123); // eslint-disable-line no-undef
+const bigInt = BigInt(123);
 
 class Foo {
   flag = false;

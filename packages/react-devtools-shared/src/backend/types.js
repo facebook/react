@@ -58,6 +58,7 @@ export type WorkTagMap = {
   HostSingleton: WorkTag,
   HostText: WorkTag,
   IncompleteClassComponent: WorkTag,
+  IncompleteFunctionComponent: WorkTag,
   IndeterminateComponent: WorkTag,
   LazyComponent: WorkTag,
   LegacyHiddenComponent: WorkTag,
@@ -71,6 +72,7 @@ export type WorkTagMap = {
   SuspenseListComponent: WorkTag,
   TracingMarkerComponent: WorkTag,
   YieldComponent: WorkTag,
+  Throw: WorkTag,
 };
 
 // TODO: If it's useful for the frontend to know which types of data an Element has
@@ -86,7 +88,12 @@ export type NativeType = Object;
 export type RendererID = number;
 
 type Dispatcher = any;
-export type CurrentDispatcherRef = {current: null | Dispatcher};
+export type LegacyDispatcherRef = {current: null | Dispatcher};
+type SharedInternalsSubset = {
+  H: null | Dispatcher,
+  ...
+};
+export type CurrentDispatcherRef = SharedInternalsSubset;
 
 export type GetDisplayNameForFiberID = (
   id: number,
@@ -154,7 +161,7 @@ export type ReactRenderer = {
   scheduleUpdate?: ?(fiber: Object) => void,
   setSuspenseHandler?: ?(shouldSuspend: (fiber: Object) => boolean) => void,
   // Only injected by React v16.8+ in order to support hooks inspection.
-  currentDispatcherRef?: CurrentDispatcherRef,
+  currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,

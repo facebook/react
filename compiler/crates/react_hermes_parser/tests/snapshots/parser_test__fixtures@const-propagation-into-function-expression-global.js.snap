@@ -1,0 +1,315 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/const-propagation-into-function-expression-global.js
+---
+Input:
+function foo() {
+  const isX = GLOBAL_IS_X;
+  const getJSX = () => {
+    return <Child x={isX}></Child>;
+  };
+  const result = getJSX();
+  return result;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "isX",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    25,
+                    28
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "GLOBAL_IS_X",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    31,
+                    42
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  25,
+                  42
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              19,
+              43
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "getJSX",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    52,
+                    58
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ReturnStatement",
+                        "argument": {
+                          "type": "JSXElement",
+                          "openingElement": {
+                            "type": "JSXOpeningElement",
+                            "name": {
+                              "type": "JSXIdentifier",
+                              "name": "Child",
+                              "loc": null,
+                              "range": [
+                                81,
+                                86
+                              ]
+                            },
+                            "attributes": [
+                              {
+                                "type": "JSXAttribute",
+                                "name": {
+                                  "type": "JSXIdentifier",
+                                  "name": "x",
+                                  "loc": null,
+                                  "range": [
+                                    87,
+                                    88
+                                  ]
+                                },
+                                "value": {
+                                  "type": "JSXExpressionContainer",
+                                  "expression": {
+                                    "type": "Identifier",
+                                    "name": "isX",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      90,
+                                      93
+                                    ]
+                                  },
+                                  "loc": null,
+                                  "range": [
+                                    89,
+                                    94
+                                  ]
+                                },
+                                "loc": null,
+                                "range": [
+                                  87,
+                                  94
+                                ]
+                              }
+                            ],
+                            "selfClosing": false,
+                            "loc": null,
+                            "range": [
+                              80,
+                              95
+                            ]
+                          },
+                          "children": [],
+                          "closingElement": {
+                            "type": "JSXClosingElement",
+                            "name": {
+                              "type": "JSXIdentifier",
+                              "name": "Child",
+                              "loc": null,
+                              "range": [
+                                97,
+                                102
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              95,
+                              103
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            80,
+                            103
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          73,
+                          104
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      67,
+                      108
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    61,
+                    108
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    61,
+                    108
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  52,
+                  108
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              46,
+              109
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "result",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    118,
+                    124
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "getJSX",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      127,
+                      133
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    127,
+                    135
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  118,
+                  135
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              112,
+              136
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "result",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                146,
+                152
+              ]
+            },
+            "loc": null,
+            "range": [
+              139,
+              153
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          155
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        155
+      ],
+      "loc": null,
+      "range": [
+        0,
+        155
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    155
+  ]
+}

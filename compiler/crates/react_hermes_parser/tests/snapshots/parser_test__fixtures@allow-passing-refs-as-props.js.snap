@@ -1,0 +1,201 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/allow-passing-refs-as-props.js
+---
+Input:
+function Component(props) {
+  const ref = useRef(null);
+  return <Foo ref={ref} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "ref",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    39
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useRef",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      42,
+                      48
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        49,
+                        53
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    42,
+                    54
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  54
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              55
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    66,
+                    69
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "ref",
+                      "loc": null,
+                      "range": [
+                        70,
+                        73
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "ref",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          75,
+                          78
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        74,
+                        79
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      70,
+                      79
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  65,
+                  82
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                65,
+                82
+              ]
+            },
+            "loc": null,
+            "range": [
+              58,
+              83
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          85
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        85
+      ],
+      "loc": null,
+      "range": [
+        0,
+        85
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    85
+  ]
+}

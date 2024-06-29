@@ -36,6 +36,16 @@ if (process.env.NODE_ENV !== 'production') {
 | `useHttps` | `false` | Socket connection to frontend should use secure protocol (wss). |
 | `websocket` |  | Custom `WebSocket` connection to frontend; overrides `host` and `port` settings. |
 
+
+### `connectWithCustomMessagingProtocol` options
+| Prop            | Description                                                                                                                                                    |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `onSubscribe`   | Function, which receives listener (function, with a single argument) as an argument. Called when backend subscribes to messages from the other end (frontend). |
+| `onUnsubscribe` | Function, which receives listener (function) as an argument. Called when backend unsubscribes to messages from the other end (frontend).                       |
+| `onMessage`     | Function, which receives 2 arguments: event (string) and payload (any). Called when backend emits a message, which should be sent to the frontend.             |
+
+Unlike `connectToDevTools`, `connectWithCustomMessagingProtocol` returns a callback, which can be used for unsubscribing the backend from the global DevTools hook.
+
 # Frontend API
 
 Frontend APIs can be used to render the DevTools UI into a DOM node. One example of this is [`react-devtools`](https://github.com/facebook/react/tree/main/packages/react-devtools) which wraps DevTools in an Electron app.

@@ -1,0 +1,364 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-freeze-mutable-lambda-reassign-local.js
+---
+Input:
+function Component(props) {
+  let x = "";
+  const onChange = (e) => {
+    x = e.target.value;
+  };
+  return <input value={x} onChange={onChange} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    35
+                  ]
+                },
+                "init": {
+                  "type": "StringLiteral",
+                  "value": "",
+                  "loc": null,
+                  "range": [
+                    38,
+                    40
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  34,
+                  40
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              41
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "onChange",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    50,
+                    58
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [
+                    {
+                      "type": "Identifier",
+                      "name": "e",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        62,
+                        63
+                      ]
+                    }
+                  ],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "x",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              74,
+                              75
+                            ]
+                          },
+                          "right": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "e",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  78,
+                                  79
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "target",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  80,
+                                  86
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                78,
+                                86
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "value",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                87,
+                                92
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              78,
+                              92
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            74,
+                            92
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          74,
+                          93
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      68,
+                      97
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    61,
+                    97
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    61,
+                    97
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  50,
+                  97
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              44,
+              98
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "input",
+                  "loc": null,
+                  "range": [
+                    109,
+                    114
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "value",
+                      "loc": null,
+                      "range": [
+                        115,
+                        120
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          122,
+                          123
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        121,
+                        124
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      115,
+                      124
+                    ]
+                  },
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "onChange",
+                      "loc": null,
+                      "range": [
+                        125,
+                        133
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "onChange",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          135,
+                          143
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        134,
+                        144
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      125,
+                      144
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  108,
+                  147
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                108,
+                147
+              ]
+            },
+            "loc": null,
+            "range": [
+              101,
+              148
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          150
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        150
+      ],
+      "loc": null,
+      "range": [
+        0,
+        150
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    150
+  ]
+}

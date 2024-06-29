@@ -1,0 +1,287 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-unconditional-set-state-in-render.js
+---
+Input:
+function Component(props) {
+  const [x, setX] = useState(0);
+  const aliased = setX;
+
+  setX(1);
+  aliased(2);
+
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        37,
+                        38
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "setX",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        40,
+                        44
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    36,
+                    45
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useState",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      48,
+                      56
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        57,
+                        58
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    48,
+                    59
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  59
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              60
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "aliased",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    69,
+                    76
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "setX",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    79,
+                    83
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  69,
+                  83
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              63,
+              84
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "setX",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  88,
+                  92
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    93,
+                    94
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                88,
+                95
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              88,
+              96
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "aliased",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  99,
+                  106
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    107,
+                    108
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                99,
+                109
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              99,
+              110
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                121,
+                122
+              ]
+            },
+            "loc": null,
+            "range": [
+              114,
+              123
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          125
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        125
+      ],
+      "loc": null,
+      "range": [
+        0,
+        125
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    125
+  ]
+}

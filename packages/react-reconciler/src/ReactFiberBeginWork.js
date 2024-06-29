@@ -46,7 +46,6 @@ import {
   setIsStrictModeForDevtools,
 } from './ReactFiberDevToolsHook';
 import {
-  IndeterminateComponent,
   FunctionComponent,
   ClassComponent,
   HostRoot,
@@ -67,11 +66,13 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  IncompleteFunctionComponent,
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
+  Throw,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -91,7 +92,6 @@ import {
   Passive,
   DidDefer,
 } from './ReactFiberFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -108,16 +108,25 @@ import {
   enablePostpone,
   enableRenderableContext,
   enableRefAsProp,
+  disableLegacyMode,
+  disableDefaultPropsExceptForClasses,
+  disableStringRefs,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
+import {
+  REACT_LAZY_TYPE,
+  REACT_FORWARD_REF_TYPE,
+  REACT_MEMO_TYPE,
+  getIteratorFn,
+} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
-  setIsRendering,
+  setCurrentFiber,
 } from './ReactCurrentFiber';
 import {
   resolveFunctionForHotReloading,
@@ -239,15 +248,16 @@ import {
   mountClassInstance,
   resumeMountClassInstance,
   updateClassInstance,
+  resolveClassComponentProps,
 } from './ReactFiberClassComponent';
-import {resolveDefaultProps} from './ReactFiberLazyComponent';
+import {resolveDefaultPropsOnNonClassComponent} from './ReactFiberLazyComponent';
 import {
-  resolveLazyComponentTag,
   createFiberFromTypeAndProps,
   createFiberFromFragment,
   createFiberFromOffscreen,
   createWorkInProgress,
   isSimpleFunctionComponent,
+  isFunctionClassComponent,
 } from './ReactFiber';
 import {
   retryDehydratedSuspenseBoundary,
@@ -262,7 +272,6 @@ import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
 import {
   createCapturedValueFromError,
   createCapturedValueAtFiber,
-  type CapturedValue,
 } from './ReactCapturedValue';
 import {
   createClassErrorUpdate,
@@ -289,8 +298,11 @@ import {
   pushRootMarkerInstance,
   TransitionTracingMarker,
 } from './ReactFiberTracingMarkerComponent';
-
-const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+import {
+  callLazyInitInDEV,
+  callComponentInDEV,
+  callRenderInDEV,
+} from './ReactFiberCallUserSpace';
 
 // A special exception that's used to unwind the stack when an update flows
 // into a dehydrated boundary.
@@ -303,7 +315,6 @@ export const SelectiveHydrationException: mixed = new Error(
 let didReceiveUpdate: boolean = false;
 
 let didWarnAboutBadClass;
-let didWarnAboutModulePatternComponent;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
@@ -314,7 +325,6 @@ let didWarnAboutDefaultPropsOnFunctionComponent;
 
 if (__DEV__) {
   didWarnAboutBadClass = ({}: {[string]: boolean});
-  didWarnAboutModulePatternComponent = ({}: {[string]: boolean});
   didWarnAboutContextTypeOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutFunctionRefs = ({}: {[string]: boolean});
@@ -428,8 +438,6 @@ function updateForwardRef(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
-    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -439,7 +447,6 @@ function updateForwardRef(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -483,7 +490,8 @@ function updateMemoComponent(
       isSimpleFunctionComponent(type) &&
       Component.compare === null &&
       // SimpleMemoComponent codepath doesn't resolve outer props either.
-      Component.defaultProps === undefined
+      (disableDefaultPropsExceptForClasses ||
+        Component.defaultProps === undefined)
     ) {
       let resolvedType = type;
       if (__DEV__) {
@@ -505,16 +513,18 @@ function updateMemoComponent(
         renderLanes,
       );
     }
-    if (__DEV__) {
-      if (Component.defaultProps !== undefined) {
-        const componentName = getComponentNameFromType(type) || 'Unknown';
-        if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
-          console.error(
-            '%s: Support for defaultProps will be removed from memo components ' +
-              'in a future major release. Use JavaScript default parameters instead.',
-            componentName,
-          );
-          didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+    if (!disableDefaultPropsExceptForClasses) {
+      if (__DEV__) {
+        if (Component.defaultProps !== undefined) {
+          const componentName = getComponentNameFromType(type) || 'Unknown';
+          if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+            console.error(
+              '%s: Support for defaultProps will be removed from memo components ' +
+                'in a future major release. Use JavaScript default parameters instead.',
+              componentName,
+            );
+            didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+          }
         }
       }
     }
@@ -670,7 +680,7 @@ function updateOffscreenComponent(
         // pending work. We can't read `childLanes` from the current Offscreen
         // fiber because we reset it when it was deferred; however, we can read
         // the pending lanes from the child fibers.
-        let currentChildLanes = NoLanes;
+        let currentChildLanes: Lanes = NoLanes;
         while (currentChild !== null) {
           currentChildLanes = mergeLanes(
             mergeLanes(currentChildLanes, currentChild.lanes),
@@ -697,7 +707,10 @@ function updateOffscreenComponent(
       );
     }
 
-    if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+    if (
+      !disableLegacyMode &&
+      (workInProgress.mode & ConcurrentMode) === NoMode
+    ) {
       // In legacy sync mode, don't defer the subtree. Render it now.
       // TODO: Consider how Offscreen should work with transitions in the future
       const nextState: OffscreenState = {
@@ -1038,10 +1051,49 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
       );
     }
     if (current === null || current.ref !== ref) {
+      if (!disableStringRefs && current !== null) {
+        const oldRef = current.ref;
+        const newRef = ref;
+        if (
+          typeof oldRef === 'function' &&
+          typeof newRef === 'function' &&
+          typeof oldRef.__stringRef === 'string' &&
+          oldRef.__stringRef === newRef.__stringRef &&
+          oldRef.__stringRefType === newRef.__stringRefType &&
+          oldRef.__stringRefOwner === newRef.__stringRefOwner
+        ) {
+          // Although this is a different callback, it represents the same
+          // string ref. To avoid breaking old Meta code that relies on string
+          // refs only being attached once, reuse the old ref. This will
+          // prevent us from detaching and reattaching the ref on each update.
+          workInProgress.ref = oldRef;
+          return;
+        }
+      }
       // Schedule a Ref effect
       workInProgress.flags |= Ref | RefStatic;
     }
   }
+}
+
+function mountIncompleteFunctionComponent(
+  _current: null | Fiber,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  renderLanes: Lanes,
+) {
+  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
+
+  workInProgress.tag = FunctionComponent;
+
+  return updateFunctionComponent(
+    null,
+    workInProgress,
+    Component,
+    nextProps,
+    renderLanes,
+  );
 }
 
 function updateFunctionComponent(
@@ -1051,6 +1103,43 @@ function updateFunctionComponent(
   nextProps: any,
   renderLanes: Lanes,
 ) {
+  if (__DEV__) {
+    if (
+      Component.prototype &&
+      typeof Component.prototype.render === 'function'
+    ) {
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
+
+      if (!didWarnAboutBadClass[componentName]) {
+        console.error(
+          "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+            'This is likely to cause errors. Change %s to extend React.Component instead.',
+          componentName,
+          componentName,
+        );
+        didWarnAboutBadClass[componentName] = true;
+      }
+    }
+
+    if (workInProgress.mode & StrictLegacyMode) {
+      ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, null);
+    }
+
+    if (current === null) {
+      // Some validations were previously done in mountIndeterminateComponent however and are now run
+      // in updateFuntionComponent but only on mount
+      validateFunctionComponentInDev(workInProgress, workInProgress.type);
+
+      if (disableLegacyContext && Component.contextTypes) {
+        console.error(
+          '%s uses the legacy contextTypes API which was removed in React 19. ' +
+            'Use React.createContext() with React.useContext() instead.',
+          getComponentNameFromType(Component) || 'Unknown',
+        );
+      }
+    }
+  }
+
   let context;
   if (!disableLegacyContext) {
     const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
@@ -1064,8 +1153,6 @@ function updateFunctionComponent(
     markComponentRenderStarted(workInProgress);
   }
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
-    setIsRendering(true);
     nextChildren = renderWithHooks(
       current,
       workInProgress,
@@ -1075,7 +1162,6 @@ function updateFunctionComponent(
       renderLanes,
     );
     hasId = checkDidRenderIdHook();
-    setIsRendering(false);
   } else {
     nextChildren = renderWithHooks(
       current,
@@ -1286,7 +1372,9 @@ function finishClassComponent(
   const instance = workInProgress.stateNode;
 
   // Rerender
-  ReactCurrentOwner.current = workInProgress;
+  if (__DEV__ || !disableStringRefs) {
+    setCurrentFiber(workInProgress);
+  }
   let nextChildren;
   if (
     didCaptureError &&
@@ -1307,20 +1395,18 @@ function finishClassComponent(
       markComponentRenderStarted(workInProgress);
     }
     if (__DEV__) {
-      setIsRendering(true);
-      nextChildren = instance.render();
+      nextChildren = callRenderInDEV(instance);
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
         setIsStrictModeForDevtools(true);
         try {
-          instance.render();
+          callRenderInDEV(instance);
         } finally {
           setIsStrictModeForDevtools(false);
         }
       }
-      setIsRendering(false);
     } else {
       nextChildren = instance.render();
     }
@@ -1435,21 +1521,12 @@ function updateHostRoot(
 
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during a previous attempt to hydrate the shell, so we
-      // forced a client render.
-      const recoverableError = createCapturedValueAtFiber<mixed>(
-        new Error(
-          'There was an error while hydrating. Because the error happened outside ' +
-            'of a Suspense boundary, the entire root will switch to ' +
-            'client rendering.',
-        ),
-        workInProgress,
-      );
+      // forced a client render. We should have a recoverable error already scheduled.
       return mountHostRootWithoutHydrating(
         current,
         workInProgress,
         nextChildren,
         renderLanes,
-        recoverableError,
       );
     } else if (nextChildren !== prevChildren) {
       const recoverableError = createCapturedValueAtFiber<mixed>(
@@ -1459,12 +1536,12 @@ function updateHostRoot(
         ),
         workInProgress,
       );
+      queueHydrationError(recoverableError);
       return mountHostRootWithoutHydrating(
         current,
         workInProgress,
         nextChildren,
         renderLanes,
-        recoverableError,
       );
     } else {
       // The outermost shell has not hydrated yet. Start hydrating.
@@ -1507,12 +1584,9 @@ function mountHostRootWithoutHydrating(
   workInProgress: Fiber,
   nextChildren: ReactNodeList,
   renderLanes: Lanes,
-  recoverableError: CapturedValue<mixed>,
 ) {
   // Revert to client rendering.
   resetHydrationState();
-
-  queueHydrationError(recoverableError);
 
   workInProgress.flags |= ForceClientRender;
 
@@ -1616,22 +1690,36 @@ function updateHostHoistable(
   renderLanes: Lanes,
 ) {
   markRef(current, workInProgress);
-  const currentProps = current === null ? null : current.memoizedProps;
-  const resource = (workInProgress.memoizedState = getResource(
-    workInProgress.type,
-    currentProps,
-    workInProgress.pendingProps,
-  ));
+
   if (current === null) {
-    if (!getIsHydrating() && resource === null) {
-      // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
-      workInProgress.stateNode = createHoistableInstance(
-        workInProgress.type,
-        workInProgress.pendingProps,
-        getRootHostContainer(),
-        workInProgress,
-      );
+    const resource = getResource(
+      workInProgress.type,
+      null,
+      workInProgress.pendingProps,
+      null,
+    );
+    if (resource) {
+      workInProgress.memoizedState = resource;
+    } else {
+      if (!getIsHydrating()) {
+        // This is not a Resource Hoistable and we aren't hydrating so we construct the instance.
+        workInProgress.stateNode = createHoistableInstance(
+          workInProgress.type,
+          workInProgress.pendingProps,
+          getRootHostContainer(),
+          workInProgress,
+        );
+      }
     }
+  } else {
+    // Get Resource may or may not return a resource. either way we stash the result
+    // on memoized state.
+    workInProgress.memoizedState = getResource(
+      workInProgress.type,
+      current.memoizedProps,
+      workInProgress.pendingProps,
+      current.memoizedState,
+    );
   }
 
   // Resources never have reconciler managed children. It is possible for
@@ -1692,69 +1780,88 @@ function mountLazyComponent(
 
   const props = workInProgress.pendingProps;
   const lazyComponent: LazyComponentType<any, any> = elementType;
-  const payload = lazyComponent._payload;
-  const init = lazyComponent._init;
-  let Component = init(payload);
+  let Component;
+  if (__DEV__) {
+    Component = callLazyInitInDEV(lazyComponent);
+  } else {
+    const payload = lazyComponent._payload;
+    const init = lazyComponent._init;
+    Component = init(payload);
+  }
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
-  const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component));
-  const resolvedProps = resolveDefaultProps(Component, props);
-  let child;
-  switch (resolvedTag) {
-    case FunctionComponent: {
+
+  if (typeof Component === 'function') {
+    if (isFunctionClassComponent(Component)) {
+      const resolvedProps = resolveClassComponentProps(Component, props, false);
+      workInProgress.tag = ClassComponent;
+      if (__DEV__) {
+        workInProgress.type = Component =
+          resolveClassForHotReloading(Component);
+      }
+      return updateClassComponent(
+        null,
+        workInProgress,
+        Component,
+        resolvedProps,
+        renderLanes,
+      );
+    } else {
+      const resolvedProps = disableDefaultPropsExceptForClasses
+        ? props
+        : resolveDefaultPropsOnNonClassComponent(Component, props);
+      workInProgress.tag = FunctionComponent;
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, Component);
         workInProgress.type = Component =
           resolveFunctionForHotReloading(Component);
       }
-      child = updateFunctionComponent(
+      return updateFunctionComponent(
         null,
         workInProgress,
         Component,
         resolvedProps,
         renderLanes,
       );
-      return child;
     }
-    case ClassComponent: {
-      if (__DEV__) {
-        workInProgress.type = Component =
-          resolveClassForHotReloading(Component);
-      }
-      child = updateClassComponent(
-        null,
-        workInProgress,
-        Component,
-        resolvedProps,
-        renderLanes,
-      );
-      return child;
-    }
-    case ForwardRef: {
+  } else if (Component !== undefined && Component !== null) {
+    const $$typeof = Component.$$typeof;
+    if ($$typeof === REACT_FORWARD_REF_TYPE) {
+      const resolvedProps = disableDefaultPropsExceptForClasses
+        ? props
+        : resolveDefaultPropsOnNonClassComponent(Component, props);
+      workInProgress.tag = ForwardRef;
       if (__DEV__) {
         workInProgress.type = Component =
           resolveForwardRefForHotReloading(Component);
       }
-      child = updateForwardRef(
+      return updateForwardRef(
         null,
         workInProgress,
         Component,
         resolvedProps,
         renderLanes,
       );
-      return child;
-    }
-    case MemoComponent: {
-      child = updateMemoComponent(
+    } else if ($$typeof === REACT_MEMO_TYPE) {
+      const resolvedProps = disableDefaultPropsExceptForClasses
+        ? props
+        : resolveDefaultPropsOnNonClassComponent(Component, props);
+      workInProgress.tag = MemoComponent;
+      return updateMemoComponent(
         null,
         workInProgress,
         Component,
-        resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
+        disableDefaultPropsExceptForClasses
+          ? resolvedProps
+          : resolveDefaultPropsOnNonClassComponent(
+              Component.type,
+              resolvedProps,
+            ), // The inner type can have defaults too
         renderLanes,
       );
-      return child;
     }
   }
+
   let hint = '';
   if (__DEV__) {
     if (
@@ -1814,133 +1921,6 @@ function mountIncompleteClassComponent(
   );
 }
 
-function mountIndeterminateComponent(
-  _current: null | Fiber,
-  workInProgress: Fiber,
-  Component: $FlowFixMe,
-  renderLanes: Lanes,
-) {
-  resetSuspendedCurrentOnMountInLegacyMode(_current, workInProgress);
-
-  const props = workInProgress.pendingProps;
-  let context;
-  if (!disableLegacyContext) {
-    const unmaskedContext = getUnmaskedContext(
-      workInProgress,
-      Component,
-      false,
-    );
-    context = getMaskedContext(workInProgress, unmaskedContext);
-  }
-
-  prepareToReadContext(workInProgress, renderLanes);
-  let value;
-  let hasId;
-
-  if (enableSchedulingProfiler) {
-    markComponentRenderStarted(workInProgress);
-  }
-  if (__DEV__) {
-    if (
-      Component.prototype &&
-      typeof Component.prototype.render === 'function'
-    ) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-
-      if (!didWarnAboutBadClass[componentName]) {
-        console.error(
-          "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
-            'This is likely to cause errors. Change %s to extend React.Component instead.',
-          componentName,
-          componentName,
-        );
-        didWarnAboutBadClass[componentName] = true;
-      }
-    }
-
-    if (workInProgress.mode & StrictLegacyMode) {
-      ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, null);
-    }
-
-    setIsRendering(true);
-    ReactCurrentOwner.current = workInProgress;
-    value = renderWithHooks(
-      null,
-      workInProgress,
-      Component,
-      props,
-      context,
-      renderLanes,
-    );
-    hasId = checkDidRenderIdHook();
-    setIsRendering(false);
-  } else {
-    value = renderWithHooks(
-      null,
-      workInProgress,
-      Component,
-      props,
-      context,
-      renderLanes,
-    );
-    hasId = checkDidRenderIdHook();
-  }
-  if (enableSchedulingProfiler) {
-    markComponentRenderStopped();
-  }
-
-  // React DevTools reads this flag.
-  workInProgress.flags |= PerformedWork;
-
-  if (__DEV__) {
-    // Support for module components is deprecated and is removed behind a flag.
-    // Whether or not it would crash later, we want to show a good message in DEV first.
-    if (
-      typeof value === 'object' &&
-      value !== null &&
-      typeof value.render === 'function' &&
-      value.$$typeof === undefined
-    ) {
-      const componentName = getComponentNameFromType(Component) || 'Unknown';
-      if (!didWarnAboutModulePatternComponent[componentName]) {
-        console.error(
-          'The <%s /> component appears to be a function component that returns a class instance. ' +
-            'Change %s to a class that extends React.Component instead. ' +
-            "If you can't use a class try assigning the prototype on the function as a workaround. " +
-            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-            'cannot be called with `new` by React.',
-          componentName,
-          componentName,
-          componentName,
-        );
-        didWarnAboutModulePatternComponent[componentName] = true;
-      }
-    }
-  }
-
-  // Proceed under the assumption that this is a function component
-  workInProgress.tag = FunctionComponent;
-  if (__DEV__) {
-    if (disableLegacyContext && Component.contextTypes) {
-      console.error(
-        '%s uses the legacy contextTypes API which was removed in React 19. ' +
-          'Use React.createContext() with React.useContext() instead.',
-        getComponentNameFromType(Component) || 'Unknown',
-      );
-    }
-  }
-
-  if (getIsHydrating() && hasId) {
-    pushMaterializedTreeId(workInProgress);
-  }
-
-  reconcileChildren(null, workInProgress, value, renderLanes);
-  if (__DEV__) {
-    validateFunctionComponentInDev(workInProgress, Component);
-  }
-  return workInProgress.child;
-}
-
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   if (__DEV__) {
     if (Component) {
@@ -1972,7 +1952,10 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       }
     }
 
-    if (Component.defaultProps !== undefined) {
+    if (
+      !disableDefaultPropsExceptForClasses &&
+      Component.defaultProps !== undefined
+    ) {
       const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
@@ -2414,6 +2397,7 @@ function mountSuspenseFallbackChildren(
   let primaryChildFragment;
   let fallbackChildFragment;
   if (
+    !disableLegacyMode &&
     (mode & ConcurrentMode) === NoMode &&
     progressedPrimaryFragment !== null
   ) {
@@ -2497,7 +2481,7 @@ function updateSuspensePrimaryChildren(
       children: primaryChildren,
     },
   );
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) === NoMode) {
     primaryChildFragment.lanes = renderLanes;
   }
   primaryChildFragment.return = workInProgress;
@@ -2538,6 +2522,7 @@ function updateSuspenseFallbackChildren(
   if (
     // In legacy mode, we commit the primary tree as if it successfully
     // completed, even though it's in an inconsistent state.
+    !disableLegacyMode &&
     (mode & ConcurrentMode) === NoMode &&
     // Make sure we're on the second pass, i.e. the primary child fragment was
     // already cloned. In legacy mode, the only case where this isn't true is
@@ -2610,18 +2595,10 @@ function retrySuspenseComponentWithoutHydrating(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
-  recoverableError: CapturedValue<mixed> | null,
 ) {
   // Falling back to client rendering. Because this has performance
   // implications, it's considered a recoverable error, even though the user
   // likely won't observe anything wrong with the UI.
-  //
-  // The error is passed in as an argument to enforce that every caller provide
-  // a custom message, or explicitly opt out (currently the only path that opts
-  // out is legacy mode; every concurrent path provides an error).
-  if (recoverableError !== null) {
-    queueHydrationError(recoverableError);
-  }
 
   // This will add the old fiber to the deletion list
   reconcileChildFibers(workInProgress, current.child, null, renderLanes);
@@ -2674,7 +2651,7 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
   primaryChildFragment.sibling = fallbackChildFragment;
   workInProgress.child = primaryChildFragment;
 
-  if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
+  if (disableLegacyMode || (workInProgress.mode & ConcurrentMode) !== NoMode) {
     // We will have dropped the effect list which contains the
     // deletion. We need to reconcile to delete the current child.
     reconcileChildFibers(workInProgress, current.child, null, renderLanes);
@@ -2745,10 +2722,9 @@ function updateDehydratedSuspenseComponent(
         ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
       }
 
-      let capturedValue = null;
       // TODO: Figure out a better signal than encoding a magic digest value.
       if (!enablePostpone || digest !== 'POSTPONE') {
-        let error;
+        let error: Error;
         if (__DEV__ && message) {
           // eslint-disable-next-line react-internal/prod-error-codes
           error = new Error(message);
@@ -2762,16 +2738,16 @@ function updateDehydratedSuspenseComponent(
         // Replace the stack with the server stack
         error.stack = (__DEV__ && stack) || '';
         (error: any).digest = digest;
-        capturedValue = createCapturedValueFromError(
+        const capturedValue = createCapturedValueFromError(
           error,
           componentStack === undefined ? null : componentStack,
         );
+        queueHydrationError(capturedValue);
       }
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        capturedValue,
       );
     }
 
@@ -2852,7 +2828,6 @@ function updateDehydratedSuspenseComponent(
         current,
         workInProgress,
         renderLanes,
-        null,
       );
     } else if (isSuspenseInstancePending(suspenseInstance)) {
       // This component is still pending more data from the server, so we can't hydrate its
@@ -2899,21 +2874,13 @@ function updateDehydratedSuspenseComponent(
 
     if (workInProgress.flags & ForceClientRender) {
       // Something errored during hydration. Try again without hydrating.
+      // The error should've already been logged in throwException.
       pushPrimaryTreeSuspenseHandler(workInProgress);
-
       workInProgress.flags &= ~ForceClientRender;
-      const capturedValue = createCapturedValueFromError(
-        new Error(
-          'There was an error while hydrating this Suspense boundary. ' +
-            'Switched to client rendering.',
-        ),
-        null,
-      );
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        capturedValue,
       );
     } else if ((workInProgress.memoizedState: null | SuspenseState) !== null) {
       // Something suspended and we should still be in dehydrated mode.
@@ -3262,7 +3229,7 @@ function updateSuspenseListComponent(
   }
   pushSuspenseListContext(workInProgress, suspenseContext);
 
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) === NoMode) {
     // In legacy mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
     workInProgress.memoizedState = null;
@@ -3469,10 +3436,7 @@ function updateContextConsumer(
   }
   let newChildren;
   if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
-    setIsRendering(true);
-    newChildren = render(newValue);
-    setIsRendering(false);
+    newChildren = callComponentInDEV(render, newValue, undefined);
   } else {
     newChildren = render(newValue);
   }
@@ -3510,7 +3474,7 @@ function resetSuspendedCurrentOnMountInLegacyMode(
   current: null | Fiber,
   workInProgress: Fiber,
 ) {
-  if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+  if (!disableLegacyMode && (workInProgress.mode & ConcurrentMode) === NoMode) {
     if (current !== null) {
       // A lazy component only mounts if it suspended inside a non-
       // concurrent tree, in an inconsistent state. We want to treat it like
@@ -3884,18 +3848,19 @@ function beginWork(
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
-      return remountFiber(
-        current,
-        workInProgress,
-        createFiberFromTypeAndProps(
-          workInProgress.type,
-          workInProgress.key,
-          workInProgress.pendingProps,
-          workInProgress._debugOwner || null,
-          workInProgress.mode,
-          workInProgress.lanes,
-        ),
+      const copiedFiber = createFiberFromTypeAndProps(
+        workInProgress.type,
+        workInProgress.key,
+        workInProgress.pendingProps,
+        workInProgress._debugOwner || null,
+        workInProgress.mode,
+        workInProgress.lanes,
       );
+      if (enableOwnerStacks) {
+        copiedFiber._debugStack = workInProgress._debugStack;
+        copiedFiber._debugTask = workInProgress._debugTask;
+      }
+      return remountFiber(current, workInProgress, copiedFiber);
     }
   }
 
@@ -3972,14 +3937,6 @@ function beginWork(
   workInProgress.lanes = NoLanes;
 
   switch (workInProgress.tag) {
-    case IndeterminateComponent: {
-      return mountIndeterminateComponent(
-        current,
-        workInProgress,
-        workInProgress.type,
-        renderLanes,
-      );
-    }
     case LazyComponent: {
       const elementType = workInProgress.elementType;
       return mountLazyComponent(
@@ -3993,9 +3950,10 @@ function beginWork(
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
+        disableDefaultPropsExceptForClasses ||
         workInProgress.elementType === Component
           ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       return updateFunctionComponent(
         current,
         workInProgress,
@@ -4007,10 +3965,11 @@ function beginWork(
     case ClassComponent: {
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        workInProgress.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+      const resolvedProps = resolveClassComponentProps(
+        Component,
+        unresolvedProps,
+        workInProgress.elementType === Component,
+      );
       return updateClassComponent(
         current,
         workInProgress,
@@ -4043,9 +4002,10 @@ function beginWork(
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
+        disableDefaultPropsExceptForClasses ||
         workInProgress.elementType === type
           ? unresolvedProps
-          : resolveDefaultProps(type, unresolvedProps);
+          : resolveDefaultPropsOnNonClassComponent(type, unresolvedProps);
       return updateForwardRef(
         current,
         workInProgress,
@@ -4068,8 +4028,12 @@ function beginWork(
       const type = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
       // Resolve outer props first, then resolve inner props.
-      let resolvedProps = resolveDefaultProps(type, unresolvedProps);
-      resolvedProps = resolveDefaultProps(type.type, resolvedProps);
+      let resolvedProps = disableDefaultPropsExceptForClasses
+        ? unresolvedProps
+        : resolveDefaultPropsOnNonClassComponent(type, unresolvedProps);
+      resolvedProps = disableDefaultPropsExceptForClasses
+        ? resolvedProps
+        : resolveDefaultPropsOnNonClassComponent(type.type, resolvedProps);
       return updateMemoComponent(
         current,
         workInProgress,
@@ -4088,13 +4052,36 @@ function beginWork(
       );
     }
     case IncompleteClassComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
       const Component = workInProgress.type;
       const unresolvedProps = workInProgress.pendingProps;
-      const resolvedProps =
-        workInProgress.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultProps(Component, unresolvedProps);
+      const resolvedProps = resolveClassComponentProps(
+        Component,
+        unresolvedProps,
+        workInProgress.elementType === Component,
+      );
       return mountIncompleteClassComponent(
+        current,
+        workInProgress,
+        Component,
+        resolvedProps,
+        renderLanes,
+      );
+    }
+    case IncompleteFunctionComponent: {
+      if (disableLegacyMode) {
+        break;
+      }
+      const Component = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
+      const resolvedProps = resolveClassComponentProps(
+        Component,
+        unresolvedProps,
+        workInProgress.elementType === Component,
+      );
+      return mountIncompleteFunctionComponent(
         current,
         workInProgress,
         Component,
@@ -4139,6 +4126,11 @@ function beginWork(
         );
       }
       break;
+    }
+    case Throw: {
+      // This represents a Component that threw in the reconciliation phase.
+      // So we'll rethrow here. This might be a Thenable.
+      throw workInProgress.pendingProps;
     }
   }
 
