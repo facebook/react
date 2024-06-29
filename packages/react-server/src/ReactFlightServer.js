@@ -168,7 +168,7 @@ function getStack(error: Error): string {
 
 function initCallComponentFrame(): string {
   // Extract the stack frame of the callComponentInDEV function.
-  const error = callComponentInDEV(Error, 'react-stack-top-frame', {});
+  const error = callComponentInDEV(Error, 'react-stack-top-frame', {}, null);
   const stack = getStack(error);
   const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
   const endIdx = stack.indexOf('\n', startIdx);
@@ -991,6 +991,7 @@ function callComponentInDEV<Props, R>(
   Component: (p: Props, arg: void) => R,
   props: Props,
   componentDebugInfo: ReactComponentInfo,
+  debugTask: null | ConsoleTask,
 ): R {
   // The secondArg is always undefined in Server Components since refs error early.
   const secondArg = undefined;
@@ -998,6 +999,18 @@ function callComponentInDEV<Props, R>(
   try {
     if (supportsComponentStorage) {
       // Run the component in an Async Context that tracks the current owner.
+      if (enableOwnerStacks && debugTask) {
+        return debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          componentStorage.run.bind(
+            componentStorage,
+            componentDebugInfo,
+            Component,
+            props,
+            secondArg,
+          ),
+        );
+      }
       return componentStorage.run(
         componentDebugInfo,
         Component,
@@ -1005,6 +1018,9 @@ function callComponentInDEV<Props, R>(
         secondArg,
       );
     } else {
+      if (enableOwnerStacks && debugTask) {
+        return debugTask.run(Component.bind(null, props, secondArg));
+      }
       return Component(props, secondArg);
     }
   } finally {
@@ -1028,6 +1044,7 @@ function renderFunctionComponent<Props>(
   props: Props,
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
+  debugTask: null | ConsoleTask, // DEV-only
   validated: number, // DEV-only
 ): ReactJSONValue {
   // Reset the task's thenable state before continuing, so that if a later
@@ -1075,11 +1092,22 @@ function renderFunctionComponent<Props>(
       task.environmentName = componentEnv;
 
       if (enableOwnerStacks) {
-        warnForMissingKey(request, key, validated, componentDebugInfo);
+        warnForMissingKey(
+          request,
+          key,
+          validated,
+          componentDebugInfo,
+          debugTask,
+        );
       }
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
-    result = callComponentInDEV(Component, props, componentDebugInfo);
+    result = callComponentInDEV(
+      Component,
+      props,
+      componentDebugInfo,
+      debugTask,
+    );
   } else {
     prepareToUseHooksForComponent(prevThenableState, null);
     // The secondArg is always undefined in Server Components since refs error early.
@@ -1235,6 +1263,7 @@ function warnForMissingKey(
   key: null | string,
   validated: number,
   componentDebugInfo: ReactComponentInfo,
+  debugTask: null | ConsoleTask,
 ): void {
   if (__DEV__) {
     if (validated !== 2) {
@@ -1267,6 +1296,7 @@ function warnForMissingKey(
       },
       null,
       componentDebugInfo,
+      debugTask,
     );
   }
 }
@@ -1482,6 +1512,7 @@ function renderElement(
   props: any,
   owner: null | ReactComponentInfo, // DEV only
   stack: null | string, // DEV only
+  debugTask: null | ConsoleTask, // DEV only
   validated: number, // DEV only
 ): ReactJSONValue {
   if (ref !== null && ref !== undefined) {
@@ -1514,6 +1545,7 @@ function renderElement(
       props,
       owner,
       stack,
+      debugTask,
       validated,
     );
   } else if (type === REACT_FRAGMENT_TYPE && key === null) {
@@ -1562,6 +1594,7 @@ function renderElement(
           props,
           owner,
           stack,
+          debugTask,
           validated,
         );
       }
@@ -1574,6 +1607,7 @@ function renderElement(
           props,
           owner,
           stack,
+          debugTask,
           validated,
         );
       }
@@ -1587,6 +1621,7 @@ function renderElement(
           props,
           owner,
           stack,
+          debugTask,
           validated,
         );
       }
@@ -2190,6 +2225,7 @@ function renderModelDestructive(
               ? element._debugStack
               : filterDebugStack(element._debugStack)
             : null,
+          __DEV__ && enableOwnerStacks ? element._debugTask : null,
           __DEV__ && enableOwnerStacks ? element._store.validated : 0,
         );
         if (
