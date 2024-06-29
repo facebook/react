@@ -1,0 +1,32 @@
+name: facebook/react/fuzz_tests
+on:
+  schedule:
+  - cron: 0 * * * *
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      prerelease_commit_sha:
+        required: false
+jobs:
+  test_fuzz:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Run fuzz tests
+      run: |-
+        FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
+        FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
