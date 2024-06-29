@@ -2159,58 +2159,59 @@ function commitDeletionEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
-      if (!offscreenSubtreeWasHidden) {
-        const updateQueue: FunctionComponentUpdateQueue | null =
-          (deletedFiber.updateQueue: any);
-        if (updateQueue !== null) {
-          const lastEffect = updateQueue.lastEffect;
-          if (lastEffect !== null) {
-            const firstEffect = lastEffect.next;
+      const updateQueue: FunctionComponentUpdateQueue | null =
+        (deletedFiber.updateQueue: any);
+      if (updateQueue !== null) {
+        const lastEffect = updateQueue.lastEffect;
+        if (lastEffect !== null) {
+          const firstEffect = lastEffect.next;
 
-            let effect = firstEffect;
-            do {
-              const tag = effect.tag;
-              const inst = effect.inst;
-              const destroy = inst.destroy;
-              if (destroy !== undefined) {
-                if ((tag & HookInsertion) !== NoHookEffect) {
+          let effect = firstEffect;
+          do {
+            const tag = effect.tag;
+            const inst = effect.inst;
+            const destroy = inst.destroy;
+            if (destroy !== undefined) {
+              if ((tag & HookInsertion) !== NoHookEffect) {
+                inst.destroy = undefined;
+                safelyCallDestroy(
+                  deletedFiber,
+                  nearestMountedAncestor,
+                  destroy,
+                );
+              } else if (
+                !offscreenSubtreeWasHidden &&
+                (tag & HookLayout) !== NoHookEffect
+              ) {
+                if (enableSchedulingProfiler) {
+                  markComponentLayoutEffectUnmountStarted(deletedFiber);
+                }
+
+                if (shouldProfile(deletedFiber)) {
+                  startLayoutEffectTimer();
                   inst.destroy = undefined;
                   safelyCallDestroy(
                     deletedFiber,
                     nearestMountedAncestor,
                     destroy,
                   );
-                } else if ((tag & HookLayout) !== NoHookEffect) {
-                  if (enableSchedulingProfiler) {
-                    markComponentLayoutEffectUnmountStarted(deletedFiber);
-                  }
+                  recordLayoutEffectDuration(deletedFiber);
+                } else {
+                  inst.destroy = undefined;
+                  safelyCallDestroy(
+                    deletedFiber,
+                    nearestMountedAncestor,
+                    destroy,
+                  );
+                }
 
-                  if (shouldProfile(deletedFiber)) {
-                    startLayoutEffectTimer();
-                    inst.destroy = undefined;
-                    safelyCallDestroy(
-                      deletedFiber,
-                      nearestMountedAncestor,
-                      destroy,
-                    );
-                    recordLayoutEffectDuration(deletedFiber);
-                  } else {
-                    inst.destroy = undefined;
-                    safelyCallDestroy(
-                      deletedFiber,
-                      nearestMountedAncestor,
-                      destroy,
-                    );
-                  }
-
-                  if (enableSchedulingProfiler) {
-                    markComponentLayoutEffectUnmountStopped();
-                  }
+                if (enableSchedulingProfiler) {
+                  markComponentLayoutEffectUnmountStopped();
                 }
               }
-              effect = effect.next;
-            } while (effect !== firstEffect);
-          }
+            }
+            effect = effect.next;
+          } while (effect !== firstEffect);
         }
       }
 

@@ -265,19 +265,31 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
   it('does not destroy layout effects twice when parent suspense is removed', async () => {
     function ChildA({label}) {
-      React.useLayoutEffect(() => {
-        Scheduler.log('Did mount: ' + label);
+      React.useInsertionEffect(() => {
+        Scheduler.log('Did mount insertion: ' + label);
         return () => {
-          Scheduler.log('Will unmount: ' + label);
+          Scheduler.log('Will unmount insertion: ' + label);
+        };
+      }, []);
+      React.useLayoutEffect(() => {
+        Scheduler.log('Did mount layout: ' + label);
+        return () => {
+          Scheduler.log('Will unmount layout: ' + label);
         };
       }, []);
       return <Text text={label} />;
     }
     function ChildB({label}) {
-      React.useLayoutEffect(() => {
-        Scheduler.log('Did mount: ' + label);
+      React.useInsertionEffect(() => {
+        Scheduler.log('Did mount insertion: ' + label);
         return () => {
-          Scheduler.log('Will unmount: ' + label);
+          Scheduler.log('Will unmount insertion: ' + label);
+        };
+      }, []);
+      React.useLayoutEffect(() => {
+        Scheduler.log('Did mount layout: ' + label);
+        return () => {
+          Scheduler.log('Will unmount layout: ' + label);
         };
       }, []);
       return <Text text={label} />;
@@ -300,20 +312,22 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     assertLog(['Loading...']);
 
     await act(() => resolveFakeImport(ChildA));
-    assertLog(['A', 'Did mount: A']);
+    assertLog(['A', 'Did mount insertion: A', 'Did mount layout: A']);
     expect(container.innerHTML).toBe('A');
 
     // Swap the position of A and B
     ReactDOM.flushSync(() => {
       root.render(<Parent swap={true} />);
     });
-    assertLog(['Loading...', 'Will unmount: A']);
+    assertLog(['Loading...', 'Will unmount layout: A']);
     expect(container.innerHTML).toBe('Loading...');
 
     // Destroy the whole tree, including the hidden A
     ReactDOM.flushSync(() => {
       root.render(<h1>Hello</h1>);
     });
+
+    assertLog(['Will unmount insertion: A']);
     await waitForAll([]);
     expect(container.innerHTML).toBe('<h1>Hello</h1>');
   });
@@ -454,10 +468,16 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     // effects are not unmounted. So we have to unmount them during a deletion.
 
     function Child() {
-      React.useLayoutEffect(() => {
-        Scheduler.log('Mount');
+      React.useInsertionEffect(() => {
+        Scheduler.log('Mount insertion');
         return () => {
-          Scheduler.log('Unmount');
+          Scheduler.log('Unmount insertion');
+        };
+      }, []);
+      React.useLayoutEffect(() => {
+        Scheduler.log('Mount layout');
+        return () => {
+          Scheduler.log('Unmount layout');
         };
       }, []);
       return <Text text="Child" />;
@@ -479,7 +499,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
     // Initial render
     ReactDOM.render(<App showMore={false} />, container);
-    assertLog(['Child', 'Mount']);
+    assertLog(['Child', 'Mount insertion', 'Mount layout']);
 
     // Update that suspends, causing the existing tree to switches it to
     // a fallback.
@@ -495,10 +515,10 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
 
     // Delete the tree and unmount the effect
     ReactDOM.render(null, container);
-    assertLog(['Unmount']);
+    assertLog(['Unmount insertion', 'Unmount layout']);
   });
 
-  it('does not call cleanup effects twice after a bailout', async () => {
+  it('does not call cleanup layout effects twice after a bailout', async () => {
     const never = new Promise(resolve => {});
     function Never() {
       throw never;
