@@ -91,11 +91,11 @@ function row(result, baseSha, headSha) {
   const rowArr = [
     `| [${result.path}](${diffViewUrl})`,
     `**${change(result.change)}**`,
-    `${kbs(result.baseSize)}`,
-    `${kbs(result.headSize)}`,
-    `${change(result.changeGzip)}`,
-    `${kbs(result.baseSizeGzip)}`,
-    `${kbs(result.headSizeGzip)}`,
+    kbs(result.baseSize),
+    kbs(result.headSize),
+    change(result.changeGzip),
+    kbs(result.baseSizeGzip),
+    kbs(result.headSizeGzip),
   ];
   return rowArr.join(' | ');
 }
