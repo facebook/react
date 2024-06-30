@@ -43,10 +43,7 @@ import {
   PrintedCompilerPipelineValue,
 } from "./Output";
 
-function parseInput(
-  input: string,
-  language: "flow" | "typescript"
-) {
+function parseInput(input: string, language: "flow" | "typescript") {
   // Extract the first line to quickly check for custom test directives
   if (language === "flow") {
     return HermesParser.parse(input, {

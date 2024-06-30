@@ -43,7 +43,9 @@ export default function Input({ errors, language }: Props) {
     model.updateOptions({ tabSize: 2 });
   }, [monaco, errors]);
 
-  const flowDiagnosticDisable = [7028 /* unused label */, 6133 /* var declared but not read */]
+  const flowDiagnosticDisable = [
+    7028 /* unused label */, 6133 /* var declared but not read */,
+  ];
   useEffect(() => {
     // Ignore "can only be used in TypeScript files." errors, since
     // we want to support syntax highlighting for Flow (*.js) files
@@ -51,7 +53,18 @@ export default function Input({ errors, language }: Props) {
     if (!monaco) return;
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
       diagnosticCodesToIgnore: [
-        8002, 8003, 8004, 8005, 8006, 8008, 8009, 8010, 8011, 8012, 8013, ...(language === "flow" ? flowDiagnosticDisable : []),
+        8002,
+        8003,
+        8004,
+        8005,
+        8006,
+        8008,
+        8009,
+        8010,
+        8011,
+        8012,
+        8013,
+        ...(language === "flow" ? flowDiagnosticDisable : []),
       ],
       noSemanticValidation: true,
       // Monaco can't validate Flow component syntax
