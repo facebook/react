@@ -115,6 +115,7 @@ import {
 import {DefaultAsyncDispatcher} from './ReactFizzAsyncDispatcher';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
 import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
+import {currentTaskInDEV, setCurrentTaskInDEV} from './ReactFizzCurrentTask';
 
 import {
   getIteratorFn,
@@ -790,8 +791,6 @@ function createPendingSegment(
   };
 }
 
-// DEV-only global reference to the currently executing task
-let currentTaskInDEV: null | Task = null;
 function getCurrentStackInDEV(): string {
   if (__DEV__) {
     if (currentTaskInDEV === null || currentTaskInDEV.componentStack === null) {
@@ -3775,7 +3774,7 @@ function retryRenderTask(
   let prevTaskInDEV = null;
   if (__DEV__) {
     prevTaskInDEV = currentTaskInDEV;
-    currentTaskInDEV = task;
+    setCurrentTaskInDEV(task);
   }
 
   const childrenLength = segment.children.length;
@@ -3852,7 +3851,7 @@ function retryRenderTask(
     return;
   } finally {
     if (__DEV__) {
-      currentTaskInDEV = prevTaskInDEV;
+      setCurrentTaskInDEV(prevTaskInDEV);
     }
   }
 }
@@ -3870,7 +3869,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
   let prevTaskInDEV = null;
   if (__DEV__) {
     prevTaskInDEV = currentTaskInDEV;
-    currentTaskInDEV = task;
+    setCurrentTaskInDEV(task);
   }
 
   try {
@@ -3939,7 +3938,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     return;
   } finally {
     if (__DEV__) {
-      currentTaskInDEV = prevTaskInDEV;
+      setCurrentTaskInDEV(prevTaskInDEV);
     }
   }
 }

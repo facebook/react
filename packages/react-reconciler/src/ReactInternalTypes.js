@@ -36,6 +36,7 @@ import type {
   Transition,
 } from './ReactFiberTracingMarkerComponent';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
+import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -439,5 +440,5 @@ export type Dispatcher = {
 export type AsyncDispatcher = {
   getCacheForType: <T>(resourceType: () => T) => T,
   // DEV-only (or !disableStringRefs)
-  getOwner: () => null | Fiber | ReactComponentInfo,
+  getOwner: () => null | Fiber | ReactComponentInfo | ComponentStackNode,
 };
