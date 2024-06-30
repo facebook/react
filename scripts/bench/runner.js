@@ -41,7 +41,7 @@ async function runBenchmarks(reactPath) {
 
     if (
       !benchmarkFilter ||
-      (benchmarkFilter && benchmarkName.indexOf(benchmarkFilter) !== -1)
+      (benchmarkName.indexOf(benchmarkFilter) !== -1)
     ) {
       console.log(
         chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`)
