@@ -7,7 +7,7 @@
 
 import { transformFromAstSync } from "@babel/core";
 // @ts-expect-error
-import PluginTransformPrivateMethods from '@babel/plugin-transform-private-methods';
+import PluginTransformPrivateMethods from "@babel/plugin-transform-private-methods";
 import type { SourceLocation as BabelSourceLocation } from "@babel/types";
 import BabelPluginReactCompiler, {
   CompilerSuggestionOperation,
