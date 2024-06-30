@@ -99,13 +99,14 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
     }
   }
   let lastPassOutput: string | null = null;
+  let nonDiffPasses = ["HIR", "BuildReactiveFunction", "EnvironmentConfig"];
   for (const [passName, text] of concattedResults) {
     tabs.set(
       passName,
       <TextTabContent
         output={text}
-        diff={passName !== "HIR" ? lastPassOutput : null}
-        showInfoPanel={true}
+        diff={lastPassOutput}
+        showInfoPanel={!nonDiffPasses.includes(passName)}
       ></TextTabContent>
     );
     lastPassOutput = text;
@@ -187,7 +188,7 @@ function Output({ store, compilerOutput }: Props) {
     });
   }, [store.source, compilerOutput]);
 
-  const changedPasses: Set<string> = new Set();
+  const changedPasses: Set<string> = new Set(["JS", "HIR"]); // Initial and final passes should always be bold
   let lastResult: string = "";
   for (const [passName, results] of compilerOutput.results) {
     for (const result of results) {
@@ -195,7 +196,7 @@ function Output({ store, compilerOutput }: Props) {
       if (result.kind === "hir" || result.kind === "reactive") {
         currResult += `function ${result.fnName}\n\n${result.value}`;
       }
-      if (passName !== "HIR" && currResult !== lastResult) {
+      if (currResult !== lastResult) {
         changedPasses.add(passName);
       }
       lastResult = currResult;
