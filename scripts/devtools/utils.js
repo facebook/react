@@ -22,9 +22,14 @@ async function checkNPMPermissions() {
 
   const checkProject = async project => {
     const owners = (await execRead(`npm owner ls ${project}`))
-      .split('\n')
-      .filter(owner => owner)
-      .map(owner => owner.split(' ')[0]);
+    .split('\n')
+    .reduce((acc, owner) => {
+      if (owner) {
+        const ownerName = owner.split(' ')[0];
+        acc.push(ownerName);
+      }
+      return acc;
+    }, []);
 
     if (!owners.includes(currentUser)) {
       failedProjects.push(project);
