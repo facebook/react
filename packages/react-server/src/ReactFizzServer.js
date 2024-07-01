@@ -908,27 +908,23 @@ type ThrownInfo = {
 export type ErrorInfo = ThrownInfo;
 export type PostponeInfo = ThrownInfo;
 
-// While we track component stacks in prod all the time we only produce a reified stack in dev and
-// during prerender in Prod. The reason for this is that the stack is useful for prerender where the timeliness
-// of the request is less critical than the observability of the execution. For renders and resumes however we
-// prioritize speed of the request.
-function getThrownInfo(
-  request: Request,
-  node: null | ComponentStackNode,
-): ThrownInfo {
-  if (
-    node &&
-    // Always produce a stack in dev
-    (__DEV__ ||
-      // Produce a stack in prod if we're in a prerender
-      request.trackedPostpones !== null)
-  ) {
-    return {
-      componentStack: getStackFromNode(node),
-    };
-  } else {
-    return {};
+function getThrownInfo(node: null | ComponentStackNode): ThrownInfo {
+  const errorInfo: ThrownInfo = {};
+  if (node) {
+    Object.defineProperty(errorInfo, 'componentStack', {
+      configurable: true,
+      enumerable: true,
+      get() {
+        // Lazyily generate the stack since it's expensive.
+        const stack = getStackFromNode(node);
+        Object.defineProperty(errorInfo, 'componentStack', {
+          value: stack,
+        });
+        return stack;
+      },
+    });
   }
+  return errorInfo;
 }
 
 function encodeErrorForBoundary(
@@ -1127,7 +1123,7 @@ function renderSuspenseBoundary(
   } catch (error: mixed) {
     contentRootSegment.status = ERRORED;
     newBoundary.status = CLIENT_RENDERED;
-    const thrownInfo = getThrownInfo(request, task.componentStack);
+    const thrownInfo = getThrownInfo(task.componentStack);
     let errorDigest;
     if (
       enablePostpone &&
@@ -1273,7 +1269,7 @@ function replaySuspenseBoundary(
     }
   } catch (error: mixed) {
     resumedBoundary.status = CLIENT_RENDERED;
-    const thrownInfo = getThrownInfo(request, task.componentStack);
+    const thrownInfo = getThrownInfo(task.componentStack);
     let errorDigest;
     if (
       enablePostpone &&
@@ -2337,7 +2333,7 @@ function replayElement(
         // in the original prerender. What's unable to complete is the child
         // replay nodes which might be Suspense boundaries which are able to
         // absorb the error and we can still continue with siblings.
-        const thrownInfo = getThrownInfo(request, task.componentStack);
+        const thrownInfo = getThrownInfo(task.componentStack);
         erroredReplay(
           request,
           task.blockedBoundary,
@@ -2868,7 +2864,7 @@ function replayFragment(
       // replay nodes which might be Suspense boundaries which are able to
       // absorb the error and we can still continue with siblings.
       // This is an error, stash the component stack if it is null.
-      const thrownInfo = getThrownInfo(request, task.componentStack);
+      const thrownInfo = getThrownInfo(task.componentStack);
       erroredReplay(
         request,
         task.blockedBoundary,
@@ -3467,7 +3463,7 @@ function renderNode(
           const trackedPostpones = request.trackedPostpones;
 
           const postponeInstance: Postpone = (x: any);
-          const thrownInfo = getThrownInfo(request, task.componentStack);
+          const thrownInfo = getThrownInfo(task.componentStack);
           const postponedSegment = injectPostponedHole(
             request,
             ((task: any): RenderTask), // We don't use ReplayTasks in prerenders.
@@ -3782,7 +3778,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       boundary.status = CLIENT_RENDERED;
       // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
       // boundary the message is referring to
-      const errorInfo = getThrownInfo(request, task.componentStack);
+      const errorInfo = getThrownInfo(task.componentStack);
       let errorDigest;
       if (
         enablePostpone &&
@@ -4074,7 +4070,7 @@ function retryRenderTask(
         task.abortSet.delete(task);
         const postponeInstance: Postpone = (x: any);
 
-        const postponeInfo = getThrownInfo(request, task.componentStack);
+        const postponeInfo = getThrownInfo(task.componentStack);
         logPostpone(request, postponeInstance.message, postponeInfo);
         trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
@@ -4082,7 +4078,7 @@ function retryRenderTask(
       }
     }
 
-    const errorInfo = getThrownInfo(request, task.componentStack);
+    const errorInfo = getThrownInfo(task.componentStack);
     task.abortSet.delete(task);
     segment.status = ERRORED;
     erroredTask(request, task.blockedBoundary, x, errorInfo);
@@ -4156,7 +4152,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     }
     task.replay.pendingTasks--;
     task.abortSet.delete(task);
-    const errorInfo = getThrownInfo(request, task.componentStack);
+    const errorInfo = getThrownInfo(task.componentStack);
     erroredReplay(
       request,
       task.blockedBoundary,
