@@ -182,7 +182,7 @@ const EnvironmentConfigSchema = z.object({
    * that the memoized values remain memoized, the compiler will simply not prune existing calls to
    * useMemo/useCallback.
    */
-  enablePreserveExistingManualUseMemo: z.boolean().default(false),
+  enablePreserveExistingManualUseMemo: z.nullable(z.enum(["hook","scope"])).default(null),
 
   // 🌲
   enableForest: z.boolean().default(false),
@@ -453,6 +453,29 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
         source: "react-compiler-runtime",
         importSpecifierName: "$structuralCheck",
       };
+      continue;
+    }
+
+    if (
+      key === "enableChangeDetectionForDebugging" &&
+      (val === undefined || val === "true")
+    ) {
+      maybeConfig[key] = {
+        source: "react-compiler-runtime",
+        importSpecifierName: "$structuralCheck",
+      };
+      continue;
+    }
+
+    if (key === "enablePreserveExistingManualUseMemoAsHook" &&
+       (val === undefined || val === "true")) {
+      maybeConfig[key] = "hook"
+      continue;
+    }
+
+    if (key === "enablePreserveExistingManualUseMemoAsScope" &&
+       (val === undefined || val === "true")) {
+      maybeConfig[key] = "scope"
       continue;
     }
 

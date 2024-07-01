@@ -947,7 +947,7 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
       Array.from(scopeBlock.scope.reassignments).some((identifier) =>
         state.has(identifier.id)
       );
-    if (hasMemoizedOutput) {
+    if (hasMemoizedOutput || scopeBlock.scope.source) {
       return { kind: "keep" };
     } else {
       this.prunedScopes.add(scopeBlock.scope.id);
