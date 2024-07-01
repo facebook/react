@@ -114,9 +114,17 @@ import {
   getActionStateMatchingIndex,
 } from './ReactFizzHooks';
 import {DefaultAsyncDispatcher} from './ReactFizzAsyncDispatcher';
-import {getStackByComponentStackNode} from './ReactFizzComponentStack';
+import {
+  getStackByComponentStackNode,
+  getOwnerStackByComponentStackNodeInDev,
+} from './ReactFizzComponentStack';
 import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
 import {currentTaskInDEV, setCurrentTaskInDEV} from './ReactFizzCurrentTask';
+import {
+  callLazyInitInDEV,
+  callComponentInDEV,
+  callRenderInDEV,
+} from './ReactFizzCallUserSpace';
 
 import {
   getIteratorFn,
@@ -797,7 +805,11 @@ function getCurrentStackInDEV(): string {
     if (currentTaskInDEV === null || currentTaskInDEV.componentStack === null) {
       return '';
     }
-    // TODO: Support owner based stacks for logs during SSR.
+    if (enableOwnerStacks) {
+      return getOwnerStackByComponentStackNodeInDev(
+        currentTaskInDEV.componentStack,
+      );
+    }
     return getStackByComponentStackNode(currentTaskInDEV.componentStack);
   }
   return '';
@@ -1454,7 +1466,12 @@ function renderWithHooks<Props, SecondArg>(
     componentIdentity,
     prevThenableState,
   );
-  const result = Component(props, secondArg);
+  let result;
+  if (__DEV__) {
+    result = callComponentInDEV(Component, props, secondArg);
+  } else {
+    result = Component(props, secondArg);
+  }
   return finishHooks(Component, props, result, secondArg);
 }
 
@@ -1466,7 +1483,12 @@ function finishClassComponent(
   Component: any,
   props: any,
 ): ReactNodeList {
-  const nextChildren = instance.render();
+  let nextChildren;
+  if (__DEV__) {
+    nextChildren = callRenderInDEV(instance);
+  } else {
+    nextChildren = instance.render();
+  }
 
   if (__DEV__) {
     if (instance.props !== props) {
@@ -1961,9 +1983,14 @@ function renderLazyComponent(
 ): void {
   const previousComponentStack = task.componentStack;
   task.componentStack = createBuiltInComponentStack(task, 'Lazy', owner, stack);
-  const payload = lazyComponent._payload;
-  const init = lazyComponent._init;
-  const Component = init(payload);
+  let Component;
+  if (__DEV__) {
+    Component = callLazyInitInDEV(lazyComponent);
+  } else {
+    const payload = lazyComponent._payload;
+    const init = lazyComponent._init;
+    Component = init(payload);
+  }
   const resolvedProps = resolveDefaultPropsOnNonClassComponent(
     Component,
     props,
@@ -2589,9 +2616,14 @@ function renderNodeDestructive(
           null,
         );
         const lazyNode: LazyComponentType<any, any> = (node: any);
-        const payload = lazyNode._payload;
-        const init = lazyNode._init;
-        const resolvedNode = init(payload);
+        let resolvedNode;
+        if (__DEV__) {
+          resolvedNode = callLazyInitInDEV(lazyNode);
+        } else {
+          const payload = lazyNode._payload;
+          const init = lazyNode._init;
+          resolvedNode = init(payload);
+        }
 
         // We restore the stack before rendering the resolved node because once the Lazy
         // has resolved any future errors
