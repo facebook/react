@@ -60,7 +60,12 @@ const foundDevTools = injectIntoDevTools({
 });
 
 if (__DEV__) {
-  if (!foundDevTools && canUseDOM && window.top === window.self) {
+  if (
+    !foundDevTools &&
+    canUseDOM &&
+    window.top === window.self &&
+    !window.__DONT_RECOMMEND_REACT_DEVTOOLS__
+  ) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (
       (navigator.userAgent.indexOf('Chrome') > -1 &&
