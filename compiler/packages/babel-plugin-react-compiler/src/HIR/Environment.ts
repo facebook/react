@@ -197,6 +197,8 @@ const EnvironmentConfigSchema = z.object({
 
   enableReactiveScopesInHIR: z.boolean().default(true),
 
+  enableReactiveScopeConditionHelper: z.boolean().default(false),
+
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
    * When disabled, the component is assumed to follow the rules (though the Babel plugin looks
@@ -510,6 +512,7 @@ export class Environment {
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
   useMemoCacheIdentifier: string;
+  reactiveFnHelperIdentifier: string;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -521,7 +524,8 @@ export class Environment {
     logger: Logger | null,
     filename: string | null,
     code: string | null,
-    useMemoCacheIdentifier: string
+    useMemoCacheIdentifier: string,
+    reactiveFnHelperIdentifier: string
   ) {
     this.fnType = fnType;
     this.config = config;
@@ -529,6 +533,7 @@ export class Environment {
     this.code = code;
     this.logger = logger;
     this.useMemoCacheIdentifier = useMemoCacheIdentifier;
+    this.reactiveFnHelperIdentifier = reactiveFnHelperIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
 

@@ -100,7 +100,8 @@ function hasExistingNonNamespacedImportOfModule(
 function addMemoCacheFunctionSpecifierToExistingImport(
   program: NodePath<t.Program>,
   moduleName: string,
-  identifierName: string
+  identifierName: string,
+  reactiveFnHelperIdentifierName?: string
 ): boolean {
   let didInsertUseMemoCache = false;
   program.traverse({
@@ -109,10 +110,17 @@ function addMemoCacheFunctionSpecifierToExistingImport(
         !didInsertUseMemoCache &&
         isNonNamespacedImport(importDeclPath, moduleName)
       ) {
-        importDeclPath.pushContainer(
-          "specifiers",
-          t.importSpecifier(t.identifier(identifierName), t.identifier("c"))
-        );
+        importDeclPath.pushContainer("specifiers", [
+          t.importSpecifier(t.identifier(identifierName), t.identifier("c")),
+          ...(reactiveFnHelperIdentifierName
+            ? [
+                t.importSpecifier(
+                  t.identifier(reactiveFnHelperIdentifierName),
+                  t.identifier("u")
+                ),
+              ]
+            : []),
+        ]);
         didInsertUseMemoCache = true;
       }
     },
@@ -123,7 +131,8 @@ function addMemoCacheFunctionSpecifierToExistingImport(
 export function updateMemoCacheFunctionImport(
   program: NodePath<t.Program>,
   moduleName: string,
-  useMemoCacheIdentifier: string
+  useMemoCacheIdentifier: string,
+  reactiveFnHelperIdentifier?: string
 ): void {
   /*
    * If there isn't already an import of * as React, insert it so useMemoCache doesn't
@@ -138,7 +147,8 @@ export function updateMemoCacheFunctionImport(
     const didUpdateImport = addMemoCacheFunctionSpecifierToExistingImport(
       program,
       moduleName,
-      useMemoCacheIdentifier
+      useMemoCacheIdentifier,
+      reactiveFnHelperIdentifier
     );
     if (!didUpdateImport) {
       throw new Error(
@@ -149,7 +159,8 @@ export function updateMemoCacheFunctionImport(
     addMemoCacheFunctionImportDeclaration(
       program,
       moduleName,
-      useMemoCacheIdentifier
+      useMemoCacheIdentifier,
+      reactiveFnHelperIdentifier
     );
   }
 }
@@ -157,12 +168,23 @@ export function updateMemoCacheFunctionImport(
 function addMemoCacheFunctionImportDeclaration(
   program: NodePath<t.Program>,
   moduleName: string,
-  localName: string
+  localName: string,
+  reactiveFnHelperIdentifierName?: string
 ): void {
   program.unshiftContainer(
     "body",
     t.importDeclaration(
-      [t.importSpecifier(t.identifier(localName), t.identifier("c"))],
+      [
+        t.importSpecifier(t.identifier(localName), t.identifier("c")),
+        ...(reactiveFnHelperIdentifierName
+          ? [
+              t.importSpecifier(
+                t.identifier(reactiveFnHelperIdentifierName),
+                t.identifier("u")
+              ),
+            ]
+          : []),
+      ],
       t.stringLiteral(moduleName)
     )
   );

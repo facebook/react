@@ -44,6 +44,41 @@ export function $read(memoCache: MemoCache, index: number) {
   return value;
 }
 
+export function u(
+  cache: any[],
+  getSource: () => any[],
+  conditionIndexs: number[],
+  conditionTargets: any[] | null,
+  updateIndexs: number[],
+  updateTargets: () => any[]
+) {
+  const test =
+    conditionTargets === null
+      ? (i: number) => cache[conditionIndexs[i]] === $empty
+      : (i: number) => cache[conditionIndexs[i]] !== conditionTargets[i];
+  const condition = (() => {
+    for (let i = 0; i < conditionIndexs.length; i++) {
+      if (test(i)) {
+        return true;
+      }
+    }
+    return false;
+  })();
+
+  if (!condition) {
+    return null;
+  }
+
+  const source = getSource();
+  const updateList = [...updateTargets(), ...source];
+  for (let i = 0; i < updateIndexs.length; i++) {
+    cache[updateIndexs[i]] = updateList[updateIndexs[i]];
+  }
+
+  return source;
+}
+
+
 const LazyGuardDispatcher: { [key: string]: (...args: Array<any>) => any } = {};
 [
   "readContext",
