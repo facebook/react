@@ -19,13 +19,12 @@ async function main() {
     .usage("$ npx healthcheck <src>")
     .option("src", {
       description: "glob expression matching src files to compile",
-      type: "string",
-      default: "**/+(*.{js,mjs,jsx,ts,tsx}|package.json)",
+      type: "array",
+      default: ["**/+(*.{js,mjs,jsx,ts,tsx}|package.json)"],
     })
     .parseSync();
 
   const spinner = ora("Checking").start();
-  let src = argv.src;
 
   const globOptions = {
     onlyFiles: true,
@@ -39,7 +38,13 @@ async function main() {
     ],
   };
 
-  for (const path of await glob(src, globOptions)) {
+  const paths = new Set();
+  for (const pattern of argv.src) {
+    const resolvedPaths = await glob(pattern, globOptions);
+    paths.add(...resolvedPaths);
+  }
+
+  for (const path of paths) {
     const source = await fs.readFile(path, "utf-8");
     spinner.text = `Checking ${path}`;
     reactCompilerCheck.run(source, path);
