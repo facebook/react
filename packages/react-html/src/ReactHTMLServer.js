@@ -13,6 +13,9 @@ import type {ErrorInfo} from 'react-server/src/ReactFizzServer';
 
 import ReactVersion from 'shared/ReactVersion';
 
+import ReactSharedInternalsServer from 'react-server/src/ReactSharedInternalsServer';
+import ReactSharedInternalsClient from 'shared/ReactSharedInternals';
+
 import {
   createRequest as createFlightRequest,
   startWork as startFlightWork,
@@ -141,7 +144,23 @@ export function renderToMarkup(
 
       const onError = options && options.onError;
       if (onError) {
-        onError(error, errorInfo);
+        if (__DEV__) {
+          const prevGetCurrentStackImpl =
+            ReactSharedInternalsServer.getCurrentStack;
+          // We're inside a "client" callback from Fizz but we only have access to the
+          // "server" runtime so to get access to a stack trace within this callback we
+          // need to override it to get it from the client runtime.
+          ReactSharedInternalsServer.getCurrentStack =
+            ReactSharedInternalsClient.getCurrentStack;
+          try {
+            onError(error, errorInfo);
+          } finally {
+            ReactSharedInternalsServer.getCurrentStack =
+              prevGetCurrentStackImpl;
+          }
+        } else {
+          onError(error, errorInfo);
+        }
       }
     }
     const flightRequest = createFlightRequest(
