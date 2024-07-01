@@ -11,15 +11,19 @@
 
 let React;
 let ReactNoop;
+let Scheduler;
 let act;
+let assertLog;
 
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
     jest.resetModules();
     act = require('internal-test-utils').act;
+    assertLog = require('internal-test-utils').assertLog;
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
   // @gate !disableLegacyMode
@@ -965,6 +969,165 @@ describe('StrictEffectsMode', () => {
         'Child dep destroy',
         'Child dep create',
       ]);
+    }
+  });
+
+  it('effect invovation after key swap', async () => {
+    const log = [];
+    const setPassiveEffectState = {
+      first: null,
+      second: null,
+    };
+    function PassiveEffect(props) {
+      const [state, _setState] = React.useState(0);
+      setPassiveEffectState[props.name] = _setState;
+
+      React.useEffect(() => {
+        Scheduler.log('passive create ' + props.name + ': ' + state);
+        log.push('passive create ' + props.name + ': ' + state);
+        return () => {
+          Scheduler.log('passive destroy ' + props.name + ': ' + state);
+          log.push('passive destroy ' + props.name + ': ' + state);
+        };
+      }, [props.name, state]);
+      log.push('PassiveEffect rendered ' + props.name + ': ' + state);
+      Scheduler.log('PassiveEffect rendered ' + props.name + ': ' + state);
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <PassiveEffect key={'A'} name={'first'} />
+          <PassiveEffect key={'B'} name={'second'} />
+        </React.StrictMode>,
+      );
+    });
+
+    assertLog([
+      'PassiveEffect rendered first: 0',
+      'PassiveEffect rendered second: 0',
+      'passive create first: 0',
+      'passive create second: 0',
+    ]);
+    if (__DEV__) {
+      expect(log).toMatchInlineSnapshot(`
+        [
+          "PassiveEffect rendered first: 0",
+          "PassiveEffect rendered first: 0",
+          "PassiveEffect rendered second: 0",
+          "PassiveEffect rendered second: 0",
+          "passive create first: 0",
+          "passive create second: 0",
+          "passive destroy first: 0",
+          "passive destroy second: 0",
+          "passive create first: 0",
+          "passive create second: 0",
+        ]
+      `);
+    } else {
+      expect(log).toMatchInlineSnapshot(`
+        [
+          "PassiveEffect rendered first: 0",
+          "PassiveEffect rendered second: 0",
+          "passive create first: 0",
+          "passive create second: 0",
+        ]
+      `);
+    }
+
+    log.length = 0;
+    await act(() => {
+      setPassiveEffectState.first(n => n + 1);
+      setPassiveEffectState.second(n => n + 1);
+    });
+
+    assertLog([
+      'PassiveEffect rendered first: 1',
+      'PassiveEffect rendered second: 1',
+      'passive destroy first: 0',
+      'passive destroy second: 0',
+      'passive create first: 1',
+      'passive create second: 1',
+    ]);
+    if (__DEV__) {
+      expect(log).toMatchInlineSnapshot(`
+        [
+          "PassiveEffect rendered first: 1",
+          "PassiveEffect rendered first: 1",
+          "PassiveEffect rendered second: 1",
+          "PassiveEffect rendered second: 1",
+          "passive destroy first: 0",
+          "passive destroy second: 0",
+          "passive create first: 1",
+          "passive create second: 1",
+        ]
+      `);
+    } else {
+      expect(log).toMatchInlineSnapshot(`
+        [
+          "PassiveEffect rendered first: 1",
+          "PassiveEffect rendered second: 1",
+          "passive destroy first: 0",
+          "passive destroy second: 0",
+          "passive create first: 1",
+          "passive create second: 1",
+        ]
+      `);
+    }
+
+    log.length = 0;
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <PassiveEffect
+            // A -> B
+            key={'B'}
+            name={'first'}
+          />
+          <PassiveEffect
+            // B -> A
+            key={'A'}
+            name={'second'}
+          />
+        </React.StrictMode>,
+      );
+    });
+
+    assertLog([
+      'PassiveEffect rendered first: 1',
+      'PassiveEffect rendered second: 1',
+      'passive destroy second: 1',
+      'passive destroy first: 1',
+      'passive create first: 1',
+      'passive create second: 1',
+    ]);
+    if (__DEV__) {
+      expect(log).toMatchInlineSnapshot(`
+        [
+          "PassiveEffect rendered first: 1",
+          "PassiveEffect rendered first: 1",
+          "PassiveEffect rendered second: 1",
+          "PassiveEffect rendered second: 1",
+          "passive destroy second: 1",
+          "passive destroy first: 1",
+          "passive create first: 1",
+          "passive create second: 1",
+          "passive destroy second: 1",
+          "passive create second: 1",
+        ]
+      `);
+    } else {
+      expect(log).toMatchInlineSnapshot(`
+        [
+          "PassiveEffect rendered first: 1",
+          "PassiveEffect rendered second: 1",
+          "passive destroy second: 1",
+          "passive destroy first: 1",
+          "passive create first: 1",
+          "passive create second: 1",
+        ]
+      `);
     }
   });
 });
