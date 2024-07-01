@@ -19,8 +19,6 @@ export type HintCode = any;
 // eslint-disable-next-line no-unused-vars
 export type HintModel<T: any> = any;
 
-export const isPrimaryRenderer = false;
-
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 

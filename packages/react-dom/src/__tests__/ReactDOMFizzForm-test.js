@@ -10,6 +10,7 @@
 'use strict';
 
 import {insertNodesAndExecuteScripts} from '../test-utils/FizzTestUtils';
+import {patchMessageChannel} from '../../../../scripts/jest/patchMessageChannel';
 
 // Polyfills for test environment
 global.ReadableStream =
@@ -24,10 +25,13 @@ let ReactDOMClient;
 let useFormStatus;
 let useOptimistic;
 let useActionState;
+let Scheduler;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
     jest.resetModules();
+    Scheduler = require('scheduler');
+    patchMessageChannel(Scheduler);
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
@@ -47,6 +51,14 @@ describe('ReactDOMFizzForm', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await act(() => {
+      maybePromise = callback();
+    });
+    return maybePromise;
+  }
 
   function submit(submitter) {
     const form = submitter.form || submitter;
@@ -96,7 +108,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     await act(async () => {
       ReactDOMClient.hydrateRoot(container, <App />);
@@ -143,7 +157,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     await act(async () => {
       ReactDOMClient.hydrateRoot(container, <App />);
@@ -175,7 +191,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     await expect(async () => {
       await act(async () => {
@@ -197,7 +215,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     // This should ideally warn because only the client provides a function that doesn't line up.
     await act(async () => {
@@ -231,7 +251,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     let root;
     await act(async () => {
@@ -278,7 +300,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     let root;
     await act(async () => {
@@ -334,7 +358,9 @@ describe('ReactDOMFizzForm', () => {
     // Specifying the extra form fields are a DEV error, but we expect it
     // to eventually still be patched up after an update.
     await expect(async () => {
-      const stream = await ReactDOMServer.renderToReadableStream(<App />);
+      const stream = await serverAct(() =>
+        ReactDOMServer.renderToReadableStream(<App />),
+      );
       await readIntoContainer(stream);
     }).toErrorDev([
       'Cannot specify a encType or method for a form that specifies a function as the action.',
@@ -379,7 +405,9 @@ describe('ReactDOMFizzForm', () => {
       return 'Pending: ' + pending;
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     expect(container.textContent).toBe('Pending: false');
 
@@ -400,7 +428,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
 
     // Dispatch an event before hydration
@@ -441,7 +471,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
 
     submit(container.getElementsByTagName('input')[1]);
@@ -463,7 +495,9 @@ describe('ReactDOMFizzForm', () => {
       return optimisticState;
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     expect(container.textContent).toBe('hi');
 
@@ -484,7 +518,9 @@ describe('ReactDOMFizzForm', () => {
       return state;
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
     expect(container.textContent).toBe('0');
 
@@ -521,7 +557,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
 
     const form = container.firstChild;
@@ -581,7 +619,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
 
     const input = container.getElementsByTagName('input')[1];
@@ -651,7 +691,9 @@ describe('ReactDOMFizzForm', () => {
       );
     }
 
-    const stream = await ReactDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<App />),
+    );
     await readIntoContainer(stream);
 
     const barField = container.querySelector('[name=bar]');

@@ -1,7 +1,5 @@
 'use strict';
 
-/* eslint-disable no-for-of-loops/no-for-of-loops */
-
 const getComments = require('./getComments');
 
 const GATE_VERSION_STR = '@reactVersion ';

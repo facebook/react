@@ -32,8 +32,18 @@ ignoreErrors([
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
   'Warning: ReactDOM.render was removed in React 19',
   'Warning: react-test-renderer is deprecated',
+  // Ignore prefixed and not prefixed since I don't know which
+  // React versions are being tested by this code.
+  'Legacy context API',
+  'Unsafe lifecycle methods',
+  '%s is deprecated in StrictMode.', // findDOMNode
+  'ReactDOM.render was removed in React 19',
+  'react-test-renderer is deprecated',
 ]);
-ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
+ignoreWarnings([
+  'Warning: componentWillReceiveProps has been renamed',
+  'componentWillReceiveProps has been renamed',
+]);
 ignoreLogs([]);
 
 const unmountFunctions: Array<() => void | boolean> = [];

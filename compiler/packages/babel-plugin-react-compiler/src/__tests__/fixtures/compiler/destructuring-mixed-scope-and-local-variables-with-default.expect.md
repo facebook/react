@@ -56,71 +56,63 @@ function useFragment(_arg1, _arg2) {
 }
 
 function Component(props) {
-  const $ = _c(14);
-  const post = useFragment(graphql`...`, props.post);
-  let media;
-  let allUrls;
-  let onClick;
-  if ($[0] !== post) {
-    allUrls = [];
+  const $ = _c(9);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = graphql`...`;
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  const post = useFragment(t0, props.post);
+  let t1;
+  if ($[1] !== post) {
+    const allUrls = [];
 
-    const { media: t0, comments: t1, urls: t2 } = post;
-    media = t0 === undefined ? null : t0;
-    let t3;
-    if ($[4] !== t1) {
-      t3 = t1 === undefined ? [] : t1;
-      $[4] = t1;
-      $[5] = t3;
-    } else {
-      t3 = $[5];
-    }
-    const comments = t3;
-    let t4;
-    if ($[6] !== t2) {
-      t4 = t2 === undefined ? [] : t2;
-      $[6] = t2;
-      $[7] = t4;
-    } else {
-      t4 = $[7];
-    }
-    const urls = t4;
+    const { media: t2, comments: t3, urls: t4 } = post;
+    const media = t2 === undefined ? null : t2;
     let t5;
-    if ($[8] !== comments.length) {
-      t5 = (e) => {
+    if ($[3] !== t3) {
+      t5 = t3 === undefined ? [] : t3;
+      $[3] = t3;
+      $[4] = t5;
+    } else {
+      t5 = $[4];
+    }
+    const comments = t5;
+    let t6;
+    if ($[5] !== t4) {
+      t6 = t4 === undefined ? [] : t4;
+      $[5] = t4;
+      $[6] = t6;
+    } else {
+      t6 = $[6];
+    }
+    const urls = t6;
+    let t7;
+    if ($[7] !== comments.length) {
+      t7 = (e) => {
         if (!comments.length) {
           return;
         }
 
         console.log(comments.length);
       };
-      $[8] = comments.length;
-      $[9] = t5;
+      $[7] = comments.length;
+      $[8] = t7;
     } else {
-      t5 = $[9];
+      t7 = $[8];
     }
-    onClick = t5;
+    const onClick = t7;
 
     allUrls.push(...urls);
-    $[0] = post;
-    $[1] = media;
-    $[2] = allUrls;
-    $[3] = onClick;
+    t1 = <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
+    $[1] = post;
+    $[2] = t1;
   } else {
-    media = $[1];
-    allUrls = $[2];
-    onClick = $[3];
+    t1 = $[2];
   }
-  let t0;
-  if ($[10] !== media || $[11] !== allUrls || $[12] !== onClick) {
-    t0 = <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
-    $[10] = media;
-    $[11] = allUrls;
-    $[12] = onClick;
-    $[13] = t0;
-  } else {
-    t0 = $[13];
-  }
-  return t0;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

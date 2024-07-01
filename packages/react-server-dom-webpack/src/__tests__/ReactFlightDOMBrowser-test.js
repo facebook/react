@@ -15,6 +15,10 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
+const {
+  patchMessageChannel,
+} = require('../../../../scripts/jest/patchMessageChannel');
+
 let clientExports;
 let serverExports;
 let webpackMap;
@@ -30,10 +34,17 @@ let Suspense;
 let use;
 let ReactServer;
 let ReactServerDOM;
+let Scheduler;
+let ReactServerScheduler;
+let reactServerAct;
 
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    ReactServerScheduler = require('scheduler');
+    patchMessageChannel(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
 
     // Simulate the condition resolution
 
@@ -54,6 +65,9 @@ describe('ReactFlightDOMBrowser', () => {
     __unmockReact();
     jest.resetModules();
 
+    Scheduler = require('scheduler');
+    patchMessageChannel(Scheduler);
+
     act = require('internal-test-utils').act;
     React = require('react');
     ReactDOM = require('react-dom');
@@ -63,6 +77,17 @@ describe('ReactFlightDOMBrowser', () => {
     Suspense = React.Suspense;
     use = React.use;
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   function makeDelayedText(Model) {
     let error, _resolve, _reject;
@@ -152,40 +177,9 @@ describe('ReactFlightDOMBrowser', () => {
       return model;
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(<App />);
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-    const model = await response;
-    expect(model).toEqual({
-      html: (
-        <div>
-          <span>hello</span>
-          <span>world</span>
-        </div>
-      ),
-    });
-  });
-
-  it('should resolve HTML using W3C streams', async () => {
-    function Text({children}) {
-      return <span>{children}</span>;
-    }
-    function HTML() {
-      return (
-        <div>
-          <Text>hello</Text>
-          <Text>world</Text>
-        </div>
-      );
-    }
-
-    function App() {
-      const model = {
-        html: <HTML />,
-      };
-      return model;
-    }
-
-    const stream = ReactServerDOMServer.renderToReadableStream(<App />);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<App />),
+    );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
     const model = await response;
     expect(model).toEqual({
@@ -221,9 +215,8 @@ describe('ReactFlightDOMBrowser', () => {
       return <ClientOuter Component={ClientInner}>Hello, World!</ClientOuter>;
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <Server />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Server />, webpackMap),
     );
 
     function ClientRoot({response}) {
@@ -245,6 +238,158 @@ describe('ReactFlightDOMBrowser', () => {
     });
 
     expect(container.innerHTML).toBe('<span>Hello, World!</span>');
+  });
+
+  it('should resolve deduped objects within the same model root when it is blocked', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientOuter = clientExports(function ClientOuter({Component, value}) {
+      return <Component value={value} />;
+    });
+
+    const ClientInner = clientExports(
+      function ClientInner({value}) {
+        return <pre>{JSON.stringify(value)}</pre>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function Server({value}) {
+      return <ClientOuter Component={ClientInner} value={value} />;
+    }
+
+    const shared = [1, 2, 3];
+    const value = [shared, shared];
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <Server value={value} />,
+        webpackMap,
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<pre>[[1,2,3],[1,2,3]]</pre>');
+  });
+
+  it('should resolve deduped objects within the same model root when it is blocked and there is a listener attached to the root', async () => {
+    let resolveClientComponentChunk;
+
+    const ClientOuter = clientExports(function ClientOuter({Component, value}) {
+      return <Component value={value} />;
+    });
+
+    const ClientInner = clientExports(
+      function ClientInner({value}) {
+        return <pre>{JSON.stringify(value)}</pre>;
+      },
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    function Server({value}) {
+      return <ClientOuter Component={ClientInner} value={value} />;
+    }
+
+    const shared = [1, 2, 3];
+    const value = [shared, shared];
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <Server value={value} />,
+        webpackMap,
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    // make sure we have a listener so that `resolveModelChunk` initializes the chunk eagerly
+    response.then(() => {});
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<pre>[[1,2,3],[1,2,3]]</pre>');
+  });
+
+  it('should resolve deduped objects that are themselves blocked', async () => {
+    let resolveClientComponentChunk;
+
+    const Client = clientExports(
+      [4, 5],
+      '42',
+      '/test.js',
+      new Promise(resolve => (resolveClientComponentChunk = resolve)),
+    );
+
+    const shared = [1, 2, 3, Client];
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <div>
+          <Suspense fallback="Loading">
+            <span>
+              {shared /* this will serialize first and block nearest element */}
+            </span>
+          </Suspense>
+          {shared /* this will be referenced inside the blocked element */}
+        </div>,
+        webpackMap,
+      ),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<div><span>12345</span>12345</div>');
   });
 
   it('should progressively reveal server components', async () => {
@@ -356,15 +501,13 @@ describe('ReactFlightDOMBrowser', () => {
       return use(response).rootContent;
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      model,
-      webpackMap,
-      {
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(model, webpackMap, {
         onError(x) {
           reportedErrors.push(x);
           return __DEV__ ? `a dev digest` : `digest("${x.message}")`;
         },
-      },
+      }),
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
 
@@ -380,14 +523,18 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // This isn't enough to show anything.
-    await act(() => {
-      resolveFriends();
+    await serverAct(async () => {
+      await act(() => {
+        resolveFriends();
+      });
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // We can now show the details. Sidebar and posts are still loading.
-    await act(() => {
-      resolveName();
+    await serverAct(async () => {
+      await act(() => {
+        resolveName();
+      });
     });
     // Advance time enough to trigger a nested fallback.
     jest.advanceTimersByTime(500);
@@ -402,8 +549,10 @@ describe('ReactFlightDOMBrowser', () => {
 
     const theError = new Error('Game over');
     // Let's *fail* loading games.
-    await act(() => {
-      rejectGames(theError);
+    await serverAct(async () => {
+      await act(() => {
+        rejectGames(theError);
+      });
     });
 
     const gamesExpectedValue = __DEV__
@@ -421,8 +570,10 @@ describe('ReactFlightDOMBrowser', () => {
     reportedErrors = [];
 
     // We can now show the sidebar.
-    await act(() => {
-      resolvePhotos();
+    await serverAct(async () => {
+      await act(() => {
+        resolvePhotos();
+      });
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -432,8 +583,10 @@ describe('ReactFlightDOMBrowser', () => {
     );
 
     // Show everything.
-    await act(() => {
-      resolvePosts();
+    await serverAct(async () => {
+      await act(() => {
+        resolvePosts();
+      });
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -495,9 +648,8 @@ describe('ReactFlightDOMBrowser', () => {
       rootContent: <ProfileContent />,
     };
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      model,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(model, webpackMap),
     );
 
     const reader = stream.getReader();
@@ -520,7 +672,7 @@ describe('ReactFlightDOMBrowser', () => {
     // Advance time enough to trigger a nested fallback.
     jest.advanceTimersByTime(500);
 
-    await act(() => {});
+    await serverAct(() => {});
 
     expect(flightResponse).toContain('(loading everything)');
     expect(flightResponse).toContain('(loading sidebar)');
@@ -528,25 +680,25 @@ describe('ReactFlightDOMBrowser', () => {
     expect(flightResponse).not.toContain(':friends:');
     expect(flightResponse).not.toContain(':name:');
 
-    await act(() => {
+    await serverAct(() => {
       resolveFriends();
     });
 
     expect(flightResponse).toContain(':friends:');
 
-    await act(() => {
+    await serverAct(() => {
       resolveName();
     });
 
     expect(flightResponse).toContain(':name:');
 
-    await act(() => {
+    await serverAct(() => {
       resolvePhotos();
     });
 
     expect(flightResponse).toContain(':photos:');
 
-    await act(() => {
+    await serverAct(() => {
       resolvePosts();
     });
 
@@ -594,19 +746,21 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     const controller = new AbortController();
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <div>
-        <InfiniteSuspend />
-      </div>,
-      webpackMap,
-      {
-        signal: controller.signal,
-        onError(x) {
-          const message = typeof x === 'string' ? x : x.message;
-          reportedErrors.push(x);
-          return __DEV__ ? 'a dev digest' : `digest("${message}")`;
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <div>
+          <InfiniteSuspend />
+        </div>,
+        webpackMap,
+        {
+          signal: controller.signal,
+          onError(x) {
+            const message = typeof x === 'string' ? x : x.message;
+            reportedErrors.push(x);
+            return __DEV__ ? 'a dev digest' : `digest("${message}")`;
+          },
         },
-      },
+      ),
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
 
@@ -645,21 +799,29 @@ describe('ReactFlightDOMBrowser', () => {
     }
     const Parent = clientExports(ParentClient);
     const ParentModule = clientExports({Parent: ParentClient});
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
     await expect(async () => {
-      const stream = ReactServerDOMServer.renderToReadableStream(
-        <>
-          <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
-          <ParentModule.Parent>
-            {Array(6).fill(<div>no key</div>)}
-          </ParentModule.Parent>
-        </>,
-        webpackMap,
+      const stream = await serverAct(() =>
+        ReactServerDOMServer.renderToReadableStream(
+          <>
+            <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
+            <ParentModule.Parent>
+              {Array(6).fill(<div>no key</div>)}
+            </ParentModule.Parent>
+          </>,
+          webpackMap,
+        ),
       );
-      await ReactServerDOMClient.createFromReadableStream(stream);
-    }).toErrorDev(
-      'Each child in a list should have a unique "key" prop. ' +
-        'See https://react.dev/link/warning-keys for more information.',
-    );
+      const result =
+        await ReactServerDOMClient.createFromReadableStream(stream);
+
+      await act(() => {
+        root.render(result);
+      });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('basic use(promise)', async () => {
@@ -671,7 +833,9 @@ describe('ReactFlightDOMBrowser', () => {
       );
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(<Server />);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Server />),
+    );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
 
     function Client() {
@@ -710,7 +874,9 @@ describe('ReactFlightDOMBrowser', () => {
       );
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(<Parent />);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Parent />),
+    );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
 
     function Client() {
@@ -747,15 +913,13 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     const reportedErrors = [];
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <Server />,
-      webpackMap,
-      {
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Server />, webpackMap, {
         onError(x) {
           reportedErrors.push(x);
           return __DEV__ ? 'a dev digest' : `digest("${x.message}")`;
         },
-      },
+      }),
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
 
@@ -806,7 +970,9 @@ describe('ReactFlightDOMBrowser', () => {
       return ReactServer.use(thenable);
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(<Server />);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Server />),
+    );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
 
     function Client() {
@@ -841,7 +1007,9 @@ describe('ReactFlightDOMBrowser', () => {
 
     // Because the thenable resolves synchronously, we should be able to finish
     // rendering synchronously, with no fallback.
-    const stream = ReactServerDOMServer.renderToReadableStream(<Server />);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Server />),
+    );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
 
     function Client() {
@@ -882,9 +1050,11 @@ describe('ReactFlightDOMBrowser', () => {
 
     const boundFn = ServerModuleA.greet.bind(null, ServerModuleB.upper);
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={boundFn} />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ClientRef action={boundFn} />,
+        webpackMap,
+      ),
     );
 
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
@@ -929,9 +1099,11 @@ describe('ReactFlightDOMBrowser', () => {
     });
     const ClientRef = clientExports(Client);
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={ServerModule.split} />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ClientRef action={ServerModule.split} />,
+        webpackMap,
+      ),
     );
 
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
@@ -994,9 +1166,11 @@ describe('ReactFlightDOMBrowser', () => {
 
     const ClientRef = clientExports(Client);
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={ServerModuleA.greet} />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ClientRef action={ServerModuleA.greet} />,
+        webpackMap,
+      ),
     );
 
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
@@ -1034,9 +1208,11 @@ describe('ReactFlightDOMBrowser', () => {
     });
     const ClientRef = clientExports(Client);
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={greet.bind(null, 'Hello').bind(null, 'World')} />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ClientRef action={greet.bind(null, 'Hello').bind(null, 'World')} />,
+        webpackMap,
+      ),
     );
 
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
@@ -1072,26 +1248,29 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     async function send(text) {
-      return Promise.reject(new Error(`Error for ${text}`));
+      throw new Error(`Error for ${text}`);
     }
 
     const ServerModule = serverExports({send});
     const ClientRef = clientExports(Client);
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={ServerModule.send} />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ClientRef action={ServerModule.send} />,
+        webpackMap,
+      ),
     );
-
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
       async callServer(actionId, args) {
         const body = await ReactServerDOMClient.encodeReply(args);
+        const result = callServer(actionId, body);
+        // Flight doesn't attach error handlers early enough. we suppress the warning
+        // by putting a dummy catch on the result here
+        result.catch(() => {});
         return ReactServerDOMClient.createFromReadableStream(
-          ReactServerDOMServer.renderToReadableStream(
-            callServer(actionId, body),
-            null,
-            {onError: error => 'test-error-digest'},
-          ),
+          ReactServerDOMServer.renderToReadableStream(result, null, {
+            onError: error => 'test-error-digest',
+          }),
         );
       },
     });
@@ -1106,17 +1285,17 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
 
+    let thrownError;
+
+    try {
+      await serverAct(() => actionProxy('test'));
+    } catch (error) {
+      thrownError = error;
+    }
+
     if (__DEV__) {
-      await expect(actionProxy('test')).rejects.toThrow('Error for test');
+      expect(thrownError).toEqual(new Error('Error for test'));
     } else {
-      let thrownError;
-
-      try {
-        await actionProxy('test');
-      } catch (error) {
-        thrownError = error;
-      }
-
       expect(thrownError).toEqual(
         new Error(
           'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.',
@@ -1147,9 +1326,14 @@ describe('ReactFlightDOMBrowser', () => {
     });
     const ClientRef = clientExports(Client);
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action1={ServerModule.greet} action2={ServerModule.greet2} />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ClientRef
+          action1={ServerModule.greet}
+          action2={ServerModule.greet2}
+        />,
+        webpackMap,
+      ),
     );
 
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
@@ -1192,9 +1376,11 @@ describe('ReactFlightDOMBrowser', () => {
     );
 
     // Send the action to the client
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      {action: serverModule.action},
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {action: serverModule.action},
+        webpackMap,
+      ),
     );
     const response =
       await ReactServerDOMClient.createFromReadableStream(stream);
@@ -1234,9 +1420,11 @@ describe('ReactFlightDOMBrowser', () => {
       return <ClientComponent />;
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ServerComponent />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
 
     let response = null;
@@ -1300,9 +1488,11 @@ describe('ReactFlightDOMBrowser', () => {
       return <ClientComponent />;
     }
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <ServerComponent />,
-      webpackMap,
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <ServerComponent />,
+        webpackMap,
+      ),
     );
 
     let response = null;
@@ -1321,15 +1511,11 @@ describe('ReactFlightDOMBrowser', () => {
       );
     }
 
-    // pausing to let Flight runtime tick. This is a test only artifact of the fact that
-    // we aren't operating separate module graphs for flight and fiber. In a real app
-    // each would have their own dispatcher and there would be no cross dispatching.
-    await 1;
-
-    let fizzStream;
+    let fizzPromise;
     await act(async () => {
-      fizzStream = await ReactDOMFizzServer.renderToReadableStream(<App />);
+      fizzPromise = ReactDOMFizzServer.renderToReadableStream(<App />);
     });
+    const fizzStream = await fizzPromise;
 
     const decoder = new TextDecoder();
     const reader = fizzStream.getReader();
@@ -1358,16 +1544,18 @@ describe('ReactFlightDOMBrowser', () => {
 
     let postponed = null;
 
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <Suspense fallback="Loading...">
-        <Server />
-      </Suspense>,
-      null,
-      {
-        onPostpone(reason) {
-          postponed = reason;
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <Suspense fallback="Loading...">
+          <Server />
+        </Suspense>,
+        null,
+        {
+          onPostpone(reason) {
+            postponed = reason;
+          },
         },
-      },
+      ),
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream);
 
@@ -1406,18 +1594,20 @@ describe('ReactFlightDOMBrowser', () => {
       return 'Done';
     }
     const errors = [];
-    const stream = await ReactServerDOMServer.renderToReadableStream(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <Wait />
-        </Suspense>
-      </div>,
-      null,
-      {
-        onError(x) {
-          errors.push(x.message);
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <Wait />
+          </Suspense>
+        </div>,
+        null,
+        {
+          onError(x) {
+            errors.push(x.message);
+          },
         },
-      },
+      ),
     );
 
     expect(rendered).toBe(false);
@@ -1453,20 +1643,22 @@ describe('ReactFlightDOMBrowser', () => {
     let error = null;
 
     const controller = new AbortController();
-    const stream = ReactServerDOMServer.renderToReadableStream(
-      <Suspense fallback="Loading...">
-        <Server />
-      </Suspense>,
-      null,
-      {
-        onError(x) {
-          error = x;
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        <Suspense fallback="Loading...">
+          <Server />
+        </Suspense>,
+        null,
+        {
+          onError(x) {
+            error = x;
+          },
+          onPostpone(reason) {
+            postponed = reason;
+          },
+          signal: controller.signal,
         },
-        onPostpone(reason) {
-          postponed = reason;
-        },
-        signal: controller.signal,
-      },
+      ),
     );
 
     try {
@@ -1483,7 +1675,7 @@ describe('ReactFlightDOMBrowser', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
+    await act(() => {
       root.render(
         <div>
           Shell: <Client />
@@ -1537,27 +1729,33 @@ describe('ReactFlightDOMBrowser', () => {
         controller2 = c;
       },
     });
-    const rscStream = ReactServerDOMServer.renderToReadableStream(
-      {
-        s1,
-        s2,
-      },
-      {},
-      {
-        onError(x) {
-          errors.push(x);
-          return x;
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          s1,
+          s2,
         },
-      },
+        {},
+        {
+          onError(x) {
+            errors.push(x);
+            return x;
+          },
+        },
+      ),
     );
     const result = await ReactServerDOMClient.createFromReadableStream(
       passThrough(rscStream),
     );
+
     const reader1 = result.s1.getReader();
     const reader2 = result.s2.getReader();
 
-    controller1.enqueue({hello: 'world'});
-    controller2.enqueue({hi: 'there'});
+    await serverAct(() => {
+      controller1.enqueue({hello: 'world'});
+      controller2.enqueue({hi: 'there'});
+    });
+
     expect(await reader1.read()).toEqual({
       value: {hello: 'world'},
       done: false,
@@ -1567,10 +1765,11 @@ describe('ReactFlightDOMBrowser', () => {
       done: false,
     });
 
-    controller1.enqueue('text1');
-    controller2.enqueue('text2');
-    controller1.close();
-    controller2.error('rejected');
+    await serverAct(async () => {
+      controller1.enqueue('text1');
+      controller2.enqueue('text2');
+      controller1.close();
+    });
 
     expect(await reader1.read()).toEqual({
       value: 'text1',
@@ -1583,6 +1782,9 @@ describe('ReactFlightDOMBrowser', () => {
     expect(await reader2.read()).toEqual({
       value: 'text2',
       done: false,
+    });
+    await serverAct(async () => {
+      controller2.error('rejected');
     });
     let error = null;
     try {
@@ -1607,14 +1809,16 @@ describe('ReactFlightDOMBrowser', () => {
       },
     });
     let loggedReason;
-    const rscStream = ReactServerDOMServer.renderToReadableStream(
-      s,
-      {},
-      {
-        onError(reason) {
-          loggedReason = reason;
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        s,
+        {},
+        {
+          onError(reason) {
+            loggedReason = reason;
+          },
         },
-      },
+      ),
     );
     const reader = rscStream.getReader();
     controller.enqueue('hi');
@@ -1639,21 +1843,25 @@ describe('ReactFlightDOMBrowser', () => {
         cancelReason = r;
       },
     });
-    const rscStream = ReactServerDOMServer.renderToReadableStream(
-      s,
-      {},
-      {
-        signal: abortController.signal,
-        onError(x) {
-          errors.push(x);
-          return x.message;
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        s,
+        {},
+        {
+          signal: abortController.signal,
+          onError(x) {
+            errors.push(x);
+            return x.message;
+          },
         },
-      },
+      ),
     );
     const result = await ReactServerDOMClient.createFromReadableStream(
       passThrough(rscStream),
     );
     const reader = result.getReader();
+
     controller.enqueue('hi');
 
     await 0;
@@ -1702,18 +1910,20 @@ describe('ReactFlightDOMBrowser', () => {
       throw 'F';
     })();
 
-    const rscStream = ReactServerDOMServer.renderToReadableStream(
-      {
-        multiShotIterable,
-        singleShotIterator,
-      },
-      {},
-      {
-        onError(x) {
-          errors.push(x);
-          return x;
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        {
+          multiShotIterable,
+          singleShotIterator,
         },
-      },
+        {},
+        {
+          onError(x) {
+            errors.push(x);
+            return x;
+          },
+        },
+      ),
     );
     const result = await ReactServerDOMClient.createFromReadableStream(
       passThrough(rscStream),
@@ -1734,7 +1944,9 @@ describe('ReactFlightDOMBrowser', () => {
       done: false,
     });
 
-    await resolve();
+    await serverAct(() => {
+      resolve();
+    });
 
     expect(await iterator1.next()).toEqual({
       value: {hi: 'B'},
@@ -1808,16 +2020,21 @@ describe('ReactFlightDOMBrowser', () => {
       yield 'c';
     })();
     let loggedReason;
-    const rscStream = ReactServerDOMServer.renderToReadableStream(
-      iterator,
-      {},
-      {
-        onError(reason) {
-          loggedReason = reason;
+
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        iterator,
+        {},
+        {
+          onError(reason) {
+            loggedReason = reason;
+          },
         },
-      },
+      ),
     );
+
     const reader = rscStream.getReader();
+
     const reason = new Error('aborted');
     reader.cancel(reason);
     await resolve();
@@ -1843,16 +2060,18 @@ describe('ReactFlightDOMBrowser', () => {
       }
       yield 'c';
     })();
-    const rscStream = ReactServerDOMServer.renderToReadableStream(
-      iterator,
-      {},
-      {
-        signal: abortController.signal,
-        onError(x) {
-          errors.push(x);
-          return x.message;
+    const rscStream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(
+        iterator,
+        {},
+        {
+          signal: abortController.signal,
+          onError(x) {
+            errors.push(x);
+            return x.message;
+          },
         },
-      },
+      ),
     );
     const result = await ReactServerDOMClient.createFromReadableStream(
       passThrough(rscStream),
@@ -1861,7 +2080,9 @@ describe('ReactFlightDOMBrowser', () => {
     const reason = new Error('aborted');
     abortController.abort(reason);
 
-    await resolve();
+    await serverAct(() => {
+      resolve();
+    });
 
     // We should be able to read the part we already emitted before the abort
     expect(await result.next()).toEqual({

@@ -127,7 +127,8 @@ export function printMixedHIR(
     case "do-while":
     case "for-in":
     case "for-of":
-    case "scope": {
+    case "scope":
+    case "pruned-scope": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
         return terminal.join("; ");
@@ -193,7 +194,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case "optional": {
-      value = `[${terminal.id}] Optional test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
+      value = `[${terminal.id}] Optional (optional=${terminal.optional}) test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "throw": {
@@ -278,6 +279,12 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       value = `Scope ${printReactiveScopeSummary(terminal.scope)} block=bb${
         terminal.block
       } fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "pruned-scope": {
+      value = `<pruned> Scope ${printReactiveScopeSummary(
+        terminal.scope
+      )} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "try": {
@@ -588,7 +595,38 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "LoadGlobal": {
-      value = `LoadGlobal ${instrValue.name}`;
+      switch (instrValue.binding.kind) {
+        case "Global": {
+          value = `LoadGlobal(global) ${instrValue.binding.name}`;
+          break;
+        }
+        case "ModuleLocal": {
+          value = `LoadGlobal(module) ${instrValue.binding.name}`;
+          break;
+        }
+        case "ImportDefault": {
+          value = `LoadGlobal import ${instrValue.binding.name} from '${instrValue.binding.module}'`;
+          break;
+        }
+        case "ImportNamespace": {
+          value = `LoadGlobal import * as ${instrValue.binding.name} from '${instrValue.binding.module}'`;
+          break;
+        }
+        case "ImportSpecifier": {
+          if (instrValue.binding.imported !== instrValue.binding.name) {
+            value = `LoadGlobal import { ${instrValue.binding.imported} as ${instrValue.binding.name} } from '${instrValue.binding.module}'`;
+          } else {
+            value = `LoadGlobal import { ${instrValue.binding.name} } from '${instrValue.binding.module}'`;
+          }
+          break;
+        }
+        default: {
+          assertExhaustive(
+            instrValue.binding,
+            `Unexpected binding kind \`${(instrValue.binding as any).kind}\``
+          );
+        }
+      }
       break;
     }
     case "StoreGlobal": {
@@ -603,6 +641,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "RegExpLiteral": {
       value = `RegExp /${instrValue.pattern}/${instrValue.flags}`;
+      break;
+    }
+    case "MetaProperty": {
+      value = `MetaProperty ${instrValue.meta}.${instrValue.property}`;
       break;
     }
     case "Await": {

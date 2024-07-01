@@ -11,8 +11,11 @@ import { Environment } from "../HIR";
 import { lowerType } from "../HIR/BuildHIR";
 import {
   HIRFunction,
+  Identifier,
+  IdentifierId,
   Instruction,
   makeType,
+  PropType,
   Type,
   typeEquals,
   TypeId,
@@ -20,7 +23,11 @@ import {
 } from "../HIR/HIR";
 import {
   BuiltInArrayId,
+  BuiltInFunctionId,
+  BuiltInJsxId,
   BuiltInObjectId,
+  BuiltInPropsId,
+  BuiltInRefValueId,
   BuiltInUseRefId,
 } from "../HIR/ObjectShape";
 import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
@@ -99,7 +106,13 @@ function* generate(
   func: HIRFunction
 ): Generator<TypeEquation, void, undefined> {
   if (func.env.fnType === "Component") {
-    const [_, ref] = func.params;
+    const [props, ref] = func.params;
+    if (props && props.kind === "Identifier") {
+      yield equation(props.identifier.type, {
+        kind: "Object",
+        shapeId: BuiltInPropsId,
+      });
+    }
     if (ref && ref.kind === "Identifier") {
       yield equation(ref.identifier.type, {
         kind: "Object",
@@ -108,6 +121,7 @@ function* generate(
     }
   }
 
+  const names = new Map();
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       yield equation(phi.type, {
@@ -117,13 +131,28 @@ function* generate(
     }
 
     for (const instr of block.instructions) {
-      yield* generateInstructionTypes(func.env, instr);
+      yield* generateInstructionTypes(func.env, names, instr);
     }
   }
 }
 
+function setName(
+  names: Map<IdentifierId, string>,
+  id: IdentifierId,
+  name: Identifier
+): void {
+  if (name.name?.kind === "named") {
+    names.set(id, name.name.value);
+  }
+}
+
+function getName(names: Map<IdentifierId, string>, id: IdentifierId): string {
+  return names.get(id) ?? "";
+}
+
 function* generateInstructionTypes(
   env: Environment,
+  names: Map<IdentifierId, string>,
   instr: Instruction
 ): Generator<TypeEquation, void, undefined> {
   const { lvalue, value } = instr;
@@ -143,6 +172,7 @@ function* generateInstructionTypes(
     }
 
     case "LoadLocal": {
+      setName(names, lvalue.identifier.id, value.place.identifier);
       yield equation(left, value.place.identifier.type);
       break;
     }
@@ -197,7 +227,7 @@ function* generateInstructionTypes(
     }
 
     case "LoadGlobal": {
-      const globalType = env.getGlobalDeclaration(value.name);
+      const globalType = env.getGlobalDeclaration(value.binding);
       if (globalType) {
         yield equation(left, globalType);
       }
@@ -241,7 +271,8 @@ function* generateInstructionTypes(
     case "PropertyLoad": {
       yield equation(left, {
         kind: "Property",
-        object: value.object.identifier.type,
+        objectType: value.object.identifier.type,
+        objectName: getName(names, value.object.identifier.id),
         propertyName: value.property,
       });
       break;
@@ -269,7 +300,8 @@ function* generateInstructionTypes(
             const propertyName = String(i);
             yield equation(item.identifier.type, {
               kind: "Property",
-              object: value.value.identifier.type,
+              objectType: value.value.identifier.type,
+              objectName: getName(names, value.value.identifier.id),
               propertyName,
             });
           } else {
@@ -285,7 +317,8 @@ function* generateInstructionTypes(
             ) {
               yield equation(property.place.identifier.type, {
                 kind: "Property",
-                object: value.value.identifier.type,
+                objectType: value.value.identifier.type,
+                objectName: getName(names, value.value.identifier.id),
                 propertyName: property.key.name,
               });
             }
@@ -313,6 +346,7 @@ function* generateInstructionTypes(
 
     case "FunctionExpression": {
       yield* generate(value.loweredFunc.func);
+      yield equation(left, { kind: "Object", shapeId: BuiltInFunctionId });
       break;
     }
 
@@ -327,12 +361,16 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "JsxExpression":
+    case "JsxFragment": {
+      yield equation(left, { kind: "Object", shapeId: BuiltInJsxId });
+      break;
+    }
+    case "PropertyStore":
     case "DeclareLocal":
     case "NewExpression":
-    case "JsxExpression":
-    case "JsxFragment":
     case "RegExpLiteral":
-    case "PropertyStore":
+    case "MetaProperty":
     case "ComputedStore":
     case "ComputedLoad":
     case "TaggedTemplateExpression":
@@ -361,7 +399,21 @@ class Unifier {
 
   unify(tA: Type, tB: Type): void {
     if (tB.kind === "Property") {
-      const objectType = this.get(tB.object);
+      if (
+        this.env.config.enableTreatRefLikeIdentifiersAsRefs &&
+        isRefLikeName(tB)
+      ) {
+        this.unify(tB.objectType, {
+          kind: "Object",
+          shapeId: BuiltInUseRefId,
+        });
+        this.unify(tA, {
+          kind: "Object",
+          shapeId: BuiltInRefValueId,
+        });
+        return;
+      }
+      const objectType = this.get(tB.objectType);
       const propertyType = this.env.getPropertyType(
         objectType,
         tB.propertyName
@@ -468,4 +520,10 @@ class Unifier {
 
     return type;
   }
+}
+
+const RefLikeNameRE = /^(?:[a-zA-Z$_][a-zA-Z$_0-9]*)Ref$|^ref$/;
+
+function isRefLikeName(t: PropType): boolean {
+  return RefLikeNameRE.test(t.objectName) && t.propertyName === "current";
 }

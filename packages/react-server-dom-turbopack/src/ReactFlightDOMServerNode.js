@@ -61,13 +61,12 @@ function createDrainHandler(destination: Destination, request: Request) {
 function createCancelHandler(request: Request, reason: string) {
   return () => {
     stopFlowing(request);
-    // eslint-disable-next-line react-internal/prod-error-codes
     abort(request, new Error(reason));
   };
 }
 
 type Options = {
-  environmentName?: string,
+  environmentName?: string | (() => string),
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
   identifierPrefix?: string,
@@ -127,8 +126,13 @@ function renderToPipeableStream(
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
   turbopackMap: ServerManifest,
+  options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
-  const response = createResponse(turbopackMap, '');
+  const response = createResponse(
+    turbopackMap,
+    '',
+    options ? options.temporaryReferences : undefined,
+  );
   let pendingFiles = 0;
   const queuedFields: Array<string> = [];
   busboyStream.on('field', (name, value) => {

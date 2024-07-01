@@ -23,12 +23,7 @@ import type {
   ViewElementSource,
   CanViewElementSource,
 } from 'react-devtools-shared/src/devtools/views/DevTools';
-
-type Config = {
-  checkBridgeProtocolCompatibility?: boolean,
-  supportsNativeInspection?: boolean,
-  supportsProfiling?: boolean,
-};
+import type {Config} from 'react-devtools-shared/src/devtools/store';
 
 export function createBridge(wall?: Wall): FrontendBridge {
   if (wall != null) {
@@ -42,7 +37,7 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
   return new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
-    supportsNativeInspection: true,
+    supportsClickToInspect: true,
     ...config,
   });
 }

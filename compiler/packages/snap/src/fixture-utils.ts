@@ -10,7 +10,16 @@ import * as glob from "glob";
 import path from "path";
 import { FILTER_PATH, FIXTURES_PATH, SNAPSHOT_EXTENSION } from "./constants";
 
-const INPUT_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx"];
+const INPUT_EXTENSIONS = [
+  ".js",
+  ".cjs",
+  ".mjs",
+  ".ts",
+  ".cts",
+  ".mts",
+  ".jsx",
+  ".tsx",
+];
 
 export type TestFilter = {
   debug: boolean;

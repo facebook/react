@@ -611,12 +611,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         }
         return false;
       } else {
-        // If this is false, React will trigger a fallback, if needed.
         return record.status === 'fulfilled';
       }
     },
 
-    preloadResource(resource: mixed): boolean {
+    preloadResource(resource: mixed): number {
       throw new Error(
         'Resources are not implemented for React Noop yet. This method should not be called',
       );
@@ -636,6 +635,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     NotPendingTransition: (null: TransitionStatus),
 
     resetFormInstance(form: Instance) {},
+
+    printToConsole(methodName, args, badgeName) {
+      // eslint-disable-next-line react-internal/no-production-logging
+      console[methodName].apply(console, args);
+    },
   };
 
   const hostConfig = useMutation
@@ -972,7 +976,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function onRecoverableError(error) {
     // TODO: Turn this on once tests are fixed
-    // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
     // console.error(error);
   }
 

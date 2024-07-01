@@ -22,6 +22,7 @@ export function writeOutputToString(
   input: string,
   compilerOutput: string | null,
   evaluatorOutput: string | null,
+  logs: string | null,
   errorMessage: string | null
 ) {
   // leading newline intentional
@@ -39,6 +40,14 @@ ${wrapWithTripleBackticks(compilerOutput, "javascript")}
 `;
   } else {
     result += "\n";
+  }
+
+  if (logs != null) {
+    result += `
+## Logs
+
+${wrapWithTripleBackticks(logs, null)}
+`;
   }
 
   if (errorMessage != null) {

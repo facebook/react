@@ -16,6 +16,7 @@ const babelOptions = {
     '@babel/plugin-syntax-import-meta',
     '@babel/plugin-transform-react-jsx',
   ],
+  sourceMaps: process.env.NODE_ENV === 'development' ? 'inline' : false,
 };
 
 async function babelLoad(url, context, defaultLoad) {

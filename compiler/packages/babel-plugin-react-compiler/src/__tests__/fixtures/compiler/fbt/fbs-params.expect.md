@@ -40,7 +40,7 @@ function Component(props) {
         title={fbs._(
           "Hello {user name}",
           [fbs._param("user name", props.name)],
-          { hk: "2zEDKF" }
+          { hk: "2zEDKF" },
         )}
       >
         Hover me

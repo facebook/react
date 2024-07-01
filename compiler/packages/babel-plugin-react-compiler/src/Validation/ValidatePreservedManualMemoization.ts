@@ -280,7 +280,13 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
   scopeMapping = new Map();
   temporaries: Map<IdentifierId, ManualMemoDependency> = new Map();
 
-  collectMaybeMemoDependencies(
+  /**
+   * Recursively visit values and instructions to collect declarations
+   * and property loads.
+   * @returns a @{ManualMemoDependency} representing the variable +
+   * property reads represented by @value
+   */
+  recordDepsInValue(
     value: ReactiveValue,
     state: VisitorState
   ): ManualMemoDependency | null {
@@ -289,16 +295,28 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         for (const instr of value.instructions) {
           this.visitInstruction(instr, state);
         }
-        const result = this.collectMaybeMemoDependencies(value.value, state);
-
+        const result = this.recordDepsInValue(value.value, state);
         return result;
       }
       case "OptionalExpression": {
-        return this.collectMaybeMemoDependencies(value.value, state);
+        return this.recordDepsInValue(value.value, state);
       }
-      case "ReactiveFunctionValue":
-      case "ConditionalExpression":
+      case "ReactiveFunctionValue": {
+        CompilerError.throwTodo({
+          reason:
+            "Handle ReactiveFunctionValue in ValidatePreserveManualMemoization",
+          loc: value.loc,
+        });
+      }
+      case "ConditionalExpression": {
+        this.recordDepsInValue(value.test, state);
+        this.recordDepsInValue(value.consequent, state);
+        this.recordDepsInValue(value.alternate, state);
+        return null;
+      }
       case "LogicalExpression": {
+        this.recordDepsInValue(value.left, state);
+        this.recordDepsInValue(value.right, state);
         return null;
       }
       default: {
@@ -336,7 +354,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       state.manualMemoState.decls.add(lvalId);
     }
 
-    const maybeDep = this.collectMaybeMemoDependencies(value, state);
+    const maybeDep = this.recordDepsInValue(value, state);
     if (lvalId != null) {
       if (maybeDep != null) {
         temporaries.set(lvalId, maybeDep);
@@ -400,7 +418,10 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     instruction: ReactiveInstruction,
     state: VisitorState
   ): void {
-    this.traverseInstruction(instruction, state);
+    /**
+     * We don't invoke traverseInstructions because `recordDepsInValue`
+     * recursively visits ReactiveValues and instructions
+     */
     this.recordTemporaries(instruction, state);
     if (instruction.value.kind === "StartMemoize") {
       let depsFromSource: Array<ManualMemoDependency> | null = null;

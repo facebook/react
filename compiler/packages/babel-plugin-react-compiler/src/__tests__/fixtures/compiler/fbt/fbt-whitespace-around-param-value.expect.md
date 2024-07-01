@@ -35,7 +35,7 @@ function Component(t0) {
     t1 = fbt._(
       "Before text {paramName} after text",
       [fbt._param("paramName", value)],
-      { hk: "26pxNm" }
+      { hk: "26pxNm" },
     );
     $[0] = value;
     $[1] = t1;

@@ -35,7 +35,7 @@ function Component(props) {
         value={fbt._(
           "{value}%",
           [fbt._param("value", <>{identity(props.text)}</>)],
-          { hk: "10F5Cc" }
+          { hk: "10F5Cc" },
         )}
       />
     );

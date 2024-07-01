@@ -125,6 +125,8 @@ export const enableAddPropertiesFastPath = false;
 
 export const enableOwnerStacks = __EXPERIMENTAL__;
 
+export const enableShallowPropDiffing = false;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */
@@ -192,8 +194,6 @@ export const enableReactTestRendererWarning = true;
 // before removing them in stable in the next Major
 export const disableLegacyMode = true;
 
-export const disableDOMTestUtils = true;
-
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
 export const enableRenderableContext = true;
 
@@ -209,8 +209,6 @@ export const enableUseDeferredValueInitialArg = true;
 
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const forceConcurrentByDefaultForTesting = false;
-
-export const enableUnifiedSyncLane = true;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;

@@ -56,10 +56,10 @@ function Component(props) {
             fbt._param(
               "option",
 
-              props.option
+              props.option,
             ),
           ],
-          { hk: "3Bg20a" }
+          { hk: "3Bg20a" },
         )}
         !
       </span>

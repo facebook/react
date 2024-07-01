@@ -14,6 +14,8 @@ import * as t from "@babel/types";
 import assert from "assert";
 import type {
   CompilationMode,
+  Logger,
+  LoggerEvent,
   PanicThresholdOptions,
   PluginOptions,
 } from "babel-plugin-react-compiler/src/Entrypoint";
@@ -32,7 +34,7 @@ export function parseLanguage(source: string): "flow" | "typescript" {
 function makePluginOptions(
   firstLine: string,
   parseConfigPragmaFn: typeof ParseConfigPragma
-): PluginOptions {
+): [PluginOptions, Array<{ filename: string | null; event: LoggerEvent }>] {
   let gating = null;
   let enableEmitInstrumentForget = null;
   let enableEmitFreeze = null;
@@ -43,6 +45,8 @@ function makePluginOptions(
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
+  let enableChangeDetectionForDebugging = null;
+  let customMacros = null;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -120,6 +124,12 @@ function makePluginOptions(
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
+  if (firstLine.includes("@enableChangeDetectionForDebugging")) {
+    enableChangeDetectionForDebugging = {
+      source: "react-compiler-runtime",
+      importSpecifierName: "$structuralCheck",
+    };
+  }
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -133,8 +143,30 @@ function makePluginOptions(
     );
   }
 
+  const customMacrosMatch = /@customMacros\(([^)]+)\)/.exec(firstLine);
+  if (
+    customMacrosMatch &&
+    customMacrosMatch.length > 1 &&
+    customMacrosMatch[1].trim().length > 0
+  ) {
+    customMacros = customMacrosMatch[1]
+      .split(" ")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+
+  let logs: Array<{ filename: string | null; event: LoggerEvent }> = [];
+  let logger: Logger | null = null;
+  if (firstLine.includes("@logger")) {
+    logger = {
+      logEvent(filename: string | null, event: LoggerEvent): void {
+        logs.push({ filename, event });
+      },
+    };
+  }
+
   const config = parseConfigPragmaFn(firstLine);
-  return {
+  const options = {
     environment: {
       ...config,
       customHooks: new Map([
@@ -166,15 +198,18 @@ function makePluginOptions(
           },
         ],
       ]),
+      customMacros,
       enableEmitFreeze,
       enableEmitInstrumentForget,
       enableEmitHookGuards,
       assertValidMutableRanges: true,
+      enableSharedRuntime__testonly: true,
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
+      enableChangeDetectionForDebugging,
     },
     compilationMode,
-    logger: null,
+    logger,
     gating,
     panicThreshold,
     noEmit: false,
@@ -182,7 +217,9 @@ function makePluginOptions(
     eslintSuppressionRules,
     flowSuppressions,
     ignoreUseNoForget,
+    enableReanimatedCheck: false,
   };
+  return [options, logs];
 }
 
 export function parseInput(
@@ -270,8 +307,11 @@ function getEvaluatorPresets(
   );
   return presets;
 }
-function format(inputCode: string, language: "typescript" | "flow"): string {
-  return prettier.format(inputCode, {
+async function format(
+  inputCode: string,
+  language: "typescript" | "flow"
+): Promise<string> {
+  return await prettier.format(inputCode, {
     semi: true,
     parser: language === "typescript" ? "babel-ts" : "flow",
   });
@@ -281,19 +321,22 @@ const FlowEvaluatorPresets = getEvaluatorPresets("flow");
 
 export type TransformResult = {
   forgetOutput: string;
+  logs: string | null;
   evaluatorCode: {
     original: string;
     forget: string;
   } | null;
 };
 
-export function transformFixtureInput(
+export async function transformFixtureInput(
   input: string,
   fixturePath: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
   includeEvaluator: boolean
-): { kind: "ok"; value: TransformResult } | { kind: "err"; msg: string } {
+): Promise<
+  { kind: "ok"; value: TransformResult } | { kind: "err"; msg: string }
+> {
   // Extract the first line to quickly check for custom test directives
   const firstLine = input.substring(0, input.indexOf("\n"));
 
@@ -315,24 +358,27 @@ export function transformFixtureInput(
   /**
    * Get Forget compiled code
    */
+  const [options, logs] = makePluginOptions(firstLine, parseConfigPragmaFn);
   const forgetResult = transformFromAstSync(inputAst, input, {
     filename: virtualFilepath,
     highlightCode: false,
     retainLines: true,
     plugins: [
-      [plugin, makePluginOptions(firstLine, parseConfigPragmaFn)],
+      [plugin, options],
       "babel-plugin-fbt",
       "babel-plugin-fbt-runtime",
     ],
     sourceType: "module",
     ast: includeEvaluator,
     cloneInputAst: includeEvaluator,
+    configFile: false,
+    babelrc: false,
   });
   invariant(
     forgetResult?.code != null,
     "Expected BabelPluginReactForget to codegen successfully."
   );
-  const forgetOutput = forgetResult.code;
+  const forgetCode = forgetResult.code;
   let evaluatorCode = null;
 
   if (
@@ -346,9 +392,11 @@ export function transformFixtureInput(
         forgetResult?.ast != null,
         "Expected BabelPluginReactForget ast."
       );
-      const result = transformFromAstSync(forgetResult.ast, forgetOutput, {
+      const result = transformFromAstSync(forgetResult.ast, forgetCode, {
         presets,
         filename: virtualFilepath,
+        configFile: false,
+        babelrc: false,
       });
       if (result?.code == null) {
         return {
@@ -373,6 +421,8 @@ export function transformFixtureInput(
       const result = transformFromAstSync(inputAst, input, {
         presets,
         filename: virtualFilepath,
+        configFile: false,
+        babelrc: false,
       });
 
       if (result?.code == null) {
@@ -394,10 +444,20 @@ export function transformFixtureInput(
       original: originalEval,
     };
   }
+  const forgetOutput = await format(forgetCode, language);
+  let formattedLogs = null;
+  if (logs.length !== 0) {
+    formattedLogs = logs
+      .map(({ event }) => {
+        return JSON.stringify(event);
+      })
+      .join("\n");
+  }
   return {
     kind: "ok",
     value: {
-      forgetOutput: format(forgetOutput, language),
+      forgetOutput,
+      logs: formattedLogs,
       evaluatorCode,
     },
   };

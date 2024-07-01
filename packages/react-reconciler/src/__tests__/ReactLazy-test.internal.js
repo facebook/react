@@ -703,7 +703,7 @@ describe('ReactLazy', () => {
       await act(() => resolveFakeImport(T));
       assertLog(['Hi Bye']);
     }).toErrorDev(
-      'Warning: T: Support for defaultProps ' +
+      'T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );
@@ -995,7 +995,10 @@ describe('ReactLazy', () => {
     await expect(async () => {
       await act(() => resolveFakeImport(Foo));
       assertLog(['A', 'B']);
-    }).toErrorDev('    in Text (at **)\n' + '    in Foo (at **)');
+    }).toErrorDev(
+      (gate(flags => flags.enableOwnerStacks) ? '' : '    in Text (at **)\n') +
+        '    in Foo (at **)',
+    );
     expect(root).toMatchRenderedOutput(<div>AB</div>);
   });
 

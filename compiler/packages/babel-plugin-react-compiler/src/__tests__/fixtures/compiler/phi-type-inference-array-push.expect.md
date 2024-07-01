@@ -22,6 +22,11 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ cond: true, value: 42 }],
+  sequentialRenders: [
+    { cond: true, value: 3.14 },
+    { cond: false, value: 3.14 },
+    { cond: true, value: 42 },
+  ],
 };
 
 ```
@@ -31,11 +36,11 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(6);
-  let x;
-  let y;
+  const $ = _c(2);
+  let t0;
   if ($[0] !== props) {
-    x = {};
+    const x = {};
+    let y;
     if (props.cond) {
       y = [props.value];
     } else {
@@ -43,21 +48,12 @@ function Component(props) {
     }
 
     y.push(x);
-    $[0] = props;
-    $[1] = x;
-    $[2] = y;
-  } else {
-    x = $[1];
-    y = $[2];
-  }
-  let t0;
-  if ($[3] !== x || $[4] !== y) {
+
     t0 = [x, y];
-    $[3] = x;
-    $[4] = y;
-    $[5] = t0;
+    $[0] = props;
+    $[1] = t0;
   } else {
-    t0 = $[5];
+    t0 = $[1];
   }
   return t0;
 }
@@ -65,9 +61,16 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ cond: true, value: 42 }],
+  sequentialRenders: [
+    { cond: true, value: 3.14 },
+    { cond: false, value: 3.14 },
+    { cond: true, value: 42 },
+  ],
 };
 
 ```
       
 ### Eval output
-(kind: ok) [{},[42,"[[ cyclic ref *1 ]]"]]
+(kind: ok) [{},[3.14,"[[ cyclic ref *1 ]]"]]
+[{},["[[ cyclic ref *1 ]]"]]
+[{},[42,"[[ cyclic ref *1 ]]"]]

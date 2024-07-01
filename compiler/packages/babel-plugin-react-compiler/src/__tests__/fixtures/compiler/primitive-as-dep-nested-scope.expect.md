@@ -6,14 +6,32 @@
 // emit it trivially and repeatedly (e.g. no need to memoize props.b + 1
 // separately from props.b)
 // Correctness:
+
+import { identity, mutate, setProperty } from "shared-runtime";
+
 //   y depends on either props.b or props.b + 1
 function PrimitiveAsDepNested(props) {
   let x = {};
   mutate(x);
-  let y = foo(props.b + 1);
-  mutate(x, props.a);
+  let y = identity(props.b + 1);
+  setProperty(x, props.a);
   return [x, y];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: PrimitiveAsDepNested,
+  params: [{ a: 1, b: 2 }],
+  sequentialRenders: [
+    // change b
+    { a: 1, b: 3 },
+    // change b
+    { a: 1, b: 4 },
+    // change a
+    { a: 2, b: 4 },
+    // change a
+    { a: 3, b: 4 },
+  ],
+};
 
 ```
 
@@ -24,44 +42,56 @@ import { c as _c } from "react/compiler-runtime"; // props.b + 1 is an non-alloc
 // emit it trivially and repeatedly (e.g. no need to memoize props.b + 1
 // separately from props.b)
 // Correctness:
+
+import { identity, mutate, setProperty } from "shared-runtime";
+
 //   y depends on either props.b or props.b + 1
 function PrimitiveAsDepNested(props) {
-  const $ = _c(9);
-  let x;
-  let y;
+  const $ = _c(5);
+  let t0;
   if ($[0] !== props.b || $[1] !== props.a) {
-    x = {};
+    const x = {};
     mutate(x);
-    const t0 = props.b + 1;
-    let t1;
-    if ($[4] !== t0) {
-      t1 = foo(t0);
-      $[4] = t0;
-      $[5] = t1;
+    const t1 = props.b + 1;
+    let t2;
+    if ($[3] !== t1) {
+      t2 = identity(t1);
+      $[3] = t1;
+      $[4] = t2;
     } else {
-      t1 = $[5];
+      t2 = $[4];
     }
-    y = t1;
-    mutate(x, props.a);
+    const y = t2;
+    setProperty(x, props.a);
+    t0 = [x, y];
     $[0] = props.b;
     $[1] = props.a;
-    $[2] = x;
-    $[3] = y;
+    $[2] = t0;
   } else {
-    x = $[2];
-    y = $[3];
-  }
-  let t0;
-  if ($[6] !== x || $[7] !== y) {
-    t0 = [x, y];
-    $[6] = x;
-    $[7] = y;
-    $[8] = t0;
-  } else {
-    t0 = $[8];
+    t0 = $[2];
   }
   return t0;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: PrimitiveAsDepNested,
+  params: [{ a: 1, b: 2 }],
+  sequentialRenders: [
+    // change b
+    { a: 1, b: 3 },
+    // change b
+    { a: 1, b: 4 },
+    // change a
+    { a: 2, b: 4 },
+    // change a
+    { a: 3, b: 4 },
+  ],
+};
+
 ```
       
+### Eval output
+(kind: ok) [{"wat0":"joe","wat1":1},4]
+[{"wat0":"joe","wat1":1},5]
+[{"wat0":"joe","wat1":2},5]
+[{"wat0":"joe","wat1":3},5]

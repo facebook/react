@@ -139,8 +139,9 @@ describe('SimpleEventPlugin', function () {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  ['button', 'input', 'select', 'textarea'].forEach(function (tagName) {
-    describe(tagName, function () {
+  describe.each(['button', 'input', 'select', 'textarea'])(
+    '%s',
+    function (tagName) {
       it('should forward clicks when it starts out not disabled', async () => {
         const element = React.createElement(tagName, {
           onClick: onClick,
@@ -207,8 +208,8 @@ describe('SimpleEventPlugin', function () {
         const element = container.firstChild;
         await expectClickThru(element);
       });
-    });
-  });
+    },
+  );
 
   it('batches updates that occur as a result of a nested event dispatch', async () => {
     container = document.createElement('div');

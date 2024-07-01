@@ -115,11 +115,7 @@ describe('StrictEffectsMode defaults', () => {
           </React.StrictMode>,
         );
 
-        await waitForPaint([
-          'useLayoutEffect mount "one"',
-          'useLayoutEffect unmount "one"',
-          'useLayoutEffect mount "one"',
-        ]);
+        await waitForPaint(['useLayoutEffect mount "one"']);
         expect(log).toEqual([
           'useLayoutEffect mount "one"',
           'useLayoutEffect unmount "one"',
@@ -141,10 +137,6 @@ describe('StrictEffectsMode defaults', () => {
           // Cleanup and re-run "one" (and "two") since there is no dependencies array.
           'useLayoutEffect unmount "one"',
           'useLayoutEffect mount "one"',
-          'useLayoutEffect mount "two"',
-
-          // Since "two" is new, it should be double-invoked.
-          'useLayoutEffect unmount "two"',
           'useLayoutEffect mount "two"',
         ]);
         expect(log).toEqual([
@@ -196,10 +188,6 @@ describe('StrictEffectsMode defaults', () => {
         await waitForAll([
           'useLayoutEffect mount "one"',
           'useEffect mount "one"',
-          'useLayoutEffect unmount "one"',
-          'useEffect unmount "one"',
-          'useLayoutEffect mount "one"',
-          'useEffect mount "one"',
         ]);
         expect(log).toEqual([
           'useLayoutEffect mount "one"',
@@ -236,12 +224,6 @@ describe('StrictEffectsMode defaults', () => {
         await waitForAll([
           'useEffect unmount "one"',
           'useEffect mount "one"',
-          'useEffect mount "two"',
-
-          // Since "two" is new, it should be double-invoked.
-          'useLayoutEffect unmount "two"',
-          'useEffect unmount "two"',
-          'useLayoutEffect mount "two"',
           'useEffect mount "two"',
         ]);
         expect(log).toEqual([

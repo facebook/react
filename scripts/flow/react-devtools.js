@@ -12,9 +12,4 @@
 declare const __EXTENSION__: boolean;
 declare const __TEST__: boolean;
 
-declare const DARK_MODE_DIMMED_WARNING_COLOR: string;
-declare const DARK_MODE_DIMMED_ERROR_COLOR: string;
-declare const DARK_MODE_DIMMED_LOG_COLOR: string;
-declare const LIGHT_MODE_DIMMED_WARNING_COLOR: string;
-declare const LIGHT_MODE_DIMMED_ERROR_COLOR: string;
-declare const LIGHT_MODE_DIMMED_LOG_COLOR: string;
+declare const __IS_FIREFOX__: boolean;

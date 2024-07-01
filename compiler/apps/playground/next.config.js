@@ -23,7 +23,7 @@ const nextConfig = {
         new MonacoWebpackPlugin({
           languages: ["typescript", "javascript"],
           filename: "static/[name].worker.js",
-        }),
+        })
       );
     }
 
@@ -31,7 +31,7 @@ const nextConfig = {
       ...config.resolve.alias,
       "react-compiler-runtime": path.resolve(
         __dirname,
-        "../../packages/react-compiler-runtime",
+        "../../packages/react-compiler-runtime"
       ),
     };
 

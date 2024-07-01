@@ -162,7 +162,7 @@ describe('ReactConcurrentErrorRecovery', () => {
   const rejectText = rejectMostRecentTextCache;
 
   // @gate enableLegacyCache
-  test('errors during a refresh transition should not force fallbacks to display (suspend then error)', async () => {
+  it('errors during a refresh transition should not force fallbacks to display (suspend then error)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -234,7 +234,7 @@ describe('ReactConcurrentErrorRecovery', () => {
   });
 
   // @gate enableLegacyCache
-  test('errors during a refresh transition should not force fallbacks to display (error then suspend)', async () => {
+  it('errors during a refresh transition should not force fallbacks to display (error then suspend)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -306,7 +306,7 @@ describe('ReactConcurrentErrorRecovery', () => {
   });
 
   // @gate enableLegacyCache
-  test('suspending in the shell (outside a Suspense boundary) should not throw, warn, or log during a transition', async () => {
+  it('suspending in the shell (outside a Suspense boundary) should not throw, warn, or log during a transition', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -356,7 +356,7 @@ describe('ReactConcurrentErrorRecovery', () => {
   });
 
   // @gate enableLegacyCache
-  test(
+  it(
     'errors during a suspended transition at the shell should not force ' +
       'fallbacks to display (error then suspend)',
     async () => {

@@ -150,7 +150,7 @@ describe('act warnings', () => {
     }
   }
 
-  test('warns about unwrapped updates only if environment flag is enabled', async () => {
+  it('warns about unwrapped updates only if environment flag is enabled', async () => {
     let setState;
     function App() {
       const [state, _setState] = useState(0);
@@ -187,7 +187,7 @@ describe('act warnings', () => {
   });
 
   // @gate __DEV__
-  test('act warns if the environment flag is not enabled', async () => {
+  it('act warns if the environment flag is not enabled', async () => {
     let setState;
     function App() {
       const [state, _setState] = useState(0);
@@ -237,7 +237,7 @@ describe('act warnings', () => {
     });
   });
 
-  test('warns if root update is not wrapped', async () => {
+  it('warns if root update is not wrapped', async () => {
     await withActEnvironment(true, () => {
       const root = ReactNoop.createRoot();
       expect(() => root.render('Hi')).toErrorDev(
@@ -250,7 +250,7 @@ describe('act warnings', () => {
   });
 
   // @gate __DEV__
-  test('warns if class update is not wrapped', async () => {
+  it('warns if class update is not wrapped', async () => {
     let app;
     class App extends React.Component {
       state = {count: 0};
@@ -272,7 +272,7 @@ describe('act warnings', () => {
   });
 
   // @gate __DEV__
-  test('warns even if update is synchronous', async () => {
+  it('warns even if update is synchronous', async () => {
     let setState;
     function App() {
       const [state, _setState] = useState(0);
@@ -299,7 +299,7 @@ describe('act warnings', () => {
 
   // @gate __DEV__
   // @gate enableLegacyCache
-  test('warns if Suspense retry is not wrapped', async () => {
+  it('warns if Suspense retry is not wrapped', async () => {
     function App() {
       return (
         <Suspense fallback={<Text text="Loading..." />}>
@@ -327,7 +327,7 @@ describe('act warnings', () => {
 
   // @gate __DEV__
   // @gate enableLegacyCache
-  test('warns if Suspense ping is not wrapped', async () => {
+  it('warns if Suspense ping is not wrapped', async () => {
     function App({showMore}) {
       return (
         <Suspense fallback={<Text text="Loading..." />}>

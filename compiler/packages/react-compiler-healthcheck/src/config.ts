@@ -1,3 +1,3 @@
 export const config = {
-  knownIncompatibleLibraries: ["mobx"],
+  knownIncompatibleLibraries: ["mobx", "@risingstack/react-easy-state"],
 };

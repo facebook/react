@@ -38,7 +38,7 @@ describe('ReactDeprecationWarnings', () => {
 
     ReactNoop.render(<FunctionalComponent />);
     await expect(async () => await waitForAll([])).toErrorDev(
-      'Warning: FunctionalComponent: Support for defaultProps ' +
+      'FunctionalComponent: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );
@@ -60,7 +60,7 @@ describe('ReactDeprecationWarnings', () => {
       </div>,
     );
     await expect(async () => await waitForAll([])).toErrorDev(
-      'Warning: FunctionalComponent: Support for defaultProps ' +
+      'FunctionalComponent: Support for defaultProps ' +
         'will be removed from memo components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );
@@ -81,7 +81,7 @@ describe('ReactDeprecationWarnings', () => {
 
     ReactNoop.render(<Component />);
     await expect(async () => await waitForAll([])).toErrorDev(
-      'Warning: Component "Component" contains the string ref "refComponent". ' +
+      'Component "Component" contains the string ref "refComponent". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: ' +
@@ -138,7 +138,7 @@ describe('ReactDeprecationWarnings', () => {
 
     ReactNoop.render(<Component />);
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: Component "Component" contains the string ref "refComponent". ' +
+      'Component "Component" contains the string ref "refComponent". ' +
         'Support for string refs will be removed in a future major release. ' +
         'This case cannot be automatically converted to an arrow function. ' +
         'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
@@ -170,7 +170,7 @@ describe('ReactDeprecationWarnings', () => {
 
     ReactNoop.render(<Component />);
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: Component "Component" contains the string ref "refComponent". ' +
+      'Component "Component" contains the string ref "refComponent". ' +
         'Support for string refs will be removed in a future major release. ' +
         'This case cannot be automatically converted to an arrow function. ' +
         'We ask you to manually fix this case by using useRef() or createRef() instead. ' +

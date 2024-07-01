@@ -7,8 +7,6 @@
  * @flow
  */
 
-/* eslint-disable */
-
 // libdefs cannot actually import. These are supposed to be the types imported
 // from 'react-native-renderer/src/ReactNativeTypes'
 type __MeasureOnSuccessCallback = any;
@@ -167,10 +165,12 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
 }
 
+// eslint-disable-next-line no-unused-vars
 declare const RN$enableMicrotasksInReact: boolean;
 
 // This is needed for a short term solution.
 // See https://github.com/facebook/react/pull/15490 for more info
+// eslint-disable-next-line no-unused-vars
 declare const nativeFabricUIManager: {
   createNode: (
     reactTag: number,

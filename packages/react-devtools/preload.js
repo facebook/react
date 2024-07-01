@@ -1,11 +1,11 @@
 const {clipboard, shell, contextBridge} = require('electron');
 const fs = require('fs');
-const {address} = require('ip');
+const internalIP = require('internal-ip');
 
 // Expose protected methods so that render process does not need unsafe node integration
 contextBridge.exposeInMainWorld('api', {
   electron: {clipboard, shell},
-  ip: {address},
+  ip: {address: internalIP.v4.sync},
   getDevTools() {
     let devtools;
     try {

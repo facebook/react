@@ -132,6 +132,8 @@ export function appendInitialChild(
   appendChildNode(parentInstance.node, child.node);
 }
 
+const PROD_HOST_CONTEXT: HostContext = {isInAParentText: true};
+
 export function createInstance(
   type: string,
   props: Props,
@@ -220,29 +222,35 @@ export function finalizeInitialChildren(
 export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
-  return {isInAParentText: false};
+  if (__DEV__) {
+    return {isInAParentText: false};
+  }
+
+  return PROD_HOST_CONTEXT;
 }
 
 export function getChildHostContext(
   parentHostContext: HostContext,
   type: string,
 ): HostContext {
-  const prevIsInAParentText = parentHostContext.isInAParentText;
-  const isInAParentText =
-    type === 'AndroidTextInput' || // Android
-    type === 'RCTMultilineTextInputView' || // iOS
-    type === 'RCTSinglelineTextInputView' || // iOS
-    type === 'RCTText' ||
-    type === 'RCTVirtualText';
+  if (__DEV__) {
+    const prevIsInAParentText = parentHostContext.isInAParentText;
+    const isInAParentText =
+      type === 'AndroidTextInput' || // Android
+      type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSinglelineTextInputView' || // iOS
+      type === 'RCTText' ||
+      type === 'RCTVirtualText';
 
-  // TODO: If this is an offscreen host container, we should reuse the
-  // parent context.
+    // TODO: If this is an offscreen host container, we should reuse the
+    // parent context.
 
-  if (prevIsInAParentText !== isInAParentText) {
-    return {isInAParentText};
-  } else {
-    return parentHostContext;
+    if (prevIsInAParentText !== isInAParentText) {
+      return {isInAParentText};
+    }
   }
+
+  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): null | PublicInstance {

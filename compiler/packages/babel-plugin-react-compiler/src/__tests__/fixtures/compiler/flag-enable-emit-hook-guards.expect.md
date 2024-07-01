@@ -107,7 +107,7 @@ function Component(t0) {
             } finally {
               $dispatcherGuard(3);
             }
-          })()
+          })(),
         );
       } finally {
         $dispatcherGuard(3);

@@ -17,25 +17,19 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
+    const onEvent = () => {
       console.log(42);
     };
+
+    t0 = <Foo onEvent={onEvent} />;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const onEvent = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <Foo onEvent={onEvent} />;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  return t1;
+  return t0;
 }
 
 ```

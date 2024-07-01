@@ -1333,7 +1333,7 @@ describe('DOMPropertyOperations', () => {
       });
 
       assertConsoleErrorDev([
-        'The `popoverTarget` prop expects the ID of an Element as a string. Received [object HTMLDivElement] instead.',
+        'The `popoverTarget` prop expects the ID of an Element as a string. Received HTMLDivElement {} instead.',
       ]);
 
       // Dedupe warning

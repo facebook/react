@@ -56,7 +56,7 @@ function Component(props) {
           {fbt._(
             "Lorum ipsum{thing} blah blah blah",
             [fbt._param("thing", object.b)],
-            { hk: "lwmuH" }
+            { hk: "lwmuH" },
           )}
         </div>
       );

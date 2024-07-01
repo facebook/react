@@ -24,10 +24,10 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(4);
-  let x;
+  const $ = _c(2);
+  let t0;
   if ($[0] !== props.cond) {
-    x = {};
+    const x = {};
 
     const onChange = (e) => {
       maybeMutate(x, e.target.value);
@@ -36,18 +36,11 @@ function Component(props) {
     }
 
     onChange();
-    $[0] = props.cond;
-    $[1] = x;
-  } else {
-    x = $[1];
-  }
-  let t0;
-  if ($[2] !== x) {
     t0 = <Foo value={x} />;
-    $[2] = x;
-    $[3] = t0;
+    $[0] = props.cond;
+    $[1] = t0;
   } else {
-    t0 = $[3];
+    t0 = $[1];
   }
   return t0;
 }

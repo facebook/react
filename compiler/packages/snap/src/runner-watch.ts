@@ -27,7 +27,7 @@ export function watchSrc(
   const host = ts.createWatchCompilerHost(
     configPath,
     ts.convertCompilerOptionsFromJson(
-      { module: "commonjs", outDir: "dist" },
+      { module: "commonjs", outDir: "dist", sourceMap: true },
       "."
     ).options,
     ts.sys,
@@ -153,8 +153,8 @@ function subscribeFilterFile(
     } else if (
       events.findIndex((event) => event.path.includes(FILTER_FILENAME)) !== -1
     ) {
-      state.filter = await readTestFilter();
       if (state.mode.filter) {
+        state.filter = await readTestFilter();
         state.mode.action = RunnerAction.Test;
         onChange(state);
       }
@@ -189,7 +189,7 @@ function subscribeKeyEvents(
   state: RunnerState,
   onChange: (state: RunnerState) => void
 ) {
-  process.stdin.on("keypress", (str, key) => {
+  process.stdin.on("keypress", async (str, key) => {
     if (key.name === "u") {
       // u => update fixtures
       state.mode.action = RunnerAction.Update;
@@ -197,6 +197,7 @@ function subscribeKeyEvents(
       process.exit(0);
     } else if (key.name === "f") {
       state.mode.filter = !state.mode.filter;
+      state.filter = state.mode.filter ? await readTestFilter() : null;
       state.mode.action = RunnerAction.Test;
     } else {
       // any other key re-runs tests
@@ -218,7 +219,7 @@ export async function makeWatchRunner(
       action: RunnerAction.Test,
       filter: filterMode,
     },
-    filter: await readTestFilter(),
+    filter: filterMode ? await readTestFilter() : null,
   };
 
   subscribeTsc(state, onChange);

@@ -45,6 +45,17 @@ export function retainWhere<T>(
   array.length = writeIndex;
 }
 
+export function retainWhere_Set<T>(
+  items: Set<T>,
+  predicate: (item: T) => boolean
+): void {
+  for (const item of items) {
+    if (!predicate(item)) {
+      items.delete(item);
+    }
+  }
+}
+
 export function getOrInsertWith<U, V>(
   m: Map<U, V>,
   key: U,

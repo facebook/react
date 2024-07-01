@@ -51,7 +51,14 @@ class Transform extends ReactiveFunctionTransform<State> {
          */
         !hasOwnDeclaration(scopeBlock))
     ) {
-      return { kind: "replace-many", value: scopeBlock.instructions };
+      return {
+        kind: "replace",
+        value: {
+          kind: "pruned-scope",
+          scope: scopeBlock.scope,
+          instructions: scopeBlock.instructions,
+        },
+      };
     } else {
       return { kind: "keep" };
     }

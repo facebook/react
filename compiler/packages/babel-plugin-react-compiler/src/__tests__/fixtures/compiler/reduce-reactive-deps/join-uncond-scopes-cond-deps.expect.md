@@ -61,38 +61,28 @@ import { c as _c } from "react/compiler-runtime"; // This tests an optimization,
 import { CONST_TRUE, setProperty } from "shared-runtime";
 
 function useJoinCondDepsInUncondScopes(props) {
-  const $ = _c(8);
-  let x;
-  let y;
+  const $ = _c(4);
+  let t0;
   if ($[0] !== props.a.b) {
-    y = {};
-    if ($[3] !== props) {
+    const y = {};
+    let x;
+    if ($[2] !== props) {
       x = {};
       if (CONST_TRUE) {
         setProperty(x, props.a.b);
       }
-      $[3] = props;
-      $[4] = x;
+      $[2] = props;
+      $[3] = x;
     } else {
-      x = $[4];
+      x = $[3];
     }
 
     setProperty(y, props.a.b);
-    $[0] = props.a.b;
-    $[1] = x;
-    $[2] = y;
-  } else {
-    x = $[1];
-    y = $[2];
-  }
-  let t0;
-  if ($[5] !== x || $[6] !== y) {
     t0 = [x, y];
-    $[5] = x;
-    $[6] = y;
-    $[7] = t0;
+    $[0] = props.a.b;
+    $[1] = t0;
   } else {
-    t0 = $[7];
+    t0 = $[1];
   }
   return t0;
 }

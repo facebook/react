@@ -27,8 +27,7 @@ function Foo() {}
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
-/**
+import { c as _c } from "react/compiler-runtime"; /**
  * Should produce 1 scope:
  *
  * return: inputs=props.a & props.b; outputs=return

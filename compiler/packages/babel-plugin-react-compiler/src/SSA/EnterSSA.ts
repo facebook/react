@@ -86,6 +86,7 @@ class SSABuilder {
       },
       scope: null, // reset along w the mutable range
       type: makeType(),
+      loc: oldId.loc,
     };
   }
 

@@ -23,12 +23,7 @@ export function startTransition(
   options?: StartTransitionOptions,
 ) {
   const prevTransition = ReactSharedInternals.T;
-  // Each renderer registers a callback to receive the return value of
-  // the scope function. This is used to implement async actions.
-  const callbacks = new Set<(BatchConfigTransition, mixed) => mixed>();
-  const transition: BatchConfigTransition = {
-    _callbacks: callbacks,
-  };
+  const transition: BatchConfigTransition = {};
   ReactSharedInternals.T = transition;
   const currentTransition = ReactSharedInternals.T;
 
@@ -48,12 +43,15 @@ export function startTransition(
   if (enableAsyncActions) {
     try {
       const returnValue = scope();
+      const onStartTransitionFinish = ReactSharedInternals.S;
+      if (onStartTransitionFinish !== null) {
+        onStartTransitionFinish(transition, returnValue);
+      }
       if (
         typeof returnValue === 'object' &&
         returnValue !== null &&
         typeof returnValue.then === 'function'
       ) {
-        callbacks.forEach(callback => callback(currentTransition, returnValue));
         returnValue.then(noop, reportGlobalError);
       }
     } catch (error) {

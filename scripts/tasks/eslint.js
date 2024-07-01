@@ -17,7 +17,6 @@ async function main() {
     console.log('Hint: run `yarn linc` to only lint changed files.');
   }
 
-  // eslint-disable-next-line no-unused-vars
   const {_, ...cliOptions} = minimist(process.argv.slice(2));
 
   if (await runESLint({onlyChanged: false, ...cliOptions})) {

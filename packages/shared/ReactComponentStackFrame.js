@@ -315,6 +315,7 @@ function shouldConstruct(Component: Function) {
   return !!(prototype && prototype.isReactComponent);
 }
 
+// TODO: Delete this once the key warning no longer uses it. I.e. when enableOwnerStacks ship.
 export function describeUnknownElementTypeFrameInDEV(type: any): string {
   if (!__DEV__) {
     return '';

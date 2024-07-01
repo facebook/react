@@ -9,7 +9,6 @@ import { Binding, NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import { CompilerError } from "../CompilerError";
 import { Environment } from "./Environment";
-import { Global } from "./Globals";
 import {
   BasicBlock,
   BlockId,
@@ -22,7 +21,9 @@ import {
   IdentifierId,
   Instruction,
   Place,
+  SourceLocation,
   Terminal,
+  VariableBinding,
   makeBlockId,
   makeIdentifierName,
   makeInstructionId,
@@ -174,7 +175,7 @@ export default class HIRBuilder {
     return handler ?? null;
   }
 
-  makeTemporary(): Identifier {
+  makeTemporary(loc: SourceLocation): Identifier {
     const id = this.nextIdentifierId;
     return {
       id,
@@ -182,26 +183,8 @@ export default class HIRBuilder {
       mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) },
       scope: null,
       type: makeType(),
+      loc,
     };
-  }
-
-  resolveGlobal(
-    path: NodePath<t.Identifier | t.JSXIdentifier>
-  ): (Global & { name: string }) | null {
-    const name = path.node.name;
-    const resolvedGlobal = this.#env.getGlobalDeclaration(name);
-    if (resolvedGlobal) {
-      return {
-        ...resolvedGlobal,
-        name,
-      };
-    } else {
-      // if env records no global with the given name, load it as an unknown type
-      return {
-        kind: "Poly",
-        name,
-      };
-    }
   }
 
   #resolveBabelBinding(
@@ -210,12 +193,6 @@ export default class HIRBuilder {
     const originalName = path.node.name;
     const binding = path.scope.getBinding(originalName);
     if (binding == null) {
-      return null;
-    }
-    // Check if the binding is from module scope, if so return null
-    const outerBinding =
-      this.parentFunction.scope.parent.getBinding(originalName);
-    if (binding === outerBinding) {
       return null;
     }
     return binding;
@@ -253,22 +230,75 @@ export default class HIRBuilder {
    */
   resolveIdentifier(
     path: NodePath<t.Identifier | t.JSXIdentifier>
-  ): Identifier | null {
+  ): VariableBinding {
     const originalName = path.node.name;
     const babelBinding = this.#resolveBabelBinding(path);
     if (babelBinding == null) {
-      return null;
+      return { kind: "Global", name: originalName };
     }
+
+    // Check if the binding is from module scope
+    const outerBinding =
+      this.parentFunction.scope.parent.getBinding(originalName);
+    if (babelBinding === outerBinding) {
+      const path = babelBinding.path;
+      if (path.isImportDefaultSpecifier()) {
+        const importDeclaration =
+          path.parentPath as NodePath<t.ImportDeclaration>;
+        return {
+          kind: "ImportDefault",
+          name: originalName,
+          module: importDeclaration.node.source.value,
+        };
+      } else if (path.isImportSpecifier()) {
+        const importDeclaration =
+          path.parentPath as NodePath<t.ImportDeclaration>;
+        return {
+          kind: "ImportSpecifier",
+          name: originalName,
+          module: importDeclaration.node.source.value,
+          imported:
+            path.node.imported.type === "Identifier"
+              ? path.node.imported.name
+              : path.node.imported.value,
+        };
+      } else if (path.isImportNamespaceSpecifier()) {
+        const importDeclaration =
+          path.parentPath as NodePath<t.ImportDeclaration>;
+        return {
+          kind: "ImportNamespace",
+          name: originalName,
+          module: importDeclaration.node.source.value,
+        };
+      } else {
+        return {
+          kind: "ModuleLocal",
+          name: originalName,
+        };
+      }
+    }
+
     const resolvedBinding = this.resolveBinding(babelBinding.identifier);
     if (resolvedBinding.name && resolvedBinding.name.value !== originalName) {
       babelBinding.scope.rename(originalName, resolvedBinding.name.value);
     }
-    return resolvedBinding;
+    return {
+      kind: "Identifier",
+      identifier: resolvedBinding,
+      bindingKind: babelBinding.kind,
+    };
   }
 
   isContextIdentifier(path: NodePath<t.Identifier | t.JSXIdentifier>): boolean {
     const binding = this.#resolveBabelBinding(path);
     if (binding) {
+      // Check if the binding is from module scope, if so return null
+      const outerBinding = this.parentFunction.scope.parent.getBinding(
+        path.node.name
+      );
+      if (binding === outerBinding) {
+        return false;
+      }
       return this.#env.isContextIdentifier(binding.identifier);
     } else {
       return false;
@@ -292,6 +322,7 @@ export default class HIRBuilder {
           },
           scope: null,
           type: makeType(),
+          loc: node.loc ?? GeneratedSource,
         };
         this.#bindings.set(name, { node, identifier });
         return identifier;
@@ -849,7 +880,10 @@ export function removeUnnecessaryTryCatch(fn: HIR): void {
   }
 }
 
-export function createTemporaryPlace(env: Environment): Place {
+export function createTemporaryPlace(
+  env: Environment,
+  loc: SourceLocation
+): Place {
   return {
     kind: "Identifier",
     identifier: {
@@ -858,6 +892,7 @@ export function createTemporaryPlace(env: Environment): Place {
       name: null,
       scope: null,
       type: makeType(),
+      loc,
     },
     reactive: false,
     effect: Effect.Unknown,

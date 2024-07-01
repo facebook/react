@@ -361,7 +361,7 @@ export default function Tree(props: Props): React.Node {
     <TreeFocusedContext.Provider value={treeFocused}>
       <div className={styles.Tree} ref={treeRef}>
         <div className={styles.SearchInput}>
-          {store.supportsNativeInspection && (
+          {store.supportsClickToInspect && (
             <Fragment>
               <InspectHostNodesToggle />
               <div className={styles.VRule} />

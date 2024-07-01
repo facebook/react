@@ -13,6 +13,10 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ hello: null, world: undefined, "!": true }],
+  sequentialRenders: [
+    { a: null, b: null, c: null },
+    { lauren: true, mofei: true, sathya: true, jason: true },
+  ],
 };
 
 ```
@@ -22,25 +26,19 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(4);
-  let items;
+  const $ = _c(2);
+  let t0;
   if ($[0] !== props) {
-    items = [];
+    const items = [];
     for (const key in props) {
       items.push(<div key={key}>{key}</div>);
     }
-    $[0] = props;
-    $[1] = items;
-  } else {
-    items = $[1];
-  }
-  let t0;
-  if ($[2] !== items) {
+
     t0 = <div>{items}</div>;
-    $[2] = items;
-    $[3] = t0;
+    $[0] = props;
+    $[1] = t0;
   } else {
-    t0 = $[3];
+    t0 = $[1];
   }
   return t0;
 }
@@ -48,9 +46,14 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ hello: null, world: undefined, "!": true }],
+  sequentialRenders: [
+    { a: null, b: null, c: null },
+    { lauren: true, mofei: true, sathya: true, jason: true },
+  ],
 };
 
 ```
       
 ### Eval output
-(kind: ok) <div><div>hello</div><div>world</div><div>!</div></div>
+(kind: ok) <div><div>a</div><div>b</div><div>c</div></div>
+<div><div>lauren</div><div>mofei</div><div>sathya</div><div>jason</div></div>

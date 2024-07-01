@@ -251,8 +251,8 @@ export default function InspectedElementWrapper(_: Props): React.Node {
           <div
             className={
               element.isStrictModeNonCompliant
-                ? styles.StrictModeNonCompliant
-                : styles.Component
+                ? `${styles.ComponentName} ${styles.StrictModeNonCompliantComponentName}`
+                : styles.ComponentName
             }
             title={element.displayName}>
             {element.displayName}
@@ -296,7 +296,7 @@ export default function InspectedElementWrapper(_: Props): React.Node {
             <ButtonIcon type="suspend" />
           </Toggle>
         )}
-        {store.supportsNativeInspection && (
+        {store.supportsInspectMatchingDOMElement && (
           <Button
             onClick={highlightElement}
             title="Inspect the matching DOM element">

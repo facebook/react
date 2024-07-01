@@ -220,7 +220,6 @@ const skipFilter = new Set([
    * Tests with one or more params, with external references.
    */
   "alias-computed-load",
-  "allocating-primitive-as-dep-nested-scope",
   "allocating-primitive-as-dep",
   "allow-passing-refs-as-props",
   "array-at-closure",
@@ -309,7 +308,6 @@ const skipFilter = new Set([
   "optional-receiver-method-call",
   "optional-receiver-optional-method",
   "primitive-alias-mutate",
-  "primitive-as-dep-nested-scope",
   "primitive-as-dep",
   "property-assignment",
   "property-call-spread",
@@ -446,7 +444,6 @@ const skipFilter = new Set([
   "loop-unused-let",
   "reanimated-no-memo-arg",
 
-  // Tested e2e in forget-feedback repo
   "userspace-use-memo-cache",
   "transitive-freeze-function-expressions",
 
@@ -487,12 +484,24 @@ const skipFilter = new Set([
   "rules-of-hooks/rules-of-hooks-69521d94fa03",
 
   // bugs
-  "bug-invalid-reactivity-value-block",
+  "bug-invalid-hoisting-functionexpr",
   "original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block",
   "original-reactive-scopes-fork/bug-hoisted-declaration-with-scope",
+  "bug-codegen-inline-iife",
 
   // 'react-compiler-runtime' not yet supported
   "flag-enable-emit-hook-guards",
+
+  "fast-refresh-refresh-on-const-changes-dev",
+  "useState-pruned-dependency-change-detect",
+  "useState-unpruned-dependency",
+  "useState-and-other-hook-unpruned-dependency",
+  "change-detect-reassign",
+
+  // needs to be executed as a module
+  "meta-property",
+
+  "todo.invalid-nested-function-reassign-local-variable-in-effect",
 ]);
 
 export default skipFilter;

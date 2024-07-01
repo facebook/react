@@ -180,7 +180,7 @@ describe('ReactInteractionTracing', () => {
   }
 
   // @gate enableTransitionTracing
-  it(' should not call callbacks when transition is not defined', async () => {
+  it('should not call callbacks when transition is not defined', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
         Scheduler.log(`onTransitionStart(${name}, ${startTime})`);
@@ -1265,6 +1265,7 @@ describe('ReactInteractionTracing', () => {
   });
 
   // @gate enableTransitionTracing
+  // eslint-disable-next-line jest/no-disabled-tests
   it.skip('warn and calls marker incomplete if name changes before transition completes', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
@@ -1820,7 +1821,7 @@ describe('ReactInteractionTracing', () => {
   });
 
   // @gate enableTransitionTracing
-  it('Suspense boundary not added by the transition is deleted ', async () => {
+  it('Suspense boundary not added by the transition is deleted', async () => {
     const transitionCallbacks = {
       onTransitionStart: (name, startTime) => {
         Scheduler.log(`onTransitionStart(${name}, ${startTime})`);

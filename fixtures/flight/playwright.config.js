@@ -24,7 +24,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'FAST_REFRESH=false yarn dev',
+    command: 'yarn dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !isCI,
   },

@@ -43,6 +43,7 @@ function willCoercionThrow(value: mixed): boolean {
   }
 }
 
+/** @noinline */
 function testStringCoercion(value: mixed) {
   // If you ended up here by following an exception call stack, here's what's
   // happened: you supplied an object or symbol value to React (as a prop, key,

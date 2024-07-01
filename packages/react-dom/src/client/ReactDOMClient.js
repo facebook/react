@@ -19,6 +19,9 @@ import ReactVersion from 'shared/ReactVersion';
 import {getClosestInstanceFromNode} from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import Internals from 'shared/ReactDOMSharedInternals';
 
+import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomorphicReactVersion';
+ensureCorrectIsomorphicReactVersion();
+
 if (__DEV__) {
   if (
     typeof Map !== 'function' ||

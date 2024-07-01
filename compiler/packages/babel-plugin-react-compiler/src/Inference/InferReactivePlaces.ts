@@ -15,7 +15,7 @@ import {
   Place,
   computePostDominatorTree,
   getHookKind,
-  isSetStateType,
+  isStableType,
   isUseOperator,
 } from "../HIR";
 import { PostDominator } from "../HIR/Dominator";
@@ -219,7 +219,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
 
         if (hasReactiveInput) {
           for (const lvalue of eachInstructionLValue(instruction)) {
-            if (isSetStateType(lvalue.identifier)) {
+            if (isStableType(lvalue.identifier)) {
               continue;
             }
             reactiveIdentifiers.markReactive(lvalue);

@@ -16,9 +16,9 @@ export function validateUseMemo(fn: HIRFunction): void {
     for (const { lvalue, value } of block.instructions) {
       switch (value.kind) {
         case "LoadGlobal": {
-          if (value.name === "useMemo") {
+          if (value.binding.name === "useMemo") {
             useMemos.add(lvalue.identifier.id);
-          } else if (value.name === "React") {
+          } else if (value.binding.name === "React") {
             react.add(lvalue.identifier.id);
           }
           break;

@@ -50,7 +50,7 @@ export default function Header() {
         <Logo
           className={clsx(
             "w-8 h-8 text-link",
-            process.env.NODE_ENV === "development" && "text-yellow-600",
+            process.env.NODE_ENV === "development" && "text-yellow-600"
           )}
         />
         <p className="hidden select-none sm:block">React Compiler Playground</p>

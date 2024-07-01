@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
 /**
  * Sync from <https://github.com/reactjs/reactjs.org/blob/main/beta/colors.js>.
  */

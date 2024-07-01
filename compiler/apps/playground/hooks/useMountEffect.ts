@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
 import type { EffectCallback } from "react";
 import { useEffect } from "react";
 

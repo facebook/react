@@ -36,10 +36,10 @@ function Foo(props) {
         fbt._param(
           "value",
 
-          props.value
+          props.value,
         ),
       ],
-      { hk: "Ri5kJ" }
+      { hk: "Ri5kJ" },
     );
     $[0] = props.value;
     $[1] = t0;

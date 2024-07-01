@@ -34,7 +34,7 @@ function Component(props) {
     t0 = fbt._(
       "Hello, {(key) name}!",
       [fbt._param("(key) name", identity(props.name))],
-      { hk: "2sOsn5" }
+      { hk: "2sOsn5" },
     );
     $[0] = props.name;
     $[1] = t0;

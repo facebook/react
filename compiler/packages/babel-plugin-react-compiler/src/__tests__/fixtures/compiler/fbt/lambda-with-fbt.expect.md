@@ -57,7 +57,7 @@ function Component() {
           return fbt._(
             "Gift | {price}",
             [fbt._param("price", item?.current_gift_offer?.price?.formatted)],
-            { hk: "3GTnGE" }
+            { hk: "3GTnGE" },
           );
         } else {
           if (!iconOnly && !showPrice) {

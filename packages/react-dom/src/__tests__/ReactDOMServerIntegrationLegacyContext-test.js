@@ -48,7 +48,7 @@ describe('ReactDOMServerIntegration', () => {
     // The `itRenders` test abstraction doesn't work with @gate so we have
     // to do this instead.
     if (gate(flags => flags.disableLegacyContext)) {
-      test('empty test to stop Jest from being a complainy complainer', () => {});
+      it('empty test to stop Jest from being a complainy complainer', () => {});
       return;
     }
 
@@ -314,7 +314,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(() => {
         ReactDOMServer.renderToString(<MyComponent />);
       }).toErrorDev(
-        'Warning: MyComponent.getChildContext(): childContextTypes must be defined in order to use getChildContext().\n' +
+        'MyComponent.getChildContext(): childContextTypes must be defined in order to use getChildContext().\n' +
           '    in MyComponent (at **)',
       );
     });

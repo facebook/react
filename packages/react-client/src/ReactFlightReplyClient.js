@@ -227,14 +227,11 @@ export function processReply(
     function progress(entry: {done: boolean, value: ReactServerValue, ...}) {
       if (entry.done) {
         const blobId = nextPartId++;
-        // eslint-disable-next-line react-internal/safe-string-coercion
         data.append(formFieldPrefix + blobId, new Blob(buffer));
-        // eslint-disable-next-line react-internal/safe-string-coercion
         data.append(
           formFieldPrefix + streamId,
           '"$o' + blobId.toString(16) + '"',
         );
-        // eslint-disable-next-line react-internal/safe-string-coercion
         data.append(formFieldPrefix + streamId, 'C'); // Close signal
         pendingParts--;
         if (pendingParts === 0) {
@@ -262,7 +259,6 @@ export function processReply(
 
     function progress(entry: {done: boolean, value: ReactServerValue, ...}) {
       if (entry.done) {
-        // eslint-disable-next-line react-internal/safe-string-coercion
         data.append(formFieldPrefix + streamId, 'C'); // Close signal
         pendingParts--;
         if (pendingParts === 0) {
@@ -272,7 +268,6 @@ export function processReply(
         try {
           // $FlowFixMe[incompatible-type]: While plain JSON can return undefined we never do here.
           const partJSON: string = JSON.stringify(entry.value, resolveToJSON);
-          // eslint-disable-next-line react-internal/safe-string-coercion
           data.append(formFieldPrefix + streamId, partJSON);
           reader.read().then(progress, reject);
         } catch (x) {
@@ -326,7 +321,6 @@ export function processReply(
     ) {
       if (entry.done) {
         if (entry.value === undefined) {
-          // eslint-disable-next-line react-internal/safe-string-coercion
           data.append(formFieldPrefix + streamId, 'C'); // Close signal
         } else {
           // Unlike streams, the last value may not be undefined. If it's not
@@ -348,7 +342,6 @@ export function processReply(
         try {
           // $FlowFixMe[incompatible-type]: While plain JSON can return undefined we never do here.
           const partJSON: string = JSON.stringify(entry.value, resolveToJSON);
-          // eslint-disable-next-line react-internal/safe-string-coercion
           data.append(formFieldPrefix + streamId, partJSON);
           iterator.next().then(progress, reject);
         } catch (x) {
@@ -441,7 +434,6 @@ export function processReply(
             const partJSON = serializeModel(resolvedModel, lazyId);
             // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
             const data: FormData = formData;
-            // eslint-disable-next-line react-internal/safe-string-coercion
             data.append(formFieldPrefix + lazyId, partJSON);
             return serializeByValueID(lazyId);
           } catch (x) {
@@ -461,7 +453,6 @@ export function processReply(
                   const partJSON = serializeModel(value, lazyId);
                   // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
                   const data: FormData = formData;
-                  // eslint-disable-next-line react-internal/safe-string-coercion
                   data.append(formFieldPrefix + lazyId, partJSON);
                   pendingParts--;
                   if (pendingParts === 0) {
@@ -502,7 +493,6 @@ export function processReply(
               const partJSON = serializeModel(partValue, promiseId);
               // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
               const data: FormData = formData;
-              // eslint-disable-next-line react-internal/safe-string-coercion
               data.append(formFieldPrefix + promiseId, partJSON);
               pendingParts--;
               if (pendingParts === 0) {
@@ -784,7 +774,6 @@ export function processReply(
         }
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
-        // eslint-disable-next-line react-internal/safe-string-coercion
         formData.set(formFieldPrefix + refId, metaDataJSON);
         return serializeServerReferenceID(refId);
       }

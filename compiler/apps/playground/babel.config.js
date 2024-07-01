@@ -9,20 +9,13 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: ["next/babel"],
-    overrides: [
-      {
-        test: /^((?!node_modules).)*$/g,
-        plugins: [
-          [
-            "babel-plugin-react-compiler",
-            {
-              compilationMode: "infer",
-              panicThreshold: "NONE",
-              runtimeModule: "react-compiler-runtime",
-            },
-          ],
-        ],
-      },
+    plugins: [
+      [
+        "babel-plugin-react-compiler",
+        {
+          runtimeModule: "react-compiler-runtime",
+        },
+      ],
     ],
   };
 };

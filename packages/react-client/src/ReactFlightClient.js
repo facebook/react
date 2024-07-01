@@ -67,7 +67,12 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_POSTPONE_TYPE,
   ASYNC_ITERATOR,
+  REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
+
+import getComponentNameFromType from 'shared/getComponentNameFromType';
+
+import isArray from 'shared/isArray';
 
 export type {CallServerCallback, EncodeFormActionCallback};
 
@@ -98,7 +103,6 @@ type RowParserState = 0 | 1 | 2 | 3 | 4;
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const CYCLIC = 'cyclic';
 const RESOLVED_MODEL = 'resolved_model';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
@@ -114,14 +118,6 @@ type PendingChunk<T> = {
 };
 type BlockedChunk<T> = {
   status: 'blocked',
-  value: null | Array<(T) => mixed>,
-  reason: null | Array<(mixed) => mixed>,
-  _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
-};
-type CyclicChunk<T> = {
-  status: 'cyclic',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
@@ -159,6 +155,7 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _response: Response,
+  _debugInfo?: null | ReactDebugInfo,
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
@@ -172,7 +169,6 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | CyclicChunk<T>
   | ResolvedModelChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
@@ -214,7 +210,6 @@ Chunk.prototype.then = function <T>(
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       if (resolve) {
         if (chunk.value === null) {
           chunk.value = ([]: Array<(T) => mixed>);
@@ -236,6 +231,8 @@ Chunk.prototype.then = function <T>(
   }
 };
 
+export type FindSourceMapURLCallback = (fileName: string) => null | string;
+
 export type Response = {
   _bundlerConfig: SSRModuleMap,
   _moduleLoading: ModuleLoading,
@@ -251,6 +248,8 @@ export type Response = {
   _rowLength: number, // remaining bytes in the row. 0 indicates that we're looking for a newline.
   _buffer: Array<Uint8Array>, // chunks received so far as part of this row
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
+  _debugRootTask?: null | ConsoleTask, // DEV-only
+  _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -270,7 +269,6 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       return chunk.value;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       // eslint-disable-next-line no-throw-literal
       throw ((chunk: any): Thenable<T>);
     default:
@@ -319,9 +317,24 @@ function wakeChunkIfInitialized<T>(
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
-      chunk.value = resolveListeners;
-      chunk.reason = rejectListeners;
+      if (chunk.value) {
+        for (let i = 0; i < resolveListeners.length; i++) {
+          chunk.value.push(resolveListeners[i]);
+        }
+      } else {
+        chunk.value = resolveListeners;
+      }
+
+      if (chunk.reason) {
+        if (rejectListeners) {
+          for (let i = 0; i < rejectListeners.length; i++) {
+            chunk.reason.push(rejectListeners[i]);
+          }
+        }
+      } else {
+        chunk.reason = rejectListeners;
+      }
+
       break;
     case ERRORED:
       if (rejectListeners) {
@@ -477,53 +490,61 @@ function resolveModuleChunk<T>(
   }
 }
 
-let initializingChunk: ResolvedModelChunk<any> = (null: any);
-let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
+type InitializationHandler = {
+  parent: null | InitializationHandler,
+  chunk: null | BlockedChunk<any>,
+  value: any,
+  deps: number,
+  errored: boolean,
+};
+let initializingHandler: null | InitializationHandler = null;
+
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
-  const prevChunk = initializingChunk;
-  const prevBlocked = initializingChunkBlockedModel;
-  initializingChunk = chunk;
-  initializingChunkBlockedModel = null;
+  const prevHandler = initializingHandler;
+  initializingHandler = null;
 
   const resolvedModel = chunk.value;
 
-  // We go to the CYCLIC state until we've fully resolved this.
+  // We go to the BLOCKED state until we've fully resolved this.
   // We do this before parsing in case we try to initialize the same chunk
   // while parsing the model. Such as in a cyclic reference.
-  const cyclicChunk: CyclicChunk<T> = (chunk: any);
-  cyclicChunk.status = CYCLIC;
+  const cyclicChunk: BlockedChunk<T> = (chunk: any);
+  cyclicChunk.status = BLOCKED;
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
 
   try {
     const value: T = parseModel(chunk._response, resolvedModel);
-    if (
-      initializingChunkBlockedModel !== null &&
-      initializingChunkBlockedModel.deps > 0
-    ) {
-      initializingChunkBlockedModel.value = value;
-      // We discovered new dependencies on modules that are not yet resolved.
-      // We have to go the BLOCKED state until they're resolved.
-      const blockedChunk: BlockedChunk<T> = (chunk: any);
-      blockedChunk.status = BLOCKED;
-      blockedChunk.value = null;
-      blockedChunk.reason = null;
-    } else {
-      const resolveListeners = cyclicChunk.value;
-      const initializedChunk: InitializedChunk<T> = (chunk: any);
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = value;
-      if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, value);
+    // Invoke any listeners added while resolving this model. I.e. cyclic
+    // references. This may or may not fully resolve the model depending on
+    // if they were blocked.
+    const resolveListeners = cyclicChunk.value;
+    if (resolveListeners !== null) {
+      cyclicChunk.value = null;
+      cyclicChunk.reason = null;
+      wakeChunk(resolveListeners, value);
+    }
+    if (initializingHandler !== null) {
+      if (initializingHandler.errored) {
+        throw initializingHandler.value;
+      }
+      if (initializingHandler.deps > 0) {
+        // We discovered new dependencies on modules that are not yet resolved.
+        // We have to keep the BLOCKED state until they're resolved.
+        initializingHandler.value = value;
+        initializingHandler.chunk = cyclicChunk;
+        return;
       }
     }
+    const initializedChunk: InitializedChunk<T> = (chunk: any);
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = value;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
     erroredChunk.reason = error;
   } finally {
-    initializingChunk = prevChunk;
-    initializingChunkBlockedModel = prevBlocked;
+    initializingHandler = prevHandler;
   }
 }
 
@@ -559,13 +580,54 @@ function nullRefGetter() {
   }
 }
 
+function getServerComponentTaskName(componentInfo: ReactComponentInfo): string {
+  return '<' + (componentInfo.name || '...') + '>';
+}
+
+function getTaskName(type: mixed): string {
+  if (type === REACT_FRAGMENT_TYPE) {
+    return '<>';
+  }
+  if (typeof type === 'function') {
+    // This is a function so it must have been a Client Reference that resolved to
+    // a function. We use "use client" to indicate that this is the boundary into
+    // the client. There should only be one for any given owner chain.
+    return '"use client"';
+  }
+  if (
+    typeof type === 'object' &&
+    type !== null &&
+    type.$$typeof === REACT_LAZY_TYPE
+  ) {
+    if (type._init === readChunk) {
+      // This is a lazy node created by Flight. It is probably a client reference.
+      // We use the "use client" string to indicate that this is the boundary into
+      // the client. There will only be one for any given owner chain.
+      return '"use client"';
+    }
+    // We don't want to eagerly initialize the initializer in DEV mode so we can't
+    // call it to extract the type so we don't know the type of this component.
+    return '<...>';
+  }
+  try {
+    const name = getComponentNameFromType(type);
+    return name ? '<' + name + '>' : '<...>';
+  } catch (x) {
+    return '<...>';
+  }
+}
+
 function createElement(
+  response: Response,
   type: mixed,
   key: mixed,
   props: mixed,
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
-): React$Element<any> {
+  validated: number, // DEV-only
+):
+  | React$Element<any>
+  | LazyComponent<React$Element<any>, SomeChunk<React$Element<any>>> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
     // `ref` is non-enumerable in dev
@@ -610,13 +672,13 @@ function createElement(
     // Unfortunately, _store is enumerable in jest matchers so for equality to
     // work, I need to keep it or make _store non-enumerable in the other file.
     element._store = ({}: {
-      validated?: boolean,
+      validated?: number,
     });
     Object.defineProperty(element._store, 'validated', {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: true, // This element has already been validated on the server.
+      value: enableOwnerStacks ? validated : 1, // Whether the element has already been validated on the server.
     });
     // debugInfo contains Server Component debug information.
     Object.defineProperty(element, '_debugInfo', {
@@ -630,24 +692,92 @@ function createElement(
         configurable: false,
         enumerable: false,
         writable: true,
-        value: {stack: stack},
+        value: stack,
       });
+
+      let task: null | ConsoleTask = null;
+      if (supportsCreateTask && stack !== null) {
+        const createTaskFn = (console: any).createTask.bind(
+          console,
+          getTaskName(type),
+        );
+        const callStack = buildFakeCallStack(response, stack, createTaskFn);
+        // This owner should ideally have already been initialized to avoid getting
+        // user stack frames on the stack.
+        const ownerTask =
+          owner === null ? null : initializeFakeTask(response, owner);
+        if (ownerTask === null) {
+          const rootTask = response._debugRootTask;
+          if (rootTask != null) {
+            task = rootTask.run(callStack);
+          } else {
+            task = callStack();
+          }
+        } else {
+          task = ownerTask.run(callStack);
+        }
+      }
       Object.defineProperty(element, '_debugTask', {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: null,
+        value: task,
       });
     }
+  }
+
+  if (initializingHandler !== null) {
+    const handler = initializingHandler;
+    // We pop the stack to the previous outer handler before leaving the Element.
+    // This is effectively the complete phase.
+    initializingHandler = handler.parent;
+    if (handler.errored) {
+      // Something errored inside this Element's props. We can turn this Element
+      // into a Lazy so that we can still render up until that Lazy is rendered.
+      const erroredChunk: ErroredChunk<React$Element<any>> = createErrorChunk(
+        response,
+        handler.value,
+      );
+      if (__DEV__) {
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.stack = element._debugStack;
+          // $FlowFixMe[cannot-write]
+          erroredComponent.task = element._debugTask;
+        }
+        erroredChunk._debugInfo = [erroredComponent];
+      }
+      return createLazyChunkWrapper(erroredChunk);
+    }
+    if (handler.deps > 0) {
+      // We have blocked references inside this Element but we can turn this into
+      // a Lazy node referencing this Element to let everything around it proceed.
+      const blockedChunk: BlockedChunk<React$Element<any>> =
+        createBlockedChunk(response);
+      handler.value = element;
+      handler.chunk = blockedChunk;
+      if (__DEV__) {
+        const freeze = Object.freeze.bind(Object, element.props);
+        blockedChunk.then(freeze, freeze);
+      }
+      return createLazyChunkWrapper(blockedChunk);
+    }
+  } else if (__DEV__) {
     // TODO: We should be freezing the element but currently, we might write into
     // _debugInfo later. We could move it into _store which remains mutable.
-    if (initializingChunkBlockedModel !== null) {
-      const freeze = Object.freeze.bind(Object, element.props);
-      initializingChunk.then(freeze, freeze);
-    } else {
-      Object.freeze(element.props);
-    }
+    Object.freeze(element.props);
   }
+
   return element;
 }
 
@@ -678,57 +808,129 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
-function createModelResolver<T>(
-  chunk: SomeChunk<T>,
+function waitForReference<T>(
+  referencedChunk: PendingChunk<T> | BlockedChunk<T>,
   parentObject: Object,
   key: string,
-  cyclic: boolean,
   response: Response,
   map: (response: Response, model: any) => T,
   path: Array<string>,
-): (value: any) => void {
-  let blocked;
-  if (initializingChunkBlockedModel) {
-    blocked = initializingChunkBlockedModel;
-    if (!cyclic) {
-      blocked.deps++;
-    }
+): T {
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+    handler.deps++;
   } else {
-    blocked = initializingChunkBlockedModel = {
-      deps: cyclic ? 0 : 1,
-      value: (null: any),
+    handler = initializingHandler = {
+      parent: null,
+      chunk: null,
+      value: null,
+      deps: 1,
+      errored: false,
     };
   }
-  return value => {
+
+  function fulfill(value: any): void {
     for (let i = 1; i < path.length; i++) {
+      while (value.$$typeof === REACT_LAZY_TYPE) {
+        // We never expect to see a Lazy node on this path because we encode those as
+        // separate models. This must mean that we have inserted an extra lazy node
+        // e.g. to replace a blocked element. We must instead look for it inside.
+        const chunk: SomeChunk<any> = value._payload;
+        if (chunk === handler.chunk) {
+          // This is a reference to the thing we're currently blocking. We can peak
+          // inside of it to get the value.
+          value = handler.value;
+          continue;
+        } else if (chunk.status === INITIALIZED) {
+          value = chunk.value;
+          continue;
+        } else {
+          // If we're not yet initialized we need to skip what we've already drilled
+          // through and then wait for the next value to become available.
+          path.splice(0, i - 1);
+          chunk.then(fulfill, reject);
+          return;
+        }
+      }
       value = value[path[i]];
     }
     parentObject[key] = map(response, value);
 
-    // If this is the root object for a model reference, where `blocked.value`
+    // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && blocked.value === null) {
-      blocked.value = parentObject[key];
+    if (key === '' && handler.value === null) {
+      handler.value = parentObject[key];
     }
 
-    blocked.deps--;
-    if (blocked.deps === 0) {
-      if (chunk.status !== BLOCKED) {
+    handler.deps--;
+
+    if (handler.deps === 0) {
+      const chunk = handler.chunk;
+      if (chunk === null || chunk.status !== BLOCKED) {
         return;
       }
       const resolveListeners = chunk.value;
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
-      initializedChunk.value = blocked.value;
+      initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, blocked.value);
+        wakeChunk(resolveListeners, handler.value);
       }
     }
-  };
-}
+  }
 
-function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
-  return (error: mixed) => triggerErrorOnChunk(chunk, error);
+  function reject(error: mixed): void {
+    if (handler.errored) {
+      // We've already errored. We could instead build up an AggregateError
+      // but if there are multiple errors we just take the first one like
+      // Promise.all.
+      return;
+    }
+    const blockedValue = handler.value;
+    handler.errored = true;
+    handler.value = error;
+    const chunk = handler.chunk;
+    if (chunk === null || chunk.status !== BLOCKED) {
+      return;
+    }
+
+    if (__DEV__) {
+      if (
+        typeof blockedValue === 'object' &&
+        blockedValue !== null &&
+        blockedValue.$$typeof === REACT_ELEMENT_TYPE
+      ) {
+        const element = blockedValue;
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.stack = element._debugStack;
+          // $FlowFixMe[cannot-write]
+          erroredComponent.task = element._debugTask;
+        }
+        const chunkDebugInfo: ReactDebugInfo =
+          chunk._debugInfo || (chunk._debugInfo = []);
+        chunkDebugInfo.push(erroredComponent);
+      }
+    }
+
+    triggerErrorOnChunk(chunk, error);
+  }
+
+  referencedChunk.then(fulfill, reject);
+
+  // Return a place holder value for now.
+  return (null: any);
 }
 
 function createServerReferenceProxy<A: Iterable<any>, T>(
@@ -796,7 +998,7 @@ function getOutlinedModel<T>(
         if (
           typeof chunkValue === 'object' &&
           chunkValue !== null &&
-          (Array.isArray(chunkValue) ||
+          (isArray(chunkValue) ||
             typeof chunkValue[ASYNC_ITERATOR] === 'function' ||
             chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
           !chunkValue._debugInfo
@@ -814,23 +1016,24 @@ function getOutlinedModel<T>(
       return chunkValue;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
-      const parentChunk = initializingChunk;
-      chunk.then(
-        createModelResolver(
-          parentChunk,
-          parentObject,
-          key,
-          chunk.status === CYCLIC,
-          response,
-          map,
-          path,
-        ),
-        createModelReject(parentChunk),
-      );
-      return (null: any);
+      return waitForReference(chunk, parentObject, key, response, map, path);
     default:
-      throw chunk.reason;
+      // This is an error. Instead of erroring directly, we're going to encode this on
+      // an initialization handler so that we can catch it at the nearest Element.
+      if (initializingHandler) {
+        initializingHandler.errored = true;
+        initializingHandler.value = chunk.reason;
+      } else {
+        initializingHandler = {
+          parent: null,
+          chunk: null,
+          value: chunk.reason,
+          deps: 0,
+          errored: true,
+        };
+      }
+      // Placeholder
+      return (null: any);
   }
 }
 
@@ -878,6 +1081,19 @@ function parseModelString(
   if (value[0] === '$') {
     if (value === '$') {
       // A very common symbol.
+      if (initializingHandler !== null && key === '0') {
+        // We we already have an initializing handler and we're abound to enter
+        // a new element, we need to shadow it because we're now in a new scope.
+        // This is effectively the "begin" or "push" phase of Element parsing.
+        // We'll pop later when we parse the array itself.
+        initializingHandler = {
+          parent: initializingHandler,
+          chunk: null,
+          value: null,
+          deps: 0,
+          errored: false,
+        };
+      }
       return REACT_ELEMENT_TYPE;
     }
     switch (value[1]) {
@@ -1034,11 +1250,13 @@ function parseModelTuple(
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
     return createElement(
+      response,
       tuple[1],
       tuple[2],
       tuple[3],
       __DEV__ ? (tuple: any)[4] : null,
       __DEV__ && enableOwnerStacks ? (tuple: any)[5] : null,
+      __DEV__ && enableOwnerStacks ? (tuple: any)[6] : 0,
     );
   }
   return value;
@@ -1051,6 +1269,46 @@ function missingCall() {
   );
 }
 
+function ResponseInstance(
+  this: $FlowFixMe,
+  bundlerConfig: SSRModuleMap,
+  moduleLoading: ModuleLoading,
+  callServer: void | CallServerCallback,
+  encodeFormAction: void | EncodeFormActionCallback,
+  nonce: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+  findSourceMapURL: void | FindSourceMapURLCallback,
+) {
+  const chunks: Map<number, SomeChunk<any>> = new Map();
+  this._bundlerConfig = bundlerConfig;
+  this._moduleLoading = moduleLoading;
+  this._callServer = callServer !== undefined ? callServer : missingCall;
+  this._encodeFormAction = encodeFormAction;
+  this._nonce = nonce;
+  this._chunks = chunks;
+  this._stringDecoder = createStringDecoder();
+  this._fromJSON = (null: any);
+  this._rowState = 0;
+  this._rowID = 0;
+  this._rowTag = 0;
+  this._rowLength = 0;
+  this._buffer = [];
+  this._tempRefs = temporaryReferences;
+  if (supportsCreateTask) {
+    // Any stacks that appear on the server need to be rooted somehow on the client
+    // so we create a root Task for this response which will be the root owner for any
+    // elements created by the server. We use the "use server" string to indicate that
+    // this is where we enter the server from the client.
+    // TODO: Make this string configurable.
+    this._debugRootTask = (console: any).createTask('"use server"');
+  }
+  if (__DEV__) {
+    this._debugFindSourceMapURL = findSourceMapURL;
+  }
+  // Don't inline this call because it causes closure to outline the call above.
+  this._fromJSON = createFromJSONCallback(this);
+}
+
 export function createResponse(
   bundlerConfig: SSRModuleMap,
   moduleLoading: ModuleLoading,
@@ -1058,27 +1316,18 @@ export function createResponse(
   encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
+  findSourceMapURL: void | FindSourceMapURLCallback,
 ): Response {
-  const chunks: Map<number, SomeChunk<any>> = new Map();
-  const response: Response = {
-    _bundlerConfig: bundlerConfig,
-    _moduleLoading: moduleLoading,
-    _callServer: callServer !== undefined ? callServer : missingCall,
-    _encodeFormAction: encodeFormAction,
-    _nonce: nonce,
-    _chunks: chunks,
-    _stringDecoder: createStringDecoder(),
-    _fromJSON: (null: any),
-    _rowState: 0,
-    _rowID: 0,
-    _rowTag: 0,
-    _rowLength: 0,
-    _buffer: [],
-    _tempRefs: temporaryReferences,
-  };
-  // Don't inline this call because it causes closure to outline the call above.
-  response._fromJSON = createFromJSONCallback(response);
-  return response;
+  // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
+  return new ResponseInstance(
+    bundlerConfig,
+    moduleLoading,
+    callServer,
+    encodeFormAction,
+    nonce,
+    temporaryReferences,
+    findSourceMapURL,
+  );
 }
 
 function resolveModel(
@@ -1481,6 +1730,7 @@ function resolveErrorDev(
   digest: string,
   message: string,
   stack: string,
+  env: string,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1489,13 +1739,38 @@ function resolveErrorDev(
       'resolveErrorDev should never be called in production mode. Use resolveErrorProd instead. This is a bug in React.',
     );
   }
-  // eslint-disable-next-line react-internal/prod-error-codes
-  const error = new Error(
-    message ||
-      'An error occurred in the Server Components render but no message was provided',
-  );
-  error.stack = stack;
+
+  let error;
+  if (!enableOwnerStacks) {
+    // Executing Error within a native stack isn't really limited to owner stacks
+    // but we gate it behind the same flag for now while iterating.
+    // eslint-disable-next-line react-internal/prod-error-codes
+    error = Error(
+      message ||
+        'An error occurred in the Server Components render but no message was provided',
+    );
+    error.stack = stack;
+  } else {
+    const callStack = buildFakeCallStack(
+      response,
+      stack,
+      // $FlowFixMe[incompatible-use]
+      Error.bind(
+        null,
+        message ||
+          'An error occurred in the Server Components render but no message was provided',
+      ),
+    );
+    const rootTask = response._debugRootTask;
+    if (rootTask != null) {
+      error = rootTask.run(callStack);
+    } else {
+      error = callStack();
+    }
+  }
+
   (error: any).digest = digest;
+  (error: any).environmentName = env;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -1566,6 +1841,165 @@ function resolveHint<Code: HintCode>(
   dispatchHint(code, hintModel);
 }
 
+const supportsCreateTask =
+  __DEV__ && enableOwnerStacks && !!(console: any).createTask;
+
+type FakeFunction<T> = (() => T) => T;
+const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
+  ? new Map()
+  : (null: any);
+
+let fakeFunctionIdx = 0;
+function createFakeFunction<T>(
+  name: string,
+  filename: string,
+  sourceMap: null | string,
+  line: number,
+  col: number,
+): FakeFunction<T> {
+  // This creates a fake copy of a Server Module. It represents a module that has already
+  // executed on the server but we re-execute a blank copy for its stack frames on the client.
+
+  const comment =
+    '/* This module was rendered by a Server Component. Turn on Source Maps to see the server source. */';
+
+  // We generate code where the call is at the line and column of the server executed code.
+  // This allows us to use the original source map as the source map of this fake file to
+  // point to the original source.
+  let code;
+  if (line <= 1) {
+    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment;
+  } else {
+    code =
+      comment +
+      '\n'.repeat(line - 2) +
+      '_=>\n' +
+      ' '.repeat(col < 1 ? 0 : col - 1) +
+      '_()';
+  }
+
+  if (filename.startsWith('/')) {
+    // If the filename starts with `/` we assume that it is a file system file
+    // rather than relative to the current host. Since on the server fully qualified
+    // stack traces use the file path.
+    // TODO: What does this look like on Windows?
+    filename = 'file://' + filename;
+  }
+
+  if (sourceMap) {
+    // We use the prefix rsc://React/ to separate these from other files listed in
+    // the Chrome DevTools. We need a "host name" and not just a protocol because
+    // otherwise the group name becomes the root folder. Ideally we don't want to
+    // show these at all but there's two reasons to assign a fake URL.
+    // 1) A printed stack trace string needs a unique URL to be able to source map it.
+    // 2) If source maps are disabled or fails, you should at least be able to tell
+    //    which file it was.
+    code += '\n//# sourceURL=rsc://React/' + filename + '?' + fakeFunctionIdx++;
+    code += '\n//# sourceMappingURL=' + sourceMap;
+  } else if (filename) {
+    code += '\n//# sourceURL=' + filename;
+  }
+
+  let fn: FakeFunction<T>;
+  try {
+    // eslint-disable-next-line no-eval
+    fn = (0, eval)(code);
+  } catch (x) {
+    // If eval fails, such as if in an environment that doesn't support it,
+    // we fallback to creating a function here. It'll still have the right
+    // name but it'll lose line/column number and file name.
+    fn = function (_) {
+      return _();
+    };
+  }
+  // $FlowFixMe[cannot-write]
+  Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
+  // $FlowFixMe[prop-missing]
+  fn.displayName = name;
+  return fn;
+}
+
+// This matches either of these V8 formats.
+//     at name (filename:0:0)
+//     at filename:0:0
+//     at async filename:0:0
+const frameRegExp =
+  /^ {3} at (?:(.+) \(([^\)]+):(\d+):(\d+)\)|(?:async )?([^\)]+):(\d+):(\d+))$/;
+
+function buildFakeCallStack<T>(
+  response: Response,
+  stack: string,
+  innerCall: () => T,
+): () => T {
+  const frames = stack.split('\n');
+  let callStack = innerCall;
+  for (let i = 0; i < frames.length; i++) {
+    const frame = frames[i];
+    let fn = fakeFunctionCache.get(frame);
+    if (fn === undefined) {
+      const parsed = frameRegExp.exec(frame);
+      if (!parsed) {
+        // We assume the server returns a V8 compatible stack trace.
+        continue;
+      }
+      const name = parsed[1] || '';
+      const filename = parsed[2] || parsed[5] || '';
+      const line = +(parsed[3] || parsed[6]);
+      const col = +(parsed[4] || parsed[7]);
+      const sourceMap = response._debugFindSourceMapURL
+        ? response._debugFindSourceMapURL(filename)
+        : null;
+      fn = createFakeFunction(name, filename, sourceMap, line, col);
+      // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
+      // function is an input and can vary by response.
+      fakeFunctionCache.set(frame, fn);
+    }
+    callStack = fn.bind(null, callStack);
+  }
+  return callStack;
+}
+
+function initializeFakeTask(
+  response: Response,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): null | ConsoleTask {
+  if (!supportsCreateTask || typeof debugInfo.stack !== 'string') {
+    return null;
+  }
+  const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
+  const stack: string = debugInfo.stack;
+  const cachedEntry = componentInfo.task;
+  if (cachedEntry !== undefined) {
+    return cachedEntry;
+  }
+
+  const ownerTask =
+    componentInfo.owner == null
+      ? null
+      : initializeFakeTask(response, componentInfo.owner);
+
+  const createTaskFn = (console: any).createTask.bind(
+    console,
+    getServerComponentTaskName(componentInfo),
+  );
+  const callStack = buildFakeCallStack(response, stack, createTaskFn);
+
+  let componentTask;
+  if (ownerTask === null) {
+    const rootTask = response._debugRootTask;
+    if (rootTask != null) {
+      componentTask = rootTask.run(callStack);
+    } else {
+      componentTask = callStack();
+    }
+  } else {
+    componentTask = ownerTask.run(callStack);
+  }
+  // $FlowFixMe[cannot-write]: We consider this part of initialization.
+  componentInfo.task = componentTask;
+  return componentTask;
+}
+
 function resolveDebugInfo(
   response: Response,
   id: number,
@@ -1578,6 +2012,10 @@ function resolveDebugInfo(
       'resolveDebugInfo should never be called in production mode. This is a bug in React.',
     );
   }
+  // We eagerly initialize the fake task because this resolving happens outside any
+  // render phase so we're not inside a user space stack at this point. If we waited
+  // to initialize it when we need it, we might be inside user code.
+  initializeFakeTask(response, debugInfo);
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
@@ -1599,12 +2037,36 @@ function resolveConsoleEntry(
   const payload: [string, string, null | ReactComponentInfo, string, mixed] =
     parseModel(response, value);
   const methodName = payload[0];
-  // TODO: Restore the fake stack before logging.
-  // const stackTrace = payload[1];
-  // const owner = payload[2];
+  const stackTrace = payload[1];
+  const owner = payload[2];
   const env = payload[3];
   const args = payload.slice(4);
-  printToConsole(methodName, args, env);
+  if (!enableOwnerStacks) {
+    // Printing with stack isn't really limited to owner stacks but
+    // we gate it behind the same flag for now while iterating.
+    printToConsole(methodName, args, env);
+    return;
+  }
+  const callStack = buildFakeCallStack(
+    response,
+    stackTrace,
+    printToConsole.bind(null, methodName, args, env),
+  );
+  if (owner != null) {
+    const task = initializeFakeTask(response, owner);
+    if (task !== null) {
+      task.run(callStack);
+      return;
+    }
+    // TODO: Set the current owner so that consoleWithStackDev adds the component
+    // stack during the replay - if needed.
+  }
+  const rootTask = response._debugRootTask;
+  if (rootTask != null) {
+    rootTask.run(callStack);
+    return;
+  }
+  callStack();
 }
 
 function mergeBuffer(
@@ -1740,6 +2202,7 @@ function processFullRow(
           errorInfo.digest,
           errorInfo.message,
           errorInfo.stack,
+          errorInfo.env,
         );
       } else {
         resolveErrorProd(response, id, errorInfo.digest);
