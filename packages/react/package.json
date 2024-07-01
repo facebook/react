@@ -39,7 +39,9 @@
       "react-server": "./compiler-runtime.js",
       "default": "./compiler-runtime.js"
     },
-    "./src/*": "./src/*"
+    "./src/*": "./src/*",
+    "./cjs/*": "./cjs/*",
+    "./umd/*": "./umd/*"
   },
   "repository": {
     "type": "git",
