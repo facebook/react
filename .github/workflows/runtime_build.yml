@@ -1,0 +1,184 @@
+name: (Runtime) Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - 'compiler/**'
+
+env:
+  WORKER_COUNT: 20
+
+jobs:
+  define_build_params:
+    name: Build build params
+    runs-on: ubuntu-latest
+    outputs:
+      worker_id: ${{ steps.define_worker_id.outputs.result }}
+      release_channel:  ${{ steps.define_release_channels.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        id: define_worker_id
+        with:
+          script: |
+            function range(from, to) {
+              const arr = [];
+              for (let n = from; n < to; n++) {
+                arr.push(n);
+              }
+              return arr;
+            }
+            return range(0, process.env.WORKER_COUNT);
+      - uses: actions/github-script@v7
+        id: define_release_channels
+        with:
+          script: |
+            return ["stable", "experimental"];
+
+  build:
+    name: yarn build
+    runs-on: ubuntu-latest
+    needs: define_build_params
+    strategy:
+      matrix:
+        worker_id: ${{ fromJSON(needs.define_build_params.outputs.worker_id) }}
+        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn build --index=${{ matrix.worker_id }} --total=${{ env.WORKER_COUNT }} --r=${{ matrix.release_channel }} --ci=github
+        env:
+          CI: github
+          RELEASE_CHANNEL: ${{ matrix.release_channel }}
+      - name: Display structure of build
+        run: ls -R build
+      - name: Archive build
+        uses: actions/upload-artifact@v4
+        with:
+          name: build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
+          path: |
+            build
+
+  lint_build:
+    name: yarn lint-build
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - run: yarn lint-build
+
+  test_build:
+    name: yarn test-build
+    needs: build
+    strategy:
+      matrix:
+        test_params: [
+          # Intentionally passing these as strings instead of creating a
+          # separate parameter per CLI argument, since it's easier to
+          # control/see which combinations we want to run.
+          -r=stable --env=development,
+          -r=stable --env=production,
+          -r=experimental --env=development,
+          -r=experimental --env=production,
+
+          # Dev Tools
+          --project=devtools -r=experimental,
+
+          # TODO: Update test config to support www build tests
+          # - "-r=www-classic --env=development --variant=false"
+          # - "-r=www-classic --env=production --variant=false"
+          # - "-r=www-classic --env=development --variant=true"
+          # - "-r=www-classic --env=production --variant=true"
+          # - "-r=www-modern --env=development --variant=false"
+          # - "-r=www-modern --env=production --variant=false"
+          # - "-r=www-modern --env=development --variant=true"
+          # - "-r=www-modern --env=production --variant=true"
+
+          # TODO: Update test config to support xplat build tests
+          # - "-r=xplat --env=development --variant=false"
+          # - "-r=xplat --env=development --variant=true"
+          # - "-r=xplat --env=production --variant=false"
+          # - "-r=xplat --env=production --variant=true"
+
+          # TODO: Test more persistent configurations?
+        ]
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - run: yarn test --build ${{ matrix.test_params }} --ci=github
+
+  process_artifacts_combined:
+    name: Process artifacts combined
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+        # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build.tgz ./build
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: cp ./build.tgz ./build2.tgz
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined_artifacts_${{ github.sha }}
+          path: |
+            ./build.tgz
+            ./build2.tgz
