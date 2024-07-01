@@ -3585,7 +3585,6 @@ function RequestInstance(
     abortSet,
     null,
     rootFormatContext,
-    emptyContextObject,
     null,
     emptyTreeContext,
     null,
@@ -3656,7 +3655,6 @@ function createRenderTask(
   abortSet,
   keyPath,
   formatContext,
-  legacyContext,
   context,
   treeContext,
   componentStack,
@@ -3679,7 +3677,6 @@ function createRenderTask(
     abortSet: abortSet,
     keyPath: keyPath,
     formatContext: formatContext,
-    legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
     componentStack: componentStack,
@@ -3700,7 +3697,6 @@ function createReplayTask(
   abortSet,
   keyPath,
   formatContext,
-  legacyContext,
   context,
   treeContext,
   componentStack,
@@ -3724,7 +3720,6 @@ function createReplayTask(
     abortSet: abortSet,
     keyPath: keyPath,
     formatContext: formatContext,
-    legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
     componentStack: componentStack,
@@ -4246,7 +4241,6 @@ function renderElement(request, task, keyPath, type, props, ref) {
             props,
             JSCompiler_inline_result,
             task.formatContext,
-            task.legacyContext,
             task.context,
             task.treeContext,
             type,
@@ -4526,7 +4520,6 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                         fallbackAbortSet,
                         [key[0], "Suspense Fallback", key[2]],
                         task.formatContext,
-                        task.legacyContext,
                         task.context,
                         task.treeContext,
                         suspenseComponentStack,
@@ -4712,7 +4705,6 @@ function untrackBoundary(request, boundary) {
 }
 function renderNode(request, task, node, childIndex) {
   var previousFormatContext = task.formatContext,
-    previousLegacyContext = task.legacyContext,
     previousContext = task.context,
     previousKeyPath = task.keyPath,
     previousTreeContext = task.treeContext,
@@ -4744,7 +4736,6 @@ function renderNode(request, task, node, childIndex) {
           task.abortSet,
           task.keyPath,
           task.formatContext,
-          task.legacyContext,
           task.context,
           task.treeContext,
           null !== task.componentStack ? task.componentStack.parent : null,
@@ -4752,7 +4743,6 @@ function renderNode(request, task, node, childIndex) {
         ).ping;
         node.then(request, request);
         task.formatContext = previousFormatContext;
-        task.legacyContext = previousLegacyContext;
         task.context = previousContext;
         task.keyPath = previousKeyPath;
         task.treeContext = previousTreeContext;
@@ -4802,7 +4792,6 @@ function renderNode(request, task, node, childIndex) {
           task.abortSet,
           task.keyPath,
           task.formatContext,
-          task.legacyContext,
           task.context,
           task.treeContext,
           null !== task.componentStack ? task.componentStack.parent : null,
@@ -4810,7 +4799,6 @@ function renderNode(request, task, node, childIndex) {
         ).ping;
         node.then(request, request);
         task.formatContext = previousFormatContext;
-        task.legacyContext = previousLegacyContext;
         task.context = previousContext;
         task.keyPath = previousKeyPath;
         task.treeContext = previousTreeContext;
@@ -4821,7 +4809,6 @@ function renderNode(request, task, node, childIndex) {
     }
   }
   task.formatContext = previousFormatContext;
-  task.legacyContext = previousLegacyContext;
   task.context = previousContext;
   task.keyPath = previousKeyPath;
   task.treeContext = previousTreeContext;
@@ -5769,4 +5756,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-315109b02b-20240701";
+exports.version = "19.0.0-www-modern-6d2a97a711-20240701";

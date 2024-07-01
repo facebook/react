@@ -3593,11 +3593,11 @@ function RequestInstance(
     abortSet,
     null,
     rootFormatContext,
-    emptyContextObject,
     null,
     emptyTreeContext,
     null,
-    !1
+    !1,
+    emptyContextObject
   );
   pingedTasks.push(children);
 }
@@ -3664,11 +3664,11 @@ function createRenderTask(
   abortSet,
   keyPath,
   formatContext,
-  legacyContext,
   context,
   treeContext,
   componentStack,
-  isFallback
+  isFallback,
+  legacyContext
 ) {
   request.allPendingTasks++;
   null === blockedBoundary
@@ -3687,13 +3687,13 @@ function createRenderTask(
     abortSet: abortSet,
     keyPath: keyPath,
     formatContext: formatContext,
-    legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
     componentStack: componentStack,
     thenableState: thenableState,
     isFallback: isFallback
   };
+  task.legacyContext = legacyContext;
   abortSet.add(task);
   return task;
 }
@@ -3708,11 +3708,11 @@ function createReplayTask(
   abortSet,
   keyPath,
   formatContext,
-  legacyContext,
   context,
   treeContext,
   componentStack,
-  isFallback
+  isFallback,
+  legacyContext
 ) {
   request.allPendingTasks++;
   null === blockedBoundary
@@ -3732,13 +3732,13 @@ function createReplayTask(
     abortSet: abortSet,
     keyPath: keyPath,
     formatContext: formatContext,
-    legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
     componentStack: componentStack,
     thenableState: thenableState,
     isFallback: isFallback
   };
+  task.legacyContext = legacyContext;
   abortSet.add(task);
   return task;
 }
@@ -4268,11 +4268,11 @@ function renderElement(request, task, keyPath, type, props, ref) {
             props,
             newProps,
             task.formatContext,
-            task.legacyContext,
             task.context,
             task.treeContext,
             type,
-            !0
+            !0,
+            task.legacyContext
           );
           request.pingedTasks.push(task);
         }
@@ -4548,11 +4548,11 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                         fallbackAbortSet,
                         [key[0], "Suspense Fallback", key[2]],
                         task.formatContext,
-                        task.legacyContext,
                         task.context,
                         task.treeContext,
                         suspenseComponentStack,
-                        !0
+                        !0,
+                        task.legacyContext
                       );
                       request.pingedTasks.push(task);
                     }
@@ -4766,11 +4766,11 @@ function renderNode(request, task, node, childIndex) {
           task.abortSet,
           task.keyPath,
           task.formatContext,
-          task.legacyContext,
           task.context,
           task.treeContext,
           null !== task.componentStack ? task.componentStack.parent : null,
-          task.isFallback
+          task.isFallback,
+          task.legacyContext
         ).ping;
         node.then(request, request);
         task.formatContext = previousFormatContext;
@@ -4824,11 +4824,11 @@ function renderNode(request, task, node, childIndex) {
           task.abortSet,
           task.keyPath,
           task.formatContext,
-          task.legacyContext,
           task.context,
           task.treeContext,
           null !== task.componentStack ? task.componentStack.parent : null,
-          task.isFallback
+          task.isFallback,
+          task.legacyContext
         ).ping;
         node.then(request, request);
         task.formatContext = previousFormatContext;
@@ -5791,4 +5791,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-315109b02b-20240701";
+exports.version = "19.0.0-www-classic-6d2a97a711-20240701";

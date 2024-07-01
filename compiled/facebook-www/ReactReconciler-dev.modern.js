@@ -18372,7 +18372,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-315109b02b-20240701"
+        reconcilerVersion: "19.0.0-www-modern-6d2a97a711-20240701"
       });
     };
     exports.isAlreadyRendering = function () {

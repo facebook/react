@@ -4158,7 +4158,6 @@ __DEV__ &&
         abortSet,
         null,
         rootFormatContext,
-        emptyContextObject,
         null,
         emptyTreeContext,
         null,
@@ -4201,7 +4200,6 @@ __DEV__ &&
       abortSet,
       keyPath,
       formatContext,
-      legacyContext,
       context,
       treeContext,
       componentStack,
@@ -4224,7 +4222,6 @@ __DEV__ &&
         abortSet: abortSet,
         keyPath: keyPath,
         formatContext: formatContext,
-        legacyContext: legacyContext,
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
@@ -4245,7 +4242,6 @@ __DEV__ &&
       abortSet,
       keyPath,
       formatContext,
-      legacyContext,
       context,
       treeContext,
       componentStack,
@@ -4269,7 +4265,6 @@ __DEV__ &&
         abortSet: abortSet,
         keyPath: keyPath,
         formatContext: formatContext,
-        legacyContext: legacyContext,
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
@@ -5238,7 +5233,6 @@ __DEV__ &&
                 fallbackAbortSet,
                 fallbackKeyPath,
                 task.formatContext,
-                task.legacyContext,
                 task.context,
                 task.treeContext,
                 suspenseComponentStack,
@@ -5589,7 +5583,6 @@ __DEV__ &&
                             fallbackAbortSet,
                             [ref[0], "Suspense Fallback", ref[2]],
                             task.formatContext,
-                            task.legacyContext,
                             task.context,
                             task.treeContext,
                             refProp,
@@ -5920,7 +5913,6 @@ __DEV__ &&
     }
     function renderNode(request, task, node, childIndex) {
       var previousFormatContext = task.formatContext,
-        previousLegacyContext = task.legacyContext,
         previousContext = task.context,
         previousKeyPath = task.keyPath,
         previousTreeContext = task.treeContext,
@@ -5952,7 +5944,6 @@ __DEV__ &&
               task.abortSet,
               task.keyPath,
               task.formatContext,
-              task.legacyContext,
               task.context,
               task.treeContext,
               null !== task.componentStack ? task.componentStack.parent : null,
@@ -5960,7 +5951,6 @@ __DEV__ &&
             ).ping;
             node.then(request, request);
             task.formatContext = previousFormatContext;
-            task.legacyContext = previousLegacyContext;
             task.context = previousContext;
             task.keyPath = previousKeyPath;
             task.treeContext = previousTreeContext;
@@ -6010,7 +6000,6 @@ __DEV__ &&
               task.abortSet,
               task.keyPath,
               task.formatContext,
-              task.legacyContext,
               task.context,
               task.treeContext,
               null !== task.componentStack ? task.componentStack.parent : null,
@@ -6018,7 +6007,6 @@ __DEV__ &&
             ).ping;
             node.then(request, request);
             task.formatContext = previousFormatContext;
-            task.legacyContext = previousLegacyContext;
             task.context = previousContext;
             task.keyPath = previousKeyPath;
             task.treeContext = previousTreeContext;
@@ -6029,7 +6017,6 @@ __DEV__ &&
         }
       }
       task.formatContext = previousFormatContext;
-      task.legacyContext = previousLegacyContext;
       task.context = previousContext;
       task.keyPath = previousKeyPath;
       task.treeContext = previousTreeContext;

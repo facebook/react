@@ -4349,7 +4349,6 @@ __DEV__ &&
         abortSet,
         null,
         rootFormatContext,
-        emptyContextObject,
         null,
         emptyTreeContext,
         null,
@@ -4422,7 +4421,6 @@ __DEV__ &&
       abortSet,
       keyPath,
       formatContext,
-      legacyContext,
       context,
       treeContext,
       componentStack,
@@ -4445,7 +4443,6 @@ __DEV__ &&
         abortSet: abortSet,
         keyPath: keyPath,
         formatContext: formatContext,
-        legacyContext: legacyContext,
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
@@ -4466,7 +4463,6 @@ __DEV__ &&
       abortSet,
       keyPath,
       formatContext,
-      legacyContext,
       context,
       treeContext,
       componentStack,
@@ -4490,7 +4486,6 @@ __DEV__ &&
         abortSet: abortSet,
         keyPath: keyPath,
         formatContext: formatContext,
-        legacyContext: legacyContext,
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
@@ -5457,7 +5452,6 @@ __DEV__ &&
                 fallbackAbortSet,
                 fallbackKeyPath,
                 task.formatContext,
-                task.legacyContext,
                 task.context,
                 task.treeContext,
                 suspenseComponentStack,
@@ -5808,7 +5802,6 @@ __DEV__ &&
                             fallbackAbortSet,
                             [ref[0], "Suspense Fallback", ref[2]],
                             task.formatContext,
-                            task.legacyContext,
                             task.context,
                             task.treeContext,
                             refProp,
@@ -6139,7 +6132,6 @@ __DEV__ &&
     }
     function renderNode(request, task, node, childIndex) {
       var previousFormatContext = task.formatContext,
-        previousLegacyContext = task.legacyContext,
         previousContext = task.context,
         previousKeyPath = task.keyPath,
         previousTreeContext = task.treeContext,
@@ -6171,7 +6163,6 @@ __DEV__ &&
               task.abortSet,
               task.keyPath,
               task.formatContext,
-              task.legacyContext,
               task.context,
               task.treeContext,
               null !== task.componentStack ? task.componentStack.parent : null,
@@ -6179,7 +6170,6 @@ __DEV__ &&
             ).ping;
             node.then(request, request);
             task.formatContext = previousFormatContext;
-            task.legacyContext = previousLegacyContext;
             task.context = previousContext;
             task.keyPath = previousKeyPath;
             task.treeContext = previousTreeContext;
@@ -6229,7 +6219,6 @@ __DEV__ &&
               task.abortSet,
               task.keyPath,
               task.formatContext,
-              task.legacyContext,
               task.context,
               task.treeContext,
               null !== task.componentStack ? task.componentStack.parent : null,
@@ -6237,7 +6226,6 @@ __DEV__ &&
             ).ping;
             node.then(request, request);
             task.formatContext = previousFormatContext;
-            task.legacyContext = previousLegacyContext;
             task.context = previousContext;
             task.keyPath = previousKeyPath;
             task.treeContext = previousTreeContext;
@@ -6248,7 +6236,6 @@ __DEV__ &&
         }
       }
       task.formatContext = previousFormatContext;
-      task.legacyContext = previousLegacyContext;
       task.context = previousContext;
       task.keyPath = previousKeyPath;
       task.treeContext = previousTreeContext;
@@ -8860,5 +8847,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-315109b02b-20240701";
+    exports.version = "19.0.0-www-modern-6d2a97a711-20240701";
   })();

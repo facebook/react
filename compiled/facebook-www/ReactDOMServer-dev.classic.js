@@ -4357,11 +4357,11 @@ __DEV__ &&
         abortSet,
         null,
         rootFormatContext,
-        emptyContextObject,
         null,
         emptyTreeContext,
         null,
-        !1
+        !1,
+        emptyContextObject
       );
       pingedTasks.push(children);
     }
@@ -4430,11 +4430,11 @@ __DEV__ &&
       abortSet,
       keyPath,
       formatContext,
-      legacyContext,
       context,
       treeContext,
       componentStack,
-      isFallback
+      isFallback,
+      legacyContext
     ) {
       request.allPendingTasks++;
       null === blockedBoundary
@@ -4453,13 +4453,13 @@ __DEV__ &&
         abortSet: abortSet,
         keyPath: keyPath,
         formatContext: formatContext,
-        legacyContext: legacyContext,
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
         thenableState: thenableState,
         isFallback: isFallback
       };
+      task.legacyContext = legacyContext;
       abortSet.add(task);
       return task;
     }
@@ -4474,11 +4474,11 @@ __DEV__ &&
       abortSet,
       keyPath,
       formatContext,
-      legacyContext,
       context,
       treeContext,
       componentStack,
-      isFallback
+      isFallback,
+      legacyContext
     ) {
       request.allPendingTasks++;
       null === blockedBoundary
@@ -4498,13 +4498,13 @@ __DEV__ &&
         abortSet: abortSet,
         keyPath: keyPath,
         formatContext: formatContext,
-        legacyContext: legacyContext,
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
         thenableState: thenableState,
         isFallback: isFallback
       };
+      task.legacyContext = legacyContext;
       abortSet.add(task);
       return task;
     }
@@ -5499,11 +5499,11 @@ __DEV__ &&
                 fallbackAbortSet,
                 fallbackKeyPath,
                 task.formatContext,
-                task.legacyContext,
                 task.context,
                 task.treeContext,
                 suspenseComponentStack,
-                !0
+                !0,
+                task.legacyContext
               );
               request.pingedTasks.push(suspendedFallbackTask);
             }
@@ -5850,11 +5850,11 @@ __DEV__ &&
                             fallbackAbortSet,
                             [ref[0], "Suspense Fallback", ref[2]],
                             task.formatContext,
-                            task.legacyContext,
                             task.context,
                             task.treeContext,
                             refProp,
-                            !0
+                            !0,
+                            task.legacyContext
                           );
                           request.pingedTasks.push(childNodes);
                         }
@@ -6213,11 +6213,11 @@ __DEV__ &&
               task.abortSet,
               task.keyPath,
               task.formatContext,
-              task.legacyContext,
               task.context,
               task.treeContext,
               null !== task.componentStack ? task.componentStack.parent : null,
-              task.isFallback
+              task.isFallback,
+              task.legacyContext
             ).ping;
             node.then(request, request);
             task.formatContext = previousFormatContext;
@@ -6271,11 +6271,11 @@ __DEV__ &&
               task.abortSet,
               task.keyPath,
               task.formatContext,
-              task.legacyContext,
               task.context,
               task.treeContext,
               null !== task.componentStack ? task.componentStack.parent : null,
-              task.isFallback
+              task.isFallback,
+              task.legacyContext
             ).ping;
             node.then(request, request);
             task.formatContext = previousFormatContext;
@@ -8904,5 +8904,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-315109b02b-20240701";
+    exports.version = "19.0.0-www-classic-6d2a97a711-20240701";
   })();
