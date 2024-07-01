@@ -90,6 +90,7 @@ export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = false;
 
+export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 

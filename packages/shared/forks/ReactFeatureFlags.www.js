@@ -120,6 +120,7 @@ export const disableStringRefs = false;
 export const disableLegacyMode: boolean =
   __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
 
+export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 
