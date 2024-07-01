@@ -20,7 +20,7 @@ import { c as _c } from "react/compiler-runtime"; // @enableChangeDetectionForDe
 import { useState } from "react";
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(5);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = f(props.x);
@@ -28,24 +28,40 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
-  const [x] = useState(t0);
-  let t1;
+  const t1 = useState(t0);
+  let x;
   {
-    t1 = <div>{x}</div>;
-    let condition = $[1] !== x;
+    [x] = t1;
+    let condition = $[1] !== t1;
     if (!condition) {
-      let old$t1 = $[2];
-      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(6:6)");
+      let old$x = $[2];
+      $structuralCheck(old$x, x, "x", "Component", "cached", "(5:5)");
     }
-    $[1] = x;
-    $[2] = t1;
+    $[1] = t1;
+    $[2] = x;
     if (condition) {
-      t1 = <div>{x}</div>;
-      $structuralCheck($[2], t1, "t1", "Component", "recomputed", "(6:6)");
-      t1 = $[2];
+      [x] = t1;
+      $structuralCheck($[2], x, "x", "Component", "recomputed", "(5:5)");
+      x = $[2];
     }
   }
-  return t1;
+  let t2;
+  {
+    t2 = <div>{x}</div>;
+    let condition = $[3] !== x;
+    if (!condition) {
+      let old$t2 = $[4];
+      $structuralCheck(old$t2, t2, "t2", "Component", "cached", "(6:6)");
+    }
+    $[3] = x;
+    $[4] = t2;
+    if (condition) {
+      t2 = <div>{x}</div>;
+      $structuralCheck($[4], t2, "t2", "Component", "recomputed", "(6:6)");
+      t2 = $[4];
+    }
+  }
+  return t2;
 }
 
 ```
