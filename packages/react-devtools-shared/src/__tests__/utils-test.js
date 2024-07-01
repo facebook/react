@@ -26,6 +26,7 @@ import {
   REACT_STRICT_MODE_TYPE as StrictMode,
 } from 'shared/ReactSymbols';
 import {createElement} from 'react';
+import {symbolicateSource} from '../symbolicateSource';
 
 describe('utils', () => {
   describe('getDisplayName', () => {
@@ -382,6 +383,35 @@ describe('utils', () => {
         line: 1,
         column: 165558,
       });
+    });
+  });
+
+  describe('symbolicateSource', () => {
+    const source = `"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.f = f;
+function f() { }
+//# sourceMappingURL=`;
+    const result = {
+      column: 16,
+      line: 1,
+      sourceURL: 'http://test/a.mts',
+    };
+    const fs = {
+      'http://test/a.mts': `export function f() {}`,
+      'http://test/a.mjs.map': `{"version":3,"file":"a.mjs","sourceRoot":"","sources":["a.mts"],"names":[],"mappings":";;AAAA,cAAsB;AAAtB,SAAgB,CAAC,KAAI,CAAC"}`,
+      'http://test/a.mjs': `${source}a.mjs.map`,
+      'http://test/b.mjs': `${source}./a.mjs.map`,
+      'http://test/c.mjs': `${source}http://test/a.mjs.map`,
+      'http://test/d.mjs': `${source}/a.mjs.map`,
+    };
+    const fetchFileWithCaching = async (url: string) => fs[url] || null;
+    it('should parse source map urls', async () => {
+      const run = url => symbolicateSource(fetchFileWithCaching, url, 4, 10);
+      await expect(run('http://test/a.mjs')).resolves.toStrictEqual(result);
+      await expect(run('http://test/b.mjs')).resolves.toStrictEqual(result);
+      await expect(run('http://test/c.mjs')).resolves.toStrictEqual(result);
+      await expect(run('http://test/d.mjs')).resolves.toStrictEqual(result);
     });
   });
 

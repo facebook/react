@@ -1017,7 +1017,7 @@ export function backendToFrontendSerializedElementMapper(
   };
 }
 
-// This is a hacky one to just support this exact case.
+// Chrome normalizes urls like webpack-internals:// but new URL don't, so cannot use new URL here.
 export function normalizeUrl(url: string): string {
   return url.replace('/./', '/');
 }
