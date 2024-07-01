@@ -1,4 +1,4 @@
-import { arrayPush } from "shared-runtime";
+import { arrayPush, mutate } from "shared-runtime";
 
 function useFoo({ value }) {
   let items = null;

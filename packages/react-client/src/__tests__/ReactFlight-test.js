@@ -127,6 +127,7 @@ describe('ReactFlight', () => {
             this.props.expectedMessage,
           );
           expect(this.state.error.digest).toBe('a dev digest');
+          expect(this.state.error.environmentName).toBe('Server');
         } else {
           expect(this.state.error.message).toBe(
             'An error occurred in the Server Components render. The specific message is omitted in production' +
@@ -143,6 +144,7 @@ describe('ReactFlight', () => {
             expectedDigest = '[]';
           }
           expect(this.state.error.digest).toContain(expectedDigest);
+          expect(this.state.error.environmentName).toBe(undefined);
           expect(this.state.error.stack).toBe(
             'Error: ' + this.state.error.message,
           );
@@ -690,14 +692,22 @@ describe('ReactFlight', () => {
 
     const transport = ReactNoopFlightServer.render(<ServerComponent />);
 
-    await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
-    });
-    expect(ReactNoop).toMatchRenderedOutput('Loading...');
-    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
     await load();
-    expect(console.error).toHaveBeenCalledTimes(1);
+
+    await expect(async () => {
+      await act(async () => {
+        const rootModel = await ReactNoopFlightClient.read(transport);
+        ReactNoop.render(rootModel);
+      });
+    }).rejects.toThrow(
+      __DEV__
+        ? 'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+            '(for composite components) but got: <div />. ' +
+            'Did you accidentally export a JSX literal instead of a component?'
+        : 'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+            '(for composite components) but got: object.',
+    );
+    expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
   it('can render a lazy element', async () => {

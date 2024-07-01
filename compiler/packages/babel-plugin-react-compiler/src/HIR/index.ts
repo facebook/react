@@ -6,7 +6,10 @@
  */
 
 export { assertConsistentIdentifiers } from "./AssertConsistentIdentifiers";
-export { assertTerminalSuccessorsExist } from "./AssertTerminalSuccessorsExist";
+export {
+  assertTerminalSuccessorsExist,
+  assertTerminalPredsExist,
+} from "./AssertTerminalBlocksExist";
 export { assertValidBlockNesting } from "./AssertValidBlockNesting";
 export { assertValidMutableRanges } from "./AssertValidMutableRanges";
 export { lower } from "./BuildHIR";
