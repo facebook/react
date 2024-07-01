@@ -48,6 +48,7 @@ export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
 export const enableOwnerStacks = false;
+export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
