@@ -4,6 +4,11 @@
   "files": [
     "src"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "compiler/packages/make-read-only-util"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest src"

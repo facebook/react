@@ -7,6 +7,11 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "compiler/packages/babel-plugin-react-compiler"
+  },
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "yarn snap:ci",

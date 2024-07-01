@@ -5,6 +5,11 @@
   "bin": {
     "react-compiler-healthcheck": "dist/index.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-compiler-healthcheck"
+  },
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "echo 'no tests'"

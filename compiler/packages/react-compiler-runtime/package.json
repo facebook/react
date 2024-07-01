@@ -11,6 +11,11 @@
   "peerDependencies": {
     "react": "^18.2.0 || ^19.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-compiler-runtime"
+  },
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "echo 'no tests'"
