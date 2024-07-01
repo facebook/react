@@ -98,3 +98,27 @@ jobs:
       - name: Display structure of build
         run: ls -R build
       - run: yarn lint-build
+
+  process_artifacts_combined:
+    name: Process artifacts combined
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+        # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build.tgz ./build
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: cp ./build.tgz ./build2.tgz
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined_artifacts_${{ github.sha }}
+          path: |
+            ./build.tgz
+            ./build2.tgz
