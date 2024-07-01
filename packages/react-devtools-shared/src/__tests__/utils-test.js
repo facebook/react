@@ -414,7 +414,7 @@ function f() { }
       await expect(run('http://test/d.mjs')).resolves.toStrictEqual(result);
     });
   });
-  
+
   describe('formatConsoleArguments', () => {
     it('works with empty arguments list', () => {
       expect(formatConsoleArguments(...[])).toEqual([]);
