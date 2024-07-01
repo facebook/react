@@ -53,6 +53,7 @@ jobs:
       - run: yarn build --b=${{ matrix.bundle_type }} --r=${{ matrix.release_channel }} --ci=github
         env:
           CI: github
+          RELEASE_CHANNEL: ${{ matrix.release_channel }}
       - name: Display structure of build
         run: ls -R build
       - name: Archive build

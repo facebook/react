@@ -40,55 +40,48 @@ import { useMemo } from "react";
 import { Stringify } from "shared-runtime";
 
 function Foo(t0) {
-  const $ = _c(11);
+  const $ = _c(9);
   const { arr1, arr2, foo } = t0;
   let t1;
-  if ($[0] !== arr1) {
-    t1 = [arr1];
-    $[0] = arr1;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const x = t1;
-  let t2;
   let val1;
-  if ($[2] !== foo || $[3] !== x || $[4] !== arr2) {
+  if ($[0] !== arr1 || $[1] !== foo || $[2] !== arr2) {
+    const x = [arr1];
+
     let y;
     y = [];
+    let t2;
     let t3;
-    let t4;
-    if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
-      t4 = { x: 2 };
-      $[7] = t4;
+    if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+      t3 = { x: 2 };
+      $[5] = t3;
     } else {
-      t4 = $[7];
+      t3 = $[5];
     }
-    t3 = t4;
-    val1 = t3;
+    t2 = t3;
+    val1 = t2;
 
     foo ? (y = x.concat(arr2)) : y;
-    t2 = (() => [y])();
-    $[2] = foo;
-    $[3] = x;
-    $[4] = arr2;
-    $[5] = t2;
+    t1 = (() => [y])();
+    $[0] = arr1;
+    $[1] = foo;
+    $[2] = arr2;
+    $[3] = t1;
+    $[4] = val1;
+  } else {
+    t1 = $[3];
+    val1 = $[4];
+  }
+  const val2 = t1;
+  let t2;
+  if ($[6] !== val1 || $[7] !== val2) {
+    t2 = <Stringify val1={val1} val2={val2} />;
     $[6] = val1;
+    $[7] = val2;
+    $[8] = t2;
   } else {
-    t2 = $[5];
-    val1 = $[6];
+    t2 = $[8];
   }
-  const val2 = t2;
-  let t3;
-  if ($[8] !== val1 || $[9] !== val2) {
-    t3 = <Stringify val1={val1} val2={val2} />;
-    $[8] = val1;
-    $[9] = val2;
-    $[10] = t3;
-  } else {
-    t3 = $[10];
-  }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {
