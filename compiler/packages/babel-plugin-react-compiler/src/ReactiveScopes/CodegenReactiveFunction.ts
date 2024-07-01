@@ -622,7 +622,7 @@ function codegenReactiveScope(
     );
   }
 
-  if (cx.env.config.disableMemoizationForDebugging) {
+  if (cx.env.config.disableMemoizationForDebugging && !scope.source) {
     CompilerError.invariant(
       cx.env.config.enableChangeDetectionForDebugging == null,
       {
