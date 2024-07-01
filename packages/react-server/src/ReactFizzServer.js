@@ -243,12 +243,12 @@ type RenderTask = {
   abortSet: Set<Task>, // the abortable set that this task belongs to
   keyPath: Root | KeyNode, // the path of all parent keys currently rendering
   formatContext: FormatContext, // the format's specific context (e.g. HTML/SVG/MathML)
-  legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
   isFallback: boolean, // whether this task is rendering inside a fallback tree
+  legacyContext: LegacyContext, // the current legacy context that this task is executing in
   // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
   // Consider splitting into multiple objects or consolidating some fields.
 };
@@ -272,12 +272,12 @@ type ReplayTask = {
   abortSet: Set<Task>, // the abortable set that this task belongs to
   keyPath: Root | KeyNode, // the path of all parent keys currently rendering
   formatContext: FormatContext, // the format's specific context (e.g. HTML/SVG/MathML)
-  legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
   isFallback: boolean, // whether this task is rendering inside a fallback tree
+  legacyContext: LegacyContext, // the current legacy context that this task is executing in
   // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
   // Consider splitting into multiple objects or consolidating some fields.
 };
@@ -462,11 +462,11 @@ function RequestInstance(
     abortSet,
     null,
     rootFormatContext,
-    emptyContextObject,
     rootContextSnapshot,
     emptyTreeContext,
     null,
     false,
+    emptyContextObject,
   );
   pingedTasks.push(rootTask);
 }
@@ -604,11 +604,11 @@ export function resumeRequest(
       abortSet,
       null,
       postponedState.rootFormatContext,
-      emptyContextObject,
       rootContextSnapshot,
       emptyTreeContext,
       null,
       false,
+      emptyContextObject,
     );
     pingedTasks.push(rootTask);
     return request;
@@ -630,11 +630,11 @@ export function resumeRequest(
     abortSet,
     null,
     postponedState.rootFormatContext,
-    emptyContextObject,
     rootContextSnapshot,
     emptyTreeContext,
     null,
     false,
+    emptyContextObject,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -698,11 +698,11 @@ function createRenderTask(
   abortSet: Set<Task>,
   keyPath: Root | KeyNode,
   formatContext: FormatContext,
-  legacyContext: LegacyContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
   componentStack: null | ComponentStackNode,
   isFallback: boolean,
+  legacyContext: LegacyContext,
 ): RenderTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -710,7 +710,7 @@ function createRenderTask(
   } else {
     blockedBoundary.pendingTasks++;
   }
-  const task: RenderTask = {
+  const task: RenderTask = ({
     replay: null,
     node,
     childIndex,
@@ -721,13 +721,15 @@ function createRenderTask(
     abortSet,
     keyPath,
     formatContext,
-    legacyContext,
     context,
     treeContext,
     componentStack,
     thenableState,
     isFallback,
-  };
+  }: any);
+  if (!disableLegacyContext) {
+    task.legacyContext = legacyContext;
+  }
   abortSet.add(task);
   return task;
 }
@@ -743,11 +745,11 @@ function createReplayTask(
   abortSet: Set<Task>,
   keyPath: Root | KeyNode,
   formatContext: FormatContext,
-  legacyContext: LegacyContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
   componentStack: null | ComponentStackNode,
   isFallback: boolean,
+  legacyContext: LegacyContext,
 ): ReplayTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -756,7 +758,7 @@ function createReplayTask(
     blockedBoundary.pendingTasks++;
   }
   replay.pendingTasks++;
-  const task: ReplayTask = {
+  const task: ReplayTask = ({
     replay,
     node,
     childIndex,
@@ -767,13 +769,15 @@ function createReplayTask(
     abortSet,
     keyPath,
     formatContext,
-    legacyContext,
     context,
     treeContext,
     componentStack,
     thenableState,
     isFallback,
-  };
+  }: any);
+  if (!disableLegacyContext) {
+    task.legacyContext = legacyContext;
+  }
   abortSet.add(task);
   return task;
 }
@@ -1188,13 +1192,13 @@ function renderSuspenseBoundary(
     fallbackAbortSet,
     fallbackKeyPath,
     task.formatContext,
-    task.legacyContext,
     task.context,
     task.treeContext,
     // This stack should be the Suspense boundary stack because while the fallback is actually a child segment
     // of the parent boundary from a component standpoint the fallback is a child of the Suspense boundary itself
     suspenseComponentStack,
     true,
+    !disableLegacyContext ? task.legacyContext : emptyContextObject,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
@@ -1328,13 +1332,13 @@ function replaySuspenseBoundary(
     fallbackAbortSet,
     fallbackKeyPath,
     task.formatContext,
-    task.legacyContext,
     task.context,
     task.treeContext,
     // This stack should be the Suspense boundary stack because while the fallback is actually a child segment
     // of the parent boundary from a component standpoint the fallback is a child of the Suspense boundary itself
     suspenseComponentStack,
     true,
+    !disableLegacyContext ? task.legacyContext : emptyContextObject,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
@@ -3271,13 +3275,13 @@ function spawnNewSuspendedReplayTask(
     task.abortSet,
     task.keyPath,
     task.formatContext,
-    task.legacyContext,
     task.context,
     task.treeContext,
     // We pop one task off the stack because the node that suspended will be tried again,
     // which will add it back onto the stack.
     task.componentStack !== null ? task.componentStack.parent : null,
     task.isFallback,
+    !disableLegacyContext ? task.legacyContext : emptyContextObject,
   );
 
   const ping = newTask.ping;
@@ -3317,13 +3321,13 @@ function spawnNewSuspendedRenderTask(
     task.abortSet,
     task.keyPath,
     task.formatContext,
-    task.legacyContext,
     task.context,
     task.treeContext,
     // We pop one task off the stack because the node that suspended will be tried again,
     // which will add it back onto the stack.
     task.componentStack !== null ? task.componentStack.parent : null,
     task.isFallback,
+    !disableLegacyContext ? task.legacyContext : emptyContextObject,
   );
 
   const ping = newTask.ping;
@@ -3341,7 +3345,9 @@ function renderNode(
   // Snapshot the current context in case something throws to interrupt the
   // process.
   const previousFormatContext = task.formatContext;
-  const previousLegacyContext = task.legacyContext;
+  const previousLegacyContext = !disableLegacyContext
+    ? task.legacyContext
+    : emptyContextObject;
   const previousContext = task.context;
   const previousKeyPath = task.keyPath;
   const previousTreeContext = task.treeContext;
@@ -3383,7 +3389,9 @@ function renderNode(
           // Restore the context. We assume that this will be restored by the inner
           // functions in case nothing throws so we don't use "finally" here.
           task.formatContext = previousFormatContext;
-          task.legacyContext = previousLegacyContext;
+          if (!disableLegacyContext) {
+            task.legacyContext = previousLegacyContext;
+          }
           task.context = previousContext;
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
@@ -3435,7 +3443,9 @@ function renderNode(
           // Restore the context. We assume that this will be restored by the inner
           // functions in case nothing throws so we don't use "finally" here.
           task.formatContext = previousFormatContext;
-          task.legacyContext = previousLegacyContext;
+          if (!disableLegacyContext) {
+            task.legacyContext = previousLegacyContext;
+          }
           task.context = previousContext;
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
@@ -3469,7 +3479,9 @@ function renderNode(
           // Restore the context. We assume that this will be restored by the inner
           // functions in case nothing throws so we don't use "finally" here.
           task.formatContext = previousFormatContext;
-          task.legacyContext = previousLegacyContext;
+          if (!disableLegacyContext) {
+            task.legacyContext = previousLegacyContext;
+          }
           task.context = previousContext;
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
@@ -3485,7 +3497,9 @@ function renderNode(
   // Restore the context. We assume that this will be restored by the inner
   // functions in case nothing throws so we don't use "finally" here.
   task.formatContext = previousFormatContext;
-  task.legacyContext = previousLegacyContext;
+  if (!disableLegacyContext) {
+    task.legacyContext = previousLegacyContext;
+  }
   task.context = previousContext;
   task.keyPath = previousKeyPath;
   task.treeContext = previousTreeContext;
