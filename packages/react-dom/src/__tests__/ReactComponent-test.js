@@ -14,6 +14,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 let act;
+let assertConsoleErrorDev;
 
 describe('ReactComponent', () => {
   beforeEach(() => {
@@ -24,6 +25,8 @@ describe('ReactComponent', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
   });
 
   // @gate !disableLegacyMode
@@ -131,8 +134,6 @@ describe('ReactComponent', () => {
 
   // @gate !disableStringRefs
   it('string refs do not detach and reattach on every render', async () => {
-    spyOnDev(console, 'error').mockImplementation(() => {});
-
     let refVal;
     class Child extends React.Component {
       componentDidUpdate() {
@@ -170,6 +171,8 @@ describe('ReactComponent', () => {
     await act(() => {
       root.render(<Parent />);
     });
+
+    assertConsoleErrorDev(['contains the string ref']);
 
     expect(refVal).toBe(undefined);
     await act(() => {
@@ -511,19 +514,25 @@ describe('ReactComponent', () => {
   });
 
   it('throws usefully when rendering badly-typed elements', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
     const X = undefined;
-    let container = document.createElement('div');
-    let root = ReactDOMClient.createRoot(container);
-    await expect(
-      expect(async () => {
-        await act(() => {
-          root.render(<X />);
-        });
-      }).toErrorDev(
-        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-          'or a class/function (for composite components) but got: undefined.',
-      ),
-    ).rejects.toThrowError(
+    const XElement = <X />;
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(
+        [
+          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
+            'or a class/function (for composite components) but got: undefined.',
+        ],
+        {withoutStack: true},
+      );
+    }
+    await expect(async () => {
+      await act(() => {
+        root.render(XElement);
+      });
+    }).rejects.toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined.' +
         (__DEV__
@@ -533,20 +542,43 @@ describe('ReactComponent', () => {
     );
 
     const Y = null;
-    container = document.createElement('div');
-    root = ReactDOMClient.createRoot(container);
-    await expect(
-      expect(async () => {
-        await act(() => {
-          root.render(<Y />);
-        });
-      }).toErrorDev(
-        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
-          'or a class/function (for composite components) but got: null.',
-      ),
-    ).rejects.toThrowError(
+    const YElement = <Y />;
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(
+        [
+          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
+            'or a class/function (for composite components) but got: null.',
+        ],
+        {withoutStack: true},
+      );
+    }
+    await expect(async () => {
+      await act(() => {
+        root.render(YElement);
+      });
+    }).rejects.toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: null.',
+    );
+
+    const Z = true;
+    const ZElement = <Z />;
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(
+        [
+          'React.jsx: type is invalid -- expected a string (for built-in components) ' +
+            'or a class/function (for composite components) but got: boolean.',
+        ],
+        {withoutStack: true},
+      );
+    }
+    await expect(async () => {
+      await act(() => {
+        root.render(ZElement);
+      });
+    }).rejects.toThrowError(
+      'Element type is invalid: expected a string (for built-in components) ' +
+        'or a class/function (for composite components) but got: boolean.',
     );
   });
 

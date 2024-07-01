@@ -363,6 +363,31 @@ const bundles = [
     externals: [],
   },
 
+  /******* React HTML RSC *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-html/src/ReactHTMLServer.js',
+    name: 'react-html.react-server',
+    condition: 'react-server',
+    global: 'ReactHTML',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+
+  /******* React HTML Client *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-html/src/ReactHTMLClient.js',
+    name: 'react-html',
+    global: 'ReactHTML',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+
   /******* React Server DOM Webpack Server *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
