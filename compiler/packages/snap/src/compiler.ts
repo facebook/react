@@ -45,7 +45,8 @@ function makePluginOptions(
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
-  let enableChangeDetectionForDebugging = null;
+  let enableChangeDetectionForDebugging= null;
+  let enablePreserveExistingManualUseMemo: "hook" | "scope" | null  = null;
   let customMacros = null;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
@@ -130,6 +131,15 @@ function makePluginOptions(
       importSpecifierName: "$structuralCheck",
     };
   }
+  if (firstLine.includes("@enablePreserveExistingManualUseMemoAsHook")) {
+    enablePreserveExistingManualUseMemo = "hook"
+  } else if (firstLine.includes("@enablePreserveExistingManualUseMemoAsScope")) {
+    enablePreserveExistingManualUseMemo = "scope"
+  } else if (firstLine.includes("@enablePreserveExistingManualUseMemo")) {
+    throw new Error(
+      'Use either @enablePreserveExistingManualUseMemoAsScope or @enablePreserveExistingManualUseMemoAsHook'
+    );
+  }
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -207,6 +217,7 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       enableChangeDetectionForDebugging,
+      enablePreserveExistingManualUseMemo,
     },
     compilationMode,
     logger,

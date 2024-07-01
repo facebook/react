@@ -1429,6 +1429,8 @@ export type ReactiveScope = {
   merged: Set<ScopeId>;
 
   loc: SourceLocation;
+
+  source: boolean;
 };
 
 export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;
