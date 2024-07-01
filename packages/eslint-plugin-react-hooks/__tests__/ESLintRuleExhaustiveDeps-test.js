@@ -538,6 +538,26 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
+          useCustomOrderEffect(null, () => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
+      options: [{additionalHooks: [['useCustomOrderEffect', 1]]}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomOrderEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
+      options: [{additionalHooks: [['useCustomOrderEffect', 0]]}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
           useWithoutEffectSuffix(() => {
             console.log(props.foo);
           }, []);
@@ -3613,6 +3633,42 @@ const tests = {
               `,
             },
           ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomOrderEffect(null, () => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
+      options: [{additionalHooks: [['useCustomOrderEffect', 0]]}],
+      errors: [
+        {
+          message:
+            'React Hook useCustomOrderEffect received a function whose dependencies ' +
+            'are unknown. Pass an inline function instead.',
+          suggestions: [],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomOrderEffect(() => {
+            console.log(props.foo);
+          }, [props.foo]);
+        }
+      `,
+      options: [{additionalHooks: [['useCustomOrderEffect', 1]]}],
+      errors: [
+        {
+          message:
+            'React Hook useCustomOrderEffect received a function whose dependencies ' +
+            'are unknown. Pass an inline function instead.',
+          suggestions: [],
         },
       ],
     },

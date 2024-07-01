@@ -27,7 +27,18 @@ export default {
         enableDangerousAutofixThisMayCauseInfiniteLoops: false,
         properties: {
           additionalHooks: {
-            type: 'string',
+            anyOf: [
+              {
+                type: 'string',
+              },
+              {
+                type: 'array',
+                items: {
+                  type: 'array',
+                  items: [{type: 'string'}, {type: 'number'}],
+                },
+              },
+            ],
           },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
@@ -42,7 +53,12 @@ export default {
       context.options &&
       context.options[0] &&
       context.options[0].additionalHooks
-        ? new RegExp(context.options[0].additionalHooks)
+        ? typeof context.options[0].additionalHooks === 'string'
+          ? [[new RegExp(context.options[0].additionalHooks), 0]]
+          : context.options[0].additionalHooks.map(([regex, callbackIndex]) => [
+              new RegExp(regex),
+              callbackIndex,
+            ])
         : undefined;
 
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
@@ -1809,7 +1825,12 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
             throw error;
           }
         }
-        return options.additionalHooks.test(name) ? 0 : -1;
+        for (const [regex, callbackIndex] of options.additionalHooks) {
+          if (regex.test(name)) {
+            return callbackIndex || 0;
+          }
+        }
+        return -1;
       } else {
         return -1;
       }
