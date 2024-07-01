@@ -29,6 +29,9 @@ export default {
           additionalHooks: {
             type: 'string',
           },
+          stableKnownHooks: {
+            type: 'string',
+          },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
@@ -45,6 +48,14 @@ export default {
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
 
+    // Parse the `stableKnownHooks` regex.
+    const stableKnownHooks =
+      context.options &&
+      context.options[0] &&
+      context.options[0].stableKnownHooks
+        ? new RegExp(context.options[0].stableKnownHooks)
+        : undefined;
+
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
       (context.options &&
         context.options[0] &&
@@ -53,6 +64,7 @@ export default {
 
     const options = {
       additionalHooks,
+      stableKnownHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
     };
 
@@ -246,7 +258,11 @@ export default {
         }
         const id = def.node.id;
         const {name} = callee;
-        if (name === 'useRef' && id.type === 'Identifier') {
+
+        if (stableKnownHooks && stableKnownHooks.test(name)) {
+          // Consider user-defined stable-known hooks return value stable.
+          return true;
+        } else if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
         } else if (
