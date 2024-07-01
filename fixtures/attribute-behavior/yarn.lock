@@ -2,6 +2,13 @@
 # yarn lockfile v1
 
 
+"@playwright/test@^1.41.2":
+  version "1.41.2"
+  resolved "https://registry.yarnpkg.com/@playwright/test/-/test-1.41.2.tgz#bd9db40177f8fd442e16e14e0389d23751cdfc54"
+  integrity sha512-qQB9h7KbibJzrDpkXkYvsmiDJK14FULCCZgEcoe2AvFAS64oCirWTwzTlAYEbKaRxWs5TFesE1Na6izMv3HfGg==
+  dependencies:
+    playwright "1.41.2"
+
 abab@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/abab/-/abab-1.0.3.tgz#b81de5f7274ec4e756d797cd834f303642724e5d"
@@ -2705,7 +2712,7 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
 
-fsevents@1.1.2, fsevents@1.2.13, fsevents@^1.0.0:
+fsevents@1.1.2, fsevents@1.2.13, fsevents@2.3.2, fsevents@^1.0.0:
   version "1.2.13"
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-1.2.13.tgz#f325cb0455592428bcf11b383370ef70e3bfcc38"
   integrity sha512-oWb1Z6mkHIskLzEJ/XWX0srkpkTQ7vaopMQkyaEIoq0fmtFVxOthb8cCxeT+p3ynTdkk/RZwbgG4brR5BeWECw==
@@ -4620,6 +4627,20 @@ pkg-dir@^2.0.0:
   resolved "https://registry.yarnpkg.com/pkg-dir/-/pkg-dir-2.0.0.tgz#f6d5d1109e19d63edf428e0bd57e12777615334b"
   dependencies:
     find-up "^2.1.0"
+
+playwright-core@1.41.2:
+  version "1.41.2"
+  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.41.2.tgz#db22372c708926c697acc261f0ef8406606802d9"
+  integrity sha512-VaTvwCA4Y8kxEe+kfm2+uUUw5Lubf38RxF7FpBxLPmGe5sdNkSg5e3ChEigaGrX7qdqT3pt2m/98LiyvU2x6CA==
+
+playwright@1.41.2:
+  version "1.41.2"
+  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.41.2.tgz#4e760b1c79f33d9129a8c65cc27953be6dd35042"
+  integrity sha512-v0bOa6H2GJChDL8pAeLa/LZC4feoAMbSQm1/jF/ySsWWoaNItvrMP7GEkvEEFyCTUYKMxjQKaTSg5up7nR6/8A==
+  dependencies:
+    playwright-core "1.41.2"
+  optionalDependencies:
+    fsevents "2.3.2"
 
 pluralize@^4.0.0:
   version "4.0.0"
