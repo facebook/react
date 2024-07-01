@@ -150,6 +150,7 @@ import {
   disableDefaultPropsExceptForClasses,
   enableAsyncIterableChildren,
   disableStringRefs,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -2372,6 +2373,27 @@ function renderNodeDestructive(
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;
         const keyPath = [task.keyPath, name, keyOrIndex];
         if (task.replay !== null) {
+          if (__DEV__ && enableOwnerStacks) {
+            const debugTask: null | ConsoleTask = element._debugTask;
+            if (debugTask) {
+              debugTask.run(
+                replayElement.bind(
+                  null,
+                  request,
+                  task,
+                  keyPath,
+                  name,
+                  keyOrIndex,
+                  childIndex,
+                  type,
+                  props,
+                  ref,
+                  task.replay,
+                ),
+              );
+              return;
+            }
+          }
           replayElement(
             request,
             task,
@@ -2388,6 +2410,23 @@ function renderNodeDestructive(
           // prelude and skip it during the replay.
         } else {
           // We're doing a plain render.
+          if (__DEV__ && enableOwnerStacks) {
+            const debugTask: null | ConsoleTask = element._debugTask;
+            if (debugTask) {
+              debugTask.run(
+                renderElement.bind(
+                  null,
+                  request,
+                  task,
+                  keyPath,
+                  type,
+                  props,
+                  ref,
+                ),
+              );
+              return;
+            }
+          }
           renderElement(request, task, keyPath, type, props, ref);
         }
         return;
