@@ -244,17 +244,19 @@ if (!__EXPERIMENTAL__) {
       expect(caughtErrors.length).toBe(1);
       expect(caughtErrors[0].error).toBe(thrownError);
       expect(normalizeCodeLocInfo(caughtErrors[0].parentStack)).toBe(
-        // TODO: Because Fizz doesn't yet implement debugInfo for parent stacks
-        // it doesn't have the Server Components in the parent stacks.
-        '\n    in Lazy (at **)' +
-          '\n    in div (at **)' +
-          '\n    in div (at **)',
+        __DEV__
+          ? '\n    in Baz (at **)' +
+              '\n    in div (at **)' +
+              '\n    in Bar (at **)' +
+              '\n    in Foo (at **)' +
+              '\n    in div (at **)'
+          : '\n    in Lazy (at **)' +
+              '\n    in div (at **)' +
+              '\n    in div (at **)',
       );
       expect(normalizeCodeLocInfo(caughtErrors[0].ownerStack)).toBe(
         __DEV__ && gate(flags => flags.enableOwnerStacks)
-          ? // TODO: Because Fizz doesn't yet implement debugInfo for parent stacks
-            // it doesn't have the Server Components in the parent stacks.
-            '\n    in Lazy (at **)'
+          ? '\n    in Bar (at **)' + '\n    in Foo (at **)'
           : null,
       );
     });
