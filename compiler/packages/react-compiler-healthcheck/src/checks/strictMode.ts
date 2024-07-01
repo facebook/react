@@ -8,26 +8,45 @@
 import chalk from "chalk";
 
 const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
+const StrictModeRE = /(?<!\/\/[^\n]*)<(React\.StrictMode|StrictMode)>/;
 const NextConfigFileRE = /^next\.config\.(js|mjs)$/;
-const StrictModeRE = /<(React\.StrictMode|StrictMode)>/;
-const NextStrictModeRE = /reactStrictMode:\s*true/;
-let StrictModeUsage = false;
+const NextStrictModeRE = /(?<!\/\/[^\n]*)reactStrictMode\s*:\s*true/;
+const NextNonStrictModeRE = /(?<!\/\/[^\n]*)reactStrictMode\s*:\s*false/;
+
+let isNextAppRoute = false;
+let nextStrictFlag: boolean | undefined = undefined;
+let isStrictComponentUsed = false;
 
 export default {
   run(source: string, path: string): void {
-    if (StrictModeUsage) {
-      return;
+    if (
+      (path.startsWith("src/app/") || path.startsWith("app/")) &&
+      (path.endsWith("layout.tsx") || path.endsWith("layout.jsx"))
+    ) {
+      isNextAppRoute = true;
     }
 
     if (NextConfigFileRE.exec(path) !== null) {
-      StrictModeUsage = NextStrictModeRE.exec(source) !== null;
-    } else if (JsFileExtensionRE.exec(path) !== null) {
-      StrictModeUsage = StrictModeRE.exec(source) !== null;
+      nextStrictFlag =
+        NextStrictModeRE.exec(source) !== null
+          ? true
+          : NextNonStrictModeRE.exec(source) !== null
+          ? false
+          : undefined;
+    } else if (
+      JsFileExtensionRE.exec(path) !== null &&
+      StrictModeRE.exec(source) !== null
+    ) {
+      isStrictComponentUsed = true;
     }
   },
 
   report(): void {
-    if (StrictModeUsage) {
+    if (
+      (isNextAppRoute && nextStrictFlag === undefined) ||
+      nextStrictFlag === true ||
+      isStrictComponentUsed === true
+    ) {
       console.log(chalk.green("StrictMode usage found."));
     } else {
       console.log(chalk.red("StrictMode usage not found."));
