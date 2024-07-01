@@ -19,6 +19,7 @@ let assertLog;
 let waitForAll;
 let waitFor;
 let waitForThrow;
+let assertConsoleErrorDev;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
@@ -28,6 +29,8 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
@@ -1237,11 +1240,15 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'React.jsx: type is invalid -- expected a string',
-      // React retries once on error
-      'React.jsx: type is invalid -- expected a string',
-    ]);
+    await waitForAll([]);
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev([
+        'React.jsx: type is invalid -- expected a string',
+        // React retries once on error
+        'React.jsx: type is invalid -- expected a string',
+      ]);
+    }
+
     expect(ReactNoop).toMatchRenderedOutput(
       <span
         prop={
@@ -1288,11 +1295,14 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender fail={true} />
       </ErrorBoundary>,
     );
-    await expect(async () => await waitForAll([])).toErrorDev([
-      'React.jsx: type is invalid -- expected a string',
-      // React retries once on error
-      'React.jsx: type is invalid -- expected a string',
-    ]);
+    await waitForAll([]);
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev([
+        'React.jsx: type is invalid -- expected a string',
+        // React retries once on error
+        'React.jsx: type is invalid -- expected a string',
+      ]);
+    }
     expect(ReactNoop).toMatchRenderedOutput(
       <span
         prop={
@@ -1310,10 +1320,14 @@ describe('ReactIncrementalErrorHandling', () => {
 
   it('recovers from uncaught reconciler errors', async () => {
     const InvalidType = undefined;
-    expect(() => ReactNoop.render(<InvalidType />)).toErrorDev(
-      'React.jsx: type is invalid -- expected a string',
-      {withoutStack: true},
-    );
+    ReactNoop.render(<InvalidType />);
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(
+        ['React.jsx: type is invalid -- expected a string'],
+        {withoutStack: true},
+      );
+    }
+
     await waitForThrow(
       'Element type is invalid: expected a string (for built-in components) or ' +
         'a class/function (for composite components) but got: undefined.' +

@@ -220,6 +220,9 @@ function validateFragmentProps(
           // For unkeyed root fragments there's no Fiber. We create a fake one just for
           // error stack handling.
           fiber = createFiberFromElement(element, returnFiber.mode, 0);
+          if (__DEV__) {
+            fiber._debugInfo = currentDebugInfo;
+          }
           fiber.return = returnFiber;
         }
         runWithFiberInDEV(
@@ -242,6 +245,9 @@ function validateFragmentProps(
         // For unkeyed root fragments there's no Fiber. We create a fake one just for
         // error stack handling.
         fiber = createFiberFromElement(element, returnFiber.mode, 0);
+        if (__DEV__) {
+          fiber._debugInfo = currentDebugInfo;
+        }
         fiber.return = returnFiber;
       }
       runWithFiberInDEV(fiber, () => {

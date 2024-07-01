@@ -13,6 +13,7 @@ import {
   HIRFunction,
   ReactiveFunction,
   assertConsistentIdentifiers,
+  assertTerminalPredsExist,
   assertTerminalSuccessorsExist,
   assertValidBlockNesting,
   assertValidMutableRanges,
@@ -95,6 +96,7 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
+import { validateLocalsNotReassignedAfterRender } from "../Validation/ValidateLocalsNotReassignedAfterRender";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -201,6 +203,8 @@ function* runWithEnvironment(
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
 
+  validateLocalsNotReassignedAfterRender(hir);
+
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
   yield log({ kind: "hir", name: "DeadCodeElimination", value: hir });
@@ -303,6 +307,8 @@ function* runWithEnvironment(
       name: "FlattenScopesWithHooksOrUseHIR",
       value: hir,
     });
+    assertTerminalSuccessorsExist(hir);
+    assertTerminalPredsExist(hir);
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
