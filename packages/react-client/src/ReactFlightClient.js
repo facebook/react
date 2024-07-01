@@ -1730,6 +1730,7 @@ function resolveErrorDev(
   digest: string,
   message: string,
   stack: string,
+  env: string,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1769,6 +1770,7 @@ function resolveErrorDev(
   }
 
   (error: any).digest = digest;
+  (error: any).environmentName = env;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -2056,6 +2058,8 @@ function resolveConsoleEntry(
       task.run(callStack);
       return;
     }
+    // TODO: Set the current owner so that consoleWithStackDev adds the component
+    // stack during the replay - if needed.
   }
   const rootTask = response._debugRootTask;
   if (rootTask != null) {
@@ -2198,6 +2202,7 @@ function processFullRow(
           errorInfo.digest,
           errorInfo.message,
           errorInfo.stack,
+          errorInfo.env,
         );
       } else {
         resolveErrorProd(response, id, errorInfo.digest);
