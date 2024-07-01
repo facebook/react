@@ -1210,6 +1210,254 @@ describe('ProfilingCache', () => {
   });
 
   // @reactVersion >= 18.0
+  it('should properly detect changed hooks #2', () => {
+    // inlined `use-sync-external-store/with-selector`
+    function useSyncExternalStoreWithSelector<Snapshot, Selection>(
+      subscribe: (() => void) => () => void,
+      getSnapshot: () => Snapshot,
+      getServerSnapshot: void | null | (() => Snapshot),
+      selector: (snapshot: Snapshot) => Selection,
+      isEqual?: (a: Selection, b: Selection) => boolean,
+    ): Selection {
+      // Use this to track the rendered snapshot.
+      const instRef = React.useRef<
+        | {
+            hasValue: true,
+            value: Selection,
+          }
+        | {
+            hasValue: false,
+            value: null,
+          }
+        | null,
+      >(null);
+      let inst;
+      if (instRef.current === null) {
+        inst = {
+          hasValue: false,
+          value: null,
+        };
+        instRef.current = inst;
+      } else {
+        inst = instRef.current;
+      }
+
+      const [getSelection, getServerSelection] = React.useMemo(() => {
+        // Track the memoized state using closure variables that are local to this
+        // memoized instance of a getSnapshot function. Intentionally not using a
+        // useRef hook, because that state would be shared across all concurrent
+        // copies of the hook/component.
+        let hasMemo = false;
+        let memoizedSnapshot;
+        let memoizedSelection: Selection;
+        const memoizedSelector = (nextSnapshot: Snapshot) => {
+          if (!hasMemo) {
+            // The first time the hook is called, there is no memoized result.
+            hasMemo = true;
+            memoizedSnapshot = nextSnapshot;
+            const nextSelection = selector(nextSnapshot);
+            if (isEqual !== undefined) {
+              // Even if the selector has changed, the currently rendered selection
+              // may be equal to the new selection. We should attempt to reuse the
+              // current value if possible, to preserve downstream memoizations.
+              if (inst.hasValue) {
+                const currentSelection = inst.value;
+                if (isEqual(currentSelection, nextSelection)) {
+                  memoizedSelection = currentSelection;
+                  return currentSelection;
+                }
+              }
+            }
+            memoizedSelection = nextSelection;
+            return nextSelection;
+          }
+
+          // We may be able to reuse the previous invocation's result.
+          const prevSnapshot: Snapshot = (memoizedSnapshot: any);
+          const prevSelection: Selection = (memoizedSelection: any);
+
+          if (Object.is(prevSnapshot, nextSnapshot)) {
+            // The snapshot is the same as last time. Reuse the previous selection.
+            return prevSelection;
+          }
+
+          // The snapshot has changed, so we need to compute a new selection.
+          const nextSelection = selector(nextSnapshot);
+
+          // If a custom isEqual function is provided, use that to check if the data
+          // has changed. If it hasn't, return the previous selection. That signals
+          // to React that the selections are conceptually equal, and we can bail
+          // out of rendering.
+          if (isEqual !== undefined && isEqual(prevSelection, nextSelection)) {
+            return prevSelection;
+          }
+
+          memoizedSnapshot = nextSnapshot;
+          memoizedSelection = nextSelection;
+          return nextSelection;
+        };
+        // Assigning this to a constant so that Flow knows it can't change.
+        const maybeGetServerSnapshot =
+          getServerSnapshot === undefined ? null : getServerSnapshot;
+        const getSnapshotWithSelector = () => memoizedSelector(getSnapshot());
+        const getServerSnapshotWithSelector =
+          maybeGetServerSnapshot === null
+            ? undefined
+            : () => memoizedSelector(maybeGetServerSnapshot());
+        return [getSnapshotWithSelector, getServerSnapshotWithSelector];
+      }, [getSnapshot, getServerSnapshot, selector, isEqual]);
+
+      const value = React.useSyncExternalStore(
+        subscribe,
+        getSelection,
+        getServerSelection,
+      );
+
+      React.useEffect(() => {
+        // $FlowFixMe[incompatible-type] changing the variant using mutation isn't supported
+        inst.hasValue = true;
+        // $FlowFixMe[incompatible-type]
+        inst.value = value;
+      }, [value]);
+
+      React.useDebugValue(value);
+      return value;
+    }
+
+    let reduxStore = {a: 0, b: 0};
+    function getState() {
+      return reduxStore;
+    }
+
+    let syncExternalStoreCallback;
+    function subscribe(callback) {
+      syncExternalStoreCallback = callback;
+    }
+
+    const ReactReduxContext = React.createContext(0);
+    const DropTargetContext = React.createContext(0);
+    const EditorContext = React.createContext(0);
+
+    const ResizableComponent = React.memo(function ResizableComponent(props) {
+      // 0
+      React.useRef(null);
+      React.useContext(EditorContext);
+      React.useContext(DropTargetContext);
+      // useShowPropertyPane
+      // useDispatch
+      React.useContext(ReactReduxContext);
+      // 1
+      React.useCallback(() => {}, []);
+      // useWidgetSelection
+      // useDispatch
+      React.useContext(ReactReduxContext);
+      // 2
+      React.useCallback(() => {}, []);
+      // 3
+      React.useCallback(() => {}, []);
+      // useWidgetDragResize
+      // useDispatch
+      React.useContext(ReactReduxContext);
+      // 4
+      React.useCallback(() => {}, []);
+      // 5
+      React.useCallback(() => {}, []);
+      // useSelector
+      React.useContext(ReactReduxContext);
+      // 6
+      React.useRef();
+      // 7
+      React.useCallback();
+      // 8,9,10,11
+      const selectedState1 = useSyncExternalStoreWithSelector(
+        subscribe,
+        getState,
+        getState,
+        state => state.a,
+      );
+      React.useDebugValue(selectedState1);
+      // useSelector
+      React.useContext(ReactReduxContext);
+      // 12
+      React.useRef();
+      // 13
+      React.useCallback();
+      // 14,15,16,17
+      const selectedState2 = useSyncExternalStoreWithSelector(
+        subscribe,
+        getState,
+        getState,
+        state => state.a,
+      );
+      React.useDebugValue(selectedState2);
+      // useSelector
+      React.useContext(ReactReduxContext);
+      // 18
+      React.useRef();
+      // 19
+      React.useCallback();
+      // 20,21,22,23
+      const selectedState3 = useSyncExternalStoreWithSelector(
+        subscribe,
+        getState,
+        getState,
+        state => state.a,
+      );
+      React.useDebugValue(selectedState3);
+      // useSelector
+      React.useContext(ReactReduxContext);
+      // 24
+      React.useRef();
+      // 25
+      React.useCallback();
+      // 26,27,28,29
+      const valueThatChanges = useSyncExternalStoreWithSelector(
+        subscribe,
+        getState,
+        getState,
+        state => state.b,
+      );
+      React.useDebugValue(valueThatChanges);
+
+      return valueThatChanges;
+    });
+
+    utils.act(() => render(<ResizableComponent />));
+
+    utils.act(() => store.profilerStore.startProfiling());
+
+    utils.act(() => {
+      reduxStore = {...reduxStore, b: reduxStore.b + 1};
+      syncExternalStoreCallback();
+    });
+
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+
+    const changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+
+    expect(changeDescriptions).toMatchInlineSnapshot(`
+      [
+        Map {
+          2 => {
+            "context": false,
+            "didHooksChange": true,
+            "hooks": [
+              31,
+            ],
+            "isFirstMount": false,
+            "props": [],
+            "state": null,
+          },
+        },
+      ]
+    `);
+  });
+
+  // @reactVersion >= 18.0
   it('should calculate durations based on actual children (not filtered children)', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 
