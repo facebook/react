@@ -4191,7 +4191,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           defaultProps = type._init;
           type = defaultProps(type._payload);
           props = resolveDefaultPropsOnNonClassComponent(type, props);
-          renderElement(request, task, keyPath, type, props, void 0);
+          renderElement(request, task, keyPath, type, props, ref);
           task.componentStack = JSCompiler_inline_result;
           return;
       }
@@ -4277,7 +4277,16 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                       pendingTasks: 1
                     };
                     try {
-                      renderElement(request, task, key, type, props, ref);
+                      renderElement(
+                        request,
+                        task,
+                        key,
+                        type,
+                        props,
+                        ref,
+                        null,
+                        null
+                      );
                       if (
                         1 === task.replay.pendingTasks &&
                         0 < task.replay.nodes.length

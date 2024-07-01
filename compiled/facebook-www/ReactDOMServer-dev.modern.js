@@ -4233,6 +4233,16 @@ __DEV__ &&
       "function" === typeof fn && componentFrameCache.set(fn, sampleLines);
       return sampleLines;
     }
+    function callComponentInDEV(Component, props, secondArg) {
+      return Component(props, secondArg);
+    }
+    function callRenderInDEV(instance) {
+      return instance.render();
+    }
+    function callLazyInitInDEV(lazy) {
+      var init = lazy._init;
+      return init(lazy._payload);
+    }
     function getStackByComponentStackNode(componentStack) {
       try {
         var info = "";
@@ -4517,8 +4527,23 @@ __DEV__ &&
         ? ""
         : getStackByComponentStackNode(currentTaskInDEV.componentStack);
     }
-    function createBuiltInComponentStack(task, type) {
-      return { tag: 0, parent: task.componentStack, type: type };
+    function createBuiltInComponentStack(task, type, owner, stack) {
+      return {
+        tag: 0,
+        parent: task.componentStack,
+        type: type,
+        owner: owner,
+        stack: stack
+      };
+    }
+    function createFunctionComponentStack(task, type, owner, stack) {
+      return {
+        tag: 1,
+        parent: task.componentStack,
+        type: type,
+        owner: owner,
+        stack: stack
+      };
     }
     function getThrownInfo(request, node) {
       return node ? { componentStack: getStackByComponentStackNode(node) } : {};
@@ -4583,7 +4608,7 @@ __DEV__ &&
       thenableIndexCounter = 0;
       thenableState = prevThenableState;
       for (
-        request = Component(props, secondArg);
+        request = callComponentInDEV(Component, props, secondArg);
         didScheduleRenderPhaseUpdate;
 
       )
@@ -4704,7 +4729,16 @@ __DEV__ &&
           "Popping the context provider did not return back to the original snapshot. This is a bug in React."
         );
     }
-    function renderElement(request, task, keyPath, type, props, ref) {
+    function renderElement(
+      request,
+      task,
+      keyPath,
+      type,
+      props,
+      ref,
+      owner,
+      stack
+    ) {
       if ("function" === typeof type)
         if (type.prototype && type.prototype.isReactComponent) {
           var newProps = props;
@@ -4725,7 +4759,9 @@ __DEV__ &&
           task.componentStack = {
             tag: 2,
             parent: task.componentStack,
-            type: type
+            type: type,
+            owner: owner,
+            stack: stack
           };
           var context = emptyContextObject,
             contextType = type.contextType;
@@ -5074,7 +5110,7 @@ __DEV__ &&
               }
             } else internalInstance.queue = null;
           }
-          var nextChildren = instance.render();
+          var nextChildren = callRenderInDEV(instance);
           instance.props !== resolvedProps &&
             (didWarnAboutReassigningProps ||
               error$jscomp$2(
@@ -5089,11 +5125,12 @@ __DEV__ &&
           task.componentStack = previousComponentStack;
         } else {
           var previousComponentStack$jscomp$0 = task.componentStack;
-          task.componentStack = {
-            tag: 1,
-            parent: task.componentStack,
-            type: type
-          };
+          task.componentStack = createFunctionComponentStack(
+            task,
+            type,
+            owner,
+            stack
+          );
           if (type.prototype && "function" === typeof type.prototype.render) {
             var componentName$jscomp$3 =
               getComponentNameFromType(type) || "Unknown";
@@ -5184,7 +5221,12 @@ __DEV__ &&
         }
       else if ("string" === typeof type) {
         var previousComponentStack$jscomp$1 = task.componentStack;
-        task.componentStack = createBuiltInComponentStack(task, type);
+        task.componentStack = createBuiltInComponentStack(
+          task,
+          type,
+          owner,
+          stack
+        );
         var segment = task.blockedSegment;
         if (null === segment) {
           var children = props.children,
@@ -5279,7 +5321,9 @@ __DEV__ &&
             var preiousComponentStack = task.componentStack;
             task.componentStack = createBuiltInComponentStack(
               task,
-              "SuspenseList"
+              "SuspenseList",
+              owner,
+              stack
             );
             var _prevKeyPath3 = task.keyPath;
             task.keyPath = keyPath;
@@ -5306,7 +5350,7 @@ __DEV__ &&
             } else {
               var previousComponentStack$jscomp$2 = task.componentStack,
                 suspenseComponentStack = (task.componentStack =
-                  createBuiltInComponentStack(task, "Suspense")),
+                  createBuiltInComponentStack(task, "Suspense", owner, stack)),
                 prevKeyPath$jscomp$3 = task.keyPath,
                 parentBoundary = task.blockedBoundary,
                 parentHoistableState = task.hoistableState,
@@ -5427,11 +5471,12 @@ __DEV__ &&
           switch (type.$$typeof) {
             case REACT_FORWARD_REF_TYPE:
               var previousComponentStack$jscomp$3 = task.componentStack;
-              task.componentStack = {
-                tag: 1,
-                parent: task.componentStack,
-                type: type.render
-              };
+              task.componentStack = createFunctionComponentStack(
+                task,
+                type.render,
+                owner,
+                stack
+              );
               if ("ref" in props) {
                 var propsWithoutRef = {};
                 for (var key in props)
@@ -5468,7 +5513,9 @@ __DEV__ &&
                 keyPath,
                 innerType,
                 resolvedProps$jscomp$0,
-                ref
+                ref,
+                owner,
+                stack
               );
               return;
             case REACT_PROVIDER_TYPE:
@@ -5505,20 +5552,24 @@ __DEV__ &&
               }
             case REACT_LAZY_TYPE:
               var previousComponentStack$jscomp$4 = task.componentStack;
-              task.componentStack = createBuiltInComponentStack(task, "Lazy");
-              var init = type._init,
-                Component = init(type._payload),
-                resolvedProps$jscomp$1 = resolveDefaultPropsOnNonClassComponent(
-                  Component,
-                  props
-                );
+              task.componentStack = createBuiltInComponentStack(
+                task,
+                "Lazy",
+                owner,
+                stack
+              );
+              var Component = callLazyInitInDEV(type);
+              var resolvedProps$jscomp$1 =
+                resolveDefaultPropsOnNonClassComponent(Component, props);
               renderElement(
                 request,
                 task,
                 keyPath,
                 Component,
                 resolvedProps$jscomp$1,
-                void 0
+                ref,
+                owner,
+                stack
               );
               task.componentStack = previousComponentStack$jscomp$4;
               return;
@@ -5578,9 +5629,10 @@ __DEV__ &&
             case REACT_ELEMENT_TYPE:
               var type = node$jscomp$0.type,
                 key = node$jscomp$0.key,
-                props = node$jscomp$0.props;
-              node$jscomp$0 = props.ref;
-              var ref = void 0 !== node$jscomp$0 ? node$jscomp$0 : null;
+                props = node$jscomp$0.props,
+                refProp = props.ref;
+              var ref = void 0 !== refProp ? refProp : null;
+              refProp = node$jscomp$0._owner;
               var name = getComponentNameFromType(type),
                 keyOrIndex =
                   null == key ? (-1 === childIndex ? 0 : childIndex) : key;
@@ -5614,7 +5666,16 @@ __DEV__ &&
                           pendingTasks: 1
                         };
                         try {
-                          renderElement(request, task, key, type, props, ref);
+                          renderElement(
+                            request,
+                            task,
+                            key,
+                            type,
+                            props,
+                            ref,
+                            refProp,
+                            null
+                          );
                           if (
                             1 === task.replay.pendingTasks &&
                             0 < task.replay.nodes.length
@@ -5634,12 +5695,12 @@ __DEV__ &&
                               (task.node === node && (task.replay = replay), x)
                             );
                           task.replay.pendingTasks--;
-                          type = getThrownInfo(request, task.componentStack);
+                          refProp = getThrownInfo(request, task.componentStack);
                           erroredReplay(
                             request,
                             task.blockedBoundary,
                             x,
-                            type,
+                            refProp,
                             childNodes,
                             name
                           );
@@ -5654,16 +5715,22 @@ __DEV__ &&
                           );
                         b: {
                           type = void 0;
+                          ref = key;
                           var props$jscomp$0 = props;
                           props = node[5];
-                          ref = node[2];
+                          key = node[2];
                           replay = node[3];
                           name = null === node[4] ? [] : node[4][2];
                           node = null === node[4] ? null : node[4][3];
                           keyOrIndex = task.componentStack;
-                          var suspenseComponentStack = (task.componentStack =
-                              createBuiltInComponentStack(task, "Suspense")),
-                            prevKeyPath = task.keyPath,
+                          refProp = task.componentStack =
+                            createBuiltInComponentStack(
+                              task,
+                              "Suspense",
+                              refProp,
+                              null
+                            );
+                          var prevKeyPath = task.keyPath,
                             previousReplaySet = task.replay,
                             parentBoundary = task.blockedBoundary,
                             parentHoistableState = task.hoistableState,
@@ -5679,7 +5746,7 @@ __DEV__ &&
                           task.blockedBoundary = resumedBoundary;
                           task.hoistableState = resumedBoundary.contentState;
                           task.replay = {
-                            nodes: ref,
+                            nodes: key,
                             slots: replay,
                             pendingTasks: 1
                           };
@@ -5739,12 +5806,12 @@ __DEV__ &&
                             parentBoundary,
                             resumedBoundary.fallbackState,
                             fallbackAbortSet,
-                            [key[0], "Suspense Fallback", key[2]],
+                            [ref[0], "Suspense Fallback", ref[2]],
                             task.formatContext,
                             task.legacyContext,
                             task.context,
                             task.treeContext,
-                            suspenseComponentStack,
+                            refProp,
                             !0
                           );
                           request.pingedTasks.push(childNodes);
@@ -5755,7 +5822,17 @@ __DEV__ &&
                     }
                   }
                 }
-              else renderElement(request, task, key, type, props, ref);
+              else
+                renderElement(
+                  request,
+                  task,
+                  key,
+                  type,
+                  props,
+                  ref,
+                  refProp,
+                  null
+                );
               return;
             case REACT_PORTAL_TYPE:
               throw Error(
@@ -5763,9 +5840,13 @@ __DEV__ &&
               );
             case REACT_LAZY_TYPE:
               childNodes = task.componentStack;
-              task.componentStack = createBuiltInComponentStack(task, "Lazy");
-              type = node$jscomp$0._init;
-              node$jscomp$0 = type(node$jscomp$0._payload);
+              task.componentStack = createBuiltInComponentStack(
+                task,
+                "Lazy",
+                null,
+                null
+              );
+              node$jscomp$0 = callLazyInitInDEV(node$jscomp$0);
               task.componentStack = childNodes;
               renderNodeDestructive(request, task, node$jscomp$0, childIndex);
               return;
@@ -5775,13 +5856,13 @@ __DEV__ &&
             return;
           }
           null === node$jscomp$0 || "object" !== typeof node$jscomp$0
-            ? (type = null)
+            ? (refProp = null)
             : ((childNodes =
                 (MAYBE_ITERATOR_SYMBOL &&
                   node$jscomp$0[MAYBE_ITERATOR_SYMBOL]) ||
                 node$jscomp$0["@@iterator"]),
-              (type = "function" === typeof childNodes ? childNodes : null));
-          if (type && (childNodes = type.call(node$jscomp$0))) {
+              (refProp = "function" === typeof childNodes ? childNodes : null));
+          if (refProp && (childNodes = refProp.call(node$jscomp$0))) {
             if (childNodes === node$jscomp$0) {
               if (
                 -1 !== childIndex ||
@@ -5798,7 +5879,7 @@ __DEV__ &&
                   ),
                   (didWarnAboutGenerators = !0);
             } else
-              node$jscomp$0.entries !== type ||
+              node$jscomp$0.entries !== refProp ||
                 didWarnAboutMaps ||
                 (error$jscomp$2(
                   "Using Maps as children is not supported. Use an array of keyed ReactElements instead."
@@ -5806,12 +5887,12 @@ __DEV__ &&
                 (didWarnAboutMaps = !0));
             node$jscomp$0 = childNodes.next();
             if (!node$jscomp$0.done) {
-              type = [];
+              refProp = [];
               do
-                type.push(node$jscomp$0.value),
+                refProp.push(node$jscomp$0.value),
                   (node$jscomp$0 = childNodes.next());
               while (!node$jscomp$0.done);
-              renderChildrenArray(request, task, type, childIndex);
+              renderChildrenArray(request, task, refProp, childIndex);
             }
             return;
           }
@@ -5978,33 +6059,68 @@ __DEV__ &&
           null == didWarnForKey &&
             (didWarnForKey = request.didWarnForKey = new WeakSet());
           request = node.componentStack;
-          null === request ||
-            didWarnForKey.has(request) ||
-            (didWarnForKey.add(request),
-            (didWarnForKey = node),
-            (resumeSegmentID = resumeSegmentID.type),
-            (resumeSegmentID =
-              "string" === typeof resumeSegmentID
-                ? createBuiltInComponentStack(didWarnForKey, resumeSegmentID)
-                : resumeSegmentID.prototype &&
-                  resumeSegmentID.prototype.isReactComponent
+          if (null !== request && !didWarnForKey.has(request)) {
+            didWarnForKey.add(request);
+            didWarnForKey = getComponentNameFromType(resumeSegmentID.type);
+            var childOwner = resumeSegmentID._owner,
+              parentOwner = request.owner;
+            request = "";
+            if (parentOwner && "number" === typeof parentOwner.tag) {
+              var name = getComponentNameFromType(parentOwner.type);
+              name &&
+                (request = "\n\nCheck the render method of `" + name + "`.");
+            }
+            request ||
+              (didWarnForKey &&
+                (request =
+                  "\n\nCheck the top-level render call using <" +
+                  didWarnForKey +
+                  ">."));
+            didWarnForKey = "";
+            null != childOwner &&
+              parentOwner !== childOwner &&
+              ((parentOwner = null),
+              "number" === typeof childOwner.tag
+                ? (parentOwner = getComponentNameFromType(childOwner.type))
+                : "string" === typeof childOwner.name &&
+                  (parentOwner = childOwner.name),
+              parentOwner &&
+                (didWarnForKey =
+                  " It was passed a child from " + parentOwner + "."));
+            childOwner = node;
+            parentOwner = resumeSegmentID.type;
+            resumeSegmentID = resumeSegmentID._owner;
+            resumeSegmentID =
+              "string" === typeof parentOwner
+                ? createBuiltInComponentStack(
+                    childOwner,
+                    parentOwner,
+                    resumeSegmentID,
+                    null
+                  )
+                : parentOwner.prototype &&
+                  parentOwner.prototype.isReactComponent
                 ? {
                     tag: 2,
-                    parent: didWarnForKey.componentStack,
-                    type: resumeSegmentID
+                    parent: childOwner.componentStack,
+                    type: parentOwner,
+                    owner: resumeSegmentID,
+                    stack: null
                   }
-                : {
-                    tag: 1,
-                    parent: didWarnForKey.componentStack,
-                    type: resumeSegmentID
-                  }),
-            (node.componentStack = resumeSegmentID),
+                : createFunctionComponentStack(
+                    childOwner,
+                    parentOwner,
+                    resumeSegmentID,
+                    null
+                  );
+            node.componentStack = resumeSegmentID;
             error$jscomp$2(
               'Each child in a list should have a unique "key" prop.%s%s See https://react.dev/link/warning-keys for more information.',
-              "",
-              ""
-            ),
-            (node.componentStack = resumeSegmentID.parent));
+              request,
+              didWarnForKey
+            );
+            node.componentStack = resumeSegmentID.parent;
+          }
         }
         task.treeContext = pushTreeContext(replay, replayNodes, j);
         renderNode(request$jscomp$0, task, childIndex, j);
@@ -8690,12 +8806,15 @@ __DEV__ &&
     HooksDispatcher.useFormState = useActionState;
     HooksDispatcher.useActionState = useActionState;
     var currentResumableState = null,
+      currentTaskInDEV = null,
       DefaultAsyncDispatcher = {
         getCacheForType: function () {
           throw Error("Not implemented.");
         },
         getOwner: function () {
-          return null;
+          return null === currentTaskInDEV
+            ? null
+            : currentTaskInDEV.componentStack;
         }
       },
       disabledDepth = 0,
@@ -8718,7 +8837,6 @@ __DEV__ &&
       FLUSHED = 2,
       POSTPONED = 5,
       currentRequest = null,
-      currentTaskInDEV = null,
       didWarnAboutBadClass = {},
       didWarnAboutContextTypeOnFunctionComponent = {},
       didWarnAboutGetDerivedStateOnFunctionComponent = {},
@@ -8742,5 +8860,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-e02baf6c92-20240627";
+    exports.version = "19.0.0-www-modern-315109b02b-20240701";
   })();
