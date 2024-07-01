@@ -139,7 +139,7 @@ export default {
     }
   },
 
-  report(): void {
+  report(verboseErrors: boolean): void {
     const totalComponents =
       SucessfulCompilation.length +
       countUniqueLocInEvents(OtherFailures) +
@@ -149,5 +149,26 @@ export default {
         `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`
       )
     );
-  },
+
+    if (verboseErrors) {
+     console.log(
+      chalk.bold(
+        chalk.red(
+         `Failed to compile ${OtherFailures.length} components due to non-actionable errors.`
+      ))
+    );
+    OtherFailures.forEach((failure) => {
+      console.log(chalk.red(`Error details for ${failure.filename}:`) + ' ' + failure.detail.reason + '\n');
+    });
+    console.log(
+      chalk.bold(chalk.red(
+        `Failed to compile ${ActionableFailures.length} components due to actionable errors.`
+      ))
+  );
+    ActionableFailures.forEach((failure) => {
+      console.log(chalk.red(`Error details for ${failure.filename}:`) + ' ' + failure.detail.reason + '\n');
+    });
+  }
+
+  }
 };
