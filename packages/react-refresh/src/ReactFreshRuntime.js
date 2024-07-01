@@ -192,10 +192,7 @@ export function performReactRefresh(): RefreshUpdate | null {
       'Unexpected call to React Refresh in a production environment.',
     );
   }
-  if (pendingUpdates.length === 0) {
-    return null;
-  }
-  if (isPerformingRefresh) {
+  if (pendingUpdates.length === 0 || isPerformingRefresh) {
     return null;
   }
 
@@ -698,13 +695,13 @@ export function isLikelyComponentType(type: any): boolean {
             return true;
           }
           const ownNames = Object.getOwnPropertyNames(type.prototype);
-          if (ownNames.length > 1 || ownNames[0] !== 'constructor') {
-            // This looks like a class.
-            return false;
-          }
-          // eslint-disable-next-line no-proto
-          if (type.prototype.__proto__ !== Object.prototype) {
-            // It has a superclass.
+          if (
+            ownNames.length > 1 ||
+            ownNames[0] !== 'constructor' ||
+            // eslint-disable-next-line no-proto
+            type.prototype.__proto__ !== Object.prototype
+          ) {
+            // This looks like a class or it has a superclass.
             return false;
           }
           // Pass through.
