@@ -7,10 +7,44 @@ on:
     paths-ignore:
       - 'compiler/**'
 
+env:
+  WORKER_COUNT: 20
+
 jobs:
+  define_build_params:
+    name: Build build params
+    runs-on: ubuntu-latest
+    outputs:
+      worker_id: ${{ steps.define_worker_id.outputs.result }}
+      release_channel:  ${{ steps.define_release_channels.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        id: define_worker_id
+        with:
+          script: |
+            function range(from, to) {
+              const arr = [];
+              for (let n = from; n < to; n++) {
+                arr.push(n);
+              }
+              return arr;
+            }
+            return range(0, process.env.WORKER_COUNT);
+      - uses: actions/github-script@v7
+        id: define_release_channels
+        with:
+          script: |
+            return ["stable", "experimental"];
+
   build:
     name: yarn build
     runs-on: ubuntu-latest
+    needs: define_build_params
+    strategy:
+      matrix:
+        worker_id: ${{ fromJSON(needs.define_build_params.outputs.worker_id) }}
+        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,13 +59,18 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build
-      - name: Cache build
-        uses: actions/cache@v4
-        id: build_cache
+      - run: yarn build --index=${{ matrix.worker_id }} --total=${{ env.WORKER_COUNT }} --r=${{ matrix.release_channel }} --ci=github
+        env:
+          CI: github
+          RELEASE_CHANNEL: ${{ matrix.release_channel }}
+      - name: Display structure of build
+        run: ls -R build
+      - name: Archive build
+        uses: actions/upload-artifact@v4
         with:
-          path: "build/**"
-          key: yarn-build-${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          name: build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
+          path: |
+            build
 
   lint_build:
     name: yarn lint-build
@@ -50,11 +89,12 @@ jobs:
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
-      - name: Restore cached build
-        uses: actions/cache@v4
-        id: build_cache
-        with:
-          path: "build/**"
-          key: yarn-build-${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
       - run: yarn lint-build
