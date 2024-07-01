@@ -21,6 +21,7 @@ import type {
   Thenable,
   ReactFormState,
   ReactComponentInfo,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -885,6 +886,41 @@ function createClassComponentStack(
     parent: task.componentStack,
     type,
   };
+}
+function createServerComponentStack(
+  task: Task,
+  debugInfo: void | null | ReactDebugInfo,
+): null | ComponentStackNode {
+  // Build a Server Component parent stack from the debugInfo.
+  if (__DEV__) {
+    let node = task.componentStack;
+    if (debugInfo != null) {
+      const stack: ReactDebugInfo = debugInfo;
+      for (let i = 0; i < stack.length; i++) {
+        const componentInfo: ReactComponentInfo = (stack[i]: any);
+        if (typeof componentInfo.name !== 'string') {
+          continue;
+        }
+        let name = componentInfo.name;
+        const env = componentInfo.env;
+        if (env) {
+          name += ' (' + env + ')';
+        }
+        node = {
+          tag: 3,
+          parent: node,
+          type: name,
+          owner: componentInfo.owner,
+          stack: componentInfo.stack,
+        };
+      }
+    }
+    return node;
+  }
+  // eslint-disable-next-line react-internal/prod-error-codes
+  throw new Error(
+    'createServerComponentStack should never be called in production. This is a bug in React.',
+  );
 }
 
 function createComponentStackFromType(
@@ -1982,6 +2018,7 @@ function renderLazyComponent(
   stack: null | Error, // DEV only
 ): void {
   const previousComponentStack = task.componentStack;
+  // TODO: Do we really need this stack frame? We don't on the client.
   task.componentStack = createBuiltInComponentStack(task, 'Lazy', owner, stack);
   let Component;
   if (__DEV__) {
@@ -2533,72 +2570,90 @@ function renderNodeDestructive(
         const owner = __DEV__ ? element._owner : null;
         const stack = __DEV__ && enableOwnerStacks ? element._debugStack : null;
 
+        const previousComponentStack = task.componentStack;
+        if (__DEV__) {
+          task.componentStack = createServerComponentStack(
+            task,
+            element._debugInfo,
+          );
+        }
+
         const name = getComponentNameFromType(type);
         const keyOrIndex =
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;
         const keyPath = [task.keyPath, name, keyOrIndex];
         if (task.replay !== null) {
-          if (__DEV__ && enableOwnerStacks) {
-            const debugTask: null | ConsoleTask = element._debugTask;
-            if (debugTask) {
-              debugTask.run(
-                replayElement.bind(
-                  null,
-                  request,
-                  task,
-                  keyPath,
-                  name,
-                  keyOrIndex,
-                  childIndex,
-                  type,
-                  props,
-                  ref,
-                  task.replay,
-                  owner,
-                  stack,
-                ),
-              );
-              return;
-            }
+          const debugTask: null | ConsoleTask =
+            __DEV__ && enableOwnerStacks ? element._debugTask : null;
+          if (debugTask) {
+            debugTask.run(
+              replayElement.bind(
+                null,
+                request,
+                task,
+                keyPath,
+                name,
+                keyOrIndex,
+                childIndex,
+                type,
+                props,
+                ref,
+                task.replay,
+                owner,
+                stack,
+              ),
+            );
+          } else {
+            replayElement(
+              request,
+              task,
+              keyPath,
+              name,
+              keyOrIndex,
+              childIndex,
+              type,
+              props,
+              ref,
+              task.replay,
+              owner,
+              stack,
+            );
           }
-          replayElement(
-            request,
-            task,
-            keyPath,
-            name,
-            keyOrIndex,
-            childIndex,
-            type,
-            props,
-            ref,
-            task.replay,
-            owner,
-            stack,
-          );
           // No matches found for this node. We assume it's already emitted in the
           // prelude and skip it during the replay.
         } else {
           // We're doing a plain render.
-          if (__DEV__ && enableOwnerStacks) {
-            const debugTask: null | ConsoleTask = element._debugTask;
-            if (debugTask) {
-              debugTask.run(
-                renderElement.bind(
-                  null,
-                  request,
-                  task,
-                  keyPath,
-                  type,
-                  props,
-                  ref,
-                  owner,
-                  stack,
-                ),
-              );
-              return;
-            }
+          const debugTask: null | ConsoleTask =
+            __DEV__ && enableOwnerStacks ? element._debugTask : null;
+          if (debugTask) {
+            debugTask.run(
+              renderElement.bind(
+                null,
+                request,
+                task,
+                keyPath,
+                type,
+                props,
+                ref,
+                owner,
+                stack,
+              ),
+            );
+          } else {
+            renderElement(
+              request,
+              task,
+              keyPath,
+              type,
+              props,
+              ref,
+              owner,
+              stack,
+            );
           }
-          renderElement(request, task, keyPath, type, props, ref, owner, stack);
+        }
+        if (__DEV__) {
+          task.componentStack = previousComponentStack;
         }
         return;
       }
@@ -2608,14 +2663,23 @@ function renderNodeDestructive(
             'Render them conditionally so that they only appear on the client render.',
         );
       case REACT_LAZY_TYPE: {
-        const previousComponentStack = task.componentStack;
-        task.componentStack = createBuiltInComponentStack(
-          task,
-          'Lazy',
-          null,
-          null,
-        );
         const lazyNode: LazyComponentType<any, any> = (node: any);
+        const previousComponentStack = task.componentStack;
+        if (__DEV__) {
+          task.componentStack = createServerComponentStack(
+            task,
+            lazyNode._debugInfo,
+          );
+        }
+        if (!__DEV__ || task.componentStack === previousComponentStack) {
+          // TODO: Do we really need this stack frame? We don't on the client.
+          task.componentStack = createBuiltInComponentStack(
+            task,
+            'Lazy',
+            null,
+            null,
+          );
+        }
         let resolvedNode;
         if (__DEV__) {
           resolvedNode = callLazyInitInDEV(lazyNode);
@@ -2746,12 +2810,23 @@ function renderNodeDestructive(
       // Clear any previous thenable state that was created by the unwrapping.
       task.thenableState = null;
       const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
-      return renderNodeDestructive(
+      const previousComponentStack = task.componentStack;
+      if (__DEV__) {
+        task.componentStack = createServerComponentStack(
+          task,
+          thenable._debugInfo,
+        );
+      }
+      const result = renderNodeDestructive(
         request,
         task,
         unwrapThenable(thenable),
         childIndex,
       );
+      if (__DEV__) {
+        task.componentStack = previousComponentStack;
+      }
+      return result;
     }
 
     if (maybeUsable.$$typeof === REACT_CONTEXT_TYPE) {
@@ -2982,6 +3057,15 @@ function renderChildrenArray(
   childIndex: number,
 ): void {
   const prevKeyPath = task.keyPath;
+  const previousComponentStack = task.componentStack;
+  if (__DEV__) {
+    // We read debugInfo from task.node instead of children because it might have been an
+    // unwrapped iterable so we read from the original node.
+    task.componentStack = createServerComponentStack(
+      task,
+      (task.node: any)._debugInfo,
+    );
+  }
   if (childIndex !== -1) {
     task.keyPath = [task.keyPath, 'Fragment', childIndex];
     if (task.replay !== null) {
@@ -2993,6 +3077,9 @@ function renderChildrenArray(
         childIndex,
       );
       task.keyPath = prevKeyPath;
+      if (__DEV__) {
+        task.componentStack = previousComponentStack;
+      }
       return;
     }
   }
@@ -3023,6 +3110,9 @@ function renderChildrenArray(
       }
       task.treeContext = prevTreeContext;
       task.keyPath = prevKeyPath;
+      if (__DEV__) {
+        task.componentStack = previousComponentStack;
+      }
       return;
     }
   }
@@ -3042,6 +3132,9 @@ function renderChildrenArray(
   // only need to reset it to the previous value at the very end.
   task.treeContext = prevTreeContext;
   task.keyPath = prevKeyPath;
+  if (__DEV__) {
+    task.componentStack = previousComponentStack;
+  }
 }
 
 function trackPostpone(
