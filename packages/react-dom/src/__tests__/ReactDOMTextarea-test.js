@@ -815,6 +815,32 @@ describe('ReactDOMTextarea', () => {
     expect(set.mock.calls.length).toBe(0);
   });
 
+  it('does not update defaultValue of DOM node if minLength or maxLength are set', () => {
+    const container = document.createElement('div');
+    let node;
+    ReactDOM.render(
+      <textarea
+        ref={n => (node = n)}
+        value="foo"
+        onChange={emptyFunction}
+        minLength={10}
+      />,
+      container,
+    );
+    expect(node.defaultValue).toBe('foo');
+
+    ReactDOM.render(
+      <textarea
+        ref={n => (node = n)}
+        value="food"
+        onChange={emptyFunction}
+        minLength={10}
+      />,
+      container,
+    );
+    expect(node.defaultValue).toBe('foo');
+  });
+
   describe('When given a Symbol value', () => {
     it('treats initial Symbol value as an empty string', async () => {
       const container = document.createElement('div');
