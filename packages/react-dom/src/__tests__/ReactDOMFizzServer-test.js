@@ -8229,7 +8229,9 @@ describe('ReactDOMFizzServer', () => {
             onError(error, errorInfo) {
               caughtError = error;
               parentStack = errorInfo.componentStack;
-              ownerStack = React.captureOwnerStack();
+              ownerStack = React.captureOwnerStack
+                ? React.captureOwnerStack()
+                : null;
             },
           },
         );
