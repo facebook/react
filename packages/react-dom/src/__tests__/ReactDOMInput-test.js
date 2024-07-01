@@ -1815,6 +1815,73 @@ describe('ReactDOMInput', () => {
     expect(isCheckedDirty(bNode)).toBe(true);
     assertInputTrackingIsCurrent(container);
   });
+  it('should checkbox be uncheck then check then uncheck', () => {
+    const App = () => {
+      const [s, setS] = React.useState(false);
+
+      return (
+        <div>
+          <input
+            type="checkbox"
+            checked={s}
+            onChange={() => {
+              setS(!s);
+            }}
+          />
+          <p>{s.toString()}</p>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, container);
+
+    expect(container.querySelector('input').checked).toBe(false);
+    expect(container.querySelector('p').innerHTML).toBe('false');
+
+    container.querySelector('input').click(); // we check
+
+    expect(container.querySelector('input').checked).toBe(true);
+    expect(container.querySelector('p').innerHTML).toBe('true');
+
+    container.querySelector('input').click(); // we uncheck
+
+    expect(container.querySelector('input').checked).toBe(false);
+    expect(container.querySelector('p').innerHTML).toBe('false');
+  });
+
+  it('should be unchecked then checked', () => {
+    const App = () => {
+      const [s, setS] = React.useState(false);
+
+      return (
+        <div
+          onClick={e => {
+            e.preventDefault(); // the problem
+          }}>
+          <input
+            type="checkbox"
+            checked={s}
+            onChange={() => {
+              setS(!s);
+            }}
+          />
+          <p>{s.toString()}</p>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, container);
+
+    expect(container.querySelector('input').checked).toBe(false);
+    expect(container.querySelector('p').innerHTML).toBe('false');
+
+    container.querySelector('input').click(); // check
+
+    expect(container.querySelector('p').innerHTML).toBe('true');
+    expect(container.querySelector('input').checked).toBe(true); // bug : is not true
+
+    // input is broken
+  });
 
   it('should control radio buttons if the tree updates during render (case 2; #26876)', async () => {
     let thunk = null;
