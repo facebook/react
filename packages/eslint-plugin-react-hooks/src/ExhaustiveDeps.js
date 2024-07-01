@@ -837,8 +837,8 @@ export default {
                   fix(fixer) {
                     const [before, after] =
                       wrapperHook === 'useMemo'
-                        ? [`useMemo(() => { return `, '; })']
-                        : ['useCallback(', ')'];
+                        ? [`useMemo(() => { return `, '; }, [])']
+                        : ['useCallback(', ', [])'];
                     return [
                       // TODO: also add an import?
                       fixer.insertTextBefore(construction.node.init, before),
