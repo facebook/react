@@ -214,7 +214,7 @@ export function trackUsedThenable<T>(
       }
 
       // Check one more time in case the thenable resolved synchronously.
-      switch (thenable.status) {
+      switch ((thenable: Thenable<T>).status) {
         case 'fulfilled': {
           const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
           return fulfilledThenable.value;
