@@ -39,7 +39,7 @@ export async function symbolicateSourceWithCache(
 }
 
 const SOURCE_MAP_ANNOTATION_PREFIX = 'sourceMappingURL=';
-async function symbolicateSource(
+export async function symbolicateSource(
   fetchFileWithCaching: FetchFileWithCaching,
   sourceURL: string,
   lineNumber: number, // 1-based
@@ -63,14 +63,15 @@ async function symbolicateSource(
       const sourceMapAnnotationStartIndex = resourceLine.indexOf(
         SOURCE_MAP_ANNOTATION_PREFIX,
       );
-      const sourceMapURL = resourceLine.slice(
+      const sourceMapAt = resourceLine.slice(
         sourceMapAnnotationStartIndex + SOURCE_MAP_ANNOTATION_PREFIX.length,
         resourceLine.length,
       );
 
-      const sourceMap = await fetchFileWithCaching(
-        new URL(sourceMapURL, sourceURL).toString(),
-      ).catch(() => null);
+      const sourceMapURL = new URL(sourceMapAt, sourceURL).toString();
+      const sourceMap = await fetchFileWithCaching(sourceMapURL).catch(
+        () => null,
+      );
       if (sourceMap != null) {
         try {
           const parsedSourceMap = JSON.parse(sourceMap);
@@ -84,16 +85,21 @@ async function symbolicateSource(
             columnNumber, // 1-based
           });
 
+          if (possiblyURL === null) {
+            return null;
+          }
           try {
-            void new URL(possiblyURL); // This is a valid URL
+            // sourceMapURL=https://...
+            void new URL(possiblyURL); // test if it is a valid URL
             const normalizedURL = normalizeUrl(possiblyURL);
 
             return {sourceURL: normalizedURL, line, column};
           } catch (e) {
             // This is not valid URL
-            // /path or X:\\path
             if (
+              // sourceMapURL=/file
               possiblyURL.startsWith('/') ||
+              // sourceMapURL=C:\\...
               possiblyURL.slice(1).startsWith(':\\\\')
             ) {
               // This is an absolute path
@@ -101,6 +107,7 @@ async function symbolicateSource(
             }
 
             // This is a relative path
+            // sourceMapURL=x.js.map
             const absoluteSourcePath = new URL(
               possiblyURL,
               sourceMapURL,
