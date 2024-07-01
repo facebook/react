@@ -20,7 +20,7 @@ function componentB(props) {
 ```javascript
 function componentA(props) {
   let t = `hello ${props.a}, ${props.b}!`;
-  t = t + ``;
+  t = t + "";
   return t;
 }
 

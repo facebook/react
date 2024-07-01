@@ -472,6 +472,51 @@ function evaluateInstruction(
       }
       return null;
     }
+    case "TemplateLiteral": {
+      if (value.quasis.some((q) => q.cooked === undefined)) {
+        return null;
+      }
+
+      if (value.subexprs.length === 0) {
+        const result: InstructionValue = {
+          kind: "Primitive",
+          value: value.quasis.map((q) => q.cooked).join(""),
+          loc: value.loc,
+        };
+        instr.value = result;
+        return result;
+      }
+
+      const subExpressionValues = value.subexprs.map((subExpr) =>
+        read(constants, subExpr)
+      );
+
+      let resultString = value.quasis[0].cooked;
+      let quasiIndex = 1;
+      for (const subExprValue of subExpressionValues) {
+        if (
+          !subExprValue ||
+          subExprValue.kind !== "Primitive" ||
+          subExprValue.value === null ||
+          subExprValue.value === undefined
+        ) {
+          return null;
+        }
+
+        const suffix = value.quasis[quasiIndex].cooked;
+        resultString += subExprValue.value.toString() + suffix;
+        ++quasiIndex;
+      }
+
+      const result: InstructionValue = {
+        kind: "Primitive",
+        value: resultString,
+        loc: value.loc,
+      };
+
+      instr.value = result;
+      return result;
+    }
     case "PropertyLoad": {
       const objectValue = read(constants, value.object);
       if (objectValue !== null) {
