@@ -538,6 +538,16 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
+          useCustomEffectExtended(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [{additionalHooks: '^useCustomEffect$'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
           useWithoutEffectSuffix(() => {
             console.log(props.foo);
           }, []);
@@ -3607,6 +3617,43 @@ const tests = {
                     console.log(props.foo);
                   }, [props.foo]);
                   React.useCustomEffect(() => {
+                    console.log(props.foo);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          }, []);
+
+          useCustomEffectExtended(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [{additionalHooks: '^useCustomEffect$'}],
+      errors: [
+        {
+          message:
+            "React Hook useCustomEffect has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomEffect(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+        
+                  useCustomEffectExtended(() => {
                     console.log(props.foo);
                   }, []);
                 }
