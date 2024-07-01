@@ -87,6 +87,25 @@ Component.prototype.forceUpdate = function (callback) {
 };
 
 /**
+ * Forces an update in SyncLane. This should only be invoked when it is known
+ * with certainty that we are **not** in a DOM transaction and need the changes
+ * to be scheduled immediately.
+ *
+ * You may want to call this when you know that some deeper aspect of the
+ * component's state has changed but `setState` was not called.
+ *
+ * This will not invoke `shouldComponentUpdate`, but it will invoke
+ * `componentWillUpdate` and `componentDidUpdate`.
+ *
+ * @param {?function} callback Called after update is complete.
+ * @final
+ * @protected
+ */
+Component.prototype.forceSyncUpdate = function (callback) {
+  this.updater.enqueueForceSyncUpdate(this, callback, 'forceSyncUpdate');
+};
+
+/**
  * Deprecated APIs. These APIs used to exist on classic React classes but since
  * we would like to deprecate them, we're not going to move them over to this
  * modern base class. Instead, we define a getter that warns if it's accessed.

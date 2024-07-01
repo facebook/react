@@ -144,6 +144,19 @@ const classComponentUpdater = {
       }
     }
   },
+  // $FlowFixMe[missing-local-annot]
+  enqueueForceSyncUpdate(inst: any, callback) {
+    const internals: InternalInstance = getInstance(inst);
+    if (internals.queue === null) {
+      warnNoop(inst, 'forceSyncUpdate');
+    } else {
+      if (__DEV__) {
+        if (callback !== undefined && callback !== null) {
+          warnOnInvalidCallback(callback);
+        }
+      }
+    }
+  },
 };
 
 function applyDerivedStateFromProps(

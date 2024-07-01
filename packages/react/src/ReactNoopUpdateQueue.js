@@ -64,6 +64,26 @@ const ReactNoopUpdateQueue = {
   },
 
   /**
+   * Forces an update in SyncLane. This should only be invoked when it is known
+   * with certainty that we are **not** in a DOM transaction and need the changes
+   * to be scheduled immediately.
+   *
+   * You may want to call this when you know that some deeper aspect of the
+   * component's state has changed but `setState` was not called.
+   *
+   * This will not invoke `shouldComponentUpdate`, but it will invoke
+   * `componentWillUpdate` and `componentDidUpdate`.
+   *
+   * @param {ReactClass} publicInstance The instance that should rerender.
+   * @param {?function} callback Called after component is updated.
+   * @param {?string} callerName name of the calling function in the public API.
+   * @internal
+   */
+  enqueueForceSyncUpdate: function (publicInstance, callback, callerName) {
+    warnNoop(publicInstance, 'forceSyncUpdate');
+  },
+
+  /**
    * Replaces all of the state. Always use this or `setState` to mutate state.
    * You should treat `this.state` as immutable.
    *
