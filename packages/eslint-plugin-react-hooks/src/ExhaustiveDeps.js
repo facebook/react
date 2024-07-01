@@ -110,6 +110,23 @@ export default {
         return result;
       };
     }
+    function checkTypeOfParent(dependencyNode) {
+      let currentNode = dependencyNode.parent;
+      let foundMatch = false;
+
+      while (currentNode) {
+        if (
+          currentNode.type === 'TSTypeQuery' ||
+          currentNode.type === 'TSTypeReference'
+        ) {
+          foundMatch = true;
+          break;
+        }
+        currentNode = currentNode.parent;
+      }
+
+      return foundMatch;
+    }
     /**
      * Visitor for both function expressions and arrow function expressions.
      */
@@ -454,10 +471,7 @@ export default {
             });
           }
 
-          if (
-            dependencyNode.parent.type === 'TSTypeQuery' ||
-            dependencyNode.parent.type === 'TSTypeReference'
-          ) {
+          if (checkTypeOfParent(dependencyNode)) {
             continue;
           }
 

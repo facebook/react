@@ -7791,6 +7791,17 @@ const testsTypescript = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [foo, setFoo] = useState<{ bar: { b: number } }>({ bar: { b: 42 } });
+          useEffect(() => {
+            const square = (x: typeof foo.bar.b) => x * x;
+            setFoo((previous) => ({ ...previous, bar: { b: square(previous.bar.b) } }));
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -8141,6 +8152,40 @@ const testsTypescript = {
             "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
             "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [foo, setFoo] = useState<{ bar: { b: number } }>({ bar: { b: 42 } });
+
+          useEffect(() => {
+            const square = () => foo.bar.b * foo.bar.b;
+            setFoo((previous) => ({ ...previous, bar: { b: square() } }));
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'foo.bar.b'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [foo.bar.b]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const [foo, setFoo] = useState<{ bar: { b: number } }>({ bar: { b: 42 } });
+
+                  useEffect(() => {
+                    const square = () => foo.bar.b * foo.bar.b;
+                    setFoo((previous) => ({ ...previous, bar: { b: square() } }));
+                  }, [foo.bar.b]);
+                }
+              `,
+            },
+          ],
         },
       ],
     },
