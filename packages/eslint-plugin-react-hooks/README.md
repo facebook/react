@@ -42,7 +42,9 @@ If you want more fine-grained configuration, you can instead add a snippet like 
   "rules": {
     // ...
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": ["warn", {
+      "avoidObjects": true
+    }]
   }
 }
 ```
@@ -58,7 +60,8 @@ This option accepts a regex to match the names of custom Hooks that have depende
   "rules": {
     // ...
     "react-hooks/exhaustive-deps": ["warn", {
-      "additionalHooks": "(useMyCustomHook|useMyOtherCustomHook)"
+      "additionalHooks": "(useMyCustomHook|useMyOtherCustomHook)",
+      "avoidObjects": true
     }]
   }
 }

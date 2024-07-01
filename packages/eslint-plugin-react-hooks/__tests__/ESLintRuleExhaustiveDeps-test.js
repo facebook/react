@@ -7469,6 +7469,57 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent(obj) {
+          useEffect(() => {}, [obj]);
+          useLayoutEffect(() => {}, [obj]);
+          useCallback(() => {}, [obj]);
+          useMemo(() => {}, [obj]);
+        }
+      `,
+      // const { value } = query;
+      // console.log(value);
+      errors: [
+        {
+          message:
+            "React Hook useEffect has an object in its dependency array: 'obj'. " +
+            'Non-primitive dependencies may cause the hook to execute unnecessarily. ' +
+            'Consider destructuring the object outside the useEffect call or using ' +
+            'property accessors to refer to primitive values within the dependency ' +
+            'array.',
+          suggestions: undefined,
+        },
+        {
+          message:
+            "React Hook useLayoutEffect has an object in its dependency array: 'obj'. " +
+            'Non-primitive dependencies may cause the hook to execute unnecessarily. ' +
+            'Consider destructuring the object outside the useLayoutEffect call or ' +
+            'using property accessors to refer to primitive values within the ' +
+            'dependency array.',
+          suggestions: undefined,
+        },
+        {
+          message:
+            "React Hook useCallback has an object in its dependency array: 'obj'. " +
+            'Non-primitive dependencies may cause the hook to execute unnecessarily. ' +
+            'Consider destructuring the object outside the useCallback call or ' +
+            'using property accessors to refer to primitive values within the ' +
+            'dependency array.',
+          suggestions: undefined,
+        },
+        {
+          message:
+            "React Hook useMemo has an object in its dependency array: 'obj'. " +
+            'Non-primitive dependencies may cause the hook to execute unnecessarily. ' +
+            'Consider destructuring the object outside the useMemo call or ' +
+            'using property accessors to refer to primitive values within the ' +
+            'dependency array.',
+          suggestions: undefined,
+        },
+      ],
+      options: [{avoidObjects: true}],
+    },
+    {
+      code: normalizeIndent`
         function Foo() {
           const foo = <>Hi!</>;
           useMemo(() => {

@@ -29,6 +29,9 @@ export default {
           additionalHooks: {
             type: 'string',
           },
+          avoidObjects: {
+            type: 'boolean',
+          },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
@@ -45,6 +48,9 @@ export default {
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
 
+    const avoidObjects =
+      context.options && context.options[0] && context.options[0].avoidObjects;
+
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
       (context.options &&
         context.options[0] &&
@@ -53,6 +59,7 @@ export default {
 
     const options = {
       additionalHooks,
+      avoidObjects,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
     };
 
@@ -666,6 +673,24 @@ export default {
         arrayExpression.elements.forEach(declaredDependencyNode => {
           // Skip elided elements.
           if (declaredDependencyNode === null) {
+            return;
+          }
+          // If we see an object then add a special warning if the avoidObjects option is true.
+          if (
+            declaredDependencyNode.type === 'Identifier' &&
+            options &&
+            options.avoidObjects
+          ) {
+            reportProblem({
+              node: declaredDependencyNode,
+              message:
+                `React Hook ${context.getSource(reactiveHook)} has an object ` +
+                `in its dependency array: '${declaredDependencyNode.name}'. ` +
+                'Non-primitive dependencies may cause the hook to execute ' +
+                'unnecessarily. Consider destructuring the object outside ' +
+                `the ${reactiveHookName} call or using property accessors ` +
+                'to refer to primitive values within the dependency array.',
+            });
             return;
           }
           // If we see a spread element then add a special warning.
