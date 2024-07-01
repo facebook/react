@@ -803,7 +803,7 @@ function handleRollupError(error) {
   }
 }
 
-async function buildEverything(bundleTypeToBuild) {
+async function buildEverything(index, total) {
   if (!argv['unsafe-partial']) {
     await asyncRimRaf('build');
   }
@@ -840,10 +840,9 @@ async function buildEverything(bundleTypeToBuild) {
     return !shouldSkipBundle(bundle, bundleType);
   });
 
-  // TODO: cleanup the rest of this function
-  bundles = bundles.filter(
-    ([, bundleType]) => bundleType === bundleTypeToBuild
-  );
+  const nodeTotal = parseInt(total, 10);
+  const nodeIndex = parseInt(index, 10);
+  bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
 
   await Promise.all(
     bundles.map(([bundle, bundleType]) => createBundle(bundle, bundleType))
