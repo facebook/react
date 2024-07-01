@@ -2922,6 +2922,41 @@ function warnForMissingKey(request: Request, task: Task, child: mixed): void {
     }
     didWarnForKey.add(parentStackFrame);
 
+    const componentName = getComponentNameFromType(child.type);
+    const childOwner = child._owner;
+    const parentOwner = parentStackFrame.owner;
+
+    let currentComponentErrorInfo = '';
+    if (parentOwner && typeof parentOwner.tag === 'number') {
+      const name = getComponentNameFromType((parentOwner: any).type);
+      if (name) {
+        currentComponentErrorInfo =
+          '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
+    if (!currentComponentErrorInfo) {
+      if (componentName) {
+        currentComponentErrorInfo = `\n\nCheck the top-level render call using <${componentName}>.`;
+      }
+    }
+
+    // Usually the current owner is the offender, but if it accepts children as a
+    // property, it may be the creator of the child that's responsible for
+    // assigning it a key.
+    let childOwnerAppendix = '';
+    if (childOwner != null && parentOwner !== childOwner) {
+      let ownerName = null;
+      if (typeof childOwner.tag === 'number') {
+        ownerName = getComponentNameFromType((childOwner: any).type);
+      } else if (typeof childOwner.name === 'string') {
+        ownerName = childOwner.name;
+      }
+      if (ownerName) {
+        // Give the component that originally created this child.
+        childOwnerAppendix = ` It was passed a child from ${ownerName}.`;
+      }
+    }
+
     // We create a fake component stack for the child to log the stack trace from.
     const stackFrame = createComponentStackFromType(
       task,
@@ -2933,8 +2968,8 @@ function warnForMissingKey(request: Request, task: Task, child: mixed): void {
     console.error(
       'Each child in a list should have a unique "key" prop.' +
         '%s%s See https://react.dev/link/warning-keys for more information.',
-      '',
-      '',
+      currentComponentErrorInfo,
+      childOwnerAppendix,
     );
     task.componentStack = stackFrame.parent;
   }

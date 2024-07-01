@@ -1837,9 +1837,7 @@ describe('ReactDOMFizzServer', () => {
         expect(mockError).toHaveBeenCalledWith(
           'Each child in a list should have a unique "key" prop.%s%s' +
             ' See https://react.dev/link/warning-keys for more information.%s',
-          gate(flags => flags.enableOwnerStacks)
-            ? ''
-            : '\n\nCheck the render method of `B`.',
+          '\n\nCheck the render method of `B`.',
           '',
           '\n' +
             (gate(flags => flags.enableOwnerStacks)
