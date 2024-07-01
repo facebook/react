@@ -216,6 +216,7 @@ export function codegenFunction(
         )
       );
     }
+    compiled.body.body.unshift(...preface);
   }
 
   const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;
@@ -273,7 +274,7 @@ function codegenReactiveFunction(
   }
 
   const params = fn.params.map((param) => convertParameter(param));
-  const body: t.BlockStatement = codegenBlock(cx, fn.body); // 生成块
+  const body: t.BlockStatement = codegenBlock(cx, fn.body);
   body.directives = fn.directives.map((d) =>
     t.directive(t.directiveLiteral(d))
   );
