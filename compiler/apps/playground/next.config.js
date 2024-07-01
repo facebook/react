@@ -34,6 +34,11 @@ const nextConfig = {
         "../../packages/react-compiler-runtime"
       ),
     };
+    config.resolve.fallback = {
+      fs: false,
+      path: false,
+      os: false,
+    };
 
     return config;
   },
