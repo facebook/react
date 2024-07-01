@@ -29,7 +29,7 @@ async function checkNPMPermissions() {
           acc.push(ownerName);
         }
         return acc;
-    }, []);
+      }, []);
 
     if (!owners.includes(currentUser)) {
       failedProjects.push(project);
