@@ -635,6 +635,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     NotPendingTransition: (null: TransitionStatus),
 
     resetFormInstance(form: Instance) {},
+
+    printToConsole(methodName, args, badgeName) {
+      // eslint-disable-next-line react-internal/no-production-logging
+      console[methodName].apply(console, args);
+    },
   };
 
   const hostConfig = useMutation

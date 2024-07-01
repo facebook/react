@@ -110,7 +110,6 @@ import {
 } from 'shared/ReactSymbols';
 
 import {
-  describeValueForErrorMessage,
   describeObjectForErrorMessage,
   isSimpleObject,
   jsxPropsParents,
@@ -1501,19 +1500,11 @@ function renderElement(
       jsxChildrenParents.set(props.children, type);
     }
   }
-  if (typeof type === 'function') {
-    if (isClientReference(type) || isOpaqueTemporaryReference(type)) {
-      // This is a reference to a Client Component.
-      return renderClientElement(
-        task,
-        type,
-        key,
-        props,
-        owner,
-        stack,
-        validated,
-      );
-    }
+  if (
+    typeof type === 'function' &&
+    !isClientReference(type) &&
+    !isOpaqueTemporaryReference(type)
+  ) {
     // This is a Server Component.
     return renderFunctionComponent(
       request,
@@ -1525,43 +1516,27 @@ function renderElement(
       stack,
       validated,
     );
-  } else if (typeof type === 'string') {
-    // This is a host element. E.g. HTML.
-    return renderClientElement(task, type, key, props, owner, stack, validated);
-  } else if (typeof type === 'symbol') {
-    if (type === REACT_FRAGMENT_TYPE && key === null) {
-      // For key-less fragments, we add a small optimization to avoid serializing
-      // it as a wrapper.
-      const prevImplicitSlot = task.implicitSlot;
-      if (task.keyPath === null) {
-        task.implicitSlot = true;
-      }
-      const json = renderModelDestructive(
-        request,
-        task,
-        emptyRoot,
-        '',
-        props.children,
-      );
-      task.implicitSlot = prevImplicitSlot;
-      return json;
+  } else if (type === REACT_FRAGMENT_TYPE && key === null) {
+    // For key-less fragments, we add a small optimization to avoid serializing
+    // it as a wrapper.
+    const prevImplicitSlot = task.implicitSlot;
+    if (task.keyPath === null) {
+      task.implicitSlot = true;
     }
-    // This might be a built-in React component. We'll let the client decide.
-    // Any built-in works as long as its props are serializable.
-    return renderClientElement(task, type, key, props, owner, stack, validated);
-  } else if (type != null && typeof type === 'object') {
-    if (isClientReference(type)) {
-      // This is a reference to a Client Component.
-      return renderClientElement(
-        task,
-        type,
-        key,
-        props,
-        owner,
-        stack,
-        validated,
-      );
-    }
+    const json = renderModelDestructive(
+      request,
+      task,
+      emptyRoot,
+      '',
+      props.children,
+    );
+    task.implicitSlot = prevImplicitSlot;
+    return json;
+  } else if (
+    type != null &&
+    typeof type === 'object' &&
+    !isClientReference(type)
+  ) {
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
         let wrappedType;
@@ -1615,11 +1590,21 @@ function renderElement(
           validated,
         );
       }
+      case REACT_ELEMENT_TYPE: {
+        // This is invalid but we'll let the client determine that it is.
+        if (__DEV__) {
+          // Disable the key warning that would happen otherwise because this
+          // element gets serialized inside an array. We'll error later anyway.
+          type._store.validated = 1;
+        }
+      }
     }
   }
-  throw new Error(
-    `Unsupported Server Component type: ${describeValueForErrorMessage(type)}`,
-  );
+  // For anything else, try it on the client instead.
+  // We don't know if the client will support it or not. This might error on the
+  // client or error during serialization but the stack will point back to the
+  // server.
+  return renderClientElement(task, type, key, props, owner, stack, validated);
 }
 
 function pingTask(request: Request, task: Task): void {
@@ -2556,7 +2541,7 @@ function renderModelDestructive(
         return serializeDateFromDateJSON(value);
       }
     }
-    if (value.length >= 1024) {
+    if (value.length >= 1024 && byteLengthOfChunk !== null) {
       // For large strings, we encode them outside the JSON payload so that we
       // don't have to double encode and double parse the strings. This can also
       // be more compact in case the string has a lot of escaped characters.
@@ -2774,11 +2759,18 @@ function emitErrorChunk(
   if (__DEV__) {
     let message;
     let stack = '';
+    let env = request.environmentName();
     try {
       if (error instanceof Error) {
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
         stack = getStack(error);
+        const errorEnv = (error: any).environmentName;
+        if (typeof errorEnv === 'string') {
+          // This probably came from another FlightClient as a pass through.
+          // Keep the environment name.
+          env = errorEnv;
+        }
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
       } else {
@@ -2788,7 +2780,7 @@ function emitErrorChunk(
     } catch (x) {
       message = 'An error occurred but serializing the error message failed.';
     }
-    errorInfo = {digest, message, stack};
+    errorInfo = {digest, message, stack, env};
   } else {
     errorInfo = {digest};
   }
@@ -2900,6 +2892,12 @@ function emitTypedArrayChunk(
 }
 
 function emitTextChunk(request: Request, id: number, text: string): void {
+  if (byteLengthOfChunk === null) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'Existence of byteLengthOfChunk should have already been checked. This is a bug in React.',
+    );
+  }
   request.pendingChunks++; // Extra chunk for the header.
   const textChunk = stringToChunk(text);
   const binaryLength = byteLengthOfChunk(textChunk);
@@ -3297,7 +3295,7 @@ function emitChunk(
   const id = task.id;
   // For certain types we have special types, we typically outlined them but
   // we can emit them directly for this row instead of through an indirection.
-  if (typeof value === 'string') {
+  if (typeof value === 'string' && byteLengthOfChunk !== null) {
     if (enableTaint) {
       const tainted = TaintRegistryValues.get(value);
       if (tainted !== undefined) {
