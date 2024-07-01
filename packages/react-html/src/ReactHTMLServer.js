@@ -9,6 +9,7 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
+import type {ErrorInfo} from 'react-server/src/ReactFizzServer';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -62,6 +63,7 @@ type ReactMarkupNodeList =
 type MarkupOptions = {
   identifierPrefix?: string,
   signal?: AbortSignal,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
 };
 
 function noServerCallOrFormAction() {
@@ -109,17 +111,44 @@ export function renderToMarkup(
         reject(error);
       },
     };
-    function onError(error: mixed) {
+
+    let stashErrorIdx = 1;
+    const stashedErrors: Map<string, mixed> = new Map();
+
+    function handleFlightError(error: mixed): string {
+      // For Flight errors we don't immediately reject, because they might not matter
+      // to the output of the HTML. We stash the error with a digest in case we need
+      // to get to the original error from the Fizz render.
+      const id = '' + stashErrorIdx++;
+      stashedErrors.set(id, error);
+      return id;
+    }
+
+    function handleError(error: mixed, errorInfo: ErrorInfo) {
+      if (typeof error === 'object' && error !== null) {
+        const id = error.digest;
+        // Note that the original error might be `undefined` so we need a has check.
+        if (typeof id === 'string' && stashedErrors.has(id)) {
+          // Get the original error thrown inside Flight.
+          error = stashedErrors.get(id);
+        }
+      }
+
       // Any error rejects the promise, regardless of where it happened.
       // Unlike other React SSR we don't want to put Suspense boundaries into
       // client rendering mode because there's no client rendering here.
       reject(error);
+
+      const onError = options && options.onError;
+      if (onError) {
+        onError(error, errorInfo);
+      }
     }
     const flightRequest = createFlightRequest(
       // $FlowFixMe: This should be a subtype but not everything is typed covariant.
       children,
       null,
-      onError,
+      handleFlightError,
       options ? options.identifierPrefix : undefined,
       undefined,
       'Markup',
@@ -153,7 +182,7 @@ export function renderToMarkup(
       ),
       createRootFormatContext(),
       Infinity,
-      onError,
+      handleError,
       undefined,
       undefined,
       undefined,

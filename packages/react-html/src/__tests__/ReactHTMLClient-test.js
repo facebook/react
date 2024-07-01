@@ -12,6 +12,15 @@
 let React;
 let ReactHTML;
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    String(str).replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+      return '\n    in ' + name + ' (at **)';
+    })
+  );
+}
+
 if (!__EXPERIMENTAL__) {
   it('should not be built in stable', () => {
     try {
@@ -169,6 +178,59 @@ if (!__EXPERIMENTAL__) {
 
       const html = await ReactHTML.renderToMarkup(<Component />);
       expect(html).toBe('<div>01</div>');
+    });
+
+    it('can get the component owner stacks for onError in dev', async () => {
+      const thrownError = new Error('hi');
+      const caughtErrors = [];
+
+      function Foo() {
+        return <Bar />;
+      }
+      function Bar() {
+        return (
+          <div>
+            <Baz />
+          </div>
+        );
+      }
+      function Baz({unused}) {
+        throw thrownError;
+      }
+
+      await expect(async () => {
+        await ReactHTML.renderToMarkup(
+          <div>
+            <Foo />
+          </div>,
+          {
+            onError(error, errorInfo) {
+              caughtErrors.push({
+                error: error,
+                parentStack: errorInfo.componentStack,
+                ownerStack: React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null,
+              });
+            },
+          },
+        );
+      }).rejects.toThrow(thrownError);
+
+      expect(caughtErrors.length).toBe(1);
+      expect(caughtErrors[0].error).toBe(thrownError);
+      expect(normalizeCodeLocInfo(caughtErrors[0].parentStack)).toBe(
+        '\n    in Baz (at **)' +
+          '\n    in div (at **)' +
+          '\n    in Bar (at **)' +
+          '\n    in Foo (at **)' +
+          '\n    in div (at **)',
+      );
+      expect(normalizeCodeLocInfo(caughtErrors[0].ownerStack)).toBe(
+        __DEV__ && gate(flags => flags.enableOwnerStacks)
+          ? '\n    in Bar (at **)' + '\n    in Foo (at **)'
+          : null,
+      );
     });
   });
 }
