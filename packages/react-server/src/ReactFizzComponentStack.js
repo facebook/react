@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactComponentInfo} from 'shared/ReactTypes';
+
 import {
   describeBuiltInComponentFrame,
   describeFunctionComponentFrame,
@@ -18,16 +20,22 @@ type BuiltInComponentStackNode = {
   tag: 0,
   parent: null | ComponentStackNode,
   type: string,
+  owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack?: null | Error, // DEV only
 };
 type FunctionComponentStackNode = {
   tag: 1,
   parent: null | ComponentStackNode,
   type: Function,
+  owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack?: null | Error, // DEV only
 };
 type ClassComponentStackNode = {
   tag: 2,
   parent: null | ComponentStackNode,
   type: Function,
+  owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack?: null | Error, // DEV only
 };
 export type ComponentStackNode =
   | BuiltInComponentStackNode
