@@ -191,11 +191,10 @@ export function mayAllocate(env: Environment, instruction: Instruction, conserva
   const { value } = instruction;
   switch (value.kind) {
     case "Destructure": {
-      return doesPatternContainSpreadElement(value.lvalue.pattern);
+      return doesPatternContainSpreadElement(value.lvalue.pattern) || env.config.enableChangeDetectionForDebugging != null;
     }
     case "PostfixUpdate":
     case "PrefixUpdate":
-    case "Await":
     case "DeclareLocal":
     case "DeclareContext":
     case "StoreLocal":
@@ -206,26 +205,29 @@ export function mayAllocate(env: Environment, instruction: Instruction, conserva
     case "LoadContext":
     case "StoreContext":
     case "PropertyDelete":
-    case "ComputedLoad":
     case "ComputedDelete":
     case "JSXText":
     case "TemplateLiteral":
     case "Primitive":
     case "GetIterator":
     case "IteratorNext":
-    case "NextPropertyOf":
     case "Debugger":
     case "StartMemoize":
     case "FinishMemoize":
     case "UnaryExpression":
     case "BinaryExpression":
-    case "PropertyLoad":
     case "StoreGlobal": {
       return false;
     }
+    case "PropertyLoad":
+    case "NextPropertyOf":
+    case "ComputedLoad":
+    case "Await": {
+      return env.config.enableChangeDetectionForDebugging != null;
+    }
     case "CallExpression":
     case "MethodCall": {
-      return conservative || instruction.lvalue.identifier.type.kind !== "Primitive";
+      return conservative || instruction.lvalue.identifier.type.kind !== "Primitive" || env.config.enableChangeDetectionForDebugging != null;
     }
     case "RegExpLiteral":
     case "PropertyStore":
