@@ -538,6 +538,21 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
+          useCustomEffect(async () => {
+            // do something
+          });
+        }
+      `,
+      options: [
+        {
+          additionalHooks: 'useCustomEffect',
+          checkAsyncFor: '^(?!useCustomEffect)$',
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
           useWithoutEffectSuffix(() => {
             console.log(props.foo);
           }, []);
@@ -6766,6 +6781,33 @@ const tests = {
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
             'Learn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomEffect(async () => {
+            // do something
+          });
+        }
+      `,
+      options: [{additionalHooks: 'useCustomEffect'}],
+      errors: [
+        {
+          message:
+            `Effect callbacks are synchronous to prevent race conditions. ` +
+            `Put the async function inside:\n\n` +
+            'useEffect(() => {\n' +
+            '  async function fetchData() {\n' +
+            '    // You can await here\n' +
+            '    const response = await MyAPI.getData(someId);\n' +
+            '    // ...\n' +
+            '  }\n' +
+            '  fetchData();\n' +
+            `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
+            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
           suggestions: undefined,
         },
       ],

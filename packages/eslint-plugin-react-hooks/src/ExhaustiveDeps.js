@@ -32,6 +32,9 @@ export default {
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
+          checkAsyncFor: {
+            type: 'string',
+          },
         },
       },
     ],
@@ -40,8 +43,8 @@ export default {
     // Parse the `additionalHooks` regex.
     const additionalHooks =
       context.options &&
-      context.options[0] &&
-      context.options[0].additionalHooks
+        context.options[0] &&
+        context.options[0].additionalHooks
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
 
@@ -51,9 +54,16 @@ export default {
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
+    const checkAsyncFor = new RegExp(
+      context.options && context.options[0] && context.options[0].checkAsyncFor
+        ? context.options[0].checkAsyncFor
+        : '.*',
+    );
+
     const options = {
       additionalHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      checkAsyncFor,
     };
 
     function reportProblem(problem) {
@@ -120,7 +130,11 @@ export default {
       reactiveHookName,
       isEffect,
     ) {
-      if (isEffect && node.async) {
+      if (
+        isEffect &&
+        node.async &&
+        options.checkAsyncFor.test(reactiveHookName)
+      ) {
         reportProblem({
           node: node,
           message:
@@ -245,7 +259,7 @@ export default {
           return false;
         }
         const id = def.node.id;
-        const {name} = callee;
+        const { name } = callee;
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
@@ -497,14 +511,14 @@ export default {
 
       // Warn about accessing .current in cleanup effects.
       currentRefsInEffectCleanup.forEach(
-        ({reference, dependencyNode}, dependency) => {
+        ({ reference, dependencyNode }, dependency) => {
           const references = reference.resolved.references;
           // Is React managing this ref or us?
           // Let's see if we can find a .current assignment.
           let foundCurrentAssignment = false;
           for (let i = 0; i < references.length; i++) {
-            const {identifier} = references[i];
-            const {parent} = identifier;
+            const { identifier } = references[i];
+            const { parent } = identifier;
             if (
               parent != null &&
               // ref.current
@@ -559,7 +573,7 @@ export default {
 
       // Remember which deps are stable and report bad usage first.
       const stableDependencies = new Set();
-      dependencies.forEach(({isStable, references}, key) => {
+      dependencies.forEach(({ isStable, references }, key) => {
         if (isStable) {
           stableDependencies.add(key);
         }
@@ -579,7 +593,7 @@ export default {
         // Check if there are any top-level setState() calls.
         // Those tend to lead to infinite loops.
         let setStateInsideEffectWithoutDeps = null;
-        dependencies.forEach(({isStable, references}, key) => {
+        dependencies.forEach(({ isStable, references }, key) => {
           if (setStateInsideEffectWithoutDeps) {
             return;
           }
@@ -606,7 +620,7 @@ export default {
           });
         });
         if (setStateInsideEffectWithoutDeps) {
-          const {suggestedDependencies} = collectRecommendations({
+          const { suggestedDependencies } = collectRecommendations({
             dependencies,
             declaredDependencies: [],
             stableDependencies,
@@ -797,7 +811,7 @@ export default {
           scope,
         });
         constructions.forEach(
-          ({construction, isUsedOutsideOfHook, depType}) => {
+          ({ construction, isUsedOutsideOfHook, depType }) => {
             const wrapperHook =
               depType === 'function' ? 'useCallback' : 'useMemo';
 
@@ -927,8 +941,7 @@ export default {
               .sort()
               .map(name => "'" + formatDependency(name) + "'"),
           ) +
-          `. Either ${fixVerb} ${
-            deps.size > 1 ? 'them' : 'it'
+          `. Either ${fixVerb} ${deps.size > 1 ? 'them' : 'it'
           } or remove the dependency array.`
         );
       }
@@ -1133,13 +1146,11 @@ export default {
               break;
             case 'updater':
               extraWarning =
-                ` You can also do a functional update '${
-                  setStateRecommendation.setter
+                ` You can also do a functional update '${setStateRecommendation.setter
                 }(${setStateRecommendation.missingDep.slice(
                   0,
                   1,
-                )} => ...)' if you only need '${
-                  setStateRecommendation.missingDep
+                )} => ...)' if you only need '${setStateRecommendation.missingDep
                 }'` + ` in the '${setStateRecommendation.setter}' call.`;
               break;
             default:
@@ -1193,10 +1204,11 @@ export default {
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const maybeNode = node.arguments[callbackIndex + 1];
+      const dependenciesIndex = Math.max(callbackIndex + 1, node.arguments.length - 1);
+      const maybeNode = node.arguments[dependenciesIndex];
       const declaredDependenciesNode =
         maybeNode &&
-        !(maybeNode.type === 'Identifier' && maybeNode.name === 'undefined')
+          !(maybeNode.type === 'Identifier' && maybeNode.name === 'undefined')
           ? maybeNode
           : undefined;
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
@@ -1399,7 +1411,7 @@ function collectRecommendations({
 
   // Mark all satisfied nodes.
   // Imagine checkmarks next to each declared dependency.
-  declaredDependencies.forEach(({key}) => {
+  declaredDependencies.forEach(({ key }) => {
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
@@ -1477,7 +1489,7 @@ function collectRecommendations({
   const suggestedDependencies = [];
   const unnecessaryDependencies = new Set();
   const duplicateDependencies = new Set();
-  declaredDependencies.forEach(({key}) => {
+  declaredDependencies.forEach(({ key }) => {
     // Does this declared dep satisfy a real need?
     if (satisfyingDependencies.has(key)) {
       if (suggestedDependencies.indexOf(key) === -1) {
@@ -1582,7 +1594,7 @@ function scanForConstructions({
   scope,
 }) {
   const constructions = declaredDependencies
-    .map(({key}) => {
+    .map(({ key }) => {
       const ref = componentScope.variables.find(v => v.name === key);
       if (ref == null) {
         return null;
