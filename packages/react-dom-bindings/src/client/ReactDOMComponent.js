@@ -50,7 +50,6 @@ import {
 } from './ReactDOMTextarea';
 import {validateTextNesting} from './validateDOMNesting';
 import {track} from './inputValueTracking';
-import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
@@ -66,7 +65,6 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import sanitizeURL from '../shared/sanitizeURL';
 
 import {
-  disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
 } from 'shared/ReactFeatureFlags';
@@ -86,16 +84,7 @@ let didWarnPopoverTargetObject = false;
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
   didWarnForNewBooleanPropsWithEmptyValue = {};
-  // IE 11 parses & normalizes the style attribute as opposed to other
-  // browsers. It adds spaces and sorts the properties in some
-  // non-alphabetical order. Handling that would require sorting CSS
-  // properties in the client & server versions or applying
-  // `expectedStyle` to a temporary DOM node to read its `style` attribute
-  // normalized. Since it only affects IE, we're skipping style warnings
-  // in that browser completely in favor of doing all that work.
-  // See https://github.com/facebook/react/issues/11807
-  canDiffStyleForHydrationWarning =
-    disableIEWorkarounds || (canUseDOM && !document.documentMode);
+  canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
 }
 
 function validatePropertiesInDevelopment(type: string, props: any) {
@@ -579,11 +568,7 @@ function setProp(
               'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
             );
           }
-          if (disableIEWorkarounds) {
-            domElement.innerHTML = nextHtml;
-          } else {
-            setInnerHTML(domElement, nextHtml);
-          }
+          domElement.innerHTML = nextHtml;
         }
       }
       break;
@@ -939,11 +924,7 @@ function setPropOnCustomElement(
               'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
             );
           }
-          if (disableIEWorkarounds) {
-            domElement.innerHTML = nextHtml;
-          } else {
-            setInnerHTML(domElement, nextHtml);
-          }
+          domElement.innerHTML = nextHtml;
         }
       }
       break;

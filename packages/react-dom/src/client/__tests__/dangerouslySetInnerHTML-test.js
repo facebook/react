@@ -58,42 +58,5 @@ describe('dangerouslySetInnerHTML', () => {
         innerHTMLDescriptor,
       );
     });
-
-    // @gate !disableIEWorkarounds
-    it('sets innerHTML on it', async () => {
-      const html = '<circle></circle>';
-      const container = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'svg',
-      );
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<g dangerouslySetInnerHTML={{__html: html}} />);
-      });
-      const circle = container.firstChild.firstChild;
-      expect(circle.tagName).toBe('circle');
-    });
-
-    // @gate !disableIEWorkarounds
-    it('clears previous children', async () => {
-      const firstHtml = '<rect></rect>';
-      const secondHtml = '<circle></circle>';
-
-      const container = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'svg',
-      );
-      const root = ReactDOMClient.createRoot(container);
-      await act(() => {
-        root.render(<g dangerouslySetInnerHTML={{__html: firstHtml}} />);
-      });
-      const rect = container.firstChild.firstChild;
-      expect(rect.tagName).toBe('rect');
-      await act(() => {
-        root.render(<g dangerouslySetInnerHTML={{__html: secondHtml}} />);
-      });
-      const circle = container.firstChild.firstChild;
-      expect(circle.tagName).toBe('circle');
-    });
   });
 });

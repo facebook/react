@@ -27,7 +27,6 @@ export const enableTaint = true;
 export const enablePostpone = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
-export const disableIEWorkarounds = true;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
