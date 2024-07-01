@@ -20,6 +20,7 @@ import type {
   Wakeable,
   Thenable,
   ReactFormState,
+  ReactComponentInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -113,8 +114,17 @@ import {
   getActionStateMatchingIndex,
 } from './ReactFizzHooks';
 import {DefaultAsyncDispatcher} from './ReactFizzAsyncDispatcher';
-import {getStackByComponentStackNode} from './ReactFizzComponentStack';
+import {
+  getStackByComponentStackNode,
+  getOwnerStackByComponentStackNodeInDev,
+} from './ReactFizzComponentStack';
 import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
+import {currentTaskInDEV, setCurrentTaskInDEV} from './ReactFizzCurrentTask';
+import {
+  callLazyInitInDEV,
+  callComponentInDEV,
+  callRenderInDEV,
+} from './ReactFizzCallUserSpace';
 
 import {
   getIteratorFn,
@@ -790,14 +800,16 @@ function createPendingSegment(
   };
 }
 
-// DEV-only global reference to the currently executing task
-let currentTaskInDEV: null | Task = null;
 function getCurrentStackInDEV(): string {
   if (__DEV__) {
     if (currentTaskInDEV === null || currentTaskInDEV.componentStack === null) {
       return '';
     }
-    // TODO: Support owner based stacks for logs during SSR.
+    if (enableOwnerStacks) {
+      return getOwnerStackByComponentStackNodeInDev(
+        currentTaskInDEV.componentStack,
+      );
+    }
     return getStackByComponentStackNode(currentTaskInDEV.componentStack);
   }
   return '';
@@ -810,7 +822,18 @@ function getStackFromNode(stackNode: ComponentStackNode): string {
 function createBuiltInComponentStack(
   task: Task,
   type: string,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): ComponentStackNode {
+  if (__DEV__) {
+    return {
+      tag: 0,
+      parent: task.componentStack,
+      type,
+      owner,
+      stack,
+    };
+  }
   return {
     tag: 0,
     parent: task.componentStack,
@@ -820,7 +843,18 @@ function createBuiltInComponentStack(
 function createFunctionComponentStack(
   task: Task,
   type: Function,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): ComponentStackNode {
+  if (__DEV__) {
+    return {
+      tag: 1,
+      parent: task.componentStack,
+      type,
+      owner,
+      stack,
+    };
+  }
   return {
     tag: 1,
     parent: task.componentStack,
@@ -830,7 +864,18 @@ function createFunctionComponentStack(
 function createClassComponentStack(
   task: Task,
   type: Function,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): ComponentStackNode {
+  if (__DEV__) {
+    return {
+      tag: 2,
+      parent: task.componentStack,
+      type,
+      owner,
+      stack,
+    };
+  }
   return {
     tag: 2,
     parent: task.componentStack,
@@ -841,14 +886,16 @@ function createClassComponentStack(
 function createComponentStackFromType(
   task: Task,
   type: Function | string,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): ComponentStackNode {
   if (typeof type === 'string') {
-    return createBuiltInComponentStack(task, type);
+    return createBuiltInComponentStack(task, type, owner, stack);
   }
   if (shouldConstruct(type)) {
-    return createClassComponentStack(task, type);
+    return createClassComponentStack(task, type, owner, stack);
   }
-  return createFunctionComponentStack(task, type);
+  return createFunctionComponentStack(task, type, owner, stack);
 }
 
 type ThrownInfo = {
@@ -967,6 +1014,8 @@ function renderSuspenseBoundary(
   someTask: Task,
   keyPath: KeyNode,
   props: Object,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   if (someTask.replay !== null) {
     // If we're replaying through this pass, it means we're replaying through
@@ -989,7 +1038,7 @@ function renderSuspenseBoundary(
   // If we end up creating the fallback task we need it to have the correct stack which is
   // the stack for the boundary itself. We stash it here so we can use it if needed later
   const suspenseComponentStack = (task.componentStack =
-    createBuiltInComponentStack(task, 'Suspense'));
+    createBuiltInComponentStack(task, 'Suspense', owner, stack));
 
   const prevKeyPath = task.keyPath;
   const parentBoundary = task.blockedBoundary;
@@ -1162,12 +1211,14 @@ function replaySuspenseBoundary(
   childSlots: ResumeSlots,
   fallbackNodes: Array<ReplayNode>,
   fallbackSlots: ResumeSlots,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   const previousComponentStack = task.componentStack;
   // If we end up creating the fallback task we need it to have the correct stack which is
   // the stack for the boundary itself. We stash it here so we can use it if needed later
   const suspenseComponentStack = (task.componentStack =
-    createBuiltInComponentStack(task, 'Suspense'));
+    createBuiltInComponentStack(task, 'Suspense', owner, stack));
 
   const prevKeyPath = task.keyPath;
   const previousReplaySet: ReplaySet = task.replay;
@@ -1295,9 +1346,16 @@ function renderBackupSuspenseBoundary(
   task: Task,
   keyPath: KeyNode,
   props: Object,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ) {
   const previousComponentStack = task.componentStack;
-  task.componentStack = createBuiltInComponentStack(task, 'Suspense');
+  task.componentStack = createBuiltInComponentStack(
+    task,
+    'Suspense',
+    owner,
+    stack,
+  );
 
   const content = props.children;
   const segment = task.blockedSegment;
@@ -1322,9 +1380,11 @@ function renderHostElement(
   keyPath: KeyNode,
   type: string,
   props: Object,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   const previousComponentStack = task.componentStack;
-  task.componentStack = createBuiltInComponentStack(task, type);
+  task.componentStack = createBuiltInComponentStack(task, type, owner, stack);
   const segment = task.blockedSegment;
   if (segment === null) {
     // Replay
@@ -1406,7 +1466,12 @@ function renderWithHooks<Props, SecondArg>(
     componentIdentity,
     prevThenableState,
   );
-  const result = Component(props, secondArg);
+  let result;
+  if (__DEV__) {
+    result = callComponentInDEV(Component, props, secondArg);
+  } else {
+    result = Component(props, secondArg);
+  }
   return finishHooks(Component, props, result, secondArg);
 }
 
@@ -1418,7 +1483,12 @@ function finishClassComponent(
   Component: any,
   props: any,
 ): ReactNodeList {
-  const nextChildren = instance.render();
+  let nextChildren;
+  if (__DEV__) {
+    nextChildren = callRenderInDEV(instance);
+  } else {
+    nextChildren = instance.render();
+  }
 
   if (__DEV__) {
     if (instance.props !== props) {
@@ -1504,10 +1574,17 @@ function renderClassComponent(
   keyPath: KeyNode,
   Component: any,
   props: any,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   const resolvedProps = resolveClassComponentProps(Component, props);
   const previousComponentStack = task.componentStack;
-  task.componentStack = createClassComponentStack(task, Component);
+  task.componentStack = createClassComponentStack(
+    task,
+    Component,
+    owner,
+    stack,
+  );
   const maskedContext = !disableLegacyContext
     ? getMaskedContext(Component, task.legacyContext)
     : undefined;
@@ -1542,13 +1619,20 @@ function renderFunctionComponent(
   keyPath: KeyNode,
   Component: any,
   props: any,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   let legacyContext;
   if (!disableLegacyContext) {
     legacyContext = getMaskedContext(Component, task.legacyContext);
   }
   const previousComponentStack = task.componentStack;
-  task.componentStack = createFunctionComponentStack(task, Component);
+  task.componentStack = createFunctionComponentStack(
+    task,
+    Component,
+    owner,
+    stack,
+  );
 
   if (__DEV__) {
     if (
@@ -1751,9 +1835,16 @@ function renderForwardRef(
   type: any,
   props: Object,
   ref: any,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   const previousComponentStack = task.componentStack;
-  task.componentStack = createFunctionComponentStack(task, type.render);
+  task.componentStack = createFunctionComponentStack(
+    task,
+    type.render,
+    owner,
+    stack,
+  );
 
   let propsWithoutRef;
   if (enableRefAsProp && 'ref' in props) {
@@ -1803,13 +1894,24 @@ function renderMemo(
   type: any,
   props: Object,
   ref: any,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   const innerType = type.type;
   const resolvedProps = resolveDefaultPropsOnNonClassComponent(
     innerType,
     props,
   );
-  renderElement(request, task, keyPath, innerType, resolvedProps, ref);
+  renderElement(
+    request,
+    task,
+    keyPath,
+    innerType,
+    resolvedProps,
+    ref,
+    owner,
+    stack,
+  );
 }
 
 function renderContextConsumer(
@@ -1876,17 +1978,33 @@ function renderLazyComponent(
   lazyComponent: LazyComponentType<any, any>,
   props: Object,
   ref: any,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   const previousComponentStack = task.componentStack;
-  task.componentStack = createBuiltInComponentStack(task, 'Lazy');
-  const payload = lazyComponent._payload;
-  const init = lazyComponent._init;
-  const Component = init(payload);
+  task.componentStack = createBuiltInComponentStack(task, 'Lazy', owner, stack);
+  let Component;
+  if (__DEV__) {
+    Component = callLazyInitInDEV(lazyComponent);
+  } else {
+    const payload = lazyComponent._payload;
+    const init = lazyComponent._init;
+    Component = init(payload);
+  }
   const resolvedProps = resolveDefaultPropsOnNonClassComponent(
     Component,
     props,
   );
-  renderElement(request, task, keyPath, Component, resolvedProps, ref);
+  renderElement(
+    request,
+    task,
+    keyPath,
+    Component,
+    resolvedProps,
+    ref,
+    owner,
+    stack,
+  );
   task.componentStack = previousComponentStack;
 }
 
@@ -1917,18 +2035,28 @@ function renderElement(
   type: any,
   props: Object,
   ref: any,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
-      renderClassComponent(request, task, keyPath, type, props);
+      renderClassComponent(request, task, keyPath, type, props, owner, stack);
       return;
     } else {
-      renderFunctionComponent(request, task, keyPath, type, props);
+      renderFunctionComponent(
+        request,
+        task,
+        keyPath,
+        type,
+        props,
+        owner,
+        stack,
+      );
       return;
     }
   }
   if (typeof type === 'string') {
-    renderHostElement(request, task, keyPath, type, props);
+    renderHostElement(request, task, keyPath, type, props, owner, stack);
     return;
   }
 
@@ -1959,7 +2087,12 @@ function renderElement(
     }
     case REACT_SUSPENSE_LIST_TYPE: {
       const preiousComponentStack = task.componentStack;
-      task.componentStack = createBuiltInComponentStack(task, 'SuspenseList');
+      task.componentStack = createBuiltInComponentStack(
+        task,
+        'SuspenseList',
+        owner,
+        stack,
+      );
       // TODO: SuspenseList should control the boundaries.
       const prevKeyPath = task.keyPath;
       task.keyPath = keyPath;
@@ -1983,9 +2116,16 @@ function renderElement(
         enableSuspenseAvoidThisFallbackFizz &&
         props.unstable_avoidThisFallback === true
       ) {
-        renderBackupSuspenseBoundary(request, task, keyPath, props);
+        renderBackupSuspenseBoundary(
+          request,
+          task,
+          keyPath,
+          props,
+          owner,
+          stack,
+        );
       } else {
-        renderSuspenseBoundary(request, task, keyPath, props);
+        renderSuspenseBoundary(request, task, keyPath, props, owner, stack);
       }
       return;
     }
@@ -1994,11 +2134,20 @@ function renderElement(
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
-        renderForwardRef(request, task, keyPath, type, props, ref);
+        renderForwardRef(
+          request,
+          task,
+          keyPath,
+          type,
+          props,
+          ref,
+          owner,
+          stack,
+        );
         return;
       }
       case REACT_MEMO_TYPE: {
-        renderMemo(request, task, keyPath, type, props, ref);
+        renderMemo(request, task, keyPath, type, props, ref, owner, stack);
         return;
       }
       case REACT_PROVIDER_TYPE: {
@@ -2035,7 +2184,16 @@ function renderElement(
         // Fall through
       }
       case REACT_LAZY_TYPE: {
-        renderLazyComponent(request, task, keyPath, type, props);
+        renderLazyComponent(
+          request,
+          task,
+          keyPath,
+          type,
+          props,
+          ref,
+          owner,
+          stack,
+        );
         return;
       }
     }
@@ -2115,6 +2273,8 @@ function replayElement(
   props: Object,
   ref: any,
   replay: ReplaySet,
+  owner: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack: null | Error, // DEV only
 ): void {
   // We're replaying. Find the path to follow.
   const replayNodes = replay.nodes;
@@ -2142,7 +2302,7 @@ function replayElement(
       const currentNode = task.node;
       task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
       try {
-        renderElement(request, task, keyPath, type, props, ref);
+        renderElement(request, task, keyPath, type, props, ref, owner, stack);
         if (
           task.replay.pendingTasks === 1 &&
           task.replay.nodes.length > 0
@@ -2208,6 +2368,8 @@ function replayElement(
         node[3],
         node[4] === null ? [] : node[4][2],
         node[4] === null ? null : node[4][3],
+        owner,
+        stack,
       );
     }
     // We finished rendering this node, so now we can consume this
@@ -2368,6 +2530,9 @@ function renderNodeDestructive(
           ref = element.ref;
         }
 
+        const owner = __DEV__ ? element._owner : null;
+        const stack = __DEV__ && enableOwnerStacks ? element._debugStack : null;
+
         const name = getComponentNameFromType(type);
         const keyOrIndex =
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;
@@ -2389,6 +2554,8 @@ function renderNodeDestructive(
                   props,
                   ref,
                   task.replay,
+                  owner,
+                  stack,
                 ),
               );
               return;
@@ -2405,6 +2572,8 @@ function renderNodeDestructive(
             props,
             ref,
             task.replay,
+            owner,
+            stack,
           );
           // No matches found for this node. We assume it's already emitted in the
           // prelude and skip it during the replay.
@@ -2422,12 +2591,14 @@ function renderNodeDestructive(
                   type,
                   props,
                   ref,
+                  owner,
+                  stack,
                 ),
               );
               return;
             }
           }
-          renderElement(request, task, keyPath, type, props, ref);
+          renderElement(request, task, keyPath, type, props, ref, owner, stack);
         }
         return;
       }
@@ -2438,11 +2609,21 @@ function renderNodeDestructive(
         );
       case REACT_LAZY_TYPE: {
         const previousComponentStack = task.componentStack;
-        task.componentStack = createBuiltInComponentStack(task, 'Lazy');
+        task.componentStack = createBuiltInComponentStack(
+          task,
+          'Lazy',
+          null,
+          null,
+        );
         const lazyNode: LazyComponentType<any, any> = (node: any);
-        const payload = lazyNode._payload;
-        const init = lazyNode._init;
-        const resolvedNode = init(payload);
+        let resolvedNode;
+        if (__DEV__) {
+          resolvedNode = callLazyInitInDEV(lazyNode);
+        } else {
+          const payload = lazyNode._payload;
+          const init = lazyNode._init;
+          resolvedNode = init(payload);
+        }
 
         // We restore the stack before rendering the resolved node because once the Lazy
         // has resolved any future errors
@@ -2504,6 +2685,8 @@ function renderNodeDestructive(
         task.componentStack = createBuiltInComponentStack(
           task,
           'AsyncIterable',
+          null,
+          null,
         );
 
         // Restore the thenable state before resuming.
@@ -2739,14 +2922,54 @@ function warnForMissingKey(request: Request, task: Task, child: mixed): void {
     }
     didWarnForKey.add(parentStackFrame);
 
+    const componentName = getComponentNameFromType(child.type);
+    const childOwner = child._owner;
+    const parentOwner = parentStackFrame.owner;
+
+    let currentComponentErrorInfo = '';
+    if (parentOwner && typeof parentOwner.tag === 'number') {
+      const name = getComponentNameFromType((parentOwner: any).type);
+      if (name) {
+        currentComponentErrorInfo =
+          '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
+    if (!currentComponentErrorInfo) {
+      if (componentName) {
+        currentComponentErrorInfo = `\n\nCheck the top-level render call using <${componentName}>.`;
+      }
+    }
+
+    // Usually the current owner is the offender, but if it accepts children as a
+    // property, it may be the creator of the child that's responsible for
+    // assigning it a key.
+    let childOwnerAppendix = '';
+    if (childOwner != null && parentOwner !== childOwner) {
+      let ownerName = null;
+      if (typeof childOwner.tag === 'number') {
+        ownerName = getComponentNameFromType((childOwner: any).type);
+      } else if (typeof childOwner.name === 'string') {
+        ownerName = childOwner.name;
+      }
+      if (ownerName) {
+        // Give the component that originally created this child.
+        childOwnerAppendix = ` It was passed a child from ${ownerName}.`;
+      }
+    }
+
     // We create a fake component stack for the child to log the stack trace from.
-    const stackFrame = createComponentStackFromType(task, (child: any).type);
+    const stackFrame = createComponentStackFromType(
+      task,
+      (child: any).type,
+      (child: any)._owner,
+      enableOwnerStacks ? (child: any)._debugStack : null,
+    );
     task.componentStack = stackFrame;
     console.error(
       'Each child in a list should have a unique "key" prop.' +
         '%s%s See https://react.dev/link/warning-keys for more information.',
-      '',
-      '',
+      currentComponentErrorInfo,
+      childOwnerAppendix,
     );
     task.componentStack = stackFrame.parent;
   }
@@ -3775,7 +3998,7 @@ function retryRenderTask(
   let prevTaskInDEV = null;
   if (__DEV__) {
     prevTaskInDEV = currentTaskInDEV;
-    currentTaskInDEV = task;
+    setCurrentTaskInDEV(task);
   }
 
   const childrenLength = segment.children.length;
@@ -3852,7 +4075,7 @@ function retryRenderTask(
     return;
   } finally {
     if (__DEV__) {
-      currentTaskInDEV = prevTaskInDEV;
+      setCurrentTaskInDEV(prevTaskInDEV);
     }
   }
 }
@@ -3870,7 +4093,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
   let prevTaskInDEV = null;
   if (__DEV__) {
     prevTaskInDEV = currentTaskInDEV;
-    currentTaskInDEV = task;
+    setCurrentTaskInDEV(task);
   }
 
   try {
@@ -3939,7 +4162,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     return;
   } finally {
     if (__DEV__) {
-      currentTaskInDEV = prevTaskInDEV;
+      setCurrentTaskInDEV(prevTaskInDEV);
     }
   }
 }
