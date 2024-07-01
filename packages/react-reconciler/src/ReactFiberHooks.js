@@ -28,6 +28,7 @@ import type {Flags} from './ReactFiberFlags';
 import type {TransitionStatus} from './ReactFiberConfig';
 
 import {
+  HostTransitionContext,
   NotPendingTransition as NoPendingHostTransition,
   setCurrentUpdatePriority,
   getCurrentUpdatePriority,
@@ -151,7 +152,6 @@ import {
   peekEntangledActionThenable,
   chainThenableValue,
 } from './ReactFiberAsyncAction';
-import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
 import {requestCurrentTransition} from './ReactFiberTransition';
@@ -3261,8 +3261,7 @@ function useHostTransitionStatus(): TransitionStatus {
   if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   }
-  const status: TransitionStatus | null = readContext(HostTransitionContext);
-  return status !== null ? status : NoPendingHostTransition;
+  return readContext(HostTransitionContext);
 }
 
 function mountId(): string {

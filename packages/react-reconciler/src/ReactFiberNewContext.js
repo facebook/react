@@ -19,7 +19,7 @@ import type {SharedQueue} from './ReactFiberClassUpdateQueue';
 import type {TransitionStatus} from './ReactFiberConfig';
 import type {Hook} from './ReactFiberHooks';
 
-import {isPrimaryRenderer} from './ReactFiberConfig';
+import {isPrimaryRenderer, HostTransitionContext} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
   ContextProvider,
@@ -47,10 +47,7 @@ import {
   enableAsyncActions,
   enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
-import {
-  getHostTransitionProvider,
-  HostTransitionContext,
-} from './ReactFiberHostContext';
+import {getHostTransitionProvider} from './ReactFiberHostContext';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 

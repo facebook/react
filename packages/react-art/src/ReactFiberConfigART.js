@@ -17,12 +17,17 @@ import {
   NoEventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 
+import type {ReactContext} from 'shared/ReactTypes';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+
 const pooledTransform = new Transform();
 
 const NO_CONTEXT = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
 }
+
+export type TransitionStatus = mixed;
 
 /** Helper Methods */
 
@@ -484,4 +489,12 @@ export function waitForCommitToBeReady() {
 }
 
 export const NotPendingTransition = null;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
 export function resetFormInstance() {}

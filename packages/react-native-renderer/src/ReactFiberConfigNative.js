@@ -31,6 +31,9 @@ import {
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import type {ReactContext} from 'shared/ReactTypes';
+
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
 export type Type = string;
@@ -548,6 +551,14 @@ export function waitForCommitToBeReady(): null {
 }
 
 export const NotPendingTransition: TransitionStatus = null;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
 
 export type FormInstance = Instance;
 export function resetFormInstance(form: Instance): void {}
