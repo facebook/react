@@ -3,6 +3,10 @@
 module.exports = function shouldIgnoreConsoleError(format, args) {
   if (__DEV__) {
     if (typeof format === 'string') {
+      if (format.startsWith('%c%s')) {
+        // Looks like a badged error message
+        args.splice(0, 3);
+      }
       if (
         args[0] != null &&
         ((typeof args[0] === 'object' &&

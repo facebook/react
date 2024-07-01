@@ -82,9 +82,6 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
 
 async function main() {
   if (argv.ci === 'github') {
-    // ./scripts/rollup/build was being used by spawning a new process and passing via ENV variables
-    // so let's just preserve this for now and rewrite it later to just take a function arg
-    process.env.RELEASE_CHANNEL = argv.releaseChannel;
     await buildEverything(argv.bundleType);
     switch (argv.releaseChannel) {
       case 'stable': {

@@ -363,7 +363,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         restParam: Effect.Freeze,
         returnType: { kind: "Poly" },
         calleeEffect: Effect.Read,
-        hookKind: "useLayoutEffect",
+        hookKind: "useInsertionEffect",
         returnValueKind: ValueKind.Frozen,
       },
       BuiltInUseInsertionEffectHookId
