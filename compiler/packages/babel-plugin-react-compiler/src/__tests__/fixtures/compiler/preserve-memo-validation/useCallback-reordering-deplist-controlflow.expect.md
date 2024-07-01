@@ -40,53 +40,46 @@ import { useCallback } from "react";
 import { Stringify } from "shared-runtime";
 
 function Foo(t0) {
-  const $ = _c(11);
+  const $ = _c(9);
   const { arr1, arr2, foo } = t0;
   let t1;
-  if ($[0] !== arr1) {
-    t1 = [arr1];
-    $[0] = arr1;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const x = t1;
-  let t2;
   let getVal1;
-  if ($[2] !== foo || $[3] !== x || $[4] !== arr2) {
+  if ($[0] !== arr1 || $[1] !== foo || $[2] !== arr2) {
+    const x = [arr1];
+
     let y;
     y = [];
-    let t3;
-    if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
-      t3 = () => ({ x: 2 });
-      $[7] = t3;
+    let t2;
+    if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+      t2 = () => ({ x: 2 });
+      $[5] = t2;
     } else {
-      t3 = $[7];
+      t2 = $[5];
     }
-    getVal1 = t3;
+    getVal1 = t2;
 
-    t2 = () => [y];
+    t1 = () => [y];
     foo ? (y = x.concat(arr2)) : y;
-    $[2] = foo;
-    $[3] = x;
-    $[4] = arr2;
-    $[5] = t2;
+    $[0] = arr1;
+    $[1] = foo;
+    $[2] = arr2;
+    $[3] = t1;
+    $[4] = getVal1;
+  } else {
+    t1 = $[3];
+    getVal1 = $[4];
+  }
+  const getVal2 = t1;
+  let t2;
+  if ($[6] !== getVal1 || $[7] !== getVal2) {
+    t2 = <Stringify val1={getVal1} val2={getVal2} shouldInvokeFns={true} />;
     $[6] = getVal1;
+    $[7] = getVal2;
+    $[8] = t2;
   } else {
-    t2 = $[5];
-    getVal1 = $[6];
+    t2 = $[8];
   }
-  const getVal2 = t2;
-  let t3;
-  if ($[8] !== getVal1 || $[9] !== getVal2) {
-    t3 = <Stringify val1={getVal1} val2={getVal2} shouldInvokeFns={true} />;
-    $[8] = getVal1;
-    $[9] = getVal2;
-    $[10] = t3;
-  } else {
-    t3 = $[10];
-  }
-  return t3;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

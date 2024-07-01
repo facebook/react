@@ -66,9 +66,9 @@ export function typedArrayToBinaryChunk(
   throw new Error('Not implemented.');
 }
 
-export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
-  throw new Error('Not implemented.');
-}
+export const byteLengthOfChunk:
+  | null
+  | ((chunk: Chunk | PrecomputedChunk) => number) = null;
 
 export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
   throw new Error('Not implemented.');
