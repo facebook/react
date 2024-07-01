@@ -835,21 +835,30 @@ describe('ReactDOMServer', () => {
 
     expect(() => ReactDOMServer.renderToString(<App />)).toErrorDev([
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in span (at **)\n' +
-        '    in b (at **)\n' +
-        '    in C (at **)\n' +
-        '    in font (at **)\n' +
-        '    in B (at **)\n' +
-        '    in Child (at **)\n' +
-        '    in span (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in span (at **)\n' +
+            '    in B (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in App (at **)'
+          : '    in span (at **)\n' +
+            '    in b (at **)\n' +
+            '    in C (at **)\n' +
+            '    in font (at **)\n' +
+            '    in B (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in span (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
       'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in span (at **)\n' +
-        '    in Child (at **)\n' +
-        '    in span (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in span (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in App (at **)'
+          : '    in span (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in span (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
     ]);
   });
 
@@ -885,9 +894,11 @@ describe('ReactDOMServer', () => {
     expect(() => ReactDOMServer.renderToString(<App />)).toErrorDev([
       // ReactDOMServer(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in span (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in span (at **)\n' + '    in App (at **)'
+          : '    in span (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
       // ReactDOMServer(App > div > Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
       'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in blink (at **)',
@@ -898,15 +909,21 @@ describe('ReactDOMServer', () => {
         '    in App2 (at **)',
       // ReactDOMServer(App > div > Child > span)
       'Invalid ARIA attribute `ariaTypo4`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in span (at **)\n' +
-        '    in Child (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in span (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in App (at **)'
+          : '    in span (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
       // ReactDOMServer(App > div > font)
       'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in font (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in font (at **)\n' + '    in App (at **)'
+          : '    in font (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
     ]);
   });
 
