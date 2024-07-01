@@ -13,6 +13,7 @@ import type {
   StartTransitionOptions,
   Usable,
   Awaited,
+  NotFunction,
 } from 'shared/ReactTypes';
 import {REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
@@ -20,7 +21,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 
-type BasicStateAction<S> = (S => S) | S;
+type BasicStateAction<S> = (S => S) | NotFunction<S>;
 type Dispatch<A> = A => void;
 
 function resolveDispatcher() {
@@ -66,7 +67,7 @@ export function useContext<T>(Context: ReactContext<T>): T {
 }
 
 export function useState<S>(
-  initialState: (() => S) | S,
+  initialState: (() => S) | NotFunction<S>,
 ): [S, Dispatch<BasicStateAction<S>>] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useState(initialState);
