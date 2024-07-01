@@ -29,26 +29,21 @@ function shallowEqual(objA: mixed, objB: mixed): boolean {
     return false;
   }
 
-  const keysA = Object.keys(objA);
-  const keysB = Object.keys(objB);
+  let aLength = 0;
+  let bLength = 0;
 
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-
-  // Test for A's keys different from B.
-  for (let i = 0; i < keysA.length; i++) {
-    const currentKey = keysA[i];
-    if (
-      !hasOwnProperty.call(objB, currentKey) ||
-      // $FlowFixMe[incompatible-use] lost refinement of `objB`
-      !is(objA[currentKey], objB[currentKey])
-    ) {
+  for (const key in objA) {
+    aLength += 1;
+    if (!hasOwnProperty.call(objB, key) || !is(objA[key], objB[key])) {
       return false;
     }
   }
 
-  return true;
+  for (const _ in objB) {
+    bLength += 1;
+  }
+
+  return aLength === bLength;
 }
 
 export default shallowEqual;
