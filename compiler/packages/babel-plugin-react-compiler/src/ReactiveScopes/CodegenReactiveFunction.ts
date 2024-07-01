@@ -673,7 +673,7 @@ function codegenReactiveScope(
         t.expressionStatement(
           t.callExpression(t.identifier(detectionFunction), [
             t.identifier(loadName),
-            name,
+            t.cloneNode(name, true),
             t.stringLiteral(name.name),
             t.stringLiteral(cx.fnName),
             t.stringLiteral("cached"),
@@ -684,8 +684,8 @@ function codegenReactiveScope(
       idempotenceDetectionStatements.push(
         t.expressionStatement(
           t.callExpression(t.identifier(detectionFunction), [
-            slot,
-            name,
+            t.cloneNode(slot, true),
+            t.cloneNode(name, true),
             t.stringLiteral(name.name),
             t.stringLiteral(cx.fnName),
             t.stringLiteral("recomputed"),
@@ -698,6 +698,7 @@ function codegenReactiveScope(
       );
     }
     const condition = cx.synthesizeName("condition");
+    const recomputationBlock = t.cloneNode(computationBlock, true);
     memoStatement = t.blockStatement([
       ...computationBlock.body,
       t.variableDeclaration("let", [
@@ -714,7 +715,7 @@ function codegenReactiveScope(
       t.ifStatement(
         t.identifier(condition),
         t.blockStatement([
-          ...computationBlock.body,
+          ...recomputationBlock.body,
           ...idempotenceDetectionStatements,
         ])
       ),
