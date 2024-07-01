@@ -16,7 +16,6 @@ const {
   rcNumber,
 } = require('../../ReactVersions');
 const yargs = require('yargs');
-const Bundles = require('./bundles');
 const {buildEverything} = require('./build-ghaction');
 
 // Runs the build script for both stable and experimental release channels,
@@ -65,12 +64,17 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
     default: 'experimental',
     choices: ['experimental', 'stable'],
   },
-  bundleType: {
-    alias: 'b',
-    describe: 'Build the given bundle type.',
+  index: {
+    alias: 'i',
+    describe: 'Worker id.',
     requiresArg: true,
-    type: 'string',
-    choices: Object.values(Bundles.bundleTypes),
+    type: 'number',
+  },
+  total: {
+    alias: 't',
+    describe: 'Total number of workers.',
+    requiresArg: true,
+    type: 'number',
   },
   ci: {
     describe: 'Run tests in CI',
@@ -82,7 +86,7 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
 
 async function main() {
   if (argv.ci === 'github') {
-    await buildEverything(argv.bundleType);
+    await buildEverything(argv.index, argv.total);
     switch (argv.releaseChannel) {
       case 'stable': {
         processStable('./build');
