@@ -32,6 +32,7 @@ export function installHook(target: any): DevToolsHook | null {
   let targetConsole: Object = console;
   let targetConsoleMethods: {[string]: $FlowFixMe} = {};
   for (const method in console) {
+    // $FlowFixMe[invalid-computed-prop]
     targetConsoleMethods[method] = console[method];
   }
 
@@ -42,6 +43,7 @@ export function installHook(target: any): DevToolsHook | null {
 
     targetConsoleMethods = ({}: {[string]: $FlowFixMe});
     for (const method in targetConsole) {
+      // $FlowFixMe[invalid-computed-prop]
       targetConsoleMethods[method] = console[method];
     }
   }

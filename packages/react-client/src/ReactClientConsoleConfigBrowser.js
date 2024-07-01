@@ -70,7 +70,7 @@ export function printToConsole(
   } else if (methodName === 'warn') {
     warn.apply(console, newArgs);
   } else {
-    // eslint-disable-next-line react-internal/no-production-logging
-    console[methodName].apply(console, newArgs);
+    // $FlowFixMe[invalid-computed-prop]
+    console[methodName].apply(console, newArgs); // eslint-disable-line react-internal/no-production-logging
   }
 }

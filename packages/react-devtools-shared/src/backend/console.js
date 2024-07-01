@@ -97,6 +97,7 @@ const injectedRenderers: Map<
 let targetConsole: Object = console;
 let targetConsoleMethods: {[string]: $FlowFixMe} = {};
 for (const method in console) {
+  // $FlowFixMe[invalid-computed-prop]
   targetConsoleMethods[method] = console[method];
 }
 
@@ -110,6 +111,7 @@ export function dangerous_setTargetConsoleForTesting(
 
   targetConsoleMethods = ({}: {[string]: $FlowFixMe});
   for (const method in targetConsole) {
+    // $FlowFixMe[invalid-computed-prop]
     targetConsoleMethods[method] = console[method];
   }
 }

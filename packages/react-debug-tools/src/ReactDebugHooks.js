@@ -774,6 +774,7 @@ const Dispatcher: DispatcherType = {
 const DispatcherProxyHandler = {
   get(target: DispatcherType, prop: string) {
     if (target.hasOwnProperty(prop)) {
+      // $FlowFixMe[invalid-computed-prop]
       return target[prop];
     }
     const error = new Error('Missing method in Dispatcher: ' + prop);

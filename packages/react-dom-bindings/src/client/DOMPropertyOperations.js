@@ -196,6 +196,7 @@ export function setValueForPropertyOnCustomComponent(
     const eventName = name.slice(2, useCapture ? name.length - 7 : undefined);
 
     const prevProps = getFiberCurrentPropsFromNode(node);
+    // $FlowFixMe[invalid-computed-prop]
     const prevValue = prevProps != null ? prevProps[name] : null;
     if (typeof prevValue === 'function') {
       node.removeEventListener(eventName, prevValue, useCapture);
