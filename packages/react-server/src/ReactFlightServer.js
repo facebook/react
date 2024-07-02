@@ -97,6 +97,8 @@ import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
+import {getOwnerStackByComponentInfoInDev} from './flight/ReactFlightComponentStack';
+
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -317,6 +319,21 @@ if (
   patchConsole(console, 'warn');
 }
 
+function getCurrentStackInDEV(): string {
+  if (__DEV__) {
+    if (enableOwnerStacks) {
+      const owner: null | ReactComponentInfo = resolveOwner();
+      if (owner === null) {
+        return '';
+      }
+      return getOwnerStackByComponentInfoInDev(owner);
+    }
+    // We don't have Parent Stacks in Flight.
+    return '';
+  }
+  return '';
+}
+
 const ObjectPrototype = Object.prototype;
 
 type JSONValue =
@@ -491,6 +508,12 @@ function RequestInstance(
     );
   }
   ReactSharedInternals.A = DefaultAsyncDispatcher;
+  if (__DEV__) {
+    // Unlike Fizz or Fiber, we don't reset this and just keep it on permanently.
+    // This lets it act more like the AsyncDispatcher so that we can get the
+    // stack asynchronously too.
+    ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+  }
 
   const abortSet: Set<Task> = new Set();
   const pingedTasks: Array<Task> = [];
