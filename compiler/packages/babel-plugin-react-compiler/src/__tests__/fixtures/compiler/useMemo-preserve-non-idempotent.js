@@ -1,4 +1,4 @@
-// @enablePreserveExistingManualUseMemoAsScope
+// @enablePreserveExistingManualUseMemo
 import { useMemo } from "react";
 let cur = 99;
 function random(id) {
