@@ -424,11 +424,27 @@ export function compileProgram(
       externalFunctions.push(enableEmitHookGuards);
     }
 
-    if (pass.opts.environment?.enableChangeDetectionForDebugging != null) {
-      const enableChangeDetectionForDebugging = tryParseExternalFunction(
-        pass.opts.environment.enableChangeDetectionForDebugging
-      );
-      externalFunctions.push(enableChangeDetectionForDebugging);
+    if (pass.opts.environment?.enableChangeDetection != null) {
+      const enableChangeDetection = tryParseExternalFunction({
+        importSpecifierName:
+          pass.opts.environment.enableChangeDetection.structuralCheck,
+        source: pass.opts.environment.enableChangeDetection.source,
+      });
+      externalFunctions.push(enableChangeDetection);
+      if (pass.opts.environment.enableChangeDetection.wrappers != null) {
+        const store = tryParseExternalFunction({
+          importSpecifierName:
+            pass.opts.environment.enableChangeDetection.wrappers.store,
+          source: pass.opts.environment.enableChangeDetection.source,
+        });
+        const restore = tryParseExternalFunction({
+          importSpecifierName:
+            pass.opts.environment.enableChangeDetection.wrappers.restore,
+          source: pass.opts.environment.enableChangeDetection.source,
+        });
+        externalFunctions.push(store);
+        externalFunctions.push(restore);
+      }
     }
   } catch (err) {
     handleError(err, pass, null);

@@ -364,7 +364,7 @@ function extractManualMemoizationArgs(
 export function dropManualMemoization(func: HIRFunction): void {
   const isManualUseMemoEnabled =
     func.env.config.enablePreserveExistingManualUseMemo === "scope" ||
-    func.env.config.enableChangeDetectionForDebugging != null ||
+    func.env.config.enableChangeDetection != null ||
     func.env.config.disableMemoizationForDebugging;
   const isValidationEnabled =
     func.env.config.validatePreserveExistingMemoizationGuarantees ||

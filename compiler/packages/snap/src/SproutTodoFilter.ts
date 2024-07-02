@@ -491,12 +491,13 @@ const skipFilter = new Set([
 
   // 'react-compiler-runtime' not yet supported
   "flag-enable-emit-hook-guards",
-
   "fast-refresh-refresh-on-const-changes-dev",
   "useState-pruned-dependency-change-detect",
   "useState-unpruned-dependency",
   "useState-and-other-hook-unpruned-dependency",
   "change-detect-reassign",
+  "nomemo-and-change-detect",
+  "change-detect-wrapper",
 
   // needs to be executed as a module
   "meta-property",

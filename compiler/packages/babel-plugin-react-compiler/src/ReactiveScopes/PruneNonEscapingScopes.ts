@@ -813,7 +813,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
       memoizeJsxElements: !this.env.config.enableForest,
       forceMemoizePrimitives:
         this.env.config.enableForest ||
-        this.env.config.enableChangeDetectionForDebugging != null,
+        this.env.config.enableChangeDetection != null,
     };
   }
 
