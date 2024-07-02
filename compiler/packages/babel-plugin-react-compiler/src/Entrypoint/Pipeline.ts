@@ -97,6 +97,7 @@ import {
   validateUseMemo,
 } from "../Validation";
 import { validateLocalsNotReassignedAfterRender } from "../Validation/ValidateLocalsNotReassignedAfterRender";
+import { memoizeExistingUseMemos } from "../ReactiveScopes/MemoizeExistingUseMemos";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -154,7 +155,7 @@ function* runWithEnvironment(
   validateUseMemo(hir);
 
   if (
-    !env.config.enablePreserveExistingManualUseMemo &&
+    env.config.enablePreserveExistingManualUseMemo !== "hook" &&
     !env.config.disableMemoizationForDebugging &&
     !env.config.enableChangeDetectionForDebugging
   ) {
@@ -269,6 +270,15 @@ function* runWithEnvironment(
       name: "PruneUnusedLabelsHIR",
       value: hir,
     });
+
+    if (env.config.enablePreserveExistingManualUseMemo === "scope") {
+      memoizeExistingUseMemos(hir);
+      yield log({
+        kind: "hir",
+        name: "MemoizeExistingUseMemos",
+        value: hir,
+      });
+    }
 
     alignReactiveScopesToBlockScopesHIR(hir);
     yield log({

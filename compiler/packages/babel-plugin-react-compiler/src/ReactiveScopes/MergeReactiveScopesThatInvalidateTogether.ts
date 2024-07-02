@@ -15,7 +15,6 @@ import {
   ReactiveFunction,
   ReactiveScope,
   ReactiveScopeBlock,
-  ReactiveScopeDependencies,
   ReactiveScopeDependency,
   ReactiveStatement,
   Type,
@@ -109,7 +108,7 @@ class FindLastUsageVisitor extends ReactiveFunctionVisitor<void> {
   }
 }
 
-class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | null> {
+class Transform extends ReactiveFunctionTransform<ReactiveScope | null> {
   lastUsage: Map<IdentifierId, InstructionId>;
 
   constructor(lastUsage: Map<IdentifierId, InstructionId>) {
@@ -119,12 +118,13 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
 
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    state: ReactiveScopeDependencies | null
+    state: ReactiveScope | null
   ): Transformed<ReactiveStatement> {
-    this.visitScope(scopeBlock, scopeBlock.scope.dependencies);
+    this.visitScope(scopeBlock, scopeBlock.scope);
     if (
       state !== null &&
-      areEqualDependencies(state, scopeBlock.scope.dependencies)
+      areEqualDependencies(state.dependencies, scopeBlock.scope.dependencies) &&
+      state.source === scopeBlock.scope.source
     ) {
       return { kind: "replace-many", value: scopeBlock.instructions };
     } else {
@@ -132,10 +132,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
     }
   }
 
-  override visitBlock(
-    block: ReactiveBlock,
-    state: ReactiveScopeDependencies | null
-  ): void {
+  override visitBlock(block: ReactiveBlock, state: ReactiveScope | null): void {
     // Pass 1: visit nested blocks to potentially merge their scopes
     this.traverseBlock(block, state);
 
@@ -417,6 +414,9 @@ function canMergeScopes(
   current: ReactiveScopeBlock,
   next: ReactiveScopeBlock
 ): boolean {
+  if (current.scope.source !== next.scope.source) {
+    return false;
+  }
   // Don't merge scopes with reassignments
   if (
     current.scope.reassignments.size !== 0 ||
