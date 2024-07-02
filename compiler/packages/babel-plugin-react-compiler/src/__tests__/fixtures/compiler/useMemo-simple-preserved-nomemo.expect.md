@@ -25,31 +25,26 @@ import { c as _c } from "react/compiler-runtime"; // @disableMemoizationForDebug
 import { useMemo } from "react";
 
 function Component(t0) {
-  const $ = _c(5);
+  const $ = _c(4);
   const { a } = t0;
   let t1;
-  if ($[0] !== a || true) {
-    t1 = () => [a];
-    $[0] = a;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
   let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel") || true) {
-    t2 = [];
-    $[2] = t2;
+  if ($[0] !== a) {
+    t2 = [a];
+    $[0] = a;
+    $[1] = t2;
   } else {
-    t2 = $[2];
+    t2 = $[1];
   }
-  const x = useMemo(t1, t2);
+  t1 = t2;
+  const x = t1;
   let t3;
-  if ($[3] !== x || true) {
+  if ($[2] !== x || true) {
     t3 = <div>{x}</div>;
-    $[3] = x;
-    $[4] = t3;
+    $[2] = x;
+    $[3] = t3;
   } else {
-    t3 = $[4];
+    t3 = $[3];
   }
   return t3;
 }
