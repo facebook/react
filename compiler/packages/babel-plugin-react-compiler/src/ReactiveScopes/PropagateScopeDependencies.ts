@@ -685,7 +685,9 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     const scopeDependencies = context.enter(scope.scope, () => {
       this.visitBlock(scope.instructions, context);
     });
-    scope.scope.dependencies = scopeDependencies;
+    if (!scope.scope.source) {
+      scope.scope.dependencies = scopeDependencies;
+    }
   }
 
   override visitPrunedScope(

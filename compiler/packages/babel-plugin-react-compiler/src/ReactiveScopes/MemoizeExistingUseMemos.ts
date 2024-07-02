@@ -12,6 +12,7 @@ import {
   Identifier,
   makeInstructionId,
   ReactiveScope,
+  ReactiveScopeDependencies,
 } from "../HIR";
 import { eachTerminalSuccessor } from "../HIR/visitors";
 import {
@@ -30,7 +31,7 @@ function nextId(): number {
 
 type CurrentScope =
   | null
-  | { kind: "pending"; id: number }
+  | { kind: "pending"; deps: ReactiveScopeDependencies; id: number }
   | { kind: "available"; scope: ReactiveScope; id: number };
 
 function visitBlock(
@@ -75,7 +76,18 @@ function visitBlock(
   let currentScope = scope;
   for (const instruction of block.instructions) {
     if (instruction.value.kind === "StartMemoize") {
-      currentScope = { kind: "pending", id: nextId() };
+      const deps: ReactiveScopeDependencies = new Set();
+      for (const dep of instruction.value.deps ?? []) {
+        CompilerError.invariant(dep.root.kind !== "Global", {
+          reason:
+            "MemoizeExistingUseMemos: Globals should have been replaced with InlineGlobals",
+          loc: instruction.loc,
+          suggestions: null,
+          description: null,
+        });
+        deps.add({ identifier: dep.root.value.identifier, path: dep.path });
+      }
+      currentScope = { kind: "pending", id: nextId(), deps };
     } else if (instruction.value.kind === "FinishMemoize") {
       currentScope = null;
     } else if (currentScope != null) {
@@ -88,7 +100,7 @@ function visitBlock(
             scope: {
               id: fn.env.nextScopeId,
               range: { start: instruction.id, end: instruction.id },
-              dependencies: new Set(),
+              dependencies: currentScope.deps,
               declarations: new Map(),
               reassignments: new Set(),
               earlyReturnValue: null,
@@ -102,6 +114,7 @@ function visitBlock(
       }
     }
   }
+
   for (const successor of eachTerminalSuccessor(block.terminal)) {
     visitBlock(fn, fn.body.blocks.get(successor)!, currentScope, seen);
   }

@@ -843,7 +843,9 @@ export function printManualMemoDependency(
 ): string {
   let rootStr;
   if (val.root.kind === "Global") {
-    rootStr = val.root.identifierName;
+    rootStr = val.root.binding.binding.name;
+  } else if (val.root.kind === "InlinedGlobal") {
+    rootStr = `G(${val.root.name})`;
   } else {
     CompilerError.invariant(val.root.value.identifier.name?.kind === "named", {
       reason: "DepsValidation: expected named local variable in depslist",
