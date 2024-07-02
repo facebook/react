@@ -11,6 +11,7 @@ import isAttributeNameSafe from '../shared/isAttributeNameSafe';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
+import {constructClassNameString} from './CSSPropertyOperations';
 
 /**
  * Get the value for a attribute on a node. Only used in DEV for SSR validation.
@@ -155,6 +156,16 @@ export function setValueForKnownAttribute(
     name,
     enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
   );
+}
+
+export function setComputedValueForClassAttribute(node: Element, value: mixed | Array<mixed>) {
+  if (value === null) {
+    node.removeAttribute('class');
+    return;
+  }
+
+  const computedValue = constructClassNameString(value);
+  setValueForKnownAttribute(node, 'class', computedValue);
 }
 
 export function setValueForNamespacedAttribute(

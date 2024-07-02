@@ -28,6 +28,7 @@ import {
   setValueForKnownAttribute,
   setValueForAttribute,
   setValueForNamespacedAttribute,
+  setComputedValueForClassAttribute,
 } from './DOMPropertyOperations';
 import {
   validateInputProps,
@@ -388,6 +389,9 @@ function setProp(
     // but should ideally go in this list too.
     case 'className':
       setValueForKnownAttribute(domElement, 'class', value);
+      break;
+    case 'classNames':
+      setComputedValueForClassAttribute(domElement, value);
       break;
     case 'tabIndex':
       // This has to be case sensitive in SVG.
