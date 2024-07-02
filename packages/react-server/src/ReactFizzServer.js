@@ -21,6 +21,7 @@ import type {
   Thenable,
   ReactFormState,
   ReactComponentInfo,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -886,6 +887,41 @@ function createClassComponentStack(
     type,
   };
 }
+function createServerComponentStack(
+  task: Task,
+  debugInfo: void | null | ReactDebugInfo,
+): null | ComponentStackNode {
+  // Build a Server Component parent stack from the debugInfo.
+  if (__DEV__) {
+    let node = task.componentStack;
+    if (debugInfo != null) {
+      const stack: ReactDebugInfo = debugInfo;
+      for (let i = 0; i < stack.length; i++) {
+        const componentInfo: ReactComponentInfo = (stack[i]: any);
+        if (typeof componentInfo.name !== 'string') {
+          continue;
+        }
+        let name = componentInfo.name;
+        const env = componentInfo.env;
+        if (env) {
+          name += ' (' + env + ')';
+        }
+        node = {
+          tag: 3,
+          parent: node,
+          type: name,
+          owner: componentInfo.owner,
+          stack: componentInfo.stack,
+        };
+      }
+    }
+    return node;
+  }
+  // eslint-disable-next-line react-internal/prod-error-codes
+  throw new Error(
+    'createServerComponentStack should never be called in production. This is a bug in React.',
+  );
+}
 
 function createComponentStackFromType(
   task: Task,
@@ -908,27 +944,23 @@ type ThrownInfo = {
 export type ErrorInfo = ThrownInfo;
 export type PostponeInfo = ThrownInfo;
 
-// While we track component stacks in prod all the time we only produce a reified stack in dev and
-// during prerender in Prod. The reason for this is that the stack is useful for prerender where the timeliness
-// of the request is less critical than the observability of the execution. For renders and resumes however we
-// prioritize speed of the request.
-function getThrownInfo(
-  request: Request,
-  node: null | ComponentStackNode,
-): ThrownInfo {
-  if (
-    node &&
-    // Always produce a stack in dev
-    (__DEV__ ||
-      // Produce a stack in prod if we're in a prerender
-      request.trackedPostpones !== null)
-  ) {
-    return {
-      componentStack: getStackFromNode(node),
-    };
-  } else {
-    return {};
+function getThrownInfo(node: null | ComponentStackNode): ThrownInfo {
+  const errorInfo: ThrownInfo = {};
+  if (node) {
+    Object.defineProperty(errorInfo, 'componentStack', {
+      configurable: true,
+      enumerable: true,
+      get() {
+        // Lazyily generate the stack since it's expensive.
+        const stack = getStackFromNode(node);
+        Object.defineProperty(errorInfo, 'componentStack', {
+          value: stack,
+        });
+        return stack;
+      },
+    });
   }
+  return errorInfo;
 }
 
 function encodeErrorForBoundary(
@@ -1127,7 +1159,7 @@ function renderSuspenseBoundary(
   } catch (error: mixed) {
     contentRootSegment.status = ERRORED;
     newBoundary.status = CLIENT_RENDERED;
-    const thrownInfo = getThrownInfo(request, task.componentStack);
+    const thrownInfo = getThrownInfo(task.componentStack);
     let errorDigest;
     if (
       enablePostpone &&
@@ -1273,7 +1305,7 @@ function replaySuspenseBoundary(
     }
   } catch (error: mixed) {
     resumedBoundary.status = CLIENT_RENDERED;
-    const thrownInfo = getThrownInfo(request, task.componentStack);
+    const thrownInfo = getThrownInfo(task.componentStack);
     let errorDigest;
     if (
       enablePostpone &&
@@ -1986,6 +2018,7 @@ function renderLazyComponent(
   stack: null | Error, // DEV only
 ): void {
   const previousComponentStack = task.componentStack;
+  // TODO: Do we really need this stack frame? We don't on the client.
   task.componentStack = createBuiltInComponentStack(task, 'Lazy', owner, stack);
   let Component;
   if (__DEV__) {
@@ -2337,7 +2370,7 @@ function replayElement(
         // in the original prerender. What's unable to complete is the child
         // replay nodes which might be Suspense boundaries which are able to
         // absorb the error and we can still continue with siblings.
-        const thrownInfo = getThrownInfo(request, task.componentStack);
+        const thrownInfo = getThrownInfo(task.componentStack);
         erroredReplay(
           request,
           task.blockedBoundary,
@@ -2537,72 +2570,90 @@ function renderNodeDestructive(
         const owner = __DEV__ ? element._owner : null;
         const stack = __DEV__ && enableOwnerStacks ? element._debugStack : null;
 
+        const previousComponentStack = task.componentStack;
+        if (__DEV__) {
+          task.componentStack = createServerComponentStack(
+            task,
+            element._debugInfo,
+          );
+        }
+
         const name = getComponentNameFromType(type);
         const keyOrIndex =
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;
         const keyPath = [task.keyPath, name, keyOrIndex];
         if (task.replay !== null) {
-          if (__DEV__ && enableOwnerStacks) {
-            const debugTask: null | ConsoleTask = element._debugTask;
-            if (debugTask) {
-              debugTask.run(
-                replayElement.bind(
-                  null,
-                  request,
-                  task,
-                  keyPath,
-                  name,
-                  keyOrIndex,
-                  childIndex,
-                  type,
-                  props,
-                  ref,
-                  task.replay,
-                  owner,
-                  stack,
-                ),
-              );
-              return;
-            }
+          const debugTask: null | ConsoleTask =
+            __DEV__ && enableOwnerStacks ? element._debugTask : null;
+          if (debugTask) {
+            debugTask.run(
+              replayElement.bind(
+                null,
+                request,
+                task,
+                keyPath,
+                name,
+                keyOrIndex,
+                childIndex,
+                type,
+                props,
+                ref,
+                task.replay,
+                owner,
+                stack,
+              ),
+            );
+          } else {
+            replayElement(
+              request,
+              task,
+              keyPath,
+              name,
+              keyOrIndex,
+              childIndex,
+              type,
+              props,
+              ref,
+              task.replay,
+              owner,
+              stack,
+            );
           }
-          replayElement(
-            request,
-            task,
-            keyPath,
-            name,
-            keyOrIndex,
-            childIndex,
-            type,
-            props,
-            ref,
-            task.replay,
-            owner,
-            stack,
-          );
           // No matches found for this node. We assume it's already emitted in the
           // prelude and skip it during the replay.
         } else {
           // We're doing a plain render.
-          if (__DEV__ && enableOwnerStacks) {
-            const debugTask: null | ConsoleTask = element._debugTask;
-            if (debugTask) {
-              debugTask.run(
-                renderElement.bind(
-                  null,
-                  request,
-                  task,
-                  keyPath,
-                  type,
-                  props,
-                  ref,
-                  owner,
-                  stack,
-                ),
-              );
-              return;
-            }
+          const debugTask: null | ConsoleTask =
+            __DEV__ && enableOwnerStacks ? element._debugTask : null;
+          if (debugTask) {
+            debugTask.run(
+              renderElement.bind(
+                null,
+                request,
+                task,
+                keyPath,
+                type,
+                props,
+                ref,
+                owner,
+                stack,
+              ),
+            );
+          } else {
+            renderElement(
+              request,
+              task,
+              keyPath,
+              type,
+              props,
+              ref,
+              owner,
+              stack,
+            );
           }
-          renderElement(request, task, keyPath, type, props, ref, owner, stack);
+        }
+        if (__DEV__) {
+          task.componentStack = previousComponentStack;
         }
         return;
       }
@@ -2612,14 +2663,23 @@ function renderNodeDestructive(
             'Render them conditionally so that they only appear on the client render.',
         );
       case REACT_LAZY_TYPE: {
-        const previousComponentStack = task.componentStack;
-        task.componentStack = createBuiltInComponentStack(
-          task,
-          'Lazy',
-          null,
-          null,
-        );
         const lazyNode: LazyComponentType<any, any> = (node: any);
+        const previousComponentStack = task.componentStack;
+        if (__DEV__) {
+          task.componentStack = createServerComponentStack(
+            task,
+            lazyNode._debugInfo,
+          );
+        }
+        if (!__DEV__ || task.componentStack === previousComponentStack) {
+          // TODO: Do we really need this stack frame? We don't on the client.
+          task.componentStack = createBuiltInComponentStack(
+            task,
+            'Lazy',
+            null,
+            null,
+          );
+        }
         let resolvedNode;
         if (__DEV__) {
           resolvedNode = callLazyInitInDEV(lazyNode);
@@ -2750,12 +2810,23 @@ function renderNodeDestructive(
       // Clear any previous thenable state that was created by the unwrapping.
       task.thenableState = null;
       const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
-      return renderNodeDestructive(
+      const previousComponentStack = task.componentStack;
+      if (__DEV__) {
+        task.componentStack = createServerComponentStack(
+          task,
+          thenable._debugInfo,
+        );
+      }
+      const result = renderNodeDestructive(
         request,
         task,
         unwrapThenable(thenable),
         childIndex,
       );
+      if (__DEV__) {
+        task.componentStack = previousComponentStack;
+      }
+      return result;
     }
 
     if (maybeUsable.$$typeof === REACT_CONTEXT_TYPE) {
@@ -2868,7 +2939,7 @@ function replayFragment(
       // replay nodes which might be Suspense boundaries which are able to
       // absorb the error and we can still continue with siblings.
       // This is an error, stash the component stack if it is null.
-      const thrownInfo = getThrownInfo(request, task.componentStack);
+      const thrownInfo = getThrownInfo(task.componentStack);
       erroredReplay(
         request,
         task.blockedBoundary,
@@ -2986,6 +3057,15 @@ function renderChildrenArray(
   childIndex: number,
 ): void {
   const prevKeyPath = task.keyPath;
+  const previousComponentStack = task.componentStack;
+  if (__DEV__) {
+    // We read debugInfo from task.node instead of children because it might have been an
+    // unwrapped iterable so we read from the original node.
+    task.componentStack = createServerComponentStack(
+      task,
+      (task.node: any)._debugInfo,
+    );
+  }
   if (childIndex !== -1) {
     task.keyPath = [task.keyPath, 'Fragment', childIndex];
     if (task.replay !== null) {
@@ -2997,6 +3077,9 @@ function renderChildrenArray(
         childIndex,
       );
       task.keyPath = prevKeyPath;
+      if (__DEV__) {
+        task.componentStack = previousComponentStack;
+      }
       return;
     }
   }
@@ -3027,6 +3110,9 @@ function renderChildrenArray(
       }
       task.treeContext = prevTreeContext;
       task.keyPath = prevKeyPath;
+      if (__DEV__) {
+        task.componentStack = previousComponentStack;
+      }
       return;
     }
   }
@@ -3046,6 +3132,9 @@ function renderChildrenArray(
   // only need to reset it to the previous value at the very end.
   task.treeContext = prevTreeContext;
   task.keyPath = prevKeyPath;
+  if (__DEV__) {
+    task.componentStack = previousComponentStack;
+  }
 }
 
 function trackPostpone(
@@ -3467,7 +3556,7 @@ function renderNode(
           const trackedPostpones = request.trackedPostpones;
 
           const postponeInstance: Postpone = (x: any);
-          const thrownInfo = getThrownInfo(request, task.componentStack);
+          const thrownInfo = getThrownInfo(task.componentStack);
           const postponedSegment = injectPostponedHole(
             request,
             ((task: any): RenderTask), // We don't use ReplayTasks in prerenders.
@@ -3782,7 +3871,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       boundary.status = CLIENT_RENDERED;
       // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
       // boundary the message is referring to
-      const errorInfo = getThrownInfo(request, task.componentStack);
+      const errorInfo = getThrownInfo(task.componentStack);
       let errorDigest;
       if (
         enablePostpone &&
@@ -4074,7 +4163,7 @@ function retryRenderTask(
         task.abortSet.delete(task);
         const postponeInstance: Postpone = (x: any);
 
-        const postponeInfo = getThrownInfo(request, task.componentStack);
+        const postponeInfo = getThrownInfo(task.componentStack);
         logPostpone(request, postponeInstance.message, postponeInfo);
         trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
@@ -4082,7 +4171,7 @@ function retryRenderTask(
       }
     }
 
-    const errorInfo = getThrownInfo(request, task.componentStack);
+    const errorInfo = getThrownInfo(task.componentStack);
     task.abortSet.delete(task);
     segment.status = ERRORED;
     erroredTask(request, task.blockedBoundary, x, errorInfo);
@@ -4156,7 +4245,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     }
     task.replay.pendingTasks--;
     task.abortSet.delete(task);
-    const errorInfo = getThrownInfo(request, task.componentStack);
+    const errorInfo = getThrownInfo(task.componentStack);
     erroredReplay(
       request,
       task.blockedBoundary,
