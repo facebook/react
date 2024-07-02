@@ -4556,8 +4556,7 @@ __DEV__ &&
         stack: stack
       };
     }
-    function createServerComponentStack(task, debugInfo) {
-      task = task.componentStack;
+    function pushServerComponentStack(task, debugInfo) {
       if (null != debugInfo)
         for (var i = 0; i < debugInfo.length; i++) {
           var componentInfo = debugInfo[i];
@@ -4565,16 +4564,15 @@ __DEV__ &&
             var name = componentInfo.name,
               env = componentInfo.env;
             env && (name += " (" + env + ")");
-            task = {
+            task.componentStack = {
               tag: 3,
-              parent: task,
+              parent: task.componentStack,
               type: name,
               owner: componentInfo.owner,
               stack: componentInfo.stack
             };
           }
         }
-      return task;
     }
     function getThrownInfo(node) {
       var errorInfo = {};
@@ -4615,19 +4613,20 @@ __DEV__ &&
       boundary.errorComponentStack = thrownInfo.componentStack;
     }
     function logRecoverableError(request, error$1, errorInfo) {
-      request = request.onError(error$1, errorInfo);
-      if (null != request && "string" !== typeof request)
+      request = request.onError;
+      error$1 = request(error$1, errorInfo);
+      if (null != error$1 && "string" !== typeof error$1)
         error$jscomp$2(
           'onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "%s" instead',
-          typeof request
+          typeof error$1
         );
-      else return request;
+      else return error$1;
     }
     function fatalError(request, error) {
-      var onShellError = request.onShellError;
+      var onShellError = request.onShellError,
+        onFatalError = request.onFatalError;
       onShellError(error);
-      onShellError = request.onFatalError;
-      onShellError(error);
+      onFatalError(error);
       null !== request.destination
         ? ((request.status = 2), request.destination.destroy(error))
         : ((request.status = 1), (request.fatalError = error));
@@ -5712,10 +5711,7 @@ __DEV__ &&
               var ref = void 0 !== refProp ? refProp : null;
               var owner = node$jscomp$0._owner;
               refProp = task.componentStack;
-              task.componentStack = createServerComponentStack(
-                task,
-                node$jscomp$0._debugInfo
-              );
+              pushServerComponentStack(task, node$jscomp$0._debugInfo);
               var name = getComponentNameFromType(type),
                 keyOrIndex =
                   null == key ? (-1 === childIndex ? 0 : childIndex) : key;
@@ -5920,10 +5916,7 @@ __DEV__ &&
               );
             case REACT_LAZY_TYPE:
               refProp = task.componentStack;
-              task.componentStack = createServerComponentStack(
-                task,
-                node$jscomp$0._debugInfo
-              );
+              pushServerComponentStack(task, node$jscomp$0._debugInfo);
               task.componentStack === refProp &&
                 (task.componentStack = createBuiltInComponentStack(
                   task,
@@ -5984,10 +5977,7 @@ __DEV__ &&
             return (
               (task.thenableState = null),
               (refProp = task.componentStack),
-              (task.componentStack = createServerComponentStack(
-                task,
-                node$jscomp$0._debugInfo
-              )),
+              pushServerComponentStack(task, node$jscomp$0._debugInfo),
               (node$jscomp$0 = renderNodeDestructive(
                 request,
                 task,
@@ -6052,10 +6042,7 @@ __DEV__ &&
     function renderChildrenArray(request$jscomp$0, task, children, childIndex) {
       var prevKeyPath = task.keyPath,
         previousComponentStack = task.componentStack;
-      task.componentStack = createServerComponentStack(
-        task,
-        task.node._debugInfo
-      );
+      pushServerComponentStack(task, task.node._debugInfo);
       if (
         -1 !== childIndex &&
         ((task.keyPath = [task.keyPath, "Fragment", childIndex]),
@@ -8957,5 +8944,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-cfb8945f51-20240702";
+    exports.version = "19.0.0-www-classic-3db98c9177-20240702";
   })();

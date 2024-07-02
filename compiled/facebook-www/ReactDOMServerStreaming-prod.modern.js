@@ -3660,14 +3660,15 @@ function getThrownInfo(node$jscomp$0) {
   return errorInfo;
 }
 function logRecoverableError(request, error, errorInfo) {
-  request = request.onError(error, errorInfo);
-  if (null == request || "string" === typeof request) return request;
+  request = request.onError;
+  error = request(error, errorInfo);
+  if (null == error || "string" === typeof error) return error;
 }
 function fatalError(request, error) {
-  var onShellError = request.onShellError;
+  var onShellError = request.onShellError,
+    onFatalError = request.onFatalError;
   onShellError(error);
-  onShellError = request.onFatalError;
-  onShellError(error);
+  onFatalError(error);
   null !== request.destination
     ? ((request.status = 2),
       (request = request.destination),
