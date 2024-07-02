@@ -269,6 +269,7 @@ function* runWithEnvironment(
 
     if (
       env.config.enablePreserveExistingManualUseMemo === "scope" ||
+      env.config.enableChangeDetectionForDebugging != null ||
       env.config.disableMemoizationForDebugging
     ) {
       memoizeExistingUseMemos(hir);
