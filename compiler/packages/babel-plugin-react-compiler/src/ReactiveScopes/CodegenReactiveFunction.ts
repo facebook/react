@@ -653,6 +653,7 @@ function codegenReactiveScope(
     const cacheLoadOldValueStatements: Array<t.Statement> = [];
     const changeDetectionStatements: Array<t.Statement> = [];
     const idempotenceDetectionStatements: Array<t.Statement> = [];
+    const restoreOldValueStatements: Array<t.Statement> = [];
 
     for (const { name, index, value } of cacheLoads) {
       const loadName = cx.synthesizeName(`old$${name.name}`);
@@ -669,6 +670,17 @@ function codegenReactiveScope(
           t.variableDeclarator(t.identifier(loadName), slot),
         ])
       );
+      if (scope.source) {
+        restoreOldValueStatements.push(
+          t.expressionStatement(
+            t.assignmentExpression(
+              "=",
+              t.cloneNode(name, true),
+              t.identifier(loadName)
+            )
+          )
+        );
+      }
       changeDetectionStatements.push(
         t.expressionStatement(
           t.callExpression(t.identifier(detectionFunction), [
@@ -709,6 +721,7 @@ function codegenReactiveScope(
         t.blockStatement([
           ...cacheLoadOldValueStatements,
           ...changeDetectionStatements,
+          ...restoreOldValueStatements,
         ])
       ),
       ...cacheStoreStatements,

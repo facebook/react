@@ -35,10 +35,10 @@ import { c as _c } from "react/compiler-runtime";
 import { useState } from "react"; // @enableChangeDetectionForDebugging
 
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(9);
   let t0;
   {
-    t0 = f(props.x);
+    t0 = props.x;
     let condition = $[0] !== props.x;
     if (!condition) {
       let old$t0 = $[1];
@@ -47,41 +47,73 @@ function Component(props) {
     $[0] = props.x;
     $[1] = t0;
     if (condition) {
-      t0 = f(props.x);
+      t0 = props.x;
       $structuralCheck($[1], t0, "t0", "Component", "recomputed", "(4:4)");
       t0 = $[1];
     }
   }
-  const w = t0;
-  const [x] = useState(w);
   let t1;
   {
-    t1 = (
+    t1 = f(t0);
+    let condition = $[2] !== t0;
+    if (!condition) {
+      let old$t1 = $[3];
+      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(4:4)");
+    }
+    $[2] = t0;
+    $[3] = t1;
+    if (condition) {
+      t1 = f(t0);
+      $structuralCheck($[3], t1, "t1", "Component", "recomputed", "(4:4)");
+      t1 = $[3];
+    }
+  }
+  const w = t1;
+  const t2 = useState(w);
+  let x;
+  {
+    [x] = t2;
+    let condition = $[4] !== t2;
+    if (!condition) {
+      let old$x = $[5];
+      $structuralCheck(old$x, x, "x", "Component", "cached", "(5:5)");
+    }
+    $[4] = t2;
+    $[5] = x;
+    if (condition) {
+      [x] = t2;
+      $structuralCheck($[5], x, "x", "Component", "recomputed", "(5:5)");
+      x = $[5];
+    }
+  }
+  let t3;
+  {
+    t3 = (
       <div>
         {x}
         {w}
       </div>
     );
-    let condition = $[2] !== x || $[3] !== w;
+    let condition = $[6] !== x || $[7] !== w;
     if (!condition) {
-      let old$t1 = $[4];
-      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(7:10)");
+      let old$t3 = $[8];
+      $structuralCheck(old$t3, t3, "t3", "Component", "cached", "(7:10)");
     }
-    $[2] = x;
-    $[3] = w;
-    $[4] = t1;
+    $[6] = x;
+    $[7] = w;
+    $[8] = t3;
     if (condition) {
-      t1 = (
+      t3 = (
         <div>
           {x}
           {w}
         </div>
       );
-      $structuralCheck($[4], t1, "t1", "Component", "recomputed", "(7:10)");
-      t1 = $[4];
+      $structuralCheck($[8], t3, "t3", "Component", "recomputed", "(7:10)");
+      t3 = $[8];
     }
   }
-  return t1;
+  return t3;
 }
 
 function f(x) {
