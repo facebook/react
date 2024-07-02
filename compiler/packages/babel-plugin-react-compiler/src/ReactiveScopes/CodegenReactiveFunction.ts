@@ -623,7 +623,7 @@ function codegenReactiveScope(
   }
 
   if (
-    cx.env.config.disableMemoizationForDebugging &&
+    cx.env.config.disableMemoization &&
     !scope.source &&
     cx.env.config.enableChangeDetection == null
   ) {
@@ -691,7 +691,7 @@ function codegenReactiveScope(
           t.variableDeclarator(t.identifier(loadNameStr), genSlot()),
         ])
       );
-      if (scope.source || !cx.env.config.disableMemoizationForDebugging) {
+      if (scope.source || !cx.env.config.disableMemoization) {
         restoreOldValueStatements.push(
           t.expressionStatement(
             t.assignmentExpression("=", t.identifier(nameStr), restoredValue)
