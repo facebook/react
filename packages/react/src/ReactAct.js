@@ -210,7 +210,7 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
         // Like many things in this module, this is next part is confusing.
         //
         // We do not currently require every `act` call that is passed a
-        // callback to be awaited, through arguably we should. Since this
+        // callback to be awaited, though arguably we should. Since this
         // callback was synchronous, we need to exit the current scope before
         // returning.
         //
