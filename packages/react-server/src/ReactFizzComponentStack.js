@@ -41,10 +41,19 @@ type ClassComponentStackNode = {
   owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
   stack?: null | string | Error, // DEV only
 };
+type ServerComponentStackNode = {
+  // DEV only
+  tag: 3,
+  parent: null | ComponentStackNode,
+  type: string, // name + env
+  owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
+  stack?: null | string | Error, // DEV only
+};
 export type ComponentStackNode =
   | BuiltInComponentStackNode
   | FunctionComponentStackNode
-  | ClassComponentStackNode;
+  | ClassComponentStackNode
+  | ServerComponentStackNode;
 
 export function getStackByComponentStackNode(
   componentStack: ComponentStackNode,
@@ -63,6 +72,11 @@ export function getStackByComponentStackNode(
         case 2:
           info += describeClassComponentFrame(node.type);
           break;
+        case 3:
+          if (__DEV__) {
+            info += describeBuiltInComponentFrame(node.type);
+            break;
+          }
       }
       // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.parent;
@@ -110,6 +124,11 @@ export function getOwnerStackByComponentStackNodeInDev(
           );
         }
         break;
+      case 3:
+        if (!componentStack.owner) {
+          info += describeBuiltInComponentFrame(componentStack.type);
+        }
+        break;
     }
 
     let owner: void | null | ComponentStackNode | ReactComponentInfo =
@@ -137,11 +156,11 @@ export function getOwnerStackByComponentStackNodeInDev(
         }
       } else if (typeof owner.stack === 'string') {
         // Server Component
-        if (owner.stack !== '') {
-          info += '\n' + owner.stack;
+        const ownerStack: string = owner.stack;
+        owner = owner.owner;
+        if (owner && ownerStack !== '') {
+          info += '\n' + ownerStack;
         }
-        const componentInfo: ReactComponentInfo = (owner: any);
-        owner = componentInfo.owner;
       } else {
         break;
       }
