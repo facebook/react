@@ -154,11 +154,7 @@ function* runWithEnvironment(
   validateContextVariableLValues(hir);
   validateUseMemo(hir);
 
-  if (
-    env.config.enablePreserveExistingManualUseMemo !== "hook" &&
-    !env.config.disableMemoizationForDebugging &&
-    !env.config.enableChangeDetectionForDebugging
-  ) {
+  if (env.config.enablePreserveExistingManualUseMemo !== "hook") {
     dropManualMemoization(hir);
     yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
   }
@@ -271,7 +267,10 @@ function* runWithEnvironment(
       value: hir,
     });
 
-    if (env.config.enablePreserveExistingManualUseMemo === "scope") {
+    if (
+      env.config.enablePreserveExistingManualUseMemo === "scope" ||
+      env.config.disableMemoizationForDebugging
+    ) {
       memoizeExistingUseMemos(hir);
       yield log({
         kind: "hir",
