@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePreserveExistingManualUseMemoAsScope
+// @enablePreserveExistingManualUseMemo
 import { useMemo } from "react";
 
 function Component({ a }) {
@@ -21,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingManualUseMemoAsScope
+import { c as _c } from "react/compiler-runtime"; // @enablePreserveExistingManualUseMemo
 import { useMemo } from "react";
 
 function Component(t0) {
