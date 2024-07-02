@@ -2680,16 +2680,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1670 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1669 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1684 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1685 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1686 = new Set(),
-    JSCompiler_object_inline_styles_1687 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1688 = new Set(),
-    JSCompiler_object_inline_scripts_1689 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1690 = new Set(),
-    JSCompiler_object_inline_preloads_1691 = {
+  var JSCompiler_object_inline_preconnects_1683 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1684 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1685 = new Set(),
+    JSCompiler_object_inline_styles_1686 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1687 = new Set(),
+    JSCompiler_object_inline_scripts_1688 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1689 = new Set(),
+    JSCompiler_object_inline_preloads_1690 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2726,7 +2726,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1688.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1687.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2767,7 +2767,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1688.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1687.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2782,7 +2782,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1670,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1669,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2802,14 +2802,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1684,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1685,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1686,
-    styles: JSCompiler_object_inline_styles_1687,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1688,
-    scripts: JSCompiler_object_inline_scripts_1689,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1690,
-    preloads: JSCompiler_object_inline_preloads_1691,
+    preconnects: JSCompiler_object_inline_preconnects_1683,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1684,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1685,
+    styles: JSCompiler_object_inline_styles_1686,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1687,
+    scripts: JSCompiler_object_inline_scripts_1688,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1689,
+    preloads: JSCompiler_object_inline_preloads_1690,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -3766,31 +3766,41 @@ function createPendingSegment(
 function createBuiltInComponentStack(task, type) {
   return { tag: 0, parent: task.componentStack, type: type };
 }
-function getThrownInfo(request, node) {
-  if (node && null !== request.trackedPostpones) {
-    try {
-      request = "";
-      do {
-        switch (node.tag) {
-          case 0:
-            request += describeBuiltInComponentFrame(node.type);
-            break;
-          case 1:
-            request += describeNativeComponentFrame(node.type, !1);
-            break;
-          case 2:
-            request += describeNativeComponentFrame(node.type, !0);
+function getThrownInfo(node$jscomp$0) {
+  var errorInfo = {};
+  node$jscomp$0 &&
+    Object.defineProperty(errorInfo, "componentStack", {
+      configurable: !0,
+      enumerable: !0,
+      get: function () {
+        try {
+          var info = "",
+            node = node$jscomp$0;
+          do {
+            switch (node.tag) {
+              case 0:
+                info += describeBuiltInComponentFrame(node.type);
+                break;
+              case 1:
+                info += describeNativeComponentFrame(node.type, !1);
+                break;
+              case 2:
+                info += describeNativeComponentFrame(node.type, !0);
+            }
+            node = node.parent;
+          } while (node);
+          var JSCompiler_inline_result = info;
+        } catch (x) {
+          JSCompiler_inline_result =
+            "\nError generating stack: " + x.message + "\n" + x.stack;
         }
-        node = node.parent;
-      } while (node);
-      var JSCompiler_temp = request;
-    } catch (x) {
-      JSCompiler_temp =
-        "\nError generating stack: " + x.message + "\n" + x.stack;
-    }
-    JSCompiler_temp = { componentStack: JSCompiler_temp };
-  } else JSCompiler_temp = {};
-  return JSCompiler_temp;
+        Object.defineProperty(errorInfo, "componentStack", {
+          value: JSCompiler_inline_result
+        });
+        return JSCompiler_inline_result;
+      }
+    });
+  return errorInfo;
 }
 function logRecoverableError(request, error, errorInfo) {
   request = request.onError(error, errorInfo);
@@ -4234,7 +4244,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           } catch (error$28) {
             (contentRootSegment.status = 4),
               (propName$33.status = 4),
-              (newProps = getThrownInfo(request, task.componentStack)),
+              (newProps = getThrownInfo(task.componentStack)),
               (JSCompiler_inline_result = logRecoverableError(
                 request,
                 error$28,
@@ -4444,7 +4454,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                           x)
                         );
                       task.replay.pendingTasks--;
-                      props = getThrownInfo(request, task.componentStack);
+                      props = getThrownInfo(task.componentStack);
                       key = request;
                       request = task.blockedBoundary;
                       type = x;
@@ -4516,10 +4526,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                         }
                       } catch (error$29) {
                         (resumedBoundary.status = 4),
-                          (childNodes = getThrownInfo(
-                            request,
-                            task.componentStack
-                          )),
+                          (childNodes = getThrownInfo(task.componentStack)),
                           (replay = logRecoverableError(
                             request,
                             error$29,
@@ -4677,7 +4684,7 @@ function renderChildrenArray(request, task, children, childIndex) {
           )
             throw x;
           task.replay.pendingTasks--;
-          children = getThrownInfo(request, task.componentStack);
+          children = getThrownInfo(task.componentStack);
           var boundary = task.blockedBoundary,
             error = x;
           children = logRecoverableError(request, error, children);
@@ -4929,7 +4936,7 @@ function abortTask(task, request, error) {
     boundary.pendingTasks--,
       4 !== boundary.status &&
         ((boundary.status = 4),
-        (task = getThrownInfo(request, task.componentStack)),
+        (task = getThrownInfo(task.componentStack)),
         (task = logRecoverableError(request, error, task)),
         (boundary.errorDigest = task),
         untrackBoundary(request, boundary),
@@ -5122,10 +5129,7 @@ function performWork(request$jscomp$2) {
               } else {
                 task.replay.pendingTasks--;
                 task.abortSet.delete(task);
-                var errorInfo = getThrownInfo(
-                  request$jscomp$0,
-                  task.componentStack
-                );
+                var errorInfo = getThrownInfo(task.componentStack);
                 request = void 0;
                 var request$jscomp$1 = request$jscomp$0,
                   boundary = task.blockedBoundary,
@@ -5191,10 +5195,7 @@ function performWork(request$jscomp$2) {
               null !== task.componentStack &&
                 (task.componentStack = task.componentStack.parent);
             } else {
-              var errorInfo$jscomp$0 = getThrownInfo(
-                request,
-                task.componentStack
-              );
+              var errorInfo$jscomp$0 = getThrownInfo(task.componentStack);
               task.abortSet.delete(task);
               request$jscomp$1.status = 4;
               var boundary$jscomp$0 = task.blockedBoundary;
@@ -5791,4 +5792,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-6d2a97a711-20240701";
+exports.version = "19.0.0-www-classic-e60063d9e7-20240702";

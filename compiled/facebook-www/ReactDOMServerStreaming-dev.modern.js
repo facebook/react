@@ -4319,8 +4319,21 @@ __DEV__ &&
         stack: stack
       };
     }
-    function getThrownInfo(request, node) {
-      return node ? { componentStack: getStackByComponentStackNode(node) } : {};
+    function getThrownInfo(node) {
+      var errorInfo = {};
+      node &&
+        Object.defineProperty(errorInfo, "componentStack", {
+          configurable: !0,
+          enumerable: !0,
+          get: function () {
+            var stack = getStackByComponentStackNode(node);
+            Object.defineProperty(errorInfo, "componentStack", {
+              value: stack
+            });
+            return stack;
+          }
+        });
+      return errorInfo;
     }
     function encodeErrorForBoundary(
       boundary,
@@ -5179,7 +5192,7 @@ __DEV__ &&
               } catch (error$2) {
                 contentRootSegment.status = 4;
                 newBoundary.status = 4;
-                var thrownInfo = getThrownInfo(request, task.componentStack);
+                var thrownInfo = getThrownInfo(task.componentStack);
                 var errorDigest = logRecoverableError(
                   request,
                   error$2,
@@ -5470,7 +5483,7 @@ __DEV__ &&
                               (task.node === node && (task.replay = replay), x)
                             );
                           task.replay.pendingTasks--;
-                          refProp = getThrownInfo(request, task.componentStack);
+                          refProp = getThrownInfo(task.componentStack);
                           erroredReplay(
                             request,
                             task.blockedBoundary,
@@ -5545,10 +5558,7 @@ __DEV__ &&
                             }
                           } catch (error$3) {
                             (resumedBoundary.status = 4),
-                              (childNodes = getThrownInfo(
-                                request,
-                                task.componentStack
-                              )),
+                              (childNodes = getThrownInfo(task.componentStack)),
                               (type = logRecoverableError(
                                 request,
                                 error$3,
@@ -5767,7 +5777,7 @@ __DEV__ &&
               )
                 throw x;
               task.replay.pendingTasks--;
-              children = getThrownInfo(request$jscomp$0, task.componentStack);
+              children = getThrownInfo(task.componentStack);
               erroredReplay(
                 request$jscomp$0,
                 task.blockedBoundary,
@@ -6147,7 +6157,7 @@ __DEV__ &&
         boundary.pendingTasks--,
           4 !== boundary.status &&
             ((boundary.status = 4),
-            (task = getThrownInfo(request, task.componentStack)),
+            (task = getThrownInfo(task.componentStack)),
             (segment = logRecoverableError(request, error, task)),
             encodeErrorForBoundary(boundary, segment, error, task, !0),
             untrackBoundary(request, boundary),
@@ -8304,7 +8314,6 @@ __DEV__ &&
                     request$jscomp$0.replay.pendingTasks--;
                     request$jscomp$0.abortSet.delete(request$jscomp$0);
                     var errorInfo = getThrownInfo(
-                      request$jscomp$1,
                       request$jscomp$0.componentStack
                     );
                     erroredReplay(
@@ -8375,7 +8384,6 @@ __DEV__ &&
                         task$jscomp$0.componentStack.parent);
                   } else {
                     var errorInfo$jscomp$0 = getThrownInfo(
-                      request$jscomp$0,
                       task$jscomp$0.componentStack
                     );
                     task$jscomp$0.abortSet.delete(task$jscomp$0);

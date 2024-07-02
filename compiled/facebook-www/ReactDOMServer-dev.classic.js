@@ -4553,8 +4553,21 @@ __DEV__ &&
         stack: stack
       };
     }
-    function getThrownInfo(request, node) {
-      return node ? { componentStack: getStackByComponentStackNode(node) } : {};
+    function getThrownInfo(node) {
+      var errorInfo = {};
+      node &&
+        Object.defineProperty(errorInfo, "componentStack", {
+          configurable: !0,
+          enumerable: !0,
+          get: function () {
+            var stack = getStackByComponentStackNode(node);
+            Object.defineProperty(errorInfo, "componentStack", {
+              value: stack
+            });
+            return stack;
+          }
+        });
+      return errorInfo;
     }
     function encodeErrorForBoundary(
       boundary,
@@ -5445,7 +5458,7 @@ __DEV__ &&
               } catch (error$2) {
                 contentRootSegment.status = 4;
                 newBoundary.status = CLIENT_RENDERED;
-                var thrownInfo = getThrownInfo(request, task.componentStack);
+                var thrownInfo = getThrownInfo(task.componentStack);
                 var errorDigest = logRecoverableError(
                   request,
                   error$2,
@@ -5737,7 +5750,7 @@ __DEV__ &&
                               (task.node === node && (task.replay = replay), x)
                             );
                           task.replay.pendingTasks--;
-                          refProp = getThrownInfo(request, task.componentStack);
+                          refProp = getThrownInfo(task.componentStack);
                           erroredReplay(
                             request,
                             task.blockedBoundary,
@@ -5812,10 +5825,7 @@ __DEV__ &&
                             }
                           } catch (error$3) {
                             (resumedBoundary.status = CLIENT_RENDERED),
-                              (childNodes = getThrownInfo(
-                                request,
-                                task.componentStack
-                              )),
+                              (childNodes = getThrownInfo(task.componentStack)),
                               (type = logRecoverableError(
                                 request,
                                 error$3,
@@ -6035,7 +6045,7 @@ __DEV__ &&
               )
                 throw x;
               task.replay.pendingTasks--;
-              children = getThrownInfo(request$jscomp$0, task.componentStack);
+              children = getThrownInfo(task.componentStack);
               erroredReplay(
                 request$jscomp$0,
                 task.blockedBoundary,
@@ -6421,7 +6431,7 @@ __DEV__ &&
         boundary.pendingTasks--,
           boundary.status !== CLIENT_RENDERED &&
             ((boundary.status = CLIENT_RENDERED),
-            (task = getThrownInfo(request, task.componentStack)),
+            (task = getThrownInfo(task.componentStack)),
             (segment = logRecoverableError(request, error, task)),
             encodeErrorForBoundary(boundary, segment, error, task, !0),
             untrackBoundary(request, boundary),
@@ -6632,10 +6642,7 @@ __DEV__ &&
                   } else {
                     request.replay.pendingTasks--;
                     request.abortSet.delete(request);
-                    var errorInfo = getThrownInfo(
-                      request$jscomp$0,
-                      request.componentStack
-                    );
+                    var errorInfo = getThrownInfo(request.componentStack);
                     erroredReplay(
                       request$jscomp$0,
                       request.blockedBoundary,
@@ -6705,7 +6712,6 @@ __DEV__ &&
                         task$jscomp$0.componentStack.parent);
                   } else {
                     var errorInfo$jscomp$0 = getThrownInfo(
-                      request,
                       task$jscomp$0.componentStack
                     );
                     task$jscomp$0.abortSet.delete(task$jscomp$0);
@@ -8904,5 +8910,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-6d2a97a711-20240701";
+    exports.version = "19.0.0-www-classic-e60063d9e7-20240702";
   })();

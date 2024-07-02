@@ -3623,31 +3623,41 @@ function createPendingSegment(
 function createBuiltInComponentStack(task, type) {
   return { tag: 0, parent: task.componentStack, type: type };
 }
-function getThrownInfo(request, node) {
-  if (node && null !== request.trackedPostpones) {
-    try {
-      request = "";
-      do {
-        switch (node.tag) {
-          case 0:
-            request += describeBuiltInComponentFrame(node.type);
-            break;
-          case 1:
-            request += describeNativeComponentFrame(node.type, !1);
-            break;
-          case 2:
-            request += describeNativeComponentFrame(node.type, !0);
+function getThrownInfo(node$jscomp$0) {
+  var errorInfo = {};
+  node$jscomp$0 &&
+    Object.defineProperty(errorInfo, "componentStack", {
+      configurable: !0,
+      enumerable: !0,
+      get: function () {
+        try {
+          var info = "",
+            node = node$jscomp$0;
+          do {
+            switch (node.tag) {
+              case 0:
+                info += describeBuiltInComponentFrame(node.type);
+                break;
+              case 1:
+                info += describeNativeComponentFrame(node.type, !1);
+                break;
+              case 2:
+                info += describeNativeComponentFrame(node.type, !0);
+            }
+            node = node.parent;
+          } while (node);
+          var JSCompiler_inline_result = info;
+        } catch (x) {
+          JSCompiler_inline_result =
+            "\nError generating stack: " + x.message + "\n" + x.stack;
         }
-        node = node.parent;
-      } while (node);
-      var JSCompiler_temp = request;
-    } catch (x) {
-      JSCompiler_temp =
-        "\nError generating stack: " + x.message + "\n" + x.stack;
-    }
-    JSCompiler_temp = { componentStack: JSCompiler_temp };
-  } else JSCompiler_temp = {};
-  return JSCompiler_temp;
+        Object.defineProperty(errorInfo, "componentStack", {
+          value: JSCompiler_inline_result
+        });
+        return JSCompiler_inline_result;
+      }
+    });
+  return errorInfo;
 }
 function logRecoverableError(request, error, errorInfo) {
   request = request.onError(error, errorInfo);
@@ -4067,10 +4077,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
           } catch (error$28) {
             (contentRootSegment.status = 4),
               (contextType.status = 4),
-              (JSCompiler_inline_result = getThrownInfo(
-                request,
-                task.componentStack
-              )),
+              (JSCompiler_inline_result = getThrownInfo(task.componentStack)),
               (defaultProps = logRecoverableError(
                 request,
                 error$28,
@@ -4301,7 +4308,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                           x)
                         );
                       task.replay.pendingTasks--;
-                      props = getThrownInfo(request, task.componentStack);
+                      props = getThrownInfo(task.componentStack);
                       key = request;
                       request = task.blockedBoundary;
                       type = x;
@@ -4373,10 +4380,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
                         }
                       } catch (error$29) {
                         (resumedBoundary.status = 4),
-                          (childNodes = getThrownInfo(
-                            request,
-                            task.componentStack
-                          )),
+                          (childNodes = getThrownInfo(task.componentStack)),
                           (replay = logRecoverableError(
                             request,
                             error$29,
@@ -4536,7 +4540,7 @@ function renderChildrenArray(request, task, children, childIndex) {
           )
             throw x;
           task.replay.pendingTasks--;
-          children = getThrownInfo(request, task.componentStack);
+          children = getThrownInfo(task.componentStack);
           var boundary = task.blockedBoundary,
             error = x;
           children = logRecoverableError(request, error, children);
@@ -4785,7 +4789,7 @@ function abortTask(task, request, error) {
     boundary.pendingTasks--,
       4 !== boundary.status &&
         ((boundary.status = 4),
-        (task = getThrownInfo(request, task.componentStack)),
+        (task = getThrownInfo(task.componentStack)),
         (task = logRecoverableError(request, error, task)),
         (boundary.errorDigest = task),
         untrackBoundary(request, boundary),
@@ -5472,10 +5476,7 @@ exports.renderNextChunk = function (stream) {
               } else {
                 task$jscomp$0.replay.pendingTasks--;
                 task$jscomp$0.abortSet.delete(task$jscomp$0);
-                var errorInfo = getThrownInfo(
-                    request,
-                    task$jscomp$0.componentStack
-                  ),
+                var errorInfo = getThrownInfo(task$jscomp$0.componentStack),
                   boundary = task$jscomp$0.blockedBoundary,
                   replayNodes = task$jscomp$0.replay.nodes,
                   resumeSlots = task$jscomp$0.replay.slots;
@@ -5542,7 +5543,6 @@ exports.renderNextChunk = function (stream) {
                     task$jscomp$0.componentStack.parent);
               } else {
                 var errorInfo$jscomp$0 = getThrownInfo(
-                  request,
                   task$jscomp$0.componentStack
                 );
                 task$jscomp$0.abortSet.delete(task$jscomp$0);
