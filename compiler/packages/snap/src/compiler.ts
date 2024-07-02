@@ -131,17 +131,28 @@ function makePluginOptions(
       importSpecifierName: "$structuralCheck",
     };
   }
-  if (firstLine.includes("@enablePreserveExistingManualUseMemoAsHook")) {
-    enablePreserveExistingManualUseMemo = "hook";
-  } else if (
-    firstLine.includes("@enablePreserveExistingManualUseMemoAsScope")
+
+  const useMemoMatch = /@enablePreserveExistingManualUseMemo:"([^"]+)"/.exec(
+    firstLine
+  );
+  if (
+    useMemoMatch &&
+    (useMemoMatch[1] === "hook" || useMemoMatch[1] === "scope")
   ) {
-    enablePreserveExistingManualUseMemo = "scope";
-  } else if (firstLine.includes("@enablePreserveExistingManualUseMemo")) {
+    enablePreserveExistingManualUseMemo = useMemoMatch[1];
+  } else if (
+    useMemoMatch &&
+    (useMemoMatch[1] === "false" || useMemoMatch[1] === "off")
+  ) {
+    enablePreserveExistingManualUseMemo = null;
+  } else if (useMemoMatch) {
     throw new Error(
-      "Use either @enablePreserveExistingManualUseMemoAsScope or @enablePreserveExistingManualUseMemoAsHook"
+      `Invalid setting '${useMemoMatch[1]}' for 'enablePreserveExistingManualUseMemo'. Valid settings are 'hook', 'scope', or 'off'.`
     );
+  } else if (firstLine.includes("@enablePreserveExistingManualUseMemo")) {
+    enablePreserveExistingManualUseMemo = "scope";
   }
+
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
