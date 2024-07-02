@@ -771,7 +771,12 @@ export type ManualMemoDependency = {
         kind: "NamedLocal";
         value: Place;
       }
-    | { kind: "Global"; identifierName: string };
+    | {
+        kind: "InlinedGlobal";
+        value: Place;
+        name: string;
+      }
+    | { kind: "Global"; binding: LoadGlobal };
   path: Array<string>;
 };
 
