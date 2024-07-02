@@ -1,4 +1,4 @@
-import { useState } from "react"; // @enableChangeDetectionForDebugging
+import { useState } from "react"; // @enableChangeDetection
 
 function useOther(x) {
   return x;

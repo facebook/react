@@ -385,7 +385,13 @@ const EnvironmentConfigSchema = z.object({
    * computed one. This detects cases where rules of react violations may cause the
    * compiled code to behave differently than the original.
    */
-  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
+  enableChangeDetection: z
+    .object({
+      source: z.string(),
+      structuralCheck: z.string(),
+      wrappers: z.object({ store: z.string(), restore: z.string() }).nullish(),
+    })
+    .nullish(),
 
   /**
    * The react native re-animated library uses custom Babel transforms that
@@ -448,12 +454,27 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
     }
 
     if (
-      key === "enableChangeDetectionForDebugging" &&
+      key === "enableChangeDetection" &&
       (val === undefined || val === "true")
     ) {
       maybeConfig[key] = {
         source: "react-compiler-runtime",
-        importSpecifierName: "$structuralCheck",
+        structuralCheck: "$structuralCheck",
+      };
+      continue;
+    }
+
+    if (
+      key === "enableChangeDetectionWrappers" &&
+      (val === undefined || val === "true")
+    ) {
+      maybeConfig["enableChangeDetection"] = {
+        source: "react-compiler-runtime",
+        structuralCheck: "$structuralCheck",
+        wrappers: {
+          store: "$store",
+          restore: "$restore",
+        },
       };
       continue;
     }
@@ -549,18 +570,6 @@ export class Environment {
     this.useMemoCacheIdentifier = useMemoCacheIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
-
-    if (
-      config.disableMemoizationForDebugging &&
-      config.enableChangeDetectionForDebugging != null
-    ) {
-      CompilerError.throwInvalidConfig({
-        reason: `Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together`,
-        description: null,
-        loc: null,
-        suggestions: null,
-      });
-    }
 
     for (const [hookName, hook] of this.config.customHooks) {
       CompilerError.invariant(!this.#globals.has(hookName), {

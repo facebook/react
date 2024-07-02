@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableChangeDetectionForDebugging
+// @enableChangeDetection
 import { useState } from "react";
 
 function Component(props) {
@@ -16,7 +16,7 @@ function Component(props) {
 
 ```javascript
 import { $structuralCheck } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableChangeDetectionForDebugging
+import { c as _c } from "react/compiler-runtime"; // @enableChangeDetection
 import { useState } from "react";
 
 function Component(props) {
@@ -43,6 +43,7 @@ function Component(props) {
     if (!condition) {
       let old$x = $[3];
       $structuralCheck(old$x, x, "x", "Component", "cached", "(5:5)");
+      x = old$x;
     }
     $[2] = t2;
     $[3] = x;
@@ -59,6 +60,7 @@ function Component(props) {
     if (!condition) {
       let old$t3 = $[5];
       $structuralCheck(old$t3, t3, "t3", "Component", "cached", "(6:6)");
+      t3 = old$t3;
     }
     $[4] = x;
     $[5] = t3;

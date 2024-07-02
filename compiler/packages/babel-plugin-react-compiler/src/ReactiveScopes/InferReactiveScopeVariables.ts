@@ -369,7 +369,7 @@ export function findDisjointMutableValues(
       const operands = collectMutableOperands(
         fn,
         instr,
-        fn.env.config.enableChangeDetectionForDebugging != null
+        fn.env.config.enableChangeDetection != null
       );
       if (operands.length !== 0) {
         scopeIdentifiers.union(operands);

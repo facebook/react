@@ -1,4 +1,4 @@
-// @enableChangeDetectionForDebugging
+// @enableChangeDetection
 import { useState } from "react";
 
 function Component(props) {

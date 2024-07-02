@@ -45,7 +45,7 @@ function makePluginOptions(
   let hookPattern: string | null = null;
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
-  let enableChangeDetectionForDebugging = null;
+  let enableChangeDetection = null;
   let enablePreserveExistingManualUseMemo: "hook" | "scope" | null = null;
   let customMacros = null;
 
@@ -125,10 +125,20 @@ function makePluginOptions(
     validatePreserveExistingMemoizationGuarantees = true;
   }
 
-  if (firstLine.includes("@enableChangeDetectionForDebugging")) {
-    enableChangeDetectionForDebugging = {
+  if (firstLine.includes("@enableChangeDetection")) {
+    enableChangeDetection = {
       source: "react-compiler-runtime",
-      importSpecifierName: "$structuralCheck",
+      structuralCheck: "$structuralCheck",
+    };
+  }
+  if (firstLine.includes("@enableChangeDetectionWrappers")) {
+    enableChangeDetection = {
+      source: "react-compiler-runtime",
+      structuralCheck: "$structuralCheck",
+      wrappers: {
+        store: "$store",
+        restore: "$restore",
+      },
     };
   }
   if (firstLine.includes("@enablePreserveExistingManualUseMemoAsHook")) {
@@ -218,7 +228,7 @@ function makePluginOptions(
       enableSharedRuntime__testonly: true,
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
-      enableChangeDetectionForDebugging,
+      enableChangeDetection,
       enablePreserveExistingManualUseMemo,
     },
     compilationMode,

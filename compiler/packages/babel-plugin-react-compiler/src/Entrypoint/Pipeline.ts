@@ -269,7 +269,7 @@ function* runWithEnvironment(
 
     if (
       env.config.enablePreserveExistingManualUseMemo === "scope" ||
-      env.config.enableChangeDetectionForDebugging != null ||
+      env.config.enableChangeDetection != null ||
       env.config.disableMemoizationForDebugging
     ) {
       memoizeExistingUseMemos(hir);
@@ -418,7 +418,7 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  if (env.config.enableChangeDetectionForDebugging != null) {
+  if (env.config.enableChangeDetection != null) {
     pruneInitializationDependencies(reactiveFunction);
     yield log({
       kind: "reactive",
