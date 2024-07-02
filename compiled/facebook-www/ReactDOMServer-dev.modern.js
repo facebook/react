@@ -4264,6 +4264,9 @@ __DEV__ &&
               var JSCompiler_inline_result$jscomp$0 =
                 describeNativeComponentFrame(componentStack.type, !0);
               info = JSCompiler_temp_const + JSCompiler_inline_result$jscomp$0;
+              break;
+            case 3:
+              info += describeBuiltInComponentFrame(componentStack.type);
           }
           componentStack = componentStack.parent;
         } while (componentStack);
@@ -4539,6 +4542,26 @@ __DEV__ &&
         owner: owner,
         stack: stack
       };
+    }
+    function createServerComponentStack(task, debugInfo) {
+      task = task.componentStack;
+      if (null != debugInfo)
+        for (var i = 0; i < debugInfo.length; i++) {
+          var componentInfo = debugInfo[i];
+          if ("string" === typeof componentInfo.name) {
+            var name = componentInfo.name,
+              env = componentInfo.env;
+            env && (name += " (" + env + ")");
+            task = {
+              tag: 3,
+              parent: task,
+              type: name,
+              owner: componentInfo.owner,
+              stack: componentInfo.stack
+            };
+          }
+        }
+      return task;
     }
     function getThrownInfo(node) {
       var errorInfo = {};
@@ -5639,193 +5662,197 @@ __DEV__ &&
                 props = node$jscomp$0.props,
                 refProp = props.ref;
               var ref = void 0 !== refProp ? refProp : null;
-              refProp = node$jscomp$0._owner;
+              var owner = node$jscomp$0._owner;
+              refProp = task.componentStack;
+              task.componentStack = createServerComponentStack(
+                task,
+                node$jscomp$0._debugInfo
+              );
               var name = getComponentNameFromType(type),
                 keyOrIndex =
                   null == key ? (-1 === childIndex ? 0 : childIndex) : key;
               key = [task.keyPath, name, keyOrIndex];
-              if (null !== task.replay)
-                a: {
-                  var replay = task.replay;
-                  childIndex = replay.nodes;
-                  for (
-                    node$jscomp$0 = 0;
-                    node$jscomp$0 < childIndex.length;
-                    node$jscomp$0++
-                  ) {
-                    var node = childIndex[node$jscomp$0];
-                    if (keyOrIndex === node[1]) {
-                      if (4 === node.length) {
-                        if (null !== name && name !== node[0])
+              if (null !== task.replay) {
+                var replay = task.replay;
+                node$jscomp$0 = replay.nodes;
+                for (
+                  childIndex = 0;
+                  childIndex < node$jscomp$0.length;
+                  childIndex++
+                ) {
+                  var node = node$jscomp$0[childIndex];
+                  if (keyOrIndex === node[1]) {
+                    if (4 === node.length) {
+                      if (null !== name && name !== node[0])
+                        throw Error(
+                          "Expected the resume to render <" +
+                            node[0] +
+                            "> in this slot but instead it rendered <" +
+                            name +
+                            ">. The tree doesn't match so React will fallback to client rendering."
+                        );
+                      var childNodes = node[2];
+                      name = node[3];
+                      keyOrIndex = task.node;
+                      task.replay = {
+                        nodes: childNodes,
+                        slots: name,
+                        pendingTasks: 1
+                      };
+                      try {
+                        renderElement(
+                          request,
+                          task,
+                          key,
+                          type,
+                          props,
+                          ref,
+                          owner,
+                          null
+                        );
+                        if (
+                          1 === task.replay.pendingTasks &&
+                          0 < task.replay.nodes.length
+                        )
                           throw Error(
-                            "Expected the resume to render <" +
-                              node[0] +
-                              "> in this slot but instead it rendered <" +
-                              name +
-                              ">. The tree doesn't match so React will fallback to client rendering."
+                            "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering."
                           );
-                        var childNodes = node[2];
+                        task.replay.pendingTasks--;
+                      } catch (x) {
+                        if (
+                          "object" === typeof x &&
+                          null !== x &&
+                          (x === SuspenseException ||
+                            "function" === typeof x.then)
+                        )
+                          throw (
+                            (task.node === keyOrIndex && (task.replay = replay),
+                            x)
+                          );
+                        task.replay.pendingTasks--;
+                        owner = getThrownInfo(task.componentStack);
+                        erroredReplay(
+                          request,
+                          task.blockedBoundary,
+                          x,
+                          owner,
+                          childNodes,
+                          name
+                        );
+                      }
+                      task.replay = replay;
+                    } else {
+                      if (type !== REACT_SUSPENSE_TYPE)
+                        throw Error(
+                          "Expected the resume to render <Suspense> in this slot but instead it rendered <" +
+                            (getComponentNameFromType(type) || "Unknown") +
+                            ">. The tree doesn't match so React will fallback to client rendering."
+                        );
+                      a: {
+                        type = void 0;
+                        ref = task;
+                        var props$jscomp$0 = props;
+                        props = node[5];
+                        replay = node[2];
                         name = node[3];
-                        node = task.node;
-                        task.replay = {
-                          nodes: childNodes,
+                        keyOrIndex = null === node[4] ? [] : node[4][2];
+                        node = null === node[4] ? null : node[4][3];
+                        var previousComponentStack = ref.componentStack;
+                        owner = ref.componentStack =
+                          createBuiltInComponentStack(
+                            ref,
+                            "Suspense",
+                            owner,
+                            null
+                          );
+                        var prevKeyPath = ref.keyPath,
+                          previousReplaySet = ref.replay,
+                          parentBoundary = ref.blockedBoundary,
+                          parentHoistableState = ref.hoistableState,
+                          content = props$jscomp$0.children;
+                        props$jscomp$0 = props$jscomp$0.fallback;
+                        var fallbackAbortSet = new Set(),
+                          resumedBoundary = createSuspenseBoundary(
+                            request,
+                            fallbackAbortSet
+                          );
+                        resumedBoundary.parentFlushed = !0;
+                        resumedBoundary.rootSegmentID = props;
+                        ref.blockedBoundary = resumedBoundary;
+                        ref.hoistableState = resumedBoundary.contentState;
+                        ref.replay = {
+                          nodes: replay,
                           slots: name,
                           pendingTasks: 1
                         };
                         try {
-                          renderElement(
-                            request,
-                            task,
-                            key,
-                            type,
-                            props,
-                            ref,
-                            refProp,
-                            null
-                          );
+                          renderNode(request, ref, content, -1);
                           if (
-                            1 === task.replay.pendingTasks &&
-                            0 < task.replay.nodes.length
+                            1 === ref.replay.pendingTasks &&
+                            0 < ref.replay.nodes.length
                           )
                             throw Error(
                               "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering."
                             );
-                          task.replay.pendingTasks--;
-                        } catch (x) {
+                          ref.replay.pendingTasks--;
                           if (
-                            "object" === typeof x &&
-                            null !== x &&
-                            (x === SuspenseException ||
-                              "function" === typeof x.then)
-                          )
-                            throw (
-                              (task.node === node && (task.replay = replay), x)
-                            );
-                          task.replay.pendingTasks--;
-                          refProp = getThrownInfo(task.componentStack);
-                          erroredReplay(
-                            request,
-                            task.blockedBoundary,
-                            x,
-                            refProp,
-                            childNodes,
-                            name
-                          );
-                        }
-                        task.replay = replay;
-                      } else {
-                        if (type !== REACT_SUSPENSE_TYPE)
-                          throw Error(
-                            "Expected the resume to render <Suspense> in this slot but instead it rendered <" +
-                              (getComponentNameFromType(type) || "Unknown") +
-                              ">. The tree doesn't match so React will fallback to client rendering."
-                          );
-                        b: {
-                          type = void 0;
-                          ref = key;
-                          var props$jscomp$0 = props;
-                          props = node[5];
-                          key = node[2];
-                          replay = node[3];
-                          name = null === node[4] ? [] : node[4][2];
-                          node = null === node[4] ? null : node[4][3];
-                          keyOrIndex = task.componentStack;
-                          refProp = task.componentStack =
-                            createBuiltInComponentStack(
-                              task,
-                              "Suspense",
-                              refProp,
-                              null
-                            );
-                          var prevKeyPath = task.keyPath,
-                            previousReplaySet = task.replay,
-                            parentBoundary = task.blockedBoundary,
-                            parentHoistableState = task.hoistableState,
-                            content = props$jscomp$0.children;
-                          props$jscomp$0 = props$jscomp$0.fallback;
-                          var fallbackAbortSet = new Set(),
-                            resumedBoundary = createSuspenseBoundary(
-                              request,
-                              fallbackAbortSet
-                            );
-                          resumedBoundary.parentFlushed = !0;
-                          resumedBoundary.rootSegmentID = props;
-                          task.blockedBoundary = resumedBoundary;
-                          task.hoistableState = resumedBoundary.contentState;
-                          task.replay = {
-                            nodes: key,
-                            slots: replay,
-                            pendingTasks: 1
-                          };
-                          try {
-                            renderNode(request, task, content, -1);
-                            if (
-                              1 === task.replay.pendingTasks &&
-                              0 < task.replay.nodes.length
-                            )
-                              throw Error(
-                                "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering."
-                              );
-                            task.replay.pendingTasks--;
-                            if (
-                              0 === resumedBoundary.pendingTasks &&
-                              resumedBoundary.status === PENDING
-                            ) {
-                              resumedBoundary.status = COMPLETED;
-                              request.completedBoundaries.push(resumedBoundary);
-                              break b;
-                            }
-                          } catch (error$3) {
-                            (resumedBoundary.status = CLIENT_RENDERED),
-                              (childNodes = getThrownInfo(task.componentStack)),
-                              (type = logRecoverableError(
-                                request,
-                                error$3,
-                                childNodes
-                              )),
-                              encodeErrorForBoundary(
-                                resumedBoundary,
-                                type,
-                                error$3,
-                                childNodes,
-                                !1
-                              ),
-                              task.replay.pendingTasks--,
-                              request.clientRenderedBoundaries.push(
-                                resumedBoundary
-                              );
-                          } finally {
-                            (task.blockedBoundary = parentBoundary),
-                              (task.hoistableState = parentHoistableState),
-                              (task.replay = previousReplaySet),
-                              (task.keyPath = prevKeyPath),
-                              (task.componentStack = keyOrIndex);
+                            0 === resumedBoundary.pendingTasks &&
+                            resumedBoundary.status === PENDING
+                          ) {
+                            resumedBoundary.status = COMPLETED;
+                            request.completedBoundaries.push(resumedBoundary);
+                            break a;
                           }
-                          childNodes = createReplayTask(
-                            request,
-                            null,
-                            { nodes: name, slots: node, pendingTasks: 0 },
-                            props$jscomp$0,
-                            -1,
-                            parentBoundary,
-                            resumedBoundary.fallbackState,
-                            fallbackAbortSet,
-                            [ref[0], "Suspense Fallback", ref[2]],
-                            task.formatContext,
-                            task.context,
-                            task.treeContext,
-                            refProp,
-                            !0
-                          );
-                          request.pingedTasks.push(childNodes);
+                        } catch (error$3) {
+                          (resumedBoundary.status = CLIENT_RENDERED),
+                            (childNodes = getThrownInfo(ref.componentStack)),
+                            (type = logRecoverableError(
+                              request,
+                              error$3,
+                              childNodes
+                            )),
+                            encodeErrorForBoundary(
+                              resumedBoundary,
+                              type,
+                              error$3,
+                              childNodes,
+                              !1
+                            ),
+                            ref.replay.pendingTasks--,
+                            request.clientRenderedBoundaries.push(
+                              resumedBoundary
+                            );
+                        } finally {
+                          (ref.blockedBoundary = parentBoundary),
+                            (ref.hoistableState = parentHoistableState),
+                            (ref.replay = previousReplaySet),
+                            (ref.keyPath = prevKeyPath),
+                            (ref.componentStack = previousComponentStack);
                         }
+                        childNodes = createReplayTask(
+                          request,
+                          null,
+                          { nodes: keyOrIndex, slots: node, pendingTasks: 0 },
+                          props$jscomp$0,
+                          -1,
+                          parentBoundary,
+                          resumedBoundary.fallbackState,
+                          fallbackAbortSet,
+                          [key[0], "Suspense Fallback", key[2]],
+                          ref.formatContext,
+                          ref.context,
+                          ref.treeContext,
+                          owner,
+                          !0
+                        );
+                        request.pingedTasks.push(childNodes);
                       }
-                      childIndex.splice(node$jscomp$0, 1);
-                      break a;
                     }
+                    node$jscomp$0.splice(childIndex, 1);
+                    break;
                   }
                 }
-              else
+              } else
                 renderElement(
                   request,
                   task,
@@ -5833,24 +5860,30 @@ __DEV__ &&
                   type,
                   props,
                   ref,
-                  refProp,
+                  owner,
                   null
                 );
+              task.componentStack = refProp;
               return;
             case REACT_PORTAL_TYPE:
               throw Error(
                 "Portals are not currently supported by the server renderer. Render them conditionally so that they only appear on the client render."
               );
             case REACT_LAZY_TYPE:
-              childNodes = task.componentStack;
-              task.componentStack = createBuiltInComponentStack(
+              refProp = task.componentStack;
+              task.componentStack = createServerComponentStack(
                 task,
-                "Lazy",
-                null,
-                null
+                node$jscomp$0._debugInfo
               );
+              task.componentStack === refProp &&
+                (task.componentStack = createBuiltInComponentStack(
+                  task,
+                  "Lazy",
+                  null,
+                  null
+                ));
               node$jscomp$0 = callLazyInitInDEV(node$jscomp$0);
-              task.componentStack = childNodes;
+              task.componentStack = refProp;
               renderNodeDestructive(request, task, node$jscomp$0, childIndex);
               return;
           }
@@ -5859,22 +5892,21 @@ __DEV__ &&
             return;
           }
           null === node$jscomp$0 || "object" !== typeof node$jscomp$0
-            ? (refProp = null)
-            : ((childNodes =
+            ? (childNodes = null)
+            : ((refProp =
                 (MAYBE_ITERATOR_SYMBOL &&
                   node$jscomp$0[MAYBE_ITERATOR_SYMBOL]) ||
                 node$jscomp$0["@@iterator"]),
-              (refProp = "function" === typeof childNodes ? childNodes : null));
-          if (refProp && (childNodes = refProp.call(node$jscomp$0))) {
-            if (childNodes === node$jscomp$0) {
+              (childNodes = "function" === typeof refProp ? refProp : null));
+          if (childNodes && (refProp = childNodes.call(node$jscomp$0))) {
+            if (refProp === node$jscomp$0) {
               if (
                 -1 !== childIndex ||
                 null === task.componentStack ||
                 1 !== task.componentStack.tag ||
                 "[object GeneratorFunction]" !==
                   Object.prototype.toString.call(task.componentStack.type) ||
-                "[object Generator]" !==
-                  Object.prototype.toString.call(childNodes)
+                "[object Generator]" !== Object.prototype.toString.call(refProp)
               )
                 didWarnAboutGenerators ||
                   error$jscomp$2(
@@ -5882,32 +5914,39 @@ __DEV__ &&
                   ),
                   (didWarnAboutGenerators = !0);
             } else
-              node$jscomp$0.entries !== refProp ||
+              node$jscomp$0.entries !== childNodes ||
                 didWarnAboutMaps ||
                 (error$jscomp$2(
                   "Using Maps as children is not supported. Use an array of keyed ReactElements instead."
                 ),
                 (didWarnAboutMaps = !0));
-            node$jscomp$0 = childNodes.next();
+            node$jscomp$0 = refProp.next();
             if (!node$jscomp$0.done) {
-              refProp = [];
+              childNodes = [];
               do
-                refProp.push(node$jscomp$0.value),
-                  (node$jscomp$0 = childNodes.next());
+                childNodes.push(node$jscomp$0.value),
+                  (node$jscomp$0 = refProp.next());
               while (!node$jscomp$0.done);
-              renderChildrenArray(request, task, refProp, childIndex);
+              renderChildrenArray(request, task, childNodes, childIndex);
             }
             return;
           }
           if ("function" === typeof node$jscomp$0.then)
             return (
               (task.thenableState = null),
-              renderNodeDestructive(
+              (refProp = task.componentStack),
+              (task.componentStack = createServerComponentStack(
+                task,
+                node$jscomp$0._debugInfo
+              )),
+              (node$jscomp$0 = renderNodeDestructive(
                 request,
                 task,
                 unwrapThenable(node$jscomp$0),
                 childIndex
-              )
+              )),
+              (task.componentStack = refProp),
+              node$jscomp$0
             );
           if (node$jscomp$0.$$typeof === REACT_CONTEXT_TYPE)
             return renderNodeDestructive(
@@ -5916,43 +5955,43 @@ __DEV__ &&
               node$jscomp$0._currentValue2,
               childIndex
             );
-          childIndex = Object.prototype.toString.call(node$jscomp$0);
+          task = Object.prototype.toString.call(node$jscomp$0);
           throw Error(
             "Objects are not valid as a React child (found: " +
-              ("[object Object]" === childIndex
+              ("[object Object]" === task
                 ? "object with keys {" +
                   Object.keys(node$jscomp$0).join(", ") +
                   "}"
-                : childIndex) +
+                : task) +
               "). If you meant to render a collection of children, use an array instead."
           );
         }
         "string" === typeof node$jscomp$0
-          ? ((childIndex = task.blockedSegment),
-            null !== childIndex &&
-              (childIndex.lastPushedText = pushTextInstance(
-                childIndex.chunks,
+          ? ((task = task.blockedSegment),
+            null !== task &&
+              (task.lastPushedText = pushTextInstance(
+                task.chunks,
                 node$jscomp$0,
                 request.renderState,
-                childIndex.lastPushedText
+                task.lastPushedText
               )))
           : "number" === typeof node$jscomp$0 ||
             "bigint" === typeof node$jscomp$0
-          ? ((childIndex = task.blockedSegment),
-            null !== childIndex &&
-              (childIndex.lastPushedText = pushTextInstance(
-                childIndex.chunks,
+          ? ((task = task.blockedSegment),
+            null !== task &&
+              (task.lastPushedText = pushTextInstance(
+                task.chunks,
                 "" + node$jscomp$0,
                 request.renderState,
-                childIndex.lastPushedText
+                task.lastPushedText
               )))
           : ("function" === typeof node$jscomp$0 &&
-              ((childIndex =
+              ((task =
                 node$jscomp$0.displayName || node$jscomp$0.name || "Component"),
               error$jscomp$2(
                 "Functions are not valid as a React child. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.",
-                childIndex,
-                childIndex
+                task,
+                task
               )),
             "symbol" === typeof node$jscomp$0 &&
               error$jscomp$2(
@@ -5962,7 +6001,12 @@ __DEV__ &&
       }
     }
     function renderChildrenArray(request$jscomp$0, task, children, childIndex) {
-      var prevKeyPath = task.keyPath;
+      var prevKeyPath = task.keyPath,
+        previousComponentStack = task.componentStack;
+      task.componentStack = createServerComponentStack(
+        task,
+        task.node._debugInfo
+      );
       if (
         -1 !== childIndex &&
         ((task.keyPath = [task.keyPath, "Fragment", childIndex]),
@@ -6012,6 +6056,7 @@ __DEV__ &&
           }
         }
         task.keyPath = prevKeyPath;
+        task.componentStack = previousComponentStack;
         return;
       }
       replay = task.treeContext;
@@ -6037,6 +6082,7 @@ __DEV__ &&
         }
         task.treeContext = replay;
         task.keyPath = prevKeyPath;
+        task.componentStack = previousComponentStack;
         return;
       }
       for (j = 0; j < replayNodes; j++) {
@@ -6130,6 +6176,7 @@ __DEV__ &&
       }
       task.treeContext = replay;
       task.keyPath = prevKeyPath;
+      task.componentStack = previousComponentStack;
     }
     function untrackBoundary(request, boundary) {
       request = request.trackedPostpones;
@@ -8853,5 +8900,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-e60063d9e7-20240702";
+    exports.version = "19.0.0-www-modern-cfb8945f51-20240702";
   })();
