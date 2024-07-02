@@ -2728,4 +2728,35 @@ describe('ReactFlight', () => {
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb</span>);
   });
+
+  it('nesting regression test', async () => {
+    const StoryContext = React.createContext(undefined);
+    const StoryContextProviderClient = ({children, value}) => {
+      return (
+        <StoryContext.Provider value={value}>{children}</StoryContext.Provider>
+      );
+    };
+    const StoryContextProvider = clientReference(StoryContextProviderClient);
+
+    const A11yDecoratorClient = ({children}) => <>{children}</>;
+    const A11yDecorator = clientReference(A11yDecoratorClient);
+
+    const CenteredDecorator = ({children}) =>
+      ReactServer.createElement('div', null, children);
+
+    const page = {};
+    const transport = ReactNoopFlightServer.render(
+      <StoryContextProvider value={{page}}>
+        <CenteredDecorator page={page}>
+          <A11yDecorator page={page}>foo</A11yDecorator>
+        </CenteredDecorator>
+      </StoryContextProvider>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>foo</div>);
+  });
 });
