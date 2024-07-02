@@ -182,7 +182,9 @@ const EnvironmentConfigSchema = z.object({
    * that the memoized values remain memoized, the compiler will simply not prune existing calls to
    * useMemo/useCallback.
    */
-  enablePreserveExistingManualUseMemo: z.boolean().default(false),
+  enablePreserveExistingManualUseMemo: z
+    .nullable(z.enum(["hook", "scope"]))
+    .default(null),
 
   // 🌲
   enableForest: z.boolean().default(false),
@@ -454,6 +456,31 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
         importSpecifierName: "$structuralCheck",
       };
       continue;
+    }
+
+    if (
+      key === "enablePreserveExistingManualUseMemo" &&
+      (val === undefined || val === "true" || val === "scope")
+    ) {
+      maybeConfig[key] = "scope";
+      continue;
+    }
+
+    if (key === "enablePreserveExistingManualUseMemo" && val === "hook") {
+      maybeConfig[key] = "hook";
+      continue;
+    }
+
+    if (
+      key === "enablePreserveExistingManualUseMemo" &&
+      !(val === "false" || val === "off")
+    ) {
+      CompilerError.throwInvalidConfig({
+        reason: `Invalid setting '${val}' for 'enablePreserveExistingManualUseMemo'. Valid settings are 'hook', 'scope', or 'off'.`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
     }
 
     if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {
