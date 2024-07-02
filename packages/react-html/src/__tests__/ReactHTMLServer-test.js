@@ -15,6 +15,15 @@ global.TextEncoder = require('util').TextEncoder;
 let React;
 let ReactHTML;
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    String(str).replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+      return '\n    in ' + name + ' (at **)';
+    })
+  );
+}
+
 if (!__EXPERIMENTAL__) {
   it('should not be built in stable', () => {
     try {
@@ -199,6 +208,55 @@ if (!__EXPERIMENTAL__) {
         React.createElement(Component),
       );
       expect(html).toBe('<div>00</div>');
+    });
+
+    it('can get the component owner stacks for onError in dev', async () => {
+      const thrownError = new Error('hi');
+      const caughtErrors = [];
+
+      function Foo() {
+        return React.createElement(Bar);
+      }
+      function Bar() {
+        return React.createElement('div', null, React.createElement(Baz));
+      }
+      function Baz({unused}) {
+        throw thrownError;
+      }
+
+      await expect(async () => {
+        await ReactHTML.renderToMarkup(
+          React.createElement('div', null, React.createElement(Foo)),
+          {
+            onError(error, errorInfo) {
+              caughtErrors.push({
+                error: error,
+                parentStack: errorInfo.componentStack,
+                ownerStack: React.captureOwnerStack
+                  ? React.captureOwnerStack()
+                  : null,
+              });
+            },
+          },
+        );
+      }).rejects.toThrow(thrownError);
+
+      expect(caughtErrors.length).toBe(1);
+      expect(caughtErrors[0].error).toBe(thrownError);
+      expect(normalizeCodeLocInfo(caughtErrors[0].parentStack)).toBe(
+        // TODO: Because Fizz doesn't yet implement debugInfo for parent stacks
+        // it doesn't have the Server Components in the parent stacks.
+        '\n    in Lazy (at **)' +
+          '\n    in div (at **)' +
+          '\n    in div (at **)',
+      );
+      expect(normalizeCodeLocInfo(caughtErrors[0].ownerStack)).toBe(
+        __DEV__ && gate(flags => flags.enableOwnerStacks)
+          ? // TODO: Because Fizz doesn't yet implement debugInfo for parent stacks
+            // it doesn't have the Server Components in the parent stacks.
+            '\n    in Lazy (at **)'
+          : null,
+      );
     });
   });
 }
