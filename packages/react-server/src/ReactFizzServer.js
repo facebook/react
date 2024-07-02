@@ -250,6 +250,7 @@ type RenderTask = {
   thenableState: null | ThenableState,
   isFallback: boolean, // whether this task is rendering inside a fallback tree
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
+  debugTask: null | ConsoleTask, // DEV only
   // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
   // Consider splitting into multiple objects or consolidating some fields.
 };
@@ -279,6 +280,7 @@ type ReplayTask = {
   thenableState: null | ThenableState,
   isFallback: boolean, // whether this task is rendering inside a fallback tree
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
+  debugTask: null | ConsoleTask, // DEV only
   // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
   // Consider splitting into multiple objects or consolidating some fields.
 };
@@ -468,6 +470,7 @@ function RequestInstance(
     null,
     false,
     emptyContextObject,
+    null,
   );
   pingedTasks.push(rootTask);
 }
@@ -610,6 +613,7 @@ export function resumeRequest(
       null,
       false,
       emptyContextObject,
+      null,
     );
     pingedTasks.push(rootTask);
     return request;
@@ -636,6 +640,7 @@ export function resumeRequest(
     null,
     false,
     emptyContextObject,
+    null,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -704,6 +709,7 @@ function createRenderTask(
   componentStack: null | ComponentStackNode,
   isFallback: boolean,
   legacyContext: LegacyContext,
+  debugTask: null | ConsoleTask,
 ): RenderTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -731,6 +737,9 @@ function createRenderTask(
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
   }
+  if (__DEV__ && enableOwnerStacks) {
+    task.debugTask = debugTask;
+  }
   abortSet.add(task);
   return task;
 }
@@ -751,6 +760,7 @@ function createReplayTask(
   componentStack: null | ComponentStackNode,
   isFallback: boolean,
   legacyContext: LegacyContext,
+  debugTask: null | ConsoleTask,
 ): ReplayTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -778,6 +788,9 @@ function createReplayTask(
   }: any);
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
+  }
+  if (__DEV__ && enableOwnerStacks) {
+    task.debugTask = debugTask;
   }
   abortSet.add(task);
   return task;
@@ -887,40 +900,44 @@ function createClassComponentStack(
     type,
   };
 }
-function createServerComponentStack(
+function pushServerComponentStack(
   task: Task,
   debugInfo: void | null | ReactDebugInfo,
-): null | ComponentStackNode {
+): void {
+  if (!__DEV__) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'pushServerComponentStack should never be called in production. This is a bug in React.',
+    );
+  }
   // Build a Server Component parent stack from the debugInfo.
-  if (__DEV__) {
-    let node = task.componentStack;
-    if (debugInfo != null) {
-      const stack: ReactDebugInfo = debugInfo;
-      for (let i = 0; i < stack.length; i++) {
-        const componentInfo: ReactComponentInfo = (stack[i]: any);
-        if (typeof componentInfo.name !== 'string') {
-          continue;
-        }
-        let name = componentInfo.name;
-        const env = componentInfo.env;
-        if (env) {
-          name += ' (' + env + ')';
-        }
-        node = {
-          tag: 3,
-          parent: node,
-          type: name,
-          owner: componentInfo.owner,
-          stack: componentInfo.stack,
-        };
+  if (debugInfo != null) {
+    const stack: ReactDebugInfo = debugInfo;
+    for (let i = 0; i < stack.length; i++) {
+      const componentInfo: ReactComponentInfo = (stack[i]: any);
+      if (typeof componentInfo.name !== 'string') {
+        continue;
+      }
+      if (enableOwnerStacks && componentInfo.stack === undefined) {
+        continue;
+      }
+      let name = componentInfo.name;
+      const env = componentInfo.env;
+      if (env) {
+        name += ' (' + env + ')';
+      }
+      task.componentStack = {
+        tag: 3,
+        parent: task.componentStack,
+        type: name,
+        owner: componentInfo.owner,
+        stack: componentInfo.stack,
+      };
+      if (enableOwnerStacks) {
+        task.debugTask = (componentInfo.task: any);
       }
     }
-    return node;
   }
-  // eslint-disable-next-line react-internal/prod-error-codes
-  throw new Error(
-    'createServerComponentStack should never be called in production. This is a bug in React.',
-  );
 }
 
 function createComponentStackFromType(
@@ -1000,20 +1017,31 @@ function logPostpone(
   request: Request,
   reason: string,
   postponeInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
 ): void {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  request.onPostpone(reason, postponeInfo);
+  const onPostpone = request.onPostpone;
+  if (__DEV__ && enableOwnerStacks && debugTask) {
+    debugTask.run(onPostpone.bind(null, reason, postponeInfo));
+  } else {
+    onPostpone(reason, postponeInfo);
+  }
 }
 
 function logRecoverableError(
   request: Request,
   error: any,
   errorInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
 ): ?string {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  const errorDigest = request.onError(error, errorInfo);
+  const onError = request.onError;
+  const errorDigest =
+    __DEV__ && enableOwnerStacks && debugTask
+      ? debugTask.run(onError.bind(null, error, errorInfo))
+      : onError(error, errorInfo);
   if (errorDigest != null && typeof errorDigest !== 'string') {
     // We used to throw here but since this gets called from a variety of unprotected places it
     // seems better to just warn and discard the returned value.
@@ -1028,14 +1056,24 @@ function logRecoverableError(
   return errorDigest;
 }
 
-function fatalError(request: Request, error: mixed): void {
+function fatalError(
+  request: Request,
+  error: mixed,
+  errorInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
+): void {
   // This is called outside error handling code such as if the root errors outside
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
   const onShellError = request.onShellError;
-  onShellError(error);
   const onFatalError = request.onFatalError;
-  onFatalError(error);
+  if (__DEV__ && enableOwnerStacks && debugTask) {
+    debugTask.run(onShellError.bind(null, error));
+    debugTask.run(onFatalError.bind(null, error));
+  } else {
+    onShellError(error);
+    onFatalError(error);
+  }
   if (request.destination !== null) {
     request.status = CLOSED;
     closeWithError(request.destination, error);
@@ -1168,11 +1206,21 @@ function renderSuspenseBoundary(
       error.$$typeof === REACT_POSTPONE_TYPE
     ) {
       const postponeInstance: Postpone = (error: any);
-      logPostpone(request, postponeInstance.message, thrownInfo);
+      logPostpone(
+        request,
+        postponeInstance.message,
+        thrownInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
       // TODO: Figure out a better signal than a magic digest value.
       errorDigest = 'POSTPONE';
     } else {
-      errorDigest = logRecoverableError(request, error, thrownInfo);
+      errorDigest = logRecoverableError(
+        request,
+        error,
+        thrownInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
     }
     encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo, false);
 
@@ -1231,6 +1279,7 @@ function renderSuspenseBoundary(
     suspenseComponentStack,
     true,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
@@ -1314,11 +1363,21 @@ function replaySuspenseBoundary(
       error.$$typeof === REACT_POSTPONE_TYPE
     ) {
       const postponeInstance: Postpone = (error: any);
-      logPostpone(request, postponeInstance.message, thrownInfo);
+      logPostpone(
+        request,
+        postponeInstance.message,
+        thrownInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
       // TODO: Figure out a better signal than a magic digest value.
       errorDigest = 'POSTPONE';
     } else {
-      errorDigest = logRecoverableError(request, error, thrownInfo);
+      errorDigest = logRecoverableError(
+        request,
+        error,
+        thrownInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
     }
     encodeErrorForBoundary(
       resumedBoundary,
@@ -1371,6 +1430,7 @@ function replaySuspenseBoundary(
     suspenseComponentStack,
     true,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
@@ -2378,6 +2438,7 @@ function replayElement(
           thrownInfo,
           childNodes,
           childSlots,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
         );
       }
       task.replay = replay;
@@ -2570,12 +2631,17 @@ function renderNodeDestructive(
         const owner = __DEV__ ? element._owner : null;
         const stack = __DEV__ && enableOwnerStacks ? element._debugStack : null;
 
+        let previousDebugTask: null | ConsoleTask = null;
         const previousComponentStack = task.componentStack;
+        let debugTask: null | ConsoleTask;
         if (__DEV__) {
-          task.componentStack = createServerComponentStack(
-            task,
-            element._debugInfo,
-          );
+          if (enableOwnerStacks) {
+            previousDebugTask = task.debugTask;
+          }
+          pushServerComponentStack(task, element._debugInfo);
+          if (enableOwnerStacks) {
+            task.debugTask = debugTask = element._debugTask;
+          }
         }
 
         const name = getComponentNameFromType(type);
@@ -2583,8 +2649,6 @@ function renderNodeDestructive(
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;
         const keyPath = [task.keyPath, name, keyOrIndex];
         if (task.replay !== null) {
-          const debugTask: null | ConsoleTask =
-            __DEV__ && enableOwnerStacks ? element._debugTask : null;
           if (debugTask) {
             debugTask.run(
               replayElement.bind(
@@ -2623,8 +2687,6 @@ function renderNodeDestructive(
           // prelude and skip it during the replay.
         } else {
           // We're doing a plain render.
-          const debugTask: null | ConsoleTask =
-            __DEV__ && enableOwnerStacks ? element._debugTask : null;
           if (debugTask) {
             debugTask.run(
               renderElement.bind(
@@ -2654,6 +2716,9 @@ function renderNodeDestructive(
         }
         if (__DEV__) {
           task.componentStack = previousComponentStack;
+          if (enableOwnerStacks) {
+            task.debugTask = previousDebugTask;
+          }
         }
         return;
       }
@@ -2665,11 +2730,12 @@ function renderNodeDestructive(
       case REACT_LAZY_TYPE: {
         const lazyNode: LazyComponentType<any, any> = (node: any);
         const previousComponentStack = task.componentStack;
+        let previousDebugTask = null;
         if (__DEV__) {
-          task.componentStack = createServerComponentStack(
-            task,
-            lazyNode._debugInfo,
-          );
+          if (enableOwnerStacks) {
+            previousDebugTask = task.debugTask;
+          }
+          pushServerComponentStack(task, lazyNode._debugInfo);
         }
         if (!__DEV__ || task.componentStack === previousComponentStack) {
           // TODO: Do we really need this stack frame? We don't on the client.
@@ -2692,6 +2758,9 @@ function renderNodeDestructive(
         // We restore the stack before rendering the resolved node because once the Lazy
         // has resolved any future errors
         task.componentStack = previousComponentStack;
+        if (__DEV__ && enableOwnerStacks) {
+          task.debugTask = previousDebugTask;
+        }
 
         // Now we render the resolved node
         renderNodeDestructive(request, task, resolvedNode, childIndex);
@@ -2812,10 +2881,7 @@ function renderNodeDestructive(
       const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
       const previousComponentStack = task.componentStack;
       if (__DEV__) {
-        task.componentStack = createServerComponentStack(
-          task,
-          thenable._debugInfo,
-        );
+        pushServerComponentStack(task, thenable._debugInfo);
       }
       const result = renderNodeDestructive(
         request,
@@ -2947,6 +3013,7 @@ function replayFragment(
         thrownInfo,
         childNodes,
         childSlots,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
       );
     }
     task.replay = replay;
@@ -3058,13 +3125,14 @@ function renderChildrenArray(
 ): void {
   const prevKeyPath = task.keyPath;
   const previousComponentStack = task.componentStack;
+  let previousDebugTask = null;
   if (__DEV__) {
+    if (enableOwnerStacks) {
+      previousDebugTask = task.debugTask;
+    }
     // We read debugInfo from task.node instead of children because it might have been an
     // unwrapped iterable so we read from the original node.
-    task.componentStack = createServerComponentStack(
-      task,
-      (task.node: any)._debugInfo,
-    );
+    pushServerComponentStack(task, (task.node: any)._debugInfo);
   }
   if (childIndex !== -1) {
     task.keyPath = [task.keyPath, 'Fragment', childIndex];
@@ -3079,6 +3147,9 @@ function renderChildrenArray(
       task.keyPath = prevKeyPath;
       if (__DEV__) {
         task.componentStack = previousComponentStack;
+        if (enableOwnerStacks) {
+          task.debugTask = previousDebugTask;
+        }
       }
       return;
     }
@@ -3112,6 +3183,9 @@ function renderChildrenArray(
       task.keyPath = prevKeyPath;
       if (__DEV__) {
         task.componentStack = previousComponentStack;
+        if (enableOwnerStacks) {
+          task.debugTask = previousDebugTask;
+        }
       }
       return;
     }
@@ -3134,6 +3208,9 @@ function renderChildrenArray(
   task.keyPath = prevKeyPath;
   if (__DEV__) {
     task.componentStack = previousComponentStack;
+    if (enableOwnerStacks) {
+      task.debugTask = previousDebugTask;
+    }
   }
 }
 
@@ -3327,7 +3404,12 @@ function injectPostponedHole(
   reason: string,
   thrownInfo: ThrownInfo,
 ): Segment {
-  logPostpone(request, reason, thrownInfo);
+  logPostpone(
+    request,
+    reason,
+    thrownInfo,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
+  );
   // Something suspended, we'll need to create a new segment and resolve it later.
   const segment = task.blockedSegment;
   const insertionIndex = segment.chunks.length;
@@ -3371,6 +3453,7 @@ function spawnNewSuspendedReplayTask(
     task.componentStack !== null ? task.componentStack.parent : null,
     task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
 
   const ping = newTask.ping;
@@ -3417,6 +3500,7 @@ function spawnNewSuspendedRenderTask(
     task.componentStack !== null ? task.componentStack.parent : null,
     task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
 
   const ping = newTask.ping;
@@ -3609,6 +3693,7 @@ function erroredReplay(
   errorInfo: ThrownInfo,
   replayNodes: ReplayNode[],
   resumeSlots: ResumeSlots,
+  debugTask: null | ConsoleTask,
 ): void {
   // Erroring during a replay doesn't actually cause an error by itself because
   // that component has already rendered. What causes the error is the resumable
@@ -3625,11 +3710,11 @@ function erroredReplay(
     error.$$typeof === REACT_POSTPONE_TYPE
   ) {
     const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message, errorInfo);
+    logPostpone(request, postponeInstance.message, errorInfo, debugTask);
     // TODO: Figure out a better signal than a magic digest value.
     errorDigest = 'POSTPONE';
   } else {
-    errorDigest = logRecoverableError(request, error, errorInfo);
+    errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
   }
   abortRemainingReplayNodes(
     request,
@@ -3648,6 +3733,7 @@ function erroredTask(
   boundary: Root | SuspenseBoundary,
   error: mixed,
   errorInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
 ) {
   // Report the error to a global handler.
   let errorDigest;
@@ -3658,14 +3744,14 @@ function erroredTask(
     error.$$typeof === REACT_POSTPONE_TYPE
   ) {
     const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message, errorInfo);
+    logPostpone(request, postponeInstance.message, errorInfo, debugTask);
     // TODO: Figure out a better signal than a magic digest value.
     errorDigest = 'POSTPONE';
   } else {
-    errorDigest = logRecoverableError(request, error, errorInfo);
+    errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
   }
   if (boundary === null) {
-    fatalError(request, error);
+    fatalError(request, error, errorInfo, debugTask);
   } else {
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
@@ -3821,11 +3907,11 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             'The render was aborted with postpone when the shell is incomplete. Reason: ' +
               postponeInstance.message,
           );
-          logRecoverableError(request, fatal, errorInfo);
-          fatalError(request, fatal);
+          logRecoverableError(request, fatal, errorInfo, null);
+          fatalError(request, fatal, errorInfo, null);
         } else {
-          logRecoverableError(request, error, errorInfo);
-          fatalError(request, error);
+          logRecoverableError(request, error, errorInfo, null);
+          fatalError(request, error, errorInfo, null);
         }
         return;
       } else {
@@ -3842,11 +3928,11 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             error.$$typeof === REACT_POSTPONE_TYPE
           ) {
             const postponeInstance: Postpone = (error: any);
-            logPostpone(request, postponeInstance.message, errorInfo);
+            logPostpone(request, postponeInstance.message, errorInfo, null);
             // TODO: Figure out a better signal than a magic digest value.
             errorDigest = 'POSTPONE';
           } else {
-            errorDigest = logRecoverableError(request, error, errorInfo);
+            errorDigest = logRecoverableError(request, error, errorInfo, null);
           }
           abortRemainingReplayNodes(
             request,
@@ -3880,11 +3966,11 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         error.$$typeof === REACT_POSTPONE_TYPE
       ) {
         const postponeInstance: Postpone = (error: any);
-        logPostpone(request, postponeInstance.message, errorInfo);
+        logPostpone(request, postponeInstance.message, errorInfo, null);
         // TODO: Figure out a better signal than a magic digest value.
         errorDigest = 'POSTPONE';
       } else {
-        errorDigest = logRecoverableError(request, error, errorInfo);
+        errorDigest = logRecoverableError(request, error, errorInfo, null);
       }
       encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, true);
 
@@ -3922,7 +4008,7 @@ function safelyEmitEarlyPreloads(
   } catch (error) {
     // We assume preloads are optimistic and thus non-fatal if errored.
     const errorInfo: ThrownInfo = {};
-    logRecoverableError(request, error, errorInfo);
+    logRecoverableError(request, error, errorInfo, null);
   }
 }
 
@@ -4164,7 +4250,12 @@ function retryRenderTask(
         const postponeInstance: Postpone = (x: any);
 
         const postponeInfo = getThrownInfo(task.componentStack);
-        logPostpone(request, postponeInstance.message, postponeInfo);
+        logPostpone(
+          request,
+          postponeInstance.message,
+          postponeInfo,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        );
         trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
         return;
@@ -4174,7 +4265,13 @@ function retryRenderTask(
     const errorInfo = getThrownInfo(task.componentStack);
     task.abortSet.delete(task);
     segment.status = ERRORED;
-    erroredTask(request, task.blockedBoundary, x, errorInfo);
+    erroredTask(
+      request,
+      task.blockedBoundary,
+      x,
+      errorInfo,
+      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    );
     return;
   } finally {
     if (__DEV__) {
@@ -4253,6 +4350,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
       errorInfo,
       task.replay.nodes,
       task.replay.slots,
+      __DEV__ && enableOwnerStacks ? task.debugTask : null,
     );
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
@@ -4306,8 +4404,8 @@ export function performWork(request: Request): void {
     }
   } catch (error) {
     const errorInfo: ThrownInfo = {};
-    logRecoverableError(request, error, errorInfo);
-    fatalError(request, error);
+    logRecoverableError(request, error, errorInfo, null);
+    fatalError(request, error, errorInfo, null);
   } finally {
     setCurrentResumableState(prevResumableState);
     ReactSharedInternals.H = prevDispatcher;
@@ -4891,8 +4989,8 @@ export function startFlowing(request: Request, destination: Destination): void {
     flushCompletedQueues(request, destination);
   } catch (error) {
     const errorInfo: ThrownInfo = {};
-    logRecoverableError(request, error, errorInfo);
-    fatalError(request, error);
+    logRecoverableError(request, error, errorInfo, null);
+    fatalError(request, error, errorInfo, null);
   }
 }
 
@@ -4917,8 +5015,8 @@ export function abort(request: Request, reason: mixed): void {
     }
   } catch (error) {
     const errorInfo: ThrownInfo = {};
-    logRecoverableError(request, error, errorInfo);
-    fatalError(request, error);
+    logRecoverableError(request, error, errorInfo, null);
+    fatalError(request, error, errorInfo, null);
   }
 }
 
