@@ -250,6 +250,7 @@ type RenderTask = {
   thenableState: null | ThenableState,
   isFallback: boolean, // whether this task is rendering inside a fallback tree
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
+  debugTask: null | ConsoleTask, // DEV only
   // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
   // Consider splitting into multiple objects or consolidating some fields.
 };
@@ -279,6 +280,7 @@ type ReplayTask = {
   thenableState: null | ThenableState,
   isFallback: boolean, // whether this task is rendering inside a fallback tree
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
+  debugTask: null | ConsoleTask, // DEV only
   // DON'T ANY MORE FIELDS. We at 16 already which otherwise requires converting to a constructor.
   // Consider splitting into multiple objects or consolidating some fields.
 };
@@ -468,6 +470,7 @@ function RequestInstance(
     null,
     false,
     emptyContextObject,
+    null,
   );
   pingedTasks.push(rootTask);
 }
@@ -610,6 +613,7 @@ export function resumeRequest(
       null,
       false,
       emptyContextObject,
+      null,
     );
     pingedTasks.push(rootTask);
     return request;
@@ -636,6 +640,7 @@ export function resumeRequest(
     null,
     false,
     emptyContextObject,
+    null,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -704,6 +709,7 @@ function createRenderTask(
   componentStack: null | ComponentStackNode,
   isFallback: boolean,
   legacyContext: LegacyContext,
+  debugTask: null | ConsoleTask,
 ): RenderTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -731,6 +737,9 @@ function createRenderTask(
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
   }
+  if (__DEV__ && enableOwnerStacks) {
+    task.debugTask = debugTask;
+  }
   abortSet.add(task);
   return task;
 }
@@ -751,6 +760,7 @@ function createReplayTask(
   componentStack: null | ComponentStackNode,
   isFallback: boolean,
   legacyContext: LegacyContext,
+  debugTask: null | ConsoleTask,
 ): ReplayTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -778,6 +788,9 @@ function createReplayTask(
   }: any);
   if (!disableLegacyContext) {
     task.legacyContext = legacyContext;
+  }
+  if (__DEV__ && enableOwnerStacks) {
+    task.debugTask = debugTask;
   }
   abortSet.add(task);
   return task;
@@ -887,40 +900,44 @@ function createClassComponentStack(
     type,
   };
 }
-function createServerComponentStack(
+function pushServerComponentStack(
   task: Task,
   debugInfo: void | null | ReactDebugInfo,
-): null | ComponentStackNode {
+): void {
+  if (!__DEV__) {
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'createServerComponentStack should never be called in production. This is a bug in React.',
+    );
+  }
   // Build a Server Component parent stack from the debugInfo.
-  if (__DEV__) {
-    let node = task.componentStack;
-    if (debugInfo != null) {
-      const stack: ReactDebugInfo = debugInfo;
-      for (let i = 0; i < stack.length; i++) {
-        const componentInfo: ReactComponentInfo = (stack[i]: any);
-        if (typeof componentInfo.name !== 'string') {
-          continue;
-        }
-        let name = componentInfo.name;
-        const env = componentInfo.env;
-        if (env) {
-          name += ' (' + env + ')';
-        }
-        node = {
-          tag: 3,
-          parent: node,
-          type: name,
-          owner: componentInfo.owner,
-          stack: componentInfo.stack,
-        };
+  if (debugInfo != null) {
+    const stack: ReactDebugInfo = debugInfo;
+    for (let i = 0; i < stack.length; i++) {
+      const componentInfo: ReactComponentInfo = (stack[i]: any);
+      if (typeof componentInfo.name !== 'string') {
+        continue;
+      }
+      if (enableOwnerStacks && componentInfo.stack === undefined) {
+        continue;
+      }
+      let name = componentInfo.name;
+      const env = componentInfo.env;
+      if (env) {
+        name += ' (' + env + ')';
+      }
+      task.componentStack = {
+        tag: 3,
+        parent: task.componentStack,
+        type: name,
+        owner: componentInfo.owner,
+        stack: componentInfo.stack,
+      };
+      if (enableOwnerStacks) {
+        task.debugTask = (componentInfo.task: any);
       }
     }
-    return node;
   }
-  // eslint-disable-next-line react-internal/prod-error-codes
-  throw new Error(
-    'createServerComponentStack should never be called in production. This is a bug in React.',
-  );
 }
 
 function createComponentStackFromType(
@@ -1231,6 +1248,7 @@ function renderSuspenseBoundary(
     suspenseComponentStack,
     true,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
@@ -1371,6 +1389,7 @@ function replaySuspenseBoundary(
     suspenseComponentStack,
     true,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
@@ -2570,12 +2589,17 @@ function renderNodeDestructive(
         const owner = __DEV__ ? element._owner : null;
         const stack = __DEV__ && enableOwnerStacks ? element._debugStack : null;
 
+        let previousDebugTask: null | ConsoleTask = null;
         const previousComponentStack = task.componentStack;
+        let debugTask: null | ConsoleTask;
         if (__DEV__) {
-          task.componentStack = createServerComponentStack(
-            task,
-            element._debugInfo,
-          );
+          if (enableOwnerStacks) {
+            previousDebugTask = task.debugTask;
+          }
+          pushServerComponentStack(task, element._debugInfo);
+          if (enableOwnerStacks) {
+            task.debugTask = debugTask = element._debugTask;
+          }
         }
 
         const name = getComponentNameFromType(type);
@@ -2583,8 +2607,6 @@ function renderNodeDestructive(
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;
         const keyPath = [task.keyPath, name, keyOrIndex];
         if (task.replay !== null) {
-          const debugTask: null | ConsoleTask =
-            __DEV__ && enableOwnerStacks ? element._debugTask : null;
           if (debugTask) {
             debugTask.run(
               replayElement.bind(
@@ -2623,8 +2645,6 @@ function renderNodeDestructive(
           // prelude and skip it during the replay.
         } else {
           // We're doing a plain render.
-          const debugTask: null | ConsoleTask =
-            __DEV__ && enableOwnerStacks ? element._debugTask : null;
           if (debugTask) {
             debugTask.run(
               renderElement.bind(
@@ -2654,6 +2674,9 @@ function renderNodeDestructive(
         }
         if (__DEV__) {
           task.componentStack = previousComponentStack;
+          if (enableOwnerStacks) {
+            task.debugTask = previousDebugTask;
+          }
         }
         return;
       }
@@ -2665,11 +2688,12 @@ function renderNodeDestructive(
       case REACT_LAZY_TYPE: {
         const lazyNode: LazyComponentType<any, any> = (node: any);
         const previousComponentStack = task.componentStack;
+        let previousDebugTask = null;
         if (__DEV__) {
-          task.componentStack = createServerComponentStack(
-            task,
-            lazyNode._debugInfo,
-          );
+          if (enableOwnerStacks) {
+            previousDebugTask = task.debugTask;
+          }
+          pushServerComponentStack(task, lazyNode._debugInfo);
         }
         if (!__DEV__ || task.componentStack === previousComponentStack) {
           // TODO: Do we really need this stack frame? We don't on the client.
@@ -2692,6 +2716,9 @@ function renderNodeDestructive(
         // We restore the stack before rendering the resolved node because once the Lazy
         // has resolved any future errors
         task.componentStack = previousComponentStack;
+        if (__DEV__ && enableOwnerStacks) {
+          task.debugTask = previousDebugTask;
+        }
 
         // Now we render the resolved node
         renderNodeDestructive(request, task, resolvedNode, childIndex);
@@ -2812,10 +2839,7 @@ function renderNodeDestructive(
       const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
       const previousComponentStack = task.componentStack;
       if (__DEV__) {
-        task.componentStack = createServerComponentStack(
-          task,
-          thenable._debugInfo,
-        );
+        pushServerComponentStack(task, thenable._debugInfo);
       }
       const result = renderNodeDestructive(
         request,
@@ -3058,13 +3082,14 @@ function renderChildrenArray(
 ): void {
   const prevKeyPath = task.keyPath;
   const previousComponentStack = task.componentStack;
+  let previousDebugTask = null;
   if (__DEV__) {
+    if (enableOwnerStacks) {
+      previousDebugTask = task.debugTask;
+    }
     // We read debugInfo from task.node instead of children because it might have been an
     // unwrapped iterable so we read from the original node.
-    task.componentStack = createServerComponentStack(
-      task,
-      (task.node: any)._debugInfo,
-    );
+    pushServerComponentStack(task, (task.node: any)._debugInfo);
   }
   if (childIndex !== -1) {
     task.keyPath = [task.keyPath, 'Fragment', childIndex];
@@ -3079,6 +3104,9 @@ function renderChildrenArray(
       task.keyPath = prevKeyPath;
       if (__DEV__) {
         task.componentStack = previousComponentStack;
+        if (enableOwnerStacks) {
+          task.debugTask = previousDebugTask;
+        }
       }
       return;
     }
@@ -3112,6 +3140,9 @@ function renderChildrenArray(
       task.keyPath = prevKeyPath;
       if (__DEV__) {
         task.componentStack = previousComponentStack;
+        if (enableOwnerStacks) {
+          task.debugTask = previousDebugTask;
+        }
       }
       return;
     }
@@ -3134,6 +3165,9 @@ function renderChildrenArray(
   task.keyPath = prevKeyPath;
   if (__DEV__) {
     task.componentStack = previousComponentStack;
+    if (enableOwnerStacks) {
+      task.debugTask = previousDebugTask;
+    }
   }
 }
 
@@ -3371,6 +3405,7 @@ function spawnNewSuspendedReplayTask(
     task.componentStack !== null ? task.componentStack.parent : null,
     task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
 
   const ping = newTask.ping;
@@ -3417,6 +3452,7 @@ function spawnNewSuspendedRenderTask(
     task.componentStack !== null ? task.componentStack.parent : null,
     task.isFallback,
     !disableLegacyContext ? task.legacyContext : emptyContextObject,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
 
   const ping = newTask.ping;
