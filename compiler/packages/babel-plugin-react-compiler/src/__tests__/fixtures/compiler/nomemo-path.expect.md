@@ -5,14 +5,16 @@
 // @disableMemoizationForDebugging
 import { useMemo } from "react";
 
-function Component({ a }) {
-  let x = useMemo(() => [a], []);
+const w = 42;
+
+function Component(a) {
+  let x = useMemo(() => a.x, [a, w]);
   return <div>{x}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 42 }],
+  params: [{ x: 42 }],
   isComponent: true,
 };
 
@@ -24,33 +26,37 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime"; // @disableMemoizationForDebugging
 import { useMemo } from "react";
 
-function Component(t0) {
-  const $ = _c(3);
-  const { a } = t0;
+const w = 42;
+
+function Component(a) {
+  const $ = _c(5);
+  const t0 = w;
   let t1;
   let t2;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = [a];
-    $[0] = t2;
+  if ($[0] !== a || $[1] !== t0) {
+    t2 = a.x;
+    $[0] = a;
+    $[1] = t0;
+    $[2] = t2;
   } else {
-    t2 = $[0];
+    t2 = $[2];
   }
   t1 = t2;
   const x = t1;
   let t3;
-  if ($[1] !== x || true) {
+  if ($[3] !== x || true) {
     t3 = <div>{x}</div>;
-    $[1] = x;
-    $[2] = t3;
+    $[3] = x;
+    $[4] = t3;
   } else {
-    t3 = $[2];
+    t3 = $[4];
   }
   return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 42 }],
+  params: [{ x: 42 }],
   isComponent: true,
 };
 

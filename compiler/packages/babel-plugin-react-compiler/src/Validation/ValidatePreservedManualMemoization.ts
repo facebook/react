@@ -146,9 +146,13 @@ function compareDeps(
   const rootsEqual =
     (inferred.root.kind === "Global" &&
       source.root.kind === "Global" &&
-      inferred.root.identifierName === source.root.identifierName) ||
-    (inferred.root.kind === "NamedLocal" &&
-      source.root.kind === "NamedLocal" &&
+      inferred.root.binding.binding.name ===
+        source.root.binding.binding.name) ||
+    ((inferred.root.kind === "NamedLocal" ||
+      inferred.root.kind === "InlinedGlobal") &&
+      (source.root.kind === "NamedLocal" ||
+        source.root.kind === "InlinedGlobal") &&
+      source.root.kind === inferred.root.kind &&
       inferred.root.value.identifier.id === source.root.value.identifier.id);
   if (!rootsEqual) {
     return CompareDependencyResult.RootDifference;
@@ -378,7 +382,8 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
     if (
       state.manualMemoState != null &&
-      state.manualMemoState.depsFromSource != null
+      state.manualMemoState.depsFromSource != null &&
+      !scopeBlock.scope.source
     ) {
       for (const dep of scopeBlock.scope.dependencies) {
         validateInferredDep(
