@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @disableMemoizationForDebugging
+// @disableMemoization
 import { useMemo } from "react";
 
 const w = 42;
@@ -23,7 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @disableMemoizationForDebugging
+import { c as _c } from "react/compiler-runtime"; // @disableMemoization
 import { useMemo } from "react";
 
 const w = 42;

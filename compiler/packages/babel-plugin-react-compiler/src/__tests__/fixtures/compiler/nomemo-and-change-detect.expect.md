@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @disableMemoizationForDebugging @enableChangeDetection
+// @disableMemoization @enableChangeDetection
 import { useMemo } from "react";
 
 function Component(props) {
@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { $structuralCheck } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @disableMemoizationForDebugging @enableChangeDetection
+import { c as _c } from "react/compiler-runtime"; // @disableMemoization @enableChangeDetection
 import { useMemo } from "react";
 
 function Component(props) {

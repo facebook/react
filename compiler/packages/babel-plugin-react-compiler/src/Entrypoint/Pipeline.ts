@@ -270,7 +270,7 @@ function* runWithEnvironment(
     if (
       env.config.enablePreserveExistingManualUseMemo === "scope" ||
       env.config.enableChangeDetection != null ||
-      env.config.disableMemoizationForDebugging
+      env.config.disableMemoization
     ) {
       memoizeExistingUseMemos(hir);
       yield log({
