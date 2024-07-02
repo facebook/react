@@ -459,19 +459,28 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
     }
 
     if (
-      key === "enablePreserveExistingManualUseMemoAsHook" &&
-      (val === undefined || val === "true")
+      key === "enablePreserveExistingManualUseMemo" &&
+      (val === undefined || val === "true" || val === "scope")
     ) {
-      maybeConfig["enablePreserveExistingManualUseMemo"] = "hook";
+      maybeConfig[key] = "scope";
+      continue;
+    }
+
+    if (key === "enablePreserveExistingManualUseMemo" && val === "hook") {
+      maybeConfig[key] = "hook";
       continue;
     }
 
     if (
-      key === "enablePreserveExistingManualUseMemoAsScope" &&
-      (val === undefined || val === "true")
+      key === "enablePreserveExistingManualUseMemo" &&
+      !(val === "false" || val === "off")
     ) {
-      maybeConfig["enablePreserveExistingManualUseMemo"] = "scope";
-      continue;
+      CompilerError.throwInvalidConfig({
+        reason: `Invalid setting '${val}' for 'enablePreserveExistingManualUseMemo'. Valid settings are 'hook', 'scope', or 'off'.`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
     }
 
     if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {

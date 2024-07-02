@@ -1,4 +1,4 @@
-// @enablePreserveExistingManualUseMemoAsScope
+// @enablePreserveExistingManualUseMemo
 import { useMemo } from "react";
 
 function Component({ a }) {
