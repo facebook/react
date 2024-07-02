@@ -907,7 +907,7 @@ function pushServerComponentStack(
   if (!__DEV__) {
     // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'createServerComponentStack should never be called in production. This is a bug in React.',
+      'pushServerComponentStack should never be called in production. This is a bug in React.',
     );
   }
   // Build a Server Component parent stack from the debugInfo.
