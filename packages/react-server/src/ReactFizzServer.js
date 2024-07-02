@@ -1017,20 +1017,31 @@ function logPostpone(
   request: Request,
   reason: string,
   postponeInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
 ): void {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  request.onPostpone(reason, postponeInfo);
+  const onPostpone = request.onPostpone;
+  if (__DEV__ && enableOwnerStacks && debugTask) {
+    debugTask.run(onPostpone.bind(null, reason, postponeInfo));
+  } else {
+    onPostpone(reason, postponeInfo);
+  }
 }
 
 function logRecoverableError(
   request: Request,
   error: any,
   errorInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
 ): ?string {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  const errorDigest = request.onError(error, errorInfo);
+  const onError = request.onError;
+  const errorDigest =
+    __DEV__ && enableOwnerStacks && debugTask
+      ? debugTask.run(onError.bind(null, error, errorInfo))
+      : onError(error, errorInfo);
   if (errorDigest != null && typeof errorDigest !== 'string') {
     // We used to throw here but since this gets called from a variety of unprotected places it
     // seems better to just warn and discard the returned value.
@@ -1045,14 +1056,24 @@ function logRecoverableError(
   return errorDigest;
 }
 
-function fatalError(request: Request, error: mixed): void {
+function fatalError(
+  request: Request,
+  error: mixed,
+  errorInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
+): void {
   // This is called outside error handling code such as if the root errors outside
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
   const onShellError = request.onShellError;
-  onShellError(error);
   const onFatalError = request.onFatalError;
-  onFatalError(error);
+  if (__DEV__ && enableOwnerStacks && debugTask) {
+    debugTask.run(onShellError.bind(null, error));
+    debugTask.run(onFatalError.bind(null, error));
+  } else {
+    onShellError(error);
+    onFatalError(error);
+  }
   if (request.destination !== null) {
     request.status = CLOSED;
     closeWithError(request.destination, error);
@@ -1185,11 +1206,21 @@ function renderSuspenseBoundary(
       error.$$typeof === REACT_POSTPONE_TYPE
     ) {
       const postponeInstance: Postpone = (error: any);
-      logPostpone(request, postponeInstance.message, thrownInfo);
+      logPostpone(
+        request,
+        postponeInstance.message,
+        thrownInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
       // TODO: Figure out a better signal than a magic digest value.
       errorDigest = 'POSTPONE';
     } else {
-      errorDigest = logRecoverableError(request, error, thrownInfo);
+      errorDigest = logRecoverableError(
+        request,
+        error,
+        thrownInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
     }
     encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo, false);
 
@@ -1332,11 +1363,21 @@ function replaySuspenseBoundary(
       error.$$typeof === REACT_POSTPONE_TYPE
     ) {
       const postponeInstance: Postpone = (error: any);
-      logPostpone(request, postponeInstance.message, thrownInfo);
+      logPostpone(
+        request,
+        postponeInstance.message,
+        thrownInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
       // TODO: Figure out a better signal than a magic digest value.
       errorDigest = 'POSTPONE';
     } else {
-      errorDigest = logRecoverableError(request, error, thrownInfo);
+      errorDigest = logRecoverableError(
+        request,
+        error,
+        thrownInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
     }
     encodeErrorForBoundary(
       resumedBoundary,
@@ -2397,6 +2438,7 @@ function replayElement(
           thrownInfo,
           childNodes,
           childSlots,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
         );
       }
       task.replay = replay;
@@ -2971,6 +3013,7 @@ function replayFragment(
         thrownInfo,
         childNodes,
         childSlots,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
       );
     }
     task.replay = replay;
@@ -3361,7 +3404,12 @@ function injectPostponedHole(
   reason: string,
   thrownInfo: ThrownInfo,
 ): Segment {
-  logPostpone(request, reason, thrownInfo);
+  logPostpone(
+    request,
+    reason,
+    thrownInfo,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
+  );
   // Something suspended, we'll need to create a new segment and resolve it later.
   const segment = task.blockedSegment;
   const insertionIndex = segment.chunks.length;
@@ -3645,6 +3693,7 @@ function erroredReplay(
   errorInfo: ThrownInfo,
   replayNodes: ReplayNode[],
   resumeSlots: ResumeSlots,
+  debugTask: null | ConsoleTask,
 ): void {
   // Erroring during a replay doesn't actually cause an error by itself because
   // that component has already rendered. What causes the error is the resumable
@@ -3661,11 +3710,11 @@ function erroredReplay(
     error.$$typeof === REACT_POSTPONE_TYPE
   ) {
     const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message, errorInfo);
+    logPostpone(request, postponeInstance.message, errorInfo, debugTask);
     // TODO: Figure out a better signal than a magic digest value.
     errorDigest = 'POSTPONE';
   } else {
-    errorDigest = logRecoverableError(request, error, errorInfo);
+    errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
   }
   abortRemainingReplayNodes(
     request,
@@ -3684,6 +3733,7 @@ function erroredTask(
   boundary: Root | SuspenseBoundary,
   error: mixed,
   errorInfo: ThrownInfo,
+  debugTask: null | ConsoleTask,
 ) {
   // Report the error to a global handler.
   let errorDigest;
@@ -3694,14 +3744,14 @@ function erroredTask(
     error.$$typeof === REACT_POSTPONE_TYPE
   ) {
     const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message, errorInfo);
+    logPostpone(request, postponeInstance.message, errorInfo, debugTask);
     // TODO: Figure out a better signal than a magic digest value.
     errorDigest = 'POSTPONE';
   } else {
-    errorDigest = logRecoverableError(request, error, errorInfo);
+    errorDigest = logRecoverableError(request, error, errorInfo, debugTask);
   }
   if (boundary === null) {
-    fatalError(request, error);
+    fatalError(request, error, errorInfo, debugTask);
   } else {
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
@@ -3857,11 +3907,11 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             'The render was aborted with postpone when the shell is incomplete. Reason: ' +
               postponeInstance.message,
           );
-          logRecoverableError(request, fatal, errorInfo);
-          fatalError(request, fatal);
+          logRecoverableError(request, fatal, errorInfo, null);
+          fatalError(request, fatal, errorInfo, null);
         } else {
-          logRecoverableError(request, error, errorInfo);
-          fatalError(request, error);
+          logRecoverableError(request, error, errorInfo, null);
+          fatalError(request, error, errorInfo, null);
         }
         return;
       } else {
@@ -3878,11 +3928,11 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             error.$$typeof === REACT_POSTPONE_TYPE
           ) {
             const postponeInstance: Postpone = (error: any);
-            logPostpone(request, postponeInstance.message, errorInfo);
+            logPostpone(request, postponeInstance.message, errorInfo, null);
             // TODO: Figure out a better signal than a magic digest value.
             errorDigest = 'POSTPONE';
           } else {
-            errorDigest = logRecoverableError(request, error, errorInfo);
+            errorDigest = logRecoverableError(request, error, errorInfo, null);
           }
           abortRemainingReplayNodes(
             request,
@@ -3916,11 +3966,11 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         error.$$typeof === REACT_POSTPONE_TYPE
       ) {
         const postponeInstance: Postpone = (error: any);
-        logPostpone(request, postponeInstance.message, errorInfo);
+        logPostpone(request, postponeInstance.message, errorInfo, null);
         // TODO: Figure out a better signal than a magic digest value.
         errorDigest = 'POSTPONE';
       } else {
-        errorDigest = logRecoverableError(request, error, errorInfo);
+        errorDigest = logRecoverableError(request, error, errorInfo, null);
       }
       encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, true);
 
@@ -3958,7 +4008,7 @@ function safelyEmitEarlyPreloads(
   } catch (error) {
     // We assume preloads are optimistic and thus non-fatal if errored.
     const errorInfo: ThrownInfo = {};
-    logRecoverableError(request, error, errorInfo);
+    logRecoverableError(request, error, errorInfo, null);
   }
 }
 
@@ -4200,7 +4250,12 @@ function retryRenderTask(
         const postponeInstance: Postpone = (x: any);
 
         const postponeInfo = getThrownInfo(task.componentStack);
-        logPostpone(request, postponeInstance.message, postponeInfo);
+        logPostpone(
+          request,
+          postponeInstance.message,
+          postponeInfo,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        );
         trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
         return;
@@ -4210,7 +4265,13 @@ function retryRenderTask(
     const errorInfo = getThrownInfo(task.componentStack);
     task.abortSet.delete(task);
     segment.status = ERRORED;
-    erroredTask(request, task.blockedBoundary, x, errorInfo);
+    erroredTask(
+      request,
+      task.blockedBoundary,
+      x,
+      errorInfo,
+      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    );
     return;
   } finally {
     if (__DEV__) {
@@ -4289,6 +4350,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
       errorInfo,
       task.replay.nodes,
       task.replay.slots,
+      __DEV__ && enableOwnerStacks ? task.debugTask : null,
     );
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
@@ -4342,8 +4404,8 @@ export function performWork(request: Request): void {
     }
   } catch (error) {
     const errorInfo: ThrownInfo = {};
-    logRecoverableError(request, error, errorInfo);
-    fatalError(request, error);
+    logRecoverableError(request, error, errorInfo, null);
+    fatalError(request, error, errorInfo, null);
   } finally {
     setCurrentResumableState(prevResumableState);
     ReactSharedInternals.H = prevDispatcher;
@@ -4927,8 +4989,8 @@ export function startFlowing(request: Request, destination: Destination): void {
     flushCompletedQueues(request, destination);
   } catch (error) {
     const errorInfo: ThrownInfo = {};
-    logRecoverableError(request, error, errorInfo);
-    fatalError(request, error);
+    logRecoverableError(request, error, errorInfo, null);
+    fatalError(request, error, errorInfo, null);
   }
 }
 
@@ -4953,8 +5015,8 @@ export function abort(request: Request, reason: mixed): void {
     }
   } catch (error) {
     const errorInfo: ThrownInfo = {};
-    logRecoverableError(request, error, errorInfo);
-    fatalError(request, error);
+    logRecoverableError(request, error, errorInfo, null);
+    fatalError(request, error, errorInfo, null);
   }
 }
 
