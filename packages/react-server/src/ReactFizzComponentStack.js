@@ -73,8 +73,10 @@ export function getStackByComponentStackNode(
           info += describeClassComponentFrame(node.type);
           break;
         case 3:
-          info += describeBuiltInComponentFrame(node.type);
-          break;
+          if (__DEV__) {
+            info += describeBuiltInComponentFrame(node.type);
+            break;
+          }
       }
       // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.parent;
