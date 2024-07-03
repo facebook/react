@@ -1,0 +1,17 @@
+Mantenimiento de las dependencias actualizadas automáticamente con las actualizaciones de la versión de Dependabot
+Puedes usar Dependabot para mantener automáticamente las dependencias y paquetes usados en el repositorio actualizados a la versión más reciente, incluso cuando no tienen vulnerabilidades conocidas.
+
+Acerca de las actualizaciones a la versión del Dependabot
+Puede utilizar el Dependabot para mantener los paquetes que utilizas actualizados a su versión más reciente.
+
+Configuración de las actualizaciones de versiones de Dependabot
+Puedes configurar tu repositorio para que el Dependabot actualice automáticamente los paquetes que utilizas.
+
+Listar dependencias configuradas para las actualizaciones de versión
+Puedes ver las dependencias que monitorea el Dependabot pára encontrar actualizaciones.
+
+Personalizar las actualizaciones de las dependencias
+Puedes personalizar cómo el Dependabot mantiene tus dependencias.
+
+Opciones de configuración para el archivo dependabot.yml
+La información detallada para todas las opciones que puedes utilizar para personalizar como el Dependabot mantiene tus repositorios.
