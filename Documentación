@@ -1,0 +1,73 @@
+Documentación de GitHub
+Repositorios/Administrar la configuración de un repositorio/Personalizar tu repositorio/Representación de un botón de patrocinador
+Botón para mostrar un patrocinador en tu repositorio
+Puedes agregar un botón de patrocinador en tu repositorio para aumentar la visibilidad de las opciones de financiación para tu proyecto de código abierto.
+
+En este artículo
+Acerca de los archivos FUNDING
+Botón para mostrar un patrocinador en tu repositorio
+Información adicional
+Acerca de los archivos FUNDING
+Puede configurar el botón de patrocinador si edita un archivo FUNDING.yml en la carpeta .github del repositorio, en la rama predeterminada. Puedes configurar el botón para que incluya programadores patrocinados en GitHub Sponsors, plataformas de financiamiento externo o URL de financiamiento personalizadas. Para más información sobre GitHub Sponsors, consulta "Acerca de los Patrocinadores de GitHub".
+
+Puedes agregar un nombre de usuario, un nombre de paquete o un nombre de proyecto por plataforma de financiamiento externo y hasta cuatro URL personalizadas. Puede añadir una organización y hasta cuatro desarrolladores patrocinadores en GitHub Sponsors. Agrega cada plataforma en una línea nueva, usando la siguiente sintaxis:
+
+Plataforma	Sintaxis
+LFX Mentorship (antes CommunityBridge)	community_bridge: PROJECT-NAME
+GitHub Sponsors	github: USERNAME o github: [USERNAME, USERNAME, USERNAME, USERNAME]
+IssueHunt	issuehunt: USERNAME
+Ko-fi	ko_fi: USERNAME
+Liberapay	liberapay: USERNAME
+Open Collective	open_collective: USERNAME
+Patreon	patreon: USERNAME
+Tidelift	tidelift: PLATFORM-NAME/PACKAGE-NAME
+Polar	polar: USERNAME
+Comprarme un café	buy_me_a_coffee: USERNAME
+Dirección URL personalizada	custom: LINK1 o custom: [LINK1, LINK2, LINK3, LINK4]
+Para Tidelift, usa la sintaxis platform-name/package-name con los siguientes nombres de plataforma:
+
+Idioma	Nombre de la plataforma.
+JavaScript	npm
+Python	pypi
+Ruby	rubygems
+Java	maven
+PHP	packagist
+C#	nuget
+Este es un archivo FUNDING.yml de ejemplo:
+
+github: [octocat, surftocat]
+patreon: octocat
+tidelift: npm/octo-package
+custom: ["https://www.paypal.me/octocat", octocat.com]
+Nota: Si una dirección URL personalizada de una matriz incluye :, debe encapsular la dirección URL entre comillas. Por ejemplo, "https://www.paypal.me/octocat".
+
+Puedes crear un botón de patrocinador predeterminado para tu organización o cuenta personal. Para obtener más información, vea «Creación de un archivo predeterminado de mantenimiento de la comunidad».
+
+Los enlaces de financiamiento permiten que los proyectos de código abierto reciban apoyo financiero directo de su comunidad. El uso de enlaces de financiamiento para otros fines, como la publicidad o el apoyo a grupos solidarios, comunitarios o políticos no está admitido. Si tienes consultas acerca de si los fines con que deseas usar estos enlaces están admitidos, ve a Soporte de GitHub.
+
+Botón para mostrar un patrocinador en tu repositorio
+Cualquier usuario que cuente con permisos de administración puede habilitar un botón de patrocinador en un repositorio.
+
+En GitHub.com, navega a la página principal del repositorio.
+
+En el nombre del repositorio, haz clic en  Configuración. Si no puedes ver la pestaña "Configuración", selecciona el menú desplegable  y, a continuación, haz clic en Configuración.
+
+Captura de pantalla de un encabezado de repositorio en el que se muestran las pestañas. La pestaña "Configuración" está resaltada con un contorno naranja oscuro.
+En la página de configuración "General", en la sección "Características", selecciona Patrocinios.
+
+En el cuadro "Patrocinios", haz clic en el botón Configurar patrocinador o Invalidar vínculos de financiación.
+
+En el editor de archivos, siga la instrucciones del archivo FUNDING.yml para agregar vínculos a las ubicaciones de financiación.
+
+Haz clic en Confirmar cambios... .
+
+En el campo de "Mensaje de confirmación", escriba un mensaje de confirmación corto y significativo que describa la modificación que hizo en el archivo. Puedes atribuir el cambio a mas de un autor en el mensaje del mismo. Para obtener más información, vea «Crear una confirmación con distintos autores».
+
+Debajo de los campos para el mensaje de confirmación, decide si deseas agregar tu confirmación a la rama actual o a una rama nueva. Debajo de los campos del mensaje de confirmación, decide si deseas agregar tu confirmación a la rama actual o a una nueva rama. Si tu rama actual es la rama predeterminada, debes elegir crear una nueva rama para tu confirmación y después crear una solicitud de extracción. Para obtener más información, vea «Crear una solicitud de incorporación de cambios».
+
+Captura de pantalla de una solicitud de cambios de GitHub en la que se muestra un botón de radio para confirmar directamente en la rama principal o para crear una nueva rama. Aparece seleccionada la opción de rama nueva.
+Haz clic en Confirmar cambios o Proponer cambios.
+
+Información adicional
+"Acerca de los patrocinadores para colaboradores de código abierto en GitHub"
+"Preguntas más frecuentes con el equipo de GitHub Sponsors" en the GitHub Blog
