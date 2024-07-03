@@ -1,0 +1,63 @@
+Reaccionar ·Licencia de GitHub versión npm Estado de CircleCI Bienvenidos los PR
+React es una biblioteca de JavaScript para crear interfaces de usuario.
+
+Declarativo: React facilita la creación de interfaces de usuario interactivas. Diseñe vistas simples para cada estado de su aplicación y React actualizará y renderizará de manera eficiente solo los componentes correctos cuando cambien sus datos. Las vistas declarativas hacen que su código sea más predecible, más simple de entender y más fácil de depurar.
+Basado en componentes: crea componentes encapsulados que administren su propio estado y luego compónelos para crear interfaces de usuario complejas. Dado que la lógica de los componentes está escrita en JavaScript en lugar de plantillas, puedes pasar fácilmente datos enriquecidos a través de tu aplicación y mantener el estado fuera del DOM.
+Aprenda una vez, escriba en cualquier lugar: no hacemos suposiciones sobre el resto de su pila de tecnología, por lo que puede desarrollar nuevas funciones en React sin tener que reescribir el código existente. React también puede renderizarse en el servidor mediante Node y potenciar aplicaciones móviles mediante React Native .
+Aprenda a usar React en su proyecto .
+
+Instalación
+React ha sido diseñado para una adopción gradual desde el principio, y puedes usar tanto o tan poco React como necesites :
+
+Utilice Inicio rápido para tener una idea de React.
+Agrega React a un proyecto existente para usar tan poco o tanto React como necesites.
+Crea una nueva aplicación React si buscas una potente cadena de herramientas de JavaScript.
+Documentación
+Puede encontrar la documentación de React en el sitio web .
+
+Consulta la página de Primeros pasos para obtener una descripción general rápida.
+
+La documentación se divide en varias secciones:
+
+Inicio rápido
+Tutorial
+Pensando en React
+Instalación
+Describiendo la interfaz de usuario
+Añadiendo interactividad
+Estado gestor
+Guías avanzadas
+Referencia API
+Dónde obtener ayuda
+Guía de colaboración
+Puedes mejorarlo enviando solicitudes de extracción a este repositorio .
+
+Ejemplos
+En el sitio web tenemos varios ejemplos . Aquí te mostramos el primero para que puedas empezar:
+
+import { createRoot } from 'react-dom/client';
+
+function HelloMessage({ name }) {
+  return <div>Hello {name}</div>;
+}
+
+const root = createRoot(document.getElementById('container'));
+root.render(<HelloMessage name="Taylor" />);
+Este ejemplo mostrará "Hola Taylor" en un contenedor en la página.
+
+Notarás que usamos una sintaxis similar a HTML; la llamamos JSX . JSX no es necesario para usar React, pero hace que el código sea más legible y escribirlo se siente como escribir HTML.
+
+Contribuyendo
+El objetivo principal de este repositorio es seguir desarrollando el núcleo de React, haciéndolo más rápido y fácil de usar. El desarrollo de React se lleva a cabo de forma abierta en GitHub y agradecemos a la comunidad por contribuir con correcciones de errores y mejoras. Sigue leyendo para saber cómo puedes participar en la mejora de React.
+
+Código de conducta
+Facebook ha adoptado un Código de conducta que esperamos que cumplan los participantes del proyecto. Lee el texto completo para saber qué acciones se tolerarán y cuáles no.
+
+Guía de colaboración
+Lea nuestra guía de contribución para conocer nuestro proceso de desarrollo, cómo proponer correcciones de errores y mejoras, y cómo crear y probar sus cambios en React.
+
+Buenos primeros números
+Para ayudarte a familiarizarte con nuestro proceso de contribución, tenemos una lista de buenos primeros números que contienen errores que tienen un alcance relativamente limitado. Este es un excelente lugar para comenzar.
+
+Licencia
+React tiene licencia MIT .
