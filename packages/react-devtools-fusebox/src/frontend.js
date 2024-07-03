@@ -18,12 +18,12 @@ import type {
   Wall,
 } from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-
-type Config = {
-  checkBridgeProtocolCompatibility?: boolean,
-  supportsNativeInspection?: boolean,
-  supportsProfiling?: boolean,
-};
+import type {
+  ViewAttributeSource,
+  ViewElementSource,
+  CanViewElementSource,
+} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {Config} from 'react-devtools-shared/src/devtools/store';
 
 export function createBridge(wall?: Wall): FrontendBridge {
   if (wall != null) {
@@ -37,7 +37,7 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
   return new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
-    supportsNativeInspection: true,
+    supportsClickToInspect: true,
     ...config,
   });
 }
@@ -46,13 +46,23 @@ type InitializationOptions = {
   bridge: FrontendBridge,
   store: Store,
   theme?: BrowserTheme,
+  viewAttributeSourceFunction?: ViewAttributeSource,
+  viewElementSourceFunction?: ViewElementSource,
+  canViewElementSourceFunction?: CanViewElementSource,
 };
 
 export function initialize(
   contentWindow: Element | Document,
   options: InitializationOptions,
 ): void {
-  const {bridge, store, theme = 'light'} = options;
+  const {
+    bridge,
+    store,
+    theme = 'light',
+    viewAttributeSourceFunction,
+    viewElementSourceFunction,
+    canViewElementSourceFunction,
+  } = options;
   const root = createRoot(contentWindow);
 
   root.render(
@@ -62,6 +72,10 @@ export function initialize(
       store={store}
       showTabBar={true}
       warnIfLegacyBackendDetected={true}
+      enabledInspectedElementContextMenu={true}
+      viewAttributeSourceFunction={viewAttributeSourceFunction}
+      viewElementSourceFunction={viewElementSourceFunction}
+      canViewElementSourceFunction={canViewElementSourceFunction}
     />,
   );
 }

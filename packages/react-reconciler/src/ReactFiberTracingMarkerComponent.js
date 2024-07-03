@@ -47,7 +47,6 @@ export type BatchConfigTransition = {
   name?: string,
   startTime?: number,
   _updatedFibers?: Set<Fiber>,
-  _callbacks: Set<(BatchConfigTransition, mixed) => mixed>,
 };
 
 // TODO: Is there a way to not include the tag or name here?

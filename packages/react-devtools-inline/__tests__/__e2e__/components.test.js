@@ -8,6 +8,7 @@ const devToolsUtils = require('./devtools-utils');
 const {test, expect} = require('@playwright/test');
 const config = require('../../playwright.config');
 const semver = require('semver');
+
 test.use(config);
 test.describe('Components', () => {
   let page;
@@ -59,41 +60,56 @@ test.describe('Components', () => {
     const isEditableValue = semver.gte(config.use.react_version, '16.8.0');
 
     // Then read the inspected values.
-    const [propName, propValue] = await page.evaluate(
+    const {
+      name: propName,
+      value: propValue,
+      existingNameElementsSize,
+      existingValueElementsSize,
+    } = await page.evaluate(
       isEditable => {
         const {createTestNameSelector, findAllNodes} =
           window.REACT_DOM_DEVTOOLS;
         const container = document.getElementById('devtools');
 
         // Get name of first prop
-        const selectorName = isEditable.name
+        const nameSelector = isEditable.name
           ? 'EditableName'
           : 'NonEditableName';
-        const nameElement = findAllNodes(container, [
-          createTestNameSelector('InspectedElementPropsTree'),
-          createTestNameSelector(selectorName),
-        ])[0];
-        const name = isEditable.name
-          ? nameElement.value
-          : nameElement.innerText;
-
         // Get value of first prop
-        const selectorValue = isEditable.value
+        const valueSelector = isEditable.value
           ? 'EditableValue'
           : 'NonEditableValue';
-        const valueElement = findAllNodes(container, [
-          createTestNameSelector('InspectedElementPropsTree'),
-          createTestNameSelector(selectorValue),
-        ])[0];
-        const value = isEditable.value
-          ? valueElement.value
-          : valueElement.innerText;
 
-        return [name, value];
+        const existingNameElements = findAllNodes(container, [
+          createTestNameSelector('InspectedElementPropsTree'),
+          createTestNameSelector('KeyValue'),
+          createTestNameSelector(nameSelector),
+        ]);
+        const existingValueElements = findAllNodes(container, [
+          createTestNameSelector('InspectedElementPropsTree'),
+          createTestNameSelector('KeyValue'),
+          createTestNameSelector(valueSelector),
+        ]);
+
+        const name = isEditable.name
+          ? existingNameElements[0].value
+          : existingNameElements[0].innerText;
+        const value = isEditable.value
+          ? existingValueElements[0].value
+          : existingValueElements[0].innerText;
+
+        return {
+          name,
+          value,
+          existingNameElementsSize: existingNameElements.length,
+          existingValueElementsSize: existingValueElements.length,
+        };
       },
       {name: isEditableName, value: isEditableValue}
     );
 
+    expect(existingNameElementsSize).toBe(1);
+    expect(existingValueElementsSize).toBe(1);
     expect(propName).toBe('label');
     expect(propValue).toBe('"one"');
   });
@@ -135,6 +151,7 @@ test.describe('Components', () => {
 
       focusWithin(container, [
         createTestNameSelector('InspectedElementPropsTree'),
+        createTestNameSelector('KeyValue'),
         createTestNameSelector('EditableValue'),
       ]);
     });

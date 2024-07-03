@@ -32,7 +32,7 @@ describe('ReactInterleavedUpdates', () => {
     return text;
   }
 
-  test('update during an interleaved event is not processed during the current render', async () => {
+  it('update during an interleaved event is not processed during the current render', async () => {
     const updaters = [];
 
     function Child() {
@@ -87,7 +87,7 @@ describe('ReactInterleavedUpdates', () => {
   });
 
   // @gate forceConcurrentByDefaultForTesting
-  test('low priority update during an interleaved event is not processed during the current render', async () => {
+  it('low priority update during an interleaved event is not processed during the current render', async () => {
     // Same as previous test, but the interleaved update is lower priority than
     // the in-progress render.
     const updaters = [];
@@ -141,7 +141,7 @@ describe('ReactInterleavedUpdates', () => {
     expect(root).toMatchRenderedOutput('222');
   });
 
-  test('regression for #24350: does not add to main update queue until interleaved update queue has been cleared', async () => {
+  it('regression for #24350: does not add to main update queue until interleaved update queue has been cleared', async () => {
     let setStep;
     function App() {
       const [step, _setState] = useState(0);

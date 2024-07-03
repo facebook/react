@@ -15,6 +15,8 @@ import {resolveRequest, getCache} from '../ReactFlightServer';
 
 import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
+import {resolveOwner} from './ReactFlightCurrentOwner';
+
 function resolveCache(): Map<Function, mixed> {
   const request = resolveRequest();
   if (request) {
@@ -36,19 +38,11 @@ export const DefaultAsyncDispatcher: AsyncDispatcher = ({
   },
 }: any);
 
-export let currentOwner: ReactComponentInfo | null = null;
-
 if (__DEV__) {
-  DefaultAsyncDispatcher.getOwner = (): null | ReactComponentInfo => {
-    return currentOwner;
-  };
+  DefaultAsyncDispatcher.getOwner = resolveOwner;
 } else if (!disableStringRefs) {
   // Server Components never use string refs but the JSX runtime looks for it.
   DefaultAsyncDispatcher.getOwner = (): null | ReactComponentInfo => {
     return null;
   };
-}
-
-export function setCurrentOwner(componentInfo: null | ReactComponentInfo) {
-  currentOwner = componentInfo;
 }

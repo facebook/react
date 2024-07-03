@@ -1,0 +1,356 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/optional-call-with-independently-memoizable-arg.js
+---
+Input:
+function Component(props) {
+  const x = makeOptionalFunction(props);
+  // for a regular call, the JSX element could be independently memoized
+  // since it is an immutable value. however, because the call is optional,
+  // we can't extract out independent memoization for the element w/o
+  // forcing that argument to evaluate unconditionally
+  const y = x?.(
+    <div>
+      <span>{props.text}</span>
+    </div>
+  );
+  return y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "makeOptionalFunction",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      40,
+                      60
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        61,
+                        66
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    40,
+                    67
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  67
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              68
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    351,
+                    352
+                  ]
+                },
+                "init": {
+                  "type": "OptionalCallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      355,
+                      356
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "JSXElement",
+                      "openingElement": {
+                        "type": "JSXOpeningElement",
+                        "name": {
+                          "type": "JSXIdentifier",
+                          "name": "div",
+                          "loc": null,
+                          "range": [
+                            365,
+                            368
+                          ]
+                        },
+                        "attributes": [],
+                        "selfClosing": false,
+                        "loc": null,
+                        "range": [
+                          364,
+                          369
+                        ]
+                      },
+                      "children": [
+                        {
+                          "type": "JSXText",
+                          "value": "\n      ",
+                          "raw": "\n      ",
+                          "loc": null,
+                          "range": [
+                            369,
+                            376
+                          ]
+                        },
+                        {
+                          "type": "JSXElement",
+                          "openingElement": {
+                            "type": "JSXOpeningElement",
+                            "name": {
+                              "type": "JSXIdentifier",
+                              "name": "span",
+                              "loc": null,
+                              "range": [
+                                377,
+                                381
+                              ]
+                            },
+                            "attributes": [],
+                            "selfClosing": false,
+                            "loc": null,
+                            "range": [
+                              376,
+                              382
+                            ]
+                          },
+                          "children": [
+                            {
+                              "type": "JSXExpressionContainer",
+                              "expression": {
+                                "type": "MemberExpression",
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "props",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    383,
+                                    388
+                                  ]
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "text",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    389,
+                                    393
+                                  ]
+                                },
+                                "computed": false,
+                                "loc": null,
+                                "range": [
+                                  383,
+                                  393
+                                ]
+                              },
+                              "loc": null,
+                              "range": [
+                                382,
+                                394
+                              ]
+                            }
+                          ],
+                          "closingElement": {
+                            "type": "JSXClosingElement",
+                            "name": {
+                              "type": "JSXIdentifier",
+                              "name": "span",
+                              "loc": null,
+                              "range": [
+                                396,
+                                400
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              394,
+                              401
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            376,
+                            401
+                          ]
+                        },
+                        {
+                          "type": "JSXText",
+                          "value": "\n    ",
+                          "raw": "\n    ",
+                          "loc": null,
+                          "range": [
+                            401,
+                            406
+                          ]
+                        }
+                      ],
+                      "closingElement": {
+                        "type": "JSXClosingElement",
+                        "name": {
+                          "type": "JSXIdentifier",
+                          "name": "div",
+                          "loc": null,
+                          "range": [
+                            408,
+                            411
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          406,
+                          412
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        364,
+                        412
+                      ]
+                    }
+                  ],
+                  "optional": true,
+                  "loc": null,
+                  "range": [
+                    355,
+                    416
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  351,
+                  416
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              345,
+              417
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "y",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                427,
+                428
+              ]
+            },
+            "loc": null,
+            "range": [
+              420,
+              429
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          431
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        431
+      ],
+      "loc": null,
+      "range": [
+        0,
+        431
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    431
+  ]
+}

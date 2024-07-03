@@ -1,0 +1,162 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/function-param-assignment-pattern.js
+---
+Input:
+function Component(x = "default", y = [{}]) {
+  return [x, y];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "AssignmentPattern",
+          "left": {
+            "type": "Identifier",
+            "name": "x",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              19,
+              20
+            ]
+          },
+          "right": {
+            "type": "StringLiteral",
+            "value": "default",
+            "loc": null,
+            "range": [
+              23,
+              32
+            ]
+          },
+          "loc": null,
+          "range": [
+            19,
+            32
+          ]
+        },
+        {
+          "type": "AssignmentPattern",
+          "left": {
+            "type": "Identifier",
+            "name": "y",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              34,
+              35
+            ]
+          },
+          "right": {
+            "type": "ArrayExpression",
+            "elements": [
+              {
+                "type": "ObjectExpression",
+                "properties": [],
+                "loc": null,
+                "range": [
+                  39,
+                  41
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              38,
+              42
+            ]
+          },
+          "loc": null,
+          "range": [
+            34,
+            42
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ArrayExpression",
+              "elements": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    56,
+                    57
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    59,
+                    60
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                55,
+                61
+              ]
+            },
+            "loc": null,
+            "range": [
+              48,
+              62
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          44,
+          64
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        64
+      ],
+      "loc": null,
+      "range": [
+        0,
+        64
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    64
+  ]
+}

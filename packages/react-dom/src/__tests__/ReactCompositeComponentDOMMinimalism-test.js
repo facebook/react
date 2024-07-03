@@ -54,7 +54,7 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
     expect(instance.children.length).toBe(0);
   });
 
-  it('should not render extra nodes for non-interpolated text', async () => {
+  it('should not render extra nodes for interpolated text', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -70,7 +70,7 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
     expect(instance.children.length).toBe(0);
   });
 
-  it('should not render extra nodes for non-interpolated text', async () => {
+  it('should not render extra nodes for interpolated text children', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     await act(() => {

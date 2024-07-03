@@ -1,0 +1,367 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.while-with-assignment-in-test.js
+---
+Input:
+function f(reader) {
+  const queue = [1, 2, 3];
+  let value = 0;
+  let sum = 0;
+  // BUG: we need to codegen the complex test expression
+  while ((value = queue.pop()) != null) {
+    sum += value;
+  }
+  return sum;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "f",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          10
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "reader",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            11,
+            17
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "queue",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    29,
+                    34
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 1.0,
+                      "loc": null,
+                      "range": [
+                        38,
+                        39
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 2.0,
+                      "loc": null,
+                      "range": [
+                        41,
+                        42
+                      ]
+                    },
+                    {
+                      "type": "NumericLiteral",
+                      "value": 3.0,
+                      "loc": null,
+                      "range": [
+                        44,
+                        45
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    37,
+                    46
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  29,
+                  46
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              23,
+              47
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "value",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    54,
+                    59
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 0.0,
+                  "loc": null,
+                  "range": [
+                    62,
+                    63
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  54,
+                  63
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              50,
+              64
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "sum",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    71,
+                    74
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 0.0,
+                  "loc": null,
+                  "range": [
+                    77,
+                    78
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  71,
+                  78
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              67,
+              79
+            ]
+          },
+          {
+            "type": "WhileStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "AssignmentExpression",
+                "operator": "=",
+                "left": {
+                  "type": "Identifier",
+                  "name": "value",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    147,
+                    152
+                  ]
+                },
+                "right": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "queue",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        155,
+                        160
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "pop",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        161,
+                        164
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      155,
+                      164
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    155,
+                    166
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  147,
+                  166
+                ]
+              },
+              "operator": "!=",
+              "right": {
+                "type": "NullLiteral",
+                "loc": null,
+                "range": [
+                  171,
+                  175
+                ]
+              },
+              "loc": null,
+              "range": [
+                146,
+                175
+              ]
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "+=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "sum",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        183,
+                        186
+                      ]
+                    },
+                    "right": {
+                      "type": "Identifier",
+                      "name": "value",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        190,
+                        195
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      183,
+                      195
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    183,
+                    196
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                177,
+                200
+              ]
+            },
+            "loc": null,
+            "range": [
+              139,
+              200
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "sum",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                210,
+                213
+              ]
+            },
+            "loc": null,
+            "range": [
+              203,
+              214
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          19,
+          216
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        216
+      ],
+      "loc": null,
+      "range": [
+        0,
+        216
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    216
+  ]
+}

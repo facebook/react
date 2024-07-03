@@ -14,7 +14,8 @@ import {
 } from 'react-devtools-shared/src/utils';
 import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
 import {
-  format,
+  formatConsoleArguments,
+  formatConsoleArgumentsToSingleString,
   formatWithStyles,
   gt,
   gte,
@@ -123,51 +124,51 @@ describe('utils', () => {
     });
   });
 
-  describe('format', () => {
-    // @reactVersion >= 16.0
+  describe('formatConsoleArgumentsToSingleString', () => {
     it('should format simple strings', () => {
-      expect(format('a', 'b', 'c')).toEqual('a b c');
-    });
-
-    // @reactVersion >= 16.0
-    it('should format multiple argument types', () => {
-      expect(format('abc', 123, true)).toEqual('abc 123 true');
-    });
-
-    // @reactVersion >= 16.0
-    it('should support string substitutions', () => {
-      expect(format('a %s b %s c', 123, true)).toEqual('a 123 b true c');
-    });
-
-    // @reactVersion >= 16.0
-    it('should gracefully handle Symbol types', () => {
-      expect(format(Symbol('a'), 'b', Symbol('c'))).toEqual(
-        'Symbol(a) b Symbol(c)',
+      expect(formatConsoleArgumentsToSingleString('a', 'b', 'c')).toEqual(
+        'a b c',
       );
     });
 
-    // @reactVersion >= 16.0
+    it('should format multiple argument types', () => {
+      expect(formatConsoleArgumentsToSingleString('abc', 123, true)).toEqual(
+        'abc 123 true',
+      );
+    });
+
+    it('should support string substitutions', () => {
+      expect(
+        formatConsoleArgumentsToSingleString('a %s b %s c', 123, true),
+      ).toEqual('a 123 b true c');
+    });
+
+    it('should gracefully handle Symbol types', () => {
+      expect(
+        formatConsoleArgumentsToSingleString(Symbol('a'), 'b', Symbol('c')),
+      ).toEqual('Symbol(a) b Symbol(c)');
+    });
+
     it('should gracefully handle Symbol type for the first argument', () => {
-      expect(format(Symbol('abc'), 123)).toEqual('Symbol(abc) 123');
+      expect(formatConsoleArgumentsToSingleString(Symbol('abc'), 123)).toEqual(
+        'Symbol(abc) 123',
+      );
     });
   });
 
   describe('formatWithStyles', () => {
-    // @reactVersion >= 16.0
     it('should format empty arrays', () => {
       expect(formatWithStyles([])).toEqual([]);
       expect(formatWithStyles([], 'gray')).toEqual([]);
       expect(formatWithStyles(undefined)).toEqual(undefined);
     });
 
-    // @reactVersion >= 16.0
     it('should bail out of strings with styles', () => {
       expect(
         formatWithStyles(['%ca', 'color: green', 'b', 'c'], 'color: gray'),
       ).toEqual(['%ca', 'color: green', 'b', 'c']);
     });
 
-    // @reactVersion >= 16.0
     it('should format simple strings', () => {
       expect(formatWithStyles(['a'])).toEqual(['a']);
 
@@ -186,7 +187,6 @@ describe('utils', () => {
       ]);
     });
 
-    // @reactVersion >= 16.0
     it('should format string substituions', () => {
       expect(
         formatWithStyles(['%s %s %s', 'a', 'b', 'c'], 'color: gray'),
@@ -199,7 +199,6 @@ describe('utils', () => {
       );
     });
 
-    // @reactVersion >= 16.0
     it('should support multiple argument types', () => {
       const symbol = Symbol('a');
       expect(
@@ -219,7 +218,6 @@ describe('utils', () => {
       ]);
     });
 
-    // @reactVersion >= 16.0
     it('should properly format escaped string substituions', () => {
       expect(formatWithStyles(['%%s'], 'color: gray')).toEqual([
         '%c%s',
@@ -234,7 +232,6 @@ describe('utils', () => {
       expect(formatWithStyles(['%%c%c'], 'color: gray')).toEqual(['%%c%c']);
     });
 
-    // @reactVersion >= 16.0
     it('should format non string inputs as the first argument', () => {
       expect(formatWithStyles([{foo: 'bar'}])).toEqual([{foo: 'bar'}]);
       expect(formatWithStyles([[1, 2, 3]])).toEqual([[1, 2, 3]]);
@@ -385,6 +382,57 @@ describe('utils', () => {
         line: 1,
         column: 165558,
       });
+    });
+  });
+
+  describe('formatConsoleArguments', () => {
+    it('works with empty arguments list', () => {
+      expect(formatConsoleArguments(...[])).toEqual([]);
+    });
+
+    it('works for string without escape sequences', () => {
+      expect(
+        formatConsoleArguments('This is the template', 'And another string'),
+      ).toEqual(['This is the template', 'And another string']);
+    });
+
+    it('works with strings templates', () => {
+      expect(formatConsoleArguments('This is %s template', 'the')).toEqual([
+        'This is the template',
+      ]);
+    });
+
+    it('skips %%s', () => {
+      expect(formatConsoleArguments('This %%s is %s template', 'the')).toEqual([
+        'This %%s is the template',
+      ]);
+    });
+
+    it('works with %%%s', () => {
+      expect(
+        formatConsoleArguments('This %%%s is %s template', 'test', 'the'),
+      ).toEqual(['This %%test is the template']);
+    });
+
+    it("doesn't inline objects", () => {
+      expect(
+        formatConsoleArguments('This is %s template with object %o', 'the', {}),
+      ).toEqual(['This is the template with object %o', {}]);
+    });
+
+    it("doesn't inline css", () => {
+      expect(
+        formatConsoleArguments(
+          'This is template with %c %s object %o',
+          'color: rgba(...)',
+          'the',
+          {},
+        ),
+      ).toEqual([
+        'This is template with %c the object %o',
+        'color: rgba(...)',
+        {},
+      ]);
     });
   });
 });

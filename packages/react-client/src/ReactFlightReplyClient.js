@@ -20,6 +20,7 @@ import type {TemporaryReferenceSet} from './ReactFlightTemporaryReferences';
 import {
   enableRenderableContext,
   enableBinaryFlight,
+  enableFlightReadableStream,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -28,6 +29,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_PROVIDER_TYPE,
   getIteratorFn,
+  ASYNC_ITERATOR,
 } from 'shared/ReactSymbols';
 
 import {
@@ -107,8 +109,8 @@ function serializeServerReferenceID(id: number): string {
   return '$F' + id.toString(16);
 }
 
-function serializeTemporaryReferenceID(id: number): string {
-  return '$T' + id.toString(16);
+function serializeTemporaryReferenceMarker(): string {
+  return '$T';
 }
 
 function serializeFormDataReference(id: number): string {
@@ -174,6 +176,8 @@ function escapeStringValue(value: string): string {
   }
 }
 
+interface Reference {}
+
 export function processReply(
   root: ReactServerValue,
   formFieldPrefix: string,
@@ -184,18 +188,171 @@ export function processReply(
   let nextPartId = 1;
   let pendingParts = 0;
   let formData: null | FormData = null;
+  const writtenObjects: WeakMap<Reference, string> = new WeakMap();
+  let modelRoot: null | ReactServerValue = root;
 
   function serializeTypedArray(
     tag: string,
-    typedArray: ArrayBuffer | $ArrayBufferView,
+    typedArray: $ArrayBufferView,
   ): string {
-    const blob = new Blob([typedArray]);
+    const blob = new Blob([
+      // We should be able to pass the buffer straight through but Node < 18 treat
+      // multi-byte array blobs differently so we first convert it to single-byte.
+      new Uint8Array(
+        typedArray.buffer,
+        typedArray.byteOffset,
+        typedArray.byteLength,
+      ),
+    ]);
     const blobId = nextPartId++;
     if (formData === null) {
       formData = new FormData();
     }
     formData.append(formFieldPrefix + blobId, blob);
     return '$' + tag + blobId.toString(16);
+  }
+
+  function serializeBinaryReader(reader: any): string {
+    if (formData === null) {
+      // Upgrade to use FormData to allow us to stream this value.
+      formData = new FormData();
+    }
+    const data = formData;
+
+    pendingParts++;
+    const streamId = nextPartId++;
+
+    const buffer = [];
+
+    function progress(entry: {done: boolean, value: ReactServerValue, ...}) {
+      if (entry.done) {
+        const blobId = nextPartId++;
+        data.append(formFieldPrefix + blobId, new Blob(buffer));
+        data.append(
+          formFieldPrefix + streamId,
+          '"$o' + blobId.toString(16) + '"',
+        );
+        data.append(formFieldPrefix + streamId, 'C'); // Close signal
+        pendingParts--;
+        if (pendingParts === 0) {
+          resolve(data);
+        }
+      } else {
+        buffer.push(entry.value);
+        reader.read(new Uint8Array(1024)).then(progress, reject);
+      }
+    }
+    reader.read(new Uint8Array(1024)).then(progress, reject);
+
+    return '$r' + streamId.toString(16);
+  }
+
+  function serializeReader(reader: ReadableStreamReader): string {
+    if (formData === null) {
+      // Upgrade to use FormData to allow us to stream this value.
+      formData = new FormData();
+    }
+    const data = formData;
+
+    pendingParts++;
+    const streamId = nextPartId++;
+
+    function progress(entry: {done: boolean, value: ReactServerValue, ...}) {
+      if (entry.done) {
+        data.append(formFieldPrefix + streamId, 'C'); // Close signal
+        pendingParts--;
+        if (pendingParts === 0) {
+          resolve(data);
+        }
+      } else {
+        try {
+          // $FlowFixMe[incompatible-type]: While plain JSON can return undefined we never do here.
+          const partJSON: string = JSON.stringify(entry.value, resolveToJSON);
+          data.append(formFieldPrefix + streamId, partJSON);
+          reader.read().then(progress, reject);
+        } catch (x) {
+          reject(x);
+        }
+      }
+    }
+    reader.read().then(progress, reject);
+
+    return '$R' + streamId.toString(16);
+  }
+
+  function serializeReadableStream(stream: ReadableStream): string {
+    // Detect if this is a BYOB stream. BYOB streams should be able to be read as bytes on the
+    // receiving side. For binary streams, we serialize them as plain Blobs.
+    let binaryReader;
+    try {
+      // $FlowFixMe[extra-arg]: This argument is accepted.
+      binaryReader = stream.getReader({mode: 'byob'});
+    } catch (x) {
+      return serializeReader(stream.getReader());
+    }
+    return serializeBinaryReader(binaryReader);
+  }
+
+  function serializeAsyncIterable(
+    iterable: $AsyncIterable<ReactServerValue, ReactServerValue, void>,
+    iterator: $AsyncIterator<ReactServerValue, ReactServerValue, void>,
+  ): string {
+    if (formData === null) {
+      // Upgrade to use FormData to allow us to stream this value.
+      formData = new FormData();
+    }
+    const data = formData;
+
+    pendingParts++;
+    const streamId = nextPartId++;
+
+    // Generators/Iterators are Iterables but they're also their own iterator
+    // functions. If that's the case, we treat them as single-shot. Otherwise,
+    // we assume that this iterable might be a multi-shot and allow it to be
+    // iterated more than once on the receiving server.
+    const isIterator = iterable === iterator;
+
+    // There's a race condition between when the stream is aborted and when the promise
+    // resolves so we track whether we already aborted it to avoid writing twice.
+    function progress(
+      entry:
+        | {done: false, +value: ReactServerValue, ...}
+        | {done: true, +value: ReactServerValue, ...},
+    ) {
+      if (entry.done) {
+        if (entry.value === undefined) {
+          data.append(formFieldPrefix + streamId, 'C'); // Close signal
+        } else {
+          // Unlike streams, the last value may not be undefined. If it's not
+          // we outline it and encode a reference to it in the closing instruction.
+          try {
+            // $FlowFixMe[incompatible-type]: While plain JSON can return undefined we never do here.
+            const partJSON: string = JSON.stringify(entry.value, resolveToJSON);
+            data.append(formFieldPrefix + streamId, 'C' + partJSON); // Close signal
+          } catch (x) {
+            reject(x);
+            return;
+          }
+        }
+        pendingParts--;
+        if (pendingParts === 0) {
+          resolve(data);
+        }
+      } else {
+        try {
+          // $FlowFixMe[incompatible-type]: While plain JSON can return undefined we never do here.
+          const partJSON: string = JSON.stringify(entry.value, resolveToJSON);
+          data.append(formFieldPrefix + streamId, partJSON);
+          iterator.next().then(progress, reject);
+        } catch (x) {
+          reject(x);
+          return;
+        }
+      }
+    }
+
+    iterator.next().then(progress, reject);
+    return '$' + (isIterator ? 'x' : 'X') + streamId.toString(16);
   }
 
   function resolveToJSON(
@@ -241,15 +398,22 @@ export function processReply(
     if (typeof value === 'object') {
       switch ((value: any).$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (temporaryReferences === undefined) {
-            throw new Error(
-              'React Element cannot be passed to Server Functions from the Client without a ' +
-                'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
-                (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
-            );
+          if (temporaryReferences !== undefined && key.indexOf(':') === -1) {
+            // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
+            const parentReference = writtenObjects.get(parent);
+            if (parentReference !== undefined) {
+              // If the parent has a reference, we can refer to this object indirectly
+              // through the property name inside that parent.
+              const reference = parentReference + ':' + key;
+              // Store this object so that the server can refer to it later in responses.
+              writeTemporaryReference(temporaryReferences, reference, value);
+              return serializeTemporaryReferenceMarker();
+            }
           }
-          return serializeTemporaryReferenceID(
-            writeTemporaryReference(temporaryReferences, value),
+          throw new Error(
+            'React Element cannot be passed to Server Functions from the Client without a ' +
+              'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
+              (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
           );
         }
         case REACT_LAZY_TYPE: {
@@ -267,10 +431,9 @@ export function processReply(
             // We always outline this as a separate part even though we could inline it
             // because it ensures a more deterministic encoding.
             const lazyId = nextPartId++;
-            const partJSON = JSON.stringify(resolvedModel, resolveToJSON);
+            const partJSON = serializeModel(resolvedModel, lazyId);
             // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
             const data: FormData = formData;
-            // eslint-disable-next-line react-internal/safe-string-coercion
             data.append(formFieldPrefix + lazyId, partJSON);
             return serializeByValueID(lazyId);
           } catch (x) {
@@ -287,10 +450,9 @@ export function processReply(
                 // While the first promise resolved, its value isn't necessarily what we'll
                 // resolve into because we might suspend again.
                 try {
-                  const partJSON = JSON.stringify(value, resolveToJSON);
+                  const partJSON = serializeModel(value, lazyId);
                   // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
                   const data: FormData = formData;
-                  // eslint-disable-next-line react-internal/safe-string-coercion
                   data.append(formFieldPrefix + lazyId, partJSON);
                   pendingParts--;
                   if (pendingParts === 0) {
@@ -328,10 +490,9 @@ export function processReply(
         thenable.then(
           partValue => {
             try {
-              const partJSON = JSON.stringify(partValue, resolveToJSON);
+              const partJSON = serializeModel(partValue, promiseId);
               // $FlowFixMe[incompatible-type] We know it's not null because we assigned it above.
               const data: FormData = formData;
-              // eslint-disable-next-line react-internal/safe-string-coercion
               data.append(formFieldPrefix + promiseId, partJSON);
               pendingParts--;
               if (pendingParts === 0) {
@@ -341,14 +502,39 @@ export function processReply(
               reject(reason);
             }
           },
-          reason => {
-            // In the future we could consider serializing this as an error
-            // that throws on the server instead.
-            reject(reason);
-          },
+          // In the future we could consider serializing this as an error
+          // that throws on the server instead.
+          reject,
         );
         return serializePromiseID(promiseId);
       }
+
+      const existingReference = writtenObjects.get(value);
+      if (existingReference !== undefined) {
+        if (modelRoot === value) {
+          // This is the ID we're currently emitting so we need to write it
+          // once but if we discover it again, we refer to it by id.
+          modelRoot = null;
+        } else {
+          // We've already emitted this as an outlined object, so we can
+          // just refer to that by its existing ID.
+          return existingReference;
+        }
+      } else if (key.indexOf(':') === -1) {
+        // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
+        const parentReference = writtenObjects.get(parent);
+        if (parentReference !== undefined) {
+          // If the parent has a reference, we can refer to this object indirectly
+          // through the property name inside that parent.
+          const reference = parentReference + ':' + key;
+          writtenObjects.set(value, reference);
+          if (temporaryReferences !== undefined) {
+            // Store this object so that the server can refer to it later in responses.
+            writeTemporaryReference(temporaryReferences, reference, value);
+          }
+        }
+      }
+
       if (isArray(value)) {
         // $FlowFixMe[incompatible-return]
         return value;
@@ -372,27 +558,33 @@ export function processReply(
         return serializeFormDataReference(refId);
       }
       if (value instanceof Map) {
-        const partJSON = JSON.stringify(Array.from(value), resolveToJSON);
+        const mapId = nextPartId++;
+        const partJSON = serializeModel(Array.from(value), mapId);
         if (formData === null) {
           formData = new FormData();
         }
-        const mapId = nextPartId++;
         formData.append(formFieldPrefix + mapId, partJSON);
         return serializeMapID(mapId);
       }
       if (value instanceof Set) {
-        const partJSON = JSON.stringify(Array.from(value), resolveToJSON);
+        const setId = nextPartId++;
+        const partJSON = serializeModel(Array.from(value), setId);
         if (formData === null) {
           formData = new FormData();
         }
-        const setId = nextPartId++;
         formData.append(formFieldPrefix + setId, partJSON);
         return serializeSetID(setId);
       }
 
       if (enableBinaryFlight) {
         if (value instanceof ArrayBuffer) {
-          return serializeTypedArray('A', value);
+          const blob = new Blob([value]);
+          const blobId = nextPartId++;
+          if (formData === null) {
+            formData = new FormData();
+          }
+          formData.append(formFieldPrefix + blobId, blob);
+          return '$' + 'A' + blobId.toString(16);
         }
         if (value instanceof Int8Array) {
           // char
@@ -458,18 +650,37 @@ export function processReply(
         const iterator = iteratorFn.call(value);
         if (iterator === value) {
           // Iterator, not Iterable
-          const partJSON = JSON.stringify(
+          const iteratorId = nextPartId++;
+          const partJSON = serializeModel(
             Array.from((iterator: any)),
-            resolveToJSON,
+            iteratorId,
           );
           if (formData === null) {
             formData = new FormData();
           }
-          const iteratorId = nextPartId++;
           formData.append(formFieldPrefix + iteratorId, partJSON);
           return serializeIteratorID(iteratorId);
         }
         return Array.from((iterator: any));
+      }
+
+      if (enableFlightReadableStream) {
+        // TODO: ReadableStream is not available in old Node. Remove the typeof check later.
+        if (
+          typeof ReadableStream === 'function' &&
+          value instanceof ReadableStream
+        ) {
+          return serializeReadableStream(value);
+        }
+        const getAsyncIterator: void | (() => $AsyncIterator<any, any, any>) =
+          (value: any)[ASYNC_ITERATOR];
+        if (typeof getAsyncIterator === 'function') {
+          // We treat AsyncIterables as a Fragment and as such we might need to key them.
+          return serializeAsyncIterable(
+            (value: any),
+            getAsyncIterator.call((value: any)),
+          );
+        }
       }
 
       // Verify that this is a simple plain object.
@@ -484,10 +695,9 @@ export function processReply(
               'Classes or null prototypes are not supported.',
           );
         }
-        // We can serialize class instances as temporary references.
-        return serializeTemporaryReferenceID(
-          writeTemporaryReference(temporaryReferences, value),
-        );
+        // We will have written this object to the temporary reference set above
+        // so we can replace it with a marker to refer to this slot later.
+        return serializeTemporaryReferenceMarker();
       }
       if (__DEV__) {
         if (
@@ -564,31 +774,44 @@ export function processReply(
         }
         // The reference to this function came from the same client so we can pass it back.
         const refId = nextPartId++;
-        // eslint-disable-next-line react-internal/safe-string-coercion
         formData.set(formFieldPrefix + refId, metaDataJSON);
         return serializeServerReferenceID(refId);
       }
-      if (temporaryReferences === undefined) {
-        throw new Error(
-          'Client Functions cannot be passed directly to Server Functions. ' +
-            'Only Functions passed from the Server can be passed back again.',
-        );
+      if (temporaryReferences !== undefined && key.indexOf(':') === -1) {
+        // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
+        const parentReference = writtenObjects.get(parent);
+        if (parentReference !== undefined) {
+          // If the parent has a reference, we can refer to this object indirectly
+          // through the property name inside that parent.
+          const reference = parentReference + ':' + key;
+          // Store this object so that the server can refer to it later in responses.
+          writeTemporaryReference(temporaryReferences, reference, value);
+          return serializeTemporaryReferenceMarker();
+        }
       }
-      return serializeTemporaryReferenceID(
-        writeTemporaryReference(temporaryReferences, value),
+      throw new Error(
+        'Client Functions cannot be passed directly to Server Functions. ' +
+          'Only Functions passed from the Server can be passed back again.',
       );
     }
 
     if (typeof value === 'symbol') {
-      if (temporaryReferences === undefined) {
-        throw new Error(
-          'Symbols cannot be passed to a Server Function without a ' +
-            'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
-            (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
-        );
+      if (temporaryReferences !== undefined && key.indexOf(':') === -1) {
+        // TODO: If the property name contains a colon, we don't dedupe. Escape instead.
+        const parentReference = writtenObjects.get(parent);
+        if (parentReference !== undefined) {
+          // If the parent has a reference, we can refer to this object indirectly
+          // through the property name inside that parent.
+          const reference = parentReference + ':' + key;
+          // Store this object so that the server can refer to it later in responses.
+          writeTemporaryReference(temporaryReferences, reference, value);
+          return serializeTemporaryReferenceMarker();
+        }
       }
-      return serializeTemporaryReferenceID(
-        writeTemporaryReference(temporaryReferences, value),
+      throw new Error(
+        'Symbols cannot be passed to a Server Function without a ' +
+          'temporary reference set. Pass a TemporaryReferenceSet to the options.' +
+          (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
       );
     }
 
@@ -601,8 +824,22 @@ export function processReply(
     );
   }
 
-  // $FlowFixMe[incompatible-type] it's not going to be undefined because we'll encode it.
-  const json: string = JSON.stringify(root, resolveToJSON);
+  function serializeModel(model: ReactServerValue, id: number): string {
+    if (typeof model === 'object' && model !== null) {
+      const reference = serializeByValueID(id);
+      writtenObjects.set(model, reference);
+      if (temporaryReferences !== undefined) {
+        // Store this object so that the server can refer to it later in responses.
+        writeTemporaryReference(temporaryReferences, reference, model);
+      }
+    }
+    modelRoot = model;
+    // $FlowFixMe[incompatible-return] it's not going to be undefined because we'll encode it.
+    return JSON.stringify(model, resolveToJSON);
+  }
+
+  const json = serializeModel(root, 0);
+
   if (formData === null) {
     // If it's a simple data structure, we just use plain JSON.
     resolve(json);

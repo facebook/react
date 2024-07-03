@@ -1,0 +1,24 @@
+[package]
+name = "react_optimization"
+version = "0.1.0"
+publish               = false
+authors.workspace     = true
+description.workspace = true
+edition.workspace     = true
+homepage.workspace    = true
+keywords.workspace    = true
+license.workspace     = true
+repository.workspace  = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+react_estree = { workspace = true }
+react_hir = { workspace = true }
+react_ssa = { workspace = true }
+react_build_hir = { workspace = true }
+react_utils = { workspace = true }
+react_diagnostics = { workspace = true }
+indexmap = { workspace = true }
+miette = { workspace = true }
+thiserror = { workspace = true }

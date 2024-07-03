@@ -297,9 +297,11 @@ describe('ReactJSXRuntime', () => {
         root.render(JSXRuntime.jsx(Parent, {}));
       });
     }).toErrorDev(
-      'Warning: Each child in a list should have a unique "key" prop.\n\n' +
+      'Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://react.dev/link/warning-keys for more information.\n' +
-        '    in Child (at **)\n' +
+        (gate(flags => flags.enableOwnerStacks)
+          ? ''
+          : '    in Child (at **)\n') +
         '    in Parent (at **)',
     );
   });
@@ -324,7 +326,7 @@ describe('ReactJSXRuntime', () => {
         root.render(JSXRuntime.jsx(Parent, {}));
       });
     }).toErrorDev(
-      'Warning: A props object containing a "key" prop is being spread into JSX:\n' +
+      'A props object containing a "key" prop is being spread into JSX:\n' +
         '  let props = {key: someKey, prop: ...};\n' +
         '  <Child {...props} />\n' +
         'React keys must be passed directly to JSX without using spread:\n' +
@@ -375,9 +377,8 @@ describe('ReactJSXRuntime', () => {
     expect(didCall).toBe(false);
   });
 
-  // @gate enableRefAsProp
-  // @gate disableStringRefs
-  it('does not clone props object if key is not spread', async () => {
+  // @gate enableFastJSX && enableRefAsProp
+  it('does not clone props object if key and ref is not spread', async () => {
     const config = {
       foo: 'foo',
       bar: 'bar',
@@ -386,7 +387,7 @@ describe('ReactJSXRuntime', () => {
     const element = __DEV__
       ? JSXDEVRuntime.jsxDEV('div', config)
       : JSXRuntime.jsx('div', config);
-    expect(element.props).toBe(config);
+    expect(Object.is(element.props, config)).toBe(true);
 
     const configWithKey = {
       foo: 'foo',

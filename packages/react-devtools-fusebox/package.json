@@ -5,8 +5,9 @@
   "license": "MIT",
   "files": ["dist"],
   "scripts": {
-    "build:frontend:local": "cross-env NODE_ENV=development webpack --config webpack.config.frontend.js",
-    "build:frontend": "cross-env NODE_ENV=production webpack --config webpack.config.frontend.js",
+    "build:frontend:copy-types": "cp src/*.d.ts dist/",
+    "build:frontend:local": "cross-env NODE_ENV=development webpack --config webpack.config.frontend.js && yarn build:frontend:copy-types",
+    "build:frontend": "cross-env NODE_ENV=production webpack --config webpack.config.frontend.js && yarn build:frontend:copy-types",
     "build": "yarn build:frontend"
   },
   "devDependencies": {

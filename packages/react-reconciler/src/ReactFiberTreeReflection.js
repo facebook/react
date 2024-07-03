@@ -24,7 +24,7 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {currentOwner} from './ReactFiberCurrentOwner';
+import {current as currentOwner, isRendering} from './ReactCurrentFiber';
 
 export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
@@ -90,7 +90,7 @@ export function isFiberMounted(fiber: Fiber): boolean {
 export function isMounted(component: React$Component<any, any>): boolean {
   if (__DEV__) {
     const owner = currentOwner;
-    if (owner !== null && owner.tag === ClassComponent) {
+    if (owner !== null && isRendering && owner.tag === ClassComponent) {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;
       if (!instance._warnedAboutRefsInRender) {

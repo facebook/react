@@ -482,3 +482,7 @@ export function requestTransitionLane(
   }
   return currentEventTransitionLane;
 }
+
+export function didCurrentEventScheduleTransition(): boolean {
+  return currentEventTransitionLane !== NoLane;
+}

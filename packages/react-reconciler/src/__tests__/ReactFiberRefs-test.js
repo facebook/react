@@ -25,7 +25,7 @@ describe('ReactFiberRefs', () => {
     assertLog = require('internal-test-utils').assertLog;
   });
 
-  test('ref is attached even if there are no other updates (class)', async () => {
+  it('ref is attached even if there are no other updates (class)', async () => {
     let component;
     class Component extends React.Component {
       shouldComponentUpdate() {
@@ -61,7 +61,7 @@ describe('ReactFiberRefs', () => {
     expect(ref2.current).toBe(component);
   });
 
-  test('ref is attached even if there are no other updates (host component)', async () => {
+  it('ref is attached even if there are no other updates (host component)', async () => {
     // This is kind of ailly test because host components never bail out if they
     // receive a new element, and there's no way to update a ref without also
     // updating the props, but adding it here anyway for symmetry with the
@@ -87,7 +87,7 @@ describe('ReactFiberRefs', () => {
 
   // @gate enableRefAsProp
   // @gate !disableStringRefs
-  test('string ref props are converted to function refs', async () => {
+  it('string ref props are converted to function refs', async () => {
     let refProp;
     function Child({ref}) {
       refProp = ref;
@@ -115,7 +115,7 @@ describe('ReactFiberRefs', () => {
   });
 
   // @gate disableStringRefs
-  test('throw if a string ref is passed to a ref-receiving component', async () => {
+  it('throw if a string ref is passed to a ref-receiving component', async () => {
     let refProp;
     function Child({ref}) {
       // This component renders successfully because the ref type check does not
@@ -139,7 +139,7 @@ describe('ReactFiberRefs', () => {
     expect(refProp).toBe('child');
   });
 
-  test('strings refs can be codemodded to callback refs', async () => {
+  it('strings refs can be codemodded to callback refs', async () => {
     let app;
     class App extends React.Component {
       render() {
@@ -163,7 +163,7 @@ describe('ReactFiberRefs', () => {
     expect(app.refs.div.prop).toBe('Hello!');
   });
 
-  test('class refs are initialized to a frozen shared object', async () => {
+  it('class refs are initialized to a frozen shared object', async () => {
     const refsCollection = new Set();
     class Component extends React.Component {
       constructor(props) {

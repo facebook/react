@@ -1,0 +1,343 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-shadowing.js
+---
+Input:
+function log() {}
+
+function Foo(cond) {
+  let str = "";
+  if (cond) {
+    let str = "other test";
+    log(str);
+  } else {
+    str = "fallthrough test";
+  }
+  log(str);
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "log",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          15,
+          17
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        17
+      ],
+      "loc": null,
+      "range": [
+        0,
+        17
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          28,
+          31
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "cond",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            32,
+            36
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "str",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    46,
+                    49
+                  ]
+                },
+                "init": {
+                  "type": "StringLiteral",
+                  "value": "",
+                  "loc": null,
+                  "range": [
+                    52,
+                    54
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  46,
+                  54
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              42,
+              55
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "Identifier",
+              "name": "cond",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                62,
+                66
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "VariableDeclaration",
+                  "kind": "let",
+                  "declarations": [
+                    {
+                      "type": "VariableDeclarator",
+                      "id": {
+                        "type": "Identifier",
+                        "name": "str",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          78,
+                          81
+                        ]
+                      },
+                      "init": {
+                        "type": "StringLiteral",
+                        "value": "other test",
+                        "loc": null,
+                        "range": [
+                          84,
+                          96
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        78,
+                        96
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    74,
+                    97
+                  ]
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "Identifier",
+                      "name": "log",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        102,
+                        105
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "Identifier",
+                        "name": "str",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          106,
+                          109
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      102,
+                      110
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    102,
+                    111
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                68,
+                115
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "str",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        127,
+                        130
+                      ]
+                    },
+                    "right": {
+                      "type": "StringLiteral",
+                      "value": "fallthrough test",
+                      "loc": null,
+                      "range": [
+                        133,
+                        151
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      127,
+                      151
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    127,
+                    152
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                121,
+                156
+              ]
+            },
+            "loc": null,
+            "range": [
+              58,
+              156
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "log",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  159,
+                  162
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "str",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    163,
+                    166
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                159,
+                167
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              159,
+              168
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          38,
+          170
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        19,
+        170
+      ],
+      "loc": null,
+      "range": [
+        19,
+        170
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    170
+  ]
+}

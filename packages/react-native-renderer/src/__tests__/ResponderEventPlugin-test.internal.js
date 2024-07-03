@@ -1377,113 +1377,118 @@ describe('ResponderEventPlugin', () => {
     expect(ResponderEventPlugin._getResponder()).toBe(null);
   });
 
-  it('should determine the first common ancestor correctly', async () => {
-    // This test was moved here from the ReactTreeTraversal test since only the
-    // ResponderEventPlugin uses `getLowestCommonAncestor`
-    const React = require('react');
-    const ReactDOMClient = require('react-dom/client');
-    const act = require('internal-test-utils').act;
-    const getLowestCommonAncestor =
-      require('react-native-renderer/src/legacy-events/ResponderEventPlugin').getLowestCommonAncestor;
-    // This works by accident and will likely break in the future.
-    const ReactDOMComponentTree = require('react-dom-bindings/src/client/ReactDOMComponentTree');
+  it(
+    'should determine the first common ancestor correctly',
+    async () => {
+      // This test was moved here from the ReactTreeTraversal test since only the
+      // ResponderEventPlugin uses `getLowestCommonAncestor`
+      const React = require('react');
+      const ReactDOMClient = require('react-dom/client');
+      const act = require('internal-test-utils').act;
+      const getLowestCommonAncestor =
+        require('react-native-renderer/src/legacy-events/ResponderEventPlugin').getLowestCommonAncestor;
+      // This works by accident and will likely break in the future.
+      const ReactDOMComponentTree = require('react-dom-bindings/src/client/ReactDOMComponentTree');
 
-    class ChildComponent extends React.Component {
-      divRef = React.createRef();
-      div1Ref = React.createRef();
-      div2Ref = React.createRef();
+      class ChildComponent extends React.Component {
+        divRef = React.createRef();
+        div1Ref = React.createRef();
+        div2Ref = React.createRef();
 
-      render() {
-        return (
-          <div ref={this.divRef} id={this.props.id + '__DIV'}>
-            <div ref={this.div1Ref} id={this.props.id + '__DIV_1'} />
-            <div ref={this.div2Ref} id={this.props.id + '__DIV_2'} />
-          </div>
-        );
-      }
-    }
-
-    class ParentComponent extends React.Component {
-      pRef = React.createRef();
-      p_P1Ref = React.createRef();
-      p_P1_C1Ref = React.createRef();
-      p_P1_C2Ref = React.createRef();
-      p_OneOffRef = React.createRef();
-
-      render() {
-        return (
-          <div ref={this.pRef} id="P">
-            <div ref={this.p_P1Ref} id="P_P1">
-              <ChildComponent ref={this.p_P1_C1Ref} id="P_P1_C1" />
-              <ChildComponent ref={this.p_P1_C2Ref} id="P_P1_C2" />
+        render() {
+          return (
+            <div ref={this.divRef} id={this.props.id + '__DIV'}>
+              <div ref={this.div1Ref} id={this.props.id + '__DIV_1'} />
+              <div ref={this.div2Ref} id={this.props.id + '__DIV_2'} />
             </div>
-            <div ref={this.p_OneOffRef} id="P_OneOff" />
-          </div>
+          );
+        }
+      }
+
+      class ParentComponent extends React.Component {
+        pRef = React.createRef();
+        p_P1Ref = React.createRef();
+        p_P1_C1Ref = React.createRef();
+        p_P1_C2Ref = React.createRef();
+        p_OneOffRef = React.createRef();
+
+        render() {
+          return (
+            <div ref={this.pRef} id="P">
+              <div ref={this.p_P1Ref} id="P_P1">
+                <ChildComponent ref={this.p_P1_C1Ref} id="P_P1_C1" />
+                <ChildComponent ref={this.p_P1_C2Ref} id="P_P1_C2" />
+              </div>
+              <div ref={this.p_OneOffRef} id="P_OneOff" />
+            </div>
+          );
+        }
+      }
+
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      let parent;
+      await act(() => {
+        root.render(<ParentComponent ref={current => (parent = current)} />);
+      });
+
+      const ancestors = [
+        // Common ancestor with self is self.
+        {
+          one: parent.p_P1_C1Ref.current.div1Ref.current,
+          two: parent.p_P1_C1Ref.current.div1Ref.current,
+          com: parent.p_P1_C1Ref.current.div1Ref.current,
+        },
+        // Common ancestor with self is self - even if topmost DOM.
+        {
+          one: parent.pRef.current,
+          two: parent.pRef.current,
+          com: parent.pRef.current,
+        },
+        // Siblings
+        {
+          one: parent.p_P1_C1Ref.current.div1Ref.current,
+          two: parent.p_P1_C1Ref.current.div2Ref.current,
+          com: parent.p_P1_C1Ref.current.divRef.current,
+        },
+        // Common ancestor with parent is the parent.
+        {
+          one: parent.p_P1_C1Ref.current.div1Ref.current,
+          two: parent.p_P1_C1Ref.current.divRef.current,
+          com: parent.p_P1_C1Ref.current.divRef.current,
+        },
+        // Common ancestor with grandparent is the grandparent.
+        {
+          one: parent.p_P1_C1Ref.current.div1Ref.current,
+          two: parent.p_P1Ref.current,
+          com: parent.p_P1Ref.current,
+        },
+        // Grandparent across subcomponent boundaries.
+        {
+          one: parent.p_P1_C1Ref.current.div1Ref.current,
+          two: parent.p_P1_C2Ref.current.div1Ref.current,
+          com: parent.p_P1Ref.current,
+        },
+        // Something deep with something one-off.
+        {
+          one: parent.p_P1_C1Ref.current.div1Ref.current,
+          two: parent.p_OneOffRef.current,
+          com: parent.pRef.current,
+        },
+      ];
+      let i;
+      for (i = 0; i < ancestors.length; i++) {
+        const plan = ancestors[i];
+        const firstCommon = getLowestCommonAncestor(
+          ReactDOMComponentTree.getInstanceFromNode(plan.one),
+          ReactDOMComponentTree.getInstanceFromNode(plan.two),
+        );
+        expect(firstCommon).toBe(
+          ReactDOMComponentTree.getInstanceFromNode(plan.com),
         );
       }
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    let parent;
-    await act(() => {
-      root.render(<ParentComponent ref={current => (parent = current)} />);
-    });
-
-    const ancestors = [
-      // Common ancestor with self is self.
-      {
-        one: parent.p_P1_C1Ref.current.div1Ref.current,
-        two: parent.p_P1_C1Ref.current.div1Ref.current,
-        com: parent.p_P1_C1Ref.current.div1Ref.current,
-      },
-      // Common ancestor with self is self - even if topmost DOM.
-      {
-        one: parent.pRef.current,
-        two: parent.pRef.current,
-        com: parent.pRef.current,
-      },
-      // Siblings
-      {
-        one: parent.p_P1_C1Ref.current.div1Ref.current,
-        two: parent.p_P1_C1Ref.current.div2Ref.current,
-        com: parent.p_P1_C1Ref.current.divRef.current,
-      },
-      // Common ancestor with parent is the parent.
-      {
-        one: parent.p_P1_C1Ref.current.div1Ref.current,
-        two: parent.p_P1_C1Ref.current.divRef.current,
-        com: parent.p_P1_C1Ref.current.divRef.current,
-      },
-      // Common ancestor with grandparent is the grandparent.
-      {
-        one: parent.p_P1_C1Ref.current.div1Ref.current,
-        two: parent.p_P1Ref.current,
-        com: parent.p_P1Ref.current,
-      },
-      // Grandparent across subcomponent boundaries.
-      {
-        one: parent.p_P1_C1Ref.current.div1Ref.current,
-        two: parent.p_P1_C2Ref.current.div1Ref.current,
-        com: parent.p_P1Ref.current,
-      },
-      // Something deep with something one-off.
-      {
-        one: parent.p_P1_C1Ref.current.div1Ref.current,
-        two: parent.p_OneOffRef.current,
-        com: parent.pRef.current,
-      },
-    ];
-    let i;
-    for (i = 0; i < ancestors.length; i++) {
-      const plan = ancestors[i];
-      const firstCommon = getLowestCommonAncestor(
-        ReactDOMComponentTree.getInstanceFromNode(plan.one),
-        ReactDOMComponentTree.getInstanceFromNode(plan.two),
-      );
-      expect(firstCommon).toBe(
-        ReactDOMComponentTree.getInstanceFromNode(plan.com),
-      );
-    }
-  });
+    },
+    // TODO: this is a long running test, we should speed it up.
+    60 * 1000,
+  );
 });

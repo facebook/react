@@ -166,6 +166,7 @@ export {
   resetResumableState,
   completeResumableState,
   emitEarlyPreloads,
+  supportsClientAPIs,
 } from './ReactFizzConfigDOM';
 
 import escapeTextForBrowser from './escapeTextForBrowser';

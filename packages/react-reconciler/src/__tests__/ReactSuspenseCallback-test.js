@@ -58,7 +58,7 @@ describe('ReactSuspense', () => {
 
     ReactNoop.render(elementBadType);
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: Unexpected type for suspenseCallback.',
+      'Unexpected type for suspenseCallback.',
     ]);
 
     const elementMissingCallback = (

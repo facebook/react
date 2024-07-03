@@ -1,0 +1,209 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/allocating-primitive-as-dep.js
+---
+Input:
+// bar(props.b) is an allocating expression that produces a primitive, which means
+// that Forget should memoize it.
+// Correctness:
+//   - y depends on either bar(props.b) or bar(props.b) + 1
+function AllocatingPrimitiveAsDep(props) {
+  let y = foo(bar(props).b + 1);
+  return y;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "AllocatingPrimitiveAsDep",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          202,
+          226
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            227,
+            232
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    242,
+                    243
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "foo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      246,
+                      249
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "BinaryExpression",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "Identifier",
+                            "name": "bar",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              250,
+                              253
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "Identifier",
+                              "name": "props",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                254,
+                                259
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            250,
+                            260
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "b",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            261,
+                            262
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          250,
+                          262
+                        ]
+                      },
+                      "operator": "+",
+                      "right": {
+                        "type": "NumericLiteral",
+                        "value": 1.0,
+                        "loc": null,
+                        "range": [
+                          265,
+                          266
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        250,
+                        266
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    246,
+                    267
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  242,
+                  267
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              238,
+              268
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "y",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                278,
+                279
+              ]
+            },
+            "loc": null,
+            "range": [
+              271,
+              280
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          234,
+          282
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        193,
+        282
+      ],
+      "loc": null,
+      "range": [
+        193,
+        282
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    193,
+    282
+  ]
+}

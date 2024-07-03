@@ -36,7 +36,8 @@ export type WorkTag =
   | 25
   | 26
   | 27
-  | 28;
+  | 28
+  | 29;
 
 export const FunctionComponent = 0;
 export const ClassComponent = 1;
@@ -65,3 +66,4 @@ export const TracingMarkerComponent = 25;
 export const HostHoistable = 26;
 export const HostSingleton = 27;
 export const IncompleteFunctionComponent = 28;
+export const Throw = 29;

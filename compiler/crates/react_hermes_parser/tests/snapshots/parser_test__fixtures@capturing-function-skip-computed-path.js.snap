@@ -1,0 +1,282 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/capturing-function-skip-computed-path.js
+---
+Input:
+function StoreLandingUnseenGiftModalContainer(a) {
+  const giftsSeen = { a };
+  return ((gift) => (gift.id ? giftsSeen[gift.id] : false))();
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "StoreLandingUnseenGiftModalContainer",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          45
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            46,
+            47
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "giftsSeen",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    59,
+                    68
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          73,
+                          74
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          73,
+                          74
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": true,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        73,
+                        74
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    71,
+                    76
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  59,
+                  76
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              53,
+              77
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "ArrowFunctionExpression",
+                "id": null,
+                "params": [
+                  {
+                    "type": "Identifier",
+                    "name": "gift",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      89,
+                      93
+                    ]
+                  }
+                ],
+                "body": {
+                  "type": "ConditionalExpression",
+                  "test": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "gift",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        99,
+                        103
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "id",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        104,
+                        106
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      99,
+                      106
+                    ]
+                  },
+                  "alternate": {
+                    "type": "BooleanLiteral",
+                    "value": false,
+                    "loc": null,
+                    "range": [
+                      130,
+                      135
+                    ]
+                  },
+                  "consequent": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "giftsSeen",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        109,
+                        118
+                      ]
+                    },
+                    "property": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "gift",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          119,
+                          123
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "id",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          124,
+                          126
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        119,
+                        126
+                      ]
+                    },
+                    "computed": true,
+                    "loc": null,
+                    "range": [
+                      109,
+                      127
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    99,
+                    135
+                  ]
+                },
+                "generator": true,
+                "async": false,
+                "loc": null,
+                "range": [
+                  88,
+                  136
+                ],
+                "expression": true,
+                "loc": null,
+                "range": [
+                  88,
+                  136
+                ]
+              },
+              "arguments": [],
+              "loc": null,
+              "range": [
+                87,
+                139
+              ]
+            },
+            "loc": null,
+            "range": [
+              80,
+              140
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          49,
+          142
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        142
+      ],
+      "loc": null,
+      "range": [
+        0,
+        142
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    142
+  ]
+}

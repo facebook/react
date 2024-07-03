@@ -13,6 +13,7 @@ import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
+  REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
@@ -22,12 +23,42 @@ import {
   enableRefAsProp,
   disableStringRefs,
   disableDefaultPropsExceptForClasses,
+  enableFastJSX,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {ClassComponent} from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
 const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
+
+const createTask =
+  // eslint-disable-next-line react-internal/no-production-logging
+  __DEV__ && enableOwnerStacks && console.createTask
+    ? // eslint-disable-next-line react-internal/no-production-logging
+      console.createTask
+    : () => null;
+
+function getTaskName(type) {
+  if (type === REACT_FRAGMENT_TYPE) {
+    return '<>';
+  }
+  if (
+    typeof type === 'object' &&
+    type !== null &&
+    type.$$typeof === REACT_LAZY_TYPE
+  ) {
+    // We don't want to eagerly initialize the initializer in DEV mode so we can't
+    // call it to extract the type so we don't know the type of this component.
+    return '<...>';
+  }
+  try {
+    const name = getComponentNameFromType(type);
+    return name ? '<' + name + '>' : '<...>';
+  } catch (x) {
+    return '<...>';
+  }
+}
 
 function getOwner() {
   if (__DEV__ || !disableStringRefs) {
@@ -50,6 +81,10 @@ if (__DEV__) {
   didWarnAboutStringRefs = {};
   didWarnAboutElementRef = {};
 }
+
+const enableFastJSXWithStringRefs = enableFastJSX && enableRefAsProp;
+const enableFastJSXWithoutStringRefs =
+  enableFastJSXWithStringRefs && disableStringRefs;
 
 function hasValidRef(config) {
   if (__DEV__) {
@@ -189,7 +224,17 @@ function elementRefGetterWithDeprecationWarning() {
  * indicating filename, line number, and/or other information.
  * @internal
  */
-function ReactElement(type, key, _ref, self, source, owner, props) {
+function ReactElement(
+  type,
+  key,
+  _ref,
+  self,
+  source,
+  owner,
+  props,
+  debugStack,
+  debugTask,
+) {
   let ref;
   if (enableRefAsProp) {
     // When enableRefAsProp is on, ignore whatever was passed as the ref
@@ -297,7 +342,7 @@ function ReactElement(type, key, _ref, self, source, owner, props) {
       configurable: false,
       enumerable: false,
       writable: true,
-      value: false,
+      value: 0,
     });
     // debugInfo contains Server Component debug information.
     Object.defineProperty(element, '_debugInfo', {
@@ -306,6 +351,20 @@ function ReactElement(type, key, _ref, self, source, owner, props) {
       writable: true,
       value: null,
     });
+    if (enableOwnerStacks) {
+      Object.defineProperty(element, '_debugStack', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: debugStack,
+      });
+      Object.defineProperty(element, '_debugTask', {
+        configurable: false,
+        enumerable: false,
+        writable: true,
+        value: debugTask,
+      });
+    }
     if (Object.freeze) {
       Object.freeze(element.props);
       Object.freeze(element);
@@ -355,7 +414,11 @@ export function jsxProd(type, config, maybeKey) {
   }
 
   let props;
-  if (enableRefAsProp && disableStringRefs && !('key' in config)) {
+  if (
+    (enableFastJSXWithoutStringRefs ||
+      (enableFastJSXWithStringRefs && !('ref' in config))) &&
+    !('key' in config)
+  ) {
     // If key was not spread in, we can reuse the original props object. This
     // only works for `jsx`, not `createElement`, because `jsx` is a compiler
     // target and the compiler always passes a new object. For `createElement`,
@@ -395,7 +458,17 @@ export function jsxProd(type, config, maybeKey) {
     }
   }
 
-  return ReactElement(type, key, ref, undefined, undefined, getOwner(), props);
+  return ReactElement(
+    type,
+    key,
+    ref,
+    undefined,
+    undefined,
+    getOwner(),
+    props,
+    undefined,
+    undefined,
+  );
 }
 
 // While `jsxDEV` should never be called when running in production, we do
@@ -419,7 +492,16 @@ export function jsxProdSignatureRunningInDevWithDynamicChildren(
 ) {
   if (__DEV__) {
     const isStaticChildren = false;
-    return jsxDEV(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(
+      type,
+      config,
+      maybeKey,
+      isStaticChildren,
+      source,
+      self,
+      __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
+      __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+    );
   }
 }
 
@@ -432,7 +514,16 @@ export function jsxProdSignatureRunningInDevWithStaticChildren(
 ) {
   if (__DEV__) {
     const isStaticChildren = true;
-    return jsxDEV(type, config, maybeKey, isStaticChildren, source, self);
+    return jsxDEVImpl(
+      type,
+      config,
+      maybeKey,
+      isStaticChildren,
+      source,
+      self,
+      __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
+      __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+    );
   }
 }
 
@@ -445,9 +536,36 @@ const didWarnAboutKeySpread = {};
  * @param {string} key
  */
 export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
+  return jsxDEVImpl(
+    type,
+    config,
+    maybeKey,
+    isStaticChildren,
+    source,
+    self,
+    __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
+    __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
+  );
+}
+
+function jsxDEVImpl(
+  type,
+  config,
+  maybeKey,
+  isStaticChildren,
+  source,
+  self,
+  debugStack,
+  debugTask,
+) {
   if (__DEV__) {
-    if (!isValidElementType(type)) {
+    if (!enableOwnerStacks && !isValidElementType(type)) {
       // This is an invalid element type.
+      //
+      // We warn here so that we can get better stack traces but with enableOwnerStacks
+      // enabled we don't need this because we get good stacks if we error in the
+      // renderer anyway. The renderer is the only one that knows what types are valid
+      // for this particular renderer so we let it error there instead.
       //
       // We warn in this case but don't throw. We expect the element creation to
       // succeed and there will likely be errors in render.
@@ -491,6 +609,9 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       // errors. We don't want exception behavior to differ between dev and
       // prod. (Rendering will throw with a helpful message and as soon as the
       // type is fixed, the key warnings will appear.)
+      // When enableOwnerStacks is on, we no longer need the type here so this
+      // comment is no longer true. Which is why we can run this even for invalid
+      // types.
       const children = config.children;
       if (children !== undefined) {
         if (isStaticChildren) {
@@ -578,7 +699,11 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
     }
 
     let props;
-    if (enableRefAsProp && disableStringRefs && !('key' in config)) {
+    if (
+      (enableFastJSXWithoutStringRefs ||
+        (enableFastJSXWithStringRefs && !('ref' in config))) &&
+      !('key' in config)
+    ) {
       // If key was not spread in, we can reuse the original props object. This
       // only works for `jsx`, not `createElement`, because `jsx` is a compiler
       // target and the compiler always passes a new object. For `createElement`,
@@ -631,7 +756,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    const element = ReactElement(
+    return ReactElement(
       type,
       key,
       ref,
@@ -639,13 +764,9 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       source,
       getOwner(),
       props,
+      debugStack,
+      debugTask,
     );
-
-    if (type === REACT_FRAGMENT_TYPE) {
-      validateFragmentProps(element);
-    }
-
-    return element;
   }
 }
 
@@ -655,7 +776,12 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
  */
 export function createElement(type, config, children) {
   if (__DEV__) {
-    if (!isValidElementType(type)) {
+    if (!enableOwnerStacks && !isValidElementType(type)) {
+      // This is just an optimistic check that provides a better stack trace before
+      // owner stacks. It's really up to the renderer if it's a valid element type.
+      // When owner stacks are enabled, we instead warn in the renderer and it'll
+      // have the stack trace of the JSX element anyway.
+      //
       // This is an invalid element type.
       //
       // We warn in this case but don't throw. We expect the element creation to
@@ -821,7 +947,7 @@ export function createElement(type, config, children) {
     }
   }
 
-  const element = ReactElement(
+  return ReactElement(
     type,
     key,
     ref,
@@ -829,17 +955,13 @@ export function createElement(type, config, children) {
     undefined,
     getOwner(),
     props,
+    __DEV__ && enableOwnerStacks ? Error('react-stack-top-frame') : undefined,
+    __DEV__ && enableOwnerStacks ? createTask(getTaskName(type)) : undefined,
   );
-
-  if (type === REACT_FRAGMENT_TYPE) {
-    validateFragmentProps(element);
-  }
-
-  return element;
 }
 
 export function cloneAndReplaceKey(oldElement, newKey) {
-  return ReactElement(
+  const clonedElement = ReactElement(
     oldElement.type,
     newKey,
     // When enableRefAsProp is on, this argument is ignored. This check only
@@ -849,7 +971,14 @@ export function cloneAndReplaceKey(oldElement, newKey) {
     undefined,
     !__DEV__ && disableStringRefs ? undefined : oldElement._owner,
     oldElement.props,
+    __DEV__ && enableOwnerStacks ? oldElement._debugStack : undefined,
+    __DEV__ && enableOwnerStacks ? oldElement._debugTask : undefined,
   );
+  if (__DEV__) {
+    // The cloned element should inherit the original element's key validation.
+    clonedElement._store.validated = oldElement._store.validated;
+  }
+  return clonedElement;
 }
 
 /**
@@ -960,6 +1089,8 @@ export function cloneElement(element, config, children) {
     undefined,
     owner,
     props,
+    __DEV__ && enableOwnerStacks ? element._debugStack : undefined,
+    __DEV__ && enableOwnerStacks ? element._debugTask : undefined,
   );
 
   for (let i = 2; i < arguments.length; i++) {
@@ -967,19 +1098,6 @@ export function cloneElement(element, config, children) {
   }
 
   return clonedElement;
-}
-
-function getDeclarationErrorAddendum() {
-  if (__DEV__) {
-    const owner = getOwner();
-    if (owner) {
-      const name = getComponentNameFromType(owner.type);
-      if (name) {
-        return '\n\nCheck the render method of `' + name + '`.';
-      }
-    }
-    return '';
-  }
 }
 
 /**
@@ -993,6 +1111,17 @@ function getDeclarationErrorAddendum() {
  */
 function validateChildKeys(node, parentType) {
   if (__DEV__) {
+    if (enableOwnerStacks) {
+      // When owner stacks is enabled no warnings happens. All we do is
+      // mark elements as being in a valid static child position so they
+      // don't need keys.
+      if (isValidElement(node)) {
+        if (node._store) {
+          node._store.validated = 1;
+        }
+      }
+      return;
+    }
     if (typeof node !== 'object' || !node) {
       return;
     }
@@ -1008,7 +1137,7 @@ function validateChildKeys(node, parentType) {
     } else if (isValidElement(node)) {
       // This element was passed in a valid location.
       if (node._store) {
-        node._store.validated = true;
+        node._store.validated = 1;
       }
     } else {
       const iteratorFn = getIteratorFn(node);
@@ -1060,11 +1189,15 @@ const ownerHasKeyUseWarning = {};
  * @param {*} parentType element's parent's type.
  */
 function validateExplicitKey(element, parentType) {
+  if (enableOwnerStacks) {
+    // Skip. Will verify in renderer instead.
+    return;
+  }
   if (__DEV__) {
     if (!element._store || element._store.validated || element.key != null) {
       return;
     }
-    element._store.validated = true;
+    element._store.validated = 1;
 
     const currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
     if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
@@ -1087,36 +1220,40 @@ function validateExplicitKey(element, parentType) {
       childOwner = ` It was passed a child from ${ownerName}.`;
     }
 
-    setCurrentlyValidatingElement(element);
+    const prevGetCurrentStack = ReactSharedInternals.getCurrentStack;
+    ReactSharedInternals.getCurrentStack = function () {
+      const owner = element._owner;
+      // Add an extra top frame while an element is being validated
+      let stack = describeUnknownElementTypeFrameInDEV(
+        element.type,
+        owner ? owner.type : null,
+      );
+      // Delegate to the injected renderer-specific implementation
+      if (prevGetCurrentStack) {
+        stack += prevGetCurrentStack() || '';
+      }
+      return stack;
+    };
     console.error(
       'Each child in a list should have a unique "key" prop.' +
         '%s%s See https://react.dev/link/warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,
     );
-    setCurrentlyValidatingElement(null);
-  }
-}
-
-function setCurrentlyValidatingElement(element) {
-  if (__DEV__) {
-    if (element) {
-      const owner = element._owner;
-      const stack = describeUnknownElementTypeFrameInDEV(
-        element.type,
-        owner ? owner.type : null,
-      );
-      ReactSharedInternals.setExtraStackFrame(stack);
-    } else {
-      ReactSharedInternals.setExtraStackFrame(null);
-    }
+    ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
   }
 }
 
 function getCurrentComponentErrorInfo(parentType) {
   if (__DEV__) {
-    let info = getDeclarationErrorAddendum();
-
+    let info = '';
+    const owner = getOwner();
+    if (owner) {
+      const name = getComponentNameFromType(owner.type);
+      if (name) {
+        info = '\n\nCheck the render method of `' + name + '`.';
+      }
+    }
     if (!info) {
       const parentName = getComponentNameFromType(parentType);
       if (parentName) {
@@ -1124,36 +1261,6 @@ function getCurrentComponentErrorInfo(parentType) {
       }
     }
     return info;
-  }
-}
-
-/**
- * Given a fragment, validate that it can only be provided with fragment props
- * @param {ReactElement} fragment
- */
-function validateFragmentProps(fragment) {
-  // TODO: Move this to render phase instead of at element creation.
-  if (__DEV__) {
-    const keys = Object.keys(fragment.props);
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      if (key !== 'children' && key !== 'key') {
-        setCurrentlyValidatingElement(fragment);
-        console.error(
-          'Invalid prop `%s` supplied to `React.Fragment`. ' +
-            'React.Fragment can only have `key` and `children` props.',
-          key,
-        );
-        setCurrentlyValidatingElement(null);
-        break;
-      }
-    }
-
-    if (!enableRefAsProp && fragment.ref !== null) {
-      setCurrentlyValidatingElement(fragment);
-      console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
-      setCurrentlyValidatingElement(null);
-    }
   }
 }
 

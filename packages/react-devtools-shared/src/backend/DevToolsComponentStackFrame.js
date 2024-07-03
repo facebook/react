@@ -12,21 +12,7 @@
 // while still maintaining support for multiple renderer versions
 // (which use different values for ReactTypeOfWork).
 
-import type {LazyComponent} from 'react/src/ReactLazy';
 import type {CurrentDispatcherRef} from './types';
-
-import {
-  FORWARD_REF_NUMBER,
-  FORWARD_REF_SYMBOL_STRING,
-  LAZY_NUMBER,
-  LAZY_SYMBOL_STRING,
-  MEMO_NUMBER,
-  MEMO_SYMBOL_STRING,
-  SUSPENSE_NUMBER,
-  SUSPENSE_SYMBOL_STRING,
-  SUSPENSE_LIST_NUMBER,
-  SUSPENSE_LIST_SYMBOL_STRING,
-} from './ReactSymbols';
 
 // The shared console patching code is DEV-only.
 // We can't use it since DevTools only ships production builds.
@@ -296,70 +282,4 @@ export function describeFunctionComponentFrame(
   currentDispatcherRef: CurrentDispatcherRef,
 ): string {
   return describeNativeComponentFrame(fn, false, currentDispatcherRef);
-}
-
-function shouldConstruct(Component: Function) {
-  const prototype = Component.prototype;
-  return !!(prototype && prototype.isReactComponent);
-}
-
-export function describeUnknownElementTypeFrameInDEV(
-  type: any,
-  currentDispatcherRef: CurrentDispatcherRef,
-): string {
-  if (!__DEV__) {
-    return '';
-  }
-  if (type == null) {
-    return '';
-  }
-  if (typeof type === 'function') {
-    return describeNativeComponentFrame(
-      type,
-      shouldConstruct(type),
-      currentDispatcherRef,
-    );
-  }
-  if (typeof type === 'string') {
-    return describeBuiltInComponentFrame(type);
-  }
-  switch (type) {
-    case SUSPENSE_NUMBER:
-    case SUSPENSE_SYMBOL_STRING:
-      return describeBuiltInComponentFrame('Suspense');
-    case SUSPENSE_LIST_NUMBER:
-    case SUSPENSE_LIST_SYMBOL_STRING:
-      return describeBuiltInComponentFrame('SuspenseList');
-  }
-  if (typeof type === 'object') {
-    switch (type.$$typeof) {
-      case FORWARD_REF_NUMBER:
-      case FORWARD_REF_SYMBOL_STRING:
-        return describeFunctionComponentFrame(
-          type.render,
-          currentDispatcherRef,
-        );
-      case MEMO_NUMBER:
-      case MEMO_SYMBOL_STRING:
-        // Memo may contain any component type so we recursively resolve it.
-        return describeUnknownElementTypeFrameInDEV(
-          type.type,
-          currentDispatcherRef,
-        );
-      case LAZY_NUMBER:
-      case LAZY_SYMBOL_STRING: {
-        const lazyComponent: LazyComponent<any, any> = (type: any);
-        const payload = lazyComponent._payload;
-        const init = lazyComponent._init;
-        try {
-          // Lazy may contain any component type so we recursively resolve it.
-          return describeUnknownElementTypeFrameInDEV(
-            init(payload),
-            currentDispatcherRef,
-          );
-        } catch (x) {}
-      }
-    }
-  }
-  return '';
 }

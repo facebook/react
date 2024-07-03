@@ -1,0 +1,1130 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/lambda-with-fbt.js
+---
+Input:
+import { fbt } from "fbt";
+
+function Component() {
+  const buttonLabel = () => {
+    if (!someCondition) {
+      return <fbt desc="My label">{"Purchase as a gift"}</fbt>;
+    } else if (
+      !iconOnly &&
+      showPrice &&
+      item?.current_gift_offer?.price?.formatted != null
+    ) {
+      return (
+        <fbt desc="Gift button's label">
+          {"Gift | "}
+          <fbt:param name="price">
+            {item?.current_gift_offer?.price?.formatted}
+          </fbt:param>
+        </fbt>
+      );
+    } else if (!iconOnly && !showPrice) {
+      return <fbt desc="Gift button's label">{"Gift"}</fbt>;
+    }
+  };
+
+  return (
+    <View>
+      <Button text={buttonLabel()} />
+    </View>
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "ImportDeclaration",
+      "specifiers": [
+        {
+          "type": "ImportSpecifier",
+          "imported": {
+            "type": "Identifier",
+            "name": "fbt",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              9,
+              12
+            ]
+          },
+          "local": {
+            "type": "Identifier",
+            "name": "fbt",
+            "typeAnnotation": null,
+            "loc": null,
+            "range": [
+              9,
+              12
+            ]
+          },
+          "loc": null,
+          "range": [
+            9,
+            12
+          ]
+        }
+      ],
+      "source": {
+        "type": "StringLiteral",
+        "value": "fbt",
+        "loc": null,
+        "range": [
+          20,
+          25
+        ]
+      },
+      "loc": null,
+      "range": [
+        0,
+        26
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          37,
+          46
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "buttonLabel",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    59,
+                    70
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "IfStatement",
+                        "test": {
+                          "type": "UnaryExpression",
+                          "operator": "!",
+                          "prefix": true,
+                          "argument": {
+                            "type": "Identifier",
+                            "name": "someCondition",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              90,
+                              103
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            89,
+                            103
+                          ]
+                        },
+                        "consequent": {
+                          "type": "BlockStatement",
+                          "body": [
+                            {
+                              "type": "ReturnStatement",
+                              "argument": {
+                                "type": "JSXElement",
+                                "openingElement": {
+                                  "type": "JSXOpeningElement",
+                                  "name": {
+                                    "type": "JSXIdentifier",
+                                    "name": "fbt",
+                                    "loc": null,
+                                    "range": [
+                                      121,
+                                      124
+                                    ]
+                                  },
+                                  "attributes": [
+                                    {
+                                      "type": "JSXAttribute",
+                                      "name": {
+                                        "type": "JSXIdentifier",
+                                        "name": "desc",
+                                        "loc": null,
+                                        "range": [
+                                          125,
+                                          129
+                                        ]
+                                      },
+                                      "value": {
+                                        "type": "JSXStringLiteral",
+                                        "value": "My label",
+                                        "raw": "\"My label\"",
+                                        "loc": null,
+                                        "range": [
+                                          130,
+                                          140
+                                        ]
+                                      },
+                                      "loc": null,
+                                      "range": [
+                                        125,
+                                        140
+                                      ]
+                                    }
+                                  ],
+                                  "selfClosing": false,
+                                  "loc": null,
+                                  "range": [
+                                    120,
+                                    141
+                                  ]
+                                },
+                                "children": [
+                                  {
+                                    "type": "JSXExpressionContainer",
+                                    "expression": {
+                                      "type": "StringLiteral",
+                                      "value": "Purchase as a gift",
+                                      "loc": null,
+                                      "range": [
+                                        142,
+                                        162
+                                      ]
+                                    },
+                                    "loc": null,
+                                    "range": [
+                                      141,
+                                      163
+                                    ]
+                                  }
+                                ],
+                                "closingElement": {
+                                  "type": "JSXClosingElement",
+                                  "name": {
+                                    "type": "JSXIdentifier",
+                                    "name": "fbt",
+                                    "loc": null,
+                                    "range": [
+                                      165,
+                                      168
+                                    ]
+                                  },
+                                  "loc": null,
+                                  "range": [
+                                    163,
+                                    169
+                                  ]
+                                },
+                                "loc": null,
+                                "range": [
+                                  120,
+                                  169
+                                ]
+                              },
+                              "loc": null,
+                              "range": [
+                                113,
+                                170
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            105,
+                            176
+                          ]
+                        },
+                        "alternate": {
+                          "type": "IfStatement",
+                          "test": {
+                            "type": "LogicalExpression",
+                            "operator": "&&",
+                            "left": {
+                              "type": "LogicalExpression",
+                              "operator": "&&",
+                              "left": {
+                                "type": "UnaryExpression",
+                                "operator": "!",
+                                "prefix": true,
+                                "argument": {
+                                  "type": "Identifier",
+                                  "name": "iconOnly",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    194,
+                                    202
+                                  ]
+                                },
+                                "loc": null,
+                                "range": [
+                                  193,
+                                  202
+                                ]
+                              },
+                              "right": {
+                                "type": "Identifier",
+                                "name": "showPrice",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  212,
+                                  221
+                                ]
+                              },
+                              "loc": null,
+                              "range": [
+                                193,
+                                221
+                              ]
+                            },
+                            "right": {
+                              "type": "BinaryExpression",
+                              "left": {
+                                "type": "OptionalMemberExpression",
+                                "object": {
+                                  "type": "OptionalMemberExpression",
+                                  "object": {
+                                    "type": "OptionalMemberExpression",
+                                    "object": {
+                                      "type": "Identifier",
+                                      "name": "item",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        231,
+                                        235
+                                      ]
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "current_gift_offer",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        237,
+                                        255
+                                      ]
+                                    },
+                                    "computed": false,
+                                    "optional": true,
+                                    "loc": null,
+                                    "range": [
+                                      231,
+                                      255
+                                    ]
+                                  },
+                                  "property": {
+                                    "type": "Identifier",
+                                    "name": "price",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      257,
+                                      262
+                                    ]
+                                  },
+                                  "computed": false,
+                                  "optional": true,
+                                  "loc": null,
+                                  "range": [
+                                    231,
+                                    262
+                                  ]
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "formatted",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    264,
+                                    273
+                                  ]
+                                },
+                                "computed": false,
+                                "optional": true,
+                                "loc": null,
+                                "range": [
+                                  231,
+                                  273
+                                ]
+                              },
+                              "operator": "!=",
+                              "right": {
+                                "type": "NullLiteral",
+                                "loc": null,
+                                "range": [
+                                  277,
+                                  281
+                                ]
+                              },
+                              "loc": null,
+                              "range": [
+                                231,
+                                281
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              193,
+                              281
+                            ]
+                          },
+                          "consequent": {
+                            "type": "BlockStatement",
+                            "body": [
+                              {
+                                "type": "ReturnStatement",
+                                "argument": {
+                                  "type": "JSXElement",
+                                  "openingElement": {
+                                    "type": "JSXOpeningElement",
+                                    "name": {
+                                      "type": "JSXIdentifier",
+                                      "name": "fbt",
+                                      "loc": null,
+                                      "range": [
+                                        314,
+                                        317
+                                      ]
+                                    },
+                                    "attributes": [
+                                      {
+                                        "type": "JSXAttribute",
+                                        "name": {
+                                          "type": "JSXIdentifier",
+                                          "name": "desc",
+                                          "loc": null,
+                                          "range": [
+                                            318,
+                                            322
+                                          ]
+                                        },
+                                        "value": {
+                                          "type": "JSXStringLiteral",
+                                          "value": "Gift button's label",
+                                          "raw": "\"Gift button's label\"",
+                                          "loc": null,
+                                          "range": [
+                                            323,
+                                            344
+                                          ]
+                                        },
+                                        "loc": null,
+                                        "range": [
+                                          318,
+                                          344
+                                        ]
+                                      }
+                                    ],
+                                    "selfClosing": false,
+                                    "loc": null,
+                                    "range": [
+                                      313,
+                                      345
+                                    ]
+                                  },
+                                  "children": [
+                                    {
+                                      "type": "JSXText",
+                                      "value": "\n          ",
+                                      "raw": "\n          ",
+                                      "loc": null,
+                                      "range": [
+                                        345,
+                                        356
+                                      ]
+                                    },
+                                    {
+                                      "type": "JSXExpressionContainer",
+                                      "expression": {
+                                        "type": "StringLiteral",
+                                        "value": "Gift | ",
+                                        "loc": null,
+                                        "range": [
+                                          357,
+                                          366
+                                        ]
+                                      },
+                                      "loc": null,
+                                      "range": [
+                                        356,
+                                        367
+                                      ]
+                                    },
+                                    {
+                                      "type": "JSXText",
+                                      "value": "\n          ",
+                                      "raw": "\n          ",
+                                      "loc": null,
+                                      "range": [
+                                        367,
+                                        378
+                                      ]
+                                    },
+                                    {
+                                      "type": "JSXElement",
+                                      "openingElement": {
+                                        "type": "JSXOpeningElement",
+                                        "name": {
+                                          "type": "JSXNamespacedName",
+                                          "namespace": {
+                                            "type": "JSXIdentifier",
+                                            "name": "fbt",
+                                            "loc": null,
+                                            "range": [
+                                              379,
+                                              382
+                                            ]
+                                          },
+                                          "name": {
+                                            "type": "JSXIdentifier",
+                                            "name": "param",
+                                            "loc": null,
+                                            "range": [
+                                              383,
+                                              388
+                                            ]
+                                          },
+                                          "loc": null,
+                                          "range": [
+                                            379,
+                                            388
+                                          ]
+                                        },
+                                        "attributes": [
+                                          {
+                                            "type": "JSXAttribute",
+                                            "name": {
+                                              "type": "JSXIdentifier",
+                                              "name": "name",
+                                              "loc": null,
+                                              "range": [
+                                                389,
+                                                393
+                                              ]
+                                            },
+                                            "value": {
+                                              "type": "JSXStringLiteral",
+                                              "value": "price",
+                                              "raw": "\"price\"",
+                                              "loc": null,
+                                              "range": [
+                                                394,
+                                                401
+                                              ]
+                                            },
+                                            "loc": null,
+                                            "range": [
+                                              389,
+                                              401
+                                            ]
+                                          }
+                                        ],
+                                        "selfClosing": false,
+                                        "loc": null,
+                                        "range": [
+                                          378,
+                                          402
+                                        ]
+                                      },
+                                      "children": [
+                                        {
+                                          "type": "JSXText",
+                                          "value": "\n            ",
+                                          "raw": "\n            ",
+                                          "loc": null,
+                                          "range": [
+                                            402,
+                                            415
+                                          ]
+                                        },
+                                        {
+                                          "type": "JSXExpressionContainer",
+                                          "expression": {
+                                            "type": "OptionalMemberExpression",
+                                            "object": {
+                                              "type": "OptionalMemberExpression",
+                                              "object": {
+                                                "type": "OptionalMemberExpression",
+                                                "object": {
+                                                  "type": "Identifier",
+                                                  "name": "item",
+                                                  "typeAnnotation": null,
+                                                  "loc": null,
+                                                  "range": [
+                                                    416,
+                                                    420
+                                                  ]
+                                                },
+                                                "property": {
+                                                  "type": "Identifier",
+                                                  "name": "current_gift_offer",
+                                                  "typeAnnotation": null,
+                                                  "loc": null,
+                                                  "range": [
+                                                    422,
+                                                    440
+                                                  ]
+                                                },
+                                                "computed": false,
+                                                "optional": true,
+                                                "loc": null,
+                                                "range": [
+                                                  416,
+                                                  440
+                                                ]
+                                              },
+                                              "property": {
+                                                "type": "Identifier",
+                                                "name": "price",
+                                                "typeAnnotation": null,
+                                                "loc": null,
+                                                "range": [
+                                                  442,
+                                                  447
+                                                ]
+                                              },
+                                              "computed": false,
+                                              "optional": true,
+                                              "loc": null,
+                                              "range": [
+                                                416,
+                                                447
+                                              ]
+                                            },
+                                            "property": {
+                                              "type": "Identifier",
+                                              "name": "formatted",
+                                              "typeAnnotation": null,
+                                              "loc": null,
+                                              "range": [
+                                                449,
+                                                458
+                                              ]
+                                            },
+                                            "computed": false,
+                                            "optional": true,
+                                            "loc": null,
+                                            "range": [
+                                              416,
+                                              458
+                                            ]
+                                          },
+                                          "loc": null,
+                                          "range": [
+                                            415,
+                                            459
+                                          ]
+                                        },
+                                        {
+                                          "type": "JSXText",
+                                          "value": "\n          ",
+                                          "raw": "\n          ",
+                                          "loc": null,
+                                          "range": [
+                                            459,
+                                            470
+                                          ]
+                                        }
+                                      ],
+                                      "closingElement": {
+                                        "type": "JSXClosingElement",
+                                        "name": {
+                                          "type": "JSXNamespacedName",
+                                          "namespace": {
+                                            "type": "JSXIdentifier",
+                                            "name": "fbt",
+                                            "loc": null,
+                                            "range": [
+                                              472,
+                                              475
+                                            ]
+                                          },
+                                          "name": {
+                                            "type": "JSXIdentifier",
+                                            "name": "param",
+                                            "loc": null,
+                                            "range": [
+                                              476,
+                                              481
+                                            ]
+                                          },
+                                          "loc": null,
+                                          "range": [
+                                            472,
+                                            481
+                                          ]
+                                        },
+                                        "loc": null,
+                                        "range": [
+                                          470,
+                                          482
+                                        ]
+                                      },
+                                      "loc": null,
+                                      "range": [
+                                        378,
+                                        482
+                                      ]
+                                    },
+                                    {
+                                      "type": "JSXText",
+                                      "value": "\n        ",
+                                      "raw": "\n        ",
+                                      "loc": null,
+                                      "range": [
+                                        482,
+                                        491
+                                      ]
+                                    }
+                                  ],
+                                  "closingElement": {
+                                    "type": "JSXClosingElement",
+                                    "name": {
+                                      "type": "JSXIdentifier",
+                                      "name": "fbt",
+                                      "loc": null,
+                                      "range": [
+                                        493,
+                                        496
+                                      ]
+                                    },
+                                    "loc": null,
+                                    "range": [
+                                      491,
+                                      497
+                                    ]
+                                  },
+                                  "loc": null,
+                                  "range": [
+                                    313,
+                                    497
+                                  ]
+                                },
+                                "loc": null,
+                                "range": [
+                                  296,
+                                  506
+                                ]
+                              }
+                            ],
+                            "loc": null,
+                            "range": [
+                              288,
+                              512
+                            ]
+                          },
+                          "alternate": {
+                            "type": "IfStatement",
+                            "test": {
+                              "type": "LogicalExpression",
+                              "operator": "&&",
+                              "left": {
+                                "type": "UnaryExpression",
+                                "operator": "!",
+                                "prefix": true,
+                                "argument": {
+                                  "type": "Identifier",
+                                  "name": "iconOnly",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    523,
+                                    531
+                                  ]
+                                },
+                                "loc": null,
+                                "range": [
+                                  522,
+                                  531
+                                ]
+                              },
+                              "right": {
+                                "type": "UnaryExpression",
+                                "operator": "!",
+                                "prefix": true,
+                                "argument": {
+                                  "type": "Identifier",
+                                  "name": "showPrice",
+                                  "typeAnnotation": null,
+                                  "loc": null,
+                                  "range": [
+                                    536,
+                                    545
+                                  ]
+                                },
+                                "loc": null,
+                                "range": [
+                                  535,
+                                  545
+                                ]
+                              },
+                              "loc": null,
+                              "range": [
+                                522,
+                                545
+                              ]
+                            },
+                            "consequent": {
+                              "type": "BlockStatement",
+                              "body": [
+                                {
+                                  "type": "ReturnStatement",
+                                  "argument": {
+                                    "type": "JSXElement",
+                                    "openingElement": {
+                                      "type": "JSXOpeningElement",
+                                      "name": {
+                                        "type": "JSXIdentifier",
+                                        "name": "fbt",
+                                        "loc": null,
+                                        "range": [
+                                          563,
+                                          566
+                                        ]
+                                      },
+                                      "attributes": [
+                                        {
+                                          "type": "JSXAttribute",
+                                          "name": {
+                                            "type": "JSXIdentifier",
+                                            "name": "desc",
+                                            "loc": null,
+                                            "range": [
+                                              567,
+                                              571
+                                            ]
+                                          },
+                                          "value": {
+                                            "type": "JSXStringLiteral",
+                                            "value": "Gift button's label",
+                                            "raw": "\"Gift button's label\"",
+                                            "loc": null,
+                                            "range": [
+                                              572,
+                                              593
+                                            ]
+                                          },
+                                          "loc": null,
+                                          "range": [
+                                            567,
+                                            593
+                                          ]
+                                        }
+                                      ],
+                                      "selfClosing": false,
+                                      "loc": null,
+                                      "range": [
+                                        562,
+                                        594
+                                      ]
+                                    },
+                                    "children": [
+                                      {
+                                        "type": "JSXExpressionContainer",
+                                        "expression": {
+                                          "type": "StringLiteral",
+                                          "value": "Gift",
+                                          "loc": null,
+                                          "range": [
+                                            595,
+                                            601
+                                          ]
+                                        },
+                                        "loc": null,
+                                        "range": [
+                                          594,
+                                          602
+                                        ]
+                                      }
+                                    ],
+                                    "closingElement": {
+                                      "type": "JSXClosingElement",
+                                      "name": {
+                                        "type": "JSXIdentifier",
+                                        "name": "fbt",
+                                        "loc": null,
+                                        "range": [
+                                          604,
+                                          607
+                                        ]
+                                      },
+                                      "loc": null,
+                                      "range": [
+                                        602,
+                                        608
+                                      ]
+                                    },
+                                    "loc": null,
+                                    "range": [
+                                      562,
+                                      608
+                                    ]
+                                  },
+                                  "loc": null,
+                                  "range": [
+                                    555,
+                                    609
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                547,
+                                615
+                              ]
+                            },
+                            "alternate": null,
+                            "loc": null,
+                            "range": [
+                              518,
+                              615
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            182,
+                            615
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          85,
+                          615
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      79,
+                      619
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    73,
+                    619
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    73,
+                    619
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  59,
+                  619
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              53,
+              620
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "View",
+                  "loc": null,
+                  "range": [
+                    638,
+                    642
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  637,
+                  643
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXText",
+                  "value": "\n      ",
+                  "raw": "\n      ",
+                  "loc": null,
+                  "range": [
+                    643,
+                    650
+                  ]
+                },
+                {
+                  "type": "JSXElement",
+                  "openingElement": {
+                    "type": "JSXOpeningElement",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "Button",
+                      "loc": null,
+                      "range": [
+                        651,
+                        657
+                      ]
+                    },
+                    "attributes": [
+                      {
+                        "type": "JSXAttribute",
+                        "name": {
+                          "type": "JSXIdentifier",
+                          "name": "text",
+                          "loc": null,
+                          "range": [
+                            658,
+                            662
+                          ]
+                        },
+                        "value": {
+                          "type": "JSXExpressionContainer",
+                          "expression": {
+                            "type": "CallExpression",
+                            "callee": {
+                              "type": "Identifier",
+                              "name": "buttonLabel",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                664,
+                                675
+                              ]
+                            },
+                            "arguments": [],
+                            "loc": null,
+                            "range": [
+                              664,
+                              677
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            663,
+                            678
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          658,
+                          678
+                        ]
+                      }
+                    ],
+                    "selfClosing": true,
+                    "loc": null,
+                    "range": [
+                      650,
+                      681
+                    ]
+                  },
+                  "children": [],
+                  "closingElement": null,
+                  "loc": null,
+                  "range": [
+                    650,
+                    681
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n    ",
+                  "raw": "\n    ",
+                  "loc": null,
+                  "range": [
+                    681,
+                    686
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "View",
+                  "loc": null,
+                  "range": [
+                    688,
+                    692
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  686,
+                  693
+                ]
+              },
+              "loc": null,
+              "range": [
+                637,
+                693
+              ]
+            },
+            "loc": null,
+            "range": [
+              624,
+              698
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          49,
+          700
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        28,
+        700
+      ],
+      "loc": null,
+      "range": [
+        28,
+        700
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    700
+  ]
+}

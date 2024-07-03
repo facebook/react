@@ -1,0 +1,291 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/capturing-function-runs-inference.js
+---
+Input:
+function component(a, b) {
+  let z = { a };
+  let p = () => <Foo>{z}</Foo>;
+  return p();
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "a",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            20
+          ]
+        },
+        {
+          "type": "Identifier",
+          "name": "b",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            22,
+            23
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "z",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    33,
+                    34
+                  ]
+                },
+                "init": {
+                  "type": "ObjectExpression",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          39,
+                          40
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "a",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          39,
+                          40
+                        ]
+                      },
+                      "kind": "init",
+                      "method": false,
+                      "shorthand": true,
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        39,
+                        40
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    37,
+                    42
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  33,
+                  42
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              29,
+              43
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "p",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    50,
+                    51
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "JSXElement",
+                    "openingElement": {
+                      "type": "JSXOpeningElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "Foo",
+                        "loc": null,
+                        "range": [
+                          61,
+                          64
+                        ]
+                      },
+                      "attributes": [],
+                      "selfClosing": false,
+                      "loc": null,
+                      "range": [
+                        60,
+                        65
+                      ]
+                    },
+                    "children": [
+                      {
+                        "type": "JSXExpressionContainer",
+                        "expression": {
+                          "type": "Identifier",
+                          "name": "z",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            66,
+                            67
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          65,
+                          68
+                        ]
+                      }
+                    ],
+                    "closingElement": {
+                      "type": "JSXClosingElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "Foo",
+                        "loc": null,
+                        "range": [
+                          70,
+                          73
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        68,
+                        74
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      60,
+                      74
+                    ]
+                  },
+                  "generator": true,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    54,
+                    74
+                  ],
+                  "expression": true,
+                  "loc": null,
+                  "range": [
+                    54,
+                    74
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  50,
+                  74
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              46,
+              75
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "p",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  85,
+                  86
+                ]
+              },
+              "arguments": [],
+              "loc": null,
+              "range": [
+                85,
+                88
+              ]
+            },
+            "loc": null,
+            "range": [
+              78,
+              89
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          25,
+          91
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        91
+      ],
+      "loc": null,
+      "range": [
+        0,
+        91
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    91
+  ]
+}

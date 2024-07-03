@@ -82,7 +82,7 @@ describe('useSyncExternalStore', () => {
     };
   }
 
-  test(
+  it(
     'detects interleaved mutations during a concurrent read before ' +
       'layout effects fire',
     async () => {
@@ -186,7 +186,7 @@ describe('useSyncExternalStore', () => {
     },
   );
 
-  test('next value is correctly cached when state is dispatched in render phase', async () => {
+  it('next value is correctly cached when state is dispatched in render phase', async () => {
     const store = createExternalStore('value:initial');
 
     function App() {
@@ -215,7 +215,7 @@ describe('useSyncExternalStore', () => {
     assertLog(['value:initial']);
   });
 
-  test(
+  it(
     'regression: suspending in shell after synchronously patching ' +
       'up store mutation',
     async () => {

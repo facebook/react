@@ -198,8 +198,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Warning: Expected the last optional `callback` argument to be a function. Instead received: no.',
-        'Warning: Expected the last optional `callback` argument to be a function. Instead received: no.',
+        'Expected the last optional `callback` argument to be a function. Instead received: no.',
+        'Expected the last optional `callback` argument to be a function. Instead received: no.',
       ],
       {withoutStack: 2},
     );
@@ -215,8 +215,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }",
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
       ],
       {withoutStack: 2},
     );
@@ -232,8 +232,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
       ],
       {withoutStack: 2},
     );
@@ -285,8 +285,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
       ],
       {withoutStack: 2},
     );
@@ -303,8 +303,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
       ],
       {withoutStack: 2},
     );
@@ -552,7 +552,7 @@ describe('ReactDOM', () => {
       // ReactDOM(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +
-        '    in div (at **)\n' +
+        (gate(flags => flags.enableOwnerStacks) ? '' : '    in div (at **)\n') +
         '    in App (at **)',
       // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
       'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
@@ -569,7 +569,7 @@ describe('ReactDOM', () => {
       // ReactDOM(App > div > font)
       'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in font (at **)\n' +
-        '    in div (at **)\n' +
+        (gate(flags => flags.enableOwnerStacks) ? '' : '    in div (at **)\n') +
         '    in App (at **)',
     ]);
   });

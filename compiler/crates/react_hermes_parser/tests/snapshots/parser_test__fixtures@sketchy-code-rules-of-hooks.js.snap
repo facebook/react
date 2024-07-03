@@ -1,0 +1,172 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/sketchy-code-rules-of-hooks.js
+---
+Input:
+/* eslint-disable react-hooks/rules-of-hooks */
+function lowercasecomponent() {
+  const x = [];
+  return <div>{x}</div>;
+}
+/* eslint-enable react-hooks/rules-of-hooks */
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "lowercasecomponent",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          57,
+          75
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    88,
+                    89
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    92,
+                    94
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  88,
+                  94
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              82,
+              95
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    106,
+                    109
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  105,
+                  110
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "x",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      111,
+                      112
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    110,
+                    113
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    115,
+                    118
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  113,
+                  119
+                ]
+              },
+              "loc": null,
+              "range": [
+                105,
+                119
+              ]
+            },
+            "loc": null,
+            "range": [
+              98,
+              120
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          78,
+          122
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        48,
+        122
+      ],
+      "loc": null,
+      "range": [
+        48,
+        122
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    48,
+    122
+  ]
+}

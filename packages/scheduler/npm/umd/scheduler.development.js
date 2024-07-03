@@ -7,8 +7,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/* eslint-disable max-len */
-
 'use strict';
 
 (function (global, factory) {

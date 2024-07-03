@@ -9,7 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
-import {useCallback, useContext, useRef, useState} from 'react';
+import {useCallback, useContext, useState} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -19,7 +19,6 @@ import KeyValue from './KeyValue';
 import {getMetaValueLabel, serializeHooksForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementHooksTree.css';
-import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
@@ -182,22 +181,6 @@ function HookView({
     [],
   );
 
-  const contextMenuTriggerRef = useRef(null);
-
-  useContextMenu({
-    data: {
-      path: ['hooks', ...path],
-      type:
-        hook !== null &&
-        typeof hook === 'object' &&
-        hook.hasOwnProperty(meta.type)
-          ? hook[(meta.type: any)]
-          : typeof value,
-    },
-    id: 'InspectedElement',
-    ref: contextMenuTriggerRef,
-  });
-
   if (hook.hasOwnProperty(meta.inspected)) {
     // This Hook is too deep and hasn't been hydrated.
     if (__DEV__) {
@@ -301,7 +284,7 @@ function HookView({
     if (isComplexDisplayValue) {
       return (
         <div className={styles.Hook}>
-          <div ref={contextMenuTriggerRef} className={styles.NameValueRow}>
+          <div className={styles.NameValueRow}>
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
             <span
               onClick={toggleIsOpen}
@@ -338,7 +321,7 @@ function HookView({
     } else {
       return (
         <div className={styles.Hook}>
-          <div ref={contextMenuTriggerRef} className={styles.NameValueRow}>
+          <div className={styles.NameValueRow}>
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
             <span
               onClick={toggleIsOpen}
@@ -394,7 +377,7 @@ function HookView({
             hookName={hookName}
             inspectedElement={inspectedElement}
             name={name}
-            path={[]}
+            path={path.concat(['value'])}
             pathRoot="hooks"
             store={store}
             value={value}

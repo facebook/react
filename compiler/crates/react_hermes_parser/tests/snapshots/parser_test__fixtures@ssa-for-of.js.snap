@@ -1,0 +1,296 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-for-of.js
+---
+Input:
+function foo(cond) {
+  let items = [];
+  for (const item of items) {
+    let y = 0;
+    if (cond) {
+      y = 1;
+    }
+  }
+  return items;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "cond",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            17
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "items",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    27,
+                    32
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    35,
+                    37
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  27,
+                  37
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              23,
+              38
+            ]
+          },
+          {
+            "type": "ForOfStatement",
+            "await": false,
+            "left": {
+              "type": "VariableDeclaration",
+              "kind": "const",
+              "declarations": [
+                {
+                  "type": "VariableDeclarator",
+                  "id": {
+                    "type": "Identifier",
+                    "name": "item",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      52,
+                      56
+                    ]
+                  },
+                  "init": null,
+                  "loc": null,
+                  "range": [
+                    52,
+                    56
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                46,
+                56
+              ]
+            },
+            "right": {
+              "type": "Identifier",
+              "name": "items",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                60,
+                65
+              ]
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "VariableDeclaration",
+                  "kind": "let",
+                  "declarations": [
+                    {
+                      "type": "VariableDeclarator",
+                      "id": {
+                        "type": "Identifier",
+                        "name": "y",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          77,
+                          78
+                        ]
+                      },
+                      "init": {
+                        "type": "NumericLiteral",
+                        "value": 0.0,
+                        "loc": null,
+                        "range": [
+                          81,
+                          82
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        77,
+                        82
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    73,
+                    83
+                  ]
+                },
+                {
+                  "type": "IfStatement",
+                  "test": {
+                    "type": "Identifier",
+                    "name": "cond",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      92,
+                      96
+                    ]
+                  },
+                  "consequent": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "y",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              106,
+                              107
+                            ]
+                          },
+                          "right": {
+                            "type": "NumericLiteral",
+                            "value": 1.0,
+                            "loc": null,
+                            "range": [
+                              110,
+                              111
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            106,
+                            111
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          106,
+                          112
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      98,
+                      118
+                    ]
+                  },
+                  "alternate": null,
+                  "loc": null,
+                  "range": [
+                    88,
+                    118
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                67,
+                122
+              ]
+            },
+            "loc": null,
+            "range": [
+              41,
+              122
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "items",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                132,
+                137
+              ]
+            },
+            "loc": null,
+            "range": [
+              125,
+              138
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          19,
+          140
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        140
+      ],
+      "loc": null,
+      "range": [
+        0,
+        140
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    140
+  ]
+}

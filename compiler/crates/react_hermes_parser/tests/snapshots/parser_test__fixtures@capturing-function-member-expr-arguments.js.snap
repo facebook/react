@@ -1,0 +1,318 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/capturing-function-member-expr-arguments.js
+---
+Input:
+function Foo(props) {
+  const onFoo = useCallback(
+    (reason) => {
+      log(props.router.location);
+    },
+    [props.router.location]
+  );
+
+  return onFoo;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            18
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "onFoo",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    30,
+                    35
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useCallback",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      38,
+                      49
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [
+                        {
+                          "type": "Identifier",
+                          "name": "reason",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            56,
+                            62
+                          ]
+                        }
+                      ],
+                      "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                          {
+                            "type": "ExpressionStatement",
+                            "expression": {
+                              "type": "CallExpression",
+                              "callee": {
+                                "type": "Identifier",
+                                "name": "log",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  75,
+                                  78
+                                ]
+                              },
+                              "arguments": [
+                                {
+                                  "type": "MemberExpression",
+                                  "object": {
+                                    "type": "MemberExpression",
+                                    "object": {
+                                      "type": "Identifier",
+                                      "name": "props",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        79,
+                                        84
+                                      ]
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "router",
+                                      "typeAnnotation": null,
+                                      "loc": null,
+                                      "range": [
+                                        85,
+                                        91
+                                      ]
+                                    },
+                                    "computed": false,
+                                    "loc": null,
+                                    "range": [
+                                      79,
+                                      91
+                                    ]
+                                  },
+                                  "property": {
+                                    "type": "Identifier",
+                                    "name": "location",
+                                    "typeAnnotation": null,
+                                    "loc": null,
+                                    "range": [
+                                      92,
+                                      100
+                                    ]
+                                  },
+                                  "computed": false,
+                                  "loc": null,
+                                  "range": [
+                                    79,
+                                    100
+                                  ]
+                                }
+                              ],
+                              "loc": null,
+                              "range": [
+                                75,
+                                101
+                              ]
+                            },
+                            "directive": null,
+                            "loc": null,
+                            "range": [
+                              75,
+                              102
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          67,
+                          108
+                        ]
+                      },
+                      "generator": false,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        55,
+                        108
+                      ],
+                      "expression": false,
+                      "loc": null,
+                      "range": [
+                        55,
+                        108
+                      ]
+                    },
+                    {
+                      "type": "ArrayExpression",
+                      "elements": [
+                        {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "props",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                115,
+                                120
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "router",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                121,
+                                127
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              115,
+                              127
+                            ]
+                          },
+                          "property": {
+                            "type": "Identifier",
+                            "name": "location",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              128,
+                              136
+                            ]
+                          },
+                          "computed": false,
+                          "loc": null,
+                          "range": [
+                            115,
+                            136
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        114,
+                        137
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    38,
+                    141
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  30,
+                  141
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              24,
+              142
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "onFoo",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                153,
+                158
+              ]
+            },
+            "loc": null,
+            "range": [
+              146,
+              159
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          20,
+          161
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        161
+      ],
+      "loc": null,
+      "range": [
+        0,
+        161
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    161
+  ]
+}

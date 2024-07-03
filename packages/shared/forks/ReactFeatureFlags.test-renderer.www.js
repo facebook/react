@@ -56,7 +56,6 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
@@ -76,21 +75,23 @@ export const passChildrenWhenCloningPersistedNodes = false;
 export const enableUseDeferredValueInitialArg = true;
 export const disableClientCache = true;
 
-export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
-export const enableRefAsProp = false;
+export const enableRefAsProp = true;
 export const disableStringRefs = false;
+export const enableFastJSX = false;
 
 export const enableReactTestRendererWarning = false;
-export const disableLegacyMode = false;
-export const disableDOMTestUtils = false;
+export const disableLegacyMode = true;
 
 export const disableDefaultPropsExceptForClasses = false;
-export const enableEarlyReturnForPropDiffing = false;
+export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = false;
+
+export const enableOwnerStacks = false;
+export const enableShallowPropDiffing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

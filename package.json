@@ -56,7 +56,7 @@
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-eslint-plugin": "^3.5.3",
     "eslint-plugin-ft-flow": "^2.0.3",
-    "eslint-plugin-jest": "^22.15.0",
+    "eslint-plugin-jest": "28.4.0",
     "eslint-plugin-no-for-of-loops": "^1.0.0",
     "eslint-plugin-no-function-declare-after-return": "^1.0.0",
     "eslint-plugin-react": "^6.7.1",
@@ -97,6 +97,7 @@
     "through2": "^3.0.1",
     "tmp": "^0.1.0",
     "typescript": "^3.7.5",
+    "undici": "^5.28.4",
     "web-streams-polyfill": "^3.1.1",
     "yargs": "^15.3.1"
   },
@@ -108,7 +109,7 @@
   },
   "scripts": {
     "build": "node ./scripts/rollup/build-all-release-channels.js",
-    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom/index,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE",
+    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react/compiler-runtime,react-dom/index,react-dom/client,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE",
     "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
     "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
     "linc": "node ./scripts/tasks/linc.js",
@@ -126,6 +127,7 @@
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
+    "prettier-check": "node ./scripts/prettier/index.js",
     "version-check": "node ./scripts/tasks/version-check.js",
     "publish-prereleases": "node ./scripts/release/publish-using-ci-workflow.js",
     "download-build": "node ./scripts/release/download-experimental-build.js",
@@ -136,6 +138,8 @@
     "flags": "node ./scripts/flags/flags.js"
   },
   "resolutions": {
-    "react-is": "npm:react-is"
-  }
+    "react-is": "npm:react-is",
+    "jsdom": "22.1.0"
+  },
+  "packageManager": "yarn@1.22.22"
 }

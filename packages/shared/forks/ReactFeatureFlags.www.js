@@ -18,7 +18,6 @@ export const {
   enableTrustedTypesIntegration,
   enableDebugTracing,
   enableLazyContextPropagation,
-  enableUnifiedSyncLane,
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,
@@ -31,10 +30,12 @@ export const {
   transitionLaneExpirationMs,
   enableInfiniteRenderLoopDetection,
   enableRenderableContext,
-  enableRefAsProp,
   favorSafetyOverHydrationPerf,
   disableDefaultPropsExceptForClasses,
   enableNoCloningMemoCache,
+  enableAddPropertiesFastPath,
+  enableFastJSX,
+  renameElementSymbol,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -65,13 +66,11 @@ export const enableSchedulingProfiler: boolean =
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
-export const renameElementSymbol = false;
-
 export const enableCache = true;
 export const enableLegacyCache = true;
 
-export const enableBinaryFlight = false;
-export const enableFlightReadableStream = false;
+export const enableBinaryFlight = true;
+export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = false;
 
 export const enableTaint = false;
@@ -92,6 +91,8 @@ export const enableLegacyHidden = true;
 
 export const enableComponentStackLocations = true;
 
+export const enableRefAsProp = true;
+
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const allowConcurrentByDefault = true;
@@ -107,7 +108,6 @@ export const passChildrenWhenCloningPersistedNodes = false;
 export const enableAsyncDebugInfo = false;
 export const disableClientCache = true;
 
-export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
 
 export const enableReactTestRendererWarning = false;
@@ -117,10 +117,11 @@ export const useModernStrictMode = true;
 // because JSX is an extremely hot path.
 export const disableStringRefs = false;
 
-export const disableLegacyMode = __EXPERIMENTAL__;
+export const disableLegacyMode: boolean =
+  __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
 
-export const disableDOMTestUtils = false;
-export const enableEarlyReturnForPropDiffing = false;
+export const enableOwnerStacks = false;
+export const enableShallowPropDiffing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

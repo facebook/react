@@ -29,6 +29,10 @@ declare module 'create-react-class' {
   declare const exports: React$CreateClass;
 }
 
+declare interface ConsoleTask {
+  run<T>(f: () => T): T;
+}
+
 // Flow hides the props of React$Element, this overrides it to unhide
 // them for React internals.
 // prettier-ignore

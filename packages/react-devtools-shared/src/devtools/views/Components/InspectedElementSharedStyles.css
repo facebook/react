@@ -1,6 +1,5 @@
 .InspectedElementTree {
   padding: 0.25rem;
-  border-top: 1px solid var(--color-border);
 }
 .InspectedElementTree:first-of-type {
   border-top: none;

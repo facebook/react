@@ -15,12 +15,13 @@ global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
-if (typeof Blob === 'undefined') {
-  global.Blob = require('buffer').Blob;
+global.Blob = require('buffer').Blob;
+if (typeof File === 'undefined' || typeof FormData === 'undefined') {
+  global.File = require('buffer').File || require('undici').File;
+  global.FormData = require('undici').FormData;
 }
-if (typeof File === 'undefined') {
-  global.File = require('buffer').File;
-}
+// Patch for Edge environments for global scope
+global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
 // Don't wait before processing work on the server.
 // TODO: we can replace this with FlightServer.act().
@@ -32,6 +33,7 @@ let webpackMap;
 let webpackModules;
 let webpackModuleLoading;
 let React;
+let ReactServer;
 let ReactDOMServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
@@ -55,6 +57,7 @@ describe('ReactFlightDOMEdge', () => {
     webpackModules = WebpackMock.webpackModules;
     webpackModuleLoading = WebpackMock.moduleLoading;
 
+    ReactServer = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     jest.resetModules();
@@ -221,14 +224,12 @@ describe('ReactFlightDOMEdge', () => {
       this: {is: 'a large objected'},
       with: {many: 'properties in it'},
     };
-    const props = {
-      items: new Array(30).fill(obj),
-    };
+    const props = {root: <div>{new Array(30).fill(obj)}</div>};
     const stream = ReactServerDOMServer.renderToReadableStream(props);
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeLessThan(1100);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
@@ -239,10 +240,13 @@ describe('ReactFlightDOMEdge', () => {
         },
       },
     );
+    // TODO: Cyclic references currently cause a Lazy wrapper which is not ideal.
+    const resultElement = result.root._init(result.root._payload);
     // Should still match the result when parsed
-    expect(result).toEqual(props);
-    expect(result.items[5]).toBe(result.items[10]); // two random items are the same instance
-    // TODO: items[0] is not the same as the others in this case
+    expect(resultElement).toEqual(props.root);
+    expect(resultElement.props.children[5]).toBe(
+      resultElement.props.children[10],
+    ); // two random items are the same instance
   });
 
   it('should execute repeated server components only once', async () => {
@@ -253,14 +257,48 @@ describe('ReactFlightDOMEdge', () => {
       return str;
     }
     const element = <ServerComponent />;
-    const children = new Array(30).fill(element);
+    // Hardcoded list to avoid the key warning
+    const children = (
+      <>
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+      </>
+    );
     const resolvedChildren = new Array(30).fill(str);
     const stream = ReactServerDOMServer.renderToReadableStream(children);
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
 
-    expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeLessThan(410);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -285,7 +323,41 @@ describe('ReactFlightDOMEdge', () => {
       return div;
     }
     const element = <ServerComponent />;
-    const children = new Array(30).fill(element);
+    // Hardcoded list to avoid the key warning
+    const children = (
+      <>
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+        {element}
+      </>
+    );
     const resolvedChildren = new Array(30).fill(
       '<div>this is a long return value</div>',
     );
@@ -293,7 +365,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeLessThan(__DEV__ ? 590 : 400);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -321,7 +393,7 @@ describe('ReactFlightDOMEdge', () => {
       <ServerComponent recurse={20} />,
     );
     const serializedContent = await readResult(stream);
-    const expectedDebugInfoSize = __DEV__ ? 64 * 20 : 0;
+    const expectedDebugInfoSize = __DEV__ ? 300 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
@@ -379,45 +451,40 @@ describe('ReactFlightDOMEdge', () => {
     expect(await result.arrayBuffer()).toEqual(await blob.arrayBuffer());
   });
 
-  if (typeof FormData !== 'undefined' && typeof File !== 'undefined') {
-    // @gate enableBinaryFlight
-    it('can transport FormData (blobs)', async () => {
-      const bytes = new Uint8Array([
-        123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
-      ]);
-      const blob = new Blob([bytes, bytes], {
-        type: 'application/x-test',
-      });
-
-      const formData = new FormData();
-      formData.append('hi', 'world');
-      formData.append('file', blob, 'filename.test');
-
-      expect(formData.get('file') instanceof File).toBe(true);
-      expect(formData.get('file').name).toBe('filename.test');
-
-      const stream = passThrough(
-        ReactServerDOMServer.renderToReadableStream(formData),
-      );
-      const result = await ReactServerDOMClient.createFromReadableStream(
-        stream,
-        {
-          ssrManifest: {
-            moduleMap: null,
-            moduleLoading: null,
-          },
-        },
-      );
-
-      expect(result instanceof FormData).toBe(true);
-      expect(result.get('hi')).toBe('world');
-      const resultBlob = result.get('file');
-      expect(resultBlob instanceof Blob).toBe(true);
-      expect(resultBlob.name).toBe('blob'); // We should not pass through the file name for security.
-      expect(resultBlob.size).toBe(bytes.length * 2);
-      expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
+  // @gate enableBinaryFlight
+  it('can transport FormData (blobs)', async () => {
+    const bytes = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]);
+    const blob = new Blob([bytes, bytes], {
+      type: 'application/x-test',
     });
-  }
+
+    const formData = new FormData();
+    formData.append('hi', 'world');
+    formData.append('file', blob, 'filename.test');
+
+    expect(formData.get('file') instanceof File).toBe(true);
+    expect(formData.get('file').name).toBe('filename.test');
+
+    const stream = passThrough(
+      ReactServerDOMServer.renderToReadableStream(formData),
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    expect(result instanceof FormData).toBe(true);
+    expect(result.get('hi')).toBe('world');
+    const resultBlob = result.get('file');
+    expect(resultBlob instanceof Blob).toBe(true);
+    expect(resultBlob.name).toBe('blob'); // We should not pass through the file name for security.
+    expect(resultBlob.size).toBe(bytes.length * 2);
+    expect(await resultBlob.arrayBuffer()).toEqual(await blob.arrayBuffer());
+  });
 
   it('can pass an async import that resolves later to an outline object like a Map', async () => {
     let resolve;
@@ -543,6 +610,55 @@ describe('ReactFlightDOMEdge', () => {
     expect(await readPromise).toEqual({value: 'world', done: false});
 
     expect(await iterator.next()).toEqual({value: undefined, done: true});
+  });
+
+  // @gate enableFlightReadableStream
+  it('should ideally dedupe objects inside async iterables but does not yet', async () => {
+    const obj = {
+      this: {is: 'a large objected'},
+      with: {many: 'properties in it'},
+    };
+    const iterable = {
+      async *[Symbol.asyncIterator]() {
+        for (let i = 0; i < 30; i++) {
+          yield obj;
+        }
+      },
+    };
+
+    const stream = ReactServerDOMServer.renderToReadableStream({
+      iterable,
+    });
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const serializedContent = await readResult(stream1);
+    // TODO: Ideally streams should dedupe objects but because we never outline the objects
+    // they end up not having a row to reference them nor any of its nested objects.
+    // expect(serializedContent.length).toBeLessThan(400);
+    expect(serializedContent.length).toBeGreaterThan(400);
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    const items = [];
+    const iterator = result.iterable[Symbol.asyncIterator]();
+    let entry;
+    while (!(entry = await iterator.next()).done) {
+      items.push(entry.value);
+    }
+
+    // Should still match the result when parsed
+    expect(items.length).toBe(30);
+    // TODO: These should be the same
+    // expect(items[5]).toBe(items[10]); // two random items are the same instance
+    expect(items[5]).toEqual(items[10]);
   });
 
   it('warns if passing a this argument to bind() of a server reference', async () => {
@@ -691,5 +807,80 @@ describe('ReactFlightDOMEdge', () => {
         Array.from(new Uint8Array(c.buffer, c.byteOffset, c.byteLength)),
       ),
     );
+  });
+
+  it('supports async server component debug info as the element owner in DEV', async () => {
+    function Container({children}) {
+      return children;
+    }
+
+    const promise = Promise.resolve(true);
+    async function Greeting({firstName}) {
+      // We can't use JSX here because it'll use the Client React.
+      const child = ReactServer.createElement(
+        'span',
+        null,
+        'Hello, ' + firstName,
+      );
+      // Yield the synchronous pass
+      await promise;
+      // We should still be able to track owner using AsyncLocalStorage.
+      return ReactServer.createElement(Container, null, child);
+    }
+
+    const model = {
+      greeting: ReactServer.createElement(Greeting, {firstName: 'Seb'}),
+    };
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      model,
+      webpackMap,
+    );
+
+    const rootModel = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    const ssrStream = await ReactDOMServer.renderToReadableStream(
+      rootModel.greeting,
+    );
+    const result = await readResult(ssrStream);
+    expect(result).toEqual('<span>Hello, Seb</span>');
+
+    // Resolve the React Lazy wrapper which must have resolved by now.
+    const lazyWrapper = rootModel.greeting;
+    const greeting = lazyWrapper._init(lazyWrapper._payload);
+
+    // We've rendered down to the span.
+    expect(greeting.type).toBe('span');
+    if (__DEV__) {
+      const greetInfo = expect.objectContaining({
+        name: 'Greeting',
+        env: 'Server',
+        owner: null,
+      });
+      expect(lazyWrapper._debugInfo).toEqual([
+        greetInfo,
+        expect.objectContaining({
+          name: 'Container',
+          env: 'Server',
+          owner: greetInfo,
+        }),
+      ]);
+      // The owner that created the span was the outer server component.
+      // We expect the debug info to be referentially equal to the owner.
+      expect(greeting._owner).toBe(lazyWrapper._debugInfo[0]);
+    } else {
+      expect(lazyWrapper._debugInfo).toBe(undefined);
+      expect(greeting._owner).toBe(
+        gate(flags => flags.disableStringRefs) ? undefined : null,
+      );
+    }
   });
 });

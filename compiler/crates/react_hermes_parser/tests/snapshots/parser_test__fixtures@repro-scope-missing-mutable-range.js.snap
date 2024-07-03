@@ -1,0 +1,474 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/repro-scope-missing-mutable-range.js
+---
+Input:
+function HomeDiscoStoreItemTileRating(props) {
+  const item = useFragment();
+  let count = 0;
+  const aggregates = item?.aggregates || [];
+  aggregates.forEach((aggregate) => {
+    count += aggregate.count || 0;
+  });
+
+  return <Text>{count}</Text>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "HomeDiscoStoreItemTileRating",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          37
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            38,
+            43
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "item",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    55,
+                    59
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useFragment",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      62,
+                      73
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    62,
+                    75
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  55,
+                  75
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              49,
+              76
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "count",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    83,
+                    88
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 0.0,
+                  "loc": null,
+                  "range": [
+                    91,
+                    92
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  83,
+                  92
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              79,
+              93
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "aggregates",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    102,
+                    112
+                  ]
+                },
+                "init": {
+                  "type": "LogicalExpression",
+                  "operator": "||",
+                  "left": {
+                    "type": "OptionalMemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "item",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        115,
+                        119
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "aggregates",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        121,
+                        131
+                      ]
+                    },
+                    "computed": false,
+                    "optional": true,
+                    "loc": null,
+                    "range": [
+                      115,
+                      131
+                    ]
+                  },
+                  "right": {
+                    "type": "ArrayExpression",
+                    "elements": [],
+                    "loc": null,
+                    "range": [
+                      135,
+                      137
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    115,
+                    137
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  102,
+                  137
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              96,
+              138
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "aggregates",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    141,
+                    151
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "forEach",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    152,
+                    159
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  141,
+                  159
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [
+                    {
+                      "type": "Identifier",
+                      "name": "aggregate",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        161,
+                        170
+                      ]
+                    }
+                  ],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "AssignmentExpression",
+                          "operator": "+=",
+                          "left": {
+                            "type": "Identifier",
+                            "name": "count",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              181,
+                              186
+                            ]
+                          },
+                          "right": {
+                            "type": "LogicalExpression",
+                            "operator": "||",
+                            "left": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "aggregate",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  190,
+                                  199
+                                ]
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "count",
+                                "typeAnnotation": null,
+                                "loc": null,
+                                "range": [
+                                  200,
+                                  205
+                                ]
+                              },
+                              "computed": false,
+                              "loc": null,
+                              "range": [
+                                190,
+                                205
+                              ]
+                            },
+                            "right": {
+                              "type": "NumericLiteral",
+                              "value": 0.0,
+                              "loc": null,
+                              "range": [
+                                209,
+                                210
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              190,
+                              210
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            181,
+                            210
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          181,
+                          211
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      175,
+                      215
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    160,
+                    215
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    160,
+                    215
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                141,
+                216
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              141,
+              217
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Text",
+                  "loc": null,
+                  "range": [
+                    229,
+                    233
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  228,
+                  234
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "count",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      235,
+                      240
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    234,
+                    241
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Text",
+                  "loc": null,
+                  "range": [
+                    243,
+                    247
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  241,
+                  248
+                ]
+              },
+              "loc": null,
+              "range": [
+                228,
+                248
+              ]
+            },
+            "loc": null,
+            "range": [
+              221,
+              249
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          45,
+          251
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        251
+      ],
+      "loc": null,
+      "range": [
+        0,
+        251
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    251
+  ]
+}

@@ -319,7 +319,7 @@ describe('ReactElementClone', () => {
       await act(() => root.render(<Parent />));
       expect(child.refs.xyz.tagName).toBe('DIV');
     }).toErrorDev([
-      'Warning: Component "Child" contains the string ref "xyz". Support for ' +
+      'Component "Child" contains the string ref "xyz". Support for ' +
         'string refs will be removed in a future major release. We recommend ' +
         'using useRef() or createRef() instead. Learn more about using refs ' +
         'safely here: https://react.dev/link/strict-mode-string-ref',
@@ -364,18 +364,29 @@ describe('ReactElementClone', () => {
     expect(cloneInstance4.props.prop).toBe('newTestKey');
   });
 
-  it('warns for keys for arrays of elements in rest args', () => {
-    expect(() =>
-      React.cloneElement(<div />, null, [<div />, <div />]),
-    ).toErrorDev('Each child in a list should have a unique "key" prop.');
+  it('warns for keys for arrays of elements in rest args', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(React.cloneElement(<div />, null, [<div />, <div />]));
+      });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
-  it('does not warns for arrays of elements with keys', () => {
-    React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
+  it('does not warns for arrays of elements with keys', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(
+        React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]),
+      );
+    });
   });
 
-  it('does not warn when the element is directly in rest args', () => {
-    React.cloneElement(<div />, null, <div />, <div />);
+  it('does not warn when the element is directly in rest args', async () => {
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(React.cloneElement(<div />, null, <div />, <div />));
+    });
   });
 
   it('does not warn when the array contains a non-element', () => {

@@ -177,15 +177,20 @@ function readContext<T>(context: ReactContext<T>): T {
       );
     }
 
+    let value: T;
     // For now we don't expose readContext usage in the hooks debugging info.
-    const value = hasOwnProperty.call(currentContextDependency, 'memoizedValue')
-      ? // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
-        ((currentContextDependency.memoizedValue: any): T)
-      : // Before React 18, we did not have `memoizedValue` so we rely on `setupContexts` in those versions.
-        // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
-        ((currentContextDependency.context._currentValue: any): T);
-    // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
-    currentContextDependency = currentContextDependency.next;
+    if (hasOwnProperty.call(currentContextDependency, 'memoizedValue')) {
+      // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+      value = ((currentContextDependency.memoizedValue: any): T);
+
+      // $FlowFixMe[incompatible-use] Flow thinks `hasOwnProperty` mutates `currentContextDependency`
+      currentContextDependency = currentContextDependency.next;
+    } else {
+      // Before React 18, we did not have `memoizedValue` so we rely on `setupContexts` in those versions.
+      // Multiple reads of the same context were also only tracked as a single dependency.
+      // We just give up on advancing context dependencies and solely rely on `setupContexts`.
+      value = context._currentValue;
+    }
 
     return value;
   }
@@ -863,7 +868,12 @@ function findCommonAncestorIndex(rootStack: any, hookStack: any) {
 }
 
 function isReactWrapper(functionName: any, wrapperName: string) {
-  return parseHookName(functionName) === wrapperName;
+  const hookName = parseHookName(functionName);
+  if (wrapperName === 'HostTransitionStatus') {
+    return hookName === wrapperName || hookName === 'FormStatus';
+  }
+
+  return hookName === wrapperName;
 }
 
 function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
@@ -873,21 +883,24 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
     return -1;
   }
   for (let i = 0; i < primitiveStack.length && i < hookStack.length; i++) {
+    // Note: there is no guarantee that we will find the top-most primitive frame in the stack
+    // For React Native (uses Hermes), these source fields will be identical and skipped
     if (primitiveStack[i].source !== hookStack[i].source) {
-      // If the next frame is a method from the dispatcher, we
-      // assume that the next frame after that is the actual public API call.
-      // This prohibits nesting dispatcher calls in hooks.
+      // If the next two frames are functions called `useX` then we assume that they're part of the
+      // wrappers that the React package or other packages adds around the dispatcher.
       if (
         i < hookStack.length - 1 &&
         isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
       ) {
         i++;
-        // Guard against the dispatcher call being inlined.
-        // At this point we wouldn't be able to recover the actual React Hook name.
-        if (i < hookStack.length - 1) {
-          i++;
-        }
       }
+      if (
+        i < hookStack.length - 1 &&
+        isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
+      ) {
+        i++;
+      }
+
       return i;
     }
   }
@@ -1035,7 +1048,7 @@ function buildTree(
     const levelChild: HooksNode = {
       id,
       isStateEditable,
-      name: name,
+      name,
       value: hook.value,
       subHooks: [],
       debugInfo: debugInfo,

@@ -169,7 +169,7 @@ describe('ReactMount', () => {
     const rootNode = container.firstChild;
 
     expect(() => ReactDOM.render(<span />, rootNode)).toErrorDev(
-      'Warning: Replacing React-rendered children with a new ' +
+      'Replacing React-rendered children with a new ' +
         'root component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state and ' +
         'render the new components instead of calling ReactDOM.render.',
@@ -198,7 +198,7 @@ describe('ReactMount', () => {
     expect(ReactDOM).not.toEqual(ReactDOMOther);
 
     expect(() => ReactDOMOther.unmountComponentAtNode(container)).toErrorDev(
-      "Warning: unmountComponentAtNode(): The node you're attempting to unmount " +
+      "unmountComponentAtNode(): The node you're attempting to unmount " +
         'was rendered by another copy of React.',
       {withoutStack: true},
     );

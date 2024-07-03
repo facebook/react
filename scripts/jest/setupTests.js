@@ -206,44 +206,55 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   };
 
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
-  global._test_gate = (gateFn, testName, callback) => {
+  global._test_gate = (gateFn, testName, callback, timeoutMS) => {
     let shouldPass;
     try {
       const flags = getTestFlags();
       shouldPass = gateFn(flags);
     } catch (e) {
-      test(testName, () => {
-        throw e;
-      });
+      test(
+        testName,
+        () => {
+          throw e;
+        },
+        timeoutMS
+      );
       return;
     }
     if (shouldPass) {
-      test(testName, callback);
+      test(testName, callback, timeoutMS);
     } else {
       const error = new Error(gatedErrorMessage);
       Error.captureStackTrace(error, global._test_gate);
       test(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, error));
+        expectTestToFail(callback, error, timeoutMS));
     }
   };
-  global._test_gate_focus = (gateFn, testName, callback) => {
+  global._test_gate_focus = (gateFn, testName, callback, timeoutMS) => {
     let shouldPass;
     try {
       const flags = getTestFlags();
       shouldPass = gateFn(flags);
     } catch (e) {
-      test.only(testName, () => {
-        throw e;
-      });
+      test.only(
+        testName,
+        () => {
+          throw e;
+        },
+        timeoutMS
+      );
       return;
     }
     if (shouldPass) {
-      test.only(testName, callback);
+      test.only(testName, callback, timeoutMS);
     } else {
       const error = new Error(gatedErrorMessage);
       Error.captureStackTrace(error, global._test_gate_focus);
-      test.only(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, error));
+      test.only(
+        `[GATED, SHOULD FAIL] ${testName}`,
+        () => expectTestToFail(callback, error),
+        timeoutMS
+      );
     }
   };
 
@@ -281,9 +292,14 @@ function lazyRequireFunctionExports(moduleName) {
         // If this export is a function, return a wrapper function that lazily
         // requires the implementation from the current module cache.
         if (typeof originalModule[prop] === 'function') {
-          return function () {
+          const wrapper = function () {
             return jest.requireActual(moduleName)[prop].apply(this, arguments);
           };
+          // We use this to trick the filtering of Flight to exclude this frame.
+          Object.defineProperty(wrapper, 'name', {
+            value: '(<anonymous>)',
+          });
+          return wrapper;
         } else {
           return originalModule[prop];
         }

@@ -58,7 +58,7 @@ describe('memo', () => {
     }
     ReactNoop.render(<Outer />);
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: Function components cannot be given refs. Attempts to access ' +
+      'Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
   });
@@ -76,7 +76,7 @@ describe('memo', () => {
     }
     ReactNoop.render(<Outer />);
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: Function components cannot be given refs. Attempts to access ' +
+      'Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
   });
@@ -599,8 +599,10 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
-          '    in p (at **)',
+        'Each child in a list should have a unique "key" prop. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in ',
       );
     });
 
@@ -616,17 +618,20 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Inner (at **)\n' +
-          '    in p (at **)',
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in Inner (at **)' +
+          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
       );
     });
 
-    it('should use the inner displayName in the stack', async () => {
+    it('should use the inner name in the stack', async () => {
       const fn = (props, ref) => {
         return [<span />];
       };
-      fn.displayName = 'Inner';
+      Object.defineProperty(fn, 'name', {value: 'Inner'});
       const MemoComponent = React.memo(fn);
       ReactNoop.render(
         <p>
@@ -636,9 +641,12 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Inner (at **)\n' +
-          '    in p (at **)',
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in Inner (at **)' +
+          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
       );
     });
 
@@ -655,9 +663,12 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Outer (at **)\n' +
-          '    in p (at **)',
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Outer>. It was passed a child from Outer. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in Outer (at **)' +
+          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
       );
     });
 
@@ -665,7 +676,7 @@ describe('memo', () => {
       const fn = (props, ref) => {
         return [<span />];
       };
-      fn.displayName = 'Inner';
+      Object.defineProperty(fn, 'name', {value: 'Inner'});
       const MemoComponent = React.memo(fn);
       MemoComponent.displayName = 'Outer';
       ReactNoop.render(
@@ -676,9 +687,12 @@ describe('memo', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev(
-        'Each child in a list should have a unique "key" prop. See https://react.dev/link/warning-keys for more information.\n' +
-          '    in Inner (at **)\n' +
-          '    in p (at **)',
+        'Each child in a list should have a unique "key" prop.' +
+          '\n\nCheck the top-level render call using <Inner>. It was passed a child from Inner. ' +
+          'See https://react.dev/link/warning-keys for more information.\n' +
+          '    in span (at **)\n' +
+          '    in Inner (at **)' +
+          (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in p (at **)'),
       );
     });
   }
