@@ -30,6 +30,7 @@ import {
   createResponse,
   getRoot,
   reportGlobalError,
+  processStringChunk,
   processBinaryChunk,
   close,
 } from 'react-client/src/ReactFlightClient';
@@ -79,7 +80,11 @@ function createFromNodeStream<T>(
       : undefined,
   );
   stream.on('data', chunk => {
-    processBinaryChunk(response, chunk);
+    if (typeof chunk === 'string') {
+      processStringChunk(response, chunk);
+    } else {
+      processBinaryChunk(response, chunk);
+    }
   });
   stream.on('error', error => {
     reportGlobalError(response, error);
