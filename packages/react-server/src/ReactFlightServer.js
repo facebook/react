@@ -1121,22 +1121,7 @@ function callWithDebugContextInDEV<A, T>(
   setCurrentOwner(componentDebugInfo);
   try {
     if (enableOwnerStacks && debugTask) {
-      if (supportsRequestStorage) {
-        // Exit the request context while running callbacks.
-        return debugTask.run(
-          // $FlowFixMe[method-unbinding]
-          requestStorage.run.bind(
-            requestStorage,
-            undefined,
-            callback.bind(null, arg),
-          ),
-        );
-      }
       return debugTask.run(callback.bind(null, arg));
-    }
-    if (supportsRequestStorage) {
-      // Exit the request context while running callbacks.
-      return requestStorage.run(undefined, callback, arg);
     }
     return callback(arg);
   } finally {
@@ -2850,11 +2835,23 @@ function logPostpone(
   task: Task | null, // DEV-only
 ): void {
   const prevRequest = currentRequest;
+  // We clear the request context so that console.logs inside the callback doesn't
+  // get forwarded to the client.
   currentRequest = null;
   try {
     const onPostpone = request.onPostpone;
     if (__DEV__ && task !== null) {
-      callWithDebugContextInDEV(task, onPostpone, reason);
+      if (supportsRequestStorage) {
+        requestStorage.run(
+          undefined,
+          callWithDebugContextInDEV,
+          task,
+          onPostpone,
+          reason,
+        );
+      } else {
+        callWithDebugContextInDEV(task, onPostpone, reason);
+      }
     } else if (supportsRequestStorage) {
       // Exit the request context while running callbacks.
       requestStorage.run(undefined, onPostpone, reason);
@@ -2872,12 +2869,24 @@ function logRecoverableError(
   task: Task | null, // DEV-only
 ): string {
   const prevRequest = currentRequest;
+  // We clear the request context so that console.logs inside the callback doesn't
+  // get forwarded to the client.
   currentRequest = null;
   let errorDigest;
   try {
     const onError = request.onError;
     if (__DEV__ && task !== null) {
-      errorDigest = callWithDebugContextInDEV(task, onError, error);
+      if (supportsRequestStorage) {
+        errorDigest = requestStorage.run(
+          undefined,
+          callWithDebugContextInDEV,
+          task,
+          onError,
+          error,
+        );
+      } else {
+        errorDigest = callWithDebugContextInDEV(task, onError, error);
+      }
     } else if (supportsRequestStorage) {
       // Exit the request context while running callbacks.
       errorDigest = requestStorage.run(undefined, onError, error);
