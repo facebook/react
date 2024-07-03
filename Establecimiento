@@ -1,0 +1,63 @@
+Establecimiento de la configuración predeterminada para el examen de código a gran escala
+Puedes configurar rápidamente el code scanning para los repositorios de toda la organización usando la configuración predeterminada.
+
+¿Quién puede utilizar esta característica?
+Code scanning está disponible para todos los repositorios públicos en GitHub.com. Code scanning también está disponible para los repositorios privados que pertenecen a las organizaciones que usan GitHub Enterprise Cloud y que tienen una licencia de GitHub Advanced Security. Para obtener más información, vea «Acerca de GitHub Advanced Security».
+
+En este artículo
+About configuring default setup at scale
+Configuring default setup for all eligible repositories in an organization
+About configuring default setup at scale
+With default setup for code scanning, you can quickly secure code in repositories across your organization.
+
+You can use the organization settings page labeled "Code security and analysis" to enable code scanning for all repositories in your organization that are eligible for default setup. After enabling default setup, the code written in CodeQL-supported languages in repositories in the organization will be scanned:
+
+On each push to the repository's default branch, or any protected branch. For more information on protected branches, see "About protected branches."
+When creating or committing to a pull request based against the repository's default branch, or any protected branch, excluding pull requests from forks.
+On a weekly schedule.
+For more information, see "Configuring default setup for all eligible repositories in an organization."
+
+You can also create different default setup configurations for individual repositories. For more information on configuring default setup at the repository level, see "Configuring default setup for code scanning."
+
+For repositories that are not eligible for default setup, you can configure advanced setup at the repository level, or at the organization level using a script. For more information, see "Configuring advanced setup for code scanning with CodeQL at scale."
+
+
+Eligible repositories for CodeQL default setup at scale
+A repository must meet all the following criteria to be eligible for default setup, otherwise you need to use advanced setup.
+
+Code scanning is not already enabled.
+GitHub Actions are enabled.
+Publicly visible.
+We recommend enabling default setup for eligible repositories if there is any chance the repositories will include at least one CodeQL-supported language in the future. If you enable default setup on a repository that does not include any CodeQL-supported languages, default setup will not run any scans or use any GitHub Actions minutes. If CodeQL-supported languages are added to the repository, default setup will automatically begin scanning CodeQL-supported languages and using GitHub Actions minutes. For more information on CodeQL-supported languages, see "About code scanning with CodeQL."
+
+About adding languages to an existing default setup configuration
+If the code in a repository changes to include a CodeQL-supported language, GitHub will automatically update the code scanning configuration to include the new language. If code scanning fails with the new configuration, GitHub will resume the previous configuration automatically so the repository does not lose code scanning coverage.
+
+Configuring default setup for all eligible repositories in an organization
+Through the "Code security and analysis" page of your organization's settings, you can enable default setup for all eligible repositories in your organization. For more information on repository eligibility, see "Eligible repositories for CodeQL default setup at scale."
+
+In the upper-right corner of GitHub, select your profile photo, then click  Your organizations.
+
+Next to the organization, click Settings.
+
+In the "Security" section of the sidebar, click  Code security and analysis.
+
+Note
+
+If your organization is enrolled in the security configurations and global settings public beta, instead of "Code security and analysis", you will see a "Code security" dropdown menu. Select  Code security, then click Global settings. For next steps on enabling code scanning and other security features for all eligible repositories with security configurations, see "Applying the GitHub-recommended security configuration in your organization."
+
+Click Enable all next to "Code scanning".
+
+In the "Query suites" section of the "Enable code scanning default setup" dialog box displayed, select the query suite your configuration of default setup will run. For more information, see "CodeQL query suites."
+
+To enable your configuration of default setup, click Enable for eligible repositories.
+
+Optionally, to recommend the "Extended" query suite throughout your organization when enabling default setup, select "Recommend the extended query suite for repositories enabling default setup."
+
+Notes:
+
+If you disable CodeQL code scanning for all repositories this change is not reflected in the coverage information shown in security overview for the organization. The repositories will still appear to have code scanning enabled in the "Security Coverage" view.
+Enabling code scanning for all eligible repositories in an organization will not override existing code scanning configurations. For information on configuring default setup with different settings for specific repositories, see "Configuring default setup for code scanning."
+Enabling default setup for all eligible repositories in an organization includes eligible repositories without CodeQL-supported languages. If a CodeQL-supported language is later added to one of these repositories, default setup will begin scanning that repository and consuming GitHub Actions minutes.
+Extending CodeQL coverage in default setup
+Through the "Code security and analysis" page of your organization's settings, you can extend coverage in default setup using model packs for all eligible repositories in your organization. For more information, see "Editing your configuration of default setup."
