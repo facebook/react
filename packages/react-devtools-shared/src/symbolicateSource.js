@@ -89,7 +89,7 @@ export async function symbolicateSource(
             return null;
           }
           try {
-            // sourceMapURL=https://...
+            // sourceMapURL = https://react.dev/script.js.map
             void new URL(possiblyURL); // test if it is a valid URL
             const normalizedURL = normalizeUrl(possiblyURL);
 
@@ -97,9 +97,9 @@ export async function symbolicateSource(
           } catch (e) {
             // This is not valid URL
             if (
-              // sourceMapURL=/file
+              // sourceMapURL = /file
               possiblyURL.startsWith('/') ||
-              // sourceMapURL=C:\\...
+              // sourceMapURL = C:\\...
               possiblyURL.slice(1).startsWith(':\\\\')
             ) {
               // This is an absolute path
@@ -107,7 +107,7 @@ export async function symbolicateSource(
             }
 
             // This is a relative path
-            // sourceMapURL=x.js.map
+            // possiblyURL = x.js.map, sourceMapURL = https://react.dev/script.js.map
             const absoluteSourcePath = new URL(
               possiblyURL,
               sourceMapURL,
