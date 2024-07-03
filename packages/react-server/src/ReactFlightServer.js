@@ -426,6 +426,9 @@ type Task = {
   implicitSlot: boolean, // true if the root server component of this sequence had a null key
   thenableState: ThenableState | null,
   environmentName: string, // DEV-only. Used to track if the environment for this task changed.
+  debugOwner: null | ReactComponentInfo, // DEV-only
+  debugStack: null | string, // DEV-only
+  debugTask: null | ConsoleTask, // DEV-only
 };
 
 interface Reference {}
@@ -577,7 +580,16 @@ function RequestInstance(
         : environmentName;
     this.didWarnForKey = null;
   }
-  const rootTask = createTask(this, model, null, false, abortSet);
+  const rootTask = createTask(
+    this,
+    model,
+    null,
+    false,
+    abortSet,
+    null,
+    null,
+    null,
+  );
   pingedTasks.push(rootTask);
 }
 
@@ -624,6 +636,9 @@ function serializeThenable(
     task.keyPath, // the server component sequence continues through Promise-as-a-child.
     task.implicitSlot,
     request.abortableTasks,
+    __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+    __DEV__ && enableOwnerStacks ? task.debugStack : null,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
   if (__DEV__) {
     // If this came from Flight, forward any debug info into this new row.
@@ -753,6 +768,9 @@ function serializeReadableStream(
     task.keyPath,
     task.implicitSlot,
     request.abortableTasks,
+    __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+    __DEV__ && enableOwnerStacks ? task.debugStack : null,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
   request.abortableTasks.delete(streamTask);
 
@@ -849,6 +867,9 @@ function serializeAsyncIterable(
     task.keyPath,
     task.implicitSlot,
     request.abortableTasks,
+    __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+    __DEV__ && enableOwnerStacks ? task.debugStack : null,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
   request.abortableTasks.delete(streamTask);
 
@@ -1083,9 +1104,6 @@ function renderFunctionComponent<Props>(
   key: null | string,
   Component: (p: Props, arg: void) => any,
   props: Props,
-  owner: null | ReactComponentInfo, // DEV-only
-  stack: null | string, // DEV-only
-  debugTask: null | ConsoleTask, // DEV-only
   validated: number, // DEV-only
 ): ReactJSONValue {
   // Reset the task's thenable state before continuing, so that if a later
@@ -1117,11 +1135,11 @@ function renderFunctionComponent<Props>(
       componentDebugInfo = ({
         name: componentName,
         env: componentEnv,
-        owner: owner,
+        owner: task.debugOwner,
       }: ReactComponentInfo);
       if (enableOwnerStacks) {
         // $FlowFixMe[cannot-write]
-        componentDebugInfo.stack = stack;
+        componentDebugInfo.stack = task.debugStack;
       }
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
@@ -1138,7 +1156,7 @@ function renderFunctionComponent<Props>(
           key,
           validated,
           componentDebugInfo,
-          debugTask,
+          task.debugTask,
         );
       }
     }
@@ -1147,7 +1165,7 @@ function renderFunctionComponent<Props>(
       Component,
       props,
       componentDebugInfo,
-      debugTask,
+      task.debugTask,
     );
   } else {
     prepareToUseHooksForComponent(prevThenableState, null);
@@ -1489,8 +1507,6 @@ function renderClientElement(
   type: any,
   key: null | string,
   props: any,
-  owner: null | ReactComponentInfo, // DEV-only
-  stack: null | string, // DEV-only
   validated: number, // DEV-only
 ): ReactJSONValue {
   // We prepend the terminal client element that actually gets serialized with
@@ -1503,8 +1519,16 @@ function renderClientElement(
   }
   const element = __DEV__
     ? enableOwnerStacks
-      ? [REACT_ELEMENT_TYPE, type, key, props, owner, stack, validated]
-      : [REACT_ELEMENT_TYPE, type, key, props, owner]
+      ? [
+          REACT_ELEMENT_TYPE,
+          type,
+          key,
+          props,
+          task.debugOwner,
+          task.debugStack,
+          validated,
+        ]
+      : [REACT_ELEMENT_TYPE, type, key, props, task.debugOwner]
     : [REACT_ELEMENT_TYPE, type, key, props];
   if (task.implicitSlot && key !== null) {
     // The root Server Component had no key so it was in an implicit slot.
@@ -1531,6 +1555,9 @@ function outlineTask(request: Request, task: Task): ReactJSONValue {
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
     request.abortableTasks,
+    __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+    __DEV__ && enableOwnerStacks ? task.debugStack : null,
+    __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
 
   retryTask(request, newTask);
@@ -1551,9 +1578,6 @@ function renderElement(
   key: null | string,
   ref: mixed,
   props: any,
-  owner: null | ReactComponentInfo, // DEV only
-  stack: null | string, // DEV only
-  debugTask: null | ConsoleTask, // DEV only
   validated: number, // DEV only
 ): ReactJSONValue {
   if (ref !== null && ref !== undefined) {
@@ -1578,17 +1602,7 @@ function renderElement(
     !isOpaqueTemporaryReference(type)
   ) {
     // This is a Server Component.
-    return renderFunctionComponent(
-      request,
-      task,
-      key,
-      type,
-      props,
-      owner,
-      stack,
-      debugTask,
-      validated,
-    );
+    return renderFunctionComponent(request, task, key, type, props, validated);
   } else if (type === REACT_FRAGMENT_TYPE && key === null) {
     // For key-less fragments, we add a small optimization to avoid serializing
     // it as a wrapper.
@@ -1633,9 +1647,6 @@ function renderElement(
           key,
           ref,
           props,
-          owner,
-          stack,
-          debugTask,
           validated,
         );
       }
@@ -1646,9 +1657,6 @@ function renderElement(
           key,
           type.render,
           props,
-          owner,
-          stack,
-          debugTask,
           validated,
         );
       }
@@ -1660,9 +1668,6 @@ function renderElement(
           key,
           ref,
           props,
-          owner,
-          stack,
-          debugTask,
           validated,
         );
       }
@@ -1680,7 +1685,7 @@ function renderElement(
   // We don't know if the client will support it or not. This might error on the
   // client or error during serialization but the stack will point back to the
   // server.
-  return renderClientElement(task, type, key, props, owner, stack, validated);
+  return renderClientElement(task, type, key, props, validated);
 }
 
 function pingTask(request: Request, task: Task): void {
@@ -1698,6 +1703,9 @@ function createTask(
   keyPath: null | string,
   implicitSlot: boolean,
   abortSet: Set<Task>,
+  debugOwner: null | ReactComponentInfo, // DEV-only
+  debugStack: null | string, // DEV-only
+  debugTask: null | ConsoleTask, // DEV-only
 ): Task {
   request.pendingChunks++;
   const id = request.nextChunkId++;
@@ -1764,9 +1772,17 @@ function createTask(
       return renderModel(request, task, parent, parentPropertyName, value);
     },
     thenableState: null,
-  }: Omit<Task, 'environmentName'>): any);
+  }: Omit<
+    Task,
+    'environmentName' | 'debugOwner' | 'debugStack' | 'debugTask',
+  >): any);
   if (__DEV__) {
     task.environmentName = request.environmentName();
+    if (enableOwnerStacks) {
+      task.debugOwner = debugOwner;
+      task.debugStack = debugStack;
+      task.debugTask = debugTask;
+    }
   }
   abortSet.add(task);
   return task;
@@ -1897,6 +1913,9 @@ function outlineModel(request: Request, value: ReactClientValue): number {
     null, // The way we use outlining is for reusing an object.
     false, // It makes no sense for that use case to be contextual.
     request.abortableTasks,
+    null, // TODO: Currently we don't associate any debug information with
+    null, // this object on the server. If it ends up erroring, it won't
+    null, // have any context on the server but can on the client.
   );
   retryTask(request, newTask);
   return newTask.id;
@@ -1990,6 +2009,9 @@ function serializeBlob(request: Request, blob: Blob): string {
     null,
     false,
     request.abortableTasks,
+    null, // TODO: Currently we don't associate any debug information with
+    null, // this object on the server. If it ends up erroring, it won't
+    null, // have any context on the server but can on the client.
   );
 
   const reader = blob.stream().getReader();
@@ -2098,6 +2120,9 @@ function renderModel(
           task.keyPath,
           task.implicitSlot,
           request.abortableTasks,
+          __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+          __DEV__ && enableOwnerStacks ? task.debugStack : null,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
         );
         const ping = newTask.ping;
         (x: any).then(ping, ping);
@@ -2252,6 +2277,23 @@ function renderModelDestructive(
         }
 
         // Attempt to render the Server Component.
+
+        if (__DEV__) {
+          task.debugOwner = element._owner;
+          if (enableOwnerStacks) {
+            task.debugStack =
+              !element._debugStack || typeof element._debugStack === 'string'
+                ? element._debugStack
+                : filterDebugStack(element._debugStack);
+            task.debugTask = element._debugTask;
+          }
+          // TODO: Pop this. Since we currently don't have a point where we can pop the stack
+          // this debug information will be used for errors inside sibling properties that
+          // are not elements. Leading to the wrong attribution on the server. We could fix
+          // that if we switch to a proper stack instead of JSON.stringify's trampoline.
+          // Attribution on the client is still correct since it has a pop.
+        }
+
         const newChild = renderElement(
           request,
           task,
@@ -2260,13 +2302,6 @@ function renderModelDestructive(
           element.key,
           ref,
           props,
-          __DEV__ ? element._owner : null,
-          __DEV__ && enableOwnerStacks
-            ? !element._debugStack || typeof element._debugStack === 'string'
-              ? element._debugStack
-              : filterDebugStack(element._debugStack)
-            : null,
-          __DEV__ && enableOwnerStacks ? element._debugTask : null,
           __DEV__ && enableOwnerStacks ? element._store.validated : 0,
         );
         if (
