@@ -664,10 +664,10 @@ function serializeThenable(
         (x: any).$$typeof === REACT_POSTPONE_TYPE
       ) {
         const postponeInstance: Postpone = (x: any);
-        logPostpone(request, postponeInstance.message);
+        logPostpone(request, postponeInstance.message, newTask);
         emitPostponeChunk(request, newTask.id, postponeInstance);
       } else {
-        const digest = logRecoverableError(request, x);
+        const digest = logRecoverableError(request, x, null);
         emitErrorChunk(request, newTask.id, digest, x);
       }
       return newTask.id;
@@ -723,11 +723,11 @@ function serializeThenable(
         (reason: any).$$typeof === REACT_POSTPONE_TYPE
       ) {
         const postponeInstance: Postpone = (reason: any);
-        logPostpone(request, postponeInstance.message);
+        logPostpone(request, postponeInstance.message, newTask);
         emitPostponeChunk(request, newTask.id, postponeInstance);
       } else {
         newTask.status = ERRORED;
-        const digest = logRecoverableError(request, reason);
+        const digest = logRecoverableError(request, reason, newTask);
         emitErrorChunk(request, newTask.id, digest, reason);
       }
       request.abortableTasks.delete(newTask);
@@ -819,10 +819,10 @@ function serializeReadableStream(
       (reason: any).$$typeof === REACT_POSTPONE_TYPE
     ) {
       const postponeInstance: Postpone = (reason: any);
-      logPostpone(request, postponeInstance.message);
+      logPostpone(request, postponeInstance.message, streamTask);
       emitPostponeChunk(request, streamTask.id, postponeInstance);
     } else {
-      const digest = logRecoverableError(request, reason);
+      const digest = logRecoverableError(request, reason, streamTask);
       emitErrorChunk(request, streamTask.id, digest, reason);
     }
     enqueueFlush(request);
@@ -951,10 +951,10 @@ function serializeAsyncIterable(
       (reason: any).$$typeof === REACT_POSTPONE_TYPE
     ) {
       const postponeInstance: Postpone = (reason: any);
-      logPostpone(request, postponeInstance.message);
+      logPostpone(request, postponeInstance.message, streamTask);
       emitPostponeChunk(request, streamTask.id, postponeInstance);
     } else {
-      const digest = logRecoverableError(request, reason);
+      const digest = logRecoverableError(request, reason, streamTask);
       emitErrorChunk(request, streamTask.id, digest, reason);
     }
     enqueueFlush(request);
@@ -1096,6 +1096,52 @@ function callLazyInitInDEV(lazy: LazyComponent<any, any>): any {
   const payload = lazy._payload;
   const init = lazy._init;
   return init(payload);
+}
+
+function callWithDebugContextInDEV<A, T>(
+  task: Task,
+  callback: A => T,
+  arg: A,
+): T {
+  // We don't have a Server Component instance associated with this callback and
+  // the nearest context is likely a Client Component being serialized. We create
+  // a fake owner during this callback so we can get the stack trace from it.
+  // This also gets sent to the client as the owner for the replaying log.
+  const componentDebugInfo: ReactComponentInfo = {
+    env: task.environmentName,
+    owner: task.debugOwner,
+  };
+  if (enableOwnerStacks) {
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.stack = task.debugStack;
+  }
+  const debugTask = task.debugTask;
+  // We don't need the async component storage context here so we only set the
+  // synchronous tracking of owner.
+  setCurrentOwner(componentDebugInfo);
+  try {
+    if (enableOwnerStacks && debugTask) {
+      if (supportsRequestStorage) {
+        // Exit the request context while running callbacks.
+        return debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          requestStorage.run.bind(
+            requestStorage,
+            undefined,
+            callback.bind(null, arg),
+          ),
+        );
+      }
+      return debugTask.run(callback.bind(null, arg));
+    }
+    if (supportsRequestStorage) {
+      // Exit the request context while running callbacks.
+      return requestStorage.run(undefined, callback, arg);
+    }
+    return callback(arg);
+  } finally {
+    setCurrentOwner(null);
+  }
 }
 
 function renderFunctionComponent<Props>(
@@ -1240,10 +1286,12 @@ function renderFunctionComponent<Props>(
                 Object.prototype.toString.call(iterableChild) ===
                   '[object Generator]';
               if (!isGeneratorComponent) {
-                console.error(
-                  'Returning an Iterator from a Server Component is not supported ' +
-                    'since it cannot be looped over more than once. ',
-                );
+                callWithDebugContextInDEV(task, () => {
+                  console.error(
+                    'Returning an Iterator from a Server Component is not supported ' +
+                      'since it cannot be looped over more than once. ',
+                  );
+                });
               }
             }
           }
@@ -1277,10 +1325,12 @@ function renderFunctionComponent<Props>(
                 Object.prototype.toString.call(iterableChild) ===
                   '[object AsyncGenerator]';
               if (!isGeneratorComponent) {
-                console.error(
-                  'Returning an AsyncIterator from a Server Component is not supported ' +
-                    'since it cannot be looped over more than once. ',
-                );
+                callWithDebugContextInDEV(task, () => {
+                  console.error(
+                    'Returning an AsyncIterator from a Server Component is not supported ' +
+                      'since it cannot be looped over more than once. ',
+                  );
+                });
               }
             }
           }
@@ -1743,30 +1793,34 @@ function createTask(
           originalValue !== value &&
           !(originalValue instanceof Date)
         ) {
-          if (objectName(originalValue) !== 'Object') {
-            const jsxParentType = jsxChildrenParents.get(parent);
-            if (typeof jsxParentType === 'string') {
-              console.error(
-                '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
-                objectName(originalValue),
-                describeObjectForErrorMessage(parent, parentPropertyName),
-              );
+          // Call with the server component as the currently rendering component
+          // for context.
+          callWithDebugContextInDEV(task, () => {
+            if (objectName(originalValue) !== 'Object') {
+              const jsxParentType = jsxChildrenParents.get(parent);
+              if (typeof jsxParentType === 'string') {
+                console.error(
+                  '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
+                  objectName(originalValue),
+                  describeObjectForErrorMessage(parent, parentPropertyName),
+                );
+              } else {
+                console.error(
+                  'Only plain objects can be passed to Client Components from Server Components. ' +
+                    '%s objects are not supported.%s',
+                  objectName(originalValue),
+                  describeObjectForErrorMessage(parent, parentPropertyName),
+                );
+              }
             } else {
               console.error(
                 'Only plain objects can be passed to Client Components from Server Components. ' +
-                  '%s objects are not supported.%s',
-                objectName(originalValue),
+                  'Objects with toJSON methods are not supported. Convert it manually ' +
+                  'to a simple value before passing it to props.%s',
                 describeObjectForErrorMessage(parent, parentPropertyName),
               );
             }
-          } else {
-            console.error(
-              'Only plain objects can be passed to Client Components from Server Components. ' +
-                'Objects with toJSON methods are not supported. Convert it manually ' +
-                'to a simple value before passing it to props.%s',
-              describeObjectForErrorMessage(parent, parentPropertyName),
-            );
-          }
+          });
         }
       }
       return renderModel(request, task, parent, parentPropertyName, value);
@@ -1900,7 +1954,7 @@ function serializeClientReference(
   } catch (x) {
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
-    const digest = logRecoverableError(request, x);
+    const digest = logRecoverableError(request, x, null);
     emitErrorChunk(request, errorId, digest, x);
     return serializeByValueID(errorId);
   }
@@ -2041,7 +2095,7 @@ function serializeBlob(request: Request, blob: Blob): string {
     }
     aborted = true;
     request.abortListeners.delete(error);
-    const digest = logRecoverableError(request, reason);
+    const digest = logRecoverableError(request, reason, newTask);
     emitErrorChunk(request, newTask.id, digest, reason);
     request.abortableTasks.delete(newTask);
     enqueueFlush(request);
@@ -2143,7 +2197,7 @@ function renderModel(
         const postponeInstance: Postpone = (x: any);
         request.pendingChunks++;
         const postponeId = request.nextChunkId++;
-        logPostpone(request, postponeInstance.message);
+        logPostpone(request, postponeInstance.message, task);
         emitPostponeChunk(request, postponeId, postponeInstance);
 
         // Restore the context. We assume that this will be restored by the inner
@@ -2175,7 +2229,7 @@ function renderModel(
     // Something errored. We'll still send everything we have up until this point.
     request.pendingChunks++;
     const errorId = request.nextChunkId++;
-    const digest = logRecoverableError(request, x);
+    const digest = logRecoverableError(request, x, task);
     emitErrorChunk(request, errorId, digest, x);
     if (wasReactNode) {
       // We'll replace this element with a lazy reference that throws on the client
@@ -2608,27 +2662,33 @@ function renderModelDestructive(
       }
 
       if (objectName(value) !== 'Object') {
-        console.error(
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            '%s objects are not supported.%s',
-          objectName(value),
-          describeObjectForErrorMessage(parent, parentPropertyName),
-        );
+        callWithDebugContextInDEV(task, () => {
+          console.error(
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              '%s objects are not supported.%s',
+            objectName(value),
+            describeObjectForErrorMessage(parent, parentPropertyName),
+          );
+        });
       } else if (!isSimpleObject(value)) {
-        console.error(
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Classes or other objects with methods are not supported.%s',
-          describeObjectForErrorMessage(parent, parentPropertyName),
-        );
+        callWithDebugContextInDEV(task, () => {
+          console.error(
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              'Classes or other objects with methods are not supported.%s',
+            describeObjectForErrorMessage(parent, parentPropertyName),
+          );
+        });
       } else if (Object.getOwnPropertySymbols) {
         const symbols = Object.getOwnPropertySymbols(value);
         if (symbols.length > 0) {
-          console.error(
-            'Only plain objects can be passed to Client Components from Server Components. ' +
-              'Objects with symbol properties like %s are not supported.%s',
-            symbols[0].description,
-            describeObjectForErrorMessage(parent, parentPropertyName),
-          );
+          callWithDebugContextInDEV(task, () => {
+            console.error(
+              'Only plain objects can be passed to Client Components from Server Components. ' +
+                'Objects with symbol properties like %s are not supported.%s',
+              symbols[0].description,
+              describeObjectForErrorMessage(parent, parentPropertyName),
+            );
+          });
         }
       }
     }
@@ -2784,12 +2844,18 @@ function renderModelDestructive(
   );
 }
 
-function logPostpone(request: Request, reason: string): void {
+function logPostpone(
+  request: Request,
+  reason: string,
+  task: Task | null, // DEV-only
+): void {
   const prevRequest = currentRequest;
   currentRequest = null;
   try {
     const onPostpone = request.onPostpone;
-    if (supportsRequestStorage) {
+    if (__DEV__ && task !== null) {
+      callWithDebugContextInDEV(task, onPostpone, reason);
+    } else if (supportsRequestStorage) {
       // Exit the request context while running callbacks.
       requestStorage.run(undefined, onPostpone, reason);
     } else {
@@ -2800,13 +2866,19 @@ function logPostpone(request: Request, reason: string): void {
   }
 }
 
-function logRecoverableError(request: Request, error: mixed): string {
+function logRecoverableError(
+  request: Request,
+  error: mixed,
+  task: Task | null, // DEV-only
+): string {
   const prevRequest = currentRequest;
   currentRequest = null;
   let errorDigest;
   try {
     const onError = request.onError;
-    if (supportsRequestStorage) {
+    if (__DEV__ && task !== null) {
+      errorDigest = callWithDebugContextInDEV(task, onError, error);
+    } else if (supportsRequestStorage) {
       // Exit the request context while running callbacks.
       errorDigest = requestStorage.run(undefined, onError, error);
     } else {
@@ -3602,7 +3674,7 @@ function retryTask(request: Request, task: Task): void {
         request.abortableTasks.delete(task);
         task.status = ERRORED;
         const postponeInstance: Postpone = (x: any);
-        logPostpone(request, postponeInstance.message);
+        logPostpone(request, postponeInstance.message, task);
         emitPostponeChunk(request, task.id, postponeInstance);
         return;
       }
@@ -3619,7 +3691,7 @@ function retryTask(request: Request, task: Task): void {
 
     request.abortableTasks.delete(task);
     task.status = ERRORED;
-    const digest = logRecoverableError(request, x);
+    const digest = logRecoverableError(request, x, task);
     emitErrorChunk(request, task.id, digest, x);
   } finally {
     if (__DEV__) {
@@ -3664,7 +3736,7 @@ function performWork(request: Request): void {
       flushCompletedChunks(request, request.destination);
     }
   } catch (error) {
-    logRecoverableError(request, error);
+    logRecoverableError(request, error, null);
     fatalError(request, error);
   } finally {
     ReactSharedInternals.H = prevDispatcher;
@@ -3815,7 +3887,7 @@ export function startFlowing(request: Request, destination: Destination): void {
   try {
     flushCompletedChunks(request, destination);
   } catch (error) {
-    logRecoverableError(request, error);
+    logRecoverableError(request, error, null);
     fatalError(request, error);
   }
 }
@@ -3842,7 +3914,7 @@ export function abort(request: Request, reason: mixed): void {
         (reason: any).$$typeof === REACT_POSTPONE_TYPE
       ) {
         const postponeInstance: Postpone = (reason: any);
-        logPostpone(request, postponeInstance.message);
+        logPostpone(request, postponeInstance.message, null);
         emitPostponeChunk(request, errorId, postponeInstance);
       } else {
         const error =
@@ -3855,7 +3927,7 @@ export function abort(request: Request, reason: mixed): void {
               typeof reason.then === 'function'
             ? new Error('The render was aborted by the server with a promise.')
             : reason;
-        const digest = logRecoverableError(request, error);
+        const digest = logRecoverableError(request, error, null);
         emitErrorChunk(request, errorId, digest, error);
       }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
@@ -3893,7 +3965,7 @@ export function abort(request: Request, reason: mixed): void {
       flushCompletedChunks(request, request.destination);
     }
   } catch (error) {
-    logRecoverableError(request, error);
+    logRecoverableError(request, error, null);
     fatalError(request, error);
   }
 }
