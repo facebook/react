@@ -523,5 +523,7 @@
   "535": "renderToMarkup should not have emitted Server References. This is a bug in React.",
   "536": "Cannot pass ref in renderToMarkup because they will never be hydrated.",
   "537": "Cannot pass event handlers (%s) in renderToMarkup because the HTML will never be hydrated so they can never get called.",
-  "538": "Cannot use state or effect Hooks in renderToMarkup because this component will never be hydrated."
+  "538": "Cannot use state or effect Hooks in renderToMarkup because this component will never be hydrated.",
+  "539": "Binary RSC chunks cannot be encoded as strings. This is a bug in the wiring of the React streams.",
+  "540": "String chunks need to be passed in their original shape. Not split into smaller string chunks. This is a bug in the wiring of the React streams."
 }
