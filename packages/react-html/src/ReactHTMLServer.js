@@ -179,6 +179,7 @@ export function renderToMarkup(
       undefined,
       undefined,
       undefined,
+      false,
     );
     const resumableState = createResumableState(
       options ? options.identifierPrefix : undefined,

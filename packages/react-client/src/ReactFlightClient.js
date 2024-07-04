@@ -250,6 +250,7 @@ export type Response = {
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
+  _replayConsole: boolean, // DEV-only
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -1278,6 +1279,7 @@ function ResponseInstance(
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
+  replayConsole: boolean,
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   this._bundlerConfig = bundlerConfig;
@@ -1304,6 +1306,7 @@ function ResponseInstance(
   }
   if (__DEV__) {
     this._debugFindSourceMapURL = findSourceMapURL;
+    this._replayConsole = replayConsole;
   }
   // Don't inline this call because it causes closure to outline the call above.
   this._fromJSON = createFromJSONCallback(this);
@@ -1317,6 +1320,7 @@ export function createResponse(
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
+  replayConsole: boolean,
 ): Response {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new ResponseInstance(
@@ -1327,6 +1331,7 @@ export function createResponse(
     nonce,
     temporaryReferences,
     findSourceMapURL,
+    replayConsole,
   );
 }
 
@@ -2032,6 +2037,10 @@ function resolveConsoleEntry(
     throw new Error(
       'resolveConsoleEntry should never be called in production mode. This is a bug in React.',
     );
+  }
+
+  if (!response._replayConsole) {
+    return;
   }
 
   const payload: [string, string, null | ReactComponentInfo, string, mixed] =
