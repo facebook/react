@@ -1,0 +1,182 @@
+Administración de alertas de examen de código para el repositorio
+En la vista de seguridad, puedes ver, corregir o descartar alertas para posibles vulnerabilidades o errores en el código del proyecto.
+
+¿Quién puede utilizar esta característica?
+If you have write permission to a repository you can manage code scanning alerts for that repository.
+
+Code scanning está disponible para todos los repositorios públicos en GitHub.com. Code scanning también está disponible para los repositorios privados que pertenecen a las organizaciones que usan GitHub Enterprise Cloud y que tienen una licencia de GitHub Advanced Security. Para obtener más información, vea «Acerca de GitHub Advanced Security».
+
+En este artículo
+Visualizar las alertas de un repositorio
+Filtrar las alertas del code scanning
+Buscar las alertas del code scanning
+Rastrar alertas del code scanning en las propuestas
+Arreglar una alerta
+Descartar alertas
+Volver a abrir alertas descartadas
+Eliminación de configuraciones y alertas obsoletas de una rama
+Auditoría de las respuestas a las alertas de code scanning
+Información adicional
+Visualizar las alertas de un repositorio
+Cualquiera con permisos de escritura en un repositorio puede ver las anotaciones del code scanning en las solicitudes de cambios. Para obtener más información, vea «Clasificar las alertas del escaneo de código en las solicitudes de cambios».
+
+Necesita permiso de escritura para ver un resumen de todas las alertas de un repositorio en la pestaña Seguridad.
+
+De manera predeterminada, la página de alertas de code scanning se filtra para mostrar únicamente las de la rama predeterminada del repositorio.
+
+En GitHub.com, navega a la página principal del repositorio.
+
+En el nombre del repositorio, haz clic en  Seguridad. Si no puedes ver la pestaña "Seguridad", selecciona el menú desplegable  y, a continuación, haz clic en Seguridad.
+
+Captura de pantalla de un encabezado de repositorio en el que se muestran las pestañas. La pestaña "Seguridad" está resaltada con un contorno naranja oscuro.
+En la barra lateral izquierda, haz clic en  Code scanning.
+
+Opcionalmente, utiliza la caja de búsqueda de texto libre o los menús desplegables para filtrar las alertas. Por ejemplo, puedes filtrar por la herramienta que se utilizó para identificar las alertas.
+
+Captura de pantalla de la página de alertas de code scanning. El cuadro de búsqueda y los menús desplegables de filtro se destacan en naranja oscuro.
+Debajo de "Code scanning", haz clic en la alerta que quieras explorar para mostrar la página de alerta detallada. El estado y los detalles de la página de alertas solo reflejan el estado de la alerta en la rama predeterminada del repositorio, incluso si la alerta existe en otras ramas. Puede ver el estado de la alerta en ramas no predeterminadas en la sección Ramas afectadas del lado derecho de la página de alertas. Si una alerta no existe en la rama predeterminada, el estado de la alerta se mostrará como "en la solicitud de incorporación de cambios" o "en la rama", y tendrá un color gris.
+
+Opcionalmente, si la alerta resalta un problema con el flujo de datos, haga clic en Mostrar rutas para mostrar la ruta desde el origen de datos hacia el receptor en el que se usa.
+
+Captura de pantalla de una alerta de code scanning. El vínculo "Mostrar rutas de acceso" está resaltado con un contorno naranja oscuro. También se resalta el vínculo "Mostrar más", descrito en el paso siguiente.
+Las alertas del análisis de CodeQL incluyen una descripción del problema. Haga clic en Mostrar más para obtener instrucciones sobre cómo corregir el código.
+
+Para obtener más información, vea «Acerca de las alertas de análisis de código».
+
+Nota: Puedes ver información sobre cuándo se ejecutó por última vez el análisis de code scanning en la página de estado de la herramienta. Para obtener más información, vea «Acerca de la página de estado de la herramienta para el examen de código».
+
+Filtrar las alertas del code scanning
+Puedes filtrar las alertas que se muestran en la vista de alertas del code scanning. Esto es útil si hay muchas alertas, ya que puedes enfocarte en un tipo particular de estas. Hay algunos filtros predefinidos y rangos de palabras clave que puedes utilizar para refinar la lista de alertas que se muestran.
+
+Al seleccionar una palabra clave de una lista desplegable o al escribir una palabra clave en el campo de búsqueda, solo se muestran los valores con los resultados. Esto hace que sea más fácil evitar configurar filtros que no encuentran resultados.
+
+Captura de pantalla del campo de búsqueda en la vista de alertas de code scanning. El usuario ha escrito "branch:dependabot" en el campo. Los nombres de todas las ramas válidas con un nombre que incluye "dependabot" se muestran en un menú desplegable.
+
+Si escribe varios filtros, en la vista se mostrarán alertas que coincidan con todos ellos. Por ejemplo, is:closed severity:high branch:main solo mostrará alertas de gravedad alta cerradas que están presentes en la rama main. La excepción son los filtros relacionados con las referencias (ref, branch y pr): is:open branch:main branch:nextmostrará las alertas abiertas tanto de la rama main como de la rama next.
+
+Tenga en cuenta que si ha filtrado las alertas en una rama no predeterminada, pero las mismas alertas existen en la rama predeterminada, en la página de alertas de cualquier alerta se seguirá reflejando el estado de la alerta en la rama predeterminada, incluso si ese estado entra en conflicto con el de una rama no predeterminada. Por ejemplo, una alerta que aparece en la lista "Abrir" en el resumen de alertas para branch-x podría mostrar un estado de "Corregido" en la página de alertas, si ya se ha corregido en la rama predeterminada. Puede ver el estado de la alerta de la rama filtrada en la sección Ramas afectadas del lado derecho de la página de alertas.
+
+Puede usar el prefijo - en el filtro tag para excluir los resultados con esa etiqueta. Por ejemplo, -tag:style solo muestra alertas que no tienen la etiqueta style.
+
+Restringir los resultados únicamente al código de la aplicación
+Puede usar el filtro "Solo alertas en el código de la aplicación" o la palabra clave autofilter:true y el valor para restringir a las alertas en el código de aplicación. Para obtener más información sobre los tipos de código que se etiquetan automáticamente como código no de la aplicación, consulta "Acerca de las alertas de análisis de código".
+
+Buscar las alertas del code scanning
+Puedes buscar la lista de alertas. Esto es útil si hay una gran cantidad de alertas en tu repositorio o si no sabes el nombre exacto de una alerta, por ejemplo. GitHub realiza la búsqueda de texto gratuita a través de:
+
+Nombre de la alerta
+Los detalles de la alerta (esto también incluye la información que no se muestra en la vista de forma predeterminada en la sección que se puede contraer Mostrar más).
+Búsqueda compatible	Ejemplo de sintaxis	Results
+Búsqueda de palabra sencilla	injection	Devuelve todas las alertas que contienen la palabra injection
+Búsqueda de palabras múltiples	sql injection	Devuelve todas las alertas que contienen sql o injection
+Búsqueda de coincidencias exactas
+(use comillas dobles)	"sql injection"	Devuelve todas las alertas que contienen la frase exacta sql injection
+Búsqueda con OR	sql OR injection	Devuelve todas las alertas que contienen sql o injection
+Búsqueda con AND	sql AND injection	Devuelve todas las alertas que contienen las palabras sql y injection
+Sugerencias:
+
+La búsuqeda de palabras múltiples es equivalente auna búsqueda con OR.
+La búsqueda con AND devolverá resultados en los que los términos de la búsqueda se encuentren en cualquier parte, en cualquier orden en el nombre o los detalles de la alerta.
+En GitHub.com, navega a la página principal del repositorio.
+En el nombre del repositorio, haz clic en  Seguridad. Si no puedes ver la pestaña "Seguridad", selecciona el menú desplegable  y, a continuación, haz clic en Seguridad.
+Captura de pantalla de un encabezado de repositorio en el que se muestran las pestañas. La pestaña "Seguridad" está resaltada con un contorno naranja oscuro.
+En la barra lateral izquierda, haz clic en  Code scanning.
+A la derecha de los menús desplegables Filtros, escriba las palabras clave que se van a buscar en el cuadro de búsqueda de texto libre.
+Captura de pantalla del campo de búsqueda en la vista de alertas de code scanning. El campo incluye los filtros predefinidos "is: open branch:main". El texto libre de "sql o inyección" se destaca en naranja oscuro.
+Presione Entrar. El listado de alerta contendrá las alertas abiertas del code scanning que empaten con tus criterios de búsqueda.
+Rastrar alertas del code scanning en las propuestas
+Nota: El seguimiento de las alertas de code scanning se encuentra en beta y está sujeto a cambios.
+
+Esta característica es compatible con la ejecución nativa de análisis mediante GitHub Actions o de forma externa mediante la infraestructura de CI/CD existente, así como herramientas de code scanning de terceros, pero no herramientas de seguimiento de terceros.
+
+Para crear rápidamente un problema a fin de realizar un seguimiento del estado de una alerta específica de code scanning, en la página de alertas de code scanning, haz clic en la alerta de la que deseas realizar un seguimiento. En la página detallada de esa alerta, haz clic en Crear problema. Personaliza el problema generado automáticamente como desees y, a continuación, haz clic en Enviar nuevo problema.
+
+De forma alternativa, para rastrear una alerta de code scanning en un problema existente, agrega la URL para la alerta como un elemento de la lista de tareas en el problema. Para obtener más información sobre las listas de tareas, consulta "Acerca de las listas de tareas".
+
+Para más información sobre cómo crear incidencias para hacer un seguimiento de las alertas de code scanning, consulta "Rastrear alertas del escaneo de código en propuestas utilizando listas de tareas".
+
+Arreglar una alerta
+Cualquiera con permisos de escritura en un repositorio puede arreglar una alerta si confirma una corrección en el código. Si el repositorio tiene programado un code scanning para ejecutarse en las solicitudes de cambios, es mejor levantar una solicitud de cambios con tu corrección. Esto activará el análisis del code scanning en los cambios y probará que tu arreglo no introduciría ningún problema nuevo. Para obtener más información, vea «Personalización de la configuración avanzada para el examen de código» y «Clasificar las alertas del escaneo de código en las solicitudes de cambios».
+
+Si tiene permisos de escritura para un repositorio, puede ver las alertas corregidas si examina el resumen de las alertas y hace clic en Cerradas. Para más información, vea "Visualización de las alertas de un repositorio". La lista de "Cerrado" muestra las alertas arregladas y las que los usuarios han descartado.
+
+Puedes usar la búsqueda de texto libre o los filtros para mostrar un subconjunto de alertas y, después, marcar como cerradas todas las alertas que coincidan.
+
+Las alertas pueden arreglarse en una rama pero no en alguna otra. Puedes utilizar el filtro "Branch" en el resumen de las alertas para verificar si una alerta está fija en una rama particular.
+
+Captura de pantalla del campo de búsqueda en code scanning con el menú desplegable "Rama" expandido. El botón "Rama" se destaca en naranja oscuro.
+
+Tenga en cuenta que si ha filtrado las alertas en una rama no predeterminada, pero las mismas alertas existen en la rama predeterminada, en la página de alertas de cualquier alerta se seguirá reflejando el estado de la alerta en la rama predeterminada, incluso si ese estado entra en conflicto con el de una rama no predeterminada. Por ejemplo, una alerta que aparece en la lista "Abrir" en el resumen de alertas para branch-x podría mostrar un estado de "Corregido" en la página de alertas, si ya se ha corregido en la rama predeterminada. Puede ver el estado de la alerta de la rama filtrada en la sección Ramas afectadas del lado derecho de la página de alertas.
+
+Nota: Si ejecutas code scanning con varias configuraciones, a veces más de una configuración generará la misma alerta. A menos que ejecutes todas las configuraciones con regularidad, es posible que veas alertas que se han corregido en una configuración, pero no en otra. Estas configuraciones y alertas obsoletas se pueden quitar de una rama. Para más información, consulta "Eliminación de configuraciones y alertas obsoletas de una rama".
+
+Descartar alertas
+Hay dos formas de cerrar una alerta. Puedes arreglar el problema en el código, o puedes descartar la alerta.
+
+Descartar una alerta es una manera de cerrar una alerta que considere que no es necesario solucionar. Por ejemplo, un error en el código que se utiliza únicamente para hacer pruebas, o cuando el esfuerzo de areglar el error es mayor que el beneficio potencial de mejorar el código. Puede eliminar alertas desde las anotaciones de code scanning en el código, o bien desde la lista de resumen dentro de la pestaña Seguridad.
+
+Cuando descartas una alerta:
+
+Se descarta en todas las ramas.
+La alerta se elimina de la cantidad de alertas actuales para tu proyecto.
+La alerta se mueve a la lista de "Cerrado" en el resumen de alertas, desde donde puedes volver a abrirla en caso de que lo necesites.
+Se registra el motivo por el que cerraste la alerta.
+Opcionalmente, puedes comentar un descarte para registrar el contexto del descarte de una alerta.
+La siguiente vez que se ejecute el code scanning, este código no volverá a generar una alerta.
+Para descartar alertas:
+
+En GitHub.com, navega a la página principal del repositorio.
+
+En el nombre del repositorio, haz clic en  Seguridad. Si no puedes ver la pestaña "Seguridad", selecciona el menú desplegable  y, a continuación, haz clic en Seguridad.
+
+Captura de pantalla de un encabezado de repositorio en el que se muestran las pestañas. La pestaña "Seguridad" está resaltada con un contorno naranja oscuro.
+En la barra lateral izquierda, haz clic en  Code scanning.
+
+Si quieres descartar una alerta, es importante explorarla primero para que puedas elegir la razón correcta para descartarla. Da clic en la alerta que quisieras explorar.
+
+Revisa la alerta y, después, haz clic en Descartar alertar y elige un motivo para cerrar la alerta.
+
+Captura de pantalla del error de comprobación de una alerta de code scanning en una solicitud de cambios. El botón "Descartar alerta" del error de comprobación está resaltado en naranja oscuro. Se muestra la lista desplegable "Descartar alerta". 
+Es importante elegir la razón adecuada del menú desplegable, ya que esto puede afectar si la consulta continuará incluyéndose en los análisis futuros. Opcionalmente, puedes comentar un descarte para registrar el contexto del descarte de una alerta. El comentario de descarte se agrega a la escala de tiempo de la alerta y se puede usar como justificación durante el proceso de auditoría y creación de informes. Puedes recuperar o establecer un comentario mediante la API REST de examen de código. El comentario se incluye en dismissed_comment para el punto de conexión alerts/{alert_number}. Para obtener más información, vea «Puntos de conexión de la API de REST para el análisis de código».
+Si descartas una alerta de CodeQL como consecuencia de un resultado de falso positivo, por ejemplo, porque el código utiliza una biblioteca de sanitización que no es compatible, considera contribuir con el repositorio de CodeQL y mejorar el análisis. Para más información sobre CodeQL, vea "Contribución a CodeQL".
+
+Descartar varias alertas al mismo tiempo
+Si un proyecto tiene varias alertas que quieras descartar por la misma razón, puedes descartarlas por lote desde el resúmen de las alertas. Habitualmente quieres filtrar la lista y luego descartar todas las alertas coincidentes. Por ejemplo, puede que quieras descartar todas las alertas actuales del proyecto que se hayan etiquetado para una vulnerabilidad de Enumeración de Debilidades (CWE, por sus siglas en inglés) Común en particular.
+
+Volver a abrir alertas descartadas
+Si descartas una alerta, pero más adelante te das cuenta de que necesitas corregir la alerta, puedes volver a abrirla y corregir el problema con el código. Muestra la lista de alertas cerradas, busca la alerta, muéstrala y vuelve a abrirla. A continuación, puedes corregir la alerta de la misma manera que cualquier otra alerta.
+
+Eliminación de configuraciones y alertas obsoletas de una rama
+Es posible que tengas varias configuraciones de examen de código en un único repositorio. Cuando se ejecutan, varias configuraciones pueden generar la misma alerta. Además, si las configuraciones se ejecutan en diferentes programaciones, los estados de alerta pueden quedar obsoletos para configuraciones poco frecuentes u obsoletas. Para más información sobre las alertas de varias configuraciones, consulta "Acerca de las alertas de análisis de código".
+
+En GitHub.com, navega a la página principal del repositorio.
+
+En el nombre del repositorio, haz clic en  Seguridad. Si no puedes ver la pestaña "Seguridad", selecciona el menú desplegable  y, a continuación, haz clic en Seguridad.
+
+Captura de pantalla de un encabezado de repositorio en el que se muestran las pestañas. La pestaña "Seguridad" está resaltada con un contorno naranja oscuro.
+En la barra lateral izquierda, haz clic en  Code scanning.
+
+En "Code scanning", haz clic en una alerta de code scanning.
+
+En la sección "Ramas afectadas" de la barra lateral, haz clic en la rama deseada.
+
+En el cuadro de diálogo "Análisis de configuraciones", revisa los detalles de las configuraciones que han notificado esta alerta en la rama seleccionada. Para eliminar una configuración no deseada de la rama deseada, haz clic en .
+
+Si eliminas una configuración por error, haz clic en Cancelar para evitar aplicar los cambios.
+
+Captura de pantalla del cuadro modal "Análisis de configuraciones". El icono "Eliminar configuración" está resaltado en naranja oscuro.
+Una vez que hayas quitado las configuraciones no deseadas y hayas confirmado que se muestran las configuraciones esperadas, haz clic en Guardar cambios.
+
+Si guardas los cambios después de eliminar accidentalmente una configuración, vuelve a ejecutar la configuración para actualizar la alerta. Para más información sobre cómo volver a configuraciones en las que se usa GitHub Actions, consulta "Volver a ejecutar flujos de trabajo y jobs".
+
+Notas:
+
+Si quitas todas las configuraciones de code scanning para la rama predeterminada del repositorio, esta permanecerá en la barra lateral "Ramas afectadas", pero no la analizará ninguna configuración.
+Si quitas todas las configuraciones de code scanning de cualquier rama que no sea la predeterminada del repositorio, esa rama se quitará de la barra lateral "Ramas afectadas".
+Auditoría de las respuestas a las alertas de code scanning
+Puedes auditar las acciones realizadas en respuesta a las alertas de code scanning mediante las herramientas de GitHub. Para obtener más información, vea «Auditoría de alertas de seguridad».
+
+Información adicional
+"Clasificar las alertas del escaneo de código en las solicitudes de cambios"
+«Establecimiento de la configuración predeterminada para el examen del código»
+"Acerca de la integración con el escaneo de código"
