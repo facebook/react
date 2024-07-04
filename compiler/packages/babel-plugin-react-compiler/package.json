@@ -34,7 +34,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.18.6",
     "@babel/preset-react": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
-    "@babel/traverse": "^7.2.0",
+    "@babel/traverse": "^7.24.6",
     "@testing-library/react": "^13.4.0",
     "@tsconfig/node18-strictest": "^1.0.0",
     "@types/glob": "^8.1.0",

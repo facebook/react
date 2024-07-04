@@ -42,7 +42,7 @@
     "@babel/plugin-syntax-typescript": "^7.18.6",
     "@babel/plugin-transform-modules-commonjs": "^7.18.6",
     "@babel/preset-react": "^7.18.6",
-    "@babel/traverse": "^7.19.1",
+    "@babel/traverse": "^7.24.6",
     "@types/babel__code-frame": "^7.0.6",
     "@types/fbt": "^1.0.4",
     "@types/glob": "^8.1.0",
