@@ -97,6 +97,10 @@ import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
+import {getOwnerStackByComponentInfoInDev} from './flight/ReactFlightComponentStack';
+
+import {isWritingAppendedStack} from 'shared/consoleWithStackDev';
+
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -263,8 +267,9 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
       'name',
     );
     const wrapperMethod = function (this: typeof console) {
+      let args = arguments;
       const request = resolveRequest();
-      if (methodName === 'assert' && arguments[0]) {
+      if (methodName === 'assert' && args[0]) {
         // assert doesn't emit anything unless first argument is falsy so we can skip it.
       } else if (request !== null) {
         // Extract the stack. Not all console logs print the full stack but they have at
@@ -276,7 +281,22 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // refer to previous logs in debug info to associate them with a component.
         const id = request.nextChunkId++;
         const owner: null | ReactComponentInfo = resolveOwner();
-        emitConsoleChunk(request, id, methodName, owner, stack, arguments);
+        if (
+          isWritingAppendedStack &&
+          (methodName === 'error' || methodName === 'warn') &&
+          args.length > 1 &&
+          typeof args[0] === 'string' &&
+          args[0].endsWith('%s')
+        ) {
+          // This looks like we've appended the component stack to the error from our own logs.
+          // We don't want those added to the replayed logs since those have the opportunity to add
+          // their own stacks or use console.createTask on the client as needed.
+          // TODO: Remove this special case once we remove consoleWithStackDev.
+          // $FlowFixMe[method-unbinding]
+          args = Array.prototype.slice.call(args, 0, args.length - 1);
+          args[0] = args[0].slice(0, args[0].length - 2);
+        }
+        emitConsoleChunk(request, id, methodName, owner, stack, args);
       }
       // $FlowFixMe[prop-missing]
       return originalMethod.apply(this, arguments);
@@ -315,6 +335,21 @@ if (
   patchConsole(console, 'table');
   patchConsole(console, 'trace');
   patchConsole(console, 'warn');
+}
+
+function getCurrentStackInDEV(): string {
+  if (__DEV__) {
+    if (enableOwnerStacks) {
+      const owner: null | ReactComponentInfo = resolveOwner();
+      if (owner === null) {
+        return '';
+      }
+      return getOwnerStackByComponentInfoInDev(owner);
+    }
+    // We don't have Parent Stacks in Flight.
+    return '';
+  }
+  return '';
 }
 
 const ObjectPrototype = Object.prototype;
@@ -491,6 +526,12 @@ function RequestInstance(
     );
   }
   ReactSharedInternals.A = DefaultAsyncDispatcher;
+  if (__DEV__) {
+    // Unlike Fizz or Fiber, we don't reset this and just keep it on permanently.
+    // This lets it act more like the AsyncDispatcher so that we can get the
+    // stack asynchronously too.
+    ReactSharedInternals.getCurrentStack = getCurrentStackInDEV;
+  }
 
   const abortSet: Set<Task> = new Set();
   const pingedTasks: Array<Task> = [];

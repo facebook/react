@@ -81,6 +81,7 @@ let ErrorBoundary;
 let NoErrorExpected;
 let Scheduler;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -102,6 +103,7 @@ describe('ReactFlight', () => {
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -1441,9 +1443,7 @@ describe('ReactFlight', () => {
         <div>{Array(6).fill(<NoKey />)}</div>,
       );
       ReactNoopFlightClient.read(transport);
-    }).toErrorDev('Each child in a list should have a unique "key" prop.', {
-      withoutStack: gate(flags => flags.enableOwnerStacks),
-    });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('should warn in DEV a child is missing keys in client component', async () => {
@@ -2727,5 +2727,77 @@ describe('ReactFlight', () => {
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb</span>);
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can get the component owner stacks during rendering in dev', () => {
+    let stack;
+
+    function Foo() {
+      return ReactServer.createElement(Bar, null);
+    }
+    function Bar() {
+      return ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Baz, null),
+      );
+    }
+
+    function Baz() {
+      stack = ReactServer.captureOwnerStack();
+      return ReactServer.createElement('span', null, 'hi');
+    }
+    ReactNoopFlightServer.render(
+      ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Foo, null),
+      ),
+    );
+
+    expect(normalizeCodeLocInfo(stack)).toBe(
+      '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
+  });
+
+  // @gate (enableOwnerStacks && enableServerComponentLogs) || !__DEV__
+  it('should not include component stacks in replayed logs (unless DevTools add them)', () => {
+    function Foo() {
+      return 'hi';
+    }
+
+    function Bar() {
+      const array = [];
+      // Trigger key warning
+      array.push(ReactServer.createElement(Foo));
+      return ReactServer.createElement('div', null, array);
+    }
+
+    function App() {
+      return ReactServer.createElement(Bar);
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      ReactServer.createElement(App),
+    );
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.' +
+        ' See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Bar (at **)\n' +
+        '    in App (at **)',
+    ]);
+
+    // Replay logs on the client
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev(
+      [
+        'Each child in a list should have a unique "key" prop.' +
+          ' See https://react.dev/link/warning-keys for more information.',
+      ],
+      // We should not have a stack in the replay because that should be added either by console.createTask
+      // or React DevTools on the client. Neither of which we do here.
+      {withoutStack: true},
+    );
   });
 });
