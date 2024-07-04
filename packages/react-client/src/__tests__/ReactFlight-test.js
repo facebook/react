@@ -2761,10 +2761,61 @@ describe('ReactFlight', () => {
     );
   });
 
+  // @gate __DEV__ && enableOwnerStacks
+  it('can get the component owner stacks for onError in dev', async () => {
+    const thrownError = new Error('hi');
+    let caughtError;
+    let ownerStack;
+
+    function Foo() {
+      return ReactServer.createElement(Bar, null);
+    }
+    function Bar() {
+      return ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Baz, null),
+      );
+    }
+    function Baz() {
+      throw thrownError;
+    }
+
+    ReactNoopFlightServer.render(
+      ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Foo, null),
+      ),
+      {
+        onError(error, errorInfo) {
+          caughtError = error;
+          ownerStack = ReactServer.captureOwnerStack
+            ? ReactServer.captureOwnerStack()
+            : null;
+        },
+      },
+    );
+
+    expect(caughtError).toBe(thrownError);
+    expect(normalizeCodeLocInfo(ownerStack)).toBe(
+      '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
+  });
+
   // @gate (enableOwnerStacks && enableServerComponentLogs) || !__DEV__
   it('should not include component stacks in replayed logs (unless DevTools add them)', () => {
+    class MyError extends Error {
+      toJSON() {
+        return 123;
+      }
+    }
+
     function Foo() {
-      return 'hi';
+      return ReactServer.createElement('div', null, [
+        'Womp womp: ',
+        new MyError('spaghetti'),
+      ]);
     }
 
     function Bar() {
@@ -2781,9 +2832,16 @@ describe('ReactFlight', () => {
     const transport = ReactNoopFlightServer.render(
       ReactServer.createElement(App),
     );
+
     assertConsoleErrorDev([
       'Each child in a list should have a unique "key" prop.' +
         ' See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Bar (at **)\n' +
+        '    in App (at **)',
+      'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
+        '  <div>Womp womp: {Error}</div>\n' +
+        '                  ^^^^^^^\n' +
+        '    in Foo (at **)\n' +
         '    in Bar (at **)\n' +
         '    in App (at **)',
     ]);
@@ -2794,6 +2852,9 @@ describe('ReactFlight', () => {
       [
         'Each child in a list should have a unique "key" prop.' +
           ' See https://react.dev/link/warning-keys for more information.',
+        'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
+          '  <div>Womp womp: {Error}</div>\n' +
+          '                  ^^^^^^^',
       ],
       // We should not have a stack in the replay because that should be added either by console.createTask
       // or React DevTools on the client. Neither of which we do here.
