@@ -1213,7 +1213,8 @@
                   }
                   if (
                     "useState" === declaration ||
-                    "useReducer" === declaration
+                    "useReducer" === declaration ||
+                    "useActionState" === declaration
                   ) {
                     if (
                       "ArrayPattern" === def.type &&
