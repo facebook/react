@@ -2604,6 +2604,13 @@ function renderNodeDestructive(
   task.node = node;
   task.childIndex = childIndex;
 
+  retryNode(request, task);
+}
+
+function retryNode(request: Request, task: Task): void {
+  const node = task.node;
+  const childIndex = task.childIndex;
+
   if (node === null) {
     return;
   }
@@ -4196,7 +4203,7 @@ function retryRenderTask(
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
 
-    renderNodeDestructive(request, task, task.node, task.childIndex);
+    retryNode(request, task);
     pushSegmentFinale(
       segment.chunks,
       request.renderState,
@@ -4299,8 +4306,12 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
-
-    renderNodeDestructive(request, task, task.node, task.childIndex);
+    if (typeof task.replay.slots === 'number') {
+      const resumeSegmentID = task.replay.slots;
+      resumeNode(request, task, resumeSegmentID, task.node, task.childIndex);
+    } else {
+      retryNode(request, task);
+    }
 
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
