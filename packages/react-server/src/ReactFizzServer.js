@@ -2078,7 +2078,7 @@ function renderLazyComponent(
   stack: null | Error, // DEV only
 ): void {
   const previousComponentStack = task.componentStack;
-  // TODO: Do we really need this stack frame? We don't on the client.
+  // TODO: When we support Thenables as component types we should rename this.
   task.componentStack = createBuiltInComponentStack(task, 'Lazy', owner, stack);
   let Component;
   if (__DEV__) {
