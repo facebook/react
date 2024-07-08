@@ -369,8 +369,14 @@ __DEV__ &&
         } catch (x) {
           var match = x.stack.trim().match(/\n( *(at )?)/);
           prefix = (match && match[1]) || "";
+          suffix =
+            -1 < x.stack.indexOf("\n    at")
+              ? " (<anonymous>)"
+              : -1 < x.stack.indexOf("@")
+              ? "@unknown:0:0"
+              : "";
         }
-      return "\n" + prefix + name;
+      return "\n" + prefix + name + suffix;
     }
     function describeNativeComponentFrame(fn, construct) {
       if (!fn || reentry) return "";
@@ -584,7 +590,7 @@ __DEV__ &&
                 var JSCompiler_temp_const = info,
                   env = entry.env;
                 var JSCompiler_inline_result = describeBuiltInComponentFrame(
-                  entry.name + (env ? " (" + env + ")" : "")
+                  entry.name + (env ? " [" + env + "]" : "")
                 );
                 info = JSCompiler_temp_const + JSCompiler_inline_result;
               }
@@ -23294,6 +23300,7 @@ __DEV__ &&
       prevGroupEnd;
     disabledLog.__reactDisabledLog = !0;
     var prefix,
+      suffix,
       reentry = !1;
     var componentFrameCache = new (
       "function" === typeof WeakMap ? WeakMap : Map
@@ -26851,11 +26858,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-1b0132c05a-20240706" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-df783f9ea1-20240708" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-1b0132c05a-20240706\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-df783f9ea1-20240708\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26920,12 +26927,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-1b0132c05a-20240706"
+          reconcilerVersion: "19.0.0-www-modern-df783f9ea1-20240708"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-1b0132c05a-20240706",
+        version: "19.0.0-www-modern-df783f9ea1-20240708",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27687,5 +27694,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-1b0132c05a-20240706";
+    exports.version = "19.0.0-www-modern-df783f9ea1-20240708";
   })();

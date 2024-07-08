@@ -168,8 +168,14 @@ module.exports = function ($$$config) {
       } catch (x) {
         var match = x.stack.trim().match(/\n( *(at )?)/);
         prefix = (match && match[1]) || "";
+        suffix =
+          -1 < x.stack.indexOf("\n    at")
+            ? " (<anonymous>)"
+            : -1 < x.stack.indexOf("@")
+            ? "@unknown:0:0"
+            : "";
       }
-    return "\n" + prefix + name;
+    return "\n" + prefix + name + suffix;
   }
   function describeNativeComponentFrame(fn, construct) {
     if (!fn || reentry) return "";
@@ -11578,6 +11584,7 @@ module.exports = function ($$$config) {
     ReactSharedInternals =
       React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
     prefix,
+    suffix,
     reentry = !1,
     current = null,
     isArrayImpl = Array.isArray,
@@ -12698,7 +12705,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-1b0132c05a-20240706"
+      reconcilerVersion: "19.0.0-www-classic-df783f9ea1-20240708"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

@@ -117,7 +117,8 @@ function getIteratorFn(maybeIterable) {
 Symbol.for("react.client.reference");
 var ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  prefix;
+  prefix,
+  suffix;
 function describeBuiltInComponentFrame(name) {
   if (void 0 === prefix)
     try {
@@ -125,8 +126,14 @@ function describeBuiltInComponentFrame(name) {
     } catch (x) {
       var match = x.stack.trim().match(/\n( *(at )?)/);
       prefix = (match && match[1]) || "";
+      suffix =
+        -1 < x.stack.indexOf("\n    at")
+          ? " (<anonymous>)"
+          : -1 < x.stack.indexOf("@")
+          ? "@unknown:0:0"
+          : "";
     }
-  return "\n" + prefix + name;
+  return "\n" + prefix + name + suffix;
 }
 var reentry = !1;
 function describeNativeComponentFrame(fn, construct) {
@@ -10164,7 +10171,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-1b0132c05a-20240706",
+    version: "19.0.0-www-modern-df783f9ea1-20240708",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1372 = {
@@ -10195,7 +10202,7 @@ var internals$jscomp$inline_1372 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-1b0132c05a-20240706"
+  reconcilerVersion: "19.0.0-www-modern-df783f9ea1-20240708"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1373 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
