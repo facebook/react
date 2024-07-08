@@ -42,6 +42,7 @@ function escape(key: string): string {
     ':': '=2',
   };
   const escapedString = key.replace(escapeRegex, function (match) {
+    // $FlowFixMe[invalid-computed-prop]
     return escaperLookup[match];
   });
 

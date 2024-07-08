@@ -62,6 +62,7 @@ export default function getListener(
     // Work in progress.
     return null;
   }
+  // $FlowFixMe[invalid-computed-prop]
   const listener = props[registrationName];
   if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
     return null;

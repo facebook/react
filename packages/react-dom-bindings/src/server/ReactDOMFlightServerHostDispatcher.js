@@ -238,6 +238,7 @@ function trimOptions<
   let hasProperties = false;
   const trimmed: T = ({}: any);
   for (const key in options) {
+    // $FlowFixMe[invalid-computed-prop]
     if (options[key] != null) {
       hasProperties = true;
       (trimmed: any)[key] = options[key];
