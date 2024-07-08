@@ -275,30 +275,25 @@ export function patch({
                     if (alreadyHasComponentStack) {
                       // Only modify the component stack if it matches what we would've added anyway.
                       // Otherwise we assume it was a non-React stack.
-                      if (
+                      if (isStrictModeOverride(args)) {
+                        // We do nothing to Strict Mode overrides that already has a stack
+                        // because we have already lost some context for how to format it
+                        // since we've already merged the stack into the log at this point.
+                      } else if (
                         areStackTracesEqual(
                           args[args.length - 1],
                           componentStack,
                         )
                       ) {
-                        args[args.length - 1] = fakeError;
-                        if (isStrictModeOverride(args)) {
-                          if (__IS_FIREFOX__) {
-                            args[0] = `${args[0]} %o`;
-                          } else {
-                            args[0] =
-                              ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK;
-                          }
-                        } else {
-                          const firstArg = args[0];
-                          if (
-                            args.length > 1 &&
-                            typeof firstArg === 'string' &&
-                            firstArg.endsWith('%s')
-                          ) {
-                            args[0] = firstArg.slice(0, firstArg.length - 2); // Strip the %s param
-                          }
+                        const firstArg = args[0];
+                        if (
+                          args.length > 1 &&
+                          typeof firstArg === 'string' &&
+                          firstArg.endsWith('%s')
+                        ) {
+                          args[0] = firstArg.slice(0, firstArg.length - 2); // Strip the %s param
                         }
+                        args[args.length - 1] = fakeError;
                       }
                     } else {
                       args.push(fakeError);
