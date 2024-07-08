@@ -924,7 +924,7 @@ function pushServerComponentStack(
       let name = componentInfo.name;
       const env = componentInfo.env;
       if (env) {
-        name += ' (' + env + ')';
+        name += ' [' + env + ']';
       }
       task.componentStack = {
         tag: 3,
