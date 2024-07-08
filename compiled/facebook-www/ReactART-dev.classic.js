@@ -15517,6 +15517,7 @@ __DEV__ &&
     HooksDispatcherOnMountInDEV.useFormState = function (action, initialState) {
       currentHookNameInDev = "useFormState";
       mountHookTypesDev();
+      warnOnUseFormStateInDev();
       return mountActionState(action, initialState);
     };
     HooksDispatcherOnMountInDEV.useActionState = function (
@@ -16941,14 +16942,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-df783f9ea1-20240708"
+        reconcilerVersion: "19.0.0-www-classic-274c980c53-20240708"
       });
     })({
       findFiberByHostInstance: function () {
         return null;
       },
       bundleType: 1,
-      version: "19.0.0-www-classic-df783f9ea1-20240708",
+      version: "19.0.0-www-classic-274c980c53-20240708",
       rendererPackageName: "react-art"
     });
     var ClippingRectangle = TYPES.CLIPPING_RECTANGLE,

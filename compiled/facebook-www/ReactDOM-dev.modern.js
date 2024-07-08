@@ -24483,6 +24483,7 @@ __DEV__ &&
     HooksDispatcherOnMountInDEV.useFormState = function (action, initialState) {
       currentHookNameInDev = "useFormState";
       mountHookTypesDev();
+      warnOnUseFormStateInDev();
       return mountActionState(action, initialState);
     };
     HooksDispatcherOnMountInDEV.useActionState = function (
@@ -26524,11 +26525,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-df783f9ea1-20240708" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-274c980c53-20240708" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-df783f9ea1-20240708\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-274c980c53-20240708\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26593,12 +26594,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-df783f9ea1-20240708"
+          reconcilerVersion: "19.0.0-www-modern-274c980c53-20240708"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-df783f9ea1-20240708",
+        version: "19.0.0-www-modern-274c980c53-20240708",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27194,7 +27195,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-df783f9ea1-20240708";
+    exports.version = "19.0.0-www-modern-274c980c53-20240708";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
