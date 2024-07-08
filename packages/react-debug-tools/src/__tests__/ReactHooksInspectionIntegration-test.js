@@ -11,7 +11,6 @@
 'use strict';
 
 let React;
-let ReactDOM;
 let ReactTestRenderer;
 let ReactDebugTools;
 let act;
@@ -34,7 +33,6 @@ describe('ReactHooksInspectionIntegration', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    ReactDOM = require('react-dom');
     act = require('internal-test-utils').act;
     ReactDebugTools = require('react-debug-tools');
     useMemoCache = require('react/compiler-runtime').c;
@@ -2658,9 +2656,9 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   // @gate enableAsyncActions
-  it('should support useFormState hook', async () => {
+  it('should support useActionState hook', async () => {
     function Foo() {
-      const [value] = ReactDOM.useFormState(function increment(n) {
+      const [value] = React.useActionState(function increment(n) {
         return n;
       }, 0);
       React.useMemo(() => 'memo', []);
@@ -2689,7 +2687,7 @@ describe('ReactHooksInspectionIntegration', () => {
           },
           "id": 0,
           "isStateEditable": false,
-          "name": "FormState",
+          "name": "ActionState",
           "subHooks": [],
           "value": 0,
         },
