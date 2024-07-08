@@ -63,6 +63,15 @@ function isStrictModeOverride(args: Array<any>): boolean {
   }
 }
 
+// We add a suffix to some frames that older versions of React didn't do.
+// To compare if it's equivalent we strip out the suffix to see if they're
+// still equivalent. Similarly, we sometimes use [] and sometimes () so we
+// strip them to for the comparison.
+const frameDiffs = / \(\<anonymous\>\)$|\@unknown\:0\:0$|\(|\)|\[|\]/gm;
+function areStackTracesEqual(a: string, b: string): boolean {
+  return a.replace(frameDiffs, '') === b.replace(frameDiffs, '');
+}
+
 function restorePotentiallyModifiedArgs(args: Array<any>): Array<any> {
   // If the arguments don't have any styles applied, then just copy
   if (!isStrictModeOverride(args)) {
@@ -204,17 +213,11 @@ export function patch({
 
         // $FlowFixMe[missing-local-annot]
         const overrideMethod = (...args) => {
-          let shouldAppendWarningStack = false;
-          if (method !== 'log') {
-            if (consoleSettingsRef.appendComponentStack) {
-              const lastArg = args.length > 0 ? args[args.length - 1] : null;
-              const alreadyHasComponentStack =
-                typeof lastArg === 'string' && isStringComponentStack(lastArg);
-
-              // If we are ever called with a string that already has a component stack,
-              // e.g. a React error/warning, don't append a second stack.
-              shouldAppendWarningStack = !alreadyHasComponentStack;
-            }
+          let alreadyHasComponentStack = false;
+          if (method !== 'log' && consoleSettingsRef.appendComponentStack) {
+            const lastArg = args.length > 0 ? args[args.length - 1] : null;
+            alreadyHasComponentStack =
+              typeof lastArg === 'string' && isStringComponentStack(lastArg); // The last argument should be a component stack.
           }
 
           const shouldShowInlineWarningsAndErrors =
@@ -244,7 +247,7 @@ export function patch({
                 }
 
                 if (
-                  shouldAppendWarningStack &&
+                  consoleSettingsRef.appendComponentStack &&
                   !supportsNativeConsoleTasks(current)
                 ) {
                   const componentStack = getStackByFiberInDevAndProd(
@@ -253,17 +256,55 @@ export function patch({
                     (currentDispatcherRef: any),
                   );
                   if (componentStack !== '') {
-                    if (isStrictModeOverride(args)) {
-                      if (__IS_FIREFOX__) {
-                        args[0] = `${args[0]} %s`;
-                        args.push(componentStack);
-                      } else {
-                        args[0] =
-                          ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK;
-                        args.push(componentStack);
+                    // Create a fake Error so that when we print it we get native source maps. Every
+                    // browser will print the .stack property of the error and then parse it back for source
+                    // mapping. Rather than print the internal slot. So it doesn't matter that the internal
+                    // slot doesn't line up.
+                    const fakeError = new Error('');
+                    // In Chromium, only the stack property is printed but in Firefox the <name>:<message>
+                    // gets printed so to make the colon make sense, we name it so we print Component Stack:
+                    // and similarly Safari leave an expandable slot.
+                    fakeError.name = 'Component Stack'; // This gets printed
+                    // In Chromium, the stack property needs to start with ^[\w.]*Error\b to trigger stack
+                    // formatting. Otherwise it is left alone. So we prefix it. Otherwise we just override it
+                    // to our own stack.
+                    fakeError.stack =
+                      __IS_CHROME__ || __IS_EDGE__
+                        ? 'Error Component Stack:' + componentStack
+                        : componentStack;
+                    if (alreadyHasComponentStack) {
+                      // Only modify the component stack if it matches what we would've added anyway.
+                      // Otherwise we assume it was a non-React stack.
+                      if (isStrictModeOverride(args)) {
+                        // We do nothing to Strict Mode overrides that already has a stack
+                        // because we have already lost some context for how to format it
+                        // since we've already merged the stack into the log at this point.
+                      } else if (
+                        areStackTracesEqual(
+                          args[args.length - 1],
+                          componentStack,
+                        )
+                      ) {
+                        const firstArg = args[0];
+                        if (
+                          args.length > 1 &&
+                          typeof firstArg === 'string' &&
+                          firstArg.endsWith('%s')
+                        ) {
+                          args[0] = firstArg.slice(0, firstArg.length - 2); // Strip the %s param
+                        }
+                        args[args.length - 1] = fakeError;
                       }
                     } else {
-                      args.push(componentStack);
+                      args.push(fakeError);
+                      if (isStrictModeOverride(args)) {
+                        if (__IS_FIREFOX__) {
+                          args[0] = `${args[0]} %o`;
+                        } else {
+                          args[0] =
+                            ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK;
+                        }
+                      }
                     }
                   }
                 }
