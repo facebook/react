@@ -59,9 +59,10 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     // as still uninitialized and try again next time. Which is the same as what
     // happens if the ctor or any wrappers processing the ctor throws. This might
     // end up fixing it if the resolution was a concurrency bug.
+    let componentIsMounted = true;
     thenable.then(
       moduleObject => {
-        if (payload._status === Pending || payload._status === Uninitialized) {
+        if (componentIsMounted && (payload._status === Pending || payload._status === Uninitialized)) {
           // Transition to the next state.
           const resolved: ResolvedPayload<T> = (payload: any);
           resolved._status = Resolved;
@@ -69,7 +70,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
         }
       },
       error => {
-        if (payload._status === Pending || payload._status === Uninitialized) {
+        if (componentIsMounted && (payload._status === Pending || payload._status === Uninitialized)) {
           // Transition to the next state.
           const rejected: RejectedPayload = (payload: any);
           rejected._status = Rejected;
@@ -84,6 +85,10 @@ function lazyInitializer<T>(payload: Payload<T>): T {
       pending._status = Pending;
       pending._result = thenable;
     }
+    // Add a cleanup function to set componentIsMounted to false when the component unmounts
+    return () => {
+      componentIsMounted = false;
+    };
   }
   if (payload._status === Resolved) {
     const moduleObject = payload._result;
