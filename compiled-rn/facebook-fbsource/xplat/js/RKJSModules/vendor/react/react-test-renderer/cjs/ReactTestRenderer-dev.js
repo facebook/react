@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7755eee04e60a5a5be47a6764dd66aef>>
+ * @generated SignedSource<<b79bb3a4890e5e05b0b98d095f5ec6a9>>
  */
 
 "use strict";
@@ -357,8 +357,14 @@ __DEV__ &&
         } catch (x) {
           var match = x.stack.trim().match(/\n( *(at )?)/);
           prefix = (match && match[1]) || "";
+          suffix =
+            -1 < x.stack.indexOf("\n    at")
+              ? " (<anonymous>)"
+              : -1 < x.stack.indexOf("@")
+              ? "@unknown:0:0"
+              : "";
         }
-      return "\n" + prefix + name;
+      return "\n" + prefix + name + suffix;
     }
     function describeNativeComponentFrame(fn, construct) {
       if (!fn || reentry) return "";
@@ -572,7 +578,7 @@ __DEV__ &&
                 var JSCompiler_temp_const = info,
                   env = entry.env;
                 var JSCompiler_inline_result = describeBuiltInComponentFrame(
-                  entry.name + (env ? " (" + env + ")" : "")
+                  entry.name + (env ? " [" + env + "]" : "")
                 );
                 info = JSCompiler_temp_const + JSCompiler_inline_result;
               }
@@ -13149,6 +13155,7 @@ __DEV__ &&
       prevGroupEnd;
     disabledLog.__reactDisabledLog = !0;
     var prefix,
+      suffix,
       reentry = !1;
     var componentFrameCache = new (
       "function" === typeof WeakMap ? WeakMap : Map
@@ -15072,14 +15079,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-58af67a8f8-20240628"
+        reconcilerVersion: "19.0.0-native-fb-df783f9ea1-20240708"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-58af67a8f8-20240628",
+      version: "19.0.0-native-fb-df783f9ea1-20240708",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

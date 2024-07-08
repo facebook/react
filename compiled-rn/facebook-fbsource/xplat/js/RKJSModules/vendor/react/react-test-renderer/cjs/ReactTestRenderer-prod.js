@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a230f61eab876a1bf3f5a22ff087160a>>
+ * @generated SignedSource<<9dcd7685e1640c17fbdf82a52a452035>>
  */
 
 "use strict";
@@ -167,7 +167,8 @@ function getComponentNameFromFiber(fiber) {
 }
 var ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
-  prefix;
+  prefix,
+  suffix;
 function describeBuiltInComponentFrame(name) {
   if (void 0 === prefix)
     try {
@@ -175,8 +176,14 @@ function describeBuiltInComponentFrame(name) {
     } catch (x) {
       var match = x.stack.trim().match(/\n( *(at )?)/);
       prefix = (match && match[1]) || "";
+      suffix =
+        -1 < x.stack.indexOf("\n    at")
+          ? " (<anonymous>)"
+          : -1 < x.stack.indexOf("@")
+          ? "@unknown:0:0"
+          : "";
     }
-  return "\n" + prefix + name;
+  return "\n" + prefix + name + suffix;
 }
 var reentry = !1;
 function describeNativeComponentFrame(fn, construct) {
@@ -9377,7 +9384,7 @@ var devToolsConfig$jscomp$inline_1053 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-58af67a8f8-20240628",
+  version: "19.0.0-native-fb-df783f9ea1-20240708",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1240 = {
@@ -9408,7 +9415,7 @@ var internals$jscomp$inline_1240 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-58af67a8f8-20240628"
+  reconcilerVersion: "19.0.0-native-fb-df783f9ea1-20240708"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1241 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
