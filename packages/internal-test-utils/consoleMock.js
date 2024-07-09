@@ -228,7 +228,7 @@ export function assertConsoleLogsCleared() {
   }
 }
 
-function replaceComponentStack(str) {
+function normalizeCodeLocInfo(str) {
   if (typeof str !== 'string') {
     return str;
   }
@@ -239,8 +239,13 @@ function replaceComponentStack(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*.*/, function (m, name) {
-    return chalk.dim(' <component stack>');
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+    if (name.endsWith('.render')) {
+      // Class components will have the `render` method as part of their stack trace.
+      // We strip that out in our normalization to make it look more like component stacks.
+      name = name.slice(0, name.length - 7);
+    }
+    return '\n    in ' + name + ' (at **)';
   });
 }
 
@@ -382,11 +387,11 @@ export function createLogAssertion(
             );
           }
 
-          expectedMessage = replaceComponentStack(currentExpectedMessage);
+          expectedMessage = normalizeCodeLocInfo(currentExpectedMessage);
           expectedWithoutStack = expectedMessageOrArray[1].withoutStack;
         } else if (typeof expectedMessageOrArray === 'string') {
           // Should be in the form assert(['log']) or assert(['log'], {withoutStack: true})
-          expectedMessage = replaceComponentStack(expectedMessageOrArray);
+          expectedMessage = normalizeCodeLocInfo(expectedMessageOrArray);
           if (consoleMethod === 'log') {
             expectedWithoutStack = true;
           } else {
@@ -410,7 +415,7 @@ export function createLogAssertion(
           );
         }
 
-        const normalizedMessage = replaceComponentStack(message);
+        const normalizedMessage = normalizeCodeLocInfo(message);
         receivedLogs.push(normalizedMessage);
 
         // Check the number of %s interpolations.

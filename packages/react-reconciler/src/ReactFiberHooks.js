@@ -3994,6 +3994,7 @@ if (__DEV__) {
       ): [Awaited<S>, (P) => void, boolean] {
         currentHookNameInDev = 'useFormState';
         mountHookTypesDev();
+        warnOnUseFormStateInDev();
         return mountActionState(action, initialState, permalink);
       };
     (HooksDispatcherOnMountInDEV: Dispatcher).useActionState =

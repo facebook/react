@@ -28,6 +28,8 @@ export function describeFiber(
   currentDispatcherRef: CurrentDispatcherRef,
 ): string {
   const {
+    HostHoistable,
+    HostSingleton,
     HostComponent,
     LazyComponent,
     SuspenseComponent,
@@ -40,6 +42,8 @@ export function describeFiber(
   } = workTagMap;
 
   switch (workInProgress.tag) {
+    case HostHoistable:
+    case HostSingleton:
     case HostComponent:
       return describeBuiltInComponentFrame(workInProgress.type);
     case LazyComponent:

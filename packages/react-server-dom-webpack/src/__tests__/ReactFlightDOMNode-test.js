@@ -27,6 +27,11 @@ let use;
 let ReactServerScheduler;
 let reactServerAct;
 
+// We test pass-through without encoding strings but it should work without it too.
+const streamOptions = {
+  objectMode: true,
+};
+
 describe('ReactFlightDOMNode', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -76,7 +81,7 @@ describe('ReactFlightDOMNode', () => {
   function readResult(stream) {
     return new Promise((resolve, reject) => {
       let buffer = '';
-      const writable = new Stream.PassThrough();
+      const writable = new Stream.PassThrough(streamOptions);
       writable.setEncoding('utf8');
       writable.on('data', chunk => {
         buffer += chunk;
@@ -128,7 +133,7 @@ describe('ReactFlightDOMNode', () => {
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
-    const readable = new Stream.PassThrough();
+    const readable = new Stream.PassThrough(streamOptions);
     let response;
 
     stream.pipe(readable);
@@ -160,7 +165,7 @@ describe('ReactFlightDOMNode', () => {
       }),
     );
 
-    const readable = new Stream.PassThrough();
+    const readable = new Stream.PassThrough(streamOptions);
 
     const stringResult = readResult(readable);
     const parsedResult = ReactServerDOMClient.createFromNodeStream(readable, {
@@ -206,7 +211,7 @@ describe('ReactFlightDOMNode', () => {
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToPipeableStream(buffers),
     );
-    const readable = new Stream.PassThrough();
+    const readable = new Stream.PassThrough(streamOptions);
     const promise = ReactServerDOMClient.createFromNodeStream(readable, {
       moduleMap: {},
       moduleLoading: webpackModuleLoading,
@@ -253,7 +258,7 @@ describe('ReactFlightDOMNode', () => {
     const stream = await serverAct(() =>
       ReactServerDOMServer.renderToPipeableStream(<App />, webpackMap),
     );
-    const readable = new Stream.PassThrough();
+    const readable = new Stream.PassThrough(streamOptions);
     let response;
 
     stream.pipe(readable);
@@ -304,7 +309,7 @@ describe('ReactFlightDOMNode', () => {
       ),
     );
 
-    const writable = new Stream.PassThrough();
+    const writable = new Stream.PassThrough(streamOptions);
     rscStream.pipe(writable);
 
     controller.enqueue('hi');
@@ -349,7 +354,7 @@ describe('ReactFlightDOMNode', () => {
       ),
     );
 
-    const readable = new Stream.PassThrough();
+    const readable = new Stream.PassThrough(streamOptions);
     rscStream.pipe(readable);
 
     const result = await ReactServerDOMClient.createFromNodeStream(readable, {
