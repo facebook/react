@@ -1638,6 +1638,7 @@ function renderClassComponent(
 }
 
 const didWarnAboutBadClass: {[string]: boolean} = {};
+const didWarnAboutContextTypes: {[string]: boolean} = {};
 const didWarnAboutContextTypeOnFunctionComponent: {[string]: boolean} = {};
 const didWarnAboutGetDerivedStateOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutReassigningProps = false;
@@ -1689,11 +1690,15 @@ function renderFunctionComponent(
 
   if (__DEV__) {
     if (disableLegacyContext && Component.contextTypes) {
-      console.error(
-        '%s uses the legacy contextTypes API which was removed in React 19. ' +
-          'Use React.createContext() with React.useContext() instead.',
-        getComponentNameFromType(Component) || 'Unknown',
-      );
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
+      if (!didWarnAboutContextTypes[componentName]) {
+        didWarnAboutContextTypes[componentName] = true;
+        console.error(
+          '%s uses the legacy contextTypes API which was removed in React 19. ' +
+            'Use React.createContext() with React.useContext() instead.',
+          componentName,
+        );
+      }
     }
   }
   if (__DEV__) {
@@ -1771,14 +1776,12 @@ function finishFunctionComponent(
 
 function validateFunctionComponentInDev(Component: any): void {
   if (__DEV__) {
-    if (Component) {
-      if (Component.childContextTypes) {
-        console.error(
-          'childContextTypes cannot be defined on a function component.\n' +
-            '  %s.childContextTypes = ...',
-          Component.displayName || Component.name || 'Component',
-        );
-      }
+    if (Component && Component.childContextTypes) {
+      console.error(
+        'childContextTypes cannot be defined on a function component.\n' +
+          '  %s.childContextTypes = ...',
+        Component.displayName || Component.name || 'Component',
+      );
     }
 
     if (
