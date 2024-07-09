@@ -4,6 +4,17 @@
 
 ---
 
+### 5.3.1
+July 3, 2024
+
+* chore[react-devtools/renderer]: dont show strict mode warning for prod renderer builds ([hoxyq](https://github.com/hoxyq) in [#30158](https://github.com/facebook/react/pull/30158))
+* chore[react-devtools/ui]: fix strict mode badge styles ([hoxyq](https://github.com/hoxyq) in [#30159](https://github.com/facebook/react/pull/30159))
+* fix[react-devtools]: restore original args when recording errors ([hoxyq](https://github.com/hoxyq) in [#30091](https://github.com/facebook/react/pull/30091))
+* Read constructor name more carefully ([LoganDark](https://github.com/LoganDark) in [#29954](https://github.com/facebook/react/pull/29954))
+* refactor[react-devtools/extensions]: dont debounce cleanup logic on navigation ([hoxyq](https://github.com/hoxyq) in [#30027](https://github.com/facebook/react/pull/30027))
+
+---
+
 ### 5.3.0
 June 17, 2024
 

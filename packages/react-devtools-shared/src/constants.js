@@ -62,4 +62,4 @@ export const PROFILER_EXPORT_VERSION = 5;
 export const FIREFOX_CONSOLE_DIMMING_COLOR = 'color: rgba(124, 124, 124, 0.75)';
 export const ANSI_STYLE_DIMMING_TEMPLATE = '\x1b[2;38;2;124;124;124m%s\x1b[0m';
 export const ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK =
-  '\x1b[2;38;2;124;124;124m%s %s\x1b[0m';
+  '\x1b[2;38;2;124;124;124m%s %o\x1b[0m';

@@ -7,26 +7,22 @@
  * @flow
  */
 
-// TODO: The legacy one should not use binary.
+export type StringDecoder = null;
 
-export type StringDecoder = TextDecoder;
-
-export function createStringDecoder(): StringDecoder {
-  return new TextDecoder();
+export function createStringDecoder(): null {
+  return null;
 }
-
-const decoderOptions = {stream: true};
 
 export function readPartialStringChunk(
   decoder: StringDecoder,
   buffer: Uint8Array,
 ): string {
-  return decoder.decode(buffer, decoderOptions);
+  throw new Error('Not implemented.');
 }
 
 export function readFinalStringChunk(
   decoder: StringDecoder,
   buffer: Uint8Array,
 ): string {
-  return decoder.decode(buffer);
+  throw new Error('Not implemented.');
 }

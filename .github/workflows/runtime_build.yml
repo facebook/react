@@ -63,6 +63,7 @@ jobs:
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
+          NODE_INDEX: ${{ matrix.worker_id }}
       - name: Display structure of build
         run: ls -R build
       - name: Archive build

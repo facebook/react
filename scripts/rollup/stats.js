@@ -18,7 +18,7 @@ const currentBuildResults = {
 };
 
 function saveResults() {
-  if (process.env.CIRCLE_NODE_TOTAL || process.env.CI === 'github') {
+  if (process.env.CIRCLE_NODE_TOTAL) {
     // In CI, write the bundle sizes to a subdirectory and append the node index
     // to the filename. A downstream job will consolidate these into a
     // single file.
@@ -26,6 +26,12 @@ function saveResults() {
     mkdirp.sync('build/sizes');
     fs.writeFileSync(
       join('build', 'sizes', `bundle-sizes-${nodeIndex}.json`),
+      JSON.stringify(currentBuildResults, null, 2)
+    );
+  } else if (process.env.CI === 'github') {
+    mkdirp.sync('build/sizes');
+    fs.writeFileSync(
+      join('build', 'sizes', `bundle-sizes-${process.env.NODE_INDEX}.json`),
       JSON.stringify(currentBuildResults, null, 2)
     );
   } else {

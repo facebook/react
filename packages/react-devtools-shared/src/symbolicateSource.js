@@ -39,7 +39,7 @@ export async function symbolicateSourceWithCache(
 }
 
 const SOURCE_MAP_ANNOTATION_PREFIX = 'sourceMappingURL=';
-async function symbolicateSource(
+export async function symbolicateSource(
   fetchFileWithCaching: FetchFileWithCaching,
   sourceURL: string,
   lineNumber: number, // 1-based
@@ -63,11 +63,12 @@ async function symbolicateSource(
       const sourceMapAnnotationStartIndex = resourceLine.indexOf(
         SOURCE_MAP_ANNOTATION_PREFIX,
       );
-      const sourceMapURL = resourceLine.slice(
+      const sourceMapAt = resourceLine.slice(
         sourceMapAnnotationStartIndex + SOURCE_MAP_ANNOTATION_PREFIX.length,
         resourceLine.length,
       );
 
+      const sourceMapURL = new URL(sourceMapAt, sourceURL).toString();
       const sourceMap = await fetchFileWithCaching(sourceMapURL).catch(
         () => null,
       );
@@ -84,29 +85,33 @@ async function symbolicateSource(
             columnNumber, // 1-based
           });
 
+          if (possiblyURL === null) {
+            return null;
+          }
           try {
-            void new URL(possiblyURL); // This is a valid URL
+            // sourceMapURL = https://react.dev/script.js.map
+            void new URL(possiblyURL); // test if it is a valid URL
             const normalizedURL = normalizeUrl(possiblyURL);
 
             return {sourceURL: normalizedURL, line, column};
           } catch (e) {
             // This is not valid URL
-            if (possiblyURL.startsWith('/')) {
+            if (
+              // sourceMapURL = /file
+              possiblyURL.startsWith('/') ||
+              // sourceMapURL = C:\\...
+              possiblyURL.slice(1).startsWith(':\\\\')
+            ) {
               // This is an absolute path
               return {sourceURL: possiblyURL, line, column};
             }
 
             // This is a relative path
-            const [sourceMapAbsolutePathWithoutQueryParameters] =
-              sourceMapURL.split(/[?#&]/);
-
-            const absoluteSourcePath =
-              sourceMapAbsolutePathWithoutQueryParameters +
-              (sourceMapAbsolutePathWithoutQueryParameters.endsWith('/')
-                ? ''
-                : '/') +
-              possiblyURL;
-
+            // possiblyURL = x.js.map, sourceMapURL = https://react.dev/script.js.map
+            const absoluteSourcePath = new URL(
+              possiblyURL,
+              sourceMapURL,
+            ).toString();
             return {sourceURL: absoluteSourcePath, line, column};
           }
         } catch (e) {

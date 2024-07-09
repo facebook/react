@@ -97,7 +97,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     setChildren: (containerTag: number, reactTags: Array<number>) => void,
     updateView: (reactTag: number, viewName: string, props: ?Object) => void,
     __takeSnapshot: (
-      view?: 'window' | Element<any> | number,
+      view?: 'window' | Element | number,
       options?: {
         width?: number,
         height?: number,
