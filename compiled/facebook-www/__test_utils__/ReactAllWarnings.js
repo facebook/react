@@ -376,7 +376,6 @@ export default [
   "memo: The first argument must be a component. Instead received: %s",
   "onError returned something with a type other than \"string\". onError should return a string and may return null or undefined but must not return anything else. It received something of type \"%s\" instead",
   "precomputed chunks must be smaller than the view size configured for this host. This is a bug in React.",
-  "propTypes was defined as an instance property on %s. Use a static property to define propTypes instead.",
   "react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer",
   "ref.measureLayout must be called with a node handle or a ref to a native component.",
   "requestFormReset was called outside a transition or action. To fix, move to an action, or wrap with startTransition.",

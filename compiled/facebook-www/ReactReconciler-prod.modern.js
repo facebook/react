@@ -12197,7 +12197,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-274c980c53-20240708"
+      reconcilerVersion: "19.0.0-www-modern-ba95cf4b8f-20240709"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

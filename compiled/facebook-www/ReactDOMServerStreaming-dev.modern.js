@@ -4706,11 +4706,6 @@ __DEV__ &&
               "getDefaultProps was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Use a static property to define defaultProps instead.",
               name
             );
-          instance.propTypes &&
-            error$jscomp$2(
-              "propTypes was defined as an instance property on %s. Use a static property to define propTypes instead.",
-              name
-            );
           instance.contextType &&
             error$jscomp$2(
               "contextType was defined as an instance property on %s. Use a static property to define contextType instead.",

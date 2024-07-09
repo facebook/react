@@ -5859,11 +5859,6 @@ __DEV__ &&
             "getDefaultProps was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Use a static property to define defaultProps instead.",
             lane
           );
-        state.propTypes &&
-          error$jscomp$0(
-            "propTypes was defined as an instance property on %s. Use a static property to define propTypes instead.",
-            lane
-          );
         state.contextType &&
           error$jscomp$0(
             "contextType was defined as an instance property on %s. Use a static property to define contextType instead.",
@@ -14725,14 +14720,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-274c980c53-20240708"
+        reconcilerVersion: "19.0.0-www-classic-ba95cf4b8f-20240709"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-www-classic-274c980c53-20240708",
+      version: "19.0.0-www-classic-ba95cf4b8f-20240709",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

@@ -4938,11 +4938,6 @@ __DEV__ &&
               "getDefaultProps was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Use a static property to define defaultProps instead.",
               name
             );
-          instance.propTypes &&
-            error$jscomp$2(
-              "propTypes was defined as an instance property on %s. Use a static property to define propTypes instead.",
-              name
-            );
           instance.contextType &&
             error$jscomp$2(
               "contextType was defined as an instance property on %s. Use a static property to define contextType instead.",
@@ -8951,5 +8946,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-274c980c53-20240708";
+    exports.version = "19.0.0-www-classic-ba95cf4b8f-20240709";
   })();
