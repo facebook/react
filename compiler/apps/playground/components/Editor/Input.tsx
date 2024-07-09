@@ -23,9 +23,10 @@ loader.config({ monaco });
 
 type Props = {
   errors: CompilerErrorDetail[];
+  language: "flow" | "typescript";
 };
 
-export default function Input({ errors }: Props) {
+export default function Input({ errors, language }: Props) {
   const [monaco, setMonaco] = useState<Monaco | null>(null);
   const store = useStore();
   const dispatchStore = useStoreDispatch();
@@ -42,6 +43,35 @@ export default function Input({ errors }: Props) {
     model.updateOptions({ tabSize: 2 });
   }, [monaco, errors]);
 
+  const flowDiagnosticDisable = [
+    7028 /* unused label */, 6133 /* var declared but not read */,
+  ];
+  useEffect(() => {
+    // Ignore "can only be used in TypeScript files." errors, since
+    // we want to support syntax highlighting for Flow (*.js) files
+    // and Flow is not a built-in language.
+    if (!monaco) return;
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+      diagnosticCodesToIgnore: [
+        8002,
+        8003,
+        8004,
+        8005,
+        8006,
+        8008,
+        8009,
+        8010,
+        8011,
+        8012,
+        8013,
+        ...(language === "flow" ? flowDiagnosticDisable : []),
+      ],
+      noSemanticValidation: true,
+      // Monaco can't validate Flow component syntax
+      noSyntaxValidation: language === "flow",
+    });
+  }, [monaco, language]);
+
   const handleChange = (value: string | undefined) => {
     if (!value) return;
 
@@ -55,17 +85,6 @@ export default function Input({ errors }: Props) {
 
   const handleMount = (_: editor.IStandaloneCodeEditor, monaco: Monaco) => {
     setMonaco(monaco);
-
-    // Ignore "can only be used in TypeScript files." errors, since
-    // we want to support syntax highlighting for Flow (*.js) files
-    // and Flow is not a built-in language.
-    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-      diagnosticCodesToIgnore: [
-        8002, 8003, 8004, 8005, 8006, 8008, 8009, 8010, 8011, 8012, 8013,
-      ],
-      noSemanticValidation: true,
-      noSyntaxValidation: false,
-    });
 
     const tscOptions = {
       allowNonTsExtensions: true,

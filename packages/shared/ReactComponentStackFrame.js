@@ -24,6 +24,7 @@ import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 let prefix;
+let suffix;
 export function describeBuiltInComponentFrame(name: string): string {
   if (enableComponentStackLocations) {
     if (prefix === undefined) {
@@ -33,17 +34,26 @@ export function describeBuiltInComponentFrame(name: string): string {
       } catch (x) {
         const match = x.stack.trim().match(/\n( *(at )?)/);
         prefix = (match && match[1]) || '';
+        suffix =
+          x.stack.indexOf('\n    at') > -1
+            ? // V8
+              ' (<anonymous>)'
+            : // JSC/Spidermonkey
+            x.stack.indexOf('@') > -1
+            ? '@unknown:0:0'
+            : // Other
+              '';
       }
     }
     // We use the prefix to ensure our stacks line up with native stack frames.
-    return '\n' + prefix + name;
+    return '\n' + prefix + name + suffix;
   } else {
     return describeComponentFrame(name);
   }
 }
 
 export function describeDebugInfoFrame(name: string, env: ?string): string {
-  return describeBuiltInComponentFrame(name + (env ? ' (' + env + ')' : ''));
+  return describeBuiltInComponentFrame(name + (env ? ' [' + env + ']' : ''));
 }
 
 let reentry = false;
