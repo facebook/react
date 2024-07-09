@@ -1766,9 +1766,9 @@ describe('ReactDOMFizzServer', () => {
       // Intentionally trigger a key warning here.
       return (
         <div>
-          {children.map(t => (
-            <span>{t}</span>
-          ))}
+          {children.map(function mapper(t) {
+            return <span>{t}</span>;
+          })}
         </div>
       );
     }
@@ -1813,11 +1813,15 @@ describe('ReactDOMFizzServer', () => {
           '<%s /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.%s',
           'inCorrectTag',
           '\n' +
-            '    in inCorrectTag (at **)\n' +
-            '    in C (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in div (at **)\n' +
-            '    in A (at **)',
+            (gate(flags => flags.enableOwnerStacks)
+              ? '    in inCorrectTag (at **)\n' +
+                '    in C (at **)\n' +
+                '    in A (at **)'
+              : '    in inCorrectTag (at **)\n' +
+                '    in C (at **)\n' +
+                '    in Suspense (at **)\n' +
+                '    in div (at **)\n' +
+                '    in A (at **)'),
         );
         mockError.mockClear();
       } else {
@@ -1833,22 +1837,19 @@ describe('ReactDOMFizzServer', () => {
         expect(mockError).toHaveBeenCalledWith(
           'Each child in a list should have a unique "key" prop.%s%s' +
             ' See https://react.dev/link/warning-keys for more information.%s',
-          gate(flags => flags.enableOwnerStacks)
-            ? // We currently don't track owners in Fizz which is responsible for this frame.
-              ''
-            : '\n\nCheck the top-level render call using <div>.',
+          '\n\nCheck the render method of `B`.',
           '',
           '\n' +
-            '    in span (at **)\n' +
-            // TODO: Because this validates after the div has been mounted, it is part of
-            // the parent stack but since owner stacks will switch to owners this goes away again.
             (gate(flags => flags.enableOwnerStacks)
-              ? '    in div (at **)\n'
-              : '') +
-            '    in B (at **)\n' +
-            '    in Suspense (at **)\n' +
-            '    in div (at **)\n' +
-            '    in A (at **)',
+              ? '    in span (at **)\n' +
+                '    in mapper (at **)\n' +
+                '    in B (at **)\n' +
+                '    in A (at **)'
+              : '    in span (at **)\n' +
+                '    in B (at **)\n' +
+                '    in Suspense (at **)\n' +
+                '    in div (at **)\n' +
+                '    in A (at **)'),
         );
       } else {
         expect(mockError).not.toHaveBeenCalled();
@@ -6519,24 +6520,25 @@ describe('ReactDOMFizzServer', () => {
       mockError(...args.map(normalizeCodeLocInfo));
     };
 
+    function App() {
+      return (
+        <html>
+          <body>
+            <script>{2}</script>
+            <script>
+              {['try { foo() } catch (e) {} ;', 'try { bar() } catch (e) {} ;']}
+            </script>
+            <script>
+              <MyScript />
+            </script>
+          </body>
+        </html>
+      );
+    }
+
     try {
       await act(async () => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <body>
-              <script>{2}</script>
-              <script>
-                {[
-                  'try { foo() } catch (e) {} ;',
-                  'try { bar() } catch (e) {} ;',
-                ]}
-              </script>
-              <script>
-                <MyScript />
-              </script>
-            </body>
-          </html>,
-        );
+        const {pipe} = renderToPipeableStream(<App />);
         pipe(writable);
       });
 
@@ -6545,17 +6547,29 @@ describe('ReactDOMFizzServer', () => {
         expect(mockError.mock.calls[0]).toEqual([
           'A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
           'a number for children',
-          componentStack(['script', 'body', 'html']),
+          componentStack(
+            gate(flags => flags.enableOwnerStacks)
+              ? ['script', 'App']
+              : ['script', 'body', 'html', 'App'],
+          ),
         ]);
         expect(mockError.mock.calls[1]).toEqual([
           'A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
           'an array for children',
-          componentStack(['script', 'body', 'html']),
+          componentStack(
+            gate(flags => flags.enableOwnerStacks)
+              ? ['script', 'App']
+              : ['script', 'body', 'html', 'App'],
+          ),
         ]);
         expect(mockError.mock.calls[2]).toEqual([
           'A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
           'something unexpected for children',
-          componentStack(['script', 'body', 'html']),
+          componentStack(
+            gate(flags => flags.enableOwnerStacks)
+              ? ['script', 'App']
+              : ['script', 'body', 'html', 'App'],
+          ),
         ]);
       } else {
         expect(mockError.mock.calls.length).toBe(0);
@@ -8147,5 +8161,92 @@ describe('ReactDOMFizzServer', () => {
     );
 
     expect(document.body.textContent).toBe('HelloWorld');
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can get the component owner stacks during rendering in dev', async () => {
+    let stack;
+
+    function Foo() {
+      return <Bar />;
+    }
+    function Bar() {
+      return (
+        <div>
+          <Baz />
+        </div>
+      );
+    }
+    function Baz() {
+      stack = React.captureOwnerStack();
+      return <span>hi</span>;
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(
+        <div>
+          <Foo />
+        </div>,
+      );
+      pipe(writable);
+    });
+
+    expect(normalizeCodeLocInfo(stack)).toBe(
+      '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can get the component owner stacks for onError in dev', async () => {
+    const thrownError = new Error('hi');
+    let caughtError;
+    let parentStack;
+    let ownerStack;
+
+    function Foo() {
+      return <Bar />;
+    }
+    function Bar() {
+      return (
+        <div>
+          <Baz />
+        </div>
+      );
+    }
+    function Baz() {
+      throw thrownError;
+    }
+
+    await expect(async () => {
+      await act(() => {
+        const {pipe} = renderToPipeableStream(
+          <div>
+            <Foo />
+          </div>,
+          {
+            onError(error, errorInfo) {
+              caughtError = error;
+              parentStack = errorInfo.componentStack;
+              ownerStack = React.captureOwnerStack
+                ? React.captureOwnerStack()
+                : null;
+            },
+          },
+        );
+        pipe(writable);
+      });
+    }).rejects.toThrow(thrownError);
+
+    expect(caughtError).toBe(thrownError);
+    expect(normalizeCodeLocInfo(parentStack)).toBe(
+      '\n    in Baz (at **)' +
+        '\n    in div (at **)' +
+        '\n    in Bar (at **)' +
+        '\n    in Foo (at **)' +
+        '\n    in div (at **)',
+    );
+    expect(normalizeCodeLocInfo(ownerStack)).toBe(
+      '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
   });
 });

@@ -107,6 +107,7 @@ function publishEventForPlugin(
   if (phasedRegistrationNames) {
     for (const phaseName in phasedRegistrationNames) {
       if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
+        // $FlowFixMe[invalid-computed-prop]
         const phasedRegistrationName = phasedRegistrationNames[phaseName];
         publishRegistrationName(
           phasedRegistrationName,
