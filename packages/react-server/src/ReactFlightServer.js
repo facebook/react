@@ -3162,7 +3162,7 @@ function renderConsoleValue(
       }
     }
 
-    if (counter.objectCount > 20) {
+    if (counter.objectCount > 500) {
       // We've reached our max number of objects to serialize across the wire so we serialize this
       // as a marker so that the client can error when this is accessed by the console.
       return serializeLimitedObject();
