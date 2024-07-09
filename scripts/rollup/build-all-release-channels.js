@@ -16,6 +16,7 @@ const {
   rcNumber,
 } = require('../../ReactVersions');
 const yargs = require('yargs');
+const {buildEverything} = require('./build-ghaction');
 
 // Runs the build script for both stable and experimental release channels,
 // by configuring an environment variable.
@@ -55,6 +56,14 @@ fs.writeFileSync(
 );
 
 const argv = yargs.wrap(yargs.terminalWidth()).options({
+  releaseChannel: {
+    alias: 'r',
+    describe: 'Build the given release channel.',
+    requiresArg: true,
+    type: 'string',
+    default: 'experimental',
+    choices: ['experimental', 'stable'],
+  },
   index: {
     alias: 'i',
     describe: 'Worker id.',
@@ -77,22 +86,18 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
 
 async function main() {
   if (argv.ci === 'github') {
-    // In CI, we use multiple concurrent processes. Allocate half the processes to
-    // build the stable channel, and the other half for experimental. Override
-    // the environment variables to "trick" the underlying build script.
-    const total = parseInt(argv.total, 10);
-    const halfTotal = Math.floor(total / 2);
-    const index = parseInt(argv.index, 10);
-    if (index < halfTotal) {
-      const nodeTotal = halfTotal;
-      const nodeIndex = index;
-      buildForChannel('stable', nodeTotal, nodeIndex);
-      processStable('./build');
-    } else {
-      const nodeTotal = total - halfTotal;
-      const nodeIndex = index - halfTotal;
-      buildForChannel('experimental', nodeTotal, nodeIndex);
-      processExperimental('./build');
+    await buildEverything(argv.index, argv.total);
+    switch (argv.releaseChannel) {
+      case 'stable': {
+        processStable('./build');
+        break;
+      }
+      case 'experimental': {
+        processExperimental('./build');
+        break;
+      }
+      default:
+        throw new Error(`Unknown release channel ${argv.releaseChannel}`);
     }
   } else if (argv.ci === 'circleci') {
     // In CI, we use multiple concurrent processes. Allocate half the processes to
