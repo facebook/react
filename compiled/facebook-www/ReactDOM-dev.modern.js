@@ -26520,11 +26520,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-ba95cf4b8f-20240709" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-b73dcdc04f-20240709" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-ba95cf4b8f-20240709\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-b73dcdc04f-20240709\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26589,12 +26589,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-ba95cf4b8f-20240709"
+          reconcilerVersion: "19.0.0-www-modern-b73dcdc04f-20240709"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-ba95cf4b8f-20240709",
+        version: "19.0.0-www-modern-b73dcdc04f-20240709",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27190,7 +27190,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-ba95cf4b8f-20240709";
+    exports.version = "19.0.0-www-modern-b73dcdc04f-20240709";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
