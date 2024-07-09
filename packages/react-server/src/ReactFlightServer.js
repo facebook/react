@@ -2615,7 +2615,8 @@ function renderModelDestructive(
     ) {
       throw new Error(
         'Only plain objects, and a few built-ins, can be passed to Client Components ' +
-          'from Server Components. Classes or null prototypes are not supported.',
+          'from Server Components. Classes or null prototypes are not supported.' +
+          describeObjectForErrorMessage(parent, parentPropertyName),
       );
     }
     if (__DEV__) {
