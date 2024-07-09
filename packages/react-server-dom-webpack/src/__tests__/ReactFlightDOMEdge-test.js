@@ -39,6 +39,15 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+      return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+    })
+  );
+}
+
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -882,5 +891,43 @@ describe('ReactFlightDOMEdge', () => {
         gate(flags => flags.disableStringRefs) ? undefined : null,
       );
     }
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can get the component owner stacks asynchronously', async () => {
+    let stack;
+
+    function Foo() {
+      return ReactServer.createElement(Bar, null);
+    }
+    function Bar() {
+      return ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Baz, null),
+      );
+    }
+
+    const promise = Promise.resolve(0);
+
+    async function Baz() {
+      await promise;
+      stack = ReactServer.captureOwnerStack();
+      return ReactServer.createElement('span', null, 'hi');
+    }
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Foo, null),
+      ),
+      webpackMap,
+    );
+    await readResult(stream);
+
+    expect(normalizeCodeLocInfo(stack)).toBe(
+      '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
   });
 });

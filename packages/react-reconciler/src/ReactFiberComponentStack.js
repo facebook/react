@@ -185,11 +185,11 @@ export function getOwnerStackByFiberInDev(
         // another code path anyway. I.e. this is likely NOT a V8 based browser.
         // This will cause some of the stack to have different formatting.
         // TODO: Normalize server component stacks to the client formatting.
-        if (owner.stack !== '') {
-          info += '\n' + owner.stack;
+        const ownerStack: string = owner.stack;
+        owner = owner.owner;
+        if (owner && ownerStack !== '') {
+          info += '\n' + ownerStack;
         }
-        const componentInfo: ReactComponentInfo = (owner: any);
-        owner = componentInfo.owner;
       } else {
         break;
       }

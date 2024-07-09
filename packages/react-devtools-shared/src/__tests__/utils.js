@@ -463,6 +463,9 @@ export function overrideFeatureFlags(overrideFlags) {
 }
 
 export function normalizeCodeLocInfo(str) {
+  if (typeof str === 'object' && str !== null) {
+    str = str.stack;
+  }
   if (typeof str !== 'string') {
     return str;
   }

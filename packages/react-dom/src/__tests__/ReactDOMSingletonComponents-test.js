@@ -475,7 +475,7 @@ describe('ReactDOM HostSingleton', () => {
     expect(hydrationErrors).toEqual([
       [
         "Hydration failed because the server rendered HTML didn't match the client.",
-        'at div',
+        'at div (<anonymous>)',
       ],
     ]);
     expect(persistentElements).toEqual([
