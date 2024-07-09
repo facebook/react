@@ -7,7 +7,18 @@
  * @flow
  */
 
-import {getCurrentParentStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import {
+  current,
+  runWithFiberInDEV,
+} from 'react-reconciler/src/ReactCurrentFiber';
+import {
+  HostComponent,
+  HostHoistable,
+  HostSingleton,
+} from 'react-reconciler/src/ReactWorkTags';
 
 type Info = {tag: string};
 export type AncestorInfoDev = {
@@ -440,6 +451,21 @@ function findInvalidAncestorForTag(
 
 const didWarn: {[string]: boolean} = {};
 
+function findAncestor(parent: Fiber, tagName: string): null | Fiber {
+  while (parent) {
+    switch (parent.tag) {
+      case HostComponent:
+      case HostHoistable:
+      case HostSingleton:
+        if (parent.type === tagName) {
+          return parent;
+        }
+    }
+    parent = parent.return;
+  }
+  return null;
+}
+
 function validateDOMNesting(
   childTag: string,
   ancestorInfo: AncestorInfoDev,
@@ -483,13 +509,12 @@ function validateDOMNesting(
       // stack has more useful context for nesting.
       // TODO: Format this as a linkified "diff view" with props instead of
       // a stack trace since the stack trace format is now for owner stacks.
-      console['error'](
+      console.error(
         'In HTML, %s cannot be a child of <%s>.%s\n' +
-          'This will cause a hydration error.%s',
+          'This will cause a hydration error.',
         tagDisplayName,
         ancestorTag,
         info,
-        getCurrentParentStackInDev(),
       );
     } else {
       // Don't transform into consoleWithStackDev here because we add a manual stack.
@@ -497,13 +522,35 @@ function validateDOMNesting(
       // stack has more useful context for nesting.
       // TODO: Format this as a linkified "diff view" with props instead of
       // a stack trace since the stack trace format is now for owner stacks.
-      console['error'](
+      console.error(
         'In HTML, %s cannot be a descendant of <%s>.\n' +
-          'This will cause a hydration error.%s',
+          'This will cause a hydration error.',
         tagDisplayName,
         ancestorTag,
-        getCurrentParentStackInDev(),
       );
+    }
+    if (enableOwnerStacks && current !== null) {
+      // For debugging purposes find the nearest ancestor that caused the issue.
+      // The stack trace of this ancestor can be useful to find the cause.
+      // If the parent is a direct parent in the same owner, we don't bother.
+      const currentFiber = current;
+      const parent = current.return;
+      const ancestor = findAncestor(parent, ancestorTag);
+      if (
+        ancestor &&
+        (ancestor !== parent || parent._debugOwner !== currentFiber._debugOwner)
+      ) {
+        runWithFiberInDEV(ancestor, () => {
+          console.error(
+            // We repeat some context because this log might be taken out of context
+            // such as in React DevTools or grouped server logs.
+            '<%s> cannot contain a nested %s.\n' +
+              'See this log for the ancestor stack trace.',
+            ancestorTag,
+            tagDisplayName,
+          );
+        });
+      }
     }
     return false;
   }
@@ -523,30 +570,22 @@ function validateTextNesting(childText: string, parentTag: string): boolean {
     didWarn[warnKey] = true;
 
     if (/\S/.test(childText)) {
-      // Don't transform into consoleWithStackDev here because we add a manual stack.
-      // We use the parent stack here instead of the owner stack because the parent
-      // stack has more useful context for nesting.
       // TODO: Format this as a linkified "diff view" with props instead of
       // a stack trace since the stack trace format is now for owner stacks.
-      console['error'](
+      console.error(
         'In HTML, text nodes cannot be a child of <%s>.\n' +
-          'This will cause a hydration error.%s',
+          'This will cause a hydration error.',
         parentTag,
-        getCurrentParentStackInDev(),
       );
     } else {
-      // Don't transform into consoleWithStackDev here because we add a manual stack.
-      // We use the parent stack here instead of the owner stack because the parent
-      // stack has more useful context for nesting.
       // TODO: Format this as a linkified "diff view" with props instead of
       // a stack trace since the stack trace format is now for owner stacks.
-      console['error'](
+      console.error(
         'In HTML, whitespace text nodes cannot be a child of <%s>. ' +
           "Make sure you don't have any extra whitespace between tags on " +
           'each line of your source code.\n' +
-          'This will cause a hydration error.%s',
+          'This will cause a hydration error.',
         parentTag,
-        getCurrentParentStackInDev(),
       );
     }
     return false;
