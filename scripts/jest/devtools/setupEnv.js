@@ -12,6 +12,8 @@ if (!global.hasOwnProperty('localStorage')) {
 global.__DEV__ = process.env.NODE_ENV !== 'production';
 global.__TEST__ = true;
 global.__IS_FIREFOX__ = false;
+global.__IS_CHROME__ = false;
+global.__IS_EDGE__ = false;
 
 const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
 

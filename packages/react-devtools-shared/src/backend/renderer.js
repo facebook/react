@@ -1984,12 +1984,17 @@ export function attach(
     }
 
     if (isRoot) {
+      // Set supportsStrictMode to false for production renderer builds
+      const isProductionBuildOfRenderer = renderer.bundleType === 0;
+
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(ElementTypeRoot);
       pushOperation((fiber.mode & StrictModeBits) !== 0 ? 1 : 0);
       pushOperation(profilingFlags);
-      pushOperation(StrictModeBits !== 0 ? 1 : 0);
+      pushOperation(
+        !isProductionBuildOfRenderer && StrictModeBits !== 0 ? 1 : 0,
+      );
       pushOperation(hasOwnerMetadata ? 1 : 0);
 
       if (isProfiling) {
@@ -3386,6 +3391,7 @@ export function attach(
       // Temporarily disable all console logging before re-running the hook.
       for (const method in console) {
         try {
+          // $FlowFixMe[invalid-computed-prop]
           originalConsoleMethods[method] = console[method];
           // $FlowFixMe[prop-missing]
           console[method] = () => {};

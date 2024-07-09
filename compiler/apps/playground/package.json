@@ -24,7 +24,9 @@
     "@monaco-editor/react": "^4.4.6",
     "@playwright/test": "^1.42.1",
     "@use-gesture/react": "^10.2.22",
+    "fs": "^0.0.1-security",
     "hermes-eslint": "^0.14.0",
+    "hermes-parser": "^0.22.0",
     "invariant": "^2.2.4",
     "lz-string": "^1.5.0",
     "monaco-editor": "^0.34.1",
@@ -34,8 +36,8 @@
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
     "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-compiler-runtime": "*"
+    "react-compiler-runtime": "*",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
     "@types/node": "18.11.9",
@@ -46,6 +48,7 @@
     "clsx": "^1.2.1",
     "eslint": "^8.28.0",
     "eslint-config-next": "^13.5.6",
+    "hermes-parser": "^0.22.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.2.4"

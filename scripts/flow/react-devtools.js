@@ -13,3 +13,5 @@ declare const __EXTENSION__: boolean;
 declare const __TEST__: boolean;
 
 declare const __IS_FIREFOX__: boolean;
+declare const __IS_CHROME__: boolean;
+declare const __IS_EDGE__: boolean;
