@@ -94,8 +94,8 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
-          path: build
-          merge-multiple: true
+          path: artifacts
+      - run: mkdir -p build && rsync -av --ignore-existing artifacts/* build/
       - name: Display structure of build
         run: ls -R build
       - run: yarn lint-build
