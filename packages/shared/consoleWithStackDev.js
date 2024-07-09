@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
-
 export function setSuppressWarning(newSuppressWarning) {
   // TODO: Noop. Delete.
 }
@@ -19,39 +16,25 @@ export function setSuppressWarning(newSuppressWarning) {
 // they are left as they are instead.
 
 export function warn(format, ...args) {
-  printWarning('warn', format, args, new Error('react-stack-top-frame'));
+  if (__DEV__) {
+    printWarning('warn', format, args);
+  }
 }
 
 export function error(format, ...args) {
-  printWarning('error', format, args, new Error('react-stack-top-frame'));
+  if (__DEV__) {
+    printWarning('error', format, args);
+  }
 }
 
-// eslint-disable-next-line react-internal/no-production-logging
-const supportsCreateTask = __DEV__ && enableOwnerStacks && !!console.createTask;
-
-export let isWritingAppendedStack = false;
-
-function printWarning(level, format, args, currentStack) {
+function printWarning(level, format, args) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   if (__DEV__) {
-    if (!supportsCreateTask && ReactSharedInternals.getCurrentStack) {
-      // We only add the current stack to the console when createTask is not supported.
-      // Since createTask requires DevTools to be open to work, this means that stacks
-      // can be lost while DevTools isn't open but we can't detect this.
-      const stack = ReactSharedInternals.getCurrentStack(currentStack);
-      if (stack !== '') {
-        isWritingAppendedStack = true;
-        format += '%s';
-        args = args.concat([stack]);
-      }
-    }
-
     args.unshift(format);
     // We intentionally don't use spread (or .apply) directly because it
     // breaks IE9: https://github.com/facebook/react/issues/13610
     // eslint-disable-next-line react-internal/no-production-logging
     Function.prototype.apply.call(console[level], console, args);
-    isWritingAppendedStack = false;
   }
 }
