@@ -8,6 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ErrorInfo} from 'react-server/src/ReactFizzServer';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -27,6 +28,7 @@ import {
 type MarkupOptions = {
   identifierPrefix?: string,
   signal?: AbortSignal,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
 };
 
 export function renderToMarkup(
@@ -49,11 +51,16 @@ export function renderToMarkup(
         reject(error);
       },
     };
-    function onError(error: mixed) {
+    function handleError(error: mixed, errorInfo: ErrorInfo) {
       // Any error rejects the promise, regardless of where it happened.
       // Unlike other React SSR we don't want to put Suspense boundaries into
       // client rendering mode because there's no client rendering here.
       reject(error);
+
+      const onError = options && options.onError;
+      if (onError) {
+        onError(error, errorInfo);
+      }
     }
     const resumableState = createResumableState(
       options ? options.identifierPrefix : undefined,
@@ -72,7 +79,7 @@ export function renderToMarkup(
       ),
       createRootFormatContext(),
       Infinity,
-      onError,
+      handleError,
       undefined,
       undefined,
       undefined,

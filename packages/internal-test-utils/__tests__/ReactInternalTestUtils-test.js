@@ -1002,8 +1002,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1025,8 +1025,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1048,8 +1048,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)"
       `);
     });
 
@@ -1071,9 +1071,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1095,9 +1095,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Hi
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1119,9 +1119,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Hi
         - Wow
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1297,7 +1297,8 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleWarnDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           If this warning should include a component stack, remove {withoutStack: true} from this warning.
           If all warnings should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleWarnDev call."
@@ -1318,10 +1319,12 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleWarnDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           Unexpected component stack for:
-            "Bye <component stack>"
+            "Bye
+              in div (at **)"
 
           If this warning should include a component stack, remove {withoutStack: true} from this warning.
           If all warnings should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleWarnDev call."
@@ -1444,7 +1447,8 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleWarnDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           If this warning should include a component stack, remove {withoutStack: true} from this warning.
           If all warnings should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleWarnDev call."
@@ -1477,10 +1481,12 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleWarnDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           Unexpected component stack for:
-            "Bye <component stack>"
+            "Bye
+              in div (at **)"
 
           If this warning should include a component stack, remove {withoutStack: true} from this warning.
           If all warnings should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleWarnDev call."
@@ -1934,8 +1940,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1957,8 +1963,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1980,8 +1986,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)"
       `);
     });
 
@@ -2003,9 +2009,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -2027,9 +2033,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Hi
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -2051,9 +2057,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Hi
         - Wow
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
     // @gate __DEV__
@@ -2170,7 +2176,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         + Received errors
 
         - This is a completely different message that happens to start with "T"
-        + Message that happens to contain a "T" <component stack>"
+        + Message that happens to contain a "T"     in div (at **)"
       `);
     });
 
@@ -2247,7 +2253,8 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleErrorDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
@@ -2268,10 +2275,12 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleErrorDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           Unexpected component stack for:
-            "Bye <component stack>"
+            "Bye
+              in div (at **)"
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
@@ -2394,7 +2403,8 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleErrorDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
@@ -2427,10 +2437,12 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleErrorDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           Unexpected component stack for:
-            "Bye <component stack>"
+            "Bye
+              in div (at **)"
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
@@ -2459,7 +2471,7 @@ describe('ReactInternalTestUtils console assertions', () => {
           + Received errors
 
           - Hello
-          + Bye <component stack>"
+          + Bye     in div (at **)"
         `);
       });
     });
