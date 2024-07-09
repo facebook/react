@@ -1000,7 +1000,7 @@ describe('console', () => {
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(3);
     expect(mockWarn.mock.calls[1][0]).toEqual(
-      '\x1b[2;38;2;124;124;124m%s %s\x1b[0m',
+      '\x1b[2;38;2;124;124;124m%s %o\x1b[0m',
     );
     expect(mockWarn.mock.calls[1][1]).toMatch('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][2]).trim()).toEqual(
@@ -1014,7 +1014,7 @@ describe('console', () => {
     );
     expect(mockError.mock.calls[1]).toHaveLength(3);
     expect(mockError.mock.calls[1][0]).toEqual(
-      '\x1b[2;38;2;124;124;124m%s %s\x1b[0m',
+      '\x1b[2;38;2;124;124;124m%s %o\x1b[0m',
     );
     expect(mockError.mock.calls[1][1]).toEqual('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][2]).trim()).toEqual(

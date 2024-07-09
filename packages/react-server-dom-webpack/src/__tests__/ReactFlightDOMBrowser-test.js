@@ -392,6 +392,70 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('<div><span>12345</span>12345</div>');
   });
 
+  it('should resolve deduped objects in nested children of blocked models', async () => {
+    let resolveOuterClientComponentChunk;
+    let resolveInnerClientComponentChunk;
+
+    const ClientOuter = clientExports(
+      function ClientOuter({children, value}) {
+        return children;
+      },
+      '1',
+      '/outer.js',
+      new Promise(resolve => (resolveOuterClientComponentChunk = resolve)),
+    );
+
+    function PassthroughServerComponent({children}) {
+      return children;
+    }
+
+    const ClientInner = clientExports(
+      function ClientInner({children}) {
+        return JSON.stringify(children);
+      },
+      '2',
+      '/inner.js',
+      new Promise(resolve => (resolveInnerClientComponentChunk = resolve)),
+    );
+
+    const value = {};
+
+    function Server() {
+      return (
+        <ClientOuter value={value}>
+          <PassthroughServerComponent>
+            <ClientInner>{value}</ClientInner>
+          </PassthroughServerComponent>
+        </ClientOuter>
+      );
+    }
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Server />, webpackMap),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveInnerClientComponentChunk();
+      resolveOuterClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('{}');
+  });
+
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
 

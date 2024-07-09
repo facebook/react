@@ -40,12 +40,12 @@ describe('ReactDOMFizzForm', () => {
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
-    if (__VARIANT__) {
-      // Remove after API is deleted.
-      useActionState = require('react-dom').useFormState;
-    } else {
-      useActionState = require('react').useActionState;
-    }
+    // TODO: Test the old api but it warns so needs warnings to be asserted.
+    // if (__VARIANT__) {
+    // Remove after API is deleted.
+    // useActionState = require('react-dom').useFormState;
+    // }
+    useActionState = require('react').useActionState;
   });
 
   afterEach(() => {
