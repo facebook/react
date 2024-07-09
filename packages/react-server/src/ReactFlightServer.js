@@ -2021,6 +2021,28 @@ function serializeSet(request: Request, set: Set<ReactClientValue>): string {
   return '$W' + id.toString(16);
 }
 
+function serializeConsoleMap(
+  request: Request,
+  counter: {objectCount: number},
+  map: Map<ReactClientValue, ReactClientValue>,
+): string {
+  // Like serializeMap but for renderConsoleValue.
+  const entries = Array.from(map);
+  const id = outlineConsoleValue(request, counter, entries);
+  return '$Q' + id.toString(16);
+}
+
+function serializeConsoleSet(
+  request: Request,
+  counter: {objectCount: number},
+  set: Set<ReactClientValue>,
+): string {
+  // Like serializeMap but for renderConsoleValue.
+  const entries = Array.from(set);
+  const id = outlineConsoleValue(request, counter, entries);
+  return '$W' + id.toString(16);
+}
+
 function serializeIterator(
   request: Request,
   iterator: Iterator<ReactClientValue>,
@@ -3220,10 +3242,10 @@ function renderConsoleValue(
     }
 
     if (value instanceof Map) {
-      return serializeMap(request, value);
+      return serializeConsoleMap(request, counter, value);
     }
     if (value instanceof Set) {
-      return serializeSet(request, value);
+      return serializeConsoleSet(request, counter, value);
     }
     // TODO: FormData is not available in old Node. Remove the typeof later.
     if (typeof FormData === 'function' && value instanceof FormData) {
