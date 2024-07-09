@@ -353,13 +353,6 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
         name,
       );
     }
-    if (instance.propTypes) {
-      console.error(
-        'propTypes was defined as an instance property on %s. Use a static ' +
-          'property to define propTypes instead.',
-        name,
-      );
-    }
     if (instance.contextType) {
       console.error(
         'contextType was defined as an instance property on %s. Use a static ' +
