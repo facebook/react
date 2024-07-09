@@ -8293,15 +8293,19 @@ __DEV__ &&
             state
           );
         Component.childContextTypes &&
+          !didWarnAboutChildContextTypes.has(Component) &&
+          (didWarnAboutChildContextTypes.add(Component),
           error$jscomp$0(
             "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.",
             state
-          );
+          ));
         Component.contextTypes &&
+          !didWarnAboutContextTypes.has(Component) &&
+          (didWarnAboutContextTypes.add(Component),
           error$jscomp$0(
             "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with static contextType instead.",
             state
-          );
+          ));
         "function" === typeof _instance.componentShouldUpdate &&
           error$jscomp$0(
             "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.",
@@ -25429,6 +25433,8 @@ __DEV__ &&
     var didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
     var didWarnAboutDirectlyAssigningPropsToState = new Set();
     var didWarnAboutUndefinedDerivedState = new Set();
+    var didWarnAboutContextTypes = new Set();
+    var didWarnAboutChildContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
     Object.freeze(fakeInternalInstance);
@@ -26520,11 +26526,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-b73dcdc04f-20240709" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-39e69dc665-20240709" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-b73dcdc04f-20240709\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-39e69dc665-20240709\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26589,12 +26595,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-b73dcdc04f-20240709"
+          reconcilerVersion: "19.0.0-www-modern-39e69dc665-20240709"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-b73dcdc04f-20240709",
+        version: "19.0.0-www-modern-39e69dc665-20240709",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27190,7 +27196,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-b73dcdc04f-20240709";
+    exports.version = "19.0.0-www-modern-39e69dc665-20240709";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

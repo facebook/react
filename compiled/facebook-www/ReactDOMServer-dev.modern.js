@@ -4911,15 +4911,19 @@ __DEV__ &&
               defaultProps
             );
           type.childContextTypes &&
+            !didWarnAboutChildContextTypes.has(type) &&
+            (didWarnAboutChildContextTypes.add(type),
             error$jscomp$2(
               "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.",
               defaultProps
-            );
+            ));
           type.contextTypes &&
+            !didWarnAboutContextTypes.has(type) &&
+            (didWarnAboutContextTypes.add(type),
             error$jscomp$2(
               "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with static contextType instead.",
               defaultProps
-            );
+            ));
           "function" === typeof newProps.componentShouldUpdate &&
             error$jscomp$2(
               "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.",
@@ -8443,6 +8447,8 @@ __DEV__ &&
     var didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
     var didWarnAboutDirectlyAssigningPropsToState = new Set();
     var didWarnAboutUndefinedDerivedState = new Set();
+    var didWarnAboutContextTypes = new Set();
+    var didWarnAboutChildContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
     var classComponentUpdater = {
@@ -8661,5 +8667,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-b73dcdc04f-20240709";
+    exports.version = "19.0.0-www-modern-39e69dc665-20240709";
   })();

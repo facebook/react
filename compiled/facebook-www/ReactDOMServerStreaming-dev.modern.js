@@ -4694,15 +4694,19 @@ __DEV__ &&
               defaultProps
             );
           type.childContextTypes &&
+            !didWarnAboutChildContextTypes.has(type) &&
+            (didWarnAboutChildContextTypes.add(type),
             error$jscomp$2(
               "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.",
               defaultProps
-            );
+            ));
           type.contextTypes &&
+            !didWarnAboutContextTypes.has(type) &&
+            (didWarnAboutContextTypes.add(type),
             error$jscomp$2(
               "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with static contextType instead.",
               defaultProps
-            );
+            ));
           "function" === typeof newProps.componentShouldUpdate &&
             error$jscomp$2(
               "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.",
@@ -7843,6 +7847,8 @@ __DEV__ &&
     var didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
     var didWarnAboutDirectlyAssigningPropsToState = new Set();
     var didWarnAboutUndefinedDerivedState = new Set();
+    var didWarnAboutContextTypes = new Set();
+    var didWarnAboutChildContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
     var classComponentUpdater = {
