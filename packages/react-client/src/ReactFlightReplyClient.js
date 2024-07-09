@@ -692,7 +692,8 @@ export function processReply(
         if (temporaryReferences === undefined) {
           throw new Error(
             'Only plain objects, and a few built-ins, can be passed to Server Actions. ' +
-              'Classes or null prototypes are not supported.',
+              'Classes or null prototypes are not supported.' +
+              (__DEV__ ? describeObjectForErrorMessage(parent, key) : ''),
           );
         }
         // We will have written this object to the temporary reference set above
