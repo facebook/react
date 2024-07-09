@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       worker_id: ${{ steps.define_worker_id.outputs.result }}
+      release_channel: ${{ steps.define_release_channels.outputs.result }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/github-script@v7
@@ -30,6 +31,11 @@ jobs:
               return arr;
             }
             return range(0, process.env.WORKER_COUNT);
+      - uses: actions/github-script@v7
+        id: define_release_channels
+        with:
+          script: |
+            return ["stable", "experimental"];
 
   build:
     name: yarn build
@@ -38,6 +44,7 @@ jobs:
     strategy:
       matrix:
         worker_id: ${{ fromJSON(needs.define_build_params.outputs.worker_id) }}
+        release_channel: ${{ fromJSON(needs.define_build_params.outputs.release_channel) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,16 +59,17 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build --index=${{ matrix.worker_id }} --total=${{ env.WORKER_COUNT }} --ci=github
+      - run: yarn build --index=${{ matrix.worker_id }} --total=${{ env.WORKER_COUNT }} --r=${{ matrix.release_channel }} --ci=github
         env:
           CI: github
+          RELEASE_CHANNEL: ${{ matrix.release_channel }}
           NODE_INDEX: ${{ matrix.worker_id }}
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
-          name: build_${{ matrix.worker_id }}
+          name: build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
           path: |
             build
 
