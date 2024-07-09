@@ -844,14 +844,9 @@ async function buildEverything(index, total) {
   const nodeIndex = parseInt(index, 10);
   bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
 
-  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (const [bundle, bundleType] of bundles) {
-    await createBundle(bundle, bundleType);
-  }
-
-  // await Promise.all(
-  //   bundles.map(([bundle, bundleType]) => createBundle(bundle, bundleType))
-  // );
+  await Promise.all(
+    bundles.map(([bundle, bundleType]) => createBundle(bundle, bundleType))
+  );
 
   await Packaging.copyAllShims();
   await Packaging.prepareNpmPackages();
