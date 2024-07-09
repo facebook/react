@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8f233b6d522b2bcef18aa23caa2b608c>>
+ * @generated SignedSource<<6df2be3471437a49ecb914b33f80ed32>>
  */
 
 "use strict";
@@ -6258,11 +6258,6 @@ __DEV__ &&
         !instance.getDefaultProps.isReactClassApproved &&
         error$jscomp$0(
           "getDefaultProps was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Use a static property to define defaultProps instead.",
-          name
-        );
-      instance.propTypes &&
-        error$jscomp$0(
-          "propTypes was defined as an instance property on %s. Use a static property to define propTypes instead.",
           name
         );
       instance.contextType &&
@@ -16687,12 +16682,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-274c980c53-20240708"
+        reconcilerVersion: "19.0.0-native-fb-ba95cf4b8f-20240709"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-274c980c53-20240708",
+      version: "19.0.0-native-fb-ba95cf4b8f-20240709",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
