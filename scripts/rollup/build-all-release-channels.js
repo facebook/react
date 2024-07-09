@@ -55,14 +55,6 @@ fs.writeFileSync(
 );
 
 const argv = yargs.wrap(yargs.terminalWidth()).options({
-  releaseChannel: {
-    alias: 'r',
-    describe: 'Build the given release channel.',
-    requiresArg: true,
-    type: 'string',
-    default: 'experimental',
-    choices: ['experimental', 'stable'],
-  },
   index: {
     alias: 'i',
     describe: 'Worker id.',
