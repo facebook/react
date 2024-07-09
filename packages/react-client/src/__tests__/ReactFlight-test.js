@@ -1482,7 +1482,10 @@ describe('ReactFlight', () => {
 
     expect(errors).toEqual([
       'Only plain objects, and a few built-ins, can be passed to Client Components ' +
-        'from Server Components. Classes or null prototypes are not supported.',
+        'from Server Components. Classes or null prototypes are not supported.' +
+        (__DEV__
+          ? '\n' + '  <input value={{}}>\n' + '               ^^^^'
+          : '\n' + '  {value: {}}\n' + '          ^^'),
     ]);
   });
 
