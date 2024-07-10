@@ -370,7 +370,7 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
         didWarnAboutChildContextTypes.add(ctor);
         console.error(
           '%s uses the legacy childContextTypes API which was removed in React 19. ' +
-            'Use React.createContext() instead.',
+            'Use React.createContext() instead. (https://react.dev/link/legacy-context)',
           name,
         );
       }
@@ -378,7 +378,8 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
         didWarnAboutContextTypes.add(ctor);
         console.error(
           '%s uses the legacy contextTypes API which was removed in React 19. ' +
-            'Use React.createContext() with static contextType instead.',
+            'Use React.createContext() with static contextType instead. ' +
+            '(https://react.dev/link/legacy-context)',
           name,
         );
       }
@@ -386,7 +387,7 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
       if (instance.contextTypes) {
         console.error(
           'contextTypes was defined as an instance property on %s. Use a static ' +
-            'property to define contextTypes instead.',
+            'property to define contextTypes instead. (https://react.dev/link/legacy-context)',
           name,
         );
       }
@@ -400,6 +401,23 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
         console.error(
           '%s declares both contextTypes and contextType static properties. ' +
             'The legacy contextTypes property will be ignored.',
+          name,
+        );
+      }
+      if (ctor.childContextTypes && !didWarnAboutChildContextTypes.has(ctor)) {
+        didWarnAboutChildContextTypes.add(ctor);
+        console.error(
+          '%s uses the legacy childContextTypes API which will soon be removed. ' +
+            'Use React.createContext() instead. (https://react.dev/link/legacy-context)',
+          name,
+        );
+      }
+      if (ctor.contextTypes && !didWarnAboutContextTypes.has(ctor)) {
+        didWarnAboutContextTypes.add(ctor);
+        console.error(
+          '%s uses the legacy contextTypes API which will soon be removed. ' +
+            'Use React.createContext() with static contextType instead. ' +
+            '(https://react.dev/link/legacy-context)',
           name,
         );
       }
