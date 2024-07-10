@@ -27,6 +27,8 @@ let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
 let SuspenseList;
+
+let assertConsoleErrorDev;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let use;
@@ -116,12 +118,14 @@ describe('ReactDOMFizzServer', () => {
       useActionState = React.useActionState;
     }
 
-    const InternalTestUtils = require('internal-test-utils');
-    waitForAll = InternalTestUtils.waitForAll;
-    waitFor = InternalTestUtils.waitFor;
-    waitForPaint = InternalTestUtils.waitForPaint;
-    assertLog = InternalTestUtils.assertLog;
-    clientAct = InternalTestUtils.act;
+    ({
+      assertConsoleErrorDev,
+      assertLog,
+      act: clientAct,
+      waitFor,
+      waitForAll,
+      waitForPaint,
+    } = require('internal-test-utils'));
 
     if (gate(flags => flags.source)) {
       // The `with-selector` module composes the main `use-sync-external-store`
@@ -1950,6 +1954,10 @@ describe('ReactDOMFizzServer', () => {
       );
       pipe(writable);
     });
+    assertConsoleErrorDev([
+      'TestProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'TestConsumer uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         Loading: <b>A</b>
