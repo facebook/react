@@ -1,0 +1,304 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/jsx-tag-evaluation-order.js
+---
+Input:
+function Component(props) {
+  let Tag = View;
+  return (
+    <Tag>
+      {((Tag = HScroll), props.value)}
+      <Tag />
+    </Tag>
+  );
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "Tag",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "View",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    40,
+                    44
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  34,
+                  44
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              45
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Tag",
+                  "loc": null,
+                  "range": [
+                    62,
+                    65
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  61,
+                  66
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXText",
+                  "value": "\n      ",
+                  "raw": "\n      ",
+                  "loc": null,
+                  "range": [
+                    66,
+                    73
+                  ]
+                },
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "SequenceExpression",
+                    "expressions": [
+                      {
+                        "type": "AssignmentExpression",
+                        "operator": "=",
+                        "left": {
+                          "type": "Identifier",
+                          "name": "Tag",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            76,
+                            79
+                          ]
+                        },
+                        "right": {
+                          "type": "Identifier",
+                          "name": "HScroll",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            82,
+                            89
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          76,
+                          89
+                        ]
+                      },
+                      {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            92,
+                            97
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "value",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            98,
+                            103
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          92,
+                          103
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      75,
+                      103
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    73,
+                    105
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n      ",
+                  "raw": "\n      ",
+                  "loc": null,
+                  "range": [
+                    105,
+                    112
+                  ]
+                },
+                {
+                  "type": "JSXElement",
+                  "openingElement": {
+                    "type": "JSXOpeningElement",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "Tag",
+                      "loc": null,
+                      "range": [
+                        113,
+                        116
+                      ]
+                    },
+                    "attributes": [],
+                    "selfClosing": true,
+                    "loc": null,
+                    "range": [
+                      112,
+                      119
+                    ]
+                  },
+                  "children": [],
+                  "closingElement": null,
+                  "loc": null,
+                  "range": [
+                    112,
+                    119
+                  ]
+                },
+                {
+                  "type": "JSXText",
+                  "value": "\n    ",
+                  "raw": "\n    ",
+                  "loc": null,
+                  "range": [
+                    119,
+                    124
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Tag",
+                  "loc": null,
+                  "range": [
+                    126,
+                    129
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  124,
+                  130
+                ]
+              },
+              "loc": null,
+              "range": [
+                61,
+                130
+              ]
+            },
+            "loc": null,
+            "range": [
+              48,
+              135
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          137
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        137
+      ],
+      "loc": null,
+      "range": [
+        0,
+        137
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    137
+  ]
+}

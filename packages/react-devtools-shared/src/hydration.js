@@ -84,7 +84,9 @@ function createDehydrated(
     preview_long: formatDataForPreview(data, true),
     preview_short: formatDataForPreview(data, false),
     name:
-      !data.constructor || data.constructor.name === 'Object'
+      typeof data.constructor !== 'function' ||
+      typeof data.constructor.name !== 'string' ||
+      data.constructor.name === 'Object'
         ? ''
         : data.constructor.name,
   };
@@ -240,7 +242,9 @@ export function dehydrate(
           preview_short: formatDataForPreview(data, false),
           preview_long: formatDataForPreview(data, true),
           name:
-            !data.constructor || data.constructor.name === 'Object'
+            typeof data.constructor !== 'function' ||
+            typeof data.constructor.name !== 'string' ||
+            data.constructor.name === 'Object'
               ? ''
               : data.constructor.name,
         };
@@ -332,7 +336,11 @@ export function dehydrate(
         readonly: true,
         preview_short: formatDataForPreview(data, false),
         preview_long: formatDataForPreview(data, true),
-        name: data.constructor.name,
+        name:
+          typeof data.constructor !== 'function' ||
+          typeof data.constructor.name !== 'string'
+            ? ''
+            : data.constructor.name,
       };
 
       getAllEnumerableKeys(data).forEach(key => {
@@ -427,7 +435,7 @@ export function hydrate(
       parent[last] = undefined;
     } else {
       // Replace the string keys with Symbols so they're non-enumerable.
-      const replaced: {[key: symbol]: boolean | string, ...} = {};
+      const replaced: {[key: symbol]: boolean | string} = {};
       replaced[meta.inspectable] = !!value.inspectable;
       replaced[meta.inspected] = false;
       replaced[meta.name] = value.name;

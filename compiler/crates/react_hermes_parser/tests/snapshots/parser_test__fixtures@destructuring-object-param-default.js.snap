@@ -1,0 +1,137 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/destructuring-object-param-default.js
+---
+Input:
+function Component({ a = 2 }) {
+  return a;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "ObjectPattern",
+          "properties": [
+            {
+              "type": "Property",
+              "key": {
+                "type": "Identifier",
+                "name": "a",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  21,
+                  22
+                ]
+              },
+              "value": {
+                "type": "AssignmentPattern",
+                "left": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    21,
+                    22
+                  ]
+                },
+                "right": {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    25,
+                    26
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  21,
+                  26
+                ]
+              },
+              "kind": "init",
+              "computed": false,
+              "shorthand": true,
+              "method": false,
+              "loc": null,
+              "range": [
+                21,
+                26
+              ]
+            }
+          ],
+          "loc": null,
+          "range": [
+            19,
+            28
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "a",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                41,
+                42
+              ]
+            },
+            "loc": null,
+            "range": [
+              34,
+              43
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          30,
+          45
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        45
+      ],
+      "loc": null,
+      "range": [
+        0,
+        45
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    45
+  ]
+}

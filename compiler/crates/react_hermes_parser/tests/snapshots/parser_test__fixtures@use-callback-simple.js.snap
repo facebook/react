@@ -1,0 +1,344 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/use-callback-simple.js
+---
+Input:
+function component() {
+  const [count, setCount] = useState(0);
+  const increment = useCallback(() => setCount(count + 1));
+
+  return <Foo onClick={increment}></Foo>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "Identifier",
+                      "name": "count",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        32,
+                        37
+                      ]
+                    },
+                    {
+                      "type": "Identifier",
+                      "name": "setCount",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        39,
+                        47
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    31,
+                    48
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useState",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      51,
+                      59
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "NumericLiteral",
+                      "value": 0.0,
+                      "loc": null,
+                      "range": [
+                        60,
+                        61
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    51,
+                    62
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  31,
+                  62
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              63
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "increment",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    72,
+                    81
+                  ]
+                },
+                "init": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "useCallback",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      84,
+                      95
+                    ]
+                  },
+                  "arguments": [
+                    {
+                      "type": "ArrowFunctionExpression",
+                      "id": null,
+                      "params": [],
+                      "body": {
+                        "type": "CallExpression",
+                        "callee": {
+                          "type": "Identifier",
+                          "name": "setCount",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            102,
+                            110
+                          ]
+                        },
+                        "arguments": [
+                          {
+                            "type": "BinaryExpression",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "count",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                111,
+                                116
+                              ]
+                            },
+                            "operator": "+",
+                            "right": {
+                              "type": "NumericLiteral",
+                              "value": 1.0,
+                              "loc": null,
+                              "range": [
+                                119,
+                                120
+                              ]
+                            },
+                            "loc": null,
+                            "range": [
+                              111,
+                              120
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          102,
+                          121
+                        ]
+                      },
+                      "generator": true,
+                      "async": false,
+                      "loc": null,
+                      "range": [
+                        96,
+                        121
+                      ],
+                      "expression": true,
+                      "loc": null,
+                      "range": [
+                        96,
+                        121
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    84,
+                    122
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  72,
+                  122
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              66,
+              123
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    135,
+                    138
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "onClick",
+                      "loc": null,
+                      "range": [
+                        139,
+                        146
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "increment",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          148,
+                          157
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        147,
+                        158
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      139,
+                      158
+                    ]
+                  }
+                ],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  134,
+                  159
+                ]
+              },
+              "children": [],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    161,
+                    164
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  159,
+                  165
+                ]
+              },
+              "loc": null,
+              "range": [
+                134,
+                165
+              ]
+            },
+            "loc": null,
+            "range": [
+              127,
+              166
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          168
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        168
+      ],
+      "loc": null,
+      "range": [
+        0,
+        168
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    168
+  ]
+}

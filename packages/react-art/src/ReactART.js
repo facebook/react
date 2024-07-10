@@ -7,15 +7,17 @@
 
 import * as React from 'react';
 import ReactVersion from 'shared/ReactVersion';
-import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   createContainer,
-  updateContainer,
+  updateContainerSync,
   injectIntoDevTools,
+  flushSyncWork,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
+import {disableLegacyMode} from 'shared/ReactFeatureFlags';
 
 import {TYPES, childrenAsString} from './ReactARTInternals';
 
@@ -68,13 +70,16 @@ class Surface extends React.Component {
 
     this._mountNode = createContainer(
       this._surface,
-      LegacyRoot,
+      disableLegacyMode ? ConcurrentRoot : LegacyRoot,
       null,
       false,
       false,
       '',
     );
-    updateContainer(this.props.children, this._mountNode, this);
+    // We synchronously flush updates coming from above so that they commit together
+    // and so that refs resolve before the parent life cycles.
+    updateContainerSync(this.props.children, this._mountNode, this);
+    flushSyncWork();
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -84,7 +89,10 @@ class Surface extends React.Component {
       this._surface.resize(+props.width, +props.height);
     }
 
-    updateContainer(this.props.children, this._mountNode, this);
+    // We synchronously flush updates coming from above so that they commit together
+    // and so that refs resolve before the parent life cycles.
+    updateContainerSync(this.props.children, this._mountNode, this);
+    flushSyncWork();
 
     if (this._surface.render) {
       this._surface.render();
@@ -92,7 +100,10 @@ class Surface extends React.Component {
   }
 
   componentWillUnmount() {
-    updateContainer(null, this._mountNode, this);
+    // We synchronously flush updates coming from above so that they commit together
+    // and so that refs resolve before the parent life cycles.
+    updateContainerSync(null, this._mountNode, this);
+    flushSyncWork();
   }
 
   render() {

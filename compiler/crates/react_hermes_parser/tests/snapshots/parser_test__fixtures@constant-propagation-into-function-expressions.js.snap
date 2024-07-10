@@ -1,0 +1,300 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/constant-propagation-into-function-expressions.js
+---
+Input:
+function Component(props) {
+  const x = 42;
+  const onEvent = () => {
+    console.log(x);
+  };
+  return <Foo onEvent={onEvent} />;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 42.0,
+                  "loc": null,
+                  "range": [
+                    40,
+                    42
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  42
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              43
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "onEvent",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    52,
+                    59
+                  ]
+                },
+                "init": {
+                  "type": "ArrowFunctionExpression",
+                  "id": null,
+                  "params": [],
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "expression": {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "console",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                74,
+                                81
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "log",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                82,
+                                85
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              74,
+                              85
+                            ]
+                          },
+                          "arguments": [
+                            {
+                              "type": "Identifier",
+                              "name": "x",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                86,
+                                87
+                              ]
+                            }
+                          ],
+                          "loc": null,
+                          "range": [
+                            74,
+                            88
+                          ]
+                        },
+                        "directive": null,
+                        "loc": null,
+                        "range": [
+                          74,
+                          89
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      68,
+                      93
+                    ]
+                  },
+                  "generator": false,
+                  "async": false,
+                  "loc": null,
+                  "range": [
+                    62,
+                    93
+                  ],
+                  "expression": false,
+                  "loc": null,
+                  "range": [
+                    62,
+                    93
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  52,
+                  93
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              46,
+              94
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    105,
+                    108
+                  ]
+                },
+                "attributes": [
+                  {
+                    "type": "JSXAttribute",
+                    "name": {
+                      "type": "JSXIdentifier",
+                      "name": "onEvent",
+                      "loc": null,
+                      "range": [
+                        109,
+                        116
+                      ]
+                    },
+                    "value": {
+                      "type": "JSXExpressionContainer",
+                      "expression": {
+                        "type": "Identifier",
+                        "name": "onEvent",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          118,
+                          125
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        117,
+                        126
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      109,
+                      126
+                    ]
+                  }
+                ],
+                "selfClosing": true,
+                "loc": null,
+                "range": [
+                  104,
+                  129
+                ]
+              },
+              "children": [],
+              "closingElement": null,
+              "loc": null,
+              "range": [
+                104,
+                129
+              ]
+            },
+            "loc": null,
+            "range": [
+              97,
+              130
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          132
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        132
+      ],
+      "loc": null,
+      "range": [
+        0,
+        132
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    132
+  ]
+}

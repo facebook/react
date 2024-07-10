@@ -40,6 +40,7 @@ module.exports = {
     // FB
     __DEV__: 'readonly',
     // Node.js Server Rendering
+    process: 'readonly',
     setImmediate: 'readonly',
     Buffer: 'readonly',
     // Trusted Types
@@ -55,6 +56,7 @@ module.exports = {
 
     // Temp
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
 
     // jest
     jest: 'readonly',

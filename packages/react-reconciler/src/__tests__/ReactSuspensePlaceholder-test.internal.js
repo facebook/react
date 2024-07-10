@@ -28,7 +28,6 @@ describe('ReactSuspensePlaceholder', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.enableProfilerTimer = true;
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -297,6 +296,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during mount', () => {
+      // @gate !disableLegacyMode && !disableLegacyMode
       it('properly accounts for base durations when a suspended times out in a legacy tree', async () => {
         ReactNoop.renderLegacySyncRoot(<App shouldSuspend={true} />);
         assertLog([
@@ -371,6 +371,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during update', () => {
+      // @gate !disableLegacyMode && !disableLegacyMode
       it('properly accounts for base durations when a suspended times out in a legacy tree', async () => {
         ReactNoop.renderLegacySyncRoot(
           <App shouldSuspend={false} textRenderDuration={5} />,

@@ -10,6 +10,8 @@
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {getVersionedRenderImplementation} from './utils';
+
 describe('ProfilingCache', () => {
   let PropTypes;
   let React;
@@ -39,8 +41,11 @@ describe('ProfilingCache', () => {
     Scheduler = require('scheduler');
   });
 
+  const {render, getContainer} = getVersionedRenderImplementation();
+
   // @reactVersion >= 16.9
-  it('should collect data for each root (including ones added or mounted after profiling started)', () => {
+  // @reactVersion <= 18.2
+  it('should collect data for each root (including ones added or mounted after profiling started) (legacy render)', () => {
     const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
@@ -151,6 +156,116 @@ describe('ProfilingCache', () => {
     });
   });
 
+  // @reactVersion >= 18
+  it('should collect data for each root (including ones added or mounted after profiling started) (createRoot)', () => {
+    const Parent = ({count}) => {
+      Scheduler.unstable_advanceTime(10);
+      const children = new Array(count)
+        .fill(true)
+        .map((_, index) => <Child key={index} duration={index} />);
+      return (
+        <React.Fragment>
+          {children}
+          <MemoizedChild duration={1} />
+        </React.Fragment>
+      );
+    };
+    const Child = ({duration}) => {
+      Scheduler.unstable_advanceTime(duration);
+      return null;
+    };
+    const MemoizedChild = React.memo(Child);
+
+    const RootA = ({children}) => children;
+    const RootB = ({children}) => children;
+    const RootC = ({children}) => children;
+
+    const containerA = document.createElement('div');
+    const containerB = document.createElement('div');
+    const containerC = document.createElement('div');
+
+    const rootA = ReactDOMClient.createRoot(containerA);
+    const rootB = ReactDOMClient.createRoot(containerB);
+    const rootC = ReactDOMClient.createRoot(containerC);
+
+    utils.act(() =>
+      rootA.render(
+        <RootA>
+          <Parent count={2} />
+        </RootA>,
+      ),
+    );
+    utils.act(() =>
+      rootB.render(
+        <RootB>
+          <Parent count={1} />
+        </RootB>,
+      ),
+    );
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() =>
+      rootA.render(
+        <RootA>
+          <Parent count={3} />
+        </RootA>,
+      ),
+    );
+    utils.act(() =>
+      rootC.render(
+        <RootC>
+          <Parent count={1} />
+        </RootC>,
+      ),
+    );
+    utils.act(() =>
+      rootA.render(
+        <RootA>
+          <Parent count={1} />
+        </RootA>,
+      ),
+    );
+    utils.act(() => rootB.unmount());
+    utils.act(() =>
+      rootA.render(
+        <RootA>
+          <Parent count={0} />
+        </RootA>,
+      ),
+    );
+    utils.act(() => store.profilerStore.stopProfiling());
+    utils.act(() => rootA.unmount());
+
+    const rootIDs = Array.from(
+      store.profilerStore.profilingData.dataForRoots.values(),
+    ).map(({rootID}) => rootID);
+    expect(rootIDs).toHaveLength(3);
+
+    const originalProfilingDataForRoot = [];
+
+    let data = store.profilerStore.getDataForRoot(rootIDs[0]);
+    expect(data.displayName).toMatchInlineSnapshot(`"RootA"`);
+    expect(data.commitData).toHaveLength(3);
+    originalProfilingDataForRoot.push(data);
+
+    data = store.profilerStore.getDataForRoot(rootIDs[1]);
+    expect(data.displayName).toMatchInlineSnapshot(`"RootC"`);
+    expect(data.commitData).toHaveLength(1);
+    originalProfilingDataForRoot.push(data);
+
+    data = store.profilerStore.getDataForRoot(rootIDs[2]);
+    expect(data.displayName).toMatchInlineSnapshot(`"RootB"`);
+    expect(data.commitData).toHaveLength(1);
+    originalProfilingDataForRoot.push(data);
+
+    utils.exportImportHelper(bridge, store);
+
+    rootIDs.forEach((rootID, index) => {
+      const current = store.profilerStore.getDataForRoot(rootID);
+      const prev = originalProfilingDataForRoot[index];
+      expect(current).toEqual(prev);
+    });
+  });
+
   // @reactVersion >= 16.9
   it('should collect data for each commit', () => {
     const Parent = ({count}) => {
@@ -171,13 +286,11 @@ describe('ProfilingCache', () => {
     };
     const MemoizedChild = React.memo(Child);
 
-    const container = document.createElement('div');
-
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => legacyRender(<Parent count={2} />, container));
-    utils.act(() => legacyRender(<Parent count={3} />, container));
-    utils.act(() => legacyRender(<Parent count={1} />, container));
-    utils.act(() => legacyRender(<Parent count={0} />, container));
+    utils.act(() => render(<Parent count={2} />));
+    utils.act(() => render(<Parent count={3} />));
+    utils.act(() => render(<Parent count={1} />));
+    utils.act(() => render(<Parent count={0} />));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const rootID = store.roots[0];
@@ -197,7 +310,8 @@ describe('ProfilingCache', () => {
   });
 
   // @reactVersion >= 16.9
-  it('should record changed props/state/context/hooks', () => {
+  // @reactVersion <= 18.2
+  it('should record changed props/state/context/hooks for React version [16.9; 18.2] with legacy context', () => {
     let instance = null;
 
     const ModernContext = React.createContext(0);
@@ -244,19 +358,13 @@ describe('ProfilingCache', () => {
       }
     }
 
-    const container = document.createElement('div');
-
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => legacyRender(<LegacyContextProvider />, container));
+    utils.act(() => render(<LegacyContextProvider />));
     expect(instance).not.toBeNull();
     utils.act(() => (instance: any).setState({count: 1}));
-    utils.act(() =>
-      legacyRender(<LegacyContextProvider foo={123} />, container),
-    );
-    utils.act(() =>
-      legacyRender(<LegacyContextProvider bar="abc" />, container),
-    );
-    utils.act(() => legacyRender(<LegacyContextProvider />, container));
+    utils.act(() => render(<LegacyContextProvider foo={123} />));
+    utils.act(() => render(<LegacyContextProvider bar="abc" />));
+    utils.act(() => render(<LegacyContextProvider />));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const rootID = store.roots[0];
@@ -512,6 +620,381 @@ describe('ProfilingCache', () => {
     }
   });
 
+  // @reactVersion > 18.2
+  // @gate !disableLegacyContext
+  it('should record changed props/state/context/hooks for React version (18.2; ∞) with legacy context enabled', () => {
+    let instance = null;
+
+    const ModernContext = React.createContext(0);
+
+    class LegacyContextProvider extends React.Component<any, {count: number}> {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      state = {count: 0};
+      getChildContext() {
+        return this.state;
+      }
+      render() {
+        instance = this;
+        return (
+          <ModernContext.Provider value={this.state.count}>
+            <React.Fragment>
+              <ModernContextConsumer />
+              <LegacyContextConsumer />
+            </React.Fragment>
+          </ModernContext.Provider>
+        );
+      }
+    }
+
+    const FunctionComponentWithHooks = ({count}) => {
+      React.useMemo(() => count, [count]);
+      return null;
+    };
+
+    class ModernContextConsumer extends React.Component<any> {
+      static contextType = ModernContext;
+      render() {
+        return <FunctionComponentWithHooks count={this.context} />;
+      }
+    }
+
+    class LegacyContextConsumer extends React.Component<any> {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render() {
+        return <FunctionComponentWithHooks count={this.context.count} />;
+      }
+    }
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => render(<LegacyContextProvider />));
+    expect(instance).not.toBeNull();
+    utils.act(() => (instance: any).setState({count: 1}));
+    utils.act(() => render(<LegacyContextProvider foo={123} />));
+    utils.act(() => render(<LegacyContextProvider bar="abc" />));
+    utils.act(() => render(<LegacyContextProvider />));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+
+    let changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+    expect(changeDescriptions).toHaveLength(5);
+    expect(changeDescriptions[0]).toEqual(
+      new Map([
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          },
+        ],
+      ]),
+    );
+
+    expect(changeDescriptions[1]).toEqual(
+      new Map([
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['count'],
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: true,
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['count'],
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: ['count'],
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: ['count'],
+          },
+        ],
+      ]),
+    );
+
+    expect(changeDescriptions[2]).toEqual(
+      new Map([
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: false,
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: [],
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['foo'],
+            state: [],
+          },
+        ],
+      ]),
+    );
+
+    expect(changeDescriptions[3]).toEqual(
+      new Map([
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: false,
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: [],
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['foo', 'bar'],
+            state: [],
+          },
+        ],
+      ]),
+    );
+
+    expect(changeDescriptions[4]).toEqual(
+      new Map([
+        [
+          5,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          4,
+          {
+            context: false,
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          7,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          6,
+          {
+            context: [],
+            didHooksChange: false,
+            hooks: null,
+            isFirstMount: false,
+            props: [],
+            state: null,
+          },
+        ],
+        [
+          2,
+          {
+            context: null,
+            didHooksChange: false,
+            hooks: [],
+            isFirstMount: false,
+            props: ['bar'],
+            state: [],
+          },
+        ],
+      ]),
+    );
+
+    utils.exportImportHelper(bridge, store);
+
+    const prevChangeDescriptions = [...changeDescriptions];
+
+    changeDescriptions = store.profilerStore
+      .getDataForRoot(rootID)
+      .commitData.map(commitData => commitData.changeDescriptions);
+    expect(changeDescriptions).toHaveLength(5);
+
+    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
+      expect(changeDescriptions[commitIndex]).toEqual(
+        prevChangeDescriptions[commitIndex],
+      );
+    }
+  });
+
   // @reactVersion >= 18.0
   it('should properly detect changed hooks', () => {
     const Context = React.createContext(0);
@@ -574,25 +1057,21 @@ describe('ProfilingCache', () => {
       return null;
     };
 
-    const container = document.createElement('div');
-
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() =>
-      legacyRender(
+      render(
         <Context.Provider value={true}>
           <Component count={1} />
         </Context.Provider>,
-        container,
       ),
     );
 
     // Second render has no changed hooks, only changed props.
     utils.act(() =>
-      legacyRender(
+      render(
         <Context.Provider value={true}>
           <Component count={2} />
         </Context.Provider>,
-        container,
       ),
     );
 
@@ -604,11 +1083,10 @@ describe('ProfilingCache', () => {
 
     // Fifth render has a changed context value, but no changed hook.
     utils.act(() =>
-      legacyRender(
+      render(
         <Context.Provider value={false}>
           <Component count={2} />
         </Context.Provider>,
-        container,
       ),
     );
 
@@ -754,9 +1232,7 @@ describe('ProfilingCache', () => {
     };
 
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() =>
-      legacyRender(<Grandparent />, document.createElement('div')),
-    );
+    utils.act(() => render(<Grandparent />));
     utils.act(() => store.profilerStore.stopProfiling());
 
     expect(store).toMatchInlineSnapshot(`
@@ -822,9 +1298,7 @@ describe('ProfilingCache', () => {
     };
 
     utils.act(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() =>
-      legacyRender(<Parent />, document.createElement('div')),
-    );
+    await utils.actAsync(() => render(<Parent />));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const rootID = store.roots[0];
@@ -880,12 +1354,10 @@ describe('ProfilingCache', () => {
     };
     const MemoizedChild = React.memo(Child);
 
-    const container = document.createElement('div');
-
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => legacyRender(<Parent count={1} />, container));
-    utils.act(() => legacyRender(<Parent count={2} />, container));
-    utils.act(() => legacyRender(<Parent count={3} />, container));
+    utils.act(() => render(<Parent count={1} />));
+    utils.act(() => render(<Parent count={2} />));
+    utils.act(() => render(<Parent count={3} />));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const rootID = store.roots[0];
@@ -940,11 +1412,11 @@ describe('ProfilingCache', () => {
 
   // @reactVersion >= 18.0.0
   // @reactVersion <= 18.2.0
-  it('should handle unexpectedly shallow suspense trees for react v[18.0.0 - 18.2.0]', () => {
-    const container = document.createElement('div');
-
+  it('should handle unexpectedly shallow suspense trees for react v[18.0.0 - 18.2.0] (legacy render)', () => {
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => legacyRender(<React.Suspense />, container));
+    utils.act(() =>
+      legacyRender(<React.Suspense />, document.createElement('div')),
+    );
     utils.act(() => store.profilerStore.stopProfiling());
 
     const rootID = store.roots[0];
@@ -968,6 +1440,7 @@ describe('ProfilingCache', () => {
           "timestamp": 0,
           "updaters": [
             {
+              "compiledWithForget": false,
               "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
@@ -980,13 +1453,11 @@ describe('ProfilingCache', () => {
     `);
   });
 
-  // This test is not gated.
-  // For this test we use the current version of react, built from source.
-  it('should handle unexpectedly shallow suspense trees', () => {
-    const container = document.createElement('div');
-
+  // @reactVersion >= 18.0.0
+  // @reactVersion <= 18.2.0
+  it('should handle unexpectedly shallow suspense trees for react v[18.0.0 - 18.2.0] (createRoot)', () => {
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => legacyRender(<React.Suspense />, container));
+    utils.act(() => render(<React.Suspense />));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const rootID = store.roots[0];
@@ -1010,7 +1481,48 @@ describe('ProfilingCache', () => {
           "timestamp": 0,
           "updaters": [
             {
-              "displayName": "render()",
+              "compiledWithForget": false,
+              "displayName": "createRoot()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+      ]
+    `);
+  });
+
+  // @reactVersion > 18.2.0
+  it('should handle unexpectedly shallow suspense trees', () => {
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => render(<React.Suspense />));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+    const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
+    expect(commitData).toMatchInlineSnapshot(`
+      [
+        {
+          "changeDescriptions": Map {},
+          "duration": 0,
+          "effectDuration": null,
+          "fiberActualDurations": Map {
+            1 => 0,
+            2 => 0,
+          },
+          "fiberSelfDurations": Map {
+            1 => 0,
+            2 => 0,
+          },
+          "passiveEffectDuration": null,
+          "priorityLevel": "Normal",
+          "timestamp": 0,
+          "updaters": [
+            {
+              "compiledWithForget": false,
+              "displayName": "createRoot()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1101,15 +1613,16 @@ describe('ProfilingCache', () => {
       );
     }
 
-    const {Simulate} = require('react-dom/test-utils');
-
-    const container = document.createElement('div');
-    utils.act(() => legacyRender(<App />, container));
-    expect(container.textContent).toBe('Home');
+    utils.act(() => render(<App />));
+    expect(getContainer().textContent).toBe('Home');
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => Simulate.click(linkRef.current));
+    utils.act(() =>
+      linkRef.current.dispatchEvent(
+        new MouseEvent('click', {bubbles: true, cancelable: true}),
+      ),
+    );
     utils.act(() => store.profilerStore.stopProfiling());
-    expect(container.textContent).toBe('About');
+    expect(getContainer().textContent).toBe('About');
   });
 
   // @reactVersion >= 18.0

@@ -16,7 +16,6 @@ type Props = {
   placeholder?: string,
   testName?: ?string,
   value: any,
-  ...
 };
 
 export default function AutoSizeInput({

@@ -19,6 +19,10 @@ import {like, greet, increment} from './actions.js';
 
 import {getServerState} from './ServerState.js';
 
+const promisedText = new Promise(resolve =>
+  setTimeout(() => resolve('deferred text'), 100)
+);
+
 export default async function App() {
   const res = await fetch('http://localhost:3001/todos');
   const todos = await res.json();
@@ -32,6 +36,11 @@ export default async function App() {
       <body>
         <Container>
           <h1>{getServerState()}</h1>
+          <React.Suspense fallback={null}>
+            <div data-testid="promise-as-a-child-test">
+              Promise as a child hydrates without errors: {promisedText}
+            </div>
+          </React.Suspense>
           <Counter incrementAction={increment} />
           <Counter2 incrementAction={increment} />
           <Counter3 incrementAction={increment} />

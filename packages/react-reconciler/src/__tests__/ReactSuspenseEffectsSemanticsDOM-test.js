@@ -448,6 +448,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     expect(container.innerHTML).toBe('<h1>Hello</h1>');
   });
 
+  // @gate !disableLegacyMode
   it('regression: unmount hidden tree, in legacy mode', async () => {
     // In legacy mode, when a tree suspends and switches to a fallback, the
     // effects are not unmounted. So we have to unmount them during a deletion.

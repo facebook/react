@@ -11,10 +11,9 @@ const inlinePackagePath = join(ROOT_PATH, 'packages', 'react-devtools-inline');
 const shellPackagePath = join(ROOT_PATH, 'packages', 'react-devtools-shell');
 const screenshotPath = join(ROOT_PATH, 'tmp', 'screenshots');
 
-const {SUCCESSFUL_COMPILATION_MESSAGE} = require(join(
-  shellPackagePath,
-  'constants.js'
-));
+const {SUCCESSFUL_COMPILATION_MESSAGE} = require(
+  join(shellPackagePath, 'constants.js')
+);
 
 let buildProcess = null;
 let serverProcess = null;

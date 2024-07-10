@@ -4,7 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @format
+ * @noformat
+ * @nolint
  * @flow strict-local
  */
 
@@ -22,13 +23,11 @@ export const customBubblingEventTypes: {
       skipBubbling?: ?boolean,
     }>,
   }>,
-  ...
 } = {};
 export const customDirectEventTypes: {
   [eventName: string]: $ReadOnly<{
     registrationName: string,
   }>,
-  ...
 } = {};
 
 const viewConfigCallbacks = new Map<string, ?() => ViewConfig>();

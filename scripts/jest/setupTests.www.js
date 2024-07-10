@@ -11,6 +11,16 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // This flag is only used by tests, it should never be set elsewhere.
   actual.forceConcurrentByDefaultForTesting = !__VARIANT__;
 
+  // Flags that aren't currently used, but we still want to force variants to keep the
+  // code live.
+  actual.disableInputAttributeSyncing = __VARIANT__;
+
+  // These are hardcoded to true for the next release,
+  // but still run the tests against both variants until
+  // we remove the flag.
+  actual.disableIEWorkarounds = __VARIANT__;
+  actual.disableClientCache = __VARIANT__;
+
   return actual;
 });
 
@@ -30,9 +40,6 @@ jest.mock('scheduler/src/SchedulerFeatureFlags', () => {
 
   // These flags are not a dynamic on www, but we still want to run
   // tests in both versions.
-  actual.enableIsInputPending = __VARIANT__;
-  actual.enableIsInputPendingContinuous = __VARIANT__;
-  actual.enableProfiling = __VARIANT__;
   actual.enableSchedulerDebugging = __VARIANT__;
 
   return actual;

@@ -1,0 +1,136 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-simple.js
+---
+Input:
+function foo() {
+  let x = 1;
+  let y = 2;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    23,
+                    24
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    27,
+                    28
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  23,
+                  28
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              19,
+              29
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    40,
+                    41
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  41
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              32,
+              42
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          44
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        44
+      ],
+      "loc": null,
+      "range": [
+        0,
+        44
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    44
+  ]
+}

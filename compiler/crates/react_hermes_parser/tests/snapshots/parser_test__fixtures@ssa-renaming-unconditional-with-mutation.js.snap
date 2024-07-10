@@ -1,0 +1,613 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-renaming-unconditional-with-mutation.js
+---
+Input:
+function foo(props) {
+  let x = [];
+  x.push(props.bar);
+  if (props.cond) {
+    x = {};
+    x = [];
+    x.push(props.foo);
+  } else {
+    x = [];
+    x = [];
+    x.push(props.bar);
+  }
+  mut(x);
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            18
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    28,
+                    29
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    32,
+                    34
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  28,
+                  34
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              24,
+              35
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    38,
+                    39
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "push",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    40,
+                    44
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  38,
+                  44
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      45,
+                      50
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "bar",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      51,
+                      54
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    45,
+                    54
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                38,
+                55
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              38,
+              56
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  63,
+                  68
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "cond",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  69,
+                  73
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                63,
+                73
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        81,
+                        82
+                      ]
+                    },
+                    "right": {
+                      "type": "ObjectExpression",
+                      "properties": [],
+                      "loc": null,
+                      "range": [
+                        85,
+                        87
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      81,
+                      87
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    81,
+                    88
+                  ]
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        93,
+                        94
+                      ]
+                    },
+                    "right": {
+                      "type": "ArrayExpression",
+                      "elements": [],
+                      "loc": null,
+                      "range": [
+                        97,
+                        99
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      93,
+                      99
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    93,
+                    100
+                  ]
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          105,
+                          106
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "push",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          107,
+                          111
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        105,
+                        111
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            112,
+                            117
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "foo",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            118,
+                            121
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          112,
+                          121
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      105,
+                      122
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    105,
+                    123
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                75,
+                127
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        139,
+                        140
+                      ]
+                    },
+                    "right": {
+                      "type": "ArrayExpression",
+                      "elements": [],
+                      "loc": null,
+                      "range": [
+                        143,
+                        145
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      139,
+                      145
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    139,
+                    146
+                  ]
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        151,
+                        152
+                      ]
+                    },
+                    "right": {
+                      "type": "ArrayExpression",
+                      "elements": [],
+                      "loc": null,
+                      "range": [
+                        155,
+                        157
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      151,
+                      157
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    151,
+                    158
+                  ]
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "CallExpression",
+                    "callee": {
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          163,
+                          164
+                        ]
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "push",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          165,
+                          169
+                        ]
+                      },
+                      "computed": false,
+                      "loc": null,
+                      "range": [
+                        163,
+                        169
+                      ]
+                    },
+                    "arguments": [
+                      {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "props",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            170,
+                            175
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "bar",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            176,
+                            179
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          170,
+                          179
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      163,
+                      180
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    163,
+                    181
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                133,
+                185
+              ]
+            },
+            "loc": null,
+            "range": [
+              59,
+              185
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "mut",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  188,
+                  191
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    192,
+                    193
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                188,
+                194
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              188,
+              195
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                205,
+                206
+              ]
+            },
+            "loc": null,
+            "range": [
+              198,
+              207
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          20,
+          209
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        209
+      ],
+      "loc": null,
+      "range": [
+        0,
+        209
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    209
+  ]
+}

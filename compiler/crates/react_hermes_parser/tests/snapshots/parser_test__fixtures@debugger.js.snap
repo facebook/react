@@ -1,0 +1,214 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/debugger.js
+---
+Input:
+function Component(props) {
+  debugger;
+  if (props.cond) {
+    debugger;
+  } else {
+    while (props.cond) {
+      debugger;
+    }
+  }
+  debugger;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "DebuggerStatement",
+            "loc": null,
+            "range": [
+              30,
+              39
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "MemberExpression",
+              "object": {
+                "type": "Identifier",
+                "name": "props",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  46,
+                  51
+                ]
+              },
+              "property": {
+                "type": "Identifier",
+                "name": "cond",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  52,
+                  56
+                ]
+              },
+              "computed": false,
+              "loc": null,
+              "range": [
+                46,
+                56
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "DebuggerStatement",
+                  "loc": null,
+                  "range": [
+                    64,
+                    73
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                58,
+                77
+              ]
+            },
+            "alternate": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "WhileStatement",
+                  "test": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        96,
+                        101
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "cond",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        102,
+                        106
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      96,
+                      106
+                    ]
+                  },
+                  "body": {
+                    "type": "BlockStatement",
+                    "body": [
+                      {
+                        "type": "DebuggerStatement",
+                        "loc": null,
+                        "range": [
+                          116,
+                          125
+                        ]
+                      }
+                    ],
+                    "loc": null,
+                    "range": [
+                      108,
+                      131
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    89,
+                    131
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                83,
+                135
+              ]
+            },
+            "loc": null,
+            "range": [
+              42,
+              135
+            ]
+          },
+          {
+            "type": "DebuggerStatement",
+            "loc": null,
+            "range": [
+              138,
+              147
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          149
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        149
+      ],
+      "loc": null,
+      "range": [
+        0,
+        149
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    149
+  ]
+}

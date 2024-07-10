@@ -239,7 +239,7 @@ describe('ReactIncremental', () => {
     expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('can deprioritize unfinished work and resume it later', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
@@ -279,7 +279,7 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle', 'Middle']);
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('can deprioritize a tree from without dropping work', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
@@ -325,7 +325,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle', 'Middle']);
   });
 
-  xit('can resume work in a subtree even when a parent bails out', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can resume work in a subtree even when a parent bails out', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
@@ -381,7 +382,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle']);
   });
 
-  xit('can resume work in a bailed subtree within one pass', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can resume work in a bailed subtree within one pass', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
@@ -467,7 +469,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Foo', 'Bar', 'Bar']);
   });
 
-  xit('can resume mounting a class component', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can resume mounting a class component', async () => {
     let foo;
     class Parent extends React.Component {
       shouldComponentUpdate() {
@@ -505,7 +508,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Foo', 'Bar']);
   });
 
-  xit('reuses the same instance when resuming a class instance', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('reuses the same instance when resuming a class instance', async () => {
     let foo;
     class Parent extends React.Component {
       shouldComponentUpdate() {
@@ -572,7 +576,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('can reuse work done after being preempted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can reuse work done after being preempted', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
@@ -650,7 +655,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle']);
   });
 
-  xit('can reuse work that began but did not complete, after being preempted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can reuse work that began but did not complete, after being preempted', async () => {
     let child;
     let sibling;
 
@@ -724,7 +730,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('can reuse work if shouldComponentUpdate is false, after being preempted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can reuse work if shouldComponentUpdate is false, after being preempted', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
@@ -1048,7 +1055,8 @@ describe('ReactIncremental', () => {
     await waitForAll([]);
   });
 
-  xit('can call sCU while resuming a partly mounted component', () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can call sCU while resuming a partly mounted component', () => {
     const instances = new Set();
 
     class Bar extends React.Component {
@@ -1093,7 +1101,8 @@ describe('ReactIncremental', () => {
     expect(instances.size).toBe(4);
   });
 
-  xit('gets new props when setting state on a partly updated component', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('gets new props when setting state on a partly updated component', async () => {
     const instances = [];
 
     class Bar extends React.Component {
@@ -1155,7 +1164,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Bar:A-1', 'Baz']);
   });
 
-  xit('calls componentWillMount twice if the initial render is aborted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('calls componentWillMount twice if the initial render is aborted', async () => {
     class LifeCycle extends React.Component {
       state = {x: this.props.x};
       UNSAFE_componentWillReceiveProps(nextProps) {
@@ -1207,7 +1217,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('uses state set in componentWillMount even if initial render was aborted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('uses state set in componentWillMount even if initial render was aborted', async () => {
     class LifeCycle extends React.Component {
       constructor(props) {
         super(props);
@@ -1245,7 +1256,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('calls componentWill* twice if an update render is aborted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('calls componentWill* twice if an update render is aborted', async () => {
     class LifeCycle extends React.Component {
       UNSAFE_componentWillMount() {
         Scheduler.log('componentWillMount:' + this.props.x);
@@ -1390,7 +1402,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Child']);
   });
 
-  xit('does not call componentWillReceiveProps for state-only updates', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('does not call componentWillReceiveProps for state-only updates', async () => {
     const instances = [];
 
     class LifeCycle extends React.Component {
@@ -1527,7 +1540,8 @@ describe('ReactIncremental', () => {
     // incomplete parents.
   });
 
-  xit('skips will/DidUpdate when bailing unless an update was already in progress', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('skips will/DidUpdate when bailing unless an update was already in progress', async () => {
     class LifeCycle extends React.Component {
       UNSAFE_componentWillMount() {
         Scheduler.log('componentWillMount');
@@ -1864,50 +1878,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  // @gate !disableModulePatternComponents
-  // @gate !disableLegacyContext
-  it('does not leak own context into context provider (factory components)', async () => {
-    function Recurse(props, context) {
-      return {
-        getChildContext() {
-          return {n: (context.n || 3) - 1};
-        },
-        render() {
-          Scheduler.log('Recurse ' + JSON.stringify(context));
-          if (context.n === 0) {
-            return null;
-          }
-          return <Recurse />;
-        },
-      };
-    }
-    Recurse.contextTypes = {
-      n: PropTypes.number,
-    };
-    Recurse.childContextTypes = {
-      n: PropTypes.number,
-    };
-
-    ReactNoop.render(<Recurse />);
-    await expect(
-      async () =>
-        await waitForAll([
-          'Recurse {}',
-          'Recurse {"n":2}',
-          'Recurse {"n":1}',
-          'Recurse {"n":0}',
-        ]),
-    ).toErrorDev([
-      'Warning: The <Recurse /> component appears to be a function component that returns a class instance. ' +
-        'Change Recurse to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Recurse.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-    ]);
-  });
-
-  // @gate www
-  // @gate !disableLegacyContext
+  // @gate enableLegacyHidden && !disableLegacyContext
   it('provides context when reusing work', async () => {
     class Intl extends React.Component {
       static childContextTypes = {
@@ -2283,7 +2254,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('should reuse memoized work if pointers are updated before calling lifecycles', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should reuse memoized work if pointers are updated before calling lifecycles', async () => {
     const cduNextProps = [];
     const cduPrevProps = [];
     const scuNextProps = [];

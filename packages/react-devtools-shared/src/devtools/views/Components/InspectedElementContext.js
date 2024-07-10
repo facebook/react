@@ -174,17 +174,6 @@ export function InspectedElementContextController({
     [setState, state],
   );
 
-  const inspectedElementRef = useRef<null | InspectedElement>(null);
-  useEffect(() => {
-    if (
-      inspectedElement !== null &&
-      inspectedElement.hooks !== null &&
-      inspectedElementRef.current !== inspectedElement
-    ) {
-      inspectedElementRef.current = inspectedElement;
-    }
-  }, [inspectedElement]);
-
   useEffect(() => {
     const purgeCachedMetadata = purgeCachedMetadataRef.current;
     if (typeof purgeCachedMetadata === 'function') {

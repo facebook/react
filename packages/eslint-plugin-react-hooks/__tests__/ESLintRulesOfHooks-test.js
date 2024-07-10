@@ -3,21 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @jest-environment node
  */
 
 'use strict';
 
-const ESLintTester = require('eslint').RuleTester;
+const ESLintTesterV7 = require('eslint-v7').RuleTester;
+const ESLintTesterV9 = require('eslint-v9').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
+const BabelEslintParser = require('@babel/eslint-parser');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];
-
-ESLintTester.setDefaultConfig({
-  parser: require.resolve('babel-eslint'),
-  parserOptions: {
-    ecmaVersion: 6,
-    sourceType: 'module',
-  },
-});
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
@@ -478,6 +474,81 @@ const tests = {
           const [myState, setMyState] = useState(null);
         }
       `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          const text = use(Promise.resolve('A'));
+          return <Text text={text} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        import * as React from 'react';
+        function App() {
+          if (shouldShowText) {
+            const text = use(query);
+            const data = React.use(thing);
+            const data2 = react.use(thing2);
+            return <Text text={text} />
+          }
+          return <Text text={shouldFetchBackupText ? use(backupQuery) : "Nothing to see here"} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          let data = [];
+          for (const query of queries) {
+            const text = use(item);
+            data.push(text);
+          }
+          return <Child data={data} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          const data = someCallback((x) => use(x));
+          return <Child data={data} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        export const notAComponent = () => {
+           return () => {
+            useState();
+          }
+        }
+      `,
+      // TODO: this should error but doesn't.
+      // errors: [functionError('use', 'notAComponent')],
+    },
+    {
+      code: normalizeIndent`
+        export default () => {
+          if (isVal) {
+            useState(0);
+          }
+        }
+      `,
+      // TODO: this should error but doesn't.
+      // errors: [genericError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        function notAComponent() {
+          return new Promise.then(() => {
+            useState();
+          });
+        }
+      `,
+      // TODO: this should error but doesn't.
+      // errors: [genericError('useState')],
     },
   ],
   invalid: [
@@ -1058,6 +1129,58 @@ const tests = {
       `,
       errors: [asyncComponentHookError('useState')],
     },
+    {
+      code: normalizeIndent`
+        Hook.use();
+        Hook._use();
+        Hook.useState();
+        Hook._useState();
+        Hook.use42();
+        Hook.useHook();
+        Hook.use_hook();
+      `,
+      errors: [
+        topLevelError('Hook.use'),
+        topLevelError('Hook.useState'),
+        topLevelError('Hook.use42'),
+        topLevelError('Hook.useHook'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function notAComponent() {
+          use(promise);
+        }
+      `,
+      errors: [functionError('use', 'notAComponent')],
+    },
+    {
+      code: normalizeIndent`
+        const text = use(promise);
+        function App() {
+          return <Text text={text} />
+        }
+      `,
+      errors: [topLevelError('use')],
+    },
+    {
+      code: normalizeIndent`
+        class C {
+          m() {
+            use(promise);
+          }
+        }
+      `,
+      errors: [classError('use')],
+    },
+    {
+      code: normalizeIndent`
+        async function AsyncComponent() {
+          use();
+        }
+      `,
+      errors: [asyncComponentHookError('use')],
+    },
   ],
 };
 
@@ -1159,45 +1282,6 @@ if (__EXPERIMENTAL__) {
         }
       `,
     },
-    {
-      code: normalizeIndent`
-        function App() {
-          const text = use(Promise.resolve('A'));
-          return <Text text={text} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function App() {
-          if (shouldShowText) {
-            const text = use(query);
-            return <Text text={text} />
-          }
-          return <Text text={shouldFetchBackupText ? use(backupQuery) : "Nothing to see here"} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function App() {
-          let data = [];
-          for (const query of queries) {
-            const text = use(item);
-            data.push(text);
-          }
-          return <Child data={data} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function App() {
-          const data = someCallback((x) => use(x));
-          return <Child data={data} />
-        }
-      `,
-    },
   ];
   tests.invalid = [
     ...tests.invalid,
@@ -1271,58 +1355,6 @@ if (__EXPERIMENTAL__) {
         }
       `,
       errors: [useEffectEventError('onClick')],
-    },
-    {
-      code: normalizeIndent`
-        Hook.use();
-        Hook._use();
-        Hook.useState();
-        Hook._useState();
-        Hook.use42();
-        Hook.useHook();
-        Hook.use_hook();
-      `,
-      errors: [
-        topLevelError('Hook.use'),
-        topLevelError('Hook.useState'),
-        topLevelError('Hook.use42'),
-        topLevelError('Hook.useHook'),
-      ],
-    },
-    {
-      code: normalizeIndent`
-        function notAComponent() {
-          use(promise);
-        }
-      `,
-      errors: [functionError('use', 'notAComponent')],
-    },
-    {
-      code: normalizeIndent`
-        const text = use(promise);
-        function App() {
-          return <Text text={text} />
-        }
-      `,
-      errors: [topLevelError('use')],
-    },
-    {
-      code: normalizeIndent`
-        class C {
-          m() {
-            use(promise);
-          }
-        }
-      `,
-      errors: [classError('use')],
-    },
-    {
-      code: normalizeIndent`
-        async function AsyncComponent() {
-          use();
-        }
-      `,
-      errors: [asyncComponentHookError('use')],
     },
   ];
 }
@@ -1425,5 +1457,20 @@ if (!process.env.CI) {
   tests.invalid = tests.invalid.filter(predicate);
 }
 
-const eslintTester = new ESLintTester();
-eslintTester.run('react-hooks', ReactHooksESLintRule, tests);
+describe('rules-of-hooks/rules-of-hooks', () => {
+  new ESLintTesterV7({
+    parser: require.resolve('babel-eslint'),
+    parserOptions: {
+      ecmaVersion: 6,
+      sourceType: 'module',
+    },
+  }).run('eslint: v7', ReactHooksESLintRule, tests);
+
+  new ESLintTesterV9({
+    languageOptions: {
+      parser: BabelEslintParser,
+      ecmaVersion: 6,
+      sourceType: 'module',
+    },
+  }).run('eslint: v9', ReactHooksESLintRule, tests);
+});

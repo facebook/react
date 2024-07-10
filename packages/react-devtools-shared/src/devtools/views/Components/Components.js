@@ -259,6 +259,4 @@ function setResizeCSSVariable(
   }
 }
 
-export default (portaledContent(
-  Components,
-): React$StatelessFunctionalComponent<{}>);
+export default (portaledContent(Components): React$AbstractComponent<{}>);

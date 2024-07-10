@@ -10,7 +10,7 @@
 // A pure JS implementation of a string hashing function. We do not use it for
 // security or obfuscation purposes, only to create compact hashes. So we
 // prioritize speed over collision avoidance. For example, we use this to hash
-// the component key path used by useFormState for MPA-style submissions.
+// the component key path used by useActionState for MPA-style submissions.
 //
 // In environments where built-in hashing functions are available, we prefer
 // those instead. Like Node's crypto module, or Bun.hash. Unfortunately this

@@ -10,17 +10,21 @@
 'use strict';
 
 const React = require('react');
-const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
+
+const act = require('internal-test-utils').act;
 
 describe('dangerouslySetInnerHTML', () => {
   describe('when the node has innerHTML property', () => {
-    it('sets innerHTML on it', () => {
+    it('sets innerHTML on it', async () => {
       const container = document.createElement('div');
-      const node = ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: '<h1>Hello</h1>'}} />,
-        container,
-      );
-      expect(node.innerHTML).toBe('<h1>Hello</h1>');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div dangerouslySetInnerHTML={{__html: '<h1>Hello</h1>'}} />,
+        );
+      });
+      expect(container.firstChild.innerHTML).toBe('<h1>Hello</h1>');
     });
   });
 
@@ -56,22 +60,22 @@ describe('dangerouslySetInnerHTML', () => {
     });
 
     // @gate !disableIEWorkarounds
-    it('sets innerHTML on it', () => {
+    it('sets innerHTML on it', async () => {
       const html = '<circle></circle>';
       const container = document.createElementNS(
         'http://www.w3.org/2000/svg',
         'svg',
       );
-      ReactDOM.render(
-        <g dangerouslySetInnerHTML={{__html: html}} />,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<g dangerouslySetInnerHTML={{__html: html}} />);
+      });
       const circle = container.firstChild.firstChild;
       expect(circle.tagName).toBe('circle');
     });
 
     // @gate !disableIEWorkarounds
-    it('clears previous children', () => {
+    it('clears previous children', async () => {
       const firstHtml = '<rect></rect>';
       const secondHtml = '<circle></circle>';
 
@@ -79,16 +83,15 @@ describe('dangerouslySetInnerHTML', () => {
         'http://www.w3.org/2000/svg',
         'svg',
       );
-      ReactDOM.render(
-        <g dangerouslySetInnerHTML={{__html: firstHtml}} />,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<g dangerouslySetInnerHTML={{__html: firstHtml}} />);
+      });
       const rect = container.firstChild.firstChild;
       expect(rect.tagName).toBe('rect');
-      ReactDOM.render(
-        <g dangerouslySetInnerHTML={{__html: secondHtml}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<g dangerouslySetInnerHTML={{__html: secondHtml}} />);
+      });
       const circle = container.firstChild.firstChild;
       expect(circle.tagName).toBe('circle');
     });

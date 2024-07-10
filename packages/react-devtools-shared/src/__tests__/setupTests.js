@@ -13,6 +13,7 @@ import type {
   BackendBridge,
   FrontendBridge,
 } from 'react-devtools-shared/src/bridge';
+const {getTestFlags} = require('../../../../scripts/jest/TestFlags');
 
 // Argument is serialized when passed from jest-cli script through to setupTests.
 const compactConsole = process.env.compactConsole === 'true';
@@ -31,6 +32,76 @@ if (compactConsole) {
 
   global.console = new CustomConsole(process.stdout, process.stderr, formatter);
 }
+
+const expectTestToFail = async (callback, error) => {
+  if (callback.length > 0) {
+    throw Error(
+      'Gated test helpers do not support the `done` callback. Return a ' +
+        'promise instead.',
+    );
+  }
+  try {
+    const maybePromise = callback();
+    if (
+      maybePromise !== undefined &&
+      maybePromise !== null &&
+      typeof maybePromise.then === 'function'
+    ) {
+      await maybePromise;
+    }
+  } catch (testError) {
+    return;
+  }
+  throw error;
+};
+
+const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
+global._test_gate = (gateFn, testName, callback) => {
+  let shouldPass;
+  try {
+    const flags = getTestFlags();
+    shouldPass = gateFn(flags);
+  } catch (e) {
+    test(testName, () => {
+      throw e;
+    });
+    return;
+  }
+  if (shouldPass) {
+    test(testName, callback);
+  } else {
+    const error = new Error(gatedErrorMessage);
+    Error.captureStackTrace(error, global._test_gate);
+    test(`[GATED, SHOULD FAIL] ${testName}`, () =>
+      expectTestToFail(callback, error));
+  }
+};
+global._test_gate_focus = (gateFn, testName, callback) => {
+  let shouldPass;
+  try {
+    const flags = getTestFlags();
+    shouldPass = gateFn(flags);
+  } catch (e) {
+    test.only(testName, () => {
+      throw e;
+    });
+    return;
+  }
+  if (shouldPass) {
+    test.only(testName, callback);
+  } else {
+    const error = new Error(gatedErrorMessage);
+    Error.captureStackTrace(error, global._test_gate_focus);
+    test.only(`[GATED, SHOULD FAIL] ${testName}`, () =>
+      expectTestToFail(callback, error));
+  }
+};
+
+// Dynamic version of @gate pragma
+global.gate = fn => {
+  const flags = getTestFlags();
+  return fn(flags);
+};
 
 beforeEach(() => {
   global.mockClipboardCopy = jest.fn();
@@ -58,7 +129,9 @@ beforeEach(() => {
   jest.useFakeTimers();
 
   // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
-  global._ignoredErrorOrWarningMessages = [];
+  global._ignoredErrorOrWarningMessages = [
+    'react-test-renderer is deprecated.',
+  ];
   function shouldIgnoreConsoleErrorOrWarn(args) {
     let firstArg = args[0];
     if (
@@ -81,23 +154,22 @@ beforeEach(() => {
 
   const originalConsoleError = console.error;
   console.error = (...args) => {
-    const firstArg = args[0];
-    if (
-      firstArg === 'Warning: React instrumentation encountered an error: %s'
-    ) {
+    let firstArg = args[0];
+    if (typeof firstArg === 'string' && firstArg.startsWith('Warning: ')) {
+      // Older React versions might use the Warning: prefix. I'm not sure
+      // if they use this code path.
+      firstArg = firstArg.slice(9);
+    }
+    if (firstArg === 'React instrumentation encountered an error: %s') {
       // Rethrow errors from React.
       throw args[1];
     } else if (
       typeof firstArg === 'string' &&
-      (firstArg.startsWith(
-        "Warning: It looks like you're using the wrong act()",
-      ) ||
+      (firstArg.startsWith("It looks like you're using the wrong act()") ||
         firstArg.startsWith(
-          'Warning: The current testing environment is not configured to support act',
+          'The current testing environment is not configured to support act',
         ) ||
-        firstArg.startsWith(
-          'Warning: You seem to have overlapping act() calls',
-        ))
+        firstArg.startsWith('You seem to have overlapping act() calls'))
     ) {
       // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
       // since test updates are expected to impact both renderers.

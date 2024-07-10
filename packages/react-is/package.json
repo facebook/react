@@ -1,8 +1,9 @@
 {
   "name": "react-is",
-  "version": "18.2.0",
+  "version": "19.0.0",
   "description": "Brand checking of React Elements.",
   "main": "index.js",
+  "sideEffects": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
@@ -15,12 +16,11 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://react.dev/",
   "files": [
     "LICENSE",
     "README.md",
     "index.js",
-    "cjs/",
-    "umd/"
+    "cjs/"
   ]
 }

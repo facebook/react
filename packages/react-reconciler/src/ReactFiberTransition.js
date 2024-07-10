@@ -7,12 +7,20 @@
  * @flow
  */
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {Thenable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
-import type {Transition} from './ReactFiberTracingMarkerComponent';
+import type {
+  BatchConfigTransition,
+  Transition,
+} from './ReactFiberTracingMarkerComponent';
 
-import {enableCache, enableTransitionTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableCache,
+  enableTransitionTracing,
+  enableAsyncActions,
+} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
@@ -26,13 +34,52 @@ import {
 } from './ReactFiberCacheComponent';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-
-const {ReactCurrentBatchConfig} = ReactSharedInternals;
+import {entangleAsyncAction} from './ReactFiberAsyncAction';
 
 export const NoTransition = null;
 
-export function requestCurrentTransition(): Transition | null {
-  return ReactCurrentBatchConfig.transition;
+// Attach this reconciler instance's onStartTransitionFinish implementation to
+// the shared internals object. This is used by the isomorphic implementation of
+// startTransition to compose all the startTransitions together.
+//
+//   function startTransition(fn) {
+//     return startTransitionDOM(() => {
+//       return startTransitionART(() => {
+//         return startTransitionThreeFiber(() => {
+//           // and so on...
+//           return fn();
+//         });
+//       });
+//     });
+//   }
+//
+// Currently we only compose together the code that runs at the end of each
+// startTransition, because for now that's sufficient — the part that sets
+// isTransition=true on the stack uses a separate shared internal field. But
+// really we should delete the shared field and track isTransition per
+// reconciler. Leaving this for a future PR.
+const prevOnStartTransitionFinish = ReactSharedInternals.S;
+ReactSharedInternals.S = function onStartTransitionFinishForReconciler(
+  transition: BatchConfigTransition,
+  returnValue: mixed,
+) {
+  if (
+    enableAsyncActions &&
+    typeof returnValue === 'object' &&
+    returnValue !== null &&
+    typeof returnValue.then === 'function'
+  ) {
+    // This is an async action
+    const thenable: Thenable<mixed> = (returnValue: any);
+    entangleAsyncAction(transition, thenable);
+  }
+  if (prevOnStartTransitionFinish !== null) {
+    prevOnStartTransitionFinish(transition, returnValue);
+  }
+};
+
+export function requestCurrentTransition(): BatchConfigTransition | null {
+  return ReactSharedInternals.T;
 }
 
 // When retrying a Suspense/Offscreen boundary, we restore the cache that was

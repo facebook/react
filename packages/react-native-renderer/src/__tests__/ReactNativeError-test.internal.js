@@ -50,6 +50,7 @@ describe('ReactNativeError', () => {
     );
   });
 
+  // @gate !disableLegacyMode
   it('should be able to extract a component stack from a native view', () => {
     const View = createReactNativeComponentClass('View', () => ({
       validAttributes: {foo: true},

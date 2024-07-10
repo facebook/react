@@ -19,11 +19,14 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import {
-  enableSchedulingProfiler,
-  enableUpdaterTracking,
   allowConcurrentByDefault,
+  enableRetryLaneExpiration,
+  enableSchedulingProfiler,
   enableTransitionTracing,
-  enableUnifiedSyncLane,
+  enableUpdaterTracking,
+  syncLaneExpirationMs,
+  transitionLaneExpirationMs,
+  retryLaneExpirationMs,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -47,9 +50,8 @@ export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000010000;
 export const DefaultLane: Lane = /*                     */ 0b0000000000000000000000000100000;
 
-export const SyncUpdateLanes: Lane = enableUnifiedSyncLane
-  ? SyncLane | InputContinuousLane | DefaultLane
-  : SyncLane;
+export const SyncUpdateLanes: Lane =
+  SyncLane | InputContinuousLane | DefaultLane;
 
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000001000000;
 const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111110000000;
@@ -147,11 +149,9 @@ let nextTransitionLane: Lane = TransitionLane1;
 let nextRetryLane: Lane = RetryLane1;
 
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
-  if (enableUnifiedSyncLane) {
-    const pendingSyncLanes = lanes & SyncUpdateLanes;
-    if (pendingSyncLanes !== 0) {
-      return pendingSyncLanes;
-    }
+  const pendingSyncLanes = lanes & SyncUpdateLanes;
+  if (pendingSyncLanes !== 0) {
+    return pendingSyncLanes;
   }
   switch (getHighestPriorityLane(lanes)) {
     case SyncHydrationLane:
@@ -219,7 +219,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     return NoLanes;
   }
 
-  let nextLanes = NoLanes;
+  let nextLanes: Lanes = NoLanes;
 
   const suspendedLanes = root.suspendedLanes;
   const pingedLanes = root.pingedLanes;
@@ -354,7 +354,7 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
       // to fix the starvation. However, this scenario supports the idea that
       // expiration times are an important safeguard when starvation
       // does happen.
-      return currentTime + 250;
+      return currentTime + syncLaneExpirationMs;
     case DefaultHydrationLane:
     case DefaultLane:
     case TransitionHydrationLane:
@@ -373,7 +373,7 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
     case TransitionLane13:
     case TransitionLane14:
     case TransitionLane15:
-      return currentTime + 5000;
+      return currentTime + transitionLaneExpirationMs;
     case RetryLane1:
     case RetryLane2:
     case RetryLane3:
@@ -383,7 +383,9 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
       // crashes. There must be some other underlying bug; not super urgent but
       // ideally should figure out why and fix it. Unfortunately we don't have
       // a repro for the crashes, only detected via production metrics.
-      return NoTimestamp;
+      return enableRetryLaneExpiration
+        ? currentTime + retryLaneExpirationMs
+        : NoTimestamp;
     case SelectiveHydrationLane:
     case IdleHydrationLane:
     case IdleLane:
@@ -422,7 +424,9 @@ export function markStarvedLanesAsExpired(
   // We exclude retry lanes because those must always be time sliced, in order
   // to unwrap uncached promises.
   // TODO: Write a test for this
-  let lanes = pendingLanes & ~RetryLanes;
+  let lanes = enableRetryLaneExpiration
+    ? pendingLanes
+    : pendingLanes & ~RetryLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
@@ -818,7 +822,7 @@ export function getBumpedLaneForHydration(
   const renderLane = getHighestPriorityLane(renderLanes);
 
   let lane;
-  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+  if ((renderLane & SyncUpdateLanes) !== NoLane) {
     lane = SyncHydrationLane;
   } else {
     switch (renderLane) {

@@ -2,7 +2,7 @@ version: 2.1
 
 aliases:
   - &docker
-    - image: cimg/openjdk:18.0-node
+    - image: cimg/node:18.20.1-browsers
 
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -74,29 +74,6 @@ parameters:
     default: ''
 
 jobs:
-  yarn_lint:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: node ./scripts/prettier/index
-      - run: node ./scripts/tasks/eslint
-      - run: ./scripts/circleci/check_license.sh
-      - run: ./scripts/circleci/check_modules.sh
-      - run: ./scripts/circleci/test_print_warnings.sh
-
-  yarn_flow:
-    docker: *docker
-    environment: *environment
-    parallelism: 5
-
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: node ./scripts/tasks/flow-ci
-
   scrape_warning_messages:
     docker: *docker
     environment: *environment
@@ -106,8 +83,8 @@ jobs:
       - setup_node_modules
       - run:
           command: |
-            mkdir -p ./build
-            node ./scripts/print-warnings/print-warnings.js > build/WARNINGS
+            mkdir -p ./build/__test_utils__
+            node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - persist_to_workspace:
           root: .
           paths:
@@ -202,6 +179,8 @@ jobs:
       - setup_node_modules
       - run:
           command: node ./scripts/tasks/danger
+      - store_artifacts:
+          path: sizebot-message.md
 
   build_devtools_and_process_artifacts:
     docker: *docker
@@ -217,6 +196,13 @@ jobs:
           command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
       - store_artifacts:
           path: ./build/devtools.tgz
+      # Simplifies getting the extension for local testing
+      - store_artifacts:
+          path: ./build/devtools/chrome-extension.zip
+          destination: react-devtools-chrome-extension.zip
+      - store_artifacts:
+          path: ./build/devtools/firefox-extension.zip
+          destination: react-devtools-firefox-extension.zip
 
   run_devtools_e2e_tests:
     docker: *docker
@@ -236,6 +222,52 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
 
+  run_fixtures_flight_tests:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      # Fixture copies some built packages from the workroot after install.
+      # That means dependencies of the built packages are not installed.
+      # We need to install dependencies of the workroot to fulfill all dependency constraints
+      - setup_node_modules
+      - restore_cache:
+          name: Restore yarn cache of fixture
+          keys:
+            - v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install fixture dependencies
+          working_directory: fixtures/flight
+          command: |
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            if [ $? -ne 0 ]; then
+              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            fi
+      - save_cache:
+          name: Save yarn cache of fixture
+          key: v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - run:
+          working_directory: fixtures/flight
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run:
+          name: Run tests
+          working_directory: fixtures/flight
+          command: yarn test
+          environment:
+          # Otherwise the webserver is a blackbox
+            DEBUG: pw:webserver
+      - store_artifacts:
+          path: fixtures/flight/playwright-report
+      - store_artifacts:
+          path: fixtures/flight/test-results
+
   run_devtools_tests_for_versions:
     docker: *docker
     environment: *environment
@@ -249,7 +281,7 @@ jobs:
           at: .
       - setup_node_modules
       - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
-      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci=circleci
 
   run_devtools_e2e_tests_for_versions:
     docker: *docker
@@ -313,31 +345,6 @@ jobs:
             yarn extract-errors
             git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
 
-  check_generated_fizz_runtime:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - setup_node_modules
-      - run:
-          name: Confirm generated inline Fizz runtime is up to date
-          command: |
-            yarn generate-inline-fizz-runtime
-            git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
-
-  yarn_test:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    parameters:
-      args:
-        type: string
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: yarn test <<parameters.args>> --ci
-
   yarn_test_build:
     docker: *docker
     environment: *environment
@@ -350,7 +357,7 @@ jobs:
       - attach_workspace:
           at: .
       - setup_node_modules
-      - run: yarn test --build <<parameters.args>> --ci
+      - run: yarn test --build <<parameters.args>> --ci=circleci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
     docker: *docker
@@ -372,18 +379,6 @@ jobs:
           command: |
             yarn predev
             yarn test --maxWorkers=2
-
-  test_fuzz:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - setup_node_modules
-      - run:
-          name: Run fuzz tests
-          command: |
-            FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
-            FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
 
   publish_prerelease:
     parameters:
@@ -412,48 +407,6 @@ workflows:
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
-      - yarn_flow:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - check_generated_fizz_runtime:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - yarn_lint:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - yarn_test:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-          matrix:
-            parameters:
-              args:
-                # Intentionally passing these as strings instead of creating a
-                # separate parameter per CLI argument, since it's easier to
-                # control/see which combinations we want to run.
-                - "-r=stable --env=development"
-                - "-r=stable --env=production"
-                - "-r=experimental --env=development"
-                - "-r=experimental --env=production"
-                - "-r=www-classic --env=development --variant=false"
-                - "-r=www-classic --env=production --variant=false"
-                - "-r=www-classic --env=development --variant=true"
-                - "-r=www-classic --env=production --variant=true"
-                - "-r=www-modern --env=development --variant=false"
-                - "-r=www-modern --env=production --variant=false"
-                - "-r=www-modern --env=development --variant=true"
-                - "-r=www-modern --env=production --variant=true"
-
-                # TODO: Test more persistent configurations?
-                - '-r=stable --env=development --persistent'
-                - '-r=experimental --env=development --persistent'
       - yarn_build:
           filters:
             branches:
@@ -495,6 +448,12 @@ workflows:
                 # - "-r=www-modern --env=development --variant=true"
                 # - "-r=www-modern --env=production --variant=true"
 
+                # TODO: Update test config to support xplat build tests
+                # - "-r=xplat --env=development --variant=false"
+                # - "-r=xplat --env=development --variant=true"
+                # - "-r=xplat --env=production --variant=false"
+                # - "-r=xplat --env=production --variant=true"
+
                 # TODO: Test more persistent configurations?
       - download_base_build_for_sizebot:
           filters:
@@ -528,19 +487,9 @@ workflows:
       - run_devtools_e2e_tests:
           requires:
             - build_devtools_and_process_artifacts
-
-  fuzz_tests:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    triggers:
-      - schedule:
-          # Fuzz tests run hourly
-          cron: "0 * * * *"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - test_fuzz
+      - run_fixtures_flight_tests:
+          requires:
+            - yarn_build
 
   devtools_regression_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
@@ -599,7 +548,7 @@ workflows:
           # because this used to be called the "next" channel and some
           # downstream consumers might still expect that tag. We can remove this
           # after some time has elapsed and the change has been communicated.
-          dist_tag: "canary,next"
+          dist_tag: "canary,next,rc"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
@@ -628,7 +577,7 @@ workflows:
           name: Publish to Canary channel
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
-          dist_tag: "canary,next"
+          dist_tag: "canary,next,rc"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:

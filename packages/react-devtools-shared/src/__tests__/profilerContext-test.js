@@ -13,9 +13,12 @@ import type {Context} from 'react-devtools-shared/src/devtools/views/Profiler/Pr
 import type {DispatcherContext} from 'react-devtools-shared/src/devtools/views/Components/TreeContext';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {getVersionedRenderImplementation} from './utils';
+
 describe('ProfilerContext', () => {
   let React;
   let ReactDOM;
+  let ReactDOMClient;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
   let legacyRender;
@@ -43,6 +46,7 @@ describe('ProfilerContext', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     TestRenderer = utils.requireTestRenderer();
 
     BridgeContext =
@@ -61,6 +65,8 @@ describe('ProfilerContext', () => {
       require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeStateContext;
   });
 
+  const {render} = getVersionedRenderImplementation();
+
   const Contexts = ({
     children = null,
     defaultSelectedElementID = null,
@@ -77,7 +83,9 @@ describe('ProfilerContext', () => {
     </BridgeContext.Provider>
   );
 
-  it('updates updates profiling support based on the attached roots', async () => {
+  // @reactVersion <= 18.2
+  // @reactVersion >= 18.0
+  it('updates updates profiling support based on the attached roots (legacy render)', async () => {
     const Component = () => null;
 
     let context: Context = ((null: any): Context);
@@ -110,10 +118,47 @@ describe('ProfilerContext', () => {
     expect(context.supportsProfiling).toBe(false);
   });
 
+  // @reactVersion >= 18
+  it('updates updates profiling support based on the attached roots (createRoot)', async () => {
+    const Component = () => null;
+
+    let context: Context = ((null: any): Context);
+
+    function ContextReader() {
+      context = React.useContext(ProfilerContext);
+      return null;
+    }
+    await utils.actAsync(() => {
+      TestRenderer.create(
+        <Contexts>
+          <ContextReader />
+        </Contexts>,
+      );
+    });
+
+    expect(context.supportsProfiling).toBe(false);
+
+    const containerA = document.createElement('div');
+    const containerB = document.createElement('div');
+
+    const rootA = ReactDOMClient.createRoot(containerA);
+    const rootB = ReactDOMClient.createRoot(containerB);
+
+    await utils.actAsync(() => rootA.render(<Component />));
+    expect(context.supportsProfiling).toBe(true);
+
+    await utils.actAsync(() => rootB.render(<Component />));
+    await utils.actAsync(() => rootA.unmount());
+    expect(context.supportsProfiling).toBe(true);
+
+    await utils.actAsync(() => rootB.unmount());
+    expect(context.supportsProfiling).toBe(false);
+  });
+
   it('should gracefully handle an empty profiling session (with no recorded commits)', async () => {
     const Example = () => null;
 
-    utils.act(() => legacyRender(<Example />, document.createElement('div')));
+    utils.act(() => render(<Example />));
 
     let context: Context = ((null: any): Context);
 
@@ -145,7 +190,9 @@ describe('ProfilerContext', () => {
     expect(context.profilingData).toBe(null);
   });
 
-  it('should auto-select the root ID matching the Components tab selection if it has profiling data', async () => {
+  // @reactVersion <= 18.2
+  // @reactVersion >= 18.0
+  it('should auto-select the root ID matching the Components tab selection if it has profiling data (legacy render)', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
@@ -191,7 +238,60 @@ describe('ProfilerContext', () => {
     );
   });
 
-  it('should not select the root ID matching the Components tab selection if it has no profiling data', async () => {
+  // @reactVersion >= 18
+  it('should auto-select the root ID matching the Components tab selection if it has profiling data (createRoot)', async () => {
+    const Parent = () => <Child />;
+    const Child = () => null;
+
+    const containerOne = document.createElement('div');
+    const containerTwo = document.createElement('div');
+
+    const rootOne = ReactDOMClient.createRoot(containerOne);
+    const rootTwo = ReactDOMClient.createRoot(containerTwo);
+
+    utils.act(() => rootOne.render(<Parent />));
+    utils.act(() => rootTwo.render(<Parent />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
+
+    // Profile and record updates to both roots.
+    await utils.actAsync(() => store.profilerStore.startProfiling());
+    await utils.actAsync(() => rootOne.render(<Parent />));
+    await utils.actAsync(() => rootTwo.render(<Parent />));
+    await utils.actAsync(() => store.profilerStore.stopProfiling());
+
+    let context: Context = ((null: any): Context);
+    function ContextReader() {
+      context = React.useContext(ProfilerContext);
+      return null;
+    }
+
+    // Select an element within the second root.
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts
+          defaultSelectedElementID={store.getElementIDAtIndex(3)}
+          defaultSelectedElementIndex={3}>
+          <ContextReader />
+        </Contexts>,
+      ),
+    );
+
+    expect(context).not.toBeNull();
+    expect(context.rootID).toBe(
+      store.getRootIDForElement(((store.getElementIDAtIndex(3): any): number)),
+    );
+  });
+
+  // @reactVersion <= 18.2
+  // @reactVersion >= 18.0
+  it('should not select the root ID matching the Components tab selection if it has no profiling data (legacy render)', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
@@ -237,7 +337,60 @@ describe('ProfilerContext', () => {
     );
   });
 
-  it('should maintain root selection between profiling sessions so long as there is data for that root', async () => {
+  // @reactVersion >= 18
+  it('should not select the root ID matching the Components tab selection if it has no profiling data (createRoot)', async () => {
+    const Parent = () => <Child />;
+    const Child = () => null;
+
+    const containerOne = document.createElement('div');
+    const containerTwo = document.createElement('div');
+
+    const rootOne = ReactDOMClient.createRoot(containerOne);
+    const rootTwo = ReactDOMClient.createRoot(containerTwo);
+
+    utils.act(() => rootOne.render(<Parent />));
+    utils.act(() => rootTwo.render(<Parent />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
+
+    // Profile and record updates to only the first root.
+    await utils.actAsync(() => store.profilerStore.startProfiling());
+    await utils.actAsync(() => rootOne.render(<Parent />));
+    await utils.actAsync(() => store.profilerStore.stopProfiling());
+
+    let context: Context = ((null: any): Context);
+    function ContextReader() {
+      context = React.useContext(ProfilerContext);
+      return null;
+    }
+
+    // Select an element within the second root.
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts
+          defaultSelectedElementID={store.getElementIDAtIndex(3)}
+          defaultSelectedElementIndex={3}>
+          <ContextReader />
+        </Contexts>,
+      ),
+    );
+
+    // Verify the default profiling root is the first one.
+    expect(context).not.toBeNull();
+    expect(context.rootID).toBe(
+      store.getRootIDForElement(((store.getElementIDAtIndex(0): any): number)),
+    );
+  });
+
+  // @reactVersion <= 18.2
+  // @reactVersion >= 18.0
+  it('should maintain root selection between profiling sessions so long as there is data for that root (legacy render)', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
@@ -300,6 +453,75 @@ describe('ProfilerContext', () => {
     expect(context.rootID).toBe(store.getRootIDForElement(id));
   });
 
+  // @reactVersion >= 18.0
+  it('should maintain root selection between profiling sessions so long as there is data for that root (createRoot)', async () => {
+    const Parent = () => <Child />;
+    const Child = () => null;
+
+    const containerA = document.createElement('div');
+    const containerB = document.createElement('div');
+
+    const rootA = ReactDOMClient.createRoot(containerA);
+    const rootB = ReactDOMClient.createRoot(containerB);
+
+    utils.act(() => rootA.render(<Parent />));
+    utils.act(() => rootB.render(<Parent />));
+
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child>
+      [root]
+        ▾ <Parent>
+            <Child>
+    `);
+
+    // Profile and record updates.
+    await utils.actAsync(() => store.profilerStore.startProfiling());
+    await utils.actAsync(() => rootA.render(<Parent />));
+    await utils.actAsync(() => rootB.render(<Parent />));
+    await utils.actAsync(() => store.profilerStore.stopProfiling());
+
+    let context: Context = ((null: any): Context);
+    let dispatch: DispatcherContext = ((null: any): DispatcherContext);
+    let selectedElementID = null;
+    function ContextReader() {
+      context = React.useContext(ProfilerContext);
+      dispatch = React.useContext(TreeDispatcherContext);
+      selectedElementID = React.useContext(TreeStateContext).selectedElementID;
+      return null;
+    }
+
+    const id = ((store.getElementIDAtIndex(3): any): number);
+
+    // Select an element within the second root.
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts defaultSelectedElementID={id} defaultSelectedElementIndex={3}>
+          <ContextReader />
+        </Contexts>,
+      ),
+    );
+
+    expect(selectedElementID).toBe(id);
+
+    // Profile and record more updates to both roots
+    await utils.actAsync(() => store.profilerStore.startProfiling());
+    await utils.actAsync(() => rootA.render(<Parent />));
+    await utils.actAsync(() => rootB.render(<Parent />));
+    await utils.actAsync(() => store.profilerStore.stopProfiling());
+
+    const otherID = ((store.getElementIDAtIndex(0): any): number);
+
+    // Change the selected element within a the Components tab.
+    utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
+
+    // Verify that the initial Profiler root selection is maintained.
+    expect(selectedElementID).toBe(otherID);
+    expect(context).not.toBeNull();
+    expect(context.rootID).toBe(store.getRootIDForElement(id));
+  });
+
   it('should sync selected element in the Components tab too, provided the element is a match', async () => {
     const GrandParent = ({includeChild}) => (
       <Parent includeChild={includeChild} />
@@ -307,10 +529,7 @@ describe('ProfilerContext', () => {
     const Parent = ({includeChild}) => (includeChild ? <Child /> : null);
     const Child = () => null;
 
-    const container = document.createElement('div');
-    utils.act(() =>
-      legacyRender(<GrandParent includeChild={true} />, container),
-    );
+    utils.act(() => render(<GrandParent includeChild={true} />));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <GrandParent>
@@ -323,12 +542,8 @@ describe('ProfilerContext', () => {
 
     // Profile and record updates.
     await utils.actAsync(() => store.profilerStore.startProfiling());
-    await utils.actAsync(() =>
-      legacyRender(<GrandParent includeChild={true} />, container),
-    );
-    await utils.actAsync(() =>
-      legacyRender(<GrandParent includeChild={false} />, container),
-    );
+    await utils.actAsync(() => render(<GrandParent includeChild={true} />));
+    await utils.actAsync(() => render(<GrandParent includeChild={false} />));
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
     expect(store).toMatchInlineSnapshot(`

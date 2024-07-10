@@ -1,0 +1,107 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/fixtures/art"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/attribute-behavior"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/concurrent"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/devtools"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/dom"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/eslint"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/expiration"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/fiber-debugger"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/fiber-triangle"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/fizz"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/fizz-ssr-browser"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/flight"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/flight-browser"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/flight-esm"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/legacy-jsx-runtimes"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/nesting"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/packaging"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/scheduler"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/ssr"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/ssr-2"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
+  - package-ecosystem: "npm"
+    directory: "/fixtures/stacks"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0

@@ -14,16 +14,19 @@ import {
 } from 'react-devtools-shared/src/utils';
 import {stackToComponentSources} from 'react-devtools-shared/src/devtools/utils';
 import {
-  format,
+  formatConsoleArguments,
+  formatConsoleArgumentsToSingleString,
   formatWithStyles,
   gt,
   gte,
+  parseSourceFromComponentStack,
 } from 'react-devtools-shared/src/backend/utils';
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_STRICT_MODE_TYPE as StrictMode,
 } from 'shared/ReactSymbols';
-import {createElement} from 'react/src/ReactElement';
+import {createElement} from 'react';
+import {symbolicateSource} from '../symbolicateSource';
 
 describe('utils', () => {
   describe('getDisplayName', () => {
@@ -122,51 +125,51 @@ describe('utils', () => {
     });
   });
 
-  describe('format', () => {
-    // @reactVersion >= 16.0
+  describe('formatConsoleArgumentsToSingleString', () => {
     it('should format simple strings', () => {
-      expect(format('a', 'b', 'c')).toEqual('a b c');
-    });
-
-    // @reactVersion >= 16.0
-    it('should format multiple argument types', () => {
-      expect(format('abc', 123, true)).toEqual('abc 123 true');
-    });
-
-    // @reactVersion >= 16.0
-    it('should support string substitutions', () => {
-      expect(format('a %s b %s c', 123, true)).toEqual('a 123 b true c');
-    });
-
-    // @reactVersion >= 16.0
-    it('should gracefully handle Symbol types', () => {
-      expect(format(Symbol('a'), 'b', Symbol('c'))).toEqual(
-        'Symbol(a) b Symbol(c)',
+      expect(formatConsoleArgumentsToSingleString('a', 'b', 'c')).toEqual(
+        'a b c',
       );
     });
 
-    // @reactVersion >= 16.0
+    it('should format multiple argument types', () => {
+      expect(formatConsoleArgumentsToSingleString('abc', 123, true)).toEqual(
+        'abc 123 true',
+      );
+    });
+
+    it('should support string substitutions', () => {
+      expect(
+        formatConsoleArgumentsToSingleString('a %s b %s c', 123, true),
+      ).toEqual('a 123 b true c');
+    });
+
+    it('should gracefully handle Symbol types', () => {
+      expect(
+        formatConsoleArgumentsToSingleString(Symbol('a'), 'b', Symbol('c')),
+      ).toEqual('Symbol(a) b Symbol(c)');
+    });
+
     it('should gracefully handle Symbol type for the first argument', () => {
-      expect(format(Symbol('abc'), 123)).toEqual('Symbol(abc) 123');
+      expect(formatConsoleArgumentsToSingleString(Symbol('abc'), 123)).toEqual(
+        'Symbol(abc) 123',
+      );
     });
   });
 
   describe('formatWithStyles', () => {
-    // @reactVersion >= 16.0
     it('should format empty arrays', () => {
       expect(formatWithStyles([])).toEqual([]);
       expect(formatWithStyles([], 'gray')).toEqual([]);
       expect(formatWithStyles(undefined)).toEqual(undefined);
     });
 
-    // @reactVersion >= 16.0
     it('should bail out of strings with styles', () => {
       expect(
         formatWithStyles(['%ca', 'color: green', 'b', 'c'], 'color: gray'),
       ).toEqual(['%ca', 'color: green', 'b', 'c']);
     });
 
-    // @reactVersion >= 16.0
     it('should format simple strings', () => {
       expect(formatWithStyles(['a'])).toEqual(['a']);
 
@@ -185,7 +188,6 @@ describe('utils', () => {
       ]);
     });
 
-    // @reactVersion >= 16.0
     it('should format string substituions', () => {
       expect(
         formatWithStyles(['%s %s %s', 'a', 'b', 'c'], 'color: gray'),
@@ -198,7 +200,6 @@ describe('utils', () => {
       );
     });
 
-    // @reactVersion >= 16.0
     it('should support multiple argument types', () => {
       const symbol = Symbol('a');
       expect(
@@ -218,7 +219,6 @@ describe('utils', () => {
       ]);
     });
 
-    // @reactVersion >= 16.0
     it('should properly format escaped string substituions', () => {
       expect(formatWithStyles(['%%s'], 'color: gray')).toEqual([
         '%c%s',
@@ -233,7 +233,6 @@ describe('utils', () => {
       expect(formatWithStyles(['%%c%c'], 'color: gray')).toEqual(['%%c%c']);
     });
 
-    // @reactVersion >= 16.0
     it('should format non string inputs as the first argument', () => {
       expect(formatWithStyles([{foo: 'bar'}])).toEqual([{foo: 'bar'}]);
       expect(formatWithStyles([[1, 2, 3]])).toEqual([[1, 2, 3]]);
@@ -295,6 +294,175 @@ describe('utils', () => {
 
     it('should return true for objects with no prototype', () => {
       expect(isPlainObject(Object.create(null))).toBe(true);
+    });
+  });
+
+  describe('parseSourceFromComponentStack', () => {
+    it('should return null if passed empty string', () => {
+      expect(parseSourceFromComponentStack('')).toEqual(null);
+    });
+
+    it('should construct the source from the first frame if available', () => {
+      expect(
+        parseSourceFromComponentStack(
+          'at l (https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js:1:10389)\n' +
+            'at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)\n' +
+            'at r (https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:498)\n',
+        ),
+      ).toEqual({
+        sourceURL:
+          'https://react.dev/_next/static/chunks/main-78a3b4c2aa4e4850.js',
+        line: 1,
+        column: 10389,
+      });
+    });
+
+    it('should construct the source from highest available frame', () => {
+      expect(
+        parseSourceFromComponentStack(
+          '    at Q\n' +
+            '    at a\n' +
+            '    at m (https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js:5:9236)\n' +
+            '    at div\n' +
+            '    at div\n' +
+            '    at div\n' +
+            '    at nav\n' +
+            '    at div\n' +
+            '    at te (https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js:1:158857)\n' +
+            '    at tt (https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js:1:165520)\n' +
+            '    at f (https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8519)',
+        ),
+      ).toEqual({
+        sourceURL:
+          'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
+        line: 5,
+        column: 9236,
+      });
+    });
+
+    it('should construct the source from frame, which has only url specified', () => {
+      expect(
+        parseSourceFromComponentStack(
+          '    at Q\n' +
+            '    at a\n' +
+            '    at https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js:5:9236\n',
+        ),
+      ).toEqual({
+        sourceURL:
+          'https://react.dev/_next/static/chunks/848-122f91e9565d9ffa.js',
+        line: 5,
+        column: 9236,
+      });
+    });
+
+    it('should parse sourceURL correctly if it includes parentheses', () => {
+      expect(
+        parseSourceFromComponentStack(
+          'at HotReload (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js:307:11)\n' +
+            '    at Router (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js:181:11)\n' +
+            '    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:114:9)',
+        ),
+      ).toEqual({
+        sourceURL:
+          'webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/hot-reloader-client.js',
+        line: 307,
+        column: 11,
+      });
+    });
+
+    it('should support Firefox stack', () => {
+      expect(
+        parseSourceFromComponentStack(
+          'tt@https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js:1:165558\n' +
+            'f@https://react.dev/_next/static/chunks/pages/%5B%5B...markdownPath%5D%5D-af2ed613aedf1d57.js:1:8535\n' +
+            'r@https://react.dev/_next/static/chunks/pages/_app-dd0b77ea7bd5b246.js:1:513',
+        ),
+      ).toEqual({
+        sourceURL:
+          'https://react.dev/_next/static/chunks/363-3c5f1b553b6be118.js',
+        line: 1,
+        column: 165558,
+      });
+    });
+  });
+
+  describe('symbolicateSource', () => {
+    const source = `"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.f = f;
+function f() { }
+//# sourceMappingURL=`;
+    const result = {
+      column: 16,
+      line: 1,
+      sourceURL: 'http://test/a.mts',
+    };
+    const fs = {
+      'http://test/a.mts': `export function f() {}`,
+      'http://test/a.mjs.map': `{"version":3,"file":"a.mjs","sourceRoot":"","sources":["a.mts"],"names":[],"mappings":";;AAAA,cAAsB;AAAtB,SAAgB,CAAC,KAAI,CAAC"}`,
+      'http://test/a.mjs': `${source}a.mjs.map`,
+      'http://test/b.mjs': `${source}./a.mjs.map`,
+      'http://test/c.mjs': `${source}http://test/a.mjs.map`,
+      'http://test/d.mjs': `${source}/a.mjs.map`,
+    };
+    const fetchFileWithCaching = async (url: string) => fs[url] || null;
+    it('should parse source map urls', async () => {
+      const run = url => symbolicateSource(fetchFileWithCaching, url, 4, 10);
+      await expect(run('http://test/a.mjs')).resolves.toStrictEqual(result);
+      await expect(run('http://test/b.mjs')).resolves.toStrictEqual(result);
+      await expect(run('http://test/c.mjs')).resolves.toStrictEqual(result);
+      await expect(run('http://test/d.mjs')).resolves.toStrictEqual(result);
+    });
+  });
+
+  describe('formatConsoleArguments', () => {
+    it('works with empty arguments list', () => {
+      expect(formatConsoleArguments(...[])).toEqual([]);
+    });
+
+    it('works for string without escape sequences', () => {
+      expect(
+        formatConsoleArguments('This is the template', 'And another string'),
+      ).toEqual(['This is the template', 'And another string']);
+    });
+
+    it('works with strings templates', () => {
+      expect(formatConsoleArguments('This is %s template', 'the')).toEqual([
+        'This is the template',
+      ]);
+    });
+
+    it('skips %%s', () => {
+      expect(formatConsoleArguments('This %%s is %s template', 'the')).toEqual([
+        'This %%s is the template',
+      ]);
+    });
+
+    it('works with %%%s', () => {
+      expect(
+        formatConsoleArguments('This %%%s is %s template', 'test', 'the'),
+      ).toEqual(['This %%test is the template']);
+    });
+
+    it("doesn't inline objects", () => {
+      expect(
+        formatConsoleArguments('This is %s template with object %o', 'the', {}),
+      ).toEqual(['This is the template with object %o', {}]);
+    });
+
+    it("doesn't inline css", () => {
+      expect(
+        formatConsoleArguments(
+          'This is template with %c %s object %o',
+          'color: rgba(...)',
+          'the',
+          {},
+        ),
+      ).toEqual([
+        'This is template with %c the object %o',
+        'color: rgba(...)',
+        {},
+      ]);
     });
   });
 });

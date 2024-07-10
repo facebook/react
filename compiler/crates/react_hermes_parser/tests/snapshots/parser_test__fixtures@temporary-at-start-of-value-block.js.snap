@@ -1,0 +1,304 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/temporary-at-start-of-value-block.js
+---
+Input:
+function component(props) {
+  // NOTE: the temporary for the leading space was previously dropped
+  const x = isMenuShown ? <Bar> {props.a ? props.b : props.c}</Bar> : null;
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    106,
+                    107
+                  ]
+                },
+                "init": {
+                  "type": "ConditionalExpression",
+                  "test": {
+                    "type": "Identifier",
+                    "name": "isMenuShown",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      110,
+                      121
+                    ]
+                  },
+                  "alternate": {
+                    "type": "NullLiteral",
+                    "loc": null,
+                    "range": [
+                      168,
+                      172
+                    ]
+                  },
+                  "consequent": {
+                    "type": "JSXElement",
+                    "openingElement": {
+                      "type": "JSXOpeningElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "Bar",
+                        "loc": null,
+                        "range": [
+                          125,
+                          128
+                        ]
+                      },
+                      "attributes": [],
+                      "selfClosing": false,
+                      "loc": null,
+                      "range": [
+                        124,
+                        129
+                      ]
+                    },
+                    "children": [
+                      {
+                        "type": "JSXText",
+                        "value": " ",
+                        "raw": " ",
+                        "loc": null,
+                        "range": [
+                          129,
+                          130
+                        ]
+                      },
+                      {
+                        "type": "JSXExpressionContainer",
+                        "expression": {
+                          "type": "ConditionalExpression",
+                          "test": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "props",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                131,
+                                136
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "a",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                137,
+                                138
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              131,
+                              138
+                            ]
+                          },
+                          "alternate": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "props",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                151,
+                                156
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "c",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                157,
+                                158
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              151,
+                              158
+                            ]
+                          },
+                          "consequent": {
+                            "type": "MemberExpression",
+                            "object": {
+                              "type": "Identifier",
+                              "name": "props",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                141,
+                                146
+                              ]
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "b",
+                              "typeAnnotation": null,
+                              "loc": null,
+                              "range": [
+                                147,
+                                148
+                              ]
+                            },
+                            "computed": false,
+                            "loc": null,
+                            "range": [
+                              141,
+                              148
+                            ]
+                          },
+                          "loc": null,
+                          "range": [
+                            131,
+                            158
+                          ]
+                        },
+                        "loc": null,
+                        "range": [
+                          130,
+                          159
+                        ]
+                      }
+                    ],
+                    "closingElement": {
+                      "type": "JSXClosingElement",
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "name": "Bar",
+                        "loc": null,
+                        "range": [
+                          161,
+                          164
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        159,
+                        165
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      124,
+                      165
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    110,
+                    172
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  106,
+                  172
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              100,
+              173
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                183,
+                184
+              ]
+            },
+            "loc": null,
+            "range": [
+              176,
+              185
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          187
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        187
+      ],
+      "loc": null,
+      "range": [
+        0,
+        187
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    187
+  ]
+}

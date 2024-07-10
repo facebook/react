@@ -131,7 +131,7 @@ describe('ReactSchedulerIntegration', () => {
     await waitForAll(['D', 'E']);
   });
 
-  // @gate www
+  // @gate enableLegacyHidden
   it('idle updates are not blocked by offscreen work', async () => {
     function Text({text}) {
       Scheduler.log(text);
@@ -370,7 +370,7 @@ describe('`act` bypasses Scheduler methods completely,', () => {
     }
 
     const root = ReactNoop.createRoot();
-    const publicAct = React.unstable_act;
+    const publicAct = React.act;
     const prevIsReactActEnvironment = global.IS_REACT_ACT_ENVIRONMENT;
     try {
       global.IS_REACT_ACT_ENVIRONMENT = true;

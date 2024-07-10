@@ -1,0 +1,194 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/destructuring-array-default.js
+---
+Input:
+function Component(props) {
+  const [[x] = ["default"]] = props.y;
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ArrayPattern",
+                  "elements": [
+                    {
+                      "type": "AssignmentPattern",
+                      "left": {
+                        "type": "ArrayPattern",
+                        "elements": [
+                          {
+                            "type": "Identifier",
+                            "name": "x",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              38,
+                              39
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          37,
+                          40
+                        ]
+                      },
+                      "right": {
+                        "type": "ArrayExpression",
+                        "elements": [
+                          {
+                            "type": "StringLiteral",
+                            "value": "default",
+                            "loc": null,
+                            "range": [
+                              44,
+                              53
+                            ]
+                          }
+                        ],
+                        "loc": null,
+                        "range": [
+                          43,
+                          54
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        37,
+                        54
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    36,
+                    55
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      58,
+                      63
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "y",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      64,
+                      65
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    58,
+                    65
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  65
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              66
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                76,
+                77
+              ]
+            },
+            "loc": null,
+            "range": [
+              69,
+              78
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          80
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        80
+      ],
+      "loc": null,
+      "range": [
+        0,
+        80
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    80
+  ]
+}

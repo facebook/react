@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/ReactTypes';
 import type {
   Fiber,
   ContextDependency,
@@ -44,11 +44,9 @@ import {createUpdate, ForceUpdate} from './ReactFiberClassUpdateQueue';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableLazyContextPropagation,
-  enableServerContext,
-  enableFormActions,
   enableAsyncActions,
+  enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
-import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 import {
   getHostTransitionProvider,
   HostTransitionContext,
@@ -153,28 +151,14 @@ export function popProvider(
   const currentValue = valueCursor.current;
 
   if (isPrimaryRenderer) {
-    if (
-      enableServerContext &&
-      currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-    ) {
-      context._currentValue = context._defaultValue;
-    } else {
-      context._currentValue = currentValue;
-    }
+    context._currentValue = currentValue;
     if (__DEV__) {
       const currentRenderer = rendererCursorDEV.current;
       pop(rendererCursorDEV, providerFiber);
       context._currentRenderer = currentRenderer;
     }
   } else {
-    if (
-      enableServerContext &&
-      currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-    ) {
-      context._currentValue2 = context._defaultValue;
-    } else {
-      context._currentValue2 = currentValue;
-    }
+    context._currentValue2 = currentValue;
     if (__DEV__) {
       const currentRenderer2 = renderer2CursorDEV.current;
       pop(renderer2CursorDEV, providerFiber);
@@ -577,8 +561,12 @@ function propagateParentContextChanges(
 
       const oldProps = currentParent.memoizedProps;
       if (oldProps !== null) {
-        const providerType: ReactProviderType<any> = parent.type;
-        const context: ReactContext<any> = providerType._context;
+        let context: ReactContext<any>;
+        if (enableRenderableContext) {
+          context = parent.type;
+        } else {
+          context = parent.type._context;
+        }
 
         const newProps = parent.pendingProps;
         const newValue = newProps.value;
@@ -593,11 +581,7 @@ function propagateParentContextChanges(
           }
         }
       }
-    } else if (
-      enableFormActions &&
-      enableAsyncActions &&
-      parent === getHostTransitionProvider()
-    ) {
+    } else if (enableAsyncActions && parent === getHostTransitionProvider()) {
       // During a host transition, a host component can act like a context
       // provider. E.g. in React DOM, this would be a <form />.
       const currentParent = parent.alternate;
@@ -726,7 +710,7 @@ export function readContext<T>(context: ReactContext<T>): T {
   return readContextForConsumer(currentlyRenderingFiber, context);
 }
 
-export function readContextDuringReconcilation<T>(
+export function readContextDuringReconciliation<T>(
   consumer: Fiber,
   context: ReactContext<T>,
   renderLanes: Lanes,

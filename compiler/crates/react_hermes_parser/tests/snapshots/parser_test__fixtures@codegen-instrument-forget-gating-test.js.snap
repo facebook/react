@@ -1,0 +1,485 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/codegen-instrument-forget-gating-test.js
+---
+Input:
+// @instrumentForget @compilationMode(annotation) @gating
+
+function Bar(props) {
+  "use forget";
+  return <div>{props.bar}</div>;
+}
+
+function NoForget(props) {
+  return <Bar>{props.noForget}</Bar>;
+}
+
+function Foo(props) {
+  "use forget";
+  return <Foo>{props.bar}</Foo>;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Bar",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          68,
+          71
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            72,
+            77
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "StringLiteral",
+              "value": "use forget",
+              "loc": null,
+              "range": [
+                83,
+                95
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              83,
+              96
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    107,
+                    110
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  106,
+                  111
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        112,
+                        117
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "bar",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        118,
+                        121
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      112,
+                      121
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    111,
+                    122
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "div",
+                  "loc": null,
+                  "range": [
+                    124,
+                    127
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  122,
+                  128
+                ]
+              },
+              "loc": null,
+              "range": [
+                106,
+                128
+              ]
+            },
+            "loc": null,
+            "range": [
+              99,
+              129
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          79,
+          131
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        59,
+        131
+      ],
+      "loc": null,
+      "range": [
+        59,
+        131
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "NoForget",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          142,
+          150
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            151,
+            156
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Bar",
+                  "loc": null,
+                  "range": [
+                    170,
+                    173
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  169,
+                  174
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        175,
+                        180
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "noForget",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        181,
+                        189
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      175,
+                      189
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    174,
+                    190
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Bar",
+                  "loc": null,
+                  "range": [
+                    192,
+                    195
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  190,
+                  196
+                ]
+              },
+              "loc": null,
+              "range": [
+                169,
+                196
+              ]
+            },
+            "loc": null,
+            "range": [
+              162,
+              197
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          158,
+          199
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        133,
+        199
+      ],
+      "loc": null,
+      "range": [
+        133,
+        199
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          210,
+          213
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            214,
+            219
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "StringLiteral",
+              "value": "use forget",
+              "loc": null,
+              "range": [
+                225,
+                237
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              225,
+              238
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "JSXElement",
+              "openingElement": {
+                "type": "JSXOpeningElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    249,
+                    252
+                  ]
+                },
+                "attributes": [],
+                "selfClosing": false,
+                "loc": null,
+                "range": [
+                  248,
+                  253
+                ]
+              },
+              "children": [
+                {
+                  "type": "JSXExpressionContainer",
+                  "expression": {
+                    "type": "MemberExpression",
+                    "object": {
+                      "type": "Identifier",
+                      "name": "props",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        254,
+                        259
+                      ]
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "bar",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        260,
+                        263
+                      ]
+                    },
+                    "computed": false,
+                    "loc": null,
+                    "range": [
+                      254,
+                      263
+                    ]
+                  },
+                  "loc": null,
+                  "range": [
+                    253,
+                    264
+                  ]
+                }
+              ],
+              "closingElement": {
+                "type": "JSXClosingElement",
+                "name": {
+                  "type": "JSXIdentifier",
+                  "name": "Foo",
+                  "loc": null,
+                  "range": [
+                    266,
+                    269
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  264,
+                  270
+                ]
+              },
+              "loc": null,
+              "range": [
+                248,
+                270
+              ]
+            },
+            "loc": null,
+            "range": [
+              241,
+              271
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          221,
+          273
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        201,
+        273
+      ],
+      "loc": null,
+      "range": [
+        201,
+        273
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    59,
+    273
+  ]
+}

@@ -8,8 +8,6 @@
  * @jest-environment node
  */
 
-/* eslint-disable no-for-of-loops/no-for-of-loops */
-
 'use strict';
 
 let Scheduler;
@@ -173,7 +171,7 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog([
       'setImmediate Callback',
       'Task',
-      'Yield at 5ms',
+      gate(flags => (flags.www ? 'Yield at 10ms' : 'Yield at 5ms')),
       'Set Immediate',
     ]);
 
@@ -288,7 +286,7 @@ describe('SchedulerDOMSetImmediate', () => {
   });
 });
 
-it('does not crash if setImmediate is undefined', () => {
+test('does not crash if setImmediate is undefined', () => {
   jest.resetModules();
   const originalSetImmediate = global.setImmediate;
   try {

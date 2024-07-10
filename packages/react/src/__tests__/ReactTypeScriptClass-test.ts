@@ -14,7 +14,6 @@
 import React = require('react');
 import ReactDOM = require('react-dom');
 import ReactDOMClient = require('react-dom/client');
-import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
 import ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -245,7 +244,6 @@ let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
   contextTypes = {};
   contextType = {};
-  propTypes = {};
   getDefaultProps() {
     getDefaultPropsWasCalled = true;
     return {};
@@ -328,21 +326,27 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('throws if no render function is defined', function() {
-    expect(() => {
-      expect(() =>
+    class Foo extends React.Component {}
+    const caughtErrors = [];
+    function errorHandler(event) {
+      event.preventDefault();
+      caughtErrors.push(event.error);
+    }
+    window.addEventListener('error', errorHandler);
+    try {
+      expect(() => {
         ReactDOM.flushSync(() => root.render(React.createElement(Empty)))
-      ).toThrow();
-    }).toErrorDev([
-      // A failed component renders four times in DEV in concurrent mode
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-    ]);
+      }).toErrorDev([
+        // A failed component renders twice in DEV in concurrent mode
+        'No `render` method found on the Empty instance: ' +
+          'you may have forgotten to define `render`.',
+        'No `render` method found on the Empty instance: ' +
+          'you may have forgotten to define `render`.',
+      ]);
+    } finally {
+      window.removeEventListener('error', errorHandler);
+    }
+    expect(caughtErrors.length).toBe(1);
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -607,7 +611,6 @@ describe('ReactTypeScriptClass', function() {
             'a plain JavaScript class.',
           'getDefaultProps was defined on ClassicProperties, ' +
             'a plain JavaScript class.',
-          'propTypes was defined as an instance property on ClassicProperties.',
           'contextTypes was defined as an instance property on ClassicProperties.',
           'contextType was defined as an instance property on ClassicProperties.',
         ]);
@@ -639,7 +642,7 @@ describe('ReactTypeScriptClass', function() {
     expect(() =>
       test(React.createElement(MisspelledComponent1), 'SPAN', 'foo')
     ).toErrorDev(
-      'Warning: ' +
+      '' +
         'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
         'you mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.'
@@ -650,7 +653,7 @@ describe('ReactTypeScriptClass', function() {
     expect(() =>
       test(React.createElement(MisspelledComponent2), 'SPAN', 'foo')
     ).toErrorDev(
-      'Warning: ' +
+      '' +
         'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
         'Did you mean componentWillReceiveProps()?'
     );
@@ -660,7 +663,7 @@ describe('ReactTypeScriptClass', function() {
     expect(() =>
       test(React.createElement(MisspelledComponent3), 'SPAN', 'foo')
     ).toErrorDev(
-      'Warning: ' +
+      '' +
         'MisspelledComponent3 has a method called UNSAFE_componentWillRecieveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?'
     );
@@ -689,24 +692,19 @@ describe('ReactTypeScriptClass', function() {
     });
   }
 
-  it('supports string refs', function() {
-    const ref = React.createRef();
-    expect(() => {
-      test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
-    }).toErrorDev([
-      'Warning: Component "ClassicRefs" contains the string ref "inner". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://reactjs.org/link/strict-mode-string-ref\n' +
-        '    in ClassicRefs (at **)',
-    ]);
-    expect(ref.current.refs.inner.getName()).toBe('foo');
-  });
-
-  it('supports drilling through to the DOM using findDOMNode', function() {
-    const ref = React.createRef();
-    test(React.createElement(Inner, {name: 'foo', ref: ref}), 'DIV', 'foo');
-    const node = ReactDOM.findDOMNode(ref.current);
-    expect(node).toBe(container.firstChild);
-  });
+  if (!ReactFeatureFlags.disableStringRefs) {
+    it('supports string refs', function() {
+      const ref = React.createRef();
+      expect(() => {
+        test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
+      }).toErrorDev([
+        'Component "ClassicRefs" contains the string ref "inner". ' +
+          'Support for string refs will be removed in a future major release. ' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
+          '    in Inner (at **)',
+      ]);
+      expect(ref.current.refs.inner.getName()).toBe('foo');
+    });
+  }
 });

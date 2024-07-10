@@ -88,7 +88,7 @@ async function main() {
     (_, variableName) => variableName
   );
 
-  const prettyOutputCode = prettier.format(outputCode, prettierConfig);
+  const prettyOutputCode = await prettier.format(outputCode, prettierConfig);
 
   fs.writeFileSync(inlineCodeStringsFilename, prettyOutputCode, 'utf8');
 }

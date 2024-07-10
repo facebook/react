@@ -2,7 +2,7 @@
 
 const {diff: jestDiff} = require('jest-diff');
 const util = require('util');
-const shouldIgnoreConsoleError = require('../shouldIgnoreConsoleError');
+const shouldIgnoreConsoleError = require('internal-test-utils/shouldIgnoreConsoleError');
 
 function normalizeCodeLocInfo(str) {
   if (typeof str !== 'string') {
@@ -16,6 +16,11 @@ function normalizeCodeLocInfo(str) {
   // React format:
   //    in Component (at filename.js:123)
   return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+    if (name.endsWith('.render')) {
+      // Class components will have the `render` method as part of their stack trace.
+      // We strip that out in our normalization to make it look more like component stacks.
+      name = name.slice(0, name.length - 7);
+    }
     return '\n    in ' + name + ' (at **)';
   });
 }
@@ -71,11 +76,7 @@ const createMatcherFor = (consoleMethod, matcherName) =>
       const consoleSpy = (format, ...args) => {
         // Ignore uncaught errors reported by jsdom
         // and React addendums because they're too noisy.
-        if (
-          !logAllErrors &&
-          consoleMethod === 'error' &&
-          shouldIgnoreConsoleError(format, args)
-        ) {
+        if (!logAllErrors && shouldIgnoreConsoleError(format, args)) {
           return;
         }
 
@@ -86,7 +87,8 @@ const createMatcherFor = (consoleMethod, matcherName) =>
         // doesn't match the number of arguments.
         // We'll fail the test if it happens.
         let argIndex = 0;
-        format.replace(/%s/g, () => argIndex++);
+        // console.* could have been called with a non-string e.g. `console.error(new Error())`
+        String(format).replace(/%s/g, () => argIndex++);
         if (argIndex !== args.length) {
           lastWarningWithMismatchingFormat = {
             format,
@@ -181,7 +183,9 @@ const createMatcherFor = (consoleMethod, matcherName) =>
           };
         }
 
-        if (typeof withoutStack === 'number') {
+        if (consoleMethod === 'log') {
+          // We don't expect any console.log calls to have a stack.
+        } else if (typeof withoutStack === 'number') {
           // We're expecting a particular number of warnings without stacks.
           if (withoutStack !== warningsWithoutComponentStack.length) {
             return {
@@ -312,4 +316,5 @@ const createMatcherFor = (consoleMethod, matcherName) =>
 module.exports = {
   toWarnDev: createMatcherFor('warn', 'toWarnDev'),
   toErrorDev: createMatcherFor('error', 'toErrorDev'),
+  toLogDev: createMatcherFor('log', 'toLogDev'),
 };

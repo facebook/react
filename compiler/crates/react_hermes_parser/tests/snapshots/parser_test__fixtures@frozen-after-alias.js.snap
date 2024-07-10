@@ -1,0 +1,320 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/frozen-after-alias.js
+---
+Input:
+function Component() {
+  const a = [];
+  const b = a;
+  useFreeze(a);
+  foo(b); // should be readonly, value is guaranteed frozen via alias
+  return b;
+}
+
+function useFreeze() {}
+function foo(x) {}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    31,
+                    32
+                  ]
+                },
+                "init": {
+                  "type": "ArrayExpression",
+                  "elements": [],
+                  "loc": null,
+                  "range": [
+                    35,
+                    37
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  31,
+                  37
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              25,
+              38
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    47,
+                    48
+                  ]
+                },
+                "init": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    51,
+                    52
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  47,
+                  52
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              41,
+              53
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "useFreeze",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  56,
+                  65
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    66,
+                    67
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                56,
+                68
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              56,
+              69
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "foo",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  72,
+                  75
+                ]
+              },
+              "arguments": [
+                {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    76,
+                    77
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                72,
+                78
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              72,
+              79
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "b",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                149,
+                150
+              ]
+            },
+            "loc": null,
+            "range": [
+              142,
+              151
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          21,
+          153
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        153
+      ],
+      "loc": null,
+      "range": [
+        0,
+        153
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "useFreeze",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          164,
+          173
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          176,
+          178
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        155,
+        178
+      ],
+      "loc": null,
+      "range": [
+        155,
+        178
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          188,
+          191
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "x",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            192,
+            193
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          195,
+          197
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        179,
+        197
+      ],
+      "loc": null,
+      "range": [
+        179,
+        197
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    197
+  ]
+}

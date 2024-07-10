@@ -23,22 +23,23 @@
 // So `$$$config` looks like a global variable, but it's
 // really an argument to a top-level wrapping function.
 
-declare var $$$config: any;
-export opaque type Type = mixed; // eslint-disable-line no-undef
-export opaque type Props = mixed; // eslint-disable-line no-undef
-export opaque type Container = mixed; // eslint-disable-line no-undef
-export opaque type Instance = mixed; // eslint-disable-line no-undef
-export opaque type TextInstance = mixed; // eslint-disable-line no-undef
-export opaque type SuspenseInstance = mixed; // eslint-disable-line no-undef
-export opaque type HydratableInstance = mixed; // eslint-disable-line no-undef
-export opaque type PublicInstance = mixed; // eslint-disable-line no-undef
-export opaque type HostContext = mixed; // eslint-disable-line no-undef
-export opaque type UpdatePayload = mixed; // eslint-disable-line no-undef
-export opaque type ChildSet = mixed; // eslint-disable-line no-undef
-export opaque type TimeoutHandle = mixed; // eslint-disable-line no-undef
-export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
-export opaque type RendererInspectionConfig = mixed; // eslint-disable-line no-undef
-export opaque type TransitionStatus = mixed; // eslint-disable-line no-undef
+declare const $$$config: any;
+export opaque type Type = mixed;
+export opaque type Props = mixed;
+export opaque type Container = mixed;
+export opaque type Instance = mixed;
+export opaque type TextInstance = mixed;
+export opaque type SuspenseInstance = mixed;
+export opaque type HydratableInstance = mixed;
+export opaque type PublicInstance = mixed;
+export opaque type HostContext = mixed;
+export opaque type UpdatePayload = mixed;
+export opaque type ChildSet = mixed;
+export opaque type TimeoutHandle = mixed;
+export opaque type NoTimeout = mixed;
+export opaque type RendererInspectionConfig = mixed;
+export opaque type TransitionStatus = mixed;
+export opaque type FormInstance = mixed;
 export type EventResponder = any;
 
 export const getPublicInstance = $$$config.getPublicInstance;
@@ -65,7 +66,9 @@ export const afterActiveInstanceBlur = $$$config.afterActiveInstanceBlur;
 export const preparePortalMount = $$$config.preparePortalMount;
 export const prepareScopeUpdate = $$$config.prepareScopeUpdate;
 export const getInstanceFromScope = $$$config.getInstanceFromScope;
-export const getCurrentEventPriority = $$$config.getCurrentEventPriority;
+export const setCurrentUpdatePriority = $$$config.setCurrentUpdatePriority;
+export const getCurrentUpdatePriority = $$$config.getCurrentUpdatePriority;
+export const resolveUpdatePriority = $$$config.resolveUpdatePriority;
 export const shouldAttemptEagerTransition =
   $$$config.shouldAttemptEagerTransition;
 export const detachDeletedInstance = $$$config.detachDeletedInstance;
@@ -76,6 +79,8 @@ export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
 export const NotPendingTransition = $$$config.NotPendingTransition;
+export const resetFormInstance = $$$config.resetFormInstance;
+export const printToConsole = $$$config.printToConsole;
 
 // -------------------
 //      Microtasks
@@ -134,7 +139,6 @@ export const cloneHiddenTextInstance = $$$config.cloneHiddenTextInstance;
 //     Hydration
 //     (optional)
 // -------------------
-export const isHydratableText = $$$config.isHydratableText;
 export const isSuspenseInstancePending = $$$config.isSuspenseInstancePending;
 export const isSuspenseInstanceFallback = $$$config.isSuspenseInstanceFallback;
 export const getSuspenseInstanceFallbackErrorDetails =
@@ -165,41 +169,22 @@ export const clearSuspenseBoundaryFromContainer =
   $$$config.clearSuspenseBoundaryFromContainer;
 export const shouldDeleteUnhydratedTailInstances =
   $$$config.shouldDeleteUnhydratedTailInstances;
-export const didNotMatchHydratedContainerTextInstance =
-  $$$config.didNotMatchHydratedContainerTextInstance;
-export const didNotMatchHydratedTextInstance =
-  $$$config.didNotMatchHydratedTextInstance;
-export const didNotHydrateInstanceWithinContainer =
-  $$$config.didNotHydrateInstanceWithinContainer;
-export const didNotHydrateInstanceWithinSuspenseInstance =
-  $$$config.didNotHydrateInstanceWithinSuspenseInstance;
-export const didNotHydrateInstance = $$$config.didNotHydrateInstance;
-export const didNotFindHydratableInstanceWithinContainer =
-  $$$config.didNotFindHydratableInstanceWithinContainer;
-export const didNotFindHydratableTextInstanceWithinContainer =
-  $$$config.didNotFindHydratableTextInstanceWithinContainer;
-export const didNotFindHydratableSuspenseInstanceWithinContainer =
-  $$$config.didNotFindHydratableSuspenseInstanceWithinContainer;
-export const didNotFindHydratableInstanceWithinSuspenseInstance =
-  $$$config.didNotFindHydratableInstanceWithinSuspenseInstance;
-export const didNotFindHydratableTextInstanceWithinSuspenseInstance =
-  $$$config.didNotFindHydratableTextInstanceWithinSuspenseInstance;
-export const didNotFindHydratableSuspenseInstanceWithinSuspenseInstance =
-  $$$config.didNotFindHydratableSuspenseInstanceWithinSuspenseInstance;
-export const didNotFindHydratableInstance =
-  $$$config.didNotFindHydratableInstance;
-export const didNotFindHydratableTextInstance =
-  $$$config.didNotFindHydratableTextInstance;
-export const didNotFindHydratableSuspenseInstance =
-  $$$config.didNotFindHydratableSuspenseInstance;
-export const errorHydratingContainer = $$$config.errorHydratingContainer;
+export const diffHydratedPropsForDevWarnings =
+  $$$config.diffHydratedPropsForDevWarnings;
+export const diffHydratedTextForDevWarnings =
+  $$$config.diffHydratedTextForDevWarnings;
+export const describeHydratableInstanceForDevWarnings =
+  $$$config.describeHydratableInstanceForDevWarnings;
+export const validateHydratableInstance = $$$config.validateHydratableInstance;
+export const validateHydratableTextInstance =
+  $$$config.validateHydratableTextInstance;
 
 // -------------------
 //     Resources
 //     (optional)
 // -------------------
 export type HoistableRoot = mixed;
-export type Resource = mixed; // eslint-disable-line no-undef
+export type Resource = mixed;
 export const supportsResources = $$$config.supportsResources;
 export const isHostHoistableType = $$$config.isHostHoistableType;
 export const getHoistableRoot = $$$config.getHoistableRoot;

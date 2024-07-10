@@ -1,0 +1,374 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/sequence-expression.js
+---
+Input:
+function sequence(props) {
+  let x = (null, Math.max(1, 2), foo());
+  while ((foo(), true)) {
+    x = (foo(), 2);
+  }
+  return x;
+}
+
+function foo() {}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "sequence",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          17
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            18,
+            23
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    33,
+                    34
+                  ]
+                },
+                "init": {
+                  "type": "SequenceExpression",
+                  "expressions": [
+                    {
+                      "type": "NullLiteral",
+                      "loc": null,
+                      "range": [
+                        38,
+                        42
+                      ]
+                    },
+                    {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "Math",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            44,
+                            48
+                          ]
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "max",
+                          "typeAnnotation": null,
+                          "loc": null,
+                          "range": [
+                            49,
+                            52
+                          ]
+                        },
+                        "computed": false,
+                        "loc": null,
+                        "range": [
+                          44,
+                          52
+                        ]
+                      },
+                      "arguments": [
+                        {
+                          "type": "NumericLiteral",
+                          "value": 1.0,
+                          "loc": null,
+                          "range": [
+                            53,
+                            54
+                          ]
+                        },
+                        {
+                          "type": "NumericLiteral",
+                          "value": 2.0,
+                          "loc": null,
+                          "range": [
+                            56,
+                            57
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        44,
+                        58
+                      ]
+                    },
+                    {
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "Identifier",
+                        "name": "foo",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          60,
+                          63
+                        ]
+                      },
+                      "arguments": [],
+                      "loc": null,
+                      "range": [
+                        60,
+                        65
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    38,
+                    65
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  33,
+                  66
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              29,
+              67
+            ]
+          },
+          {
+            "type": "WhileStatement",
+            "test": {
+              "type": "SequenceExpression",
+              "expressions": [
+                {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "foo",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      78,
+                      81
+                    ]
+                  },
+                  "arguments": [],
+                  "loc": null,
+                  "range": [
+                    78,
+                    83
+                  ]
+                },
+                {
+                  "type": "BooleanLiteral",
+                  "value": true,
+                  "loc": null,
+                  "range": [
+                    85,
+                    89
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                78,
+                89
+              ]
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        98,
+                        99
+                      ]
+                    },
+                    "right": {
+                      "type": "SequenceExpression",
+                      "expressions": [
+                        {
+                          "type": "CallExpression",
+                          "callee": {
+                            "type": "Identifier",
+                            "name": "foo",
+                            "typeAnnotation": null,
+                            "loc": null,
+                            "range": [
+                              103,
+                              106
+                            ]
+                          },
+                          "arguments": [],
+                          "loc": null,
+                          "range": [
+                            103,
+                            108
+                          ]
+                        },
+                        {
+                          "type": "NumericLiteral",
+                          "value": 2.0,
+                          "loc": null,
+                          "range": [
+                            110,
+                            111
+                          ]
+                        }
+                      ],
+                      "loc": null,
+                      "range": [
+                        103,
+                        111
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      98,
+                      112
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    98,
+                    113
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                92,
+                117
+              ]
+            },
+            "loc": null,
+            "range": [
+              70,
+              117
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                127,
+                128
+              ]
+            },
+            "loc": null,
+            "range": [
+              120,
+              129
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          25,
+          131
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        131
+      ],
+      "loc": null,
+      "range": [
+        0,
+        131
+      ]
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          142,
+          145
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [],
+        "loc": null,
+        "range": [
+          148,
+          150
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        133,
+        150
+      ],
+      "loc": null,
+      "range": [
+        133,
+        150
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    150
+  ]
+}

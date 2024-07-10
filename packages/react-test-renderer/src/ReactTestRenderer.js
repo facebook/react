@@ -20,9 +20,12 @@ import {
   getPublicRootInstance,
   createContainer,
   updateContainer,
-  flushSync,
+  flushSyncFromReconciler,
   injectIntoDevTools,
   batchedUpdates,
+  defaultOnUncaughtError,
+  defaultOnCaughtError,
+  defaultOnRecoverableError,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/src/ReactFiberTreeReflection';
 import {
@@ -52,9 +55,14 @@ import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
 import {getPublicInstance} from './ReactFiberConfigTestHost';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
-import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
+import {
+  allowConcurrentByDefault,
+  enableReactTestRendererWarning,
+  disableLegacyMode,
+} from 'shared/ReactFeatureFlags';
 
-const act = React.unstable_act;
+// $FlowFixMe[prop-missing]: This is only in the development export.
+const act = React.act;
 
 // TODO: Remove from public bundle
 
@@ -99,11 +107,9 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
     case 'TEXT':
       return inst.text;
     case 'INSTANCE': {
-      /* eslint-disable no-unused-vars */
       // We don't include the `children` prop in JSON.
       // Instead, we will include the actual rendered children.
       const {children, ...props} = inst.props;
-      /* eslint-enable */
       let renderedChildren = null;
       if (inst.children && inst.children.length) {
         for (let i = 0; i < inst.children.length; i++) {
@@ -450,13 +456,6 @@ function propsMatch(props: Object, filter: Object): boolean {
   return true;
 }
 
-// $FlowFixMe[missing-local-annot]
-function onRecoverableError(error) {
-  // TODO: Expose onRecoverableError option to userspace
-  // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
-  console.error(error);
-}
-
 function create(
   element: React$Element<any>,
   options: TestRendererOptions,
@@ -468,10 +467,24 @@ function create(
   update(newElement: React$Element<any>): any,
   unmount(): void,
   getInstance(): React$Component<any, any> | PublicInstance | null,
-  unstable_flushSync: typeof flushSync,
+  unstable_flushSync: typeof flushSyncFromReconciler,
 } {
+  if (__DEV__) {
+    if (
+      enableReactTestRendererWarning === true &&
+      global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true
+    ) {
+      console.error(
+        'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
+      );
+    }
+  }
+
   let createNodeMock = defaultTestOptions.createNodeMock;
-  let isConcurrent = false;
+  const isConcurrentOnly =
+    disableLegacyMode === true &&
+    global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true;
+  let isConcurrent = isConcurrentOnly;
   let isStrictMode = false;
   let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
@@ -479,8 +492,8 @@ function create(
       // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
-    if (options.unstable_isConcurrent === true) {
-      isConcurrent = true;
+    if (isConcurrentOnly === false) {
+      isConcurrent = options.unstable_isConcurrent;
     }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -504,7 +517,9 @@ function create(
     isStrictMode,
     concurrentUpdatesByDefault,
     '',
-    onRecoverableError,
+    defaultOnUncaughtError,
+    defaultOnCaughtError,
+    defaultOnRecoverableError,
     null,
   );
 
@@ -581,7 +596,7 @@ function create(
       return getPublicRootInstance(root);
     },
 
-    unstable_flushSync: flushSync,
+    unstable_flushSync: flushSyncFromReconciler,
   };
 
   Object.defineProperty(
@@ -639,7 +654,6 @@ injectIntoDevTools({
 export {
   Scheduler as _Scheduler,
   create,
-  /* eslint-disable-next-line camelcase */
   batchedUpdates as unstable_batchedUpdates,
   act,
 };

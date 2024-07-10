@@ -1,0 +1,229 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/unused-object-element.js
+---
+Input:
+function Foo(props) {
+  const { x, y, ...z } = props.a;
+  return x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            13,
+            18
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "const",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "ObjectPattern",
+                  "properties": [
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          32,
+                          33
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "x",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          32,
+                          33
+                        ]
+                      },
+                      "kind": "init",
+                      "computed": false,
+                      "shorthand": true,
+                      "method": false,
+                      "loc": null,
+                      "range": [
+                        32,
+                        33
+                      ]
+                    },
+                    {
+                      "type": "Property",
+                      "key": {
+                        "type": "Identifier",
+                        "name": "y",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          35,
+                          36
+                        ]
+                      },
+                      "value": {
+                        "type": "Identifier",
+                        "name": "y",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          35,
+                          36
+                        ]
+                      },
+                      "kind": "init",
+                      "computed": false,
+                      "shorthand": true,
+                      "method": false,
+                      "loc": null,
+                      "range": [
+                        35,
+                        36
+                      ]
+                    },
+                    {
+                      "type": "RestElement",
+                      "argument": {
+                        "type": "Identifier",
+                        "name": "z",
+                        "typeAnnotation": null,
+                        "loc": null,
+                        "range": [
+                          41,
+                          42
+                        ]
+                      },
+                      "loc": null,
+                      "range": [
+                        38,
+                        42
+                      ]
+                    }
+                  ],
+                  "loc": null,
+                  "range": [
+                    30,
+                    44
+                  ]
+                },
+                "init": {
+                  "type": "MemberExpression",
+                  "object": {
+                    "type": "Identifier",
+                    "name": "props",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      47,
+                      52
+                    ]
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "a",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      53,
+                      54
+                    ]
+                  },
+                  "computed": false,
+                  "loc": null,
+                  "range": [
+                    47,
+                    54
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  30,
+                  54
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              24,
+              55
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "Identifier",
+              "name": "x",
+              "typeAnnotation": null,
+              "loc": null,
+              "range": [
+                65,
+                66
+              ]
+            },
+            "loc": null,
+            "range": [
+              58,
+              67
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          20,
+          69
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        69
+      ],
+      "loc": null,
+      "range": [
+        0,
+        69
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    69
+  ]
+}

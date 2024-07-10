@@ -993,10 +993,13 @@ function recursivelySearchTree(
   regExp: RegExp,
   searchResults: Array<number>,
 ): void {
-  const {children, displayName, hocDisplayNames} = ((store.getElementByID(
-    elementID,
-  ): any): Element);
+  const element = store.getElementByID(elementID);
 
+  if (element == null) {
+    return;
+  }
+
+  const {children, displayName, hocDisplayNames, compiledWithForget} = element;
   if (displayName != null && regExp.test(displayName) === true) {
     searchResults.push(elementID);
   } else if (
@@ -1004,6 +1007,8 @@ function recursivelySearchTree(
     hocDisplayNames.length > 0 &&
     hocDisplayNames.some(name => regExp.test(name)) === true
   ) {
+    searchResults.push(elementID);
+  } else if (compiledWithForget && regExp.test('Forget')) {
     searchResults.push(elementID);
   }
 

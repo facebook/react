@@ -1,0 +1,350 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/ssa-complex-multiple-if.js
+---
+Input:
+function foo() {
+  let x = 1;
+  let y = 2;
+  if (y === 2) {
+    x = 3;
+  }
+
+  if (y === 3) {
+    x = 5;
+  }
+  y = x;
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "foo",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          12
+        ]
+      },
+      "params": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "x",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    23,
+                    24
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 1.0,
+                  "loc": null,
+                  "range": [
+                    27,
+                    28
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  23,
+                  28
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              19,
+              29
+            ]
+          },
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "y",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    36,
+                    37
+                  ]
+                },
+                "init": {
+                  "type": "NumericLiteral",
+                  "value": 2.0,
+                  "loc": null,
+                  "range": [
+                    40,
+                    41
+                  ]
+                },
+                "loc": null,
+                "range": [
+                  36,
+                  41
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              32,
+              42
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "y",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  49,
+                  50
+                ]
+              },
+              "operator": "===",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 2.0,
+                "loc": null,
+                "range": [
+                  55,
+                  56
+                ]
+              },
+              "loc": null,
+              "range": [
+                49,
+                56
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        64,
+                        65
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 3.0,
+                      "loc": null,
+                      "range": [
+                        68,
+                        69
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      64,
+                      69
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    64,
+                    70
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                58,
+                74
+              ]
+            },
+            "alternate": null,
+            "loc": null,
+            "range": [
+              45,
+              74
+            ]
+          },
+          {
+            "type": "IfStatement",
+            "test": {
+              "type": "BinaryExpression",
+              "left": {
+                "type": "Identifier",
+                "name": "y",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  82,
+                  83
+                ]
+              },
+              "operator": "===",
+              "right": {
+                "type": "NumericLiteral",
+                "value": 3.0,
+                "loc": null,
+                "range": [
+                  88,
+                  89
+                ]
+              },
+              "loc": null,
+              "range": [
+                82,
+                89
+              ]
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "x",
+                      "typeAnnotation": null,
+                      "loc": null,
+                      "range": [
+                        97,
+                        98
+                      ]
+                    },
+                    "right": {
+                      "type": "NumericLiteral",
+                      "value": 5.0,
+                      "loc": null,
+                      "range": [
+                        101,
+                        102
+                      ]
+                    },
+                    "loc": null,
+                    "range": [
+                      97,
+                      102
+                    ]
+                  },
+                  "directive": null,
+                  "loc": null,
+                  "range": [
+                    97,
+                    103
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                91,
+                107
+              ]
+            },
+            "alternate": null,
+            "loc": null,
+            "range": [
+              78,
+              107
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "Identifier",
+                "name": "y",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  110,
+                  111
+                ]
+              },
+              "right": {
+                "type": "Identifier",
+                "name": "x",
+                "typeAnnotation": null,
+                "loc": null,
+                "range": [
+                  114,
+                  115
+                ]
+              },
+              "loc": null,
+              "range": [
+                110,
+                115
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              110,
+              116
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          15,
+          118
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        118
+      ],
+      "loc": null,
+      "range": [
+        0,
+        118
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    118
+  ]
+}

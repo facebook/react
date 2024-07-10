@@ -43,10 +43,23 @@ const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
   parseModel(response: Response, json) {
     return JSON.parse(json, response._fromJSON);
   },
+  printToConsole(methodName, args, badgeName) {
+    // eslint-disable-next-line react-internal/no-production-logging
+    console[methodName].apply(console, args);
+  },
 });
 
 function read<T>(source: Source): Thenable<T> {
-  const response = createResponse(source, null);
+  const response = createResponse(
+    source,
+    null,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    true,
+  );
   for (let i = 0; i < source.length; i++) {
     processBinaryChunk(response, source[i], 0);
   }

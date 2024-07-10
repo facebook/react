@@ -361,7 +361,7 @@ export default function Tree(props: Props): React.Node {
     <TreeFocusedContext.Provider value={treeFocused}>
       <div className={styles.Tree} ref={treeRef}>
         <div className={styles.SearchInput}>
-          {store.supportsNativeInspection && (
+          {store.supportsClickToInspect && (
             <Fragment>
               <InspectHostNodesToggle />
               <div className={styles.VRule} />
@@ -538,7 +538,7 @@ function updateIndentationSizeVar(
 }
 
 // $FlowFixMe[missing-local-annot]
-function InnerElementType({children, style, ...rest}) {
+function InnerElementType({children, style}) {
   const {ownerID} = useContext(TreeStateContext);
 
   const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
@@ -586,11 +586,7 @@ function InnerElementType({children, style, ...rest}) {
   // A lot of options were considered; this seemed the one that requires the least code.
   // See https://github.com/bvaughn/react-devtools-experimental/issues/9
   return (
-    <div
-      className={styles.InnerElementType}
-      ref={divRef}
-      style={style}
-      {...rest}>
+    <div className={styles.InnerElementType} ref={divRef} style={style}>
       <SelectedTreeHighlight />
       {children}
     </div>

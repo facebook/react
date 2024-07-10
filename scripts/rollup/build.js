@@ -3,7 +3,6 @@
 const rollup = require('rollup');
 const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('@rollup/plugin-commonjs');
 const flowRemoveTypes = require('flow-remove-types');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('@rollup/plugin-replace');
@@ -47,9 +46,6 @@ const {
   NODE_ES2015,
   ESM_DEV,
   ESM_PROD,
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -89,9 +85,11 @@ function parseRequestedNames(names, toCase) {
   return result;
 }
 
+const argvType = Array.isArray(argv.type) ? argv.type : [argv.type];
 const requestedBundleTypes = argv.type
-  ? parseRequestedNames([argv.type], 'uppercase')
+  ? parseRequestedNames(argvType, 'uppercase')
   : [];
+
 const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
@@ -148,6 +146,7 @@ function getBabelConfig(
     presets: [],
     plugins: [...babelPlugins],
     babelHelpers: 'bundled',
+    sourcemap: false,
   };
   if (isDevelopment) {
     options.plugins.push(
@@ -226,10 +225,6 @@ function getRollupOutputOptions(
 
 function getFormat(bundleType) {
   switch (bundleType) {
-    case UMD_DEV:
-    case UMD_PROD:
-    case UMD_PROFILING:
-      return `umd`;
     case NODE_ES2015:
     case NODE_DEV:
     case NODE_PROD:
@@ -259,7 +254,6 @@ function isProductionBundleType(bundleType) {
     case NODE_ES2015:
       return true;
     case ESM_DEV:
-    case UMD_DEV:
     case NODE_DEV:
     case BUN_DEV:
     case FB_WWW_DEV:
@@ -267,10 +261,8 @@ function isProductionBundleType(bundleType) {
     case RN_FB_DEV:
       return false;
     case ESM_PROD:
-    case UMD_PROD:
     case NODE_PROD:
     case BUN_PROD:
-    case UMD_PROFILING:
     case NODE_PROFILING:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
@@ -300,19 +292,44 @@ function isProfilingBundleType(bundleType) {
     case RN_OSS_PROD:
     case ESM_DEV:
     case ESM_PROD:
-    case UMD_DEV:
-    case UMD_PROD:
     case BROWSER_SCRIPT:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
-    case UMD_PROFILING:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
   }
+}
+
+function getBundleTypeFlags(bundleType) {
+  const isFBWWWBundle =
+    bundleType === FB_WWW_DEV ||
+    bundleType === FB_WWW_PROD ||
+    bundleType === FB_WWW_PROFILING;
+  const isRNBundle =
+    bundleType === RN_OSS_DEV ||
+    bundleType === RN_OSS_PROD ||
+    bundleType === RN_OSS_PROFILING ||
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING;
+
+  const isFBRNBundle =
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING;
+
+  const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
+
+  return {
+    isFBWWWBundle,
+    isRNBundle,
+    isFBRNBundle,
+    shouldStayReadable,
+  };
 }
 
 function forbidFBJSImports() {
@@ -345,22 +362,10 @@ function getPlugins(
     const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
-    const isUMDBundle =
-      bundleType === UMD_DEV ||
-      bundleType === UMD_PROD ||
-      bundleType === UMD_PROFILING;
-    const isFBWWWBundle =
-      bundleType === FB_WWW_DEV ||
-      bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING;
-    const isRNBundle =
-      bundleType === RN_OSS_DEV ||
-      bundleType === RN_OSS_PROD ||
-      bundleType === RN_OSS_PROFILING ||
-      bundleType === RN_FB_DEV ||
-      bundleType === RN_FB_PROD ||
-      bundleType === RN_FB_PROFILING;
-    const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
+
+    const needsMinifiedByClosure =
+      bundleType !== ESM_PROD && bundleType !== ESM_DEV;
+
     return [
       // Keep dynamic imports as externals
       dynamicImports(),
@@ -370,7 +375,7 @@ function getPlugins(
           const transformed = flowRemoveTypes(code);
           return {
             code: transformed.toString(),
-            map: transformed.generateMap(),
+            map: null,
           };
         },
       },
@@ -399,6 +404,7 @@ function getPlugins(
       ),
       // Remove 'use strict' from individual source files.
       {
+        name: "remove 'use strict'",
         transform(source) {
           return source.replace(/['"]use strict["']/g, '');
         },
@@ -409,21 +415,37 @@ function getPlugins(
         values: {
           __DEV__: isProduction ? 'false' : 'true',
           __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-          __UMD__: isUMDBundle ? 'true' : 'false',
           'process.env.NODE_ENV': isProduction
             ? "'production'"
             : "'development'",
           __EXPERIMENTAL__,
         },
       }),
-      // The CommonJS plugin *only* exists to pull "art" into "react-art".
-      // I'm going to port "art" to ES modules to avoid this problem.
-      // Please don't enable this for anything else!
-      isUMDBundle && entry === 'react-art' && commonjs(),
-      // Apply dead code elimination and/or minification.
-      // closure doesn't yet support leaving ESM imports intact
-      isProduction &&
-        bundleType !== ESM_PROD &&
+      {
+        name: 'top-level-definitions',
+        renderChunk(source) {
+          return Wrappers.wrapWithTopLevelDefinitions(
+            source,
+            bundleType,
+            globalName,
+            filename,
+            moduleType,
+            bundle.wrapWithModuleBoundaries
+          );
+        },
+      },
+      // For production builds, compile with Closure. We do this even for the
+      // "non-minified" production builds because Closure is much better at
+      // minification than what most applications use. During this step, we do
+      // preserve the original symbol names, though, so the resulting code is
+      // relatively readable.
+      //
+      // For the minified builds, the names will be mangled later.
+      //
+      // We don't bother with sourcemaps at this step. The sourcemaps we publish
+      // are only for whitespace and symbol renaming; they don't map back to
+      // before Closure was applied.
+      needsMinifiedByClosure &&
         closure({
           compilation_level: 'SIMPLE',
           language_in: 'ECMASCRIPT_2020',
@@ -439,7 +461,7 @@ function getPlugins(
             bundleType !== ESM_DEV,
           env: 'CUSTOM',
           warning_level: 'QUIET',
-          apply_input_source_maps: false,
+          source_map_include_content: true,
           use_types_for_optimization: false,
           process_common_js_modules: false,
           rewrite_polyfills: false,
@@ -448,27 +470,30 @@ function getPlugins(
 
           // Don't let it create global variables in the browser.
           // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
+          assume_function_wrapper: true,
+
+          // Don't rename symbols (variable names, functions, etc). We leave
+          // this up to the application to handle, if they want. Otherwise gzip
+          // takes care of it.
+          renaming: false,
         }),
-      // Add the whitespace back if necessary.
-      shouldStayReadable &&
+      needsMinifiedByClosure &&
+        // Add the whitespace back
         prettier({
           parser: 'flow',
           singleQuote: false,
           trailingComma: 'none',
           bracketSpacing: true,
         }),
-      // License and haste headers, top-level `if` blocks.
       {
+        name: 'license-and-signature-header',
         renderChunk(source) {
-          return Wrappers.wrapBundle(
+          return Wrappers.wrapWithLicenseHeader(
             source,
             bundleType,
             globalName,
             filename,
-            moduleType,
-            bundle.wrapWithModuleBoundaries
+            moduleType
           );
         },
       },
@@ -505,8 +530,8 @@ function shouldSkipBundle(bundle, bundleType) {
     return true;
   }
   if (requestedBundleTypes.length > 0) {
-    const isAskingForDifferentType = requestedBundleTypes.every(
-      requestedType => bundleType.indexOf(requestedType) === -1
+    const isAskingForDifferentType = requestedBundleTypes.some(
+      requestedType => !bundleType.includes(requestedType)
     );
     if (isAskingForDifferentType) {
       return true;
@@ -544,16 +569,31 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   // .stable.js
   // .experimental.js
   // .js
+  // or any of those plus .development.js
 
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
+    const developmentFBEntry = resolvedFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentFBEntry)) {
+      return developmentFBEntry;
+    }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
     const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    const developmentGenericFBEntry = resolvedGenericFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentGenericFBEntry)) {
+      return developmentGenericFBEntry;
+    }
     if (fs.existsSync(resolvedGenericFBEntry)) {
       return resolvedGenericFBEntry;
     }
@@ -563,6 +603,10 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     '.js',
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
+  const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
+  if (fs.existsSync(devForkedEntry)) {
+    return devForkedEntry;
+  }
   if (fs.existsSync(resolvedForkedEntry)) {
     return resolvedForkedEntry;
   }
@@ -577,31 +621,19 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  const isFBWWWBundle =
-    bundleType === FB_WWW_DEV ||
-    bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING;
-
-  const isFBRNBundle =
-    bundleType === RN_FB_DEV ||
-    bundleType === RN_FB_PROD ||
-    bundleType === RN_FB_PROFILING;
+  const {isFBWWWBundle, isFBRNBundle} = getBundleTypeFlags(bundleType);
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
-    isFBWWWBundle || isFBRNBundle
+    isFBWWWBundle || isFBRNBundle,
+    !isProductionBundleType(bundleType)
   );
 
-  const shouldBundleDependencies =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
-  if (!shouldBundleDependencies) {
-    const deps = Modules.getDependencies(bundleType, bundle.entry);
-    externals = externals.concat(deps);
-  }
+
+  const deps = Modules.getDependencies(bundleType, bundle.entry);
+  externals = externals.concat(deps);
 
   const importSideEffects = Modules.getImportSideEffects();
   const pureExternalModules = Object.keys(importSideEffects).filter(
@@ -618,7 +650,7 @@ async function createBundle(bundle, bundleType) {
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
-      if (!shouldBundleDependencies && isProvidedByDependency) {
+      if (isProvidedByDependency) {
         if (id.indexOf('/src/') !== -1) {
           throw Error(
             'You are trying to import ' +
@@ -786,9 +818,6 @@ async function buildEverything() {
       [bundle, NODE_ES2015],
       [bundle, ESM_DEV],
       [bundle, ESM_PROD],
-      [bundle, UMD_DEV],
-      [bundle, UMD_PROD],
-      [bundle, UMD_PROFILING],
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],

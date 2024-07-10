@@ -12,11 +12,12 @@ import type {Element} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
+import {getVersionedRenderImplementation} from './utils';
+
 describe('OwnersListContext', () => {
   let React;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
-  let legacyRender;
   let store: Store;
   let utils;
 
@@ -29,8 +30,6 @@ describe('OwnersListContext', () => {
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
-
-    legacyRender = utils.legacyRender;
 
     bridge = global.bridge;
     store = global.store;
@@ -50,6 +49,8 @@ describe('OwnersListContext', () => {
     TreeContextController =
       require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeContextController;
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   const Contexts = ({children, defaultOwnerID = null}) => (
     <BridgeContext.Provider value={bridge}>
@@ -98,9 +99,7 @@ describe('OwnersListContext', () => {
     };
     const Child = () => null;
 
-    utils.act(() =>
-      legacyRender(<Grandparent />, document.createElement('div')),
-    );
+    utils.act(() => render(<Grandparent />));
 
     expect(store).toMatchInlineSnapshot(`
       [root]
@@ -143,9 +142,7 @@ describe('OwnersListContext', () => {
     };
     const Child = () => null;
 
-    utils.act(() =>
-      legacyRender(<Grandparent />, document.createElement('div')),
-    );
+    utils.act(() => render(<Grandparent />));
 
     expect(store).toMatchInlineSnapshot(`
       [root]
@@ -171,9 +168,7 @@ describe('OwnersListContext', () => {
     const Grandparent = () => <Parent />;
     const Parent = () => null;
 
-    utils.act(() =>
-      legacyRender(<Grandparent />, document.createElement('div')),
-    );
+    utils.act(() => render(<Grandparent />));
 
     expect(store).toMatchInlineSnapshot(`
       [root]
@@ -198,9 +193,7 @@ describe('OwnersListContext', () => {
       return <Memo ref={ref} />;
     };
 
-    utils.act(() =>
-      legacyRender(<Grandparent />, document.createElement('div')),
-    );
+    utils.act(() => render(<Grandparent />));
 
     expect(store).toMatchInlineSnapshot(`
       [root]

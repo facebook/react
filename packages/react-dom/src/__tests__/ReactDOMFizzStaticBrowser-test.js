@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {patchMessageChannel} from '../../../../scripts/jest/patchMessageChannel';
+
 import {
   getVisibleChildren,
   insertNodesAndExecuteScripts,
@@ -18,6 +20,7 @@ import {
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
+global.TextDecoder = require('util').TextDecoder;
 
 let React;
 let ReactDOM;
@@ -25,10 +28,17 @@ let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
 let container;
+let Scheduler;
+let act;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    Scheduler = require('scheduler');
+    patchMessageChannel(Scheduler);
+    act = require('internal-test-utils').act;
+
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
@@ -43,6 +53,17 @@ describe('ReactDOMFizzStaticBrowser', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await act(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   const theError = new Error('This is an error');
   function Throw() {
@@ -112,37 +133,37 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
   // @gate experimental
   it('should call prerender', async () => {
-    const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>);
+    const result = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<div>hello world</div>),
+    );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
   // @gate experimental
   it('should emit DOCTYPE at the root of the document', async () => {
-    const result = await ReactDOMFizzStatic.prerender(
-      <html>
-        <body>hello world</body>
-      </html>,
+    const result = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <html>
+          <body>hello world</body>
+        </html>,
+      ),
     );
     const prelude = await readContent(result.prelude);
-    if (gate(flags => flags.enableFloat)) {
-      expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
-      );
-    } else {
-      expect(prelude).toMatchInlineSnapshot(
-        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-      );
-    }
+    expect(prelude).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+    );
   });
 
   // @gate experimental
   it('should emit bootstrap script src at the end', async () => {
-    const result = await ReactDOMFizzStatic.prerender(<div>hello world</div>, {
-      bootstrapScriptContent: 'INIT();',
-      bootstrapScripts: ['init.js'],
-      bootstrapModules: ['init.mjs'],
-    });
+    const result = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<div>hello world</div>, {
+        bootstrapScriptContent: 'INIT();',
+        bootstrapScripts: ['init.js'],
+        bootstrapModules: ['init.mjs'],
+      }),
+    );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
       `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
@@ -160,12 +181,14 @@ describe('ReactDOMFizzStaticBrowser', () => {
       }
       return 'Done';
     }
-    const resultPromise = ReactDOMFizzStatic.prerender(
-      <div>
-        <Suspense fallback="Loading">
-          <Wait />
-        </Suspense>
-      </div>,
+    const resultPromise = serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <Suspense fallback="Loading">
+            <Wait />
+          </Suspense>
+        </div>,
+      ),
     );
 
     await jest.runAllTimers();
@@ -176,9 +199,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const result = await resultPromise;
     const prelude = await readContent(result.prelude);
-    expect(prelude).toMatchInlineSnapshot(
-      `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
-    );
+    expect(prelude).toMatchInlineSnapshot(`"<div><!--$-->Done<!--/$--></div>"`);
   });
 
   // @gate experimental
@@ -186,15 +207,17 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzStatic.prerender(
-        <div>
-          <Throw />
-        </div>,
-        {
-          onError(x) {
-            reportedErrors.push(x);
+      await serverAct(() =>
+        ReactDOMFizzStatic.prerender(
+          <div>
+            <Throw />
+          </div>,
+          {
+            onError(x) {
+              reportedErrors.push(x);
+            },
           },
-        },
+        ),
       );
     } catch (error) {
       caughtError = error;
@@ -208,17 +231,19 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzStatic.prerender(
-        <div>
-          <Suspense fallback={<Throw />}>
-            <InfiniteSuspend />
-          </Suspense>
-        </div>,
-        {
-          onError(x) {
-            reportedErrors.push(x);
+      await serverAct(() =>
+        ReactDOMFizzStatic.prerender(
+          <div>
+            <Suspense fallback={<Throw />}>
+              <InfiniteSuspend />
+            </Suspense>
+          </div>,
+          {
+            onError(x) {
+              reportedErrors.push(x);
+            },
           },
-        },
+        ),
       );
     } catch (error) {
       caughtError = error;
@@ -230,17 +255,19 @@ describe('ReactDOMFizzStaticBrowser', () => {
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
-    const result = await ReactDOMFizzStatic.prerender(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <Throw />
-        </Suspense>
-      </div>,
-      {
-        onError(x) {
-          reportedErrors.push(x);
+    const result = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <Throw />
+          </Suspense>
+        </div>,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
         },
-      },
+      ),
     );
 
     const prelude = await readContent(result.prelude);
@@ -252,21 +279,22 @@ describe('ReactDOMFizzStaticBrowser', () => {
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerender(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <InfiniteSuspend />
-        </Suspense>
-      </div>,
-      {
-        signal: controller.signal,
-        onError(x) {
-          errors.push(x.message);
+    let resultPromise;
+    await serverAct(() => {
+      resultPromise = ReactDOMFizzStatic.prerender(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <InfiniteSuspend />
+          </Suspense>
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
         },
-      },
-    );
-
-    await jest.runAllTimers();
+      );
+    });
 
     controller.abort();
 
@@ -282,16 +310,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
   it('should reject if aborting before the shell is complete', async () => {
     const errors = [];
     const controller = new AbortController();
-    const promise = ReactDOMFizzStatic.prerender(
-      <div>
-        <InfiniteSuspend />
-      </div>,
-      {
-        signal: controller.signal,
-        onError(x) {
-          errors.push(x.message);
+    const promise = serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <InfiniteSuspend />
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
         },
-      },
+      ),
     );
 
     await jest.runAllTimers();
@@ -321,16 +351,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
         </Suspense>
       );
     }
-    const streamPromise = ReactDOMFizzStatic.prerender(
-      <div>
-        <App />
-      </div>,
-      {
-        signal: controller.signal,
-        onError(x) {
-          errors.push(x.message);
+    const streamPromise = serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <App />
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
         },
-      },
+      ),
     );
 
     let caughtError = null;
@@ -350,18 +382,20 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const theReason = new Error('aborted for reasons');
     controller.abort(theReason);
 
-    const promise = ReactDOMFizzStatic.prerender(
-      <div>
-        <Suspense fallback={<div>Loading</div>}>
-          <InfiniteSuspend />
-        </Suspense>
-      </div>,
-      {
-        signal: controller.signal,
-        onError(x) {
-          errors.push(x.message);
+    const promise = serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <InfiniteSuspend />
+          </Suspense>
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
         },
-      },
+      ),
     );
 
     // Technically we could still continue rendering the shell but currently the
@@ -401,12 +435,15 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerender(<App />, {
-      signal: controller.signal,
-      onError(x) {
-        errors.push(x);
-        return 'a digest';
-      },
+    let resultPromise;
+    await serverAct(() => {
+      resultPromise = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x);
+          return 'a digest';
+        },
+      });
     });
 
     controller.abort('foobar');
@@ -441,12 +478,15 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerender(<App />, {
-      signal: controller.signal,
-      onError(x) {
-        errors.push(x.message);
-        return 'a digest';
-      },
+    let resultPromise;
+    await serverAct(() => {
+      resultPromise = ReactDOMFizzStatic.prerender(<App />, {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x.message);
+          return 'a digest';
+        },
+      });
     });
 
     controller.abort(new Error('uh oh'));
@@ -476,14 +516,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -518,14 +562,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -557,14 +605,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -605,14 +657,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -646,14 +702,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -687,14 +747,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
-    const content = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const content = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     const html = await readContent(concat(prerendered.prelude, content));
@@ -753,9 +817,11 @@ describe('ReactDOMFizzStaticBrowser', () => {
       {virtual: true},
     );
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />, {
-      bootstrapScripts: ['init.js'],
-    });
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />, {
+        bootstrapScripts: ['init.js'],
+      }),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     await readIntoContainer(prerendered.prelude);
@@ -784,9 +850,11 @@ describe('ReactDOMFizzStaticBrowser', () => {
     ]);
 
     prerendering = false;
-    const content = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const content = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(content);
@@ -865,14 +933,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -916,14 +988,18 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -962,7 +1038,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     // TODO: This should actually be null because we should've been able to fully
     // resolve the render on the server eventually, even though the fallback postponed.
     // So we should not need to resume.
@@ -972,9 +1050,11 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(getVisibleChildren(container)).toEqual(<div>Outer</div>);
 
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await readIntoContainer(resumed);
@@ -1025,7 +1105,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     await readIntoContainer(prerendered.prelude);
@@ -1038,14 +1120,16 @@ describe('ReactDOMFizzStaticBrowser', () => {
     prerendering = false;
 
     const errors = [];
-    const resumed = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
-      {
-        onError(x) {
-          errors.push(x.message);
+    const resumed = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+        {
+          onError(x) {
+            errors.push(x.message);
+          },
         },
-      },
+      ),
     );
 
     expect(errors).toEqual([
@@ -1090,7 +1174,9 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     await readIntoContainer(prerendered.prelude);
@@ -1103,15 +1189,17 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const errors = [];
 
-    const resumedPromise = ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
-      {
-        signal: controller.signal,
-        onError(x) {
-          errors.push(x);
+    const resumedPromise = serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x);
+          },
         },
-      },
+      ),
     );
 
     controller.abort('abort');
@@ -1165,16 +1253,20 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     await readIntoContainer(prerendered.prelude);
 
     prerendering = false;
 
-    const resumedPromise = ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const resumedPromise = serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     await jest.runAllTimers();
@@ -1209,16 +1301,20 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
     expect(await readContent(prerendered.prelude)).toBe('');
 
-    const content = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const content = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     expect(await readContent(content)).toBe(
@@ -1251,16 +1347,20 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
     expect(await readContent(prerendered.prelude)).toBe('');
 
-    const content = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const content = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     expect(await readContent(content)).toBe(
@@ -1298,16 +1398,20 @@ describe('ReactDOMFizzStaticBrowser', () => {
       );
     }
 
-    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
     expect(prerendered.postponed).not.toBe(null);
 
     prerendering = false;
 
     expect(await readContent(prerendered.prelude)).toBe('');
 
-    const content = await ReactDOMFizzServer.resume(
-      <App />,
-      JSON.parse(JSON.stringify(prerendered.postponed)),
+    const content = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
     );
 
     expect(await readContent(content)).toBe(
@@ -1315,5 +1419,260 @@ describe('ReactDOMFizzStaticBrowser', () => {
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
         '</head><body><div>Hello</div></body></html>',
     );
+  });
+
+  // @gate enablePostpone
+  it('does not emit preloads during resume for Resources preloaded through onHeaders', async () => {
+    let prerendering = true;
+
+    let hasLoaded = false;
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    function WaitIfResuming({children}) {
+      if (!prerendering && !hasLoaded) {
+        throw promise;
+      }
+      return children;
+    }
+
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return null;
+    }
+
+    let headers;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('image', {as: 'image', fetchPriority: 'high'});
+      return (
+        <html>
+          <body>
+            hello
+            <Suspense fallback={null}>
+              <WaitIfResuming>
+                world
+                <link rel="stylesheet" href="style" precedence="default" />
+              </WaitIfResuming>
+            </Suspense>
+            <Postpone />
+          </body>
+        </html>
+      );
+    }
+
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />, {
+        onHeaders,
+      }),
+    );
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    expect(await readContent(prerendered.prelude)).toBe('');
+    expect(headers).toEqual(
+      new Headers({
+        Link: `
+<image>; rel=preload; as="image"; fetchpriority="high",
+ <style>; rel=preload; as="style"
+`
+          .replaceAll('\n', '')
+          .trim(),
+      }),
+    );
+
+    const content = await serverAct(() =>
+      ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      ),
+    );
+
+    const decoder = new TextDecoder();
+    const reader = content.getReader();
+    let {value, done} = await reader.read();
+    let result = decoder.decode(value, {stream: true});
+
+    expect(result).toBe(
+      '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$-->',
+    );
+
+    await 1;
+    hasLoaded = true;
+    await serverAct(resolve);
+
+    while (true) {
+      ({value, done} = await reader.read());
+      if (done) {
+        result += decoder.decode(value);
+        break;
+      }
+      result += decoder.decode(value, {stream: true});
+    }
+
+    // We are mostly just trying to assert that no preload for our stylesheet was emitted
+    // prior to sending the segment the stylesheet was for. This test is asserting this
+    // because the boundary complete instruction is sent when we are writing the
+    const instructionIndex = result.indexOf('$RC');
+    expect(instructionIndex > -1).toBe(true);
+    const slice = result.slice(0, instructionIndex + '$RC'.length);
+
+    expect(slice).toBe(
+      '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$--><div hidden id="S:1">world<!-- --></div><script>$RC',
+    );
+  });
+
+  // @gate experimental
+  it('logs an error if onHeaders throws but continues the prerender', async () => {
+    const errors = [];
+    function onError(error) {
+      errors.push(error.message);
+    }
+
+    function onHeaders(x) {
+      throw new Error('bad onHeaders');
+    }
+
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<div>hello</div>, {
+        onHeaders,
+        onError,
+      }),
+    );
+    expect(prerendered.postponed).toBe(null);
+    expect(errors).toEqual(['bad onHeaders']);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual(<div>hello</div>);
+  });
+
+  // @gate enablePostpone
+  it('does not bootstrap again in a resume if it bootstraps', async () => {
+    let prerendering = true;
+
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return null;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <Postpone />
+              hello
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    let inits = 0;
+    jest.mock(
+      'init.js',
+      () => {
+        inits++;
+      },
+      {virtual: true},
+    );
+
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />, {
+        bootstrapScripts: ['init.js'],
+      }),
+    );
+
+    const postponedSerializedState = JSON.stringify(prerendered.postponed);
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual([
+      <link rel="preload" href="init.js" fetchpriority="low" as="script" />,
+      'loading...',
+    ]);
+
+    expect(inits).toBe(1);
+
+    jest.resetModules();
+    jest.mock(
+      'init.js',
+      () => {
+        inits++;
+      },
+      {virtual: true},
+    );
+
+    prerendering = false;
+
+    const content = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedSerializedState)),
+    );
+
+    await readIntoContainer(content);
+
+    expect(inits).toBe(1);
+
+    expect(getVisibleChildren(container)).toEqual([
+      <link rel="preload" href="init.js" fetchpriority="low" as="script" />,
+      'hello',
+    ]);
+  });
+
+  // @gate enablePostpone
+  it('can render a deep list of single components where one postpones', async () => {
+    let isPrerendering = true;
+    function Outer({children}) {
+      return children;
+    }
+
+    function Middle({children}) {
+      return children;
+    }
+
+    function Inner() {
+      if (isPrerendering) {
+        React.unstable_postpone();
+      }
+      return 'hello';
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="loading...">
+          <Outer>
+            <Middle>
+              <Inner />
+            </Middle>
+          </Outer>
+        </Suspense>
+      );
+    }
+
+    const prerendered = await serverAct(() =>
+      ReactDOMFizzStatic.prerender(<App />),
+    );
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual('loading...');
+
+    isPrerendering = false;
+
+    const dynamic = await serverAct(() =>
+      ReactDOMFizzServer.resume(<App />, JSON.parse(postponedState)),
+    );
+
+    await readIntoContainer(dynamic);
+    expect(getVisibleChildren(container)).toEqual('hello');
   });
 });

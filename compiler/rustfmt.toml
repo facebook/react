@@ -1,0 +1,8 @@
+# Get help on options with `rustfmt --help=config`
+# Please keep these in alphabetical order.
+edition = "2021"
+group_imports = "StdExternalCrate"
+imports_granularity = "Module"
+merge_derives = false
+use_field_init_shorthand = true
+version = "Two"

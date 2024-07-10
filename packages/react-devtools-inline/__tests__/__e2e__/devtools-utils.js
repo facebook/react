@@ -37,7 +37,10 @@ async function selectElement(page, displayName, waitForOwnersText) {
       createTestNameSelector('ComponentTreeListItem'),
       createTextSelector(listItemText),
     ])[0];
-    listItem.click();
+
+    listItem.dispatchEvent(
+      new MouseEvent('mousedown', {bubbles: true, cancelable: true})
+    );
   }, displayName);
 
   if (waitForOwnersText) {

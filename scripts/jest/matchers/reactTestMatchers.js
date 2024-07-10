@@ -1,7 +1,7 @@
 'use strict';
 
 const JestReact = require('jest-react');
-
+const {assertConsoleLogsCleared} = require('internal-test-utils/consoleMock');
 // TODO: Move to ReactInternalTestUtils
 
 function captureAssertion(fn) {
@@ -29,6 +29,7 @@ function assertYieldsWereCleared(Scheduler, caller) {
     Error.captureStackTrace(error, caller);
     throw error;
   }
+  assertConsoleLogsCleared();
 }
 
 function toMatchRenderedOutput(ReactNoop, expectedJSX) {

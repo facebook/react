@@ -8,8 +8,6 @@
  */
 
 // Keep in sync with https://github.com/facebook/flow/blob/main/lib/react.js
-export type StatelessFunctionalComponent<P> =
-  React$StatelessFunctionalComponent<P>;
 export type ComponentType<-P> = React$ComponentType<P>;
 export type AbstractComponent<
   -Config,
@@ -31,8 +29,7 @@ export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
 // Export all exports so that they're available in tests.
 // We can't use export * from in Flow for some reason.
 export {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  act as unstable_act,
+  __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   Children,
   Component,
   Fragment,
@@ -43,9 +40,7 @@ export {
   cloneElement,
   createContext,
   createElement,
-  createFactory,
   createRef,
-  createServerContext,
   use,
   forwardRef,
   isValidElement,
@@ -53,17 +48,14 @@ export {
   memo,
   cache,
   startTransition,
-  unstable_Cache,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
-  unstable_Offscreen,
+  unstable_Activity,
   unstable_Scope,
   unstable_SuspenseList,
   unstable_TracingMarker,
-  unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
-  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
@@ -81,5 +73,6 @@ export {
   useRef,
   useState,
   useTransition,
+  useActionState,
   version,
-} from './src/React';
+} from './src/ReactClient';

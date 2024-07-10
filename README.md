@@ -4,7 +4,7 @@ React is a JavaScript library for building user interfaces.
 
 * **Declarative:** React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes. Declarative views make your code more predictable, simpler to understand, and easier to debug.
 * **Component-Based:** Build encapsulated components that manage their own state, then compose them to make complex UIs. Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep the state out of the DOM.
-* **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code. React can also render on the server using Node and power mobile apps using [React Native](https://reactnative.dev/).
+* **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code. React can also render on the server using [Node](https://nodejs.org/en) and power mobile apps using [React Native](https://reactnative.dev/).
 
 [Learn how to use React in your project](https://react.dev/learn).
 
@@ -26,7 +26,10 @@ Check out the [Getting Started](https://react.dev/learn) page for a quick overvi
 
 The documentation is divided into several sections:
 
-* [Tutorial](https://react.dev/learn)
+* [Quick Start](https://react.dev/learn)
+* [Tutorial](https://react.dev/learn/tutorial-tic-tac-toe)
+* [Thinking in React](https://react.dev/learn/thinking-in-react)
+* [Installation](https://react.dev/learn/installation)
 * [Main Concepts](https://legacy.reactjs.org/docs/hello-world.html)
 * [Advanced Guides](https://legacy.reactjs.org/docs/jsx-in-depth.html)
 * [Hooks](https://legacy.reactjs.org/docs/hooks-intro.html)
@@ -35,7 +38,7 @@ The documentation is divided into several sections:
 * [Where to Get Support](https://react.dev/community)
 * [Contributing Guide](https://legacy.reactjs.org/docs/how-to-contribute.html)
 
-You can improve it by sending pull requests to [this repository](https://github.com/reactjs/reactjs.org).
+You can improve it by sending pull requests to [this repository](https://github.com/reactjs/react.dev).
 
 ## Examples
 
@@ -64,11 +67,11 @@ The main purpose of this repository is to continue evolving React core, making i
 
 Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.fb.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
 
-### [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
+### [Contributing Guide](https://legacy.reactjs.org/docs/how-to-contribute.html)
 
 Read our [contributing guide](https://legacy.reactjs.org/docs/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
 
-### Good First Issues
+### [Good First Issues](https://github.com/facebook/react/labels/good%20first%20issue)
 
 To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first issues](https://github.com/facebook/react/labels/good%20first%20issue) that contain bugs that have a relatively limited scope. This is a great place to get started.
 

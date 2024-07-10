@@ -67,7 +67,7 @@ describe('ReactSuspenseList', () => {
         ReactNoop.render(<Foo />);
       });
     }).toErrorDev([
-      'Warning: "something" is not a supported revealOrder on ' +
+      '"something" is not a supported revealOrder on ' +
         '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
@@ -89,7 +89,7 @@ describe('ReactSuspenseList', () => {
         ReactNoop.render(<Foo />);
       });
     }).toErrorDev([
-      'Warning: "TOGETHER" is not a valid value for revealOrder on ' +
+      '"TOGETHER" is not a valid value for revealOrder on ' +
         '<SuspenseList />. Use lowercase "together" instead.' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
@@ -111,7 +111,7 @@ describe('ReactSuspenseList', () => {
         ReactNoop.render(<Foo />);
       });
     }).toErrorDev([
-      'Warning: "forward" is not a valid value for revealOrder on ' +
+      '"forward" is not a valid value for revealOrder on ' +
         '<SuspenseList />. React uses the -s suffix in the spelling. ' +
         'Use "forwards" instead.' +
         '\n    in SuspenseList (at **)' +
@@ -146,7 +146,7 @@ describe('ReactSuspenseList', () => {
         );
       });
     }).toErrorDev([
-      'Warning: A single row was passed to a <SuspenseList revealOrder="forwards" />. ' +
+      'A single row was passed to a <SuspenseList revealOrder="forwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
         '\n    in SuspenseList (at **)' +
@@ -169,7 +169,7 @@ describe('ReactSuspenseList', () => {
         ReactNoop.render(<Foo />);
       });
     }).toErrorDev([
-      'Warning: A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
+      'A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
         'This is not useful since it needs multiple rows. ' +
         'Did you mean to pass multiple children or an array?' +
         '\n    in SuspenseList (at **)' +
@@ -197,7 +197,7 @@ describe('ReactSuspenseList', () => {
         ReactNoop.render(<Foo items={['A', 'B']} />);
       });
     }).toErrorDev([
-      'Warning: A nested array was passed to row #0 in <SuspenseList />. ' +
+      'A nested array was passed to row #0 in <SuspenseList />. ' +
         'Wrap it in an additional SuspenseList to configure its revealOrder: ' +
         '<SuspenseList revealOrder=...> ... ' +
         '<SuspenseList revealOrder=...>{array}</SuspenseList> ... ' +
@@ -272,7 +272,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && !disableLegacyMode
   it('shows content independently in legacy mode regardless of option', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1484,7 +1484,7 @@ describe('ReactSuspenseList', () => {
         ReactNoop.render(<Foo />);
       });
     }).toErrorDev([
-      'Warning: "collapse" is not a supported value for tail on ' +
+      '"collapse" is not a supported value for tail on ' +
         '<SuspenseList />. Did you mean "collapsed" or "hidden"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
@@ -1506,7 +1506,7 @@ describe('ReactSuspenseList', () => {
         ReactNoop.render(<Foo />);
       });
     }).toErrorDev([
-      'Warning: <SuspenseList tail="collapsed" /> is only valid if ' +
+      '<SuspenseList tail="collapsed" /> is only valid if ' +
         'revealOrder is "forwards" or "backwards". ' +
         'Did you mean to specify revealOrder="forwards"?' +
         '\n    in SuspenseList (at **)' +
@@ -2283,94 +2283,6 @@ describe('ReactSuspenseList', () => {
         <span>C</span>
       </div>,
     );
-  });
-
-  // @gate enableSuspenseList
-  it('is able to re-suspend the last rows during an update with hidden', async () => {
-    const AsyncB = createAsyncText('B');
-
-    let setAsyncB;
-
-    function B() {
-      const [shouldBeAsync, setAsync] = React.useState(false);
-      setAsyncB = setAsync;
-
-      return shouldBeAsync ? (
-        <Suspense fallback={<Text text="Loading B" />}>
-          <AsyncB />
-        </Suspense>
-      ) : (
-        <Text text="Sync B" />
-      );
-    }
-
-    function Foo({updateList}) {
-      return (
-        <SuspenseList revealOrder="forwards" tail="hidden">
-          <Suspense key="A" fallback={<Text text="Loading A" />}>
-            <Text text="A" />
-          </Suspense>
-          <B key="B" updateList={updateList} />
-        </SuspenseList>
-      );
-    }
-
-    ReactNoop.render(<Foo />);
-
-    await waitForAll(['A', 'Sync B']);
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>Sync B</span>
-      </>,
-    );
-
-    const previousInst = setAsyncB;
-
-    // During an update we suspend on B.
-    await act(() => setAsyncB(true));
-
-    assertLog([
-      'Suspend! [B]',
-      'Loading B',
-      // The second pass is the "force hide" pass
-      'Loading B',
-    ]);
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>Loading B</span>
-      </>,
-    );
-
-    // Before we resolve we'll rerender the whole list.
-    // This should leave the tree intact.
-    await act(() => ReactNoop.render(<Foo updateList={true} />));
-
-    assertLog(['A', 'Suspend! [B]', 'Loading B']);
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>Loading B</span>
-      </>,
-    );
-
-    await act(() => AsyncB.resolve());
-    assertLog(['B']);
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>A</span>
-        <span>B</span>
-      </>,
-    );
-
-    // This should be the same instance. I.e. it didn't
-    // remount.
-    expect(previousInst).toBe(setAsyncB);
   });
 
   // @gate enableSuspenseList

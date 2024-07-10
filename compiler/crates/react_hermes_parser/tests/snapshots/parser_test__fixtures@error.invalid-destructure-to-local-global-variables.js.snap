@@ -1,0 +1,218 @@
+---
+source: crates/react_hermes_parser/tests/parser_test.rs
+expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
+input_file: crates/react_hermes_parser/tests/fixtures/error.invalid-destructure-to-local-global-variables.js
+---
+Input:
+function Component(props) {
+  let a;
+  [a, b] = props.value;
+
+  return [a, b];
+}
+
+
+Output:
+{
+  "type": "Program",
+  "body": [
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "Component",
+        "typeAnnotation": null,
+        "loc": null,
+        "range": [
+          9,
+          18
+        ]
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "props",
+          "typeAnnotation": null,
+          "loc": null,
+          "range": [
+            19,
+            24
+          ]
+        }
+      ],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "kind": "let",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    34,
+                    35
+                  ]
+                },
+                "init": null,
+                "loc": null,
+                "range": [
+                  34,
+                  35
+                ]
+              }
+            ],
+            "loc": null,
+            "range": [
+              30,
+              36
+            ]
+          },
+          {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "ArrayPattern",
+                "elements": [
+                  {
+                    "type": "Identifier",
+                    "name": "a",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      40,
+                      41
+                    ]
+                  },
+                  {
+                    "type": "Identifier",
+                    "name": "b",
+                    "typeAnnotation": null,
+                    "loc": null,
+                    "range": [
+                      43,
+                      44
+                    ]
+                  }
+                ],
+                "loc": null,
+                "range": [
+                  39,
+                  45
+                ]
+              },
+              "right": {
+                "type": "MemberExpression",
+                "object": {
+                  "type": "Identifier",
+                  "name": "props",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    48,
+                    53
+                  ]
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "value",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    54,
+                    59
+                  ]
+                },
+                "computed": false,
+                "loc": null,
+                "range": [
+                  48,
+                  59
+                ]
+              },
+              "loc": null,
+              "range": [
+                39,
+                59
+              ]
+            },
+            "directive": null,
+            "loc": null,
+            "range": [
+              39,
+              60
+            ]
+          },
+          {
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "ArrayExpression",
+              "elements": [
+                {
+                  "type": "Identifier",
+                  "name": "a",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    72,
+                    73
+                  ]
+                },
+                {
+                  "type": "Identifier",
+                  "name": "b",
+                  "typeAnnotation": null,
+                  "loc": null,
+                  "range": [
+                    75,
+                    76
+                  ]
+                }
+              ],
+              "loc": null,
+              "range": [
+                71,
+                77
+              ]
+            },
+            "loc": null,
+            "range": [
+              64,
+              78
+            ]
+          }
+        ],
+        "loc": null,
+        "range": [
+          26,
+          80
+        ]
+      },
+      "generator": false,
+      "async": false,
+      "loc": null,
+      "range": [
+        0,
+        80
+      ],
+      "loc": null,
+      "range": [
+        0,
+        80
+      ]
+    }
+  ],
+  "sourceType": "script",
+  "loc": null,
+  "range": [
+    0,
+    80
+  ]
+}

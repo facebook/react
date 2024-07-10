@@ -17,6 +17,8 @@ describe('StoreStressConcurrent', () => {
   let print;
 
   beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+
     bridge = global.bridge;
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -30,12 +32,6 @@ describe('StoreStressConcurrent', () => {
 
     print = require('./__serializers__/storeSerializer').print;
   });
-
-  // TODO: Remove this in favor of @gate pragma
-  if (!__EXPERIMENTAL__) {
-    it("empty test so Jest doesn't complain", () => {});
-    return;
-  }
 
   // This is a stress test for the tree mount/update/unmount traversal.
   // It renders different trees that should produce the same output.

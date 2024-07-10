@@ -592,3 +592,11 @@ const WheelEventInterface = {
 };
 export const SyntheticWheelEvent: $FlowFixMe =
   createSyntheticEvent(WheelEventInterface);
+
+const ToggleEventInterface = {
+  ...EventInterface,
+  newState: 0,
+  oldState: 0,
+};
+export const SyntheticToggleEvent: $FlowFixMe =
+  createSyntheticEvent(ToggleEventInterface);

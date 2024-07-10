@@ -24,6 +24,7 @@ import {
 import {enableGetInspectorDataForInstanceInProduction} from 'shared/ReactFeatureFlags';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {getNodeFromInternalInstanceHandle} from './ReactNativePublicCompat';
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 
 const emptyObject = {};
 if (__DEV__) {
@@ -37,7 +38,6 @@ function createHierarchy(fiberHierarchy) {
     getInspectorData: findNodeHandle => {
       return {
         props: getHostProps(fiber),
-        source: fiber._debugSource,
         measure: callback => {
           // If this is Fabric, we'll find a shadow node and use that to measure.
           const hostFiber = findCurrentHostFiber(fiber);
@@ -98,24 +98,33 @@ function getInspectorDataForInstance(
         hierarchy: [],
         props: emptyObject,
         selectedIndex: null,
-        source: null,
+        componentStack: '',
       };
     }
 
     const fiber = findCurrentFiberUsingSlowPath(closestInstance);
+    if (fiber === null) {
+      // Might not be currently mounted.
+      return {
+        hierarchy: [],
+        props: emptyObject,
+        selectedIndex: null,
+        componentStack: '',
+      };
+    }
     const fiberHierarchy = getOwnerHierarchy(fiber);
     const instance = lastNonHostInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);
     const props = getHostProps(instance);
-    const source = instance._debugSource;
     const selectedIndex = fiberHierarchy.indexOf(instance);
+    const componentStack = getStackByFiberInDevAndProd(fiber);
 
     return {
       closestInstance: instance,
       hierarchy,
       props,
       selectedIndex,
-      source,
+      componentStack,
     };
   }
 
@@ -124,7 +133,7 @@ function getInspectorDataForInstance(
   );
 }
 
-function getOwnerHierarchy(instance: any) {
+function getOwnerHierarchy(instance: Fiber) {
   const hierarchy: Array<$FlowFixMe> = [];
   traverseOwnerTreeUp(hierarchy, instance);
   return hierarchy;
@@ -142,15 +151,17 @@ function lastNonHostInstance(hierarchy) {
   return hierarchy[0];
 }
 
-// $FlowFixMe[missing-local-annot]
 function traverseOwnerTreeUp(
   hierarchy: Array<$FlowFixMe>,
-  instance: any,
+  instance: Fiber,
 ): void {
   if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
-    if (instance) {
-      hierarchy.unshift(instance);
-      traverseOwnerTreeUp(hierarchy, instance._debugOwner);
+    hierarchy.unshift(instance);
+    const owner = instance._debugOwner;
+    if (owner != null && typeof owner.tag === 'number') {
+      traverseOwnerTreeUp(hierarchy, (owner: any));
+    } else {
+      // TODO: Traverse Server Components owners.
     }
   }
 }

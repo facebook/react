@@ -8,6 +8,8 @@ const hermesParser = require('hermes-parser');
 
 const tsPreprocessor = require('./typescript/preprocessor');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
+const {ReactVersion} = require('../../ReactVersions');
+const semver = require('semver');
 
 const pathToBabel = path.join(
   require.resolve('@babel/core'),
@@ -29,16 +31,12 @@ const pathToTransformReactVersionPragma = require.resolve(
 const pathToBabelrc = path.join(__dirname, '..', '..', 'babel.config.js');
 const pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
+const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
+
 const babelOptions = {
   plugins: [
     // For Node environment only. For builds, Rollup takes care of ESM.
     require.resolve('@babel/plugin-transform-modules-commonjs'),
-
-    // Keep stacks detailed in tests.
-    // Don't put this in .babelrc so that we don't embed filenames
-    // into ReactART builds that include JSX.
-    // TODO: I have not verified that this actually works.
-    require.resolve('@babel/plugin-transform-react-jsx-source'),
 
     pathToTransformInfiniteLoops,
     pathToTransformTestGatePragma,
@@ -86,6 +84,25 @@ module.exports = {
       if (isTestFile && isInDevToolsPackages) {
         plugins.push(pathToTransformReactVersionPragma);
       }
+
+      // This is only for React DevTools tests with React 16.x
+      // `react/jsx-dev-runtime` and `react/jsx-runtime` are included in the package starting from v17
+      if (semver.gte(ReactVersionTestingAgainst, '17.0.0')) {
+        plugins.push([
+          process.env.NODE_ENV === 'development'
+            ? require.resolve('@babel/plugin-transform-react-jsx-development')
+            : require.resolve('@babel/plugin-transform-react-jsx'),
+          // The "automatic" runtime corresponds to react/jsx-runtime. "classic"
+          // would be React.createElement.
+          {runtime: 'automatic'},
+        ]);
+      } else {
+        plugins.push(
+          require.resolve('@babel/plugin-transform-react-jsx'),
+          require.resolve('@babel/plugin-transform-react-jsx-source')
+        );
+      }
+
       let sourceAst = hermesParser.parse(src, {babel: true});
       return {
         code: babel.transformFromAstSync(
