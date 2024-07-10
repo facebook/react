@@ -61,7 +61,6 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
     describe: 'Build the given release channel.',
     requiresArg: true,
     type: 'string',
-    default: 'experimental',
     choices: ['experimental', 'stable'],
   },
   index: {
