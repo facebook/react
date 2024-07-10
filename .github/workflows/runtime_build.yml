@@ -8,8 +8,8 @@ on:
       - 'compiler/**'
 
 jobs:
-  build:
-    name: yarn build
+  build_and_lint:
+    name: yarn build and lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
