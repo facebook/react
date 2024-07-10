@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<23a806bbbd3b847c144cfb5f998a2598>>
+ * @generated SignedSource<<36e9e66cb18f9b6a812016a8f5f5bcdc>>
  */
 
 "use strict";
@@ -2509,7 +2509,10 @@ __DEV__ &&
         "number" === typeof clientProps ||
         "bigint" === typeof clientProps
       )
-        content += describeTextDiff("" + clientProps, void 0, indent + 1);
+        content =
+          null == type
+            ? content + describeTextDiff("" + clientProps, null, indent + 1)
+            : content + describeTextDiff("" + clientProps, void 0, indent + 1);
       return content;
     }
     function describeSiblingFiber(fiber, indent) {
@@ -2545,7 +2548,7 @@ __DEV__ &&
       debugInfo = "";
       i = node.fiber.pendingProps;
       if (6 === node.fiber.tag)
-        debugInfo = describeTextDiff(i, node.serverProps, indent);
+        (debugInfo = describeTextDiff(i, node.serverProps, indent)), indent++;
       else if (
         ((serverComponentName = describeFiberType(node.fiber)),
         null !== serverComponentName)
@@ -2573,11 +2576,12 @@ __DEV__ &&
           indent++;
         } else
           null === node.serverProps
-            ? (debugInfo = describeExpandedElement(
+            ? ((debugInfo = describeExpandedElement(
                 serverComponentName,
                 i,
                 added(indent)
-              ))
+              )),
+              indent++)
             : "string" === typeof node.serverProps
             ? error$jscomp$0(
                 "Should not have matched a non HostText fiber to a Text node. This is a bug in React."
@@ -2605,9 +2609,10 @@ __DEV__ &&
       i &&
         0 < node.children.length &&
         (propName += indentation(indent) + "...\n");
-      node = node.serverTail;
-      for (i = 0; i < node.length; i++)
-        (serverComponentName = node[i]),
+      i = node.serverTail;
+      null === node.serverProps && indent--;
+      for (node = 0; node < i.length; node++)
+        (serverComponentName = i[node]),
           (propName =
             "string" === typeof serverComponentName
               ? propName +
@@ -3494,6 +3499,7 @@ __DEV__ &&
               lanes
             )),
             (current.return = returnFiber),
+            (current._debugOwner = returnFiber),
             (current._debugInfo = currentDebugInfo),
             current
           );
@@ -3567,6 +3573,7 @@ __DEV__ &&
               key
             )),
             (current.return = returnFiber),
+            (current._debugOwner = returnFiber),
             (current._debugInfo = currentDebugInfo),
             current
           );
@@ -3588,6 +3595,7 @@ __DEV__ &&
               lanes
             )),
             (newChild.return = returnFiber),
+            (newChild._debugOwner = returnFiber),
             (newChild._debugInfo = currentDebugInfo),
             newChild
           );
@@ -3634,6 +3642,7 @@ __DEV__ &&
                 null
               )),
               (lanes.return = returnFiber),
+              (lanes._debugOwner = returnFiber),
               (returnFiber = pushDebugInfo(newChild._debugInfo)),
               (lanes._debugInfo = currentDebugInfo),
               (currentDebugInfo = returnFiber),
@@ -4166,6 +4175,7 @@ __DEV__ &&
                       newChild.key
                     )),
                     (currentFirstChild.return = returnFiber),
+                    (currentFirstChild._debugOwner = returnFiber),
                     (currentFirstChild._debugInfo = currentDebugInfo),
                     validateFragmentProps(
                       newChild,
@@ -4337,6 +4347,8 @@ __DEV__ &&
                   lanes
                 )),
                 (currentFirstChild.return = returnFiber),
+                (currentFirstChild._debugOwner = returnFiber),
+                (currentFirstChild._debugInfo = currentDebugInfo),
                 (returnFiber = currentFirstChild)),
             placeSingleChild(returnFiber)
           );
@@ -15250,7 +15262,7 @@ __DEV__ &&
         _currentValue2: null,
         _threadCount: 0
       },
-      needsEscaping = /["'&<>\n\t]/,
+      needsEscaping = /["'&<>\n\t]|^\s|\s$/,
       hydrationDiffRootDEV = null,
       hydrationErrors = null,
       concurrentQueues = [],
@@ -16942,11 +16954,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-378b305958-20240710" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-2d3f81bb6a-20240710" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-378b305958-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-2d3f81bb6a-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16994,12 +17006,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-378b305958-20240710"
+        reconcilerVersion: "19.0.0-native-fb-2d3f81bb6a-20240710"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-378b305958-20240710",
+      version: "19.0.0-native-fb-2d3f81bb6a-20240710",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
