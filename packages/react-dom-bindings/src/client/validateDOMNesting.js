@@ -51,7 +51,7 @@ function describeAncestors(
   if (node !== null) {
     // Describe the node using the hydration diff logic.
     // Replace + with - to mark ancestor and child. It's kind of arbitrary.
-    return describeDiff(node).replace(/\n\+/g, '\n-');
+    return describeDiff(node).replaceAll(/^[+-]/gm, '>');
   }
   return '';
 }

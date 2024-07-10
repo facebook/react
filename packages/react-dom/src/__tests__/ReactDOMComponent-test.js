@@ -2197,8 +2197,8 @@ describe('ReactDOMComponent', () => {
         'In HTML, <tr> cannot be a child of <div>.\n' +
           'This will cause a hydration error.\n' +
           '\n' +
-          '- <div>\n' +
-          '-   <tr>\n' +
+          '> <div>\n' +
+          '>   <tr>\n' +
           '    ...\n' +
           '\n    in tr (at **)' +
           (gate(flags => flags.enableOwnerStacks)
@@ -2263,9 +2263,9 @@ describe('ReactDOMComponent', () => {
                 'This will cause a hydration error.\n' +
                 '\n' +
                 '  <Foo>\n' +
-                '-   <table>\n' +
+                '>   <table>\n' +
                 '      <Row>\n' +
-                '-       <tr>\n' +
+                '>       <tr>\n' +
                 '      ...\n' +
                 '\n    in tr (at **)' +
                 '\n    in Row (at **)',
@@ -2280,7 +2280,7 @@ describe('ReactDOMComponent', () => {
                 '    <table>\n' +
                 '      <Row>\n' +
                 '        <tr>\n' +
-                '-         x\n' +
+                '>         x\n' +
                 '      ...\n' +
                 '\n    in tr (at **)' +
                 '\n    in Row (at **)',
@@ -2290,9 +2290,9 @@ describe('ReactDOMComponent', () => {
                 'This will cause a hydration error.\n' +
                 '\n' +
                 '  <Foo>\n' +
-                '-   <table>\n' +
+                '>   <table>\n' +
                 '      <Row>\n' +
-                '-     {" "}\n' +
+                '>     {" "}\n' +
                 '\n    in table (at **)' +
                 '\n    in Foo (at **)',
             ]
@@ -2303,9 +2303,9 @@ describe('ReactDOMComponent', () => {
                 'This will cause a hydration error.\n' +
                 '\n' +
                 '  <Foo>\n' +
-                '-   <table>\n' +
+                '>   <table>\n' +
                 '      <Row>\n' +
-                '-       <tr>\n' +
+                '>       <tr>\n' +
                 '      ...\n' +
                 '\n    in tr (at **)' +
                 '\n    in Row (at **)' +
@@ -2319,7 +2319,7 @@ describe('ReactDOMComponent', () => {
                 '    <table>\n' +
                 '      <Row>\n' +
                 '        <tr>\n' +
-                '-         x\n' +
+                '>         x\n' +
                 '      ...\n' +
                 '\n    in tr (at **)' +
                 '\n    in Row (at **)' +
@@ -2331,9 +2331,9 @@ describe('ReactDOMComponent', () => {
                 'This will cause a hydration error.\n' +
                 '\n' +
                 '  <Foo>\n' +
-                '-   <table>\n' +
+                '>   <table>\n' +
                 '      <Row>\n' +
-                '-     {" "}\n' +
+                '>     {" "}\n' +
                 '\n    in table (at **)' +
                 '\n    in Foo (at **)',
             ],
@@ -2368,7 +2368,7 @@ describe('ReactDOMComponent', () => {
           '\n' +
           '  <Foo>\n' +
           '    <table>\n' +
-          '-     {" "}\n' +
+          '>     {" "}\n' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
       ]);
@@ -2403,7 +2403,7 @@ describe('ReactDOMComponent', () => {
           '      <tbody>\n' +
           '        <Row>\n' +
           '          <tr>\n' +
-          '-           text\n' +
+          '>           text\n' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
           (gate(flags => flags.enableOwnerStacks)
