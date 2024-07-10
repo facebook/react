@@ -1252,6 +1252,42 @@ __DEV__ &&
         );
       return dispatcher;
     }
+    function printToConsole(methodName, args, badgeName) {
+      var offset = 0;
+      switch (methodName) {
+        case "dir":
+        case "dirxml":
+        case "groupEnd":
+        case "table":
+          console[methodName].apply(console, args);
+          return;
+        case "assert":
+          offset = 1;
+      }
+      args = args.slice(0);
+      "string" === typeof args[offset]
+        ? args.splice(
+            offset,
+            1,
+            "%c%s%c " + args[offset],
+            "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
+            " " + badgeName + " ",
+            ""
+          )
+        : args.splice(
+            offset,
+            0,
+            "%c%s%c ",
+            "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
+            " " + badgeName + " ",
+            ""
+          );
+      "error" === methodName
+        ? error$jscomp$0.apply(console, args)
+        : "warn" === methodName
+        ? warn.apply(console, args)
+        : console[methodName].apply(console, args);
+    }
     function createCursor(defaultValue) {
       return { current: defaultValue };
     }
@@ -7803,16 +7839,41 @@ __DEV__ &&
       );
     }
     function defaultOnCaughtError(error$1, errorInfo) {
-      console.error(
-        "%o\n\n%s\n\n%s\n%s",
-        error$1,
-        componentName
+      var componentNameMessage = componentName
           ? "The above error occurred in the <" + componentName + "> component."
           : "The above error occurred in one of your React components.",
-        "React will try to recreate this component tree from scratch using the error boundary you provided, " +
+        recreateMessage =
+          "React will try to recreate this component tree from scratch using the error boundary you provided, " +
           ((errorBoundaryName || "Anonymous") + "."),
-        null != errorInfo.componentStack ? errorInfo.componentStack : ""
-      );
+        prevGetCurrentStack = ReactSharedInternals.getCurrentStack,
+        componentStack =
+          null != errorInfo.componentStack ? errorInfo.componentStack : "";
+      ReactSharedInternals.getCurrentStack = function () {
+        return componentStack;
+      };
+      try {
+        "object" === typeof error$1 &&
+        null !== error$1 &&
+        "string" === typeof error$1.environmentName
+          ? printToConsole(
+              "error",
+              [
+                "%o\n\n%s\n\n%s\n",
+                error$1,
+                componentNameMessage,
+                recreateMessage
+              ],
+              error$1.environmentName
+            )
+          : error$jscomp$0(
+              "%o\n\n%s\n\n%s\n",
+              error$1,
+              componentNameMessage,
+              recreateMessage
+            );
+      } finally {
+        ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
+      }
     }
     function defaultOnRecoverableError(error) {
       reportGlobalError(error);
@@ -27707,11 +27768,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-39e69dc665-20240709" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-14fdd0e21c-20240710" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-39e69dc665-20240709\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-14fdd0e21c-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27777,12 +27838,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-classic-39e69dc665-20240709"
+          reconcilerVersion: "19.0.0-www-classic-14fdd0e21c-20240710"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-classic-39e69dc665-20240709",
+        version: "19.0.0-www-classic-14fdd0e21c-20240710",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -28591,5 +28652,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-39e69dc665-20240709";
+    exports.version = "19.0.0-www-classic-14fdd0e21c-20240710";
   })();

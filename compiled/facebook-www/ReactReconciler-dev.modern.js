@@ -15956,9 +15956,9 @@ __DEV__ &&
       suspendInstance = $$$config.suspendInstance,
       waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
       NotPendingTransition = $$$config.NotPendingTransition,
-      resetFormInstance = $$$config.resetFormInstance;
-    $$$config.printToConsole;
-    var supportsMicrotasks = $$$config.supportsMicrotasks,
+      resetFormInstance = $$$config.resetFormInstance,
+      printToConsole = $$$config.printToConsole,
+      supportsMicrotasks = $$$config.supportsMicrotasks,
       scheduleMicrotask = $$$config.scheduleMicrotask,
       supportsTestSelectors = $$$config.supportsTestSelectors,
       findFiberRoot = $$$config.findFiberRoot,
@@ -18093,16 +18093,41 @@ __DEV__ &&
       return { $$typeof: TEXT_TYPE, value: text };
     };
     exports.defaultOnCaughtError = function (error$1, errorInfo) {
-      console.error(
-        "%o\n\n%s\n\n%s\n%s",
-        error$1,
-        componentName
+      var componentNameMessage = componentName
           ? "The above error occurred in the <" + componentName + "> component."
           : "The above error occurred in one of your React components.",
-        "React will try to recreate this component tree from scratch using the error boundary you provided, " +
+        recreateMessage =
+          "React will try to recreate this component tree from scratch using the error boundary you provided, " +
           ((errorBoundaryName || "Anonymous") + "."),
-        null != errorInfo.componentStack ? errorInfo.componentStack : ""
-      );
+        prevGetCurrentStack = ReactSharedInternals.getCurrentStack,
+        componentStack =
+          null != errorInfo.componentStack ? errorInfo.componentStack : "";
+      ReactSharedInternals.getCurrentStack = function () {
+        return componentStack;
+      };
+      try {
+        "object" === typeof error$1 &&
+        null !== error$1 &&
+        "string" === typeof error$1.environmentName
+          ? printToConsole(
+              "error",
+              [
+                "%o\n\n%s\n\n%s\n",
+                error$1,
+                componentNameMessage,
+                recreateMessage
+              ],
+              error$1.environmentName
+            )
+          : error$jscomp$0(
+              "%o\n\n%s\n\n%s\n",
+              error$1,
+              componentNameMessage,
+              recreateMessage
+            );
+      } finally {
+        ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
+      }
     };
     exports.defaultOnRecoverableError = function (error) {
       reportGlobalError(error);
@@ -18381,7 +18406,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-39e69dc665-20240709"
+        reconcilerVersion: "19.0.0-www-modern-14fdd0e21c-20240710"
       });
     };
     exports.isAlreadyRendering = function () {
