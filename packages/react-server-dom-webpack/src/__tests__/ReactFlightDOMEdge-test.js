@@ -930,4 +930,74 @@ describe('ReactFlightDOMEdge', () => {
       '\n    in Bar (at **)' + '\n    in Foo (at **)',
     );
   });
+
+  it('supports server components in ssr component stacks', async () => {
+    let reject;
+    const promise = new Promise((_, r) => (reject = r));
+    async function Erroring() {
+      await promise;
+      return 'should not render';
+    }
+
+    const model = {
+      root: ReactServer.createElement(Erroring),
+    };
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      model,
+      webpackMap,
+      {
+        onError() {},
+      },
+    );
+
+    const rootModel = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    const errors = [];
+    const result = ReactDOMServer.renderToReadableStream(
+      <div>{rootModel.root}</div>,
+      {
+        onError(error, {componentStack}) {
+          errors.push({
+            error,
+            componentStack: normalizeCodeLocInfo(componentStack),
+          });
+        },
+      },
+    );
+
+    const theError = new Error('my error');
+    reject(theError);
+
+    const expectedMessage = __DEV__
+      ? 'my error'
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    try {
+      await result;
+    } catch (x) {
+      expect(x).toEqual(
+        expect.objectContaining({
+          message: expectedMessage,
+        }),
+      );
+    }
+
+    expect(errors).toEqual([
+      {
+        error: expect.objectContaining({
+          message: expectedMessage,
+        }),
+        componentStack: (__DEV__ ? '\n    in Erroring' : '') + '\n    in div',
+      },
+    ]);
+  });
 });

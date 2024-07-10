@@ -411,7 +411,6 @@ describe 'ReactCoffeeScriptClass', ->
         constructor: ->
           @contextTypes = {}
           @contextType = {}
-          @propTypes = {}
 
         getInitialState: ->
           getInitialStateWasCalled = true
@@ -431,7 +430,6 @@ describe 'ReactCoffeeScriptClass', ->
       ).toErrorDev([
         'getInitialState was defined on Foo, a plain JavaScript class.',
         'getDefaultProps was defined on Foo, a plain JavaScript class.',
-        'propTypes was defined as an instance property on Foo.',
         'contextTypes was defined as an instance property on Foo.',
         'contextType was defined as an instance property on Foo.',
       ])

@@ -700,17 +700,39 @@ describe('ReactDOMFizzServer', () => {
 
   it('should client render a boundary if a lazy component rejects', async () => {
     let rejectComponent;
+    const promise = new Promise((resolve, reject) => {
+      rejectComponent = reject;
+    });
     const LazyComponent = React.lazy(() => {
-      return new Promise((resolve, reject) => {
-        rejectComponent = reject;
-      });
+      return promise;
+    });
+
+    const LazyLazy = React.lazy(async () => {
+      return {
+        default: LazyComponent,
+      };
+    });
+
+    function Wrapper({children}) {
+      return children;
+    }
+    const LazyWrapper = React.lazy(() => {
+      return {
+        then(callback) {
+          callback({
+            default: Wrapper,
+          });
+        },
+      };
     });
 
     function App({isClient}) {
       return (
         <div>
           <Suspense fallback={<Text text="Loading..." />}>
-            {isClient ? <Text text="Hello" /> : <LazyComponent text="Hello" />}
+            <LazyWrapper>
+              {isClient ? <Text text="Hello" /> : <LazyLazy text="Hello" />}
+            </LazyWrapper>
           </Suspense>
         </div>
       );
@@ -744,6 +766,7 @@ describe('ReactDOMFizzServer', () => {
       });
       pipe(writable);
     });
+
     expect(loggedErrors).toEqual([]);
     expect(bootstrapped).toBe(true);
 
@@ -772,7 +795,7 @@ describe('ReactDOMFizzServer', () => {
           'Switched to client rendering because the server rendering errored:\n\n' +
             theError.message,
           expectedDigest,
-          componentStack(['Lazy', 'Suspense', 'div', 'App']),
+          componentStack(['Lazy', 'Wrapper', 'Suspense', 'div', 'App']),
         ],
       ],
       [
@@ -852,13 +875,9 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(() => {
-      const {pipe} = renderToPipeableStream(
-        <App isClient={false} />,
-
-        {
-          onError,
-        },
-      );
+      const {pipe} = renderToPipeableStream(<App isClient={false} />, {
+        onError,
+      });
       pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
@@ -896,7 +915,7 @@ describe('ReactDOMFizzServer', () => {
           'Switched to client rendering because the server rendering errored:\n\n' +
             theError.message,
           expectedDigest,
-          componentStack(['Lazy', 'Suspense', 'div', 'App']),
+          componentStack(['Suspense', 'div', 'App']),
         ],
       ],
       [
@@ -1395,13 +1414,13 @@ describe('ReactDOMFizzServer', () => {
             'The render was aborted by the server without a reason.',
           expectedDigest,
           // We get the stack of the task when it was aborted which is why we see `h1`
-          componentStack(['h1', 'Suspense', 'div', 'App']),
+          componentStack(['AsyncText', 'h1', 'Suspense', 'div', 'App']),
         ],
         [
           'Switched to client rendering because the server rendering aborted due to:\n\n' +
             'The render was aborted by the server without a reason.',
           expectedDigest,
-          componentStack(['Suspense', 'main', 'div', 'App']),
+          componentStack(['AsyncText', 'Suspense', 'main', 'div', 'App']),
         ],
       ],
       [
@@ -3523,13 +3542,13 @@ describe('ReactDOMFizzServer', () => {
           'Switched to client rendering because the server rendering aborted due to:\n\n' +
             'foobar',
           'a digest',
-          componentStack(['Suspense', 'p', 'div', 'App']),
+          componentStack(['AsyncText', 'Suspense', 'p', 'div', 'App']),
         ],
         [
           'Switched to client rendering because the server rendering aborted due to:\n\n' +
             'foobar',
           'a digest',
-          componentStack(['Suspense', 'span', 'div', 'App']),
+          componentStack(['AsyncText', 'Suspense', 'span', 'div', 'App']),
         ],
       ],
       [
@@ -3606,13 +3625,13 @@ describe('ReactDOMFizzServer', () => {
           'Switched to client rendering because the server rendering aborted due to:\n\n' +
             'uh oh',
           'a digest',
-          componentStack(['Suspense', 'p', 'div', 'App']),
+          componentStack(['AsyncText', 'Suspense', 'p', 'div', 'App']),
         ],
         [
           'Switched to client rendering because the server rendering aborted due to:\n\n' +
             'uh oh',
           'a digest',
-          componentStack(['Suspense', 'span', 'div', 'App']),
+          componentStack(['AsyncText', 'Suspense', 'span', 'div', 'App']),
         ],
       ],
       [
