@@ -4697,14 +4697,14 @@ __DEV__ &&
             !didWarnAboutChildContextTypes.has(type) &&
             (didWarnAboutChildContextTypes.add(type),
             error$jscomp$2(
-              "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.",
+              "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
               defaultProps
             ));
           type.contextTypes &&
-            !didWarnAboutContextTypes.has(type) &&
-            (didWarnAboutContextTypes.add(type),
+            !didWarnAboutContextTypes$1.has(type) &&
+            (didWarnAboutContextTypes$1.add(type),
             error$jscomp$2(
-              "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with static contextType instead.",
+              "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)",
               defaultProps
             ));
           "function" === typeof newProps.componentShouldUpdate &&
@@ -4919,10 +4919,13 @@ __DEV__ &&
             (defaultProps = actionStateCounter),
             (ref = actionStateMatchingIndex),
             type.contextTypes &&
-              error$jscomp$2(
-                "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with React.useContext() instead.",
-                getComponentNameFromType(type) || "Unknown"
-              ),
+              ((_propName = getComponentNameFromType(type) || "Unknown"),
+              didWarnAboutContextTypes[_propName] ||
+                ((didWarnAboutContextTypes[_propName] = !0),
+                error$jscomp$2(
+                  "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with React.useContext() instead.",
+                  _propName
+                ))),
             type &&
               type.childContextTypes &&
               error$jscomp$2(
@@ -7847,7 +7850,7 @@ __DEV__ &&
     var didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
     var didWarnAboutDirectlyAssigningPropsToState = new Set();
     var didWarnAboutUndefinedDerivedState = new Set();
-    var didWarnAboutContextTypes = new Set();
+    var didWarnAboutContextTypes$1 = new Set();
     var didWarnAboutChildContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
@@ -8040,6 +8043,7 @@ __DEV__ &&
     )();
     var currentRequest = null,
       didWarnAboutBadClass = {},
+      didWarnAboutContextTypes = {},
       didWarnAboutContextTypeOnFunctionComponent = {},
       didWarnAboutGetDerivedStateOnFunctionComponent = {},
       didWarnAboutReassigningProps = !1,

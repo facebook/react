@@ -5683,7 +5683,15 @@ __DEV__ &&
           null
         );
       null === current &&
-        validateFunctionComponentInDev(workInProgress, workInProgress.type);
+        (validateFunctionComponentInDev(workInProgress, workInProgress.type),
+        Component.contextTypes &&
+          ((componentName = getComponentNameFromType(Component) || "Unknown"),
+          didWarnAboutContextTypes[componentName] ||
+            ((didWarnAboutContextTypes[componentName] = !0),
+            error$jscomp$0(
+              "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
+              componentName
+            ))));
       componentName = isContextProvider(Component)
         ? previousContext
         : contextStackCursor$1.current;
@@ -5922,6 +5930,20 @@ __DEV__ &&
           (didWarnAboutContextTypeAndContextTypes.add(Component),
           error$jscomp$0(
             "%s declares both contextTypes and contextType static properties. The legacy contextTypes property will be ignored.",
+            lane
+          ));
+        Component.childContextTypes &&
+          !didWarnAboutChildContextTypes.has(Component) &&
+          (didWarnAboutChildContextTypes.add(Component),
+          error$jscomp$0(
+            "%s uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
+            lane
+          ));
+        Component.contextTypes &&
+          !didWarnAboutContextTypes$1.has(Component) &&
+          (didWarnAboutContextTypes$1.add(Component),
+          error$jscomp$0(
+            "%s uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)",
             lane
           ));
         "function" === typeof state.componentShouldUpdate &&
@@ -14284,6 +14306,8 @@ __DEV__ &&
     var didWarnAboutDirectlyAssigningPropsToState = new Set();
     var didWarnAboutUndefinedDerivedState = new Set();
     var didWarnAboutContextTypeAndContextTypes = new Set();
+    var didWarnAboutContextTypes$1 = new Set();
+    var didWarnAboutChildContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
     Object.freeze(fakeInternalInstance);
@@ -14381,6 +14405,7 @@ __DEV__ &&
       didReceiveUpdate = !1;
     var didWarnAboutBadClass = {};
     var didWarnAboutContextTypeOnFunctionComponent = {};
+    var didWarnAboutContextTypes = {};
     var didWarnAboutGetDerivedStateOnFunctionComponent = {};
     var didWarnAboutReassigningProps = !1;
     var didWarnAboutRevealOrder = {};
@@ -14767,14 +14792,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-3b2e5f27c5-20240710"
+        reconcilerVersion: "19.0.0-www-modern-378b305958-20240710"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-www-modern-3b2e5f27c5-20240710",
+      version: "19.0.0-www-modern-378b305958-20240710",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

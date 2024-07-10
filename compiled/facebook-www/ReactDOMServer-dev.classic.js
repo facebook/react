@@ -4814,70 +4814,82 @@ __DEV__ &&
               void 0 === newProps[_propName] &&
                 (newProps[_propName] = defaultProps[_propName]);
           }
-          props = newProps;
-          defaultProps = getMaskedContext(type, task.legacyContext);
-          newProps = type.contextType;
-          "contextType" in type &&
-            null !== newProps &&
-            (void 0 === newProps || newProps.$$typeof !== REACT_CONTEXT_TYPE) &&
-            !didWarnAboutInvalidateContextType.has(type) &&
-            (didWarnAboutInvalidateContextType.add(type),
-            (ref =
-              void 0 === newProps
+          var resolvedProps = newProps;
+          var maskedContext = getMaskedContext(type, task.legacyContext),
+            contextType = type.contextType;
+          if (
+            "contextType" in type &&
+            null !== contextType &&
+            (void 0 === contextType ||
+              contextType.$$typeof !== REACT_CONTEXT_TYPE) &&
+            !didWarnAboutInvalidateContextType.has(type)
+          ) {
+            didWarnAboutInvalidateContextType.add(type);
+            var addendum =
+              void 0 === contextType
                 ? " However, it is set to undefined. This can be caused by a typo or by mixing up named and default imports. This can also happen due to a circular dependency, so try moving the createContext() call to a separate file."
-                : "object" !== typeof newProps
-                ? " However, it is set to a " + typeof newProps + "."
-                : newProps.$$typeof === REACT_CONSUMER_TYPE
+                : "object" !== typeof contextType
+                ? " However, it is set to a " + typeof contextType + "."
+                : contextType.$$typeof === REACT_CONSUMER_TYPE
                 ? " Did you accidentally pass the Context.Consumer instead?"
                 : " However, it is set to an object with keys {" +
-                  Object.keys(newProps).join(", ") +
-                  "}."),
+                  Object.keys(contextType).join(", ") +
+                  "}.";
             error$jscomp$2(
               "%s defines an invalid contextType. contextType should point to the Context object returned by React.createContext().%s",
               getComponentNameFromType(type) || "Component",
-              ref
-            ));
-          newProps = new type(
-            props,
-            "object" === typeof newProps && null !== newProps
-              ? newProps._currentValue2
-              : defaultProps
+              addendum
+            );
+          }
+          var instance = new type(
+            resolvedProps,
+            "object" === typeof contextType && null !== contextType
+              ? contextType._currentValue2
+              : maskedContext
           );
-          "function" !== typeof type.getDerivedStateFromProps ||
-            (null !== newProps.state && void 0 !== newProps.state) ||
-            ((ref = getComponentNameFromType(type) || "Component"),
-            didWarnAboutUninitializedState.has(ref) ||
-              (didWarnAboutUninitializedState.add(ref),
+          if (
+            "function" === typeof type.getDerivedStateFromProps &&
+            (null === instance.state || void 0 === instance.state)
+          ) {
+            var componentName = getComponentNameFromType(type) || "Component";
+            didWarnAboutUninitializedState.has(componentName) ||
+              (didWarnAboutUninitializedState.add(componentName),
               error$jscomp$2(
                 "`%s` uses `getDerivedStateFromProps` but its initial state is %s. This is not recommended. Instead, define the initial state by assigning an object to `this.state` in the constructor of `%s`. This ensures that `getDerivedStateFromProps` arguments have a consistent shape.",
-                ref,
-                null === newProps.state ? "null" : "undefined",
-                ref
-              )));
+                componentName,
+                null === instance.state ? "null" : "undefined",
+                componentName
+              ));
+          }
           if (
             "function" === typeof type.getDerivedStateFromProps ||
-            "function" === typeof newProps.getSnapshotBeforeUpdate
-          )
+            "function" === typeof instance.getSnapshotBeforeUpdate
+          ) {
+            var foundWillMountName = null,
+              foundWillReceivePropsName = null,
+              foundWillUpdateName = null;
+            "function" === typeof instance.componentWillMount &&
+            !0 !== instance.componentWillMount.__suppressDeprecationWarning
+              ? (foundWillMountName = "componentWillMount")
+              : "function" === typeof instance.UNSAFE_componentWillMount &&
+                (foundWillMountName = "UNSAFE_componentWillMount");
+            "function" === typeof instance.componentWillReceiveProps &&
+            !0 !==
+              instance.componentWillReceiveProps.__suppressDeprecationWarning
+              ? (foundWillReceivePropsName = "componentWillReceiveProps")
+              : "function" ===
+                  typeof instance.UNSAFE_componentWillReceiveProps &&
+                (foundWillReceivePropsName =
+                  "UNSAFE_componentWillReceiveProps");
+            "function" === typeof instance.componentWillUpdate &&
+            !0 !== instance.componentWillUpdate.__suppressDeprecationWarning
+              ? (foundWillUpdateName = "componentWillUpdate")
+              : "function" === typeof instance.UNSAFE_componentWillUpdate &&
+                (foundWillUpdateName = "UNSAFE_componentWillUpdate");
             if (
-              ((propName = _propName = ref = null),
-              "function" === typeof newProps.componentWillMount &&
-              !0 !== newProps.componentWillMount.__suppressDeprecationWarning
-                ? (ref = "componentWillMount")
-                : "function" === typeof newProps.UNSAFE_componentWillMount &&
-                  (ref = "UNSAFE_componentWillMount"),
-              "function" === typeof newProps.componentWillReceiveProps &&
-              !0 !==
-                newProps.componentWillReceiveProps.__suppressDeprecationWarning
-                ? (_propName = "componentWillReceiveProps")
-                : "function" ===
-                    typeof newProps.UNSAFE_componentWillReceiveProps &&
-                  (_propName = "UNSAFE_componentWillReceiveProps"),
-              "function" === typeof newProps.componentWillUpdate &&
-              !0 !== newProps.componentWillUpdate.__suppressDeprecationWarning
-                ? (propName = "componentWillUpdate")
-                : "function" === typeof newProps.UNSAFE_componentWillUpdate &&
-                  (propName = "UNSAFE_componentWillUpdate"),
-              null !== ref || null !== _propName || null !== propName)
+              null !== foundWillMountName ||
+              null !== foundWillReceivePropsName ||
+              null !== foundWillUpdateName
             ) {
               var _componentName =
                   getComponentNameFromType(type) || "Component",
@@ -4893,44 +4905,51 @@ __DEV__ &&
                   "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\nThe above lifecycles should be removed. Learn more about this warning here:\nhttps://react.dev/link/unsafe-component-lifecycles",
                   _componentName,
                   newApiName,
-                  null !== ref ? "\n  " + ref : "",
-                  null !== _propName ? "\n  " + _propName : "",
-                  null !== propName ? "\n  " + propName : ""
+                  null !== foundWillMountName
+                    ? "\n  " + foundWillMountName
+                    : "",
+                  null !== foundWillReceivePropsName
+                    ? "\n  " + foundWillReceivePropsName
+                    : "",
+                  null !== foundWillUpdateName
+                    ? "\n  " + foundWillUpdateName
+                    : ""
                 ));
             }
-          ref = getComponentNameFromType(type) || "Component";
-          newProps.render ||
+          }
+          var name = getComponentNameFromType(type) || "Component";
+          instance.render ||
             (type.prototype && "function" === typeof type.prototype.render
               ? error$jscomp$2(
                   "No `render` method found on the %s instance: did you accidentally return an object from the constructor?",
-                  ref
+                  name
                 )
               : error$jscomp$2(
                   "No `render` method found on the %s instance: you may have forgotten to define `render`.",
-                  ref
+                  name
                 ));
-          !newProps.getInitialState ||
-            newProps.getInitialState.isReactClassApproved ||
-            newProps.state ||
+          !instance.getInitialState ||
+            instance.getInitialState.isReactClassApproved ||
+            instance.state ||
             error$jscomp$2(
               "getInitialState was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Did you mean to define a state property instead?",
-              ref
+              name
             );
-          newProps.getDefaultProps &&
-            !newProps.getDefaultProps.isReactClassApproved &&
+          instance.getDefaultProps &&
+            !instance.getDefaultProps.isReactClassApproved &&
             error$jscomp$2(
               "getDefaultProps was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Use a static property to define defaultProps instead.",
-              ref
+              name
             );
-          newProps.contextType &&
+          instance.contextType &&
             error$jscomp$2(
               "contextType was defined as an instance property on %s. Use a static property to define contextType instead.",
-              ref
+              name
             );
-          newProps.contextTypes &&
+          instance.contextTypes &&
             error$jscomp$2(
-              "contextTypes was defined as an instance property on %s. Use a static property to define contextTypes instead.",
-              ref
+              "contextTypes was defined as an instance property on %s. Use a static property to define contextTypes instead. (https://react.dev/link/legacy-context)",
+              name
             );
           type.contextType &&
             type.contextTypes &&
@@ -4938,319 +4957,394 @@ __DEV__ &&
             (didWarnAboutContextTypeAndContextTypes.add(type),
             error$jscomp$2(
               "%s declares both contextTypes and contextType static properties. The legacy contextTypes property will be ignored.",
-              ref
+              name
             ));
-          "function" === typeof newProps.componentShouldUpdate &&
+          type.childContextTypes &&
+            !didWarnAboutChildContextTypes.has(type) &&
+            (didWarnAboutChildContextTypes.add(type),
+            error$jscomp$2(
+              "%s uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
+              name
+            ));
+          type.contextTypes &&
+            !didWarnAboutContextTypes$1.has(type) &&
+            (didWarnAboutContextTypes$1.add(type),
+            error$jscomp$2(
+              "%s uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)",
+              name
+            ));
+          "function" === typeof instance.componentShouldUpdate &&
             error$jscomp$2(
               "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.",
-              ref
+              name
             );
           type.prototype &&
             type.prototype.isPureReactComponent &&
-            "undefined" !== typeof newProps.shouldComponentUpdate &&
+            "undefined" !== typeof instance.shouldComponentUpdate &&
             error$jscomp$2(
               "%s has a method called shouldComponentUpdate(). shouldComponentUpdate should not be used when extending React.PureComponent. Please extend React.Component if shouldComponentUpdate is used.",
               getComponentNameFromType(type) || "A pure component"
             );
-          "function" === typeof newProps.componentDidUnmount &&
+          "function" === typeof instance.componentDidUnmount &&
             error$jscomp$2(
               "%s has a method called componentDidUnmount(). But there is no such lifecycle method. Did you mean componentWillUnmount()?",
-              ref
+              name
             );
-          "function" === typeof newProps.componentDidReceiveProps &&
+          "function" === typeof instance.componentDidReceiveProps &&
             error$jscomp$2(
               "%s has a method called componentDidReceiveProps(). But there is no such lifecycle method. If you meant to update the state in response to changing props, use componentWillReceiveProps(). If you meant to fetch data or run side-effects or mutations after React has updated the UI, use componentDidUpdate().",
-              ref
+              name
             );
-          "function" === typeof newProps.componentWillRecieveProps &&
+          "function" === typeof instance.componentWillRecieveProps &&
             error$jscomp$2(
               "%s has a method called componentWillRecieveProps(). Did you mean componentWillReceiveProps()?",
-              ref
+              name
             );
-          "function" === typeof newProps.UNSAFE_componentWillRecieveProps &&
+          "function" === typeof instance.UNSAFE_componentWillRecieveProps &&
             error$jscomp$2(
               "%s has a method called UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?",
-              ref
+              name
             );
-          _propName = newProps.props !== props;
-          void 0 !== newProps.props &&
-            _propName &&
+          var hasMutatedProps = instance.props !== resolvedProps;
+          void 0 !== instance.props &&
+            hasMutatedProps &&
             error$jscomp$2(
               "When calling super() in `%s`, make sure to pass up the same props that your component's constructor was passed.",
-              ref
+              name
             );
-          newProps.defaultProps &&
+          instance.defaultProps &&
             error$jscomp$2(
               "Setting defaultProps as an instance property on %s is not supported and will be ignored. Instead, define defaultProps as a static property on %s.",
-              ref,
-              ref
+              name,
+              name
             );
-          "function" !== typeof newProps.getSnapshotBeforeUpdate ||
-            "function" === typeof newProps.componentDidUpdate ||
+          "function" !== typeof instance.getSnapshotBeforeUpdate ||
+            "function" === typeof instance.componentDidUpdate ||
             didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(type) ||
             (didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(type),
             error$jscomp$2(
               "%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). This component defines getSnapshotBeforeUpdate() only.",
               getComponentNameFromType(type)
             ));
-          "function" === typeof newProps.getDerivedStateFromProps &&
+          "function" === typeof instance.getDerivedStateFromProps &&
             error$jscomp$2(
               "%s: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
-              ref
+              name
             );
-          "function" === typeof newProps.getDerivedStateFromError &&
+          "function" === typeof instance.getDerivedStateFromError &&
             error$jscomp$2(
               "%s: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
-              ref
+              name
             );
           "function" === typeof type.getSnapshotBeforeUpdate &&
             error$jscomp$2(
               "%s: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.",
-              ref
+              name
             );
-          (_propName = newProps.state) &&
-            ("object" !== typeof _propName || isArrayImpl(_propName)) &&
-            error$jscomp$2("%s.state: must be set to an object or null", ref);
-          "function" === typeof newProps.getChildContext &&
+          var state = instance.state;
+          state &&
+            ("object" !== typeof state || isArrayImpl(state)) &&
+            error$jscomp$2("%s.state: must be set to an object or null", name);
+          "function" === typeof instance.getChildContext &&
             "object" !== typeof type.childContextTypes &&
             error$jscomp$2(
               "%s.getChildContext(): childContextTypes must be defined in order to use getChildContext().",
-              ref
+              name
             );
-          _propName = void 0 !== newProps.state ? newProps.state : null;
-          newProps.updater = classComponentUpdater;
-          newProps.props = props;
-          newProps.state = _propName;
-          ref = { queue: [], replace: !1 };
-          newProps._reactInternals = ref;
-          propName = type.contextType;
-          newProps.context =
-            "object" === typeof propName && null !== propName
-              ? propName._currentValue2
-              : defaultProps;
-          newProps.state === props &&
-            ((propName = getComponentNameFromType(type) || "Component"),
-            didWarnAboutDirectlyAssigningPropsToState.has(propName) ||
-              (didWarnAboutDirectlyAssigningPropsToState.add(propName),
+          var initialState = void 0 !== instance.state ? instance.state : null;
+          instance.updater = classComponentUpdater;
+          instance.props = resolvedProps;
+          instance.state = initialState;
+          var internalInstance = { queue: [], replace: !1 };
+          instance._reactInternals = internalInstance;
+          var contextType$jscomp$0 = type.contextType;
+          instance.context =
+            "object" === typeof contextType$jscomp$0 &&
+            null !== contextType$jscomp$0
+              ? contextType$jscomp$0._currentValue2
+              : maskedContext;
+          if (instance.state === resolvedProps) {
+            var componentName$jscomp$0 =
+              getComponentNameFromType(type) || "Component";
+            didWarnAboutDirectlyAssigningPropsToState.has(
+              componentName$jscomp$0
+            ) ||
+              (didWarnAboutDirectlyAssigningPropsToState.add(
+                componentName$jscomp$0
+              ),
               error$jscomp$2(
                 "%s: It is not recommended to assign props directly to state because updates to props won't be reflected in state. In most cases, it is better to use props directly.",
-                propName
-              )));
-          propName = type.getDerivedStateFromProps;
-          "function" === typeof propName &&
-            ((propName = propName(props, _propName)),
-            void 0 === propName &&
-              ((_componentName = getComponentNameFromType(type) || "Component"),
-              didWarnAboutUndefinedDerivedState.has(_componentName) ||
-                (didWarnAboutUndefinedDerivedState.add(_componentName),
+                componentName$jscomp$0
+              ));
+          }
+          var getDerivedStateFromProps = type.getDerivedStateFromProps;
+          if ("function" === typeof getDerivedStateFromProps) {
+            var partialState = getDerivedStateFromProps(
+              resolvedProps,
+              initialState
+            );
+            if (void 0 === partialState) {
+              var componentName$jscomp$1 =
+                getComponentNameFromType(type) || "Component";
+              didWarnAboutUndefinedDerivedState.has(componentName$jscomp$1) ||
+                (didWarnAboutUndefinedDerivedState.add(componentName$jscomp$1),
                 error$jscomp$2(
                   "%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. You have returned undefined.",
-                  _componentName
-                ))),
-            (_propName =
-              null === propName || void 0 === propName
-                ? _propName
-                : assign({}, _propName, propName)),
-            (newProps.state = _propName));
+                  componentName$jscomp$1
+                ));
+            }
+            var JSCompiler_inline_result =
+              null === partialState || void 0 === partialState
+                ? initialState
+                : assign({}, initialState, partialState);
+            instance.state = JSCompiler_inline_result;
+          }
           if (
             "function" !== typeof type.getDerivedStateFromProps &&
-            "function" !== typeof newProps.getSnapshotBeforeUpdate &&
-            ("function" === typeof newProps.UNSAFE_componentWillMount ||
-              "function" === typeof newProps.componentWillMount)
-          )
-            if (
-              ((_propName = newProps.state),
-              "function" === typeof newProps.componentWillMount &&
-                (!0 !==
-                  newProps.componentWillMount.__suppressDeprecationWarning &&
-                  ((propName = getComponentNameFromType(type) || "Unknown"),
-                  didWarnAboutDeprecatedWillMount[propName] ||
-                    (warn(
-                      "componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move code from componentWillMount to componentDidMount (preferred in most cases) or the constructor.\n\nPlease update the following components: %s",
-                      propName
-                    ),
-                    (didWarnAboutDeprecatedWillMount[propName] = !0))),
-                newProps.componentWillMount()),
-              "function" === typeof newProps.UNSAFE_componentWillMount &&
-                newProps.UNSAFE_componentWillMount(),
-              _propName !== newProps.state &&
-                (error$jscomp$2(
-                  "%s.componentWillMount(): Assigning directly to this.state is deprecated (except inside a component's constructor). Use setState instead.",
-                  getComponentNameFromType(type) || "Component"
-                ),
-                classComponentUpdater.enqueueReplaceState(
-                  newProps,
-                  newProps.state,
-                  null
-                )),
-              null !== ref.queue && 0 < ref.queue.length)
-            )
+            "function" !== typeof instance.getSnapshotBeforeUpdate &&
+            ("function" === typeof instance.UNSAFE_componentWillMount ||
+              "function" === typeof instance.componentWillMount)
+          ) {
+            var oldState = instance.state;
+            if ("function" === typeof instance.componentWillMount) {
               if (
-                ((_propName = ref.queue),
-                (_componentName = ref.replace),
-                (ref.queue = null),
-                (ref.replace = !1),
-                _componentName && 1 === _propName.length)
-              )
-                newProps.state = _propName[0];
-              else {
-                ref = _componentName ? _propName[0] : newProps.state;
-                propName = !0;
-                for (
-                  _componentName = _componentName ? 1 : 0;
-                  _componentName < _propName.length;
-                  _componentName++
-                )
-                  (newApiName = _propName[_componentName]),
-                    (newApiName =
-                      "function" === typeof newApiName
-                        ? newApiName.call(newProps, ref, props, defaultProps)
-                        : newApiName),
-                    null != newApiName &&
-                      (propName
-                        ? ((propName = !1), (ref = assign({}, ref, newApiName)))
-                        : assign(ref, newApiName));
-                newProps.state = ref;
+                !0 !== instance.componentWillMount.__suppressDeprecationWarning
+              ) {
+                var componentName$jscomp$2 =
+                  getComponentNameFromType(type) || "Unknown";
+                didWarnAboutDeprecatedWillMount[componentName$jscomp$2] ||
+                  (warn(
+                    "componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move code from componentWillMount to componentDidMount (preferred in most cases) or the constructor.\n\nPlease update the following components: %s",
+                    componentName$jscomp$2
+                  ),
+                  (didWarnAboutDeprecatedWillMount[componentName$jscomp$2] =
+                    !0));
               }
-            else ref.queue = null;
-          defaultProps = callRenderInDEV(newProps);
-          newProps.props !== props &&
+              instance.componentWillMount();
+            }
+            "function" === typeof instance.UNSAFE_componentWillMount &&
+              instance.UNSAFE_componentWillMount();
+            oldState !== instance.state &&
+              (error$jscomp$2(
+                "%s.componentWillMount(): Assigning directly to this.state is deprecated (except inside a component's constructor). Use setState instead.",
+                getComponentNameFromType(type) || "Component"
+              ),
+              classComponentUpdater.enqueueReplaceState(
+                instance,
+                instance.state,
+                null
+              ));
+            if (
+              null !== internalInstance.queue &&
+              0 < internalInstance.queue.length
+            ) {
+              var oldQueue = internalInstance.queue,
+                oldReplace = internalInstance.replace;
+              internalInstance.queue = null;
+              internalInstance.replace = !1;
+              if (oldReplace && 1 === oldQueue.length)
+                instance.state = oldQueue[0];
+              else {
+                for (
+                  var nextState = oldReplace ? oldQueue[0] : instance.state,
+                    dontMutate = !0,
+                    i = oldReplace ? 1 : 0;
+                  i < oldQueue.length;
+                  i++
+                ) {
+                  var partial = oldQueue[i],
+                    partialState$jscomp$0 =
+                      "function" === typeof partial
+                        ? partial.call(
+                            instance,
+                            nextState,
+                            resolvedProps,
+                            maskedContext
+                          )
+                        : partial;
+                  null != partialState$jscomp$0 &&
+                    (dontMutate
+                      ? ((dontMutate = !1),
+                        (nextState = assign(
+                          {},
+                          nextState,
+                          partialState$jscomp$0
+                        )))
+                      : assign(nextState, partialState$jscomp$0));
+                }
+                instance.state = nextState;
+              }
+            } else internalInstance.queue = null;
+          }
+          var nextChildren = callRenderInDEV(instance);
+          instance.props !== resolvedProps &&
             (didWarnAboutReassigningProps ||
               error$jscomp$2(
                 "It looks like %s is reassigning its own `this.props` while rendering. This is not supported and can lead to confusing bugs.",
                 getComponentNameFromType(type) || "a component"
               ),
             (didWarnAboutReassigningProps = !0));
-          props = type.childContextTypes;
-          if (null !== props && void 0 !== props) {
-            keyPath = task.legacyContext;
-            if ("function" !== typeof newProps.getChildContext)
-              (type = getComponentNameFromType(type) || "Unknown"),
-                warnedAboutMissingGetChildContext[type] ||
-                  ((warnedAboutMissingGetChildContext[type] = !0),
-                  error$jscomp$2(
-                    "%s.childContextTypes is specified but there is no getChildContext() method on the instance. You can either define getChildContext() on %s or remove childContextTypes from it.",
-                    type,
-                    type
-                  )),
-                (type = keyPath);
-            else {
-              newProps = newProps.getChildContext();
-              for (var contextKey in newProps)
-                if (!(contextKey in props))
+          var childContextTypes = type.childContextTypes;
+          if (null !== childContextTypes && void 0 !== childContextTypes) {
+            var previousContext = task.legacyContext;
+            if ("function" !== typeof instance.getChildContext) {
+              var componentName$jscomp$3 =
+                getComponentNameFromType(type) || "Unknown";
+              warnedAboutMissingGetChildContext[componentName$jscomp$3] ||
+                ((warnedAboutMissingGetChildContext[componentName$jscomp$3] =
+                  !0),
+                error$jscomp$2(
+                  "%s.childContextTypes is specified but there is no getChildContext() method on the instance. You can either define getChildContext() on %s or remove childContextTypes from it.",
+                  componentName$jscomp$3,
+                  componentName$jscomp$3
+                ));
+              var mergedContext = previousContext;
+            } else {
+              var childContext = instance.getChildContext(),
+                contextKey;
+              for (contextKey in childContext)
+                if (!(contextKey in childContextTypes))
                   throw Error(
                     (getComponentNameFromType(type) || "Unknown") +
                       '.getChildContext(): key "' +
                       contextKey +
                       '" is not defined in childContextTypes.'
                   );
-              type = assign({}, keyPath, newProps);
+              mergedContext = assign({}, previousContext, childContext);
             }
-            task.legacyContext = type;
-            renderNodeDestructive(request, task, defaultProps, -1);
-            task.legacyContext = keyPath;
-          } else
-            (type = task.keyPath),
-              (task.keyPath = keyPath),
-              renderNodeDestructive(request, task, defaultProps, -1),
-              (task.keyPath = type);
-        } else
-          (contextKey = getMaskedContext(type, task.legacyContext)),
-            type.prototype &&
-              "function" === typeof type.prototype.render &&
-              ((newProps = getComponentNameFromType(type) || "Unknown"),
-              didWarnAboutBadClass[newProps] ||
-                (error$jscomp$2(
-                  "The <%s /> component appears to have a render method, but doesn't extend React.Component. This is likely to cause errors. Change %s to extend React.Component instead.",
-                  newProps,
-                  newProps
-                ),
-                (didWarnAboutBadClass[newProps] = !0))),
-            (contextKey = renderWithHooks(
+            task.legacyContext = mergedContext;
+            renderNodeDestructive(request, task, nextChildren, -1);
+            task.legacyContext = previousContext;
+          } else {
+            var prevKeyPath = task.keyPath;
+            task.keyPath = keyPath;
+            renderNodeDestructive(request, task, nextChildren, -1);
+            task.keyPath = prevKeyPath;
+          }
+        } else {
+          var legacyContext = getMaskedContext(type, task.legacyContext);
+          if (type.prototype && "function" === typeof type.prototype.render) {
+            var componentName$jscomp$4 =
+              getComponentNameFromType(type) || "Unknown";
+            didWarnAboutBadClass[componentName$jscomp$4] ||
+              (error$jscomp$2(
+                "The <%s /> component appears to have a render method, but doesn't extend React.Component. This is likely to cause errors. Change %s to extend React.Component instead.",
+                componentName$jscomp$4,
+                componentName$jscomp$4
+              ),
+              (didWarnAboutBadClass[componentName$jscomp$4] = !0));
+          }
+          var value = renderWithHooks(
               request,
               task,
               keyPath,
               type,
               props,
-              contextKey
-            )),
-            (props = 0 !== localIdCounter),
-            (newProps = actionStateCounter),
-            (defaultProps = actionStateMatchingIndex),
-            type &&
-              type.childContextTypes &&
+              legacyContext
+            ),
+            hasId = 0 !== localIdCounter,
+            actionStateCount = actionStateCounter,
+            actionStateMatchingIndex$jscomp$0 = actionStateMatchingIndex;
+          if (type.contextTypes) {
+            var _componentName$jscomp$0 =
+              getComponentNameFromType(type) || "Unknown";
+            didWarnAboutContextTypes[_componentName$jscomp$0] ||
+              ((didWarnAboutContextTypes[_componentName$jscomp$0] = !0),
               error$jscomp$2(
-                "childContextTypes cannot be defined on a function component.\n  %s.childContextTypes = ...",
-                type.displayName || type.name || "Component"
-              ),
-            disableDefaultPropsExceptForClasses ||
-              void 0 === type.defaultProps ||
-              ((ref = getComponentNameFromType(type) || "Unknown"),
-              didWarnAboutDefaultPropsOnFunctionComponent[ref] ||
-                (error$jscomp$2(
-                  "%s: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
-                  ref
-                ),
-                (didWarnAboutDefaultPropsOnFunctionComponent[ref] = !0))),
-            "function" === typeof type.getDerivedStateFromProps &&
-              ((ref = getComponentNameFromType(type) || "Unknown"),
-              didWarnAboutGetDerivedStateOnFunctionComponent[ref] ||
-                (error$jscomp$2(
-                  "%s: Function components do not support getDerivedStateFromProps.",
-                  ref
-                ),
-                (didWarnAboutGetDerivedStateOnFunctionComponent[ref] = !0))),
-            "object" === typeof type.contextType &&
-              null !== type.contextType &&
-              ((type = getComponentNameFromType(type) || "Unknown"),
-              didWarnAboutContextTypeOnFunctionComponent[type] ||
-                (error$jscomp$2(
-                  "%s: Function components do not support contextType.",
-                  type
-                ),
-                (didWarnAboutContextTypeOnFunctionComponent[type] = !0))),
-            finishFunctionComponent(
-              request,
-              task,
-              keyPath,
-              contextKey,
-              props,
-              newProps,
-              defaultProps
+                "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.",
+                _componentName$jscomp$0
+              ));
+          }
+          type &&
+            type.childContextTypes &&
+            error$jscomp$2(
+              "childContextTypes cannot be defined on a function component.\n  %s.childContextTypes = ...",
+              type.displayName || type.name || "Component"
             );
-      else if ("string" === typeof type)
-        if (((contextKey = task.blockedSegment), null === contextKey))
-          (contextKey = props.children),
-            (newProps = task.formatContext),
-            (defaultProps = task.keyPath),
-            (task.formatContext = getChildFormatContext(newProps, type, props)),
-            (task.keyPath = keyPath),
-            renderNode(request, task, contextKey, -1),
-            (task.formatContext = newProps),
-            (task.keyPath = defaultProps);
-        else {
-          defaultProps = pushStartInstance(
-            contextKey.chunks,
+          if (
+            !disableDefaultPropsExceptForClasses &&
+            void 0 !== type.defaultProps
+          ) {
+            var componentName$jscomp$5 =
+              getComponentNameFromType(type) || "Unknown";
+            didWarnAboutDefaultPropsOnFunctionComponent[
+              componentName$jscomp$5
+            ] ||
+              (error$jscomp$2(
+                "%s: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
+                componentName$jscomp$5
+              ),
+              (didWarnAboutDefaultPropsOnFunctionComponent[
+                componentName$jscomp$5
+              ] = !0));
+          }
+          if ("function" === typeof type.getDerivedStateFromProps) {
+            var _componentName2 = getComponentNameFromType(type) || "Unknown";
+            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2] ||
+              (error$jscomp$2(
+                "%s: Function components do not support getDerivedStateFromProps.",
+                _componentName2
+              ),
+              (didWarnAboutGetDerivedStateOnFunctionComponent[_componentName2] =
+                !0));
+          }
+          if (
+            "object" === typeof type.contextType &&
+            null !== type.contextType
+          ) {
+            var _componentName3 = getComponentNameFromType(type) || "Unknown";
+            didWarnAboutContextTypeOnFunctionComponent[_componentName3] ||
+              (error$jscomp$2(
+                "%s: Function components do not support contextType.",
+                _componentName3
+              ),
+              (didWarnAboutContextTypeOnFunctionComponent[_componentName3] =
+                !0));
+          }
+          finishFunctionComponent(
+            request,
+            task,
+            keyPath,
+            value,
+            hasId,
+            actionStateCount,
+            actionStateMatchingIndex$jscomp$0
+          );
+        }
+      else if ("string" === typeof type) {
+        var segment = task.blockedSegment;
+        if (null === segment) {
+          var children = props.children,
+            prevContext = task.formatContext,
+            prevKeyPath$jscomp$0 = task.keyPath;
+          task.formatContext = getChildFormatContext(prevContext, type, props);
+          task.keyPath = keyPath;
+          renderNode(request, task, children, -1);
+          task.formatContext = prevContext;
+          task.keyPath = prevKeyPath$jscomp$0;
+        } else {
+          var _children = pushStartInstance(
+            segment.chunks,
             type,
             props,
             request.resumableState,
             request.renderState,
             task.hoistableState,
             task.formatContext,
-            contextKey.lastPushedText,
+            segment.lastPushedText,
             task.isFallback
           );
-          contextKey.lastPushedText = !1;
-          newProps = task.formatContext;
-          ref = task.keyPath;
-          task.formatContext = getChildFormatContext(newProps, type, props);
+          segment.lastPushedText = !1;
+          var _prevContext = task.formatContext,
+            _prevKeyPath2 = task.keyPath;
+          task.formatContext = getChildFormatContext(_prevContext, type, props);
           task.keyPath = keyPath;
-          renderNode(request, task, defaultProps, -1);
-          task.formatContext = newProps;
-          task.keyPath = ref;
+          renderNode(request, task, _children, -1);
+          task.formatContext = _prevContext;
+          task.keyPath = _prevKeyPath2;
           a: {
-            task = contextKey.chunks;
-            request = request.resumableState;
+            var target = segment.chunks,
+              resumableState = request.resumableState;
             switch (type) {
               case "title":
               case "style":
@@ -5272,83 +5366,84 @@ __DEV__ &&
               case "wbr":
                 break a;
               case "body":
-                if (newProps.insertionMode <= HTML_HTML_MODE) {
-                  request.hasBody = !0;
+                if (_prevContext.insertionMode <= HTML_HTML_MODE) {
+                  resumableState.hasBody = !0;
                   break a;
                 }
                 break;
               case "html":
-                if (newProps.insertionMode === ROOT_HTML_MODE) {
-                  request.hasHtml = !0;
+                if (_prevContext.insertionMode === ROOT_HTML_MODE) {
+                  resumableState.hasHtml = !0;
                   break a;
                 }
             }
-            task.push(endChunkForTag(type));
+            target.push(endChunkForTag(type));
           }
-          contextKey.lastPushedText = !1;
+          segment.lastPushedText = !1;
         }
-      else {
+      } else {
         switch (type) {
           case REACT_LEGACY_HIDDEN_TYPE:
           case REACT_DEBUG_TRACING_MODE_TYPE:
           case REACT_STRICT_MODE_TYPE:
           case REACT_PROFILER_TYPE:
           case REACT_FRAGMENT_TYPE:
-            type = task.keyPath;
+            var prevKeyPath$jscomp$1 = task.keyPath;
             task.keyPath = keyPath;
             renderNodeDestructive(request, task, props.children, -1);
-            task.keyPath = type;
+            task.keyPath = prevKeyPath$jscomp$1;
             return;
           case REACT_OFFSCREEN_TYPE:
-            "hidden" !== props.mode &&
-              ((type = task.keyPath),
-              (task.keyPath = keyPath),
-              renderNodeDestructive(request, task, props.children, -1),
-              (task.keyPath = type));
+            if ("hidden" !== props.mode) {
+              var prevKeyPath$jscomp$2 = task.keyPath;
+              task.keyPath = keyPath;
+              renderNodeDestructive(request, task, props.children, -1);
+              task.keyPath = prevKeyPath$jscomp$2;
+            }
             return;
           case REACT_SUSPENSE_LIST_TYPE:
-            type = task.keyPath;
+            var _prevKeyPath3 = task.keyPath;
             task.keyPath = keyPath;
             renderNodeDestructive(request, task, props.children, -1);
-            task.keyPath = type;
+            task.keyPath = _prevKeyPath3;
             return;
           case REACT_SCOPE_TYPE:
-            type = task.keyPath;
+            var _prevKeyPath4 = task.keyPath;
             task.keyPath = keyPath;
             renderNodeDestructive(request, task, props.children, -1);
-            task.keyPath = type;
+            task.keyPath = _prevKeyPath4;
             return;
           case REACT_SUSPENSE_TYPE:
             a: if (null !== task.replay) {
-              type = task.keyPath;
+              var _prevKeyPath = task.keyPath;
               task.keyPath = keyPath;
-              keyPath = props.children;
+              var _content = props.children;
               try {
-                renderNode(request, task, keyPath, -1);
+                renderNode(request, task, _content, -1);
               } finally {
-                task.keyPath = type;
+                task.keyPath = _prevKeyPath;
               }
             } else {
-              propName = task.keyPath;
-              type = task.blockedBoundary;
-              _componentName = task.hoistableState;
-              newApiName = task.blockedSegment;
-              contextKey = props.fallback;
-              var content = props.children;
-              props = new Set();
-              ref = createSuspenseBoundary(request, props);
+              var prevKeyPath$jscomp$3 = task.keyPath,
+                parentBoundary = task.blockedBoundary,
+                parentHoistableState = task.hoistableState,
+                parentSegment = task.blockedSegment,
+                fallback = props.fallback,
+                content = props.children,
+                fallbackAbortSet = new Set(),
+                newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
               null !== request.trackedPostpones &&
-                (ref.trackedContentKeyPath = keyPath);
-              _propName = createPendingSegment(
+                (newBoundary.trackedContentKeyPath = keyPath);
+              var boundarySegment = createPendingSegment(
                 request,
-                newApiName.chunks.length,
-                ref,
+                parentSegment.chunks.length,
+                newBoundary,
                 task.formatContext,
                 !1,
                 !1
               );
-              newApiName.children.push(_propName);
-              newApiName.lastPushedText = !1;
+              parentSegment.children.push(boundarySegment);
+              parentSegment.lastPushedText = !1;
               var contentRootSegment = createPendingSegment(
                 request,
                 0,
@@ -5358,8 +5453,8 @@ __DEV__ &&
                 !1
               );
               contentRootSegment.parentFlushed = !0;
-              task.blockedBoundary = ref;
-              task.hoistableState = ref.contentState;
+              task.blockedBoundary = newBoundary;
+              task.hoistableState = newBoundary.contentState;
               task.blockedSegment = contentRootSegment;
               task.keyPath = keyPath;
               try {
@@ -5370,53 +5465,68 @@ __DEV__ &&
                       contentRootSegment.textEmbedded &&
                       contentRootSegment.chunks.push("\x3c!-- --\x3e")),
                   (contentRootSegment.status = COMPLETED),
-                  queueCompletedSegment(ref, contentRootSegment),
-                  0 === ref.pendingTasks && ref.status === PENDING)
+                  queueCompletedSegment(newBoundary, contentRootSegment),
+                  0 === newBoundary.pendingTasks &&
+                    newBoundary.status === PENDING)
                 ) {
-                  ref.status = COMPLETED;
+                  newBoundary.status = COMPLETED;
                   break a;
                 }
               } catch (error$2) {
-                (contentRootSegment.status = 4),
-                  (ref.status = CLIENT_RENDERED),
-                  (newProps = getThrownInfo(task.componentStack)),
-                  (defaultProps = logRecoverableError(
-                    request,
-                    error$2,
-                    newProps
-                  )),
-                  encodeErrorForBoundary(
-                    ref,
-                    defaultProps,
-                    error$2,
-                    newProps,
-                    !1
-                  ),
-                  untrackBoundary(request, ref);
+                contentRootSegment.status = 4;
+                newBoundary.status = CLIENT_RENDERED;
+                var thrownInfo = getThrownInfo(task.componentStack);
+                var errorDigest = logRecoverableError(
+                  request,
+                  error$2,
+                  thrownInfo
+                );
+                encodeErrorForBoundary(
+                  newBoundary,
+                  errorDigest,
+                  error$2,
+                  thrownInfo,
+                  !1
+                );
+                untrackBoundary(request, newBoundary);
               } finally {
-                (task.blockedBoundary = type),
-                  (task.hoistableState = _componentName),
-                  (task.blockedSegment = newApiName),
-                  (task.keyPath = propName);
+                (task.blockedBoundary = parentBoundary),
+                  (task.hoistableState = parentHoistableState),
+                  (task.blockedSegment = parentSegment),
+                  (task.keyPath = prevKeyPath$jscomp$3);
               }
-              newProps = [keyPath[0], "Suspense Fallback", keyPath[2]];
-              defaultProps = request.trackedPostpones;
-              null !== defaultProps &&
-                ((propName = [newProps[1], newProps[2], [], null]),
-                defaultProps.workingMap.set(newProps, propName),
-                ref.status === POSTPONED
-                  ? (defaultProps.workingMap.get(keyPath)[4] = propName)
-                  : (ref.trackedFallbackNode = propName));
-              task = createRenderTask(
+              var fallbackKeyPath = [
+                  keyPath[0],
+                  "Suspense Fallback",
+                  keyPath[2]
+                ],
+                trackedPostpones = request.trackedPostpones;
+              if (null !== trackedPostpones) {
+                var fallbackReplayNode = [
+                  fallbackKeyPath[1],
+                  fallbackKeyPath[2],
+                  [],
+                  null
+                ];
+                trackedPostpones.workingMap.set(
+                  fallbackKeyPath,
+                  fallbackReplayNode
+                );
+                newBoundary.status === POSTPONED
+                  ? (trackedPostpones.workingMap.get(keyPath)[4] =
+                      fallbackReplayNode)
+                  : (newBoundary.trackedFallbackNode = fallbackReplayNode);
+              }
+              var suspendedFallbackTask = createRenderTask(
                 request,
                 null,
-                contextKey,
+                fallback,
                 -1,
-                type,
-                _propName,
-                ref.fallbackState,
-                props,
-                newProps,
+                parentBoundary,
+                boundarySegment,
+                newBoundary.fallbackState,
+                fallbackAbortSet,
+                fallbackKeyPath,
                 task.formatContext,
                 task.context,
                 task.treeContext,
@@ -5424,41 +5534,51 @@ __DEV__ &&
                 !0,
                 task.legacyContext
               );
-              pushComponentStack(task);
-              request.pingedTasks.push(task);
+              pushComponentStack(suspendedFallbackTask);
+              request.pingedTasks.push(suspendedFallbackTask);
             }
             return;
         }
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
             case REACT_FORWARD_REF_TYPE:
-              if ("ref" in props)
-                for (_componentName in ((contextKey = {}), props))
-                  "ref" !== _componentName &&
-                    (contextKey[_componentName] = props[_componentName]);
-              else contextKey = props;
-              type = renderWithHooks(
+              if ("ref" in props) {
+                var propsWithoutRef = {};
+                for (var key in props)
+                  "ref" !== key && (propsWithoutRef[key] = props[key]);
+              } else propsWithoutRef = props;
+              var children$jscomp$0 = renderWithHooks(
                 request,
                 task,
                 keyPath,
                 type.render,
-                contextKey,
+                propsWithoutRef,
                 ref
               );
               finishFunctionComponent(
                 request,
                 task,
                 keyPath,
-                type,
+                children$jscomp$0,
                 0 !== localIdCounter,
                 actionStateCounter,
                 actionStateMatchingIndex
               );
               return;
             case REACT_MEMO_TYPE:
-              type = type.type;
-              contextKey = resolveDefaultPropsOnNonClassComponent(type, props);
-              renderElement(request, task, keyPath, type, contextKey, ref);
+              var innerType = type.type,
+                resolvedProps$jscomp$0 = resolveDefaultPropsOnNonClassComponent(
+                  innerType,
+                  props
+                );
+              renderElement(
+                request,
+                task,
+                keyPath,
+                innerType,
+                resolvedProps$jscomp$0,
+                ref
+              );
               return;
             case REACT_PROVIDER_TYPE:
               if (!enableRenderableContext) {
@@ -5472,10 +5592,14 @@ __DEV__ &&
                 return;
               }
             case REACT_CONTEXT_TYPE:
-              enableRenderableContext
-                ? renderContextProvider(request, task, keyPath, type, props)
-                : (void 0 !== type._context && (type = type._context),
-                  renderContextConsumer(request, task, keyPath, type, props));
+              if (enableRenderableContext)
+                renderContextProvider(request, task, keyPath, type, props);
+              else {
+                var _context2 = type;
+                void 0 !== _context2._context &&
+                  (_context2 = _context2._context);
+                renderContextConsumer(request, task, keyPath, _context2, props);
+              }
               return;
             case REACT_CONSUMER_TYPE:
               if (enableRenderableContext) {
@@ -5489,23 +5613,31 @@ __DEV__ &&
                 return;
               }
             case REACT_LAZY_TYPE:
-              type = callLazyInitInDEV(type);
-              contextKey = resolveDefaultPropsOnNonClassComponent(type, props);
-              renderElement(request, task, keyPath, type, contextKey, ref);
+              var Component = callLazyInitInDEV(type);
+              var resolvedProps$jscomp$1 =
+                resolveDefaultPropsOnNonClassComponent(Component, props);
+              renderElement(
+                request,
+                task,
+                keyPath,
+                Component,
+                resolvedProps$jscomp$1,
+                ref
+              );
               return;
           }
-        request = "";
+        var info = "";
         if (
           void 0 === type ||
           ("object" === typeof type &&
             null !== type &&
             0 === Object.keys(type).length)
         )
-          request +=
+          info +=
             " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.";
         throw Error(
           "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: " +
-            ((null == type ? type : typeof type) + "." + request)
+            ((null == type ? type : typeof type) + "." + info)
         );
       }
     }
@@ -8489,6 +8621,8 @@ __DEV__ &&
     var didWarnAboutDirectlyAssigningPropsToState = new Set();
     var didWarnAboutUndefinedDerivedState = new Set();
     var didWarnAboutContextTypeAndContextTypes = new Set();
+    var didWarnAboutContextTypes$1 = new Set();
+    var didWarnAboutChildContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
     var classComponentUpdater = {
@@ -8685,6 +8819,7 @@ __DEV__ &&
       POSTPONED = 5,
       currentRequest = null,
       didWarnAboutBadClass = {},
+      didWarnAboutContextTypes = {},
       didWarnAboutContextTypeOnFunctionComponent = {},
       didWarnAboutGetDerivedStateOnFunctionComponent = {},
       didWarnAboutReassigningProps = !1,
@@ -8707,5 +8842,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-3b2e5f27c5-20240710";
+    exports.version = "19.0.0-www-classic-378b305958-20240710";
   })();

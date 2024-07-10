@@ -8133,10 +8133,13 @@ __DEV__ &&
       null === current &&
         (validateFunctionComponentInDev(workInProgress, workInProgress.type),
         Component.contextTypes &&
-          error$jscomp$0(
-            "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with React.useContext() instead.",
-            getComponentNameFromType(Component) || "Unknown"
-          ));
+          ((componentName = getComponentNameFromType(Component) || "Unknown"),
+          didWarnAboutContextTypes[componentName] ||
+            ((didWarnAboutContextTypes[componentName] = !0),
+            error$jscomp$0(
+              "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
+              componentName
+            ))));
       prepareToReadContext(workInProgress, renderLanes);
       enableSchedulingProfiler && markComponentRenderStarted(workInProgress);
       Component = renderWithHooks(
@@ -8357,14 +8360,14 @@ __DEV__ &&
           !didWarnAboutChildContextTypes.has(Component) &&
           (didWarnAboutChildContextTypes.add(Component),
           error$jscomp$0(
-            "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead.",
+            "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
             state
           ));
         Component.contextTypes &&
-          !didWarnAboutContextTypes.has(Component) &&
-          (didWarnAboutContextTypes.add(Component),
+          !didWarnAboutContextTypes$1.has(Component) &&
+          (didWarnAboutContextTypes$1.add(Component),
           error$jscomp$0(
-            "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with static contextType instead.",
+            "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)",
             state
           ));
         "function" === typeof _instance.componentShouldUpdate &&
@@ -25494,7 +25497,7 @@ __DEV__ &&
     var didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
     var didWarnAboutDirectlyAssigningPropsToState = new Set();
     var didWarnAboutUndefinedDerivedState = new Set();
-    var didWarnAboutContextTypes = new Set();
+    var didWarnAboutContextTypes$1 = new Set();
     var didWarnAboutChildContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
@@ -25626,6 +25629,7 @@ __DEV__ &&
       didReceiveUpdate = !1;
     var didWarnAboutBadClass = {};
     var didWarnAboutContextTypeOnFunctionComponent = {};
+    var didWarnAboutContextTypes = {};
     var didWarnAboutGetDerivedStateOnFunctionComponent = {};
     var didWarnAboutReassigningProps = !1;
     var didWarnAboutRevealOrder = {};
@@ -26587,11 +26591,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-3b2e5f27c5-20240710" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-378b305958-20240710" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-3b2e5f27c5-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-378b305958-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26656,12 +26660,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-3b2e5f27c5-20240710"
+          reconcilerVersion: "19.0.0-www-modern-378b305958-20240710"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-3b2e5f27c5-20240710",
+        version: "19.0.0-www-modern-378b305958-20240710",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27257,7 +27261,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-3b2e5f27c5-20240710";
+    exports.version = "19.0.0-www-modern-378b305958-20240710";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
