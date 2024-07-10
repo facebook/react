@@ -46,27 +46,29 @@ export function defaultOnUncaughtError(
       'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
       'Visit https://react.dev/link/error-boundaries to learn more about error boundaries.';
 
-    if (enableOwnerStacks) {
-      console.warn(
-        '%s\n\n%s\n',
-        componentNameMessage,
-        errorBoundaryMessage,
-        // We let our console.error wrapper add the component stack to the end.
-      );
-    } else {
+    const prevGetCurrentStack = ReactSharedInternals.getCurrentStack;
+    if (!enableOwnerStacks) {
       // The current Fiber is disconnected at this point which means that console printing
       // cannot add a component stack since it terminates at the deletion node. This is not
       // a problem for owner stacks which are not disconnected but for the parent component
       // stacks we need to use the snapshot we've previously extracted.
       const componentStack =
         errorInfo.componentStack != null ? errorInfo.componentStack : '';
-      // Don't transform to our wrapper
-      console['warn'](
-        '%s\n\n%s\n%s',
+      ReactSharedInternals.getCurrentStack = function () {
+        return componentStack;
+      };
+    }
+    try {
+      console.warn(
+        '%s\n\n%s\n',
         componentNameMessage,
         errorBoundaryMessage,
-        componentStack,
+        // We let our console.error wrapper add the component stack to the end.
       );
+    } finally {
+      if (!enableOwnerStacks) {
+        ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
+      }
     }
   }
 }
