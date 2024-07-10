@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard }})
+    name: yarn test ${{ matrix.params }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -33,12 +33,6 @@ jobs:
           # TODO: Test more persistent configurations?
           - "-r=stable --env=development --persistent"
           - "-r=experimental --env=development --persistent"
-        shard:
-          - 1/5
-          - 2/5
-          - 3/5
-          - 4/5
-          - 5/5
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -54,4 +48,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test ${{ matrix.params }} --ci=github --shard=${{ matrix.shard }}
+      - run: yarn test ${{ matrix.params }} --ci=github
