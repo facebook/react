@@ -1851,6 +1851,10 @@ function serializeSymbolReference(name: string): string {
   return '$S' + name;
 }
 
+function serializeLimitedObject(): string {
+  return '$Y';
+}
+
 function serializeNumber(number: number): string | number {
   if (Number.isFinite(number)) {
     if (number === 0 && 1 / number === -Infinity) {
@@ -3181,10 +3185,10 @@ function renderConsoleValue(
       }
     }
 
-    if (counter.objectCount > 20) {
+    if (counter.objectCount > 500) {
       // We've reached our max number of objects to serialize across the wire so we serialize this
-      // object but no properties inside of it, as a place holder.
-      return Array.isArray(value) ? [] : {};
+      // as a marker so that the client can error when this is accessed by the console.
+      return serializeLimitedObject();
     }
 
     counter.objectCount++;

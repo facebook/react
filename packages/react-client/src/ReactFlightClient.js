@@ -1231,6 +1231,29 @@ function parseModelString(
         }
         // Fallthrough
       }
+      case 'Y': {
+        if (__DEV__) {
+          // In DEV mode we encode omitted objects in logs as a getter that throws
+          // so that when you try to access it on the client, you know why that
+          // happened.
+          Object.defineProperty(parentObject, key, {
+            get: function () {
+              // We intentionally don't throw an error object here because it looks better
+              // without the stack in the console which isn't useful anyway.
+              // eslint-disable-next-line no-throw-literal
+              throw (
+                'This object has been omitted by React in the console log ' +
+                'to avoid sending too much data from the server. Try logging smaller ' +
+                'or more specific objects.'
+              );
+            },
+            enumerable: true,
+            configurable: false,
+          });
+          return null;
+        }
+        // Fallthrough
+      }
       default: {
         // We assume that anything else is a reference ID.
         const ref = value.slice(1);
