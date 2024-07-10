@@ -371,11 +371,17 @@ describe('ReactDOMServer', () => {
         text: PropTypes.string,
       };
 
-      const markup = ReactDOMServer.renderToStaticMarkup(
-        <ContextProvider>
-          <Component />
-        </ContextProvider>,
-      );
+      let markup;
+      expect(() => {
+        markup = ReactDOMServer.renderToStaticMarkup(
+          <ContextProvider>
+            <Component />
+          </ContextProvider>,
+        );
+      }).toErrorDev([
+        'ContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      ]);
       expect(markup).toContain('hello, world');
     });
 

@@ -849,6 +849,9 @@ describe('ReactLegacyErrorBoundaries', () => {
       </ErrorBoundary>,
       container,
     );
+    assertConsoleErrorDev([
+      'BrokenComponentWillMountWithContext uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+    ]);
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 

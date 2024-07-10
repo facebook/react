@@ -518,7 +518,10 @@ describe('ReactTypeScriptClass', function() {
 
   if (!ReactFeatureFlags.disableLegacyContext) {
     it('renders based on context in the constructor', function() {
-      test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo');
+      expect(() => test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo')).toErrorDev([
+        'ProvideChildContextTypes uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'StateBasedOnContext uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.'
+      ]);
     });
   }
 
@@ -687,8 +690,11 @@ describe('ReactTypeScriptClass', function() {
   });
 
   if (!ReactFeatureFlags.disableLegacyContext) {
-    it('supports this.context passed via getChildContext', function() {
-      test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
+    it('supports this.context passed via getChildContext', () => {
+      expect(() => test(React.createElement(ProvideContext), 'DIV', 'bar-through-context')).toErrorDev([
+        'ProvideContext uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'ReadContext uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+]      );
     });
   }
 
