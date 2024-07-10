@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6c132ca6fd0ae1732737dbd66e8dd708>>
+ * @generated SignedSource<<35a7c9da1ee08d15989d4cb7bad3cdac>>
  */
 
 "use strict";
@@ -1129,6 +1129,28 @@ __DEV__ &&
     function removeChild(parentInstance, child) {
       child = parentInstance.children.indexOf(child);
       parentInstance.children.splice(child, 1);
+    }
+    function printToConsole(methodName, args, badgeName) {
+      var offset = 0;
+      switch (methodName) {
+        case "dir":
+        case "dirxml":
+        case "groupEnd":
+        case "table":
+          console[methodName].apply(console, args);
+          return;
+        case "assert":
+          offset = 1;
+      }
+      args = args.slice(0);
+      "string" === typeof args[offset]
+        ? args.splice(offset, 1, "[%s] " + args[offset], " " + badgeName + " ")
+        : args.splice(offset, 0, "[%s] ", " " + badgeName + " ");
+      "error" === methodName
+        ? error$jscomp$0.apply(console, args)
+        : "warn" === methodName
+        ? warn.apply(console, args)
+        : console[methodName].apply(console, args);
     }
     function createCursor(defaultValue) {
       return { current: defaultValue };
@@ -5457,16 +5479,41 @@ __DEV__ &&
       );
     }
     function defaultOnCaughtError(error$1, errorInfo) {
-      console.error(
-        "%o\n\n%s\n\n%s\n%s",
-        error$1,
-        componentName
+      var componentNameMessage = componentName
           ? "The above error occurred in the <" + componentName + "> component."
           : "The above error occurred in one of your React components.",
-        "React will try to recreate this component tree from scratch using the error boundary you provided, " +
+        recreateMessage =
+          "React will try to recreate this component tree from scratch using the error boundary you provided, " +
           ((errorBoundaryName || "Anonymous") + "."),
-        null != errorInfo.componentStack ? errorInfo.componentStack : ""
-      );
+        prevGetCurrentStack = ReactSharedInternals.getCurrentStack,
+        componentStack =
+          null != errorInfo.componentStack ? errorInfo.componentStack : "";
+      ReactSharedInternals.getCurrentStack = function () {
+        return componentStack;
+      };
+      try {
+        "object" === typeof error$1 &&
+        null !== error$1 &&
+        "string" === typeof error$1.environmentName
+          ? printToConsole(
+              "error",
+              [
+                "%o\n\n%s\n\n%s\n",
+                error$1,
+                componentNameMessage,
+                recreateMessage
+              ],
+              error$1.environmentName
+            )
+          : error$jscomp$0(
+              "%o\n\n%s\n\n%s\n",
+              error$1,
+              componentNameMessage,
+              recreateMessage
+            );
+      } finally {
+        ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
+      }
     }
     function defaultOnRecoverableError(error) {
       reportGlobalError(error);
@@ -15075,14 +15122,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ba95cf4b8f-20240709"
+        reconcilerVersion: "19.0.0-native-fb-14fdd0e21c-20240710"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-ba95cf4b8f-20240709",
+      version: "19.0.0-native-fb-14fdd0e21c-20240710",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

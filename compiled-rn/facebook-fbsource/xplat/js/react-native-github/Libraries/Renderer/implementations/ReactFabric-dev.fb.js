@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6df2be3471437a49ecb914b33f80ed32>>
+ * @generated SignedSource<<d234c1684dfcb8171aab4cb5a4897418>>
  */
 
 "use strict";
@@ -2034,6 +2034,28 @@ __DEV__ &&
         childFiber = childFiber.return;
       }
       return !1;
+    }
+    function printToConsole(methodName, args, badgeName) {
+      var offset = 0;
+      switch (methodName) {
+        case "dir":
+        case "dirxml":
+        case "groupEnd":
+        case "table":
+          console[methodName].apply(console, args);
+          return;
+        case "assert":
+          offset = 1;
+      }
+      args = args.slice(0);
+      "string" === typeof args[offset]
+        ? args.splice(offset, 1, "[%s] " + args[offset], " " + badgeName + " ")
+        : args.splice(offset, 0, "[%s] ", " " + badgeName + " ");
+      "error" === methodName
+        ? error$jscomp$0.apply(console, args)
+        : "warn" === methodName
+        ? warn.apply(console, args)
+        : console[methodName].apply(console, args);
     }
     function createCursor(defaultValue) {
       return { current: defaultValue };
@@ -6448,6 +6470,43 @@ __DEV__ &&
         return baseProps;
       }
       return baseProps;
+    }
+    function defaultOnCaughtError(error$1, errorInfo) {
+      var componentNameMessage = componentName
+          ? "The above error occurred in the <" + componentName + "> component."
+          : "The above error occurred in one of your React components.",
+        recreateMessage =
+          "React will try to recreate this component tree from scratch using the error boundary you provided, " +
+          ((errorBoundaryName || "Anonymous") + "."),
+        prevGetCurrentStack = ReactSharedInternals.getCurrentStack,
+        componentStack =
+          null != errorInfo.componentStack ? errorInfo.componentStack : "";
+      ReactSharedInternals.getCurrentStack = function () {
+        return componentStack;
+      };
+      try {
+        "object" === typeof error$1 &&
+        null !== error$1 &&
+        "string" === typeof error$1.environmentName
+          ? printToConsole(
+              "error",
+              [
+                "%o\n\n%s\n\n%s\n",
+                error$1,
+                componentNameMessage,
+                recreateMessage
+              ],
+              error$1.environmentName
+            )
+          : error$jscomp$0(
+              "%o\n\n%s\n\n%s\n",
+              error$1,
+              componentNameMessage,
+              recreateMessage
+            );
+      } finally {
+        ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
+      }
     }
     function defaultOnRecoverableError(error) {
       reportGlobalError(error);
@@ -14095,19 +14154,7 @@ __DEV__ &&
           error: error,
           componentStack:
             null != errorInfo.componentStack ? errorInfo.componentStack : ""
-        }) &&
-        console.error(
-          "%o\n\n%s\n\n%s\n%s",
-          error,
-          componentName
-            ? "The above error occurred in the <" +
-                componentName +
-                "> component."
-            : "The above error occurred in one of your React components.",
-          "React will try to recreate this component tree from scratch using the error boundary you provided, " +
-            ((errorBoundaryName || "Anonymous") + "."),
-          null != errorInfo.componentStack ? errorInfo.componentStack : ""
-        );
+        }) && defaultOnCaughtError(error, errorInfo);
     }
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
@@ -16682,12 +16729,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ba95cf4b8f-20240709"
+        reconcilerVersion: "19.0.0-native-fb-14fdd0e21c-20240710"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-ba95cf4b8f-20240709",
+      version: "19.0.0-native-fb-14fdd0e21c-20240710",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
