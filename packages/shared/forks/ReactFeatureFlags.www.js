@@ -78,6 +78,8 @@ export const enableTaint = false;
 
 export const enablePostpone = false;
 
+export const enableContextProfiling = true;
+
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
 export const disableCommentsAsDOMContainers = false;

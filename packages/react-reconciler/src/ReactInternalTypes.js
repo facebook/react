@@ -61,16 +61,18 @@ export type HookType =
   | 'useFormState'
   | 'useActionState';
 
-export type ContextDependency<T> = {
-  context: ReactContext<T>,
-  next: ContextDependency<mixed> | null,
-  memoizedValue: T,
+export type ContextDependency<C, S> = {
+  context: ReactContext<C>,
+  next: ContextDependency<mixed, mixed> | null,
+  memoizedValue: C,
+  compare: (C => S) | null,
+  lastComparedValue: S | null,
   ...
 };
 
 export type Dependencies = {
   lanes: Lanes,
-  firstContext: ContextDependency<mixed> | null,
+  firstContext: ContextDependency<mixed, mixed> | null,
   ...
 };
 
@@ -384,6 +386,10 @@ export type Dispatcher = {
     initialArg: I,
     init?: (I) => S,
   ): [S, Dispatch<A>],
+  unstable_useContextWithBailout?: <T>(
+    context: ReactContext<T>,
+    compare: void | (T => mixed),
+  ) => T,
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(

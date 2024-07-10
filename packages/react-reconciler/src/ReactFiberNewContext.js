@@ -51,6 +51,8 @@ import {
   getHostTransitionProvider,
   HostTransitionContext,
 } from './ReactFiberHostContext';
+import isArray from '../../shared/isArray';
+import {enableContextProfiling} from '../../shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -70,7 +72,7 @@ if (__DEV__) {
 }
 
 let currentlyRenderingFiber: Fiber | null = null;
-let lastContextDependency: ContextDependency<mixed> | null = null;
+let lastContextDependency: ContextDependency<mixed, mixed> | null = null;
 let lastFullyObservedContext: ReactContext<any> | null = null;
 
 let isDisallowedContextReadInDEV: boolean = false;
@@ -400,8 +402,22 @@ function propagateContextChanges<T>(
         findContext: for (let i = 0; i < contexts.length; i++) {
           const context: ReactContext<T> = contexts[i];
           // Check if the context matches.
-          // TODO: Compare selected values to bail out early.
           if (dependency.context === context) {
+            const compare = dependency.compare;
+            if (enableContextProfiling && compare != null) {
+              const newValue = isPrimaryRenderer
+                ? dependency.context._currentValue
+                : dependency.context._currentValue2;
+              if (
+                !checkIfComparedContextValuesChanged(
+                  dependency.lastComparedValue,
+                  compare(newValue),
+                )
+              ) {
+                // Compared value hasn't changed. Bail out early.
+                continue findContext;
+              }
+            }
             // Match! Schedule an update on this fiber.
 
             // In the lazy implementation, don't mark a dirty flag on the
@@ -641,6 +657,28 @@ function propagateParentContextChanges(
   workInProgress.flags |= DidPropagateContext;
 }
 
+function checkIfComparedContextValuesChanged(
+  oldComparedValue: mixed,
+  newComparedValue: mixed,
+): boolean {
+  if (isArray(oldComparedValue) && isArray(newComparedValue)) {
+    for (
+      let i = 0;
+      i < oldComparedValue.length && i < newComparedValue.length;
+      i++
+    ) {
+      if (!is(newComparedValue[i], oldComparedValue[i])) {
+        return true;
+      }
+    }
+  } else {
+    if (!is(newComparedValue, oldComparedValue)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function checkIfContextChanged(
   currentDependencies: Dependencies,
 ): boolean {
@@ -659,8 +697,20 @@ export function checkIfContextChanged(
       ? context._currentValue
       : context._currentValue2;
     const oldValue = dependency.memoizedValue;
-    if (!is(newValue, oldValue)) {
-      return true;
+    const compare = dependency.compare;
+    if (enableContextProfiling && compare != null) {
+      if (
+        checkIfComparedContextValuesChanged(
+          dependency.lastComparedValue,
+          compare(newValue),
+        )
+      ) {
+        return true;
+      }
+    } else {
+      if (!is(newValue, oldValue)) {
+        return true;
+      }
     }
     dependency = dependency.next;
   }
@@ -694,6 +744,17 @@ export function prepareToReadContext(
   }
 }
 
+export function readContextAndCompare<C>(
+  context: ReactContext<C>,
+  compare: void | (C => mixed),
+): C {
+  if (!enableLazyContextPropagation) {
+    return readContext(context);
+  }
+
+  return readContextForConsumer(currentlyRenderingFiber, context, compare);
+}
+
 export function readContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
@@ -721,10 +782,13 @@ export function readContextDuringReconciliation<T>(
   return readContextForConsumer(consumer, context);
 }
 
-function readContextForConsumer<T>(
+type ContextCompare<C, S> = C => S;
+
+function readContextForConsumer<C, S>(
   consumer: Fiber | null,
-  context: ReactContext<T>,
-): T {
+  context: ReactContext<C>,
+  compare?: void | (C => S),
+): C {
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;
@@ -736,6 +800,8 @@ function readContextForConsumer<T>(
       context: ((context: any): ReactContext<mixed>),
       memoizedValue: value,
       next: null,
+      compare: ((compare: any): ContextCompare<mixed, mixed> | null),
+      lastComparedValue: compare != null ? compare(value) : null,
     };
 
     if (lastContextDependency === null) {

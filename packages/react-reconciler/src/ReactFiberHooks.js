@@ -47,6 +47,7 @@ import {
   enableUseDeferredValueInitialArg,
   disableLegacyMode,
   enableNoCloningMemoCache,
+  enableContextProfiling,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -81,7 +82,11 @@ import {
   ContinuousEventPriority,
   higherEventPriority,
 } from './ReactEventPriorities';
-import {readContext, checkIfContextChanged} from './ReactFiberNewContext';
+import {
+  readContext,
+  readContextAndCompare,
+  checkIfContextChanged,
+} from './ReactFiberNewContext';
 import {HostRoot, CacheComponent, HostComponent} from './ReactWorkTags';
 import {
   LayoutStatic as LayoutStaticEffect,
@@ -1051,6 +1056,13 @@ function updateWorkInProgressHook(): Hook {
     }
   }
   return workInProgressHook;
+}
+
+function unstable_useContextWithBailout<T>(
+  context: ReactContext<T>,
+  compare: void | (T => mixed),
+): T {
+  return readContextAndCompare(context, compare);
 }
 
 // NOTE: defining two versions of this function to avoid size impact when this feature is disabled.
@@ -3689,6 +3701,10 @@ if (enableAsyncActions) {
 if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
 }
+if (enableContextProfiling) {
+  (ContextOnlyDispatcher: Dispatcher).unstable_useContextWithBailout =
+    throwInvalidHookError;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -3727,6 +3743,10 @@ if (enableAsyncActions) {
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
+}
+if (enableContextProfiling) {
+  (HooksDispatcherOnMount: Dispatcher).unstable_useContextWithBailout =
+    unstable_useContextWithBailout;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -3767,6 +3787,10 @@ if (enableAsyncActions) {
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
 }
+if (enableContextProfiling) {
+  (HooksDispatcherOnUpdate: Dispatcher).unstable_useContextWithBailout =
+    unstable_useContextWithBailout;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -3805,6 +3829,10 @@ if (enableAsyncActions) {
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
+}
+if (enableContextProfiling) {
+  (HooksDispatcherOnRerender: Dispatcher).unstable_useContextWithBailout =
+    unstable_useContextWithBailout;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -4019,6 +4047,14 @@ if (__DEV__) {
         return mountOptimistic(passthrough, reducer);
       };
   }
+  if (enableContextProfiling) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
+      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+        currentHookNameInDev = 'useContext';
+        mountHookTypesDev();
+        return unstable_useContextWithBailout(context, compare);
+      };
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4198,6 +4234,14 @@ if (__DEV__) {
         currentHookNameInDev = 'useOptimistic';
         updateHookTypesDev();
         return mountOptimistic(passthrough, reducer);
+      };
+  }
+  if (enableContextProfiling) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).unstable_useContextWithBailout =
+      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+        currentHookNameInDev = 'useContext';
+        updateHookTypesDev();
+        return unstable_useContextWithBailout(context, compare);
       };
   }
 
@@ -4380,6 +4424,14 @@ if (__DEV__) {
         return updateOptimistic(passthrough, reducer);
       };
   }
+  if (enableContextProfiling) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
+      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+        currentHookNameInDev = 'useContext';
+        updateHookTypesDev();
+        return unstable_useContextWithBailout(context, compare);
+      };
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4558,6 +4610,14 @@ if (__DEV__) {
         currentHookNameInDev = 'useOptimistic';
         updateHookTypesDev();
         return rerenderOptimistic(passthrough, reducer);
+      };
+  }
+  if (enableContextProfiling) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
+      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+        currentHookNameInDev = 'useContext';
+        updateHookTypesDev();
+        return unstable_useContextWithBailout(context, compare);
       };
   }
 
@@ -4766,6 +4826,15 @@ if (__DEV__) {
         return mountOptimistic(passthrough, reducer);
       };
   }
+  if (enableContextProfiling) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
+      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+        currentHookNameInDev = 'useContext';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return unstable_useContextWithBailout(context, compare);
+      };
+  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -4972,6 +5041,15 @@ if (__DEV__) {
         return updateOptimistic(passthrough, reducer);
       };
   }
+  if (enableContextProfiling) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
+      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+        currentHookNameInDev = 'useContext';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return unstable_useContextWithBailout(context, compare);
+      };
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(context: ReactContext<T>): T {
@@ -5176,6 +5254,15 @@ if (__DEV__) {
         warnInvalidHookAccess();
         updateHookTypesDev();
         return rerenderOptimistic(passthrough, reducer);
+      };
+  }
+  if (enableContextProfiling) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
+      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+        currentHookNameInDev = 'useContext';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return unstable_useContextWithBailout(context, compare);
       };
   }
 }

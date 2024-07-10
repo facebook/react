@@ -155,7 +155,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
-let currentContextDependency: null | ContextDependency<mixed> = null;
+let currentContextDependency: null | ContextDependency<mixed, mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;
