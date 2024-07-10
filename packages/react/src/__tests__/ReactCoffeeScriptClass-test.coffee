@@ -254,7 +254,12 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           React.createElement Foo
 
-      test React.createElement(Outer), 'SPAN', 'foo'
+      expect(->
+        test React.createElement(Outer), 'SPAN', 'foo'
+      ).toErrorDev([
+        'Outer uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Foo uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      ])
 
   it 'renders only once when setting state in componentWillMount', ->
     renderCount = 0
@@ -537,7 +542,14 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           React.createElement Bar
 
-      test React.createElement(Foo), 'DIV', 'bar-through-context'
+      expect(->
+        test React.createElement(Foo), 'DIV', 'bar-through-context'
+      ).toErrorDev(
+        [
+          'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+          'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+        ],
+      )
 
   if !featureFlags.disableStringRefs
     it 'supports string refs', ->
