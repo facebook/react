@@ -124,7 +124,7 @@ export const disableStringRefs = false;
 export const disableLegacyMode: boolean =
   __EXPERIMENTAL__ || dynamicFeatureFlags.disableLegacyMode;
 
-export const enableOwnerStacks = false;
+export const enableOwnerStacks = true;
 export const enableShallowPropDiffing = false;
 
 // Flow magic to verify the exports of this file match the original version.
