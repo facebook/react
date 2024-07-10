@@ -2193,13 +2193,18 @@ describe('ReactDOMComponent', () => {
             </div>,
           );
         });
-      }).toErrorDev([
-        'In HTML, <tr> cannot be a child of ' +
-          '<div>.\n' +
-          'This will cause a hydration error.' +
+      }).toErrorDev(
+        'In HTML, <tr> cannot be a child of <div>.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '> <div>\n' +
+          '>   <tr>\n' +
+          '    ...\n' +
           '\n    in tr (at **)' +
-          '\n    in div (at **)',
-      ]);
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '\n    in div (at **)'),
+      );
     });
 
     it('warns on invalid nesting at root', async () => {
@@ -2215,12 +2220,13 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        'In HTML, <p> cannot be a descendant ' +
-          'of <p>.\n' +
+        'In HTML, <p> cannot be a descendant of <p>.\n' +
           'This will cause a hydration error.' +
           // There is no outer `p` here because root container is not part of the stack.
           '\n    in p (at **)' +
-          '\n    in span (at **)',
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '\n    in span (at **)'),
       );
     });
 
@@ -2248,29 +2254,90 @@ describe('ReactDOMComponent', () => {
         await act(() => {
           root.render(<Foo />);
         });
-      }).toErrorDev([
-        'In HTML, <tr> cannot be a child of ' +
-          '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
-          'by the browser.\n' +
-          'This will cause a hydration error.' +
-          '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-        'In HTML, text nodes cannot be a ' +
-          'child of <tr>.\n' +
-          'This will cause a hydration error.' +
-          '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-        'In HTML, whitespace text nodes cannot ' +
-          "be a child of <table>. Make sure you don't have any extra " +
-          'whitespace between tags on each line of your source code.\n' +
-          'This will cause a hydration error.' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-      ]);
+      }).toErrorDev(
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              'In HTML, <tr> cannot be a child of ' +
+                '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
+                'by the browser.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '>   <table>\n' +
+                '      <Row>\n' +
+                '>       <tr>\n' +
+                '      ...\n' +
+                '\n    in tr (at **)' +
+                '\n    in Row (at **)',
+              '<table> cannot contain a nested <tr>.\nSee this log for the ancestor stack trace.' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+              'In HTML, text nodes cannot be a ' +
+                'child of <tr>.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '    <table>\n' +
+                '      <Row>\n' +
+                '        <tr>\n' +
+                '>         x\n' +
+                '      ...\n' +
+                '\n    in tr (at **)' +
+                '\n    in Row (at **)',
+              'In HTML, whitespace text nodes cannot ' +
+                "be a child of <table>. Make sure you don't have any extra " +
+                'whitespace between tags on each line of your source code.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '>   <table>\n' +
+                '      <Row>\n' +
+                '>     {" "}\n' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+            ]
+          : [
+              'In HTML, <tr> cannot be a child of ' +
+                '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
+                'by the browser.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '>   <table>\n' +
+                '      <Row>\n' +
+                '>       <tr>\n' +
+                '      ...\n' +
+                '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+              'In HTML, text nodes cannot be a ' +
+                'child of <tr>.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '    <table>\n' +
+                '      <Row>\n' +
+                '        <tr>\n' +
+                '>         x\n' +
+                '      ...\n' +
+                '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+              'In HTML, whitespace text nodes cannot ' +
+                "be a child of <table>. Make sure you don't have any extra " +
+                'whitespace between tags on each line of your source code.\n' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '>   <table>\n' +
+                '      <Row>\n' +
+                '>     {" "}\n' +
+                '\n    in table (at **)' +
+                '\n    in Foo (at **)',
+            ],
+      );
     });
 
     it('warns nicely for updating table rows to use text', async () => {
@@ -2297,7 +2364,11 @@ describe('ReactDOMComponent', () => {
         'In HTML, whitespace text nodes cannot ' +
           "be a child of <table>. Make sure you don't have any extra " +
           'whitespace between tags on each line of your source code.\n' +
-          'This will cause a hydration error.' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '    <table>\n' +
+          '>     {" "}\n' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
       ]);
@@ -2325,12 +2396,21 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev([
         'In HTML, text nodes cannot be a ' +
           'child of <tr>.\n' +
-          'This will cause a hydration error.' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '    <table>\n' +
+          '      <tbody>\n' +
+          '        <Row>\n' +
+          '          <tr>\n' +
+          '>           text\n' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
-          '\n    in tbody (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
+          (gate(flags => flags.enableOwnerStacks)
+            ? ''
+            : '\n    in tbody (at **)' +
+              '\n    in table (at **)' +
+              '\n    in Foo (at **)'),
       ]);
     });
 
@@ -2359,11 +2439,21 @@ describe('ReactDOMComponent', () => {
           root.render(<App1 />);
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Viz1 (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in Viz1 (at **)',
+              '\n    in table (at **)' + '\n    in Viz1 (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Viz1 (at **)',
+            ],
       );
     });
 
@@ -2405,13 +2495,26 @@ describe('ReactDOMComponent', () => {
           root.render(<App2 />);
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)' +
-          '\n    in Viz2 (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in Viz2 (at **)',
+              '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)' +
+                '\n    in Viz2 (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)' +
+                '\n    in Viz2 (at **)',
+            ],
       );
     });
 
@@ -2446,12 +2549,23 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)',
+              '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)',
+            ],
       );
     });
 
@@ -2475,10 +2589,19 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)',
+              '\n    in table (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in Row (at **)' +
+                '\n    in FancyRow (at **)' +
+                '\n    in table (at **)',
+            ],
       );
     });
 
@@ -2506,10 +2629,19 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        '\n    in tr (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in tr (at **)',
+              '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)',
+            ]
+          : [
+              '\n    in tr (at **)' +
+                '\n    in table (at **)' +
+                '\n    in Table (at **)' +
+                '\n    in FancyTable (at **)',
+            ],
       );
 
       class Link extends React.Component {
@@ -2531,11 +2663,18 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        '\n    in a (at **)' +
-          '\n    in Link (at **)' +
-          '\n    in div (at **)' +
-          '\n    in a (at **)' +
-          '\n    in Link (at **)',
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              '\n    in a (at **)' + '\n    in Link (at **)',
+              '\n    in a (at **)' + '\n    in Link (at **)',
+            ]
+          : [
+              '\n    in a (at **)' +
+                '\n    in Link (at **)' +
+                '\n    in div (at **)' +
+                '\n    in a (at **)' +
+                '\n    in Link (at **)',
+            ],
       );
     });
 
