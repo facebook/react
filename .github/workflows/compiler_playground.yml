@@ -1,4 +1,4 @@
-name: Compiler Playground
+name: (Compiler) Playground
 
 on:
   push:

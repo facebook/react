@@ -3506,7 +3506,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableLegacyCache
-  // @gate forceConcurrentByDefaultForTesting
   it('regression: ping at high priority causes update to be dropped', async () => {
     const {useState, useTransition} = React;
 
@@ -3573,10 +3572,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
 
       await waitFor([
-        'B',
         'Suspend! [A1]',
         'Loading...',
-
+        'B',
         'Suspend! [A2]',
         'Loading...',
         'Suspend! [B2]',

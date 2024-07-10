@@ -925,28 +925,15 @@ describe('ReactTransition', () => {
       updateNormalPri();
     });
 
-    if (gate(flags => flags.enableUnifiedSyncLane)) {
-      assertLog([
-        'Normal pri: 0',
-        'Commit',
+    assertLog([
+      'Normal pri: 0',
+      'Commit',
 
-        // Normal pri update.
-        'Transition pri: 1',
-        'Normal pri: 1',
-        'Commit',
-      ]);
-    } else {
-      assertLog([
-        // Finish transition update.
-        'Normal pri: 0',
-        'Commit',
-
-        // Normal pri update.
-        'Transition pri: 1',
-        'Normal pri: 1',
-        'Commit',
-      ]);
-    }
+      // Normal pri update.
+      'Transition pri: 1',
+      'Normal pri: 1',
+      'Commit',
+    ]);
 
     expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
   });

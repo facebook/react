@@ -921,14 +921,26 @@ class Driver {
         });
       } else if (defaultBlock.instructions.length === 1) {
         const instr = defaultBlock.instructions[0]!;
-        let place: Place = instr.lvalue!;
+        let place: Place = instr.lvalue;
         let value: ReactiveValue = instr.value;
-        if (instr.value.kind === "StoreLocal") {
-          place = instr.value.lvalue.place;
+        if (
+          /*
+           * Value blocks generally end in a StoreLocal to assign the value of the
+           * expression for this branch. These StoreLocal instructions can be pruned,
+           * since we represent the value blocks as a compund value in ReactiveFunction
+           * (no phis). However, it's also possible to have a value block that ends in
+           * an AssignmentExpression, which we need to keep. So we only prune
+           * StoreLocal for temporaries — any named/promoted values must be used
+           * elsewhere and aren't safe to prune.
+           */
+          value.kind === "StoreLocal" &&
+          value.lvalue.place.identifier.name === null
+        ) {
+          place = value.lvalue.place;
           value = {
             kind: "LoadLocal",
-            place: instr.value.value,
-            loc: instr.value.value.loc,
+            place: value.value,
+            loc: value.value.loc,
           };
         }
         return {
@@ -939,14 +951,26 @@ class Driver {
         };
       } else {
         const instr = defaultBlock.instructions.at(-1)!;
-        let place: Place = instr.lvalue!;
+        let place: Place = instr.lvalue;
         let value: ReactiveValue = instr.value;
-        if (instr.value.kind === "StoreLocal") {
-          place = instr.value.lvalue.place;
+        if (
+          /*
+           * Value blocks generally end in a StoreLocal to assign the value of the
+           * expression for this branch. These StoreLocal instructions can be pruned,
+           * since we represent the value blocks as a compund value in ReactiveFunction
+           * (no phis). However, it's also possible to have a value block that ends in
+           * an AssignmentExpression, which we need to keep. So we only prune
+           * StoreLocal for temporaries — any named/promoted values must be used
+           * elsewhere and aren't safe to prune.
+           */
+          value.kind === "StoreLocal" &&
+          value.lvalue.place.identifier.name === null
+        ) {
+          place = value.lvalue.place;
           value = {
             kind: "LoadLocal",
-            place: instr.value.value,
-            loc: instr.value.value.loc,
+            place: value.value,
+            loc: value.value.loc,
           };
         }
         const sequence: ReactiveSequenceValue = {

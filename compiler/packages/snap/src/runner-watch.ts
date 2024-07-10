@@ -27,7 +27,7 @@ export function watchSrc(
   const host = ts.createWatchCompilerHost(
     configPath,
     ts.convertCompilerOptionsFromJson(
-      { module: "commonjs", outDir: "dist" },
+      { module: "commonjs", outDir: "dist", sourceMap: true },
       "."
     ).options,
     ts.sys,

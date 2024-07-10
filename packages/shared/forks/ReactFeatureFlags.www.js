@@ -18,7 +18,6 @@ export const {
   enableTrustedTypesIntegration,
   enableDebugTracing,
   enableLazyContextPropagation,
-  enableUnifiedSyncLane,
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,
@@ -36,6 +35,7 @@ export const {
   enableNoCloningMemoCache,
   enableAddPropertiesFastPath,
   enableFastJSX,
+  renameElementSymbol,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -65,8 +65,6 @@ export const enableSchedulingProfiler: boolean =
 
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
-
-export const renameElementSymbol = false;
 
 export const enableCache = true;
 export const enableLegacyCache = true;

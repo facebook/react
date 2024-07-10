@@ -1,4 +1,4 @@
-name: React Compiler (Rust)
+name: (Compiler) Rust
 
 on:
   push:

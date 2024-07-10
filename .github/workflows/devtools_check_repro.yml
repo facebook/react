@@ -1,4 +1,4 @@
-name: DevTools Check for bug repro
+name: (DevTools) Check for bug repro
 on:
   issues:
     types: [opened, edited]

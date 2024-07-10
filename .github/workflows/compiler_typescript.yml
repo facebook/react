@@ -1,4 +1,4 @@
-name: React Compiler (TypeScript)
+name: (Compiler) TypeScript
 
 on:
   push:
