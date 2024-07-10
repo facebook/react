@@ -13,6 +13,7 @@ let PropTypes;
 let React;
 let ReactDOMClient;
 let act;
+let assertConsoleErrorDev;
 
 function FunctionComponent(props) {
   return <div>{props.name}</div>;
@@ -24,7 +25,7 @@ describe('ReactFunctionComponent', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   it('should render stateless component', async () => {
@@ -108,6 +109,11 @@ describe('ReactFunctionComponent', () => {
     await act(() => {
       root.render(<GrandParent test="test" />);
     });
+
+    assertConsoleErrorDev([
+      'GrandParent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
 
     expect(el.textContent).toBe('test');
 
@@ -472,6 +478,10 @@ describe('ReactFunctionComponent', () => {
     await act(() => {
       root.render(<Parent />);
     });
+    assertConsoleErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
     expect(el.textContent).toBe('en');
   });
 

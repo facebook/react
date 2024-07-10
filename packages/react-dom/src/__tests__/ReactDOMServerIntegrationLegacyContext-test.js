@@ -80,6 +80,7 @@ describe('ReactDOMServerIntegration', () => {
         <PurpleContext>
           <ClassChildWithContext />
         </PurpleContext>,
+        2,
       );
       expect(e.textContent).toBe('purple');
     });
@@ -94,6 +95,7 @@ describe('ReactDOMServerIntegration', () => {
         <PurpleContext>
           <FunctionChildWithContext />
         </PurpleContext>,
+        2,
       );
       expect(e.textContent).toBe('purple');
     });
@@ -110,6 +112,7 @@ describe('ReactDOMServerIntegration', () => {
         <PurpleContext>
           <ClassChildWithoutContext />
         </PurpleContext>,
+        1,
       );
       expect(e.textContent).toBe('');
     });
@@ -124,6 +127,7 @@ describe('ReactDOMServerIntegration', () => {
         <PurpleContext>
           <FunctionChildWithoutContext />
         </PurpleContext>,
+        1,
       );
       expect(e.textContent).toBe('');
     });
@@ -141,6 +145,7 @@ describe('ReactDOMServerIntegration', () => {
         <PurpleContext>
           <ClassChildWithWrongContext />
         </PurpleContext>,
+        2,
       );
       expect(e.textContent).toBe('');
     });
@@ -158,6 +163,7 @@ describe('ReactDOMServerIntegration', () => {
         <PurpleContext>
           <FunctionChildWithWrongContext />
         </PurpleContext>,
+        2,
       );
       expect(e.textContent).toBe('');
     });
@@ -174,6 +180,7 @@ describe('ReactDOMServerIntegration', () => {
         <PurpleContext>
           <Child />
         </PurpleContext>,
+        2,
       );
       expect(e.textContent).toBe('purple');
     });
@@ -190,6 +197,7 @@ describe('ReactDOMServerIntegration', () => {
             <Grandchild />
           </RedContext>
         </PurpleContext>,
+        2,
       );
       expect(e.textContent).toBe('red');
     });
@@ -228,7 +236,7 @@ describe('ReactDOMServerIntegration', () => {
         text2: PropTypes.string,
       };
 
-      const e = await render(<Parent />);
+      const e = await render(<Parent />, 3);
       expect(e.querySelector('#first').textContent).toBe('purple');
       expect(e.querySelector('#second').textContent).toBe('red');
     });
@@ -254,7 +262,7 @@ describe('ReactDOMServerIntegration', () => {
         };
         Child.contextTypes = {text: PropTypes.string};
 
-        const e = await render(<WillMountContext />);
+        const e = await render(<WillMountContext />, 2);
         expect(e.textContent).toBe('foo');
       },
     );
@@ -278,7 +286,8 @@ describe('ReactDOMServerIntegration', () => {
         }
         const e = await render(
           <ForgetfulParent />,
-          render === clientRenderOnBadMarkup ? 2 : 1,
+          // Some warning is not de-duped and logged again on the client retry render.
+          render === clientRenderOnBadMarkup ? 3 : 2,
         );
         expect(e.textContent).toBe('nope');
       },

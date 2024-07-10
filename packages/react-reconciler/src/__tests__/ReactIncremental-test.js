@@ -14,6 +14,8 @@ let React;
 let ReactNoop;
 let Scheduler;
 let PropTypes;
+
+let assertConsoleErrorDev;
 let waitForAll;
 let waitFor;
 let waitForThrow;
@@ -27,11 +29,13 @@ describe('ReactIncremental', () => {
     Scheduler = require('scheduler');
     PropTypes = require('prop-types');
 
-    const InternalTestUtils = require('internal-test-utils');
-    waitForAll = InternalTestUtils.waitForAll;
-    waitFor = InternalTestUtils.waitFor;
-    waitForThrow = InternalTestUtils.waitForThrow;
-    assertLog = InternalTestUtils.assertLog;
+    ({
+      assertConsoleErrorDev,
+      waitForAll,
+      waitFor,
+      waitForThrow,
+      assertLog,
+    } = require('internal-test-utils'));
   });
 
   // Note: This is based on a similar component we use in www. We can delete
@@ -1793,6 +1797,11 @@ describe('ReactIncremental', () => {
       'ShowLocale {"locale":"fr"}',
       'ShowBoth {"locale":"fr"}',
     ]);
+    assertConsoleErrorDev([
+      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowLocale uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'ShowBoth uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
 
     ReactNoop.render(
       <Intl locale="de">
@@ -1843,6 +1852,10 @@ describe('ReactIncremental', () => {
       'ShowBoth {"locale":"en","route":"/about"}',
       'ShowBoth {"locale":"en"}',
     ]);
+    assertConsoleErrorDev([
+      'Router uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowRoute uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
   });
 
   // @gate !disableLegacyContext
@@ -1875,6 +1888,10 @@ describe('ReactIncremental', () => {
       'Recurse {"n":2}',
       'Recurse {"n":1}',
       'Recurse {"n":0}',
+    ]);
+    assertConsoleErrorDev([
+      'Recurse uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Recurse uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
     ]);
   });
 
@@ -1924,6 +1941,10 @@ describe('ReactIncremental', () => {
       'Intl {}',
       'ShowLocale {"locale":"fr"}',
       'ShowLocale {"locale":"fr"}',
+    ]);
+    assertConsoleErrorDev([
+      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowLocale uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
     ]);
 
     await waitForAll([
@@ -2012,6 +2033,11 @@ describe('ReactIncremental', () => {
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
+    assertConsoleErrorDev([
+      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowLocaleClass uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'ShowLocaleFn uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
 
     statefulInst.setState({x: 1});
     await waitForAll([]);
@@ -2098,6 +2124,12 @@ describe('ReactIncremental', () => {
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
 
+    assertConsoleErrorDev([
+      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowLocaleClass uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'ShowLocaleFn uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
+
     statefulInst.setState({locale: 'gr'});
     await waitForAll([
       // Intl is below setState() so it might have been
@@ -2154,6 +2186,10 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Root />);
     await waitForAll([]);
 
+    assertConsoleErrorDev([
+      'Child uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+    ]);
+
     // Trigger an update in the middle of the tree
     instance.setState({});
     await waitForAll([]);
@@ -2199,7 +2235,9 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    await waitForAll([]);
+    await expect(async () => await waitForAll([])).toErrorDev([
+      'ContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+    ]);
 
     // Trigger an update in the middle of the tree
     // This is necessary to reproduce the error as it currently exists.
@@ -2251,6 +2289,10 @@ describe('ReactIncremental', () => {
       'shouldComponentUpdate',
       'render',
       'componentDidUpdate',
+    ]);
+
+    assertConsoleErrorDev([
+      'MyComponent uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
     ]);
   });
 
@@ -2384,6 +2426,10 @@ describe('ReactIncremental', () => {
     );
 
     await waitForAll(['count:0']);
+    assertConsoleErrorDev([
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     instance.updateCount();
     await waitForAll(['count:1']);
   });
@@ -2440,6 +2486,11 @@ describe('ReactIncremental', () => {
     );
 
     await waitForAll(['count:0']);
+    assertConsoleErrorDev([
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     instance.updateCount();
     await waitForAll(['count:1']);
   });
@@ -2505,6 +2556,11 @@ describe('ReactIncremental', () => {
     );
 
     await waitForAll(['count:0']);
+    assertConsoleErrorDev([
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     instance.updateCount();
     await waitForAll([]);
   });
@@ -2580,6 +2636,11 @@ describe('ReactIncremental', () => {
     );
 
     await waitForAll(['count:0, name:brian']);
+    assertConsoleErrorDev([
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     topInstance.updateCount();
     await waitForAll([]);
     middleInstance.updateName('not brian');
@@ -2685,6 +2746,7 @@ describe('ReactIncremental', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev([
+        'Boundary uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
         'Legacy context API has been detected within a strict-mode tree',
       ]);
     }
