@@ -69,7 +69,7 @@ export function pruneUnusedLabelsHIR(fn: HIRFunction): void {
   }
 
   for (const [_, block] of fn.body.blocks) {
-    for (const pred of [...block.preds]) {
+    for (const pred of block.preds) {
       const rewritten = rewrites.get(pred);
       if (rewritten != null) {
         block.preds.delete(pred);

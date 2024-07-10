@@ -1,4 +1,4 @@
-name: Lint
+name: (Shared) Lint
 
 on:
   push:

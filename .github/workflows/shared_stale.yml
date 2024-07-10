@@ -1,5 +1,5 @@
 # Configuration for stale action workflow - https://github.com/actions/stale
-name: 'Manage stale issues and PRs'
+name: (Shared) Manage stale issues and PRs
 on:
   schedule:
     # Run hourly

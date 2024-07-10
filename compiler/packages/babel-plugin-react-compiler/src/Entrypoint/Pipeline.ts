@@ -96,7 +96,7 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
-import { propagateScopeDependenciesHIR } from "../HIR/PropagateScopeDepsHIR";
+import { propagateScopeDependenciesHIR } from "../HIR/PropagateScopeDependenciesHIR";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }

@@ -66,7 +66,6 @@ export const enableSuspenseCallback = false;
 export const enableTaint = true;
 export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
-export const enableUnifiedSyncLane = true;
 export const enableUpdaterTracking = false;
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 export const enableUseEffectEventHook = false;

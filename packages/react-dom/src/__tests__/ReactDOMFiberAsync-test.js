@@ -313,21 +313,12 @@ describe('ReactDOMFiberAsync', () => {
         assertLog([]);
       });
       // Only the active updates have flushed
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        expect(container.textContent).toEqual('ABC');
-        assertLog(['ABC']);
-      } else {
-        expect(container.textContent).toEqual('BC');
-        assertLog(['BC']);
-      }
+      expect(container.textContent).toEqual('ABC');
+      assertLog(['ABC']);
 
       await act(() => {
         instance.push('D');
-        if (gate(flags => flags.enableUnifiedSyncLane)) {
-          expect(container.textContent).toEqual('ABC');
-        } else {
-          expect(container.textContent).toEqual('BC');
-        }
+        expect(container.textContent).toEqual('ABC');
         assertLog([]);
       });
       assertLog(['ABCD']);

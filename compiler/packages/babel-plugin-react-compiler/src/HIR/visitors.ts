@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { CompilerError } from "..";
 import { assertExhaustive } from "../Utils/utils";
 import {
+  BasicBlock,
   BlockId,
   Instruction,
   InstructionValue,
@@ -14,7 +16,9 @@ import {
   Pattern,
   Place,
   ReactiveInstruction,
+  ReactiveScope,
   ReactiveValue,
+  ScopeId,
   SpreadPattern,
   Terminal,
 } from "./HIR";
@@ -1144,6 +1148,115 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
         terminal,
         `Unexpected terminal kind \`${(terminal as any).kind}\``
       );
+    }
+  }
+}
+
+
+export const NO_OP = () => null;
+
+/**
+ * Helper class for traversing scope blocks in HIR-form.
+ */
+export class ScopeBlockTraversal<TContext, TState> {
+  #blockInfos: Map<
+    BlockId,
+    | {
+        kind: "end";
+        scope: ReactiveScope;
+        pruned: boolean;
+        state: TState;
+      }
+    | {
+        kind: "begin";
+        scope: ReactiveScope;
+        pruned: boolean;
+        fallthrough: BlockId;
+      }
+  > = new Map();
+  #context: TContext;
+  #enterCallback: (
+    scope: ReactiveScope,
+    pruned: boolean,
+    context: TContext
+  ) => TState;
+  #exitCallback: (
+    scope: ReactiveScope,
+    pruned: boolean,
+    context: TContext,
+    state: TState
+  ) => void;
+  activeScopes: Array<ScopeId> = [];
+
+  constructor(
+    context: TContext,
+    enter: (scope: ReactiveScope, pruned: boolean, context: TContext) => TState,
+    exit: (
+      scope: ReactiveScope,
+      pruned: boolean,
+      context: TContext,
+      state: TState
+    ) => void
+  ) {
+    this.#context = context;
+    this.#enterCallback = enter ?? null;
+    this.#exitCallback = exit ?? null;
+  }
+
+  // Handle scopes that begin or end at the start of the given block,
+  // invoking scope enter/exit callbacks as applicable
+  handleBlock(block: BasicBlock): void {
+    const blockInfo = this.#blockInfos.get(block.id);
+    if (blockInfo?.kind === "begin") {
+      this.#blockInfos.delete(block.id);
+      this.activeScopes.push(blockInfo.scope.id);
+      const state = this.#enterCallback(
+        blockInfo.scope,
+        blockInfo.pruned,
+        this.#context
+      );
+
+      CompilerError.invariant(!this.#blockInfos.has(blockInfo.fallthrough), {
+        reason: "Expected unique scope blocks and fallthroughs",
+        loc: blockInfo.scope.loc,
+      });
+      this.#blockInfos.set(blockInfo.fallthrough, {
+        kind: "end",
+        scope: blockInfo.scope,
+        pruned: blockInfo.pruned,
+        state,
+      });
+    } else if (blockInfo?.kind === "end") {
+      this.#blockInfos.delete(block.id);
+      const top = this.activeScopes.at(-1);
+      CompilerError.invariant(blockInfo.scope.id === top, {
+        reason:
+          "Expected traversed block fallthrough to match top-most active scope",
+        loc: block.instructions[0]?.loc ?? block.terminal.id,
+      });
+      this.activeScopes.pop();
+      this.#exitCallback?.(
+        blockInfo.scope,
+        blockInfo.pruned,
+        this.#context,
+        blockInfo.state
+      );
+    }
+
+    if (
+      block.terminal.kind === "scope" ||
+      block.terminal.kind === "pruned-scope"
+    ) {
+      CompilerError.invariant(!this.#blockInfos.has(block.terminal.block), {
+        reason: "Expected unique scope blocks and fallthroughs",
+        loc: block.terminal.loc,
+      });
+      this.#blockInfos.set(block.terminal.block, {
+        kind: "begin",
+        scope: block.terminal.scope,
+        pruned: block.terminal.kind === "pruned-scope",
+        fallthrough: block.terminal.fallthrough,
+      });
     }
   }
 }
