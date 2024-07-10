@@ -98,7 +98,8 @@ jobs:
       - run: |
           mkdir -p build
           rsync -av --ignore-existing artifacts/* build/
-          mv build/* build
+          cd build
+          mv */* .
       - name: Display structure of build
         run: ls -R build
       - run: yarn lint-build
