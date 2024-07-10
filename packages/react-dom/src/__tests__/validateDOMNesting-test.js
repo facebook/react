@@ -97,6 +97,12 @@ describe('validateDOMNesting', () => {
         ? [
             'In HTML, <li> cannot be a descendant of <li>.\n' +
               'This will cause a hydration error.\n' +
+              '\n' +
+              '  <ul>\n' +
+              '-   <li>\n' +
+              '      <div>\n' +
+              '-       <li>\n' +
+              '\n' +
               '    in li (at **)',
             '<li> cannot contain a nested <li>.\nSee this log for the ancestor stack trace.\n' +
               '    in li (at **)',
@@ -104,6 +110,12 @@ describe('validateDOMNesting', () => {
         : [
             'In HTML, <li> cannot be a descendant of <li>.\n' +
               'This will cause a hydration error.\n' +
+              '\n' +
+              '  <ul>\n' +
+              '-   <li>\n' +
+              '      <div>\n' +
+              '-       <li>\n' +
+              '\n' +
               '    in li (at **)\n' +
               '    in div (at **)\n' +
               '    in li (at **)\n' +
@@ -133,6 +145,10 @@ describe('validateDOMNesting', () => {
             // TODO, this should say "In SVG",
             'In HTML, <body> cannot be a child of <foreignObject>.\n' +
               'This will cause a hydration error.\n' +
+              '\n' +
+              '- <foreignObject>\n' +
+              '-   <body>\n' +
+              '\n' +
               '    in body (at **)',
             'You are mounting a new body component when a previous one has not first unmounted. It is an error to render more than one body component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <body> and if you need to mount a new one, ensure any previous ones have unmounted first.\n' +
               '    in body (at **)',
@@ -141,6 +157,10 @@ describe('validateDOMNesting', () => {
             // TODO, this should say "In SVG",
             'In HTML, <body> cannot be a child of <foreignObject>.\n' +
               'This will cause a hydration error.\n' +
+              '\n' +
+              '- <foreignObject>\n' +
+              '-   <body>\n' +
+              '\n' +
               '    in body (at **)\n' +
               '    in foreignObject (at **)',
             'You are mounting a new body component when a previous one has not first unmounted. It is an error to render more than one body component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <body> and if you need to mount a new one, ensure any previous ones have unmounted first.\n' +

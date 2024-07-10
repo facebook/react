@@ -387,7 +387,11 @@ describe('ReactDOMForm', () => {
       });
     }).toErrorDev(
       'In HTML, <form> cannot be a descendant of <form>.\n' +
-        'This will cause a hydration error.' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '- <form action={function outerAction}>\n' +
+        '    <input>\n' +
+        '-   <form action={function innerAction} ref={{current:null}}>\n' +
         '\n    in form (at **)' +
         (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in form (at **)'),
     );

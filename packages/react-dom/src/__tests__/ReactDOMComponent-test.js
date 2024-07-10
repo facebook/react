@@ -2194,9 +2194,12 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        'In HTML, <tr> cannot be a child of ' +
-          '<div>.\n' +
-          'This will cause a hydration error.' +
+        'In HTML, <tr> cannot be a child of <div>.\n' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '- <div>\n' +
+          '-   <tr>\n' +
+          '    ...\n' +
           '\n    in tr (at **)' +
           (gate(flags => flags.enableOwnerStacks)
             ? ''
@@ -2257,7 +2260,13 @@ describe('ReactDOMComponent', () => {
               'In HTML, <tr> cannot be a child of ' +
                 '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
                 'by the browser.\n' +
-                'This will cause a hydration error.' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '-   <table>\n' +
+                '      <Row>\n' +
+                '-       <tr>\n' +
+                '      ...\n' +
                 '\n    in tr (at **)' +
                 '\n    in Row (at **)',
               '<table> cannot contain a nested <tr>.\nSee this log for the ancestor stack trace.' +
@@ -2265,13 +2274,25 @@ describe('ReactDOMComponent', () => {
                 '\n    in Foo (at **)',
               'In HTML, text nodes cannot be a ' +
                 'child of <tr>.\n' +
-                'This will cause a hydration error.' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '    <table>\n' +
+                '      <Row>\n' +
+                '        <tr>\n' +
+                '-         x\n' +
+                '      ...\n' +
                 '\n    in tr (at **)' +
                 '\n    in Row (at **)',
               'In HTML, whitespace text nodes cannot ' +
                 "be a child of <table>. Make sure you don't have any extra " +
                 'whitespace between tags on each line of your source code.\n' +
-                'This will cause a hydration error.' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '-   <table>\n' +
+                '      <Row>\n' +
+                '-     {" "}\n' +
                 '\n    in table (at **)' +
                 '\n    in Foo (at **)',
             ]
@@ -2279,14 +2300,27 @@ describe('ReactDOMComponent', () => {
               'In HTML, <tr> cannot be a child of ' +
                 '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
                 'by the browser.\n' +
-                'This will cause a hydration error.' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '-   <table>\n' +
+                '      <Row>\n' +
+                '-       <tr>\n' +
+                '      ...\n' +
                 '\n    in tr (at **)' +
                 '\n    in Row (at **)' +
                 '\n    in table (at **)' +
                 '\n    in Foo (at **)',
               'In HTML, text nodes cannot be a ' +
                 'child of <tr>.\n' +
-                'This will cause a hydration error.' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '    <table>\n' +
+                '      <Row>\n' +
+                '        <tr>\n' +
+                '-         x\n' +
+                '      ...\n' +
                 '\n    in tr (at **)' +
                 '\n    in Row (at **)' +
                 '\n    in table (at **)' +
@@ -2294,7 +2328,12 @@ describe('ReactDOMComponent', () => {
               'In HTML, whitespace text nodes cannot ' +
                 "be a child of <table>. Make sure you don't have any extra " +
                 'whitespace between tags on each line of your source code.\n' +
-                'This will cause a hydration error.' +
+                'This will cause a hydration error.\n' +
+                '\n' +
+                '  <Foo>\n' +
+                '-   <table>\n' +
+                '      <Row>\n' +
+                '-     {" "}\n' +
                 '\n    in table (at **)' +
                 '\n    in Foo (at **)',
             ],
@@ -2325,7 +2364,11 @@ describe('ReactDOMComponent', () => {
         'In HTML, whitespace text nodes cannot ' +
           "be a child of <table>. Make sure you don't have any extra " +
           'whitespace between tags on each line of your source code.\n' +
-          'This will cause a hydration error.' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '    <table>\n' +
+          '-     {" "}\n' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
       ]);
@@ -2353,7 +2396,14 @@ describe('ReactDOMComponent', () => {
       }).toErrorDev([
         'In HTML, text nodes cannot be a ' +
           'child of <tr>.\n' +
-          'This will cause a hydration error.' +
+          'This will cause a hydration error.\n' +
+          '\n' +
+          '  <Foo>\n' +
+          '    <table>\n' +
+          '      <tbody>\n' +
+          '        <Row>\n' +
+          '          <tr>\n' +
+          '-           text\n' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
           (gate(flags => flags.enableOwnerStacks)

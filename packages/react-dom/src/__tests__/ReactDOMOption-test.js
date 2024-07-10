@@ -53,6 +53,11 @@ describe('ReactDOMOption', () => {
     }).toErrorDev(
       'In HTML, <div> cannot be a child of <option>.\n' +
         'This will cause a hydration error.\n' +
+        '\n' +
+        '- <option value="12">\n' +
+        '-   <div>\n' +
+        '    ...\n' +
+        '\n' +
         '    in div (at **)' +
         (gate(flags => flags.enableOwnerStacks)
           ? ''
@@ -271,6 +276,12 @@ describe('ReactDOMOption', () => {
     }).toErrorDev(
       'In HTML, <div> cannot be a child of <option>.\n' +
         'This will cause a hydration error.\n' +
+        '\n' +
+        '  <select readOnly={true} value="bar">\n' +
+        '-   <option value="bar">\n' +
+        '-     <div ref={{current:null}}>\n' +
+        '      ...\n' +
+        '\n' +
         '    in div (at **)' +
         (gate(flags => flags.enableOwnerStacks)
           ? ''
