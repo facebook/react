@@ -24,6 +24,9 @@ import { assertExhaustive } from "../Utils/utils";
  *    path: ['b', 'c'],
  *    optionalPath: ['d', 'e', 'f'].
  * }
+ * TODO remove optionalPath or rewrite our PropagateScopeDeps logic to understand
+ * optional load expressions
+ * 
  */
 export type ReactiveScopePropertyDependency = ReactiveScopeDependency & {
   optionalPath: Array<string>;
