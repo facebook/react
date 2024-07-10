@@ -8,52 +8,96 @@
  */
 
 import type {ReactComponentInfo} from 'shared/ReactTypes';
+import type {LazyComponent} from 'react/src/ReactLazy';
 
 import {
   describeBuiltInComponentFrame,
   describeFunctionComponentFrame,
   describeClassComponentFrame,
+  describeDebugInfoFrame,
 } from 'shared/ReactComponentStackFrame';
+
+import {
+  REACT_FORWARD_REF_TYPE,
+  REACT_MEMO_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
+  REACT_SUSPENSE_TYPE,
+} from 'shared/ReactSymbols';
 
 import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
 import {formatOwnerStack} from './ReactFizzOwnerStack';
 
-// DEV-only reverse linked list representing the current component stack
-type BuiltInComponentStackNode = {
-  tag: 0,
+export type ComponentStackNode = {
   parent: null | ComponentStackNode,
-  type: string,
+  type:
+    | symbol
+    | string
+    | Function
+    | LazyComponent<any, any>
+    | ReactComponentInfo,
   owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
   stack?: null | string | Error, // DEV only
 };
-type FunctionComponentStackNode = {
-  tag: 1,
-  parent: null | ComponentStackNode,
-  type: Function,
-  owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
-  stack?: null | string | Error, // DEV only
-};
-type ClassComponentStackNode = {
-  tag: 2,
-  parent: null | ComponentStackNode,
-  type: Function,
-  owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
-  stack?: null | string | Error, // DEV only
-};
-type ServerComponentStackNode = {
-  // DEV only
-  tag: 3,
-  parent: null | ComponentStackNode,
-  type: string, // name + env
-  owner?: null | ReactComponentInfo | ComponentStackNode, // DEV only
-  stack?: null | string | Error, // DEV only
-};
-export type ComponentStackNode =
-  | BuiltInComponentStackNode
-  | FunctionComponentStackNode
-  | ClassComponentStackNode
-  | ServerComponentStackNode;
+
+function shouldConstruct(Component: any) {
+  return Component.prototype && Component.prototype.isReactComponent;
+}
+
+function describeComponentStackByType(
+  type:
+    | symbol
+    | string
+    | Function
+    | LazyComponent<any, any>
+    | ReactComponentInfo,
+): string {
+  if (typeof type === 'string') {
+    return describeBuiltInComponentFrame(type);
+  }
+  if (typeof type === 'function') {
+    if (shouldConstruct(type)) {
+      return describeClassComponentFrame(type);
+    } else {
+      return describeFunctionComponentFrame(type);
+    }
+  }
+  if (typeof type === 'object' && type !== null) {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE: {
+        return describeFunctionComponentFrame((type: any).render);
+      }
+      case REACT_MEMO_TYPE: {
+        return describeFunctionComponentFrame((type: any).type);
+      }
+      case REACT_LAZY_TYPE: {
+        const lazyComponent: LazyComponent<any, any> = (type: any);
+        const payload = lazyComponent._payload;
+        const init = lazyComponent._init;
+        try {
+          type = init(payload);
+        } catch (x) {
+          // TODO: When we support Thenables as component types we should rename this.
+          return describeBuiltInComponentFrame('Lazy');
+        }
+        return describeComponentStackByType(type);
+      }
+    }
+    if (typeof type.name === 'string') {
+      return describeDebugInfoFrame(type.name, type.env);
+    }
+  }
+  switch (type) {
+    case REACT_SUSPENSE_LIST_TYPE: {
+      return describeBuiltInComponentFrame('SuspenseList');
+    }
+    case REACT_SUSPENSE_TYPE: {
+      return describeBuiltInComponentFrame('Suspense');
+    }
+  }
+  return '';
+}
 
 export function getStackByComponentStackNode(
   componentStack: ComponentStackNode,
@@ -62,22 +106,7 @@ export function getStackByComponentStackNode(
     let info = '';
     let node: ComponentStackNode = componentStack;
     do {
-      switch (node.tag) {
-        case 0:
-          info += describeBuiltInComponentFrame(node.type);
-          break;
-        case 1:
-          info += describeFunctionComponentFrame(node.type);
-          break;
-        case 2:
-          info += describeClassComponentFrame(node.type);
-          break;
-        case 3:
-          if (__DEV__) {
-            info += describeBuiltInComponentFrame(node.type);
-            break;
-          }
-      }
+      info += describeComponentStackByType(node.type);
       // $FlowFixMe[incompatible-type] we bail out when we get a null
       node = node.parent;
     } while (node);
@@ -110,59 +139,41 @@ export function getOwnerStackByComponentStackNodeInDev(
     // add one extra frame just to describe the "current" built-in component by name.
     // Similarly, if there is no owner at all, then there's no stack frame so we add the name
     // of the root component to the stack to know which component is currently executing.
-    switch (componentStack.tag) {
-      case 0:
-        info += describeBuiltInComponentFrame(componentStack.type);
-        break;
-      case 1:
-      case 2:
-        if (!componentStack.owner) {
-          // Only if we have no other data about the callsite do we add
-          // the component name as the single stack frame.
-          info += describeFunctionComponentFrameWithoutLineNumber(
-            componentStack.type,
-          );
-        }
-        break;
-      case 3:
-        if (!componentStack.owner) {
-          info += describeBuiltInComponentFrame(componentStack.type);
-        }
-        break;
+    if (typeof componentStack.type === 'string') {
+      info += describeBuiltInComponentFrame(componentStack.type);
+    } else if (typeof componentStack.type === 'function') {
+      if (!componentStack.owner) {
+        // Only if we have no other data about the callsite do we add
+        // the component name as the single stack frame.
+        info += describeFunctionComponentFrameWithoutLineNumber(
+          componentStack.type,
+        );
+      }
+    } else {
+      if (!componentStack.owner) {
+        info += describeComponentStackByType(componentStack.type);
+      }
     }
 
     let owner: void | null | ComponentStackNode | ReactComponentInfo =
       componentStack;
 
     while (owner) {
-      if (typeof owner.tag === 'number') {
-        const node: ComponentStackNode = (owner: any);
-        owner = node.owner;
-        let debugStack = node.stack;
-        // If we don't actually print the stack if there is no owner of this JSX element.
-        // In a real app it's typically not useful since the root app is always controlled
-        // by the framework. These also tend to have noisy stacks because they're not rooted
-        // in a React render but in some imperative bootstrapping code. It could be useful
-        // if the element was created in module scope. E.g. hoisted. We could add a a single
-        // stack frame for context for example but it doesn't say much if that's a wrapper.
-        if (owner && debugStack) {
-          if (typeof debugStack !== 'string') {
-            // Stash the formatted stack so that we can avoid redoing the filtering.
-            node.stack = debugStack = formatOwnerStack(debugStack);
-          }
-          if (debugStack !== '') {
-            info += '\n' + debugStack;
-          }
-        }
-      } else if (typeof owner.stack === 'string') {
-        // Server Component
-        const ownerStack: string = owner.stack;
-        owner = owner.owner;
-        if (owner && ownerStack !== '') {
-          info += '\n' + ownerStack;
-        }
-      } else {
-        break;
+      let debugStack: void | null | string | Error = owner.stack;
+      if (typeof debugStack !== 'string' && debugStack != null) {
+        // Stash the formatted stack so that we can avoid redoing the filtering.
+        // $FlowFixMe[cannot-write]: This has been refined to a ComponentStackNode.
+        owner.stack = debugStack = formatOwnerStack(debugStack);
+      }
+      owner = owner.owner;
+      // If we don't actually print the stack if there is no owner of this JSX element.
+      // In a real app it's typically not useful since the root app is always controlled
+      // by the framework. These also tend to have noisy stacks because they're not rooted
+      // in a React render but in some imperative bootstrapping code. It could be useful
+      // if the element was created in module scope. E.g. hoisted. We could add a a single
+      // stack frame for context for example but it doesn't say much if that's a wrapper.
+      if (owner && debugStack) {
+        info += '\n' + debugStack;
       }
     }
     return info;

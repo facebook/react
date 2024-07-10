@@ -250,9 +250,7 @@ if (!__EXPERIMENTAL__) {
               '\n    in Bar (at **)' +
               '\n    in Foo (at **)' +
               '\n    in div (at **)'
-          : '\n    in Lazy (at **)' +
-              '\n    in div (at **)' +
-              '\n    in div (at **)',
+          : '\n    in div (at **)' + '\n    in div (at **)',
       );
       expect(normalizeCodeLocInfo(caughtErrors[0].ownerStack)).toBe(
         __DEV__ && gate(flags => flags.enableOwnerStacks)
