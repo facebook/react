@@ -149,16 +149,22 @@ function getBabelConfig(
     sourcemap: false,
   };
   if (isDevelopment) {
-    options.plugins.push(
-      ...babelToES5Plugins,
-      // Turn console.error/warn() into a custom wrapper
-      [
-        require('../babel/transform-replace-console-calls'),
-        {
-          shouldError: !canAccessReactObject,
-        },
-      ]
-    );
+    options.plugins.push(...babelToES5Plugins);
+    if (
+      bundleType === FB_WWW_DEV ||
+      bundleType === RN_OSS_DEV ||
+      bundleType === RN_FB_DEV
+    ) {
+      options.plugins.push(
+        // Turn console.error/warn() into a custom wrapper
+        [
+          require('../babel/transform-replace-console-calls'),
+          {
+            shouldError: !canAccessReactObject,
+          },
+        ]
+      );
+    }
   }
   if (updateBabelOptions) {
     options = updateBabelOptions(options);
