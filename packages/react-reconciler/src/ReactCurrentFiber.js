@@ -33,17 +33,6 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   return null;
 }
 
-export function getCurrentParentStackInDev(): string {
-  // This is used to get the parent stack even with owner stacks turned on.
-  if (__DEV__) {
-    if (current === null) {
-      return '';
-    }
-    return getStackByFiberInDevAndProd(current);
-  }
-  return '';
-}
-
 function getCurrentFiberStackInDev(stack: null | Error): string {
   if (__DEV__) {
     if (current === null) {
