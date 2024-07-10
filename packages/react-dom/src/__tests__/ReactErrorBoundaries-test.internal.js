@@ -36,6 +36,7 @@ describe('ReactErrorBoundaries', () => {
   let RetryErrorBoundary;
   let Normal;
   let assertLog;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -47,8 +48,7 @@ describe('ReactErrorBoundaries', () => {
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
-    const InternalTestUtils = require('internal-test-utils');
-    assertLog = InternalTestUtils.assertLog;
+    ({assertLog, assertConsoleErrorDev} = require('internal-test-utils'));
 
     BrokenConstructor = class extends React.Component {
       constructor(props) {
@@ -895,6 +895,9 @@ describe('ReactErrorBoundaries', () => {
         </ErrorBoundary>,
       );
     });
+    assertConsoleErrorDev([
+      'BrokenComponentWillMountWithContext uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+    ]);
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
 
