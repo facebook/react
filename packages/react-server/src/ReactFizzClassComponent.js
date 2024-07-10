@@ -26,6 +26,8 @@ let didWarnAboutLegacyLifecyclesAndDerivedState;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutDirectlyAssigningPropsToState;
 let didWarnAboutContextTypeAndContextTypes;
+let didWarnAboutContextTypes;
+let didWarnAboutChildContextTypes;
 let didWarnAboutInvalidateContextType;
 let didWarnOnInvalidCallback;
 
@@ -36,6 +38,8 @@ if (__DEV__) {
   didWarnAboutDirectlyAssigningPropsToState = new Set<string>();
   didWarnAboutUndefinedDerivedState = new Set<string>();
   didWarnAboutContextTypeAndContextTypes = new Set<mixed>();
+  didWarnAboutContextTypes = new Set<mixed>();
+  didWarnAboutChildContextTypes = new Set<mixed>();
   didWarnAboutInvalidateContextType = new Set<mixed>();
   didWarnOnInvalidCallback = new Set<string>();
 }
@@ -353,13 +357,6 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
         name,
       );
     }
-    if (instance.propTypes) {
-      console.error(
-        'propTypes was defined as an instance property on %s. Use a static ' +
-          'property to define propTypes instead.',
-        name,
-      );
-    }
     if (instance.contextType) {
       console.error(
         'contextType was defined as an instance property on %s. Use a static ' +
@@ -369,14 +366,16 @@ function checkClassInstance(instance: any, ctor: any, newProps: any) {
     }
 
     if (disableLegacyContext) {
-      if (ctor.childContextTypes) {
+      if (ctor.childContextTypes && !didWarnAboutChildContextTypes.has(ctor)) {
+        didWarnAboutChildContextTypes.add(ctor);
         console.error(
           '%s uses the legacy childContextTypes API which was removed in React 19. ' +
             'Use React.createContext() instead.',
           name,
         );
       }
-      if (ctor.contextTypes) {
+      if (ctor.contextTypes && !didWarnAboutContextTypes.has(ctor)) {
+        didWarnAboutContextTypes.add(ctor);
         console.error(
           '%s uses the legacy contextTypes API which was removed in React 19. ' +
             'Use React.createContext() with static contextType instead.',

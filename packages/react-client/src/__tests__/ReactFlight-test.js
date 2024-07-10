@@ -2628,7 +2628,7 @@ describe('ReactFlight', () => {
       return 'hello';
     }
     function ServerComponent() {
-      console.log('hi', {prop: 123, fn: foo});
+      console.log('hi', {prop: 123, fn: foo, map: new Map([['foo', foo]])});
       throw new Error('err');
     }
 
@@ -2670,6 +2670,13 @@ describe('ReactFlight', () => {
     expect(typeof loggedFn).toBe('function');
     expect(loggedFn).not.toBe(foo);
     expect(loggedFn.toString()).toBe(foo.toString());
+
+    const loggedMap = mockConsoleLog.mock.calls[0][1].map;
+    expect(loggedMap instanceof Map).toBe(true);
+    const loggedFn2 = loggedMap.get('foo');
+    expect(typeof loggedFn2).toBe('function');
+    expect(loggedFn2).not.toBe(foo);
+    expect(loggedFn2.toString()).toBe(foo.toString());
   });
 
   it('uses the server component debug info as the element owner in DEV', async () => {
