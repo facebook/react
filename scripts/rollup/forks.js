@@ -209,6 +209,9 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
         return './packages/shared/forks/consoleWithStackDev.www.js';
+      case RN_OSS_DEV:
+      case RN_FB_DEV:
+        return './packages/shared/forks/consoleWithStackDev.rn.js';
       default:
         return null;
     }
