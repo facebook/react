@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<62112b775ad66121203321e282c65acf>>
+ * @generated SignedSource<<23a806bbbd3b847c144cfb5f998a2598>>
  */
 
 "use strict";
@@ -6246,6 +6246,20 @@ __DEV__ &&
           "%s declares both contextTypes and contextType static properties. The legacy contextTypes property will be ignored.",
           name
         ));
+      ctor.childContextTypes &&
+        !didWarnAboutChildContextTypes.has(ctor) &&
+        (didWarnAboutChildContextTypes.add(ctor),
+        error$jscomp$0(
+          "%s uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
+          name
+        ));
+      ctor.contextTypes &&
+        !didWarnAboutContextTypes$1.has(ctor) &&
+        (didWarnAboutContextTypes$1.add(ctor),
+        error$jscomp$0(
+          "%s uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)",
+          name
+        ));
       "function" === typeof instance.componentShouldUpdate &&
         error$jscomp$0(
           "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.",
@@ -6997,7 +7011,15 @@ __DEV__ &&
           null
         );
       null === current &&
-        validateFunctionComponentInDev(workInProgress, workInProgress.type);
+        (validateFunctionComponentInDev(workInProgress, workInProgress.type),
+        Component.contextTypes &&
+          ((componentName = getComponentNameFromType(Component) || "Unknown"),
+          didWarnAboutContextTypes[componentName] ||
+            ((didWarnAboutContextTypes[componentName] = !0),
+            error$jscomp$0(
+              "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
+              componentName
+            ))));
       componentName = isContextProvider(Component)
         ? previousContext
         : contextStackCursor$1.current;
@@ -16575,6 +16597,8 @@ __DEV__ &&
     var didWarnAboutDirectlyAssigningPropsToState = new Set();
     var didWarnAboutUndefinedDerivedState = new Set();
     var didWarnAboutContextTypeAndContextTypes = new Set();
+    var didWarnAboutContextTypes$1 = new Set();
+    var didWarnAboutChildContextTypes = new Set();
     var didWarnAboutInvalidateContextType = new Set();
     var didWarnOnInvalidCallback = new Set();
     Object.freeze(fakeInternalInstance);
@@ -16678,6 +16702,7 @@ __DEV__ &&
       didReceiveUpdate = !1;
     var didWarnAboutBadClass = {};
     var didWarnAboutContextTypeOnFunctionComponent = {};
+    var didWarnAboutContextTypes = {};
     var didWarnAboutGetDerivedStateOnFunctionComponent = {};
     var didWarnAboutReassigningProps = !1;
     var didWarnAboutRevealOrder = {};
@@ -16917,11 +16942,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-3b2e5f27c5-20240710" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-378b305958-20240710" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-3b2e5f27c5-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-378b305958-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16969,12 +16994,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-3b2e5f27c5-20240710"
+        reconcilerVersion: "19.0.0-native-fb-378b305958-20240710"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-3b2e5f27c5-20240710",
+      version: "19.0.0-native-fb-378b305958-20240710",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
