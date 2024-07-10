@@ -7,40 +7,15 @@ on:
     paths-ignore:
       - 'compiler/**'
 
-env:
-  WORKER_COUNT: 20
-
 jobs:
-  define_build_params:
-    name: Build build params
+  build_and_lint:
+    name: yarn build and lint
     runs-on: ubuntu-latest
-    outputs:
-      worker_id: ${{ steps.define_worker_id.outputs.result }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/github-script@v7
-        id: define_worker_id
-        with:
-          script: |
-            function range(from, to) {
-              const arr = [];
-              for (let n = from; n < to; n++) {
-                arr.push(n);
-              }
-              return arr;
-            }
-            return range(0, process.env.WORKER_COUNT);
-
-  build:
-    name: yarn build
-    runs-on: ubuntu-latest
-    needs: define_build_params
     strategy:
       matrix:
-        worker_id: ${{ fromJSON(needs.define_build_params.outputs.worker_id) }}
-        release_channel:
-          - stable
-          - experimental
+        # yml is dumb. update the --total arg to yarn build if you change the number of workers
+        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+        release_channel: [stable, experimental]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -55,12 +30,13 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build --index=${{ matrix.worker_id }} --total=${{ env.WORKER_COUNT }} --r=${{ matrix.release_channel }} --ci=github
+      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci=github
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
           NODE_INDEX: ${{ matrix.worker_id }}
-      - run: yarn lint-build
+      - name: Lint build
+        run: yarn lint-build
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
@@ -72,7 +48,7 @@ jobs:
 
   process_artifacts_combined:
     name: Process artifacts combined
-    needs: build
+    needs: build_and_lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
