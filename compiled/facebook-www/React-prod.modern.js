@@ -12,11 +12,11 @@
 
 "use strict";
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableFastJSX = dynamicFeatureFlags.enableFastJSX,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -669,4 +669,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-modern-2d3f81bb6a-20240710";
+exports.version = "19.0.0-www-modern-fe9828954a-20240710";

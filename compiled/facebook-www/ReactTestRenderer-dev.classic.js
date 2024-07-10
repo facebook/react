@@ -75,6 +75,9 @@ __DEV__ &&
     function shouldErrorImpl() {
       return null;
     }
+    function createFiber(tag, pendingProps, key, mode) {
+      return new FiberNode(tag, pendingProps, key, mode);
+    }
     function findHostInstancesForRefresh(root, families) {
       var hostInstances = new Set();
       families = new Set(
@@ -12145,9 +12148,6 @@ __DEV__ &&
         "function" !== typeof Object.preventExtensions ||
         Object.preventExtensions(this);
     }
-    function createFiber(tag, pendingProps, key, mode) {
-      return new FiberNode(tag, pendingProps, key, mode);
-    }
     function shouldConstruct(Component) {
       Component = Component.prototype;
       return !(!Component || !Component.isReactComponent);
@@ -14804,14 +14804,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-2d3f81bb6a-20240710"
+        reconcilerVersion: "19.0.0-www-classic-fe9828954a-20240710"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-www-classic-2d3f81bb6a-20240710",
+      version: "19.0.0-www-classic-fe9828954a-20240710",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

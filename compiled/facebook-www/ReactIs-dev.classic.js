@@ -47,8 +47,8 @@ __DEV__ &&
     }
     var dynamicFeatureFlags = require("ReactFeatureFlags"),
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
     dynamicFeatureFlags = dynamicFeatureFlags.renameElementSymbol;
     var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = dynamicFeatureFlags

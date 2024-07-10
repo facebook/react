@@ -7219,12 +7219,12 @@ __DEV__ &&
       ReactDOM = require("react-dom"),
       warningWWW = require("warning"),
       dynamicFeatureFlags = require("ReactFeatureFlags"),
+      disableDefaultPropsExceptForClasses =
+        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
@@ -8671,5 +8671,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-2d3f81bb6a-20240710";
+    exports.version = "19.0.0-www-modern-fe9828954a-20240710";
   })();

@@ -13,8 +13,8 @@
 "use strict";
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol

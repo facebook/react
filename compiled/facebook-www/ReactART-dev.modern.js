@@ -13824,8 +13824,47 @@ __DEV__ &&
         "function" !== typeof Object.preventExtensions ||
         Object.preventExtensions(this);
     }
-    function createFiber(tag, pendingProps, key, mode) {
+    function createFiberImplClass(tag, pendingProps, key, mode) {
       return new FiberNode(tag, pendingProps, key, mode);
+    }
+    function createFiberImplObject(tag, pendingProps, key, mode) {
+      tag = {
+        elementType: null,
+        type: null,
+        stateNode: null,
+        return: null,
+        child: null,
+        sibling: null,
+        index: 0,
+        ref: null,
+        refCleanup: null,
+        memoizedProps: null,
+        updateQueue: null,
+        memoizedState: null,
+        dependencies: null,
+        flags: 0,
+        subtreeFlags: 0,
+        deletions: null,
+        lanes: 0,
+        childLanes: 0,
+        alternate: null,
+        tag: tag,
+        key: key,
+        pendingProps: pendingProps,
+        mode: mode,
+        actualDuration: 0,
+        actualStartTime: -1,
+        selfBaseDuration: 0,
+        treeBaseDuration: 0,
+        _debugInfo: null,
+        _debugOwner: null,
+        _debugNeedsRemount: !1,
+        _debugHookTypes: null
+      };
+      hasBadMapPolyfill ||
+        "function" !== typeof Object.preventExtensions ||
+        Object.preventExtensions(tag);
+      return tag;
     }
     function shouldConstruct(Component) {
       Component = Component.prototype;
@@ -14311,31 +14350,32 @@ __DEV__ &&
       suppressWarning = !1,
       assign = Object.assign,
       dynamicFeatureFlags = require("ReactFeatureFlags"),
-      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableLazyContextPropagation =
-        dynamicFeatureFlags.enableLazyContextPropagation,
-      enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableDeferRootSchedulingToMicrotask =
-        dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
-      enableDO_NOT_USE_disableStrictPassiveEffect =
-        dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
+      disableDefaultPropsExceptForClasses =
+        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+      enableDeferRootSchedulingToMicrotask =
+        dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+      enableDO_NOT_USE_disableStrictPassiveEffect =
+        dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
+      enableInfiniteRenderLoopDetection =
+        dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
+      enableLazyContextPropagation =
+        dynamicFeatureFlags.enableLazyContextPropagation,
+      enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
+      enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+      enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
       syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
       transitionLaneExpirationMs =
         dynamicFeatureFlags.transitionLaneExpirationMs,
-      enableInfiniteRenderLoopDetection =
-        dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-      enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
-      renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
@@ -16161,6 +16201,9 @@ __DEV__ &&
     } catch (e) {
       hasBadMapPolyfill = !0;
     }
+    var createFiber = enableObjectFiber
+      ? createFiberImplObject
+      : createFiberImplClass;
     var didWarnAboutNestedUpdates = !1;
     var overrideHookState = null,
       overrideHookStateDeletePath = null,
@@ -16389,14 +16432,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-2d3f81bb6a-20240710"
+        reconcilerVersion: "19.0.0-www-modern-fe9828954a-20240710"
       });
     })({
       findFiberByHostInstance: function () {
         return null;
       },
       bundleType: 1,
-      version: "19.0.0-www-modern-2d3f81bb6a-20240710",
+      version: "19.0.0-www-modern-fe9828954a-20240710",
       rendererPackageName: "react-art"
     });
     var ClippingRectangle = TYPES.CLIPPING_RECTANGLE,

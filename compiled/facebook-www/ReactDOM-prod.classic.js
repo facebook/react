@@ -33,34 +33,35 @@ function formatProdErrorMessage(code) {
   );
 }
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableTrustedTypesIntegration =
-    dynamicFeatureFlags.enableTrustedTypesIntegration,
-  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
-  enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableDeferRootSchedulingToMicrotask =
-    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
-  enableDO_NOT_USE_disableStrictPassiveEffect =
-    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
+  disableDefaultPropsExceptForClasses =
+    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+  enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+  enableDeferRootSchedulingToMicrotask =
+    dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
+  enableDO_NOT_USE_disableStrictPassiveEffect =
+    dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableInfiniteRenderLoopDetection =
+    dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
+  enableLazyContextPropagation =
+    dynamicFeatureFlags.enableLazyContextPropagation,
+  enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
+  enableObjectFiber = dynamicFeatureFlags.enableObjectFiber,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableTrustedTypesIntegration =
+    dynamicFeatureFlags.enableTrustedTypesIntegration,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+  favorSafetyOverHydrationPerf =
+    dynamicFeatureFlags.favorSafetyOverHydrationPerf,
+  renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
-  enableInfiniteRenderLoopDetection =
-    dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-  favorSafetyOverHydrationPerf =
-    dynamicFeatureFlags.favorSafetyOverHydrationPerf,
-  disableDefaultPropsExceptForClasses =
-    dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-  enableNoCloningMemoCache = dynamicFeatureFlags.enableNoCloningMemoCache,
-  renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   disableLegacyMode = dynamicFeatureFlags.disableLegacyMode,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -12064,9 +12065,39 @@ function FiberNode(tag, pendingProps, key, mode) {
   this.childLanes = this.lanes = 0;
   this.alternate = null;
 }
-function createFiber(tag, pendingProps, key, mode) {
+function createFiberImplClass(tag, pendingProps, key, mode) {
   return new FiberNode(tag, pendingProps, key, mode);
 }
+function createFiberImplObject(tag, pendingProps, key, mode) {
+  return {
+    elementType: null,
+    type: null,
+    stateNode: null,
+    return: null,
+    child: null,
+    sibling: null,
+    index: 0,
+    ref: null,
+    refCleanup: null,
+    memoizedProps: null,
+    updateQueue: null,
+    memoizedState: null,
+    dependencies: null,
+    flags: 0,
+    subtreeFlags: 0,
+    deletions: null,
+    lanes: 0,
+    childLanes: 0,
+    alternate: null,
+    tag: tag,
+    key: key,
+    pendingProps: pendingProps,
+    mode: mode
+  };
+}
+var createFiber = enableObjectFiber
+  ? createFiberImplObject
+  : createFiberImplClass;
 function shouldConstruct(Component) {
   Component = Component.prototype;
   return !(!Component || !Component.isReactComponent);
@@ -17163,14 +17194,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1769 = React.version;
 if (
-  "19.0.0-www-classic-2d3f81bb6a-20240710" !==
+  "19.0.0-www-classic-fe9828954a-20240710" !==
   isomorphicReactPackageVersion$jscomp$inline_1769
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1769,
-      "19.0.0-www-classic-2d3f81bb6a-20240710"
+      "19.0.0-www-classic-fe9828954a-20240710"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17216,7 +17247,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1776 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-2d3f81bb6a-20240710",
+  version: "19.0.0-www-classic-fe9828954a-20240710",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2220 = {
@@ -17246,7 +17277,7 @@ var internals$jscomp$inline_2220 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-2d3f81bb6a-20240710"
+  reconcilerVersion: "19.0.0-www-classic-fe9828954a-20240710"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2221 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17710,4 +17741,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-2d3f81bb6a-20240710";
+exports.version = "19.0.0-www-classic-fe9828954a-20240710";

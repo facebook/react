@@ -811,12 +811,12 @@ __DEV__ &&
     }
     var React = require("react"),
       dynamicFeatureFlags = require("ReactFeatureFlags"),
-      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+      enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableFastJSX = dynamicFeatureFlags.enableFastJSX,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       disableLegacyMode = dynamicFeatureFlags.disableLegacyMode;
     dynamicFeatureFlags = Symbol.for("react.element");

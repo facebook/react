@@ -6714,12 +6714,12 @@ __DEV__ &&
       ReactDOM = require("react-dom"),
       warningWWW = require("warning"),
       dynamicFeatureFlags = require("ReactFeatureFlags"),
+      disableDefaultPropsExceptForClasses =
+        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      disableDefaultPropsExceptForClasses =
-        dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
