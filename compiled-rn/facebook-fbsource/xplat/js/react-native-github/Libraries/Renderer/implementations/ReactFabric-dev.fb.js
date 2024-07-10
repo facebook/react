@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d7e7b01864acb469a5d2f72629e2b490>>
+ * @generated SignedSource<<93b736b3c74c0f2fab84b1a60c436181>>
  */
 
 "use strict";
@@ -14201,6 +14201,8 @@ __DEV__ &&
       Scheduler = require("scheduler"),
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+      suppressWarning = !1,
+      isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
       consoleManagedByDevToolsDuringStrictMode =
         dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
@@ -14211,8 +14213,6 @@ __DEV__ &&
       enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
       passChildrenWhenCloningPersistedNodes =
         dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
-      suppressWarning = !1,
-      isArrayImpl = Array.isArray,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -16766,12 +16766,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-2d3f81bb6a-20240710"
+        reconcilerVersion: "19.0.0-native-fb-9647333b3d-20240710"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-2d3f81bb6a-20240710",
+      version: "19.0.0-native-fb-9647333b3d-20240710",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

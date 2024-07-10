@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<36e9e66cb18f9b6a812016a8f5f5bcdc>>
+ * @generated SignedSource<<a62bd730f42d2f8c7b065b31f7fda874>>
  */
 
 "use strict";
@@ -14337,13 +14337,13 @@ __DEV__ &&
       Scheduler = require("scheduler"),
       ReactSharedInternals =
         React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+      suppressWarning = !1,
+      isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
       consoleManagedByDevToolsDuringStrictMode =
         dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
       disableDefaultPropsExceptForClasses =
         dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-      suppressWarning = !1,
-      isArrayImpl = Array.isArray,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = REACT_LEGACY_ELEMENT_TYPE,
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -16954,11 +16954,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-2d3f81bb6a-20240710" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-9647333b3d-20240710" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-2d3f81bb6a-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-9647333b3d-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17006,12 +17006,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-2d3f81bb6a-20240710"
+        reconcilerVersion: "19.0.0-native-fb-9647333b3d-20240710"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-2d3f81bb6a-20240710",
+      version: "19.0.0-native-fb-9647333b3d-20240710",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
