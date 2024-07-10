@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<93b736b3c74c0f2fab84b1a60c436181>>
+ * @generated SignedSource<<8bbbf707b5c0fdbafff9a599d611e079>>
  */
 
 "use strict";
@@ -13470,8 +13470,47 @@ __DEV__ &&
         "function" !== typeof Object.preventExtensions ||
         Object.preventExtensions(this);
     }
-    function createFiber(tag, pendingProps, key, mode) {
+    function createFiberImplClass(tag, pendingProps, key, mode) {
       return new FiberNode(tag, pendingProps, key, mode);
+    }
+    function createFiberImplObject(tag, pendingProps, key, mode) {
+      tag = {
+        elementType: null,
+        type: null,
+        stateNode: null,
+        return: null,
+        child: null,
+        sibling: null,
+        index: 0,
+        ref: null,
+        refCleanup: null,
+        memoizedProps: null,
+        updateQueue: null,
+        memoizedState: null,
+        dependencies: null,
+        flags: 0,
+        subtreeFlags: 0,
+        deletions: null,
+        lanes: 0,
+        childLanes: 0,
+        alternate: null,
+        tag: tag,
+        key: key,
+        pendingProps: pendingProps,
+        mode: mode,
+        actualDuration: 0,
+        actualStartTime: -1,
+        selfBaseDuration: 0,
+        treeBaseDuration: 0,
+        _debugInfo: null,
+        _debugOwner: null,
+        _debugNeedsRemount: !1,
+        _debugHookTypes: null
+      };
+      hasBadMapPolyfill ||
+        "function" !== typeof Object.preventExtensions ||
+        Object.preventExtensions(tag);
+      return tag;
     }
     function shouldConstruct(Component) {
       Component = Component.prototype;
@@ -14210,6 +14249,7 @@ __DEV__ &&
         dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
       enableAddPropertiesFastPath =
         dynamicFlagsUntyped.enableAddPropertiesFastPath,
+      enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
       enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
       passChildrenWhenCloningPersistedNodes =
         dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
@@ -16644,6 +16684,9 @@ __DEV__ &&
     } catch (e) {
       hasBadMapPolyfill = !0;
     }
+    var createFiber = enableObjectFiber
+      ? createFiberImplObject
+      : createFiberImplClass;
     var didWarnAboutNestedUpdates = !1;
     var didWarnAboutFindNodeInStrictMode = {};
     var overrideHookState = null,
@@ -16766,12 +16809,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-9647333b3d-20240710"
+        reconcilerVersion: "19.0.0-native-fb-fe9828954a-20240710"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-9647333b3d-20240710",
+      version: "19.0.0-native-fb-fe9828954a-20240710",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
