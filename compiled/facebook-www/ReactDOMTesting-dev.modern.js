@@ -607,9 +607,6 @@ __DEV__ &&
       var owner = current._debugOwner;
       return null != owner ? getComponentNameFromOwner(owner) : null;
     }
-    function getCurrentParentStackInDev() {
-      return null === current ? "" : getStackByFiberInDevAndProd(current);
-    }
     function getCurrentFiberStackInDev() {
       return null === current ? "" : getStackByFiberInDevAndProd(current);
     }
@@ -1962,6 +1959,475 @@ __DEV__ &&
         null !== value &&
         (element.value = value);
     }
+    function findNotableNode(node, indent) {
+      return void 0 === node.serverProps &&
+        0 === node.serverTail.length &&
+        1 === node.children.length &&
+        3 < node.distanceFromLeaf &&
+        node.distanceFromLeaf > 15 - indent
+        ? findNotableNode(node.children[0], indent)
+        : node;
+    }
+    function indentation(indent) {
+      return "  " + "  ".repeat(indent);
+    }
+    function added(indent) {
+      return "+ " + "  ".repeat(indent);
+    }
+    function removed(indent) {
+      return "- " + "  ".repeat(indent);
+    }
+    function describeFiberType(fiber) {
+      switch (fiber.tag) {
+        case 26:
+        case 27:
+        case 5:
+          return fiber.type;
+        case 16:
+          return "Lazy";
+        case 13:
+          return "Suspense";
+        case 19:
+          return "SuspenseList";
+        case 0:
+        case 15:
+          return (fiber = fiber.type), fiber.displayName || fiber.name || null;
+        case 11:
+          return (
+            (fiber = fiber.type.render), fiber.displayName || fiber.name || null
+          );
+        case 1:
+          return (fiber = fiber.type), fiber.displayName || fiber.name || null;
+        default:
+          return null;
+      }
+    }
+    function describeTextNode(content, maxLength) {
+      return needsEscaping.test(content)
+        ? ((content = JSON.stringify(content)),
+          content.length > maxLength - 2
+            ? 8 > maxLength
+              ? '{"..."}'
+              : "{" + content.slice(0, maxLength - 7) + '..."}'
+            : "{" + content + "}")
+        : content.length > maxLength
+        ? 5 > maxLength
+          ? '{"..."}'
+          : content.slice(0, maxLength - 3) + "..."
+        : content;
+    }
+    function describeTextDiff(clientText, serverProps, indent) {
+      var maxLength = 120 - 2 * indent;
+      if (null === serverProps)
+        return added(indent) + describeTextNode(clientText, maxLength) + "\n";
+      if ("string" === typeof serverProps) {
+        for (
+          var firstDiff = 0;
+          firstDiff < serverProps.length &&
+          firstDiff < clientText.length &&
+          serverProps.charCodeAt(firstDiff) ===
+            clientText.charCodeAt(firstDiff);
+          firstDiff++
+        );
+        firstDiff > maxLength - 8 &&
+          10 < firstDiff &&
+          ((clientText = "..." + clientText.slice(firstDiff - 8)),
+          (serverProps = "..." + serverProps.slice(firstDiff - 8)));
+        return (
+          added(indent) +
+          describeTextNode(clientText, maxLength) +
+          "\n" +
+          removed(indent) +
+          describeTextNode(serverProps, maxLength) +
+          "\n"
+        );
+      }
+      return (
+        indentation(indent) + describeTextNode(clientText, maxLength) + "\n"
+      );
+    }
+    function objectName(object) {
+      return Object.prototype.toString
+        .call(object)
+        .replace(/^\[object (.*)\]$/, function (m, p0) {
+          return p0;
+        });
+    }
+    function describeValue(value, maxLength) {
+      switch (typeof value) {
+        case "string":
+          return (
+            (value = JSON.stringify(value)),
+            value.length > maxLength
+              ? 5 > maxLength
+                ? '"..."'
+                : value.slice(0, maxLength - 4) + '..."'
+              : value
+          );
+        case "object":
+          if (null === value) return "null";
+          if (isArrayImpl(value)) return "[...]";
+          if (value.$$typeof === REACT_ELEMENT_TYPE)
+            return (maxLength = getComponentNameFromType(value.type))
+              ? "<" + maxLength + ">"
+              : "<...>";
+          var name = objectName(value);
+          if ("Object" === name) {
+            name = "";
+            maxLength -= 2;
+            for (var propName in value)
+              if (value.hasOwnProperty(propName)) {
+                var jsonPropName = JSON.stringify(propName);
+                jsonPropName !== '"' + propName + '"' &&
+                  (propName = jsonPropName);
+                maxLength -= propName.length - 2;
+                jsonPropName = describeValue(
+                  value[propName],
+                  15 > maxLength ? maxLength : 15
+                );
+                maxLength -= jsonPropName.length;
+                if (0 > maxLength) {
+                  name += "" === name ? "..." : ", ...";
+                  break;
+                }
+                name +=
+                  ("" === name ? "" : ",") + propName + ":" + jsonPropName;
+              }
+            return "{" + name + "}";
+          }
+          return name;
+        case "function":
+          return (maxLength = value.displayName || value.name)
+            ? "function " + maxLength
+            : "function";
+        default:
+          return String(value);
+      }
+    }
+    function describePropValue(value, maxLength) {
+      return "string" !== typeof value || needsEscaping.test(value)
+        ? "{" + describeValue(value, maxLength - 2) + "}"
+        : value.length > maxLength - 2
+        ? 5 > maxLength
+          ? '"..."'
+          : '"' + value.slice(0, maxLength - 5) + '..."'
+        : '"' + value + '"';
+    }
+    function describeExpandedElement(type, props, rowPrefix) {
+      var remainingRowLength = 120 - rowPrefix.length - type.length,
+        properties = [],
+        propName;
+      for (propName in props)
+        if (props.hasOwnProperty(propName) && "children" !== propName) {
+          var propValue = describePropValue(
+            props[propName],
+            120 - rowPrefix.length - propName.length - 1
+          );
+          remainingRowLength -= propName.length + propValue.length + 2;
+          properties.push(propName + "=" + propValue);
+        }
+      return 0 === properties.length
+        ? rowPrefix + "<" + type + ">\n"
+        : 0 < remainingRowLength
+        ? rowPrefix + "<" + type + " " + properties.join(" ") + ">\n"
+        : rowPrefix +
+          "<" +
+          type +
+          "\n" +
+          rowPrefix +
+          "  " +
+          properties.join("\n" + rowPrefix + "  ") +
+          "\n" +
+          rowPrefix +
+          ">\n";
+    }
+    function describePropertiesDiff(clientObject, serverObject, indent) {
+      var properties = "",
+        remainingServerProperties = assign({}, serverObject),
+        propName;
+      for (propName in clientObject)
+        if (clientObject.hasOwnProperty(propName)) {
+          delete remainingServerProperties[propName];
+          var maxLength = 120 - 2 * indent - propName.length - 2,
+            clientPropValue = describeValue(clientObject[propName], maxLength);
+          serverObject.hasOwnProperty(propName)
+            ? ((maxLength = describeValue(serverObject[propName], maxLength)),
+              (properties +=
+                added(indent) + propName + ": " + clientPropValue + "\n"),
+              (properties +=
+                removed(indent) + propName + ": " + maxLength + "\n"))
+            : (properties +=
+                added(indent) + propName + ": " + clientPropValue + "\n");
+        }
+      for (var _propName in remainingServerProperties)
+        remainingServerProperties.hasOwnProperty(_propName) &&
+          ((clientObject = describeValue(
+            remainingServerProperties[_propName],
+            120 - 2 * indent - _propName.length - 2
+          )),
+          (properties +=
+            removed(indent) + _propName + ": " + clientObject + "\n"));
+      return properties;
+    }
+    function describeElementDiff(type, clientProps, serverProps, indent) {
+      var content = "",
+        serverPropNames = new Map();
+      for (propName$jscomp$0 in serverProps)
+        serverProps.hasOwnProperty(propName$jscomp$0) &&
+          serverPropNames.set(
+            propName$jscomp$0.toLowerCase(),
+            propName$jscomp$0
+          );
+      if (1 === serverPropNames.size && serverPropNames.has("children"))
+        content += describeExpandedElement(
+          type,
+          clientProps,
+          indentation(indent)
+        );
+      else {
+        for (var _propName2 in clientProps)
+          if (
+            clientProps.hasOwnProperty(_propName2) &&
+            "children" !== _propName2
+          ) {
+            var maxLength$jscomp$0 =
+                120 - 2 * (indent + 1) - _propName2.length - 1,
+              serverPropName = serverPropNames.get(_propName2.toLowerCase());
+            if (void 0 !== serverPropName) {
+              serverPropNames.delete(_propName2.toLowerCase());
+              var propName$jscomp$0 = clientProps[_propName2];
+              serverPropName = serverProps[serverPropName];
+              var clientPropValue = describePropValue(
+                propName$jscomp$0,
+                maxLength$jscomp$0
+              );
+              maxLength$jscomp$0 = describePropValue(
+                serverPropName,
+                maxLength$jscomp$0
+              );
+              "object" === typeof propName$jscomp$0 &&
+              null !== propName$jscomp$0 &&
+              "object" === typeof serverPropName &&
+              null !== serverPropName &&
+              "Object" === objectName(propName$jscomp$0) &&
+              "Object" === objectName(serverPropName) &&
+              (2 < Object.keys(propName$jscomp$0).length ||
+                2 < Object.keys(serverPropName).length ||
+                -1 < clientPropValue.indexOf("...") ||
+                -1 < maxLength$jscomp$0.indexOf("..."))
+                ? (content +=
+                    indentation(indent + 1) +
+                    _propName2 +
+                    "={{\n" +
+                    describePropertiesDiff(
+                      propName$jscomp$0,
+                      serverPropName,
+                      indent + 2
+                    ) +
+                    indentation(indent + 1) +
+                    "}}\n")
+                : ((content +=
+                    added(indent + 1) +
+                    _propName2 +
+                    "=" +
+                    clientPropValue +
+                    "\n"),
+                  (content +=
+                    removed(indent + 1) +
+                    _propName2 +
+                    "=" +
+                    maxLength$jscomp$0 +
+                    "\n"));
+            } else
+              content +=
+                indentation(indent + 1) +
+                _propName2 +
+                "=" +
+                describePropValue(clientProps[_propName2], maxLength$jscomp$0) +
+                "\n";
+          }
+        serverPropNames.forEach(function (propName) {
+          if ("children" !== propName) {
+            var maxLength = 120 - 2 * (indent + 1) - propName.length - 1;
+            content +=
+              removed(indent + 1) +
+              propName +
+              "=" +
+              describePropValue(serverProps[propName], maxLength) +
+              "\n";
+          }
+        });
+        content =
+          "" === content
+            ? indentation(indent) + "<" + type + ">\n"
+            : indentation(indent) +
+              "<" +
+              type +
+              "\n" +
+              content +
+              indentation(indent) +
+              ">\n";
+      }
+      type = serverProps.children;
+      clientProps = clientProps.children;
+      if (
+        "string" === typeof type ||
+        "number" === typeof type ||
+        "bigint" === typeof type
+      ) {
+        serverPropNames = "";
+        if (
+          "string" === typeof clientProps ||
+          "number" === typeof clientProps ||
+          "bigint" === typeof clientProps
+        )
+          serverPropNames = "" + clientProps;
+        content += describeTextDiff(serverPropNames, "" + type, indent + 1);
+      } else if (
+        "string" === typeof clientProps ||
+        "number" === typeof clientProps ||
+        "bigint" === typeof clientProps
+      )
+        content =
+          null == type
+            ? content + describeTextDiff("" + clientProps, null, indent + 1)
+            : content + describeTextDiff("" + clientProps, void 0, indent + 1);
+      return content;
+    }
+    function describeSiblingFiber(fiber, indent) {
+      var type = describeFiberType(fiber);
+      if (null === type) {
+        type = "";
+        for (fiber = fiber.child; fiber; )
+          (type += describeSiblingFiber(fiber, indent)),
+            (fiber = fiber.sibling);
+        return type;
+      }
+      return indentation(indent) + "<" + type + ">\n";
+    }
+    function describeNode(node, indent) {
+      var skipToNode = findNotableNode(node, indent);
+      if (
+        skipToNode !== node &&
+        (1 !== node.children.length || node.children[0] !== skipToNode)
+      )
+        return (
+          indentation(indent) + "...\n" + describeNode(skipToNode, indent + 1)
+        );
+      skipToNode = "";
+      var debugInfo = node.fiber._debugInfo;
+      if (debugInfo)
+        for (var i = 0; i < debugInfo.length; i++) {
+          var serverComponentName = debugInfo[i].name;
+          "string" === typeof serverComponentName &&
+            ((skipToNode +=
+              indentation(indent) + "<" + serverComponentName + ">\n"),
+            indent++);
+        }
+      debugInfo = "";
+      i = node.fiber.pendingProps;
+      if (6 === node.fiber.tag)
+        (debugInfo = describeTextDiff(i, node.serverProps, indent)), indent++;
+      else if (
+        ((serverComponentName = describeFiberType(node.fiber)),
+        null !== serverComponentName)
+      )
+        if (void 0 === node.serverProps) {
+          debugInfo = indent;
+          var maxLength = 120 - 2 * debugInfo - serverComponentName.length - 2,
+            content = "";
+          for (propName in i)
+            if (i.hasOwnProperty(propName) && "children" !== propName) {
+              var propValue = describePropValue(i[propName], 15);
+              maxLength -= propName.length + propValue.length + 2;
+              if (0 > maxLength) {
+                content += " ...";
+                break;
+              }
+              content += " " + propName + "=" + propValue;
+            }
+          debugInfo =
+            indentation(debugInfo) +
+            "<" +
+            serverComponentName +
+            content +
+            ">\n";
+          indent++;
+        } else
+          null === node.serverProps
+            ? ((debugInfo = describeExpandedElement(
+                serverComponentName,
+                i,
+                added(indent)
+              )),
+              indent++)
+            : "string" === typeof node.serverProps
+            ? error$jscomp$0(
+                "Should not have matched a non HostText fiber to a Text node. This is a bug in React."
+              )
+            : ((debugInfo = describeElementDiff(
+                serverComponentName,
+                i,
+                node.serverProps,
+                indent
+              )),
+              indent++);
+      var propName = "";
+      i = node.fiber.child;
+      for (
+        serverComponentName = 0;
+        i && serverComponentName < node.children.length;
+
+      )
+        (maxLength = node.children[serverComponentName]),
+          maxLength.fiber === i
+            ? ((propName += describeNode(maxLength, indent)),
+              serverComponentName++)
+            : (propName += describeSiblingFiber(i, indent)),
+          (i = i.sibling);
+      i &&
+        0 < node.children.length &&
+        (propName += indentation(indent) + "...\n");
+      i = node.serverTail;
+      null === node.serverProps && indent--;
+      for (node = 0; node < i.length; node++)
+        (serverComponentName = i[node]),
+          (propName =
+            "string" === typeof serverComponentName
+              ? propName +
+                (removed(indent) +
+                  describeTextNode(serverComponentName, 120 - 2 * indent) +
+                  "\n")
+              : propName +
+                describeExpandedElement(
+                  serverComponentName.type,
+                  serverComponentName.props,
+                  removed(indent)
+                ));
+      return skipToNode + debugInfo + propName;
+    }
+    function describeDiff(rootNode) {
+      try {
+        return "\n\n" + describeNode(rootNode, 0);
+      } catch (x) {
+        return "";
+      }
+    }
+    function describeAncestors(ancestor, child, props) {
+      for (var fiber = child, node = null, distanceFromLeaf = 0; fiber; )
+        fiber === ancestor && (distanceFromLeaf = 0),
+          (node = {
+            fiber: fiber,
+            children: null !== node ? [node] : [],
+            serverProps:
+              fiber === child ? props : fiber === ancestor ? null : void 0,
+            serverTail: [],
+            distanceFromLeaf: distanceFromLeaf
+          }),
+          distanceFromLeaf++,
+          (fiber = fiber.return);
+      return null !== node ? describeDiff(node).replaceAll(/^[+-]/gm, ">") : "";
+    }
     function updatedAncestorInfoDev(oldInfo, tag) {
       oldInfo = assign({}, oldInfo || emptyAncestorInfoDev);
       var info = { tag: tag };
@@ -2143,6 +2609,18 @@ __DEV__ &&
       }
       return null;
     }
+    function findAncestor(parent, tagName) {
+      for (; parent; ) {
+        switch (parent.tag) {
+          case 5:
+          case 26:
+          case 27:
+            if (parent.type === tagName) return parent;
+        }
+        parent = parent.return;
+      }
+      return null;
+    }
     function validateDOMNesting(childTag, ancestorInfo) {
       ancestorInfo = ancestorInfo || emptyAncestorInfoDev;
       var parentInfo = ancestorInfo.current;
@@ -2160,25 +2638,32 @@ __DEV__ &&
       var warnKey = String(!!parentInfo) + "|" + childTag + "|" + ancestorInfo;
       if (didWarn[warnKey]) return !1;
       didWarn[warnKey] = !0;
-      warnKey = "<" + childTag + ">";
+      var ancestor = (warnKey = current)
+        ? findAncestor(warnKey.return, ancestorInfo)
+        : null;
+      warnKey =
+        null !== warnKey && null !== ancestor
+          ? describeAncestors(ancestor, warnKey, null)
+          : "";
+      ancestor = "<" + childTag + ">";
       parentInfo
         ? ((parentInfo = ""),
           "table" === ancestorInfo &&
             "tr" === childTag &&
             (parentInfo +=
               " Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser."),
-          console.error(
+          error$jscomp$0(
             "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s",
-            warnKey,
+            ancestor,
             ancestorInfo,
             parentInfo,
-            getCurrentParentStackInDev()
+            warnKey
           ))
-        : console.error(
+        : error$jscomp$0(
             "In HTML, %s cannot be a descendant of <%s>.\nThis will cause a hydration error.%s",
-            warnKey,
+            ancestor,
             ancestorInfo,
-            getCurrentParentStackInDev()
+            warnKey
           );
       return !1;
     }
@@ -2187,16 +2672,27 @@ __DEV__ &&
       var warnKey = "#text|" + parentTag;
       if (didWarn[warnKey]) return !1;
       didWarn[warnKey] = !0;
+      var ancestor = (warnKey = current)
+        ? findAncestor(warnKey, parentTag)
+        : null;
+      warnKey =
+        null !== warnKey && null !== ancestor
+          ? describeAncestors(
+              ancestor,
+              warnKey,
+              6 !== warnKey.tag ? { children: null } : null
+            )
+          : "";
       /\S/.test(childText)
-        ? console.error(
+        ? error$jscomp$0(
             "In HTML, text nodes cannot be a child of <%s>.\nThis will cause a hydration error.%s",
             parentTag,
-            getCurrentParentStackInDev()
+            warnKey
           )
-        : console.error(
+        : error$jscomp$0(
             "In HTML, whitespace text nodes cannot be a child of <%s>. Make sure you don't have any extra whitespace between tags on each line of your source code.\nThis will cause a hydration error.%s",
             parentTag,
-            getCurrentParentStackInDev()
+            warnKey
           );
       return !1;
     }
@@ -2975,455 +3471,6 @@ __DEV__ &&
         error$jscomp$0(
           "Expected to be hydrating. This is a bug in React. Please file an issue."
         );
-    }
-    function findNotableNode(node, indent) {
-      return void 0 === node.serverProps &&
-        0 === node.serverTail.length &&
-        1 === node.children.length &&
-        3 < node.distanceFromLeaf &&
-        node.distanceFromLeaf > 15 - indent
-        ? findNotableNode(node.children[0], indent)
-        : node;
-    }
-    function indentation(indent) {
-      return "  " + "  ".repeat(indent);
-    }
-    function added(indent) {
-      return "+ " + "  ".repeat(indent);
-    }
-    function removed(indent) {
-      return "- " + "  ".repeat(indent);
-    }
-    function describeFiberType(fiber) {
-      switch (fiber.tag) {
-        case 26:
-        case 27:
-        case 5:
-          return fiber.type;
-        case 16:
-          return "Lazy";
-        case 13:
-          return "Suspense";
-        case 19:
-          return "SuspenseList";
-        case 0:
-        case 15:
-          return (fiber = fiber.type), fiber.displayName || fiber.name || null;
-        case 11:
-          return (
-            (fiber = fiber.type.render), fiber.displayName || fiber.name || null
-          );
-        case 1:
-          return (fiber = fiber.type), fiber.displayName || fiber.name || null;
-        default:
-          return null;
-      }
-    }
-    function describeTextNode(content, maxLength) {
-      return needsEscaping.test(content)
-        ? ((content = JSON.stringify(content)),
-          content.length > maxLength - 2
-            ? 8 > maxLength
-              ? '{"..."}'
-              : "{" + content.slice(0, maxLength - 7) + '..."}'
-            : "{" + content + "}")
-        : content.length > maxLength
-        ? 5 > maxLength
-          ? '{"..."}'
-          : content.slice(0, maxLength - 3) + "..."
-        : content;
-    }
-    function describeTextDiff(clientText, serverProps, indent) {
-      var maxLength = 120 - 2 * indent;
-      if (null === serverProps)
-        return added(indent) + describeTextNode(clientText, maxLength) + "\n";
-      if ("string" === typeof serverProps) {
-        for (
-          var firstDiff = 0;
-          firstDiff < serverProps.length &&
-          firstDiff < clientText.length &&
-          serverProps.charCodeAt(firstDiff) ===
-            clientText.charCodeAt(firstDiff);
-          firstDiff++
-        );
-        firstDiff > maxLength - 8 &&
-          10 < firstDiff &&
-          ((clientText = "..." + clientText.slice(firstDiff - 8)),
-          (serverProps = "..." + serverProps.slice(firstDiff - 8)));
-        return (
-          added(indent) +
-          describeTextNode(clientText, maxLength) +
-          "\n" +
-          removed(indent) +
-          describeTextNode(serverProps, maxLength) +
-          "\n"
-        );
-      }
-      return (
-        indentation(indent) + describeTextNode(clientText, maxLength) + "\n"
-      );
-    }
-    function objectName(object) {
-      return Object.prototype.toString
-        .call(object)
-        .replace(/^\[object (.*)\]$/, function (m, p0) {
-          return p0;
-        });
-    }
-    function describeValue(value, maxLength) {
-      switch (typeof value) {
-        case "string":
-          return (
-            (value = JSON.stringify(value)),
-            value.length > maxLength
-              ? 5 > maxLength
-                ? '"..."'
-                : value.slice(0, maxLength - 4) + '..."'
-              : value
-          );
-        case "object":
-          if (null === value) return "null";
-          if (isArrayImpl(value)) return "[...]";
-          if (value.$$typeof === REACT_ELEMENT_TYPE)
-            return (maxLength = getComponentNameFromType(value.type))
-              ? "<" + maxLength + ">"
-              : "<...>";
-          var name = objectName(value);
-          if ("Object" === name) {
-            name = "";
-            maxLength -= 2;
-            for (var propName in value)
-              if (value.hasOwnProperty(propName)) {
-                var jsonPropName = JSON.stringify(propName);
-                jsonPropName !== '"' + propName + '"' &&
-                  (propName = jsonPropName);
-                maxLength -= propName.length - 2;
-                jsonPropName = describeValue(
-                  value[propName],
-                  15 > maxLength ? maxLength : 15
-                );
-                maxLength -= jsonPropName.length;
-                if (0 > maxLength) {
-                  name += "" === name ? "..." : ", ...";
-                  break;
-                }
-                name +=
-                  ("" === name ? "" : ",") + propName + ":" + jsonPropName;
-              }
-            return "{" + name + "}";
-          }
-          return name;
-        case "function":
-          return (maxLength = value.displayName || value.name)
-            ? "function " + maxLength
-            : "function";
-        default:
-          return String(value);
-      }
-    }
-    function describePropValue(value, maxLength) {
-      return "string" !== typeof value || needsEscaping.test(value)
-        ? "{" + describeValue(value, maxLength - 2) + "}"
-        : value.length > maxLength - 2
-        ? 5 > maxLength
-          ? '"..."'
-          : '"' + value.slice(0, maxLength - 5) + '..."'
-        : '"' + value + '"';
-    }
-    function describeExpandedElement(type, props, rowPrefix) {
-      var remainingRowLength = 120 - rowPrefix.length - type.length,
-        properties = [],
-        propName;
-      for (propName in props)
-        if (props.hasOwnProperty(propName) && "children" !== propName) {
-          var propValue = describePropValue(
-            props[propName],
-            120 - rowPrefix.length - propName.length - 1
-          );
-          remainingRowLength -= propName.length + propValue.length + 2;
-          properties.push(propName + "=" + propValue);
-        }
-      return 0 === properties.length
-        ? rowPrefix + "<" + type + ">\n"
-        : 0 < remainingRowLength
-        ? rowPrefix + "<" + type + " " + properties.join(" ") + ">\n"
-        : rowPrefix +
-          "<" +
-          type +
-          "\n" +
-          rowPrefix +
-          "  " +
-          properties.join("\n" + rowPrefix + "  ") +
-          "\n" +
-          rowPrefix +
-          ">\n";
-    }
-    function describePropertiesDiff(clientObject, serverObject, indent) {
-      var properties = "",
-        remainingServerProperties = assign({}, serverObject),
-        propName;
-      for (propName in clientObject)
-        if (clientObject.hasOwnProperty(propName)) {
-          delete remainingServerProperties[propName];
-          var maxLength = 120 - 2 * indent - propName.length - 2,
-            clientPropValue = describeValue(clientObject[propName], maxLength);
-          serverObject.hasOwnProperty(propName)
-            ? ((maxLength = describeValue(serverObject[propName], maxLength)),
-              (properties +=
-                added(indent) + propName + ": " + clientPropValue + "\n"),
-              (properties +=
-                removed(indent) + propName + ": " + maxLength + "\n"))
-            : (properties +=
-                added(indent) + propName + ": " + clientPropValue + "\n");
-        }
-      for (var _propName in remainingServerProperties)
-        remainingServerProperties.hasOwnProperty(_propName) &&
-          ((clientObject = describeValue(
-            remainingServerProperties[_propName],
-            120 - 2 * indent - _propName.length - 2
-          )),
-          (properties +=
-            removed(indent) + _propName + ": " + clientObject + "\n"));
-      return properties;
-    }
-    function describeElementDiff(type, clientProps, serverProps, indent) {
-      var content = "",
-        serverPropNames = new Map();
-      for (propName$jscomp$0 in serverProps)
-        serverProps.hasOwnProperty(propName$jscomp$0) &&
-          serverPropNames.set(
-            propName$jscomp$0.toLowerCase(),
-            propName$jscomp$0
-          );
-      if (1 === serverPropNames.size && serverPropNames.has("children"))
-        content += describeExpandedElement(
-          type,
-          clientProps,
-          indentation(indent)
-        );
-      else {
-        for (var _propName2 in clientProps)
-          if (
-            clientProps.hasOwnProperty(_propName2) &&
-            "children" !== _propName2
-          ) {
-            var maxLength$jscomp$0 =
-                120 - 2 * (indent + 1) - _propName2.length - 1,
-              serverPropName = serverPropNames.get(_propName2.toLowerCase());
-            if (void 0 !== serverPropName) {
-              serverPropNames.delete(_propName2.toLowerCase());
-              var propName$jscomp$0 = clientProps[_propName2];
-              serverPropName = serverProps[serverPropName];
-              var clientPropValue = describePropValue(
-                propName$jscomp$0,
-                maxLength$jscomp$0
-              );
-              maxLength$jscomp$0 = describePropValue(
-                serverPropName,
-                maxLength$jscomp$0
-              );
-              "object" === typeof propName$jscomp$0 &&
-              null !== propName$jscomp$0 &&
-              "object" === typeof serverPropName &&
-              null !== serverPropName &&
-              "Object" === objectName(propName$jscomp$0) &&
-              "Object" === objectName(serverPropName) &&
-              (2 < Object.keys(propName$jscomp$0).length ||
-                2 < Object.keys(serverPropName).length ||
-                -1 < clientPropValue.indexOf("...") ||
-                -1 < maxLength$jscomp$0.indexOf("..."))
-                ? (content +=
-                    indentation(indent + 1) +
-                    _propName2 +
-                    "={{\n" +
-                    describePropertiesDiff(
-                      propName$jscomp$0,
-                      serverPropName,
-                      indent + 2
-                    ) +
-                    indentation(indent + 1) +
-                    "}}\n")
-                : ((content +=
-                    added(indent + 1) +
-                    _propName2 +
-                    "=" +
-                    clientPropValue +
-                    "\n"),
-                  (content +=
-                    removed(indent + 1) +
-                    _propName2 +
-                    "=" +
-                    maxLength$jscomp$0 +
-                    "\n"));
-            } else
-              content +=
-                indentation(indent + 1) +
-                _propName2 +
-                "=" +
-                describePropValue(clientProps[_propName2], maxLength$jscomp$0) +
-                "\n";
-          }
-        serverPropNames.forEach(function (propName) {
-          if ("children" !== propName) {
-            var maxLength = 120 - 2 * (indent + 1) - propName.length - 1;
-            content +=
-              removed(indent + 1) +
-              propName +
-              "=" +
-              describePropValue(serverProps[propName], maxLength) +
-              "\n";
-          }
-        });
-        content =
-          "" === content
-            ? indentation(indent) + "<" + type + ">\n"
-            : indentation(indent) +
-              "<" +
-              type +
-              "\n" +
-              content +
-              indentation(indent) +
-              ">\n";
-      }
-      type = serverProps.children;
-      clientProps = clientProps.children;
-      if (
-        "string" === typeof type ||
-        "number" === typeof type ||
-        "bigint" === typeof type
-      ) {
-        serverPropNames = "";
-        if (
-          "string" === typeof clientProps ||
-          "number" === typeof clientProps ||
-          "bigint" === typeof clientProps
-        )
-          serverPropNames = "" + clientProps;
-        content += describeTextDiff(serverPropNames, "" + type, indent + 1);
-      } else if (
-        "string" === typeof clientProps ||
-        "number" === typeof clientProps ||
-        "bigint" === typeof clientProps
-      )
-        content += describeTextDiff("" + clientProps, void 0, indent + 1);
-      return content;
-    }
-    function describeSiblingFiber(fiber, indent) {
-      var type = describeFiberType(fiber);
-      if (null === type) {
-        type = "";
-        for (fiber = fiber.child; fiber; )
-          (type += describeSiblingFiber(fiber, indent)),
-            (fiber = fiber.sibling);
-        return type;
-      }
-      return indentation(indent) + "<" + type + ">\n";
-    }
-    function describeNode(node, indent) {
-      var skipToNode = findNotableNode(node, indent);
-      if (
-        skipToNode !== node &&
-        (1 !== node.children.length || node.children[0] !== skipToNode)
-      )
-        return (
-          indentation(indent) + "...\n" + describeNode(skipToNode, indent + 1)
-        );
-      skipToNode = "";
-      var debugInfo = node.fiber._debugInfo;
-      if (debugInfo)
-        for (var i = 0; i < debugInfo.length; i++) {
-          var serverComponentName = debugInfo[i].name;
-          "string" === typeof serverComponentName &&
-            ((skipToNode +=
-              indentation(indent) + "<" + serverComponentName + ">\n"),
-            indent++);
-        }
-      debugInfo = "";
-      i = node.fiber.pendingProps;
-      if (6 === node.fiber.tag)
-        debugInfo = describeTextDiff(i, node.serverProps, indent);
-      else if (
-        ((serverComponentName = describeFiberType(node.fiber)),
-        null !== serverComponentName)
-      )
-        if (void 0 === node.serverProps) {
-          debugInfo = indent;
-          var maxLength = 120 - 2 * debugInfo - serverComponentName.length - 2,
-            content = "";
-          for (propName in i)
-            if (i.hasOwnProperty(propName) && "children" !== propName) {
-              var propValue = describePropValue(i[propName], 15);
-              maxLength -= propName.length + propValue.length + 2;
-              if (0 > maxLength) {
-                content += " ...";
-                break;
-              }
-              content += " " + propName + "=" + propValue;
-            }
-          debugInfo =
-            indentation(debugInfo) +
-            "<" +
-            serverComponentName +
-            content +
-            ">\n";
-          indent++;
-        } else
-          null === node.serverProps
-            ? (debugInfo = describeExpandedElement(
-                serverComponentName,
-                i,
-                added(indent)
-              ))
-            : "string" === typeof node.serverProps
-            ? error$jscomp$0(
-                "Should not have matched a non HostText fiber to a Text node. This is a bug in React."
-              )
-            : ((debugInfo = describeElementDiff(
-                serverComponentName,
-                i,
-                node.serverProps,
-                indent
-              )),
-              indent++);
-      var propName = "";
-      i = node.fiber.child;
-      for (
-        serverComponentName = 0;
-        i && serverComponentName < node.children.length;
-
-      )
-        (maxLength = node.children[serverComponentName]),
-          maxLength.fiber === i
-            ? ((propName += describeNode(maxLength, indent)),
-              serverComponentName++)
-            : (propName += describeSiblingFiber(i, indent)),
-          (i = i.sibling);
-      i &&
-        0 < node.children.length &&
-        (propName += indentation(indent) + "...\n");
-      node = node.serverTail;
-      for (i = 0; i < node.length; i++)
-        (serverComponentName = node[i]),
-          (propName =
-            "string" === typeof serverComponentName
-              ? propName +
-                (removed(indent) +
-                  describeTextNode(serverComponentName, 120 - 2 * indent) +
-                  "\n")
-              : propName +
-                describeExpandedElement(
-                  serverComponentName.type,
-                  serverComponentName.props,
-                  removed(indent)
-                ));
-      return skipToNode + debugInfo + propName;
-    }
-    function describeDiff(rootNode) {
-      try {
-        return "\n\n" + describeNode(rootNode, 0);
-      } catch (x) {
-        return "";
-      }
     }
     function buildHydrationDiffNode(fiber, distanceFromLeaf) {
       if (null === fiber.return) {
@@ -4545,6 +4592,7 @@ __DEV__ &&
               lanes
             )),
             (current.return = returnFiber),
+            (current._debugOwner = returnFiber),
             (current._debugInfo = currentDebugInfo),
             current
           );
@@ -4618,6 +4666,7 @@ __DEV__ &&
               key
             )),
             (current.return = returnFiber),
+            (current._debugOwner = returnFiber),
             (current._debugInfo = currentDebugInfo),
             current
           );
@@ -4639,6 +4688,7 @@ __DEV__ &&
               lanes
             )),
             (newChild.return = returnFiber),
+            (newChild._debugOwner = returnFiber),
             (newChild._debugInfo = currentDebugInfo),
             newChild
           );
@@ -4685,6 +4735,7 @@ __DEV__ &&
                 null
               )),
               (lanes.return = returnFiber),
+              (lanes._debugOwner = returnFiber),
               (returnFiber = pushDebugInfo(newChild._debugInfo)),
               (lanes._debugInfo = currentDebugInfo),
               (currentDebugInfo = returnFiber),
@@ -5225,6 +5276,7 @@ __DEV__ &&
                       newChild.key
                     )),
                     (currentFirstChild.return = returnFiber),
+                    (currentFirstChild._debugOwner = returnFiber),
                     (currentFirstChild._debugInfo = currentDebugInfo),
                     validateFragmentProps(
                       newChild,
@@ -5396,6 +5448,8 @@ __DEV__ &&
                   lanes
                 )),
                 (currentFirstChild.return = returnFiber),
+                (currentFirstChild._debugOwner = returnFiber),
+                (currentFirstChild._debugInfo = currentDebugInfo),
                 (returnFiber = currentFirstChild)),
             placeSingleChild(returnFiber)
           );
@@ -23533,6 +23587,7 @@ __DEV__ &&
     var didWarnValueDefaultValue = !1;
     var valuePropNames = ["value", "defaultValue"],
       didWarnValDefaultVal = !1,
+      needsEscaping = /["'&<>\n\t]|^\s|\s$/,
       specialTags =
         "address applet area article aside base basefont bgsound blockquote body br button caption center col colgroup dd details dir div dl dt embed fieldset figcaption figure footer form frame frameset h1 h2 h3 h4 h5 h6 head header hgroup hr html iframe img input isindex li link listing main marquee menu menuitem meta nav noembed noframes noscript object ol p param plaintext pre script section select source style summary table tbody td template textarea tfoot th thead title tr track ul wbr xmp".split(
           " "
@@ -24375,7 +24430,6 @@ __DEV__ &&
       treeContextProvider = null,
       treeContextId = 1,
       treeContextOverflow = "",
-      needsEscaping = /["'&<>\n\t]/,
       hydrationParentFiber = null,
       nextHydratableInstance = null,
       isHydrating = !1,
@@ -26925,11 +26979,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-378b305958-20240710" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-2d3f81bb6a-20240710" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-378b305958-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-2d3f81bb6a-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26994,12 +27048,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-378b305958-20240710"
+          reconcilerVersion: "19.0.0-www-modern-2d3f81bb6a-20240710"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-378b305958-20240710",
+        version: "19.0.0-www-modern-2d3f81bb6a-20240710",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27761,5 +27815,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-378b305958-20240710";
+    exports.version = "19.0.0-www-modern-2d3f81bb6a-20240710";
   })();
