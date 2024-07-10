@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9cfd9a3336c394db9589562dee0da5ba>>
+ * @generated SignedSource<<db7a357f5ae59a5f4cfde3b9db83464a>>
  */
 
 "use strict";
@@ -10004,7 +10004,7 @@ var devToolsConfig$jscomp$inline_1136 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-14fdd0e21c-20240710",
+  version: "19.0.0-native-fb-3b2e5f27c5-20240710",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -10048,7 +10048,7 @@ var devToolsConfig$jscomp$inline_1136 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-14fdd0e21c-20240710"
+  reconcilerVersion: "19.0.0-native-fb-3b2e5f27c5-20240710"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
