@@ -7897,14 +7897,24 @@ __DEV__ &&
     }
     function defaultOnUncaughtError(error, errorInfo) {
       reportGlobalError(error);
-      console.warn(
-        "%s\n\n%s\n%s",
-        componentName
-          ? "An error occurred in the <" + componentName + "> component."
-          : "An error occurred in one of your React components.",
-        "Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries.",
-        null != errorInfo.componentStack ? errorInfo.componentStack : ""
-      );
+      error = componentName
+        ? "An error occurred in the <" + componentName + "> component."
+        : "An error occurred in one of your React components.";
+      var prevGetCurrentStack = ReactSharedInternals.getCurrentStack,
+        componentStack =
+          null != errorInfo.componentStack ? errorInfo.componentStack : "";
+      ReactSharedInternals.getCurrentStack = function () {
+        return componentStack;
+      };
+      try {
+        warn(
+          "%s\n\n%s\n",
+          error,
+          "Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+        );
+      } finally {
+        ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
+      }
     }
     function defaultOnCaughtError(error$1, errorInfo) {
       var componentNameMessage = componentName
@@ -27890,11 +27900,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-fe9828954a-20240710" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-29552c7907-20240710" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-fe9828954a-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-29552c7907-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27960,12 +27970,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-classic-fe9828954a-20240710"
+          reconcilerVersion: "19.0.0-www-classic-29552c7907-20240710"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-classic-fe9828954a-20240710",
+        version: "19.0.0-www-classic-29552c7907-20240710",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -28774,5 +28784,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-fe9828954a-20240710";
+    exports.version = "19.0.0-www-classic-29552c7907-20240710";
   })();
