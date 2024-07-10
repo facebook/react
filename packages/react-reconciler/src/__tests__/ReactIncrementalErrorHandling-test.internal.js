@@ -1211,7 +1211,14 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    await waitForAll([]);
+
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev([
+      'Provider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Provider uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'Connector uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
 
     // If the context stack does not unwind, span will get 'abcde'
     expect(ReactNoop).toMatchRenderedOutput(<span prop="a" />);

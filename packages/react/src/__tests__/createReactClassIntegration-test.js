@@ -10,6 +10,7 @@
 'use strict';
 
 let act;
+let assertConsoleErrorDev;
 
 let PropTypes;
 let React;
@@ -19,7 +20,7 @@ let createReactClass;
 describe('create-react-class-integration', () => {
   beforeEach(() => {
     jest.resetModules();
-    ({act} = require('internal-test-utils'));
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
@@ -336,6 +337,10 @@ describe('create-react-class-integration', () => {
     await act(() => {
       root.render(<Outer />);
     });
+    assertConsoleErrorDev([
+      'Component uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(container.firstChild.className).toBe('foo');
   });
 

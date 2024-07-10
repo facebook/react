@@ -13,10 +13,12 @@ let React;
 let ReactDOM;
 let PropTypes;
 let ReactDOMClient;
-let root;
 let Scheduler;
+
 let act;
+let assertConsoleErrorDev;
 let assertLog;
+let root;
 
 describe('ReactDOMFiber', () => {
   let container;
@@ -29,7 +31,7 @@ describe('ReactDOMFiber', () => {
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
-    assertLog = require('internal-test-utils').assertLog;
+    ({assertConsoleErrorDev, assertLog} = require('internal-test-utils'));
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -732,6 +734,10 @@ describe('ReactDOMFiber', () => {
     await act(async () => {
       root.render(<Parent />);
     });
+    assertConsoleErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(container.innerHTML).toBe('');
     expect(portalContainer.innerHTML).toBe('<div>bar</div>');
   });
