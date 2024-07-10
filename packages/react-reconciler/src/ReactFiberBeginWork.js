@@ -316,6 +316,7 @@ let didReceiveUpdate: boolean = false;
 
 let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
+let didWarnAboutContextTypes;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps: boolean;
@@ -326,6 +327,7 @@ let didWarnAboutDefaultPropsOnFunctionComponent;
 if (__DEV__) {
   didWarnAboutBadClass = ({}: {[string]: boolean});
   didWarnAboutContextTypeOnFunctionComponent = ({}: {[string]: boolean});
+  didWarnAboutContextTypes = ({}: {[string]: boolean});
   didWarnAboutGetDerivedStateOnFunctionComponent = ({}: {[string]: boolean});
   didWarnAboutFunctionRefs = ({}: {[string]: boolean});
   didWarnAboutReassigningProps = false;
@@ -1130,12 +1132,27 @@ function updateFunctionComponent(
       // in updateFuntionComponent but only on mount
       validateFunctionComponentInDev(workInProgress, workInProgress.type);
 
-      if (disableLegacyContext && Component.contextTypes) {
-        console.error(
-          '%s uses the legacy contextTypes API which was removed in React 19. ' +
-            'Use React.createContext() with React.useContext() instead.',
-          getComponentNameFromType(Component) || 'Unknown',
-        );
+      if (Component.contextTypes) {
+        const componentName = getComponentNameFromType(Component) || 'Unknown';
+
+        if (!didWarnAboutContextTypes[componentName]) {
+          didWarnAboutContextTypes[componentName] = true;
+          if (disableLegacyContext) {
+            console.error(
+              '%s uses the legacy contextTypes API which was removed in React 19. ' +
+                'Use React.createContext() with React.useContext() instead. ' +
+                '(https://react.dev/link/legacy-context)',
+              componentName,
+            );
+          } else {
+            console.error(
+              '%s uses the legacy contextTypes API which will be removed soon. ' +
+                'Use React.createContext() with React.useContext() instead. ' +
+                '(https://react.dev/link/legacy-context)',
+              componentName,
+            );
+          }
+        }
       }
     }
   }
@@ -1923,14 +1940,12 @@ function mountIncompleteClassComponent(
 
 function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   if (__DEV__) {
-    if (Component) {
-      if (Component.childContextTypes) {
-        console.error(
-          'childContextTypes cannot be defined on a function component.\n' +
-            '  %s.childContextTypes = ...',
-          Component.displayName || Component.name || 'Component',
-        );
-      }
+    if (Component && Component.childContextTypes) {
+      console.error(
+        'childContextTypes cannot be defined on a function component.\n' +
+          '  %s.childContextTypes = ...',
+        Component.displayName || Component.name || 'Component',
+      );
     }
     if (!enableRefAsProp && workInProgress.ref !== null) {
       let info = '';

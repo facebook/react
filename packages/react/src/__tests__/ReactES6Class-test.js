@@ -13,6 +13,7 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMClient;
+let assertConsoleErrorDev;
 
 describe('ReactES6Class', () => {
   let container;
@@ -30,6 +31,7 @@ describe('ReactES6Class', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    ({assertConsoleErrorDev} = require('internal-test-utils'));
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     attachedListener = null;
@@ -287,6 +289,11 @@ describe('ReactES6Class', () => {
         className: PropTypes.string,
       };
       runTest(<Outer />, 'SPAN', 'foo');
+
+      assertConsoleErrorDev([
+        'Outer uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Foo uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      ]);
     });
   }
 
@@ -579,6 +586,10 @@ describe('ReactES6Class', () => {
       }
       Foo.childContextTypes = {bar: PropTypes.string};
       runTest(<Foo />, 'DIV', 'bar-through-context');
+      assertConsoleErrorDev([
+        'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      ]);
     });
   }
 
