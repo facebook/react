@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8584109002f045b3c3f3a2b760460d87>>
+ * @generated SignedSource<<f3f3cf91f04ba94a2614315d5362e5f5>>
  */
 
 "use strict";
@@ -6442,6 +6442,27 @@ __DEV__ &&
         return baseProps;
       }
       return baseProps;
+    }
+    function defaultOnUncaughtError(error, errorInfo) {
+      reportGlobalError(error);
+      error = componentName
+        ? "An error occurred in the <" + componentName + "> component."
+        : "An error occurred in one of your React components.";
+      var prevGetCurrentStack = ReactSharedInternals.getCurrentStack,
+        componentStack =
+          null != errorInfo.componentStack ? errorInfo.componentStack : "";
+      ReactSharedInternals.getCurrentStack = function () {
+        return componentStack;
+      };
+      try {
+        warn(
+          "%s\n\n%s\n",
+          error,
+          "Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries."
+        );
+      } finally {
+        ReactSharedInternals.getCurrentStack = prevGetCurrentStack;
+      }
     }
     function defaultOnCaughtError(error$1, errorInfo) {
       var componentNameMessage = componentName
@@ -14338,16 +14359,7 @@ __DEV__ &&
           error: error,
           componentStack:
             null != errorInfo.componentStack ? errorInfo.componentStack : ""
-        }) &&
-        (reportGlobalError(error),
-        console.warn(
-          "%s\n\n%s\n%s",
-          componentName
-            ? "An error occurred in the <" + componentName + "> component."
-            : "An error occurred in one of your React components.",
-          "Consider adding an error boundary to your tree to customize error handling behavior.\nVisit https://react.dev/link/error-boundaries to learn more about error boundaries.",
-          null != errorInfo.componentStack ? errorInfo.componentStack : ""
-        ));
+        }) && defaultOnUncaughtError(error, errorInfo);
     }
     function nativeOnCaughtError(error, errorInfo) {
       !1 !==
@@ -16997,11 +17009,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-fe9828954a-20240710" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-29552c7907-20240710" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-fe9828954a-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-29552c7907-20240710\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17049,12 +17061,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-fe9828954a-20240710"
+        reconcilerVersion: "19.0.0-native-fb-29552c7907-20240710"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-fe9828954a-20240710",
+      version: "19.0.0-native-fb-29552c7907-20240710",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c77fee587e5dac8c50f6592780bb8ef0>>
+ * @generated SignedSource<<47f2cff113a0e8735d34f879855fc544>>
  */
 
 "use strict";
@@ -10632,7 +10632,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1136 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-fe9828954a-20240710",
+    version: "19.0.0-native-fb-29552c7907-20240710",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10675,7 +10675,7 @@ var internals$jscomp$inline_1362 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-fe9828954a-20240710"
+  reconcilerVersion: "19.0.0-native-fb-29552c7907-20240710"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1363 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
