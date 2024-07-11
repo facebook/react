@@ -13,26 +13,27 @@
 // Use __VARIANT__ to simulate a GK. The tests will be run twice: once
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
-export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
-export const enableLazyContextPropagation = __VARIANT__;
-export const forceConcurrentByDefaultForTesting = __VARIANT__;
-export const enableTransitionTracing = __VARIANT__;
-export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const alwaysThrottleRetries = true;
-export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
-export const enableUseDeferredValueInitialArg = __VARIANT__;
-export const enableRenderableContext = __VARIANT__;
-export const enableFastJSX = __VARIANT__;
-export const enableRetryLaneExpiration = __VARIANT__;
-export const favorSafetyOverHydrationPerf = __VARIANT__;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;
+export const disableLegacyMode = __VARIANT__;
+export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
+export const enableAddPropertiesFastPath = __VARIANT__;
+export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
+export const enableFastJSX = __VARIANT__;
+export const enableLazyContextPropagation = __VARIANT__;
 export const enableNoCloningMemoCache = __VARIANT__;
+export const enableObjectFiber = __VARIANT__;
+export const enableRenderableContext = __VARIANT__;
+export const enableRetryLaneExpiration = __VARIANT__;
+export const enableTransitionTracing = __VARIANT__;
+export const enableUseDeferredValueInitialArg = __VARIANT__;
+export const favorSafetyOverHydrationPerf = __VARIANT__;
+export const forceConcurrentByDefaultForTesting = __VARIANT__;
+export const renameElementSymbol = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
-export const enableAddPropertiesFastPath = __VARIANT__;
-export const disableLegacyMode = __VARIANT__;
-export const renameElementSymbol = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
