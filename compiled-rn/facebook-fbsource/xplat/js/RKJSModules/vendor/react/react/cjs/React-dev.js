@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9bf9089d14c921e559cf75a8baf3b007>>
+ * @generated SignedSource<<34ae957fdb21cf0094807e7ed74a96b2>>
  */
 
 "use strict";
@@ -41,7 +41,7 @@ __DEV__ &&
         _key++
       )
         args[_key - 1] = arguments[_key];
-      printWarning("warn", format, args, Error("react-stack-top-frame"));
+      printWarning("warn", format, args);
     }
     function error$jscomp$0(format) {
       for (
@@ -52,13 +52,13 @@ __DEV__ &&
         _key2++
       )
         args[_key2 - 1] = arguments[_key2];
-      printWarning("error", format, args, Error("react-stack-top-frame"));
+      printWarning("error", format, args);
     }
-    function printWarning(level, format, args, currentStack) {
-      ReactSharedInternals.getCurrentStack &&
-        ((currentStack = ReactSharedInternals.getCurrentStack(currentStack)),
-        "" !== currentStack &&
-          ((format += "%s"), (args = args.concat([currentStack]))));
+    function printWarning(level, format, args) {
+      if (ReactSharedInternals.getCurrentStack) {
+        var stack = ReactSharedInternals.getCurrentStack();
+        "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+      }
       args.unshift(format);
       Function.prototype.apply.call(console[level], console, args);
     }
@@ -1748,7 +1748,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-a5cc797b88-20240711";
+    exports.version = "19.0.0-native-fb-433068ee-20240711";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

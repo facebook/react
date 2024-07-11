@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7d835c87e5f5af6809615cdd2871b34d>>
+ * @generated SignedSource<<9e809495c8f8c2620055e72bf5cdddf0>>
  */
 
 "use strict";
@@ -139,7 +139,7 @@ __DEV__ &&
           _key++
         )
           args[_key - 1] = arguments[_key];
-        printWarning("warn", format, args, Error("react-stack-top-frame"));
+        printWarning("warn", format, args);
       }
     }
     function error$jscomp$0(format) {
@@ -152,14 +152,14 @@ __DEV__ &&
           _key2++
         )
           args[_key2 - 1] = arguments[_key2];
-        printWarning("error", format, args, Error("react-stack-top-frame"));
+        printWarning("error", format, args);
       }
     }
-    function printWarning(level, format, args, currentStack) {
-      ReactSharedInternals.getCurrentStack &&
-        ((currentStack = ReactSharedInternals.getCurrentStack(currentStack)),
-        "" !== currentStack &&
-          ((format += "%s"), (args = args.concat([currentStack]))));
+    function printWarning(level, format, args) {
+      if (ReactSharedInternals.getCurrentStack) {
+        var stack = ReactSharedInternals.getCurrentStack();
+        "" !== stack && ((format += "%s"), (args = args.concat([stack])));
+      }
       args.unshift(format);
       Function.prototype.apply.call(console[level], console, args);
     }
@@ -16821,12 +16821,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-a5cc797b88-20240711"
+        reconcilerVersion: "19.0.0-native-fb-433068ee-20240711"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-a5cc797b88-20240711",
+      version: "19.0.0-native-fb-433068ee-20240711",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

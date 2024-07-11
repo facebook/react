@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7ad8e11753e71d86731728e561f85039>>
+ * @generated SignedSource<<8de8fd144d056267c7877ddd4494da73>>
  */
 
 "use strict";
@@ -23,9 +23,8 @@ __DEV__ &&
       )
         args[_key2 - 1] = arguments[_key2];
       _len2 = format;
-      _key2 = Error("react-stack-top-frame");
       ReactSharedInternals.getCurrentStack &&
-        ((_key2 = ReactSharedInternals.getCurrentStack(_key2)),
+        ((_key2 = ReactSharedInternals.getCurrentStack()),
         "" !== _key2 && ((_len2 += "%s"), (args = args.concat([_key2]))));
       args.unshift(_len2);
       Function.prototype.apply.call(console.error, console, args);
