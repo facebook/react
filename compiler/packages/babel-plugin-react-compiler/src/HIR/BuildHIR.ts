@@ -1332,6 +1332,7 @@ function lowerStatement(
       return;
     }
     case "TypeAlias":
+    case "TSInterfaceDeclaration":
     case "TSTypeAliasDeclaration": {
       // We do not preserve type annotations/syntax through transformation
       return;
@@ -1358,7 +1359,6 @@ function lowerStatement(
     case "TSEnumDeclaration":
     case "TSExportAssignment":
     case "TSImportEqualsDeclaration":
-    case "TSInterfaceDeclaration":
     case "TSModuleDeclaration":
     case "TSNamespaceExportDeclaration":
     case "WithStatement": {

@@ -1696,13 +1696,15 @@ function renderFunctionComponent(
         if (disableLegacyContext) {
           console.error(
             '%s uses the legacy contextTypes API which was removed in React 19. ' +
-              'Use React.createContext() with React.useContext() instead.',
+              'Use React.createContext() with React.useContext() instead. ' +
+              '(https://react.dev/link/legacy-context)',
             componentName,
           );
         } else {
           console.error(
             '%s uses the legacy contextTypes API which will be removed soon. ' +
-              'Use React.createContext() with React.useContext() instead.',
+              'Use React.createContext() with React.useContext() instead. ' +
+              '(https://react.dev/link/legacy-context)',
             componentName,
           );
         }
