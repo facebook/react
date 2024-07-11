@@ -55,6 +55,8 @@ function formatProdErrorMessage(code) {
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  disableLegacyContextForFunctionComponents =
+    dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableUseDeferredValueInitialArg =
@@ -4076,15 +4078,9 @@ function renderElement(request, task, keyPath, type, props, ref) {
           renderNodeDestructive(request, task, JSCompiler_inline_result, -1),
           (task.keyPath = type);
     } else
-      (contextKey = getMaskedContext(type, task.legacyContext)),
-        (type = renderWithHooks(
-          request,
-          task,
-          keyPath,
-          type,
-          props,
-          contextKey
-        )),
+      disableLegacyContextForFunctionComponents ||
+        (partial = getMaskedContext(type, task.legacyContext)),
+        (type = renderWithHooks(request, task, keyPath, type, props, partial)),
         finishFunctionComponent(
           request,
           task,
@@ -4344,8 +4340,8 @@ function renderElement(request, task, keyPath, type, props, ref) {
           return;
         case REACT_MEMO_TYPE:
           type = type.type;
-          props = resolveDefaultPropsOnNonClassComponent(type, props);
-          renderElement(request, task, keyPath, type, props, ref);
+          contextKey = resolveDefaultPropsOnNonClassComponent(type, props);
+          renderElement(request, task, keyPath, type, contextKey, ref);
           return;
         case REACT_PROVIDER_TYPE:
           if (!enableRenderableContext) {
@@ -4365,8 +4361,8 @@ function renderElement(request, task, keyPath, type, props, ref) {
         case REACT_LAZY_TYPE:
           contextKey = type._init;
           type = contextKey(type._payload);
-          props = resolveDefaultPropsOnNonClassComponent(type, props);
-          renderElement(request, task, keyPath, type, props, ref);
+          contextKey = resolveDefaultPropsOnNonClassComponent(type, props);
+          renderElement(request, task, keyPath, type, contextKey, ref);
           return;
       }
     throw Error(
@@ -5793,4 +5789,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-a09950ed41-20240711";
+exports.version = "19.0.0-www-classic-af28f480-20240711";

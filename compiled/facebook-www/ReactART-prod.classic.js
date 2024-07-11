@@ -63,6 +63,8 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+  disableLegacyContextForFunctionComponents =
+    dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -4683,10 +4685,12 @@ function updateFunctionComponent(
   nextProps,
   renderLanes
 ) {
-  var context = isContextProvider(Component)
-    ? previousContext
-    : contextStackCursor$1.current;
-  context = getMaskedContext(workInProgress, context);
+  if (!disableLegacyContextForFunctionComponents) {
+    var context = isContextProvider(Component)
+      ? previousContext
+      : contextStackCursor$1.current;
+    context = getMaskedContext(workInProgress, context);
+  }
   prepareToReadContext(workInProgress, renderLanes);
   Component = renderWithHooks(
     current,
@@ -10749,7 +10753,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-a09950ed41-20240711",
+    version: "19.0.0-www-classic-af28f480-20240711",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1386 = {
@@ -10780,7 +10784,7 @@ var internals$jscomp$inline_1386 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-a09950ed41-20240711"
+  reconcilerVersion: "19.0.0-www-classic-af28f480-20240711"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1387 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

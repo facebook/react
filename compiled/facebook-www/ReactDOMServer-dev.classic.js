@@ -5222,7 +5222,9 @@ __DEV__ &&
             task.keyPath = prevKeyPath;
           }
         } else {
-          var legacyContext = getMaskedContext(type, task.legacyContext);
+          var legacyContext;
+          disableLegacyContextForFunctionComponents ||
+            (legacyContext = getMaskedContext(type, task.legacyContext));
           if (type.prototype && "function" === typeof type.prototype.render) {
             var componentName$jscomp$4 =
               getComponentNameFromType(type) || "Unknown";
@@ -7390,6 +7392,8 @@ __DEV__ &&
       dynamicFeatureFlags = require("ReactFeatureFlags"),
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+      disableLegacyContextForFunctionComponents =
+        dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
@@ -8842,5 +8846,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-a09950ed41-20240711";
+    exports.version = "19.0.0-www-classic-af28f480-20240711";
   })();

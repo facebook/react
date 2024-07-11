@@ -6970,10 +6970,12 @@ __DEV__ &&
               "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
               componentName
             ))));
-      componentName = isContextProvider(Component)
-        ? previousContext
-        : contextStackCursor$1.current;
-      componentName = getMaskedContext(workInProgress, componentName);
+      if (!disableLegacyContextForFunctionComponents) {
+        var context = isContextProvider(Component)
+          ? previousContext
+          : contextStackCursor$1.current;
+        context = getMaskedContext(workInProgress, context);
+      }
       prepareToReadContext(workInProgress, renderLanes);
       enableSchedulingProfiler && markComponentRenderStarted(workInProgress);
       Component = renderWithHooks(
@@ -6981,7 +6983,7 @@ __DEV__ &&
         workInProgress,
         Component,
         nextProps,
-        componentName,
+        context,
         renderLanes
       );
       nextProps = checkDidRenderIdHook();
@@ -16522,6 +16524,8 @@ __DEV__ &&
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+      disableLegacyContextForFunctionComponents =
+        dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -19111,7 +19115,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-a09950ed41-20240711"
+        reconcilerVersion: "19.0.0-www-classic-af28f480-20240711"
       });
     };
     exports.isAlreadyRendering = function () {

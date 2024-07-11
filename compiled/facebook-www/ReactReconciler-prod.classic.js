@@ -4338,10 +4338,12 @@ module.exports = function ($$$config) {
     nextProps,
     renderLanes
   ) {
-    var context = isContextProvider(Component)
-      ? previousContext
-      : contextStackCursor$1.current;
-    context = getMaskedContext(workInProgress, context);
+    if (!disableLegacyContextForFunctionComponents) {
+      var context = isContextProvider(Component)
+        ? previousContext
+        : contextStackCursor$1.current;
+      context = getMaskedContext(workInProgress, context);
+    }
     prepareToReadContext(workInProgress, renderLanes);
     Component = renderWithHooks(
       current,
@@ -11560,6 +11562,8 @@ module.exports = function ($$$config) {
     alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
     disableDefaultPropsExceptForClasses =
       dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+    disableLegacyContextForFunctionComponents =
+      dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
     disableSchedulerTimeoutInWorkLoop =
       dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
     enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -12736,7 +12740,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-a09950ed41-20240711"
+      reconcilerVersion: "19.0.0-www-classic-af28f480-20240711"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

@@ -8773,10 +8773,12 @@ __DEV__ &&
               "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
               componentName
             ))));
-      componentName = isContextProvider(Component)
-        ? previousContext
-        : contextStackCursor.current;
-      componentName = getMaskedContext(workInProgress, componentName);
+      if (!disableLegacyContextForFunctionComponents) {
+        var context = isContextProvider(Component)
+          ? previousContext
+          : contextStackCursor.current;
+        context = getMaskedContext(workInProgress, context);
+      }
       prepareToReadContext(workInProgress, renderLanes);
       enableSchedulingProfiler && markComponentRenderStarted(workInProgress);
       Component = renderWithHooks(
@@ -8784,7 +8786,7 @@ __DEV__ &&
         workInProgress,
         Component,
         nextProps,
-        componentName,
+        context,
         renderLanes
       );
       nextProps = checkDidRenderIdHook();
@@ -24264,6 +24266,8 @@ __DEV__ &&
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
+      disableLegacyContextForFunctionComponents =
+        dynamicFeatureFlags.disableLegacyContextForFunctionComponents,
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
@@ -27900,11 +27904,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-a09950ed41-20240711" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-af28f480-20240711" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-a09950ed41-20240711\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-af28f480-20240711\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27970,12 +27974,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-classic-a09950ed41-20240711"
+          reconcilerVersion: "19.0.0-www-classic-af28f480-20240711"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-classic-a09950ed41-20240711",
+        version: "19.0.0-www-classic-af28f480-20240711",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -28784,5 +28788,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-a09950ed41-20240711";
+    exports.version = "19.0.0-www-classic-af28f480-20240711";
   })();
