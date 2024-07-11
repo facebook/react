@@ -5251,7 +5251,7 @@ __DEV__ &&
             didWarnAboutContextTypes[_componentName$jscomp$0] ||
               ((didWarnAboutContextTypes[_componentName$jscomp$0] = !0),
               error$jscomp$2(
-                "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.",
+                "%s uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
                 _componentName$jscomp$0
               ));
           }
@@ -8842,5 +8842,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-29552c7907-20240710";
+    exports.version = "19.0.0-www-classic-8e00cf04de-20240711";
   })();

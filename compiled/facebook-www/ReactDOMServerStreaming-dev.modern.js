@@ -4923,7 +4923,7 @@ __DEV__ &&
               didWarnAboutContextTypes[_propName] ||
                 ((didWarnAboutContextTypes[_propName] = !0),
                 error$jscomp$2(
-                  "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with React.useContext() instead.",
+                  "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
                   _propName
                 ))),
             type &&
