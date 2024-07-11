@@ -30,7 +30,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci=github
+      - run: NODE_ENV=development yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci=github
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
