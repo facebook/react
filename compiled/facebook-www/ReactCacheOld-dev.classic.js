@@ -23,12 +23,11 @@ __DEV__ &&
       )
         args[_key2 - 1] = arguments[_key2];
       _len2 = format;
-      _key2 = Error("react-stack-top-frame");
-      var ReactSharedInternals =
+      _key2 =
         require("react").__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-      null != ReactSharedInternals &&
-        ReactSharedInternals.getCurrentStack &&
-        ((_key2 = ReactSharedInternals.getCurrentStack(_key2)),
+      null != _key2 &&
+        _key2.getCurrentStack &&
+        ((_key2 = _key2.getCurrentStack()),
         "" !== _key2 && ((_len2 += "%s"), args.push(_key2)));
       args.unshift(_len2);
       args.unshift(!1);
