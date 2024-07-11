@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f766cda8f6a41676186e7ea897b38f29>>
+ * @generated SignedSource<<b05d30bdaf64de7f584d29654e5ef1da>>
  */
 
 "use strict";
@@ -15169,14 +15169,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-29552c7907-20240710"
+        reconcilerVersion: "19.0.0-native-fb-a5cc797b88-20240711"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-29552c7907-20240710",
+      version: "19.0.0-native-fb-a5cc797b88-20240711",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;
