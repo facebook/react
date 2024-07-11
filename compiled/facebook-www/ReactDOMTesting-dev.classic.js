@@ -27900,11 +27900,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-8e00cf04de-20240711" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-85acf2d195-20240711" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-8e00cf04de-20240711\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-85acf2d195-20240711\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27970,12 +27970,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-classic-8e00cf04de-20240711"
+          reconcilerVersion: "19.0.0-www-classic-85acf2d195-20240711"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-classic-8e00cf04de-20240711",
+        version: "19.0.0-www-classic-85acf2d195-20240711",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -28784,5 +28784,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-8e00cf04de-20240711";
+    exports.version = "19.0.0-www-classic-85acf2d195-20240711";
   })();
