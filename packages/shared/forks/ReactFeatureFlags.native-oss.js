@@ -28,6 +28,7 @@ export const disableDefaultPropsExceptForClasses = true;
 export const disableIEWorkarounds = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = true;
+export const disableLegacyContextForFunctionComponents = true;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const disableStringRefs = true;
