@@ -8,10 +8,6 @@
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
-export function setSuppressWarning(newSuppressWarning) {
-  // TODO: Noop. Delete.
-}
-
 // In DEV, calls to console.warn and console.error get replaced
 // by calls to these methods by a Babel plugin.
 //

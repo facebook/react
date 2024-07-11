@@ -7,13 +7,6 @@
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-let suppressWarning = false;
-export function setSuppressWarning(newSuppressWarning) {
-  if (__DEV__) {
-    suppressWarning = newSuppressWarning;
-  }
-}
-
 // In DEV, calls to console.warn and console.error get replaced
 // by calls to these methods by a Babel plugin.
 //
@@ -21,19 +14,11 @@ export function setSuppressWarning(newSuppressWarning) {
 // they are left as they are instead.
 
 export function warn(format, ...args) {
-  if (__DEV__) {
-    if (!suppressWarning) {
-      printWarning('warn', format, args, new Error('react-stack-top-frame'));
-    }
-  }
+  printWarning('warn', format, args, new Error('react-stack-top-frame'));
 }
 
 export function error(format, ...args) {
-  if (__DEV__) {
-    if (!suppressWarning) {
-      printWarning('error', format, args, new Error('react-stack-top-frame'));
-    }
-  }
+  printWarning('error', format, args, new Error('react-stack-top-frame'));
 }
 
 export let isWritingAppendedStack = false;
