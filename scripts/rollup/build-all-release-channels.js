@@ -19,9 +19,7 @@ const {
 // Runs the build script for both stable and experimental release channels,
 // by configuring an environment variable.
 
-const sha = String(
-  spawnSync('git', ['show', '-s', '--no-show-signature', '--format=%h']).stdout
-).trim();
+const sha = String(spawnSync('git', ['rev-parse', 'HEAD']).stdout).slice(0, 8);
 
 let dateString = String(
   spawnSync('git', [
