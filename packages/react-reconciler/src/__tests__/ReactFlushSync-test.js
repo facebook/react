@@ -7,6 +7,7 @@ let useState;
 let useEffect;
 let startTransition;
 let assertLog;
+let assertConsoleErrorDev;
 let waitForPaint;
 
 // TODO: Migrate tests to React DOM instead of React Noop
@@ -26,6 +27,7 @@ describe('ReactFlushSync', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     waitForPaint = InternalTestUtils.waitForPaint;
   });
 
@@ -77,8 +79,6 @@ describe('ReactFlushSync', () => {
   }
 
   it('changes priority of updates in useEffect', async () => {
-    spyOnDev(console, 'error').mockImplementation(() => {});
-
     function App() {
       const [syncState, setSyncState] = useState(0);
       const [state, setState] = useState(0);
@@ -107,18 +107,15 @@ describe('ReactFlushSync', () => {
       // The remaining update is not sync
       ReactDOM.flushSync();
       assertLog([]);
+      assertConsoleErrorDev([
+        'flushSync was called from inside a lifecycle method. React ' +
+          'cannot flush when React is already rendering. Consider moving this ' +
+          'call to a scheduler task or micro task.',
+      ]);
 
       await waitForPaint([]);
     });
     expect(getVisibleChildren(container)).toEqual('1, 1');
-
-    if (__DEV__) {
-      expect(console.error.mock.calls[0][0]).toContain(
-        'flushSync was called from inside a lifecycle method. React ' +
-          'cannot flush when React is already rendering. Consider moving this ' +
-          'call to a scheduler task or micro task.%s',
-      );
-    }
   });
 
   it('supports nested flushSync with startTransition', async () => {

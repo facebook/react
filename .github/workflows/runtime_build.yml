@@ -25,7 +25,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: NODE_ENV=development yarn build
       - run: yarn lint-build
       - name: Cache build
         uses: actions/cache@v4
