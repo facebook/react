@@ -2824,16 +2824,6 @@ function pushTextInstance(target, text, renderState, textEmbedded) {
       (target = !0));
   return target;
 }
-function error(format) {
-  for (
-    var _len2 = arguments.length,
-      args = Array(1 < _len2 ? _len2 - 1 : 0),
-      _key2 = 1;
-    _key2 < _len2;
-    _key2++
-  )
-    args[_key2 - 1] = arguments[_key2];
-}
 var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
   if (null == type) return null;
@@ -3567,24 +3557,19 @@ function describeComponentStackByType(type) {
   }
   return "";
 }
-function defaultErrorHandler(error$jscomp$0) {
+function defaultErrorHandler(error) {
   if (
-    "object" === typeof error$jscomp$0 &&
-    null !== error$jscomp$0 &&
-    "string" === typeof error$jscomp$0.environmentName
+    "object" === typeof error &&
+    null !== error &&
+    "string" === typeof error.environmentName
   ) {
-    var badgeName = error$jscomp$0.environmentName;
-    error$jscomp$0 = [error$jscomp$0].slice(0);
-    "string" === typeof error$jscomp$0[0]
-      ? error$jscomp$0.splice(
-          0,
-          1,
-          "[%s] " + error$jscomp$0[0],
-          " " + badgeName + " "
-        )
-      : error$jscomp$0.splice(0, 0, "[%s] ", " " + badgeName + " ");
-    error.apply(console, error$jscomp$0);
-  } else console.error(error$jscomp$0);
+    var badgeName = error.environmentName;
+    error = [error].slice(0);
+    "string" === typeof error[0]
+      ? error.splice(0, 1, "[%s] " + error[0], " " + badgeName + " ")
+      : error.splice(0, 0, "[%s] ", " " + badgeName + " ");
+    console.error.apply(console, error);
+  } else console.error(error);
   return null;
 }
 function noop() {}
@@ -5808,4 +5793,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-85acf2d195-20240711";
+exports.version = "19.0.0-www-classic-a09950ed41-20240711";

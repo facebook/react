@@ -2684,16 +2684,6 @@ function hoistStyleQueueDependency(styleQueue) {
 function hoistStylesheetDependency(stylesheet) {
   this.stylesheets.add(stylesheet);
 }
-function error(format) {
-  for (
-    var _len2 = arguments.length,
-      args = Array(1 < _len2 ? _len2 - 1 : 0),
-      _key2 = 1;
-    _key2 < _len2;
-    _key2++
-  )
-    args[_key2 - 1] = arguments[_key2];
-}
 var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
   if (null == type) return null;
@@ -3450,24 +3440,24 @@ function describeComponentStackByType(type) {
   }
   return "";
 }
-function defaultErrorHandler(error$jscomp$0) {
+function defaultErrorHandler(error) {
   if (
-    "object" === typeof error$jscomp$0 &&
-    null !== error$jscomp$0 &&
-    "string" === typeof error$jscomp$0.environmentName
+    "object" === typeof error &&
+    null !== error &&
+    "string" === typeof error.environmentName
   ) {
-    var badgeName = error$jscomp$0.environmentName;
-    error$jscomp$0 = [error$jscomp$0].slice(0);
-    "string" === typeof error$jscomp$0[0]
-      ? error$jscomp$0.splice(
+    var badgeName = error.environmentName;
+    error = [error].slice(0);
+    "string" === typeof error[0]
+      ? error.splice(
           0,
           1,
-          "%c%s%c " + error$jscomp$0[0],
+          "%c%s%c " + error[0],
           "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
           " " + badgeName + " ",
           ""
         )
-      : error$jscomp$0.splice(
+      : error.splice(
           0,
           0,
           "%c%s%c ",
@@ -3475,8 +3465,8 @@ function defaultErrorHandler(error$jscomp$0) {
           " " + badgeName + " ",
           ""
         );
-    error.apply(console, error$jscomp$0);
-  } else console.error(error$jscomp$0);
+    console.error.apply(console, error);
+  } else console.error(error);
   return null;
 }
 function noop() {}
