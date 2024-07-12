@@ -32,6 +32,7 @@ export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = true;
 export const disableLegacyContext = false;
+export const disableLegacyContextForFunctionComponents = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const enableSuspenseAvoidThisFallback = true;
