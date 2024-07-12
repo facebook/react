@@ -1158,7 +1158,7 @@ describe('ReactIncrementalErrorHandling', () => {
   // because it's used for new context, suspense, and many other features.
   // It has to be tested independently for each feature anyway. So although it
   // doesn't look like it, this test is specific to legacy context.
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('unwinds the context stack correctly on error', async () => {
     class Provider extends React.Component {
       static childContextTypes = {message: PropTypes.string};

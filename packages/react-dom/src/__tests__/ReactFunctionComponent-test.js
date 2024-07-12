@@ -451,7 +451,7 @@ describe('ReactFunctionComponent', () => {
     ]);
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('should receive context', async () => {
     class Parent extends React.Component {
       static childContextTypes = {
