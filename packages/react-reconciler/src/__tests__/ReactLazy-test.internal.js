@@ -213,14 +213,18 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      );
+    }
+
     let error;
     try {
       await act(() => {
-        root.update(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <LazyText text="Hi" />
-          </Suspense>,
-        );
+        root.update(<App />);
       });
     } catch (e) {
       error = e;

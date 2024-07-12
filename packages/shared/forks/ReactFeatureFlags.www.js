@@ -17,6 +17,7 @@ const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 export const {
   alwaysThrottleRetries,
   disableDefaultPropsExceptForClasses,
+  disableLegacyContextForFunctionComponents,
   disableSchedulerTimeoutInWorkLoop,
   enableAddPropertiesFastPath,
   enableDebugTracing,

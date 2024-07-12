@@ -33,7 +33,7 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   return null;
 }
 
-function getCurrentFiberStackInDev(stack: null | Error): string {
+function getCurrentFiberStackInDev(): string {
   if (__DEV__) {
     if (current === null) {
       return '';
@@ -43,7 +43,7 @@ function getCurrentFiberStackInDev(stack: null | Error): string {
     // TODO: The above comment is not actually true. We might be
     // in a commit phase or preemptive set state callback.
     if (enableOwnerStacks) {
-      return getOwnerStackByFiberInDev(current, stack);
+      return getOwnerStackByFiberInDev(current);
     }
     return getStackByFiberInDevAndProd(current);
   }
