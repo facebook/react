@@ -114,12 +114,12 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       };
       scopes.set(groupIdentifier, scope);
     } else {
-      if (identifier.mutableRange.start !== 0 && scope.range.start !== 0) {
+      if (scope.range.start === 0) {
+        scope.range.start = identifier.mutableRange.start;
+      } else if (identifier.mutableRange.start !== 0) {
         scope.range.start = makeInstructionId(
           Math.min(scope.range.start, identifier.mutableRange.start)
         );
-      } else if (identifier.mutableRange.start !== 0) {
-        scope.range.start = identifier.mutableRange.start;
       }
       scope.range.end = makeInstructionId(
         Math.max(scope.range.end, identifier.mutableRange.end)
