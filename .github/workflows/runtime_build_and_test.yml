@@ -1,4 +1,4 @@
-name: (Runtime) Build
+name: (Runtime) Build and Test
 
 on:
   push:
