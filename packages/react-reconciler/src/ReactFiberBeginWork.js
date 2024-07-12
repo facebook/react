@@ -95,6 +95,7 @@ import {
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
+  disableLegacyContextForFunctionComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableScopeAPI,
@@ -1158,7 +1159,7 @@ function updateFunctionComponent(
   }
 
   let context;
-  if (!disableLegacyContext) {
+  if (!disableLegacyContext && !disableLegacyContextForFunctionComponents) {
     const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
     context = getMaskedContext(workInProgress, unmaskedContext);
   }
