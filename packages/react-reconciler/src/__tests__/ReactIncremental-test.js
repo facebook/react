@@ -1701,7 +1701,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(3);
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('merges and masks context', async () => {
     class Intl extends React.Component {
       static childContextTypes = {
@@ -1954,7 +1954,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('reads context when setState is below the provider', async () => {
     let statefulInst;
 
@@ -2046,7 +2046,7 @@ describe('ReactIncremental', () => {
     assertLog([]);
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('reads context when setState is above the provider', async () => {
     let statefulInst;
 
