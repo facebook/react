@@ -3940,6 +3940,59 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>hello</div>);
   });
 
+  it('accounts for the length of the interstitial between links when computing the headers length', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      // 20 bytes
+      ReactDOM.preconnect('01');
+      // 42 bytes
+      ReactDOM.preconnect('02');
+      // 64 bytes
+      ReactDOM.preconnect('03');
+      // 86 bytes
+      ReactDOM.preconnect('04');
+      // 108 bytes
+      ReactDOM.preconnect('05');
+      // 130 bytes
+      ReactDOM.preconnect('06');
+      // 152 bytes
+      ReactDOM.preconnect('07');
+      // 174 bytes
+      ReactDOM.preconnect('08');
+      // 196 bytes
+      ReactDOM.preconnect('09');
+      // 218 bytes
+      ReactDOM.preconnect('10');
+      // 240 bytes
+      ReactDOM.preconnect('11');
+      // 262 bytes
+      ReactDOM.preconnect('12');
+      // 284 bytes
+      ReactDOM.preconnect('13');
+      // 306 bytes
+      ReactDOM.preconnect('14');
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders, maxHeadersLength: 305});
+    });
+    expect(headers.Link.length).toBe(284);
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders, maxHeadersLength: 306});
+    });
+    expect(headers.Link.length).toBe(306);
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};
