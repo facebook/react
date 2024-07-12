@@ -14,6 +14,11 @@ jobs:
   build_and_lint:
     name: yarn build and lint
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # yml is dumb. update the --total arg to yarn build if you change the number of workers
+        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+        release_channel: [stable, experimental]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,11 +37,18 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build
-      - run: yarn lint-build
-      - name: Cache build
-        uses: actions/cache@v4
-        id: build_cache
+      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci=github
+        env:
+          CI: github
+          RELEASE_CHANNEL: ${{ matrix.release_channel }}
+          NODE_INDEX: ${{ matrix.worker_id }}
+      - name: Lint build
+        run: yarn lint-build
+      - name: Display structure of build
+        run: ls -R build
+      - name: Archive build
+        uses: actions/upload-artifact@v4
         with:
-          path: build/**
-          key: yarn-build-${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          name: build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
+          path: |
+            build
