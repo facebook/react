@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<333ee47fc63e94412bc1786f307125aa>>
+ * @generated SignedSource<<a55b3ae9fc483a5ea92aaa34fe44b5df>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1106() {
+    function JSCompiler_object_inline_createNodeMock_1089() {
       return null;
     }
     function findHook(fiber, id) {
@@ -4693,38 +4693,50 @@ __DEV__ &&
       hook.memoizedState = [prevState, deps];
       return prevState;
     }
-    function mountDeferredValue(value) {
-      mountWorkInProgressHook().memoizedState = value;
-      return value;
+    function mountDeferredValue(value, initialValue) {
+      var hook = mountWorkInProgressHook();
+      return mountDeferredValueImpl(hook, value, initialValue);
     }
-    function updateDeferredValue(value) {
+    function updateDeferredValue(value, initialValue) {
       var hook = updateWorkInProgressHook();
-      return updateDeferredValueImpl(hook, currentHook.memoizedState, value);
+      return updateDeferredValueImpl(
+        hook,
+        currentHook.memoizedState,
+        value,
+        initialValue
+      );
     }
-    function rerenderDeferredValue(value) {
+    function rerenderDeferredValue(value, initialValue) {
       var hook = updateWorkInProgressHook();
       return null === currentHook
-        ? ((hook.memoizedState = value), value)
-        : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
+        ? mountDeferredValueImpl(hook, value, initialValue)
+        : updateDeferredValueImpl(
+            hook,
+            currentHook.memoizedState,
+            value,
+            initialValue
+          );
     }
-    function updateDeferredValueImpl(hook, prevValue, value) {
+    function mountDeferredValueImpl(hook, value, initialValue) {
+      if (void 0 === initialValue || 0 !== (renderLanes & DeferredLane))
+        return (hook.memoizedState = value);
+      hook.memoizedState = initialValue;
+      hook = requestDeferredLane();
+      currentlyRenderingFiber$1.lanes |= hook;
+      workInProgressRootSkippedLanes |= hook;
+      return initialValue;
+    }
+    function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
       if (objectIs(value, prevValue)) return value;
       if (null !== currentTreeHiddenStackCursor.current)
         return (
-          (hook.memoizedState = value),
-          objectIs(value, prevValue) || (didReceiveUpdate = !0),
-          value
+          (hook = mountDeferredValueImpl(hook, value, initialValue)),
+          objectIs(hook, prevValue) || (didReceiveUpdate = !0),
+          hook
         );
       if (0 === (renderLanes & (SyncLane | InputContinuousLane | DefaultLane)))
         return (didReceiveUpdate = !0), (hook.memoizedState = value);
-      0 === workInProgressDeferredLane &&
-        (workInProgressDeferredLane =
-          0 !== (workInProgressRootRenderLanes & OffscreenLane)
-            ? OffscreenLane
-            : claimNextTransitionLane());
-      hook = suspenseHandlerStackCursor.current;
-      null !== hook && (hook.flags |= 32);
-      hook = workInProgressDeferredLane;
+      hook = requestDeferredLane();
       currentlyRenderingFiber$1.lanes |= hook;
       workInProgressRootSkippedLanes |= hook;
       return prevValue;
@@ -10680,6 +10692,16 @@ __DEV__ &&
           : DefaultEventPriority;
       return fiber;
     }
+    function requestDeferredLane() {
+      0 === workInProgressDeferredLane &&
+        (workInProgressDeferredLane =
+          0 !== (workInProgressRootRenderLanes & OffscreenLane)
+            ? OffscreenLane
+            : claimNextTransitionLane());
+      var suspenseHandler = suspenseHandlerStackCursor.current;
+      null !== suspenseHandler && (suspenseHandler.flags |= 32);
+      return workInProgressDeferredLane;
+    }
     function scheduleUpdateOnFiber(root, fiber, lane) {
       isRunningInsertionEffect &&
         error$jscomp$0("useInsertionEffect must not schedule updates.");
@@ -13776,10 +13798,10 @@ __DEV__ &&
         currentHookNameInDev = "useDebugValue";
         mountHookTypesDev();
       },
-      useDeferredValue: function (value) {
+      useDeferredValue: function (value, initialValue) {
         currentHookNameInDev = "useDeferredValue";
         mountHookTypesDev();
-        return mountDeferredValue(value);
+        return mountDeferredValue(value, initialValue);
       },
       useTransition: function () {
         currentHookNameInDev = "useTransition";
@@ -13901,10 +13923,10 @@ __DEV__ &&
         currentHookNameInDev = "useDebugValue";
         updateHookTypesDev();
       },
-      useDeferredValue: function (value) {
+      useDeferredValue: function (value, initialValue) {
         currentHookNameInDev = "useDeferredValue";
         updateHookTypesDev();
-        return mountDeferredValue(value);
+        return mountDeferredValue(value, initialValue);
       },
       useTransition: function () {
         currentHookNameInDev = "useTransition";
@@ -14031,10 +14053,10 @@ __DEV__ &&
         currentHookNameInDev = "useDebugValue";
         updateHookTypesDev();
       },
-      useDeferredValue: function (value) {
+      useDeferredValue: function (value, initialValue) {
         currentHookNameInDev = "useDeferredValue";
         updateHookTypesDev();
-        return updateDeferredValue(value);
+        return updateDeferredValue(value, initialValue);
       },
       useTransition: function () {
         currentHookNameInDev = "useTransition";
@@ -14156,10 +14178,10 @@ __DEV__ &&
         currentHookNameInDev = "useDebugValue";
         updateHookTypesDev();
       },
-      useDeferredValue: function (value) {
+      useDeferredValue: function (value, initialValue) {
         currentHookNameInDev = "useDeferredValue";
         updateHookTypesDev();
-        return rerenderDeferredValue(value);
+        return rerenderDeferredValue(value, initialValue);
       },
       useTransition: function () {
         currentHookNameInDev = "useTransition";
@@ -14296,11 +14318,11 @@ __DEV__ &&
         warnInvalidHookAccess();
         mountHookTypesDev();
       },
-      useDeferredValue: function (value) {
+      useDeferredValue: function (value, initialValue) {
         currentHookNameInDev = "useDeferredValue";
         warnInvalidHookAccess();
         mountHookTypesDev();
-        return mountDeferredValue(value);
+        return mountDeferredValue(value, initialValue);
       },
       useTransition: function () {
         currentHookNameInDev = "useTransition";
@@ -14450,11 +14472,11 @@ __DEV__ &&
         warnInvalidHookAccess();
         updateHookTypesDev();
       },
-      useDeferredValue: function (value) {
+      useDeferredValue: function (value, initialValue) {
         currentHookNameInDev = "useDeferredValue";
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return updateDeferredValue(value);
+        return updateDeferredValue(value, initialValue);
       },
       useTransition: function () {
         currentHookNameInDev = "useTransition";
@@ -14601,11 +14623,11 @@ __DEV__ &&
         warnInvalidHookAccess();
         updateHookTypesDev();
       },
-      useDeferredValue: function (value) {
+      useDeferredValue: function (value, initialValue) {
         currentHookNameInDev = "useDeferredValue";
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return rerenderDeferredValue(value);
+        return rerenderDeferredValue(value, initialValue);
       },
       useTransition: function () {
         currentHookNameInDev = "useTransition";
@@ -15169,20 +15191,20 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-433068ee-20240711"
+        reconcilerVersion: "19.0.0-native-fb-ff3f1fac-20240712"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-433068ee-20240711",
+      version: "19.0.0-native-fb-ff3f1fac-20240712",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1106,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1089,
         isConcurrent = !1,
         isStrictMode = !1,
         concurrentUpdatesByDefault = null;

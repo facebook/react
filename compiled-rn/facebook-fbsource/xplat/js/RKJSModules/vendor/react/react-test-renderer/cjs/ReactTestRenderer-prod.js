@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<770de2d7f078e68aa256a0a52d0270ef>>
+ * @generated SignedSource<<f051bcfe8b92b962df26379d5a99c262>>
  */
 
 "use strict";
@@ -3072,24 +3072,26 @@ function updateMemo(nextCreate, deps) {
   hook.memoizedState = [prevState, deps];
   return prevState;
 }
-function updateDeferredValueImpl(hook, prevValue, value) {
+function mountDeferredValueImpl(hook, value, initialValue) {
+  if (void 0 === initialValue || 0 !== (renderLanes & 1073741824))
+    return (hook.memoizedState = value);
+  hook.memoizedState = initialValue;
+  hook = requestDeferredLane();
+  currentlyRenderingFiber$1.lanes |= hook;
+  workInProgressRootSkippedLanes |= hook;
+  return initialValue;
+}
+function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
   if (objectIs(value, prevValue)) return value;
   if (null !== currentTreeHiddenStackCursor.current)
     return (
-      (hook.memoizedState = value),
-      objectIs(value, prevValue) || (didReceiveUpdate = !0),
-      value
+      (hook = mountDeferredValueImpl(hook, value, initialValue)),
+      objectIs(hook, prevValue) || (didReceiveUpdate = !0),
+      hook
     );
   if (0 === (renderLanes & 42))
     return (didReceiveUpdate = !0), (hook.memoizedState = value);
-  0 === workInProgressDeferredLane &&
-    (workInProgressDeferredLane =
-      0 !== (workInProgressRootRenderLanes & 536870912)
-        ? 536870912
-        : claimNextTransitionLane());
-  hook = suspenseHandlerStackCursor.current;
-  null !== hook && (hook.flags |= 32);
-  hook = workInProgressDeferredLane;
+  hook = requestDeferredLane();
   currentlyRenderingFiber$1.lanes |= hook;
   workInProgressRootSkippedLanes |= hook;
   return prevValue;
@@ -3353,9 +3355,9 @@ var HooksDispatcherOnMount = {
     return [initialState.memoizedState, dispatch];
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
-    mountWorkInProgressHook().memoizedState = value;
-    return value;
+  useDeferredValue: function (value, initialValue) {
+    var hook = mountWorkInProgressHook();
+    return mountDeferredValueImpl(hook, value, initialValue);
   },
   useTransition: function () {
     var stateHook = mountStateImpl(!1);
@@ -3450,9 +3452,14 @@ var HooksDispatcherOnUpdate = {
     return updateReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
-    return updateDeferredValueImpl(hook, currentHook.memoizedState, value);
+    return updateDeferredValueImpl(
+      hook,
+      currentHook.memoizedState,
+      value,
+      initialValue
+    );
   },
   useTransition: function () {
     var booleanOrThenable = updateReducer(basicStateReducer)[0],
@@ -3492,11 +3499,16 @@ var HooksDispatcherOnRerender = {
     return rerenderReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
     return null === currentHook
-      ? ((hook.memoizedState = value), value)
-      : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
+      ? mountDeferredValueImpl(hook, value, initialValue)
+      : updateDeferredValueImpl(
+          hook,
+          currentHook.memoizedState,
+          value,
+          initialValue
+        );
   },
   useTransition: function () {
     var booleanOrThenable = rerenderReducer(basicStateReducer)[0],
@@ -7633,6 +7645,16 @@ function requestUpdateLane(fiber) {
   fiber = 0 !== currentUpdatePriority ? currentUpdatePriority : 32;
   return fiber;
 }
+function requestDeferredLane() {
+  0 === workInProgressDeferredLane &&
+    (workInProgressDeferredLane =
+      0 !== (workInProgressRootRenderLanes & 536870912)
+        ? 536870912
+        : claimNextTransitionLane());
+  var suspenseHandler = suspenseHandlerStackCursor.current;
+  null !== suspenseHandler && (suspenseHandler.flags |= 32);
+  return workInProgressDeferredLane;
+}
 function scheduleUpdateOnFiber(root, fiber, lane) {
   if (
     (root === workInProgressRoot && 2 === workInProgressSuspendedReason) ||
@@ -9379,19 +9401,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1053 = {
+var devToolsConfig$jscomp$inline_1034 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-433068ee-20240711",
+  version: "19.0.0-native-fb-ff3f1fac-20240712",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1240 = {
-  bundleType: devToolsConfig$jscomp$inline_1053.bundleType,
-  version: devToolsConfig$jscomp$inline_1053.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1053.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1053.rendererConfig,
+var internals$jscomp$inline_1223 = {
+  bundleType: devToolsConfig$jscomp$inline_1034.bundleType,
+  version: devToolsConfig$jscomp$inline_1034.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1034.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1034.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9408,26 +9430,26 @@ var internals$jscomp$inline_1240 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1053.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1034.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-433068ee-20240711"
+  reconcilerVersion: "19.0.0-native-fb-ff3f1fac-20240712"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1241 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1224 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1241.isDisabled &&
-    hook$jscomp$inline_1241.supportsFiber
+    !hook$jscomp$inline_1224.isDisabled &&
+    hook$jscomp$inline_1224.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1241.inject(
-        internals$jscomp$inline_1240
+      (rendererID = hook$jscomp$inline_1224.inject(
+        internals$jscomp$inline_1223
       )),
-        (injectedHook = hook$jscomp$inline_1241);
+        (injectedHook = hook$jscomp$inline_1224);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
