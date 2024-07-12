@@ -1,4 +1,4 @@
-name: (Runtime) Build
+name: (Runtime) Build and Test
 
 on:
   push:
@@ -11,6 +11,137 @@ env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
 
 jobs:
+  # ----- FLOW -----
+  discover_flow_inline_configs:
+    name: Discover flow inline configs
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        id: set-matrix
+        with:
+          script: |
+            const inlinedHostConfigs = require('./scripts/shared/inlinedHostConfigs.js');
+            return inlinedHostConfigs.map(config => config.shortName);
+
+  flow:
+    name: Flow check ${{ matrix.flow_inline_config_shortname }}
+    needs: discover_flow_inline_configs
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        flow_inline_config_shortname: ${{ fromJSON(needs.discover_flow_inline_configs.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
+
+  # ----- FIZZ -----
+  check_generated_fizz_runtime:
+    name: Confirm generated inline Fizz runtime is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: |
+          yarn generate-inline-fizz-runtime
+          git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+
+  # ----- FEATURE FLAGS -----
+  flags:
+    name: Check flags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn flags
+
+  # ----- TESTS -----
+  test:
+    name: yarn test ${{ matrix.params }} (Shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        params:
+          - "-r=stable --env=development"
+          - "-r=stable --env=production"
+          - "-r=experimental --env=development"
+          - "-r=experimental --env=production"
+          - "-r=www-classic --env=development --variant=false"
+          - "-r=www-classic --env=production --variant=false"
+          - "-r=www-classic --env=development --variant=true"
+          - "-r=www-classic --env=production --variant=true"
+          - "-r=www-modern --env=development --variant=false"
+          - "-r=www-modern --env=production --variant=false"
+          - "-r=www-modern --env=development --variant=true"
+          - "-r=www-modern --env=production --variant=true"
+          - "-r=xplat --env=development --variant=false"
+          - "-r=xplat --env=development --variant=true"
+          - "-r=xplat --env=production --variant=false"
+          - "-r=xplat --env=production --variant=true"
+          # TODO: Test more persistent configurations?
+          - "-r=stable --env=development --persistent"
+          - "-r=experimental --env=development --persistent"
+        shard:
+          - 1/5
+          - 2/5
+          - 3/5
+          - 4/5
+          - 5/5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn test ${{ matrix.params }} --ci=github --shard=${{ matrix.shard }}
+
+  # ----- BUILD -----
   build_and_lint:
     name: yarn build and lint
     runs-on: ubuntu-latest
