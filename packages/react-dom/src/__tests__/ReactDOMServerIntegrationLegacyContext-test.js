@@ -86,6 +86,9 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('stateless child with context', async render => {
+      if (gate(flags => flags.disableLegacyContextForFunctionComponents)) {
+        return;
+      }
       function FunctionChildWithContext(props, context) {
         return <div>{context.text}</div>;
       }
@@ -118,6 +121,9 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('stateless child without context', async render => {
+      if (gate(flags => flags.disableLegacyContextForFunctionComponents)) {
+        return;
+      }
       function FunctionChildWithoutContext(props, context) {
         // this should render blank; context isn't passed to this component.
         return <div>{context.text}</div>;
@@ -151,6 +157,9 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('stateless child with wrong context', async render => {
+      if (gate(flags => flags.disableLegacyContextForFunctionComponents)) {
+        return;
+      }
       function FunctionChildWithWrongContext(props, context) {
         // this should render blank; context.text isn't passed to this component.
         return <div id="statelessWrongChild">{context.text}</div>;
@@ -169,6 +178,9 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('with context passed through to a grandchild', async render => {
+      if (gate(flags => flags.disableLegacyContextForFunctionComponents)) {
+        return;
+      }
       function Grandchild(props, context) {
         return <div>{context.text}</div>;
       }
@@ -186,6 +198,9 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('a child context overriding a parent context', async render => {
+      if (gate(flags => flags.disableLegacyContextForFunctionComponents)) {
+        return;
+      }
       const Grandchild = (props, context) => {
         return <div>{context.text}</div>;
       };
@@ -203,6 +218,9 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('a child context merged with a parent context', async render => {
+      if (gate(flags => flags.disableLegacyContextForFunctionComponents)) {
+        return;
+      }
       class Parent extends React.Component {
         getChildContext() {
           return {text1: 'purple'};
@@ -244,6 +262,9 @@ describe('ReactDOMServerIntegration', () => {
     itRenders(
       'with a call to componentWillMount before getChildContext',
       async render => {
+        if (gate(flags => flags.disableLegacyContextForFunctionComponents)) {
+          return;
+        }
         class WillMountContext extends React.Component {
           getChildContext() {
             return {text: this.state.text};
@@ -270,6 +291,9 @@ describe('ReactDOMServerIntegration', () => {
     itRenders(
       'if getChildContext exists but childContextTypes is missing with a warning',
       async render => {
+        if (gate(flags => flags.disableLegacyContextForFunctionComponents)) {
+          return;
+        }
         function HopefulChild(props, context) {
           return context.foo || 'nope';
         }
