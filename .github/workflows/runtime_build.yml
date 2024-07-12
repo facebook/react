@@ -1,0 +1,42 @@
+name: (Runtime) Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths-ignore:
+      - compiler/**
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  build_and_lint:
+    name: yarn build and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11.0.22
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - run: yarn lint-build
+      - name: Cache build
+        uses: actions/cache@v4
+        id: build_cache
+        with:
+          path: build/**
+          key: yarn-build-${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
