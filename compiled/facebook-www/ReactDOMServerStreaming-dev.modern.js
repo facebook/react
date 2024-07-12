@@ -4120,7 +4120,7 @@ __DEV__ &&
               " " + badgeName + " ",
               ""
             );
-        error$jscomp$2.apply(console, error);
+        console.error.apply(console, error);
       } else console.error(error);
       return null;
     }

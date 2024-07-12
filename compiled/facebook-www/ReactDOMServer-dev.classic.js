@@ -4319,7 +4319,7 @@ __DEV__ &&
         "string" === typeof error[0]
           ? error.splice(0, 1, "[%s] " + error[0], " " + badgeName + " ")
           : error.splice(0, 0, "[%s] ", " " + badgeName + " ");
-        error$jscomp$2.apply(console, error);
+        console.error.apply(console, error);
       } else console.error(error);
       return null;
     }
@@ -8846,5 +8846,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-433068ee-20240711";
+    exports.version = "19.0.0-www-classic-ff89ba73-20240712";
   })();

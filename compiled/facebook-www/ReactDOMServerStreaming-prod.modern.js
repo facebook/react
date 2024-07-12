@@ -3833,9 +3833,9 @@ function renderElement(request, task, keyPath, type, props, ref) {
       var defaultProps = type.defaultProps;
       if (defaultProps && disableDefaultPropsExceptForClasses) {
         newProps === props && (newProps = assign({}, newProps, props));
-        for (var propName$33 in defaultProps)
-          void 0 === newProps[propName$33] &&
-            (newProps[propName$33] = defaultProps[propName$33]);
+        for (var propName$31 in defaultProps)
+          void 0 === newProps[propName$31] &&
+            (newProps[propName$31] = defaultProps[propName$31]);
       }
       props = newProps;
       newProps = emptyContextObject;
@@ -3850,18 +3850,18 @@ function renderElement(request, task, keyPath, type, props, ref) {
       newProps.state = ref;
       defaultProps = { queue: [], replace: !1 };
       newProps._reactInternals = defaultProps;
-      propName$33 = type.contextType;
+      propName$31 = type.contextType;
       newProps.context =
-        "object" === typeof propName$33 && null !== propName$33
-          ? propName$33._currentValue
+        "object" === typeof propName$31 && null !== propName$31
+          ? propName$31._currentValue
           : emptyContextObject;
-      propName$33 = type.getDerivedStateFromProps;
-      "function" === typeof propName$33 &&
-        ((propName$33 = propName$33(props, ref)),
+      propName$31 = type.getDerivedStateFromProps;
+      "function" === typeof propName$31 &&
+        ((propName$31 = propName$31(props, ref)),
         (ref =
-          null === propName$33 || void 0 === propName$33
+          null === propName$31 || void 0 === propName$31
             ? ref
-            : assign({}, ref, propName$33)),
+            : assign({}, ref, propName$31)),
         (newProps.state = ref));
       if (
         "function" !== typeof type.getDerivedStateFromProps &&
@@ -3885,21 +3885,21 @@ function renderElement(request, task, keyPath, type, props, ref) {
         )
           if (
             ((type = defaultProps.queue),
-            (propName$33 = defaultProps.replace),
+            (propName$31 = defaultProps.replace),
             (defaultProps.queue = null),
             (defaultProps.replace = !1),
-            propName$33 && 1 === type.length)
+            propName$31 && 1 === type.length)
           )
             newProps.state = type[0];
           else {
-            defaultProps = propName$33 ? type[0] : newProps.state;
+            defaultProps = propName$31 ? type[0] : newProps.state;
             ref = !0;
             for (
-              propName$33 = propName$33 ? 1 : 0;
-              propName$33 < type.length;
-              propName$33++
+              propName$31 = propName$31 ? 1 : 0;
+              propName$31 < type.length;
+              propName$31++
             )
-              (propName = type[propName$33]),
+              (propName = type[propName$31]),
                 (propName =
                   "function" === typeof propName
                     ? propName.call(newProps, defaultProps, props, void 0)
@@ -3952,12 +3952,12 @@ function renderElement(request, task, keyPath, type, props, ref) {
       );
       newProps.lastPushedText = !1;
       defaultProps = task.formatContext;
-      propName$33 = task.keyPath;
+      propName$31 = task.keyPath;
       task.formatContext = getChildFormatContext(defaultProps, type, props);
       task.keyPath = keyPath;
       renderNode(request, task, ref, -1);
       task.formatContext = defaultProps;
-      task.keyPath = propName$33;
+      task.keyPath = propName$31;
       a: {
         task = newProps.chunks;
         request = request.resumableState;
@@ -4046,13 +4046,13 @@ function renderElement(request, task, keyPath, type, props, ref) {
           ref = props.fallback;
           var content = props.children;
           props = new Set();
-          propName$33 = createSuspenseBoundary(request, props);
+          propName$31 = createSuspenseBoundary(request, props);
           null !== request.trackedPostpones &&
-            (propName$33.trackedContentKeyPath = keyPath);
+            (propName$31.trackedContentKeyPath = keyPath);
           propName = createPendingSegment(
             request,
             parentSegment.chunks.length,
-            propName$33,
+            propName$31,
             task.formatContext,
             !1,
             !1
@@ -4068,8 +4068,8 @@ function renderElement(request, task, keyPath, type, props, ref) {
             !1
           );
           contentRootSegment.parentFlushed = !0;
-          task.blockedBoundary = propName$33;
-          task.hoistableState = propName$33.contentState;
+          task.blockedBoundary = propName$31;
+          task.hoistableState = propName$31.contentState;
           task.blockedSegment = contentRootSegment;
           task.keyPath = keyPath;
           try {
@@ -4079,19 +4079,19 @@ function renderElement(request, task, keyPath, type, props, ref) {
                 contentRootSegment.textEmbedded &&
                 contentRootSegment.chunks.push("\x3c!-- --\x3e"),
               (contentRootSegment.status = 1),
-              queueCompletedSegment(propName$33, contentRootSegment),
-              0 === propName$33.pendingTasks && 0 === propName$33.status)
+              queueCompletedSegment(propName$31, contentRootSegment),
+              0 === propName$31.pendingTasks && 0 === propName$31.status)
             ) {
-              propName$33.status = 1;
+              propName$31.status = 1;
               break a;
             }
-          } catch (error$28) {
+          } catch (error) {
             (contentRootSegment.status = 4),
-              (propName$33.status = 4),
+              (propName$31.status = 4),
               (newProps = getThrownInfo(task.componentStack)),
-              (defaultProps = logRecoverableError(request, error$28, newProps)),
-              (propName$33.errorDigest = defaultProps),
-              untrackBoundary(request, propName$33);
+              (defaultProps = logRecoverableError(request, error, newProps)),
+              (propName$31.errorDigest = defaultProps),
+              untrackBoundary(request, propName$31);
           } finally {
             (task.blockedBoundary = type),
               (task.hoistableState = parentHoistableState),
@@ -4103,9 +4103,9 @@ function renderElement(request, task, keyPath, type, props, ref) {
           null !== defaultProps &&
             ((prevKeyPath = [newProps[1], newProps[2], [], null]),
             defaultProps.workingMap.set(newProps, prevKeyPath),
-            5 === propName$33.status
+            5 === propName$31.status
               ? (defaultProps.workingMap.get(keyPath)[4] = prevKeyPath)
-              : (propName$33.trackedFallbackNode = prevKeyPath));
+              : (propName$31.trackedFallbackNode = prevKeyPath));
           task = createRenderTask(
             request,
             null,
@@ -4113,7 +4113,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
             -1,
             type,
             propName,
-            propName$33.fallbackState,
+            propName$31.fallbackState,
             props,
             newProps,
             task.formatContext,
@@ -4353,12 +4353,12 @@ function retryNode(request, task) {
                           request.completedBoundaries.push(resumedBoundary);
                           break b;
                         }
-                      } catch (error$29) {
+                      } catch (error) {
                         (resumedBoundary.status = 4),
                           (childNodes = getThrownInfo(task.componentStack)),
                           (replay = logRecoverableError(
                             request,
-                            error$29,
+                            error,
                             childNodes
                           )),
                           (resumedBoundary.errorDigest = replay),
@@ -4614,15 +4614,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$45) {
+    } catch (thrownValue$43) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$45 === SuspenseException
+          thrownValue$43 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$45),
+            : thrownValue$43),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -4825,8 +4825,8 @@ function safelyEmitEarlyPreloads(request, shellComplete) {
         linkHeader ? onHeaders({ Link: linkHeader }) : onHeaders({});
       }
     }
-  } catch (error$48) {
-    logRecoverableError(request, error$48, {});
+  } catch (error) {
+    logRecoverableError(request, error, {});
   }
 }
 function completeShell(request) {
@@ -5278,11 +5278,11 @@ function flushCompletedQueues(request, destination) {
       completedBoundaries.splice(0, i);
       var partialBoundaries = request.partialBoundaries;
       for (i = 0; i < partialBoundaries.length; i++) {
-        var boundary$51 = partialBoundaries[i];
+        var boundary$47 = partialBoundaries[i];
         a: {
           clientRenderedBoundaries = request;
           boundary = destination;
-          var completedSegments = boundary$51.completedSegments;
+          var completedSegments = boundary$47.completedSegments;
           for (
             JSCompiler_inline_result = 0;
             JSCompiler_inline_result < completedSegments.length;
@@ -5292,7 +5292,7 @@ function flushCompletedQueues(request, destination) {
               !flushPartiallyCompletedSegment(
                 clientRenderedBoundaries,
                 boundary,
-                boundary$51,
+                boundary$47,
                 completedSegments[JSCompiler_inline_result]
               )
             ) {
@@ -5304,7 +5304,7 @@ function flushCompletedQueues(request, destination) {
           completedSegments.splice(0, JSCompiler_inline_result);
           JSCompiler_inline_result$jscomp$0 = writeHoistablesForBoundary(
             boundary,
-            boundary$51.contentState,
+            boundary$47.contentState,
             clientRenderedBoundaries.renderState
           );
         }
@@ -5349,19 +5349,19 @@ function abort(request, reason) {
   try {
     var abortableTasks = request.abortableTasks;
     if (0 < abortableTasks.size) {
-      var error$54 =
+      var error =
         void 0 === reason
           ? Error("The render was aborted by the server without a reason.")
           : reason;
       abortableTasks.forEach(function (task) {
-        return abortTask(task, request, error$54);
+        return abortTask(task, request, error);
       });
       abortableTasks.clear();
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$55) {
-    logRecoverableError(request, error$55, {}), fatalError(request, error$55);
+  } catch (error$49) {
+    logRecoverableError(request, error$49, {}), fatalError(request, error$49);
   }
 }
 exports.abortStream = function (stream, reason) {
@@ -5533,8 +5533,8 @@ exports.renderNextChunk = function (stream) {
       pingedTasks.splice(0, i);
       null !== request.destination &&
         flushCompletedQueues(request, request.destination);
-    } catch (error$49) {
-      logRecoverableError(request, error$49, {}), fatalError(request, error$49);
+    } catch (error) {
+      logRecoverableError(request, error, {}), fatalError(request, error);
     } finally {
       (currentResumableState = prevResumableState),
         (ReactSharedInternals.H = prevDispatcher),
@@ -5553,8 +5553,8 @@ exports.renderNextChunk = function (stream) {
     request.destination = stream;
     try {
       flushCompletedQueues(request, stream);
-    } catch (error$53) {
-      logRecoverableError(request, error$53, {}), fatalError(request, error$53);
+    } catch (error) {
+      logRecoverableError(request, error, {}), fatalError(request, error);
     }
   }
   if (stream.fatal) throw stream.error;
