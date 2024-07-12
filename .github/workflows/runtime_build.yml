@@ -10,6 +10,9 @@ on:
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
 
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
 jobs:
   build_and_lint:
     name: yarn build and lint

@@ -5,6 +5,9 @@ on:
     # Run hourly
     - cron: '0 * * * *'
 
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
 jobs:
   stale:
     runs-on: ubuntu-latest
