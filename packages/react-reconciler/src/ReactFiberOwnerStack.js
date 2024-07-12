@@ -38,7 +38,7 @@ function filterDebugStack(error: Error): string {
     // To keep things light we exclude the entire trace in this case.
     return '';
   }
-  const frames = stack.split('\n').slice(1);
+  const frames = stack.split('\n').slice(1); // Pop the JSX frame.
   return frames.filter(isNotExternal).join('\n');
 }
 

@@ -689,11 +689,27 @@ function createElement(
       value: null,
     });
     if (enableOwnerStacks) {
+      let normalizedStackTrace: null | Error = null;
+      if (stack !== null) {
+        // We create a fake stack and then create an Error object inside of it.
+        // This means that the stack trace is now normalized into the native format
+        // of the browser and the stack frames will have been registered with
+        // source mapping information.
+        // This can unfortunately happen within a user space callstack which will
+        // remain on the stack.
+        const callStackForError = buildFakeCallStack(
+          response,
+          stack,
+          // $FlowFixMe[incompatible-use]
+          Error.bind(null, 'react-stack-top-frame'),
+        );
+        normalizedStackTrace = callStackForError();
+      }
       Object.defineProperty(element, '_debugStack', {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: stack,
+        value: normalizedStackTrace,
       });
 
       let task: null | ConsoleTask = null;
@@ -724,6 +740,12 @@ function createElement(
         writable: true,
         value: task,
       });
+
+      // This owner should ideally have already been initialized to avoid getting
+      // user stack frames on the stack.
+      if (owner !== null) {
+        initializeFakeStack(response, owner);
+      }
     }
   }
 
@@ -2001,15 +2023,22 @@ function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): null | ConsoleTask {
-  if (!supportsCreateTask || typeof debugInfo.stack !== 'string') {
+  if (!supportsCreateTask) {
     return null;
   }
   const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
-  const stack: string = debugInfo.stack;
   const cachedEntry = componentInfo.task;
   if (cachedEntry !== undefined) {
     return cachedEntry;
   }
+
+  if (typeof debugInfo.stack !== 'string') {
+    // If this is an error, we should've really already initialized the task.
+    // If it's null, we can't initialize a task.
+    return null;
+  }
+
+  const stack = debugInfo.stack;
 
   const ownerTask =
     componentInfo.owner == null
@@ -2038,6 +2067,47 @@ function initializeFakeTask(
   return componentTask;
 }
 
+const createFakeCallStack = {
+  'react-stack-bottom-frame': function (fakeCallStack: () => Error): Error {
+    return fakeCallStack();
+  },
+};
+
+const createFakeCallStackInDEV: (fakeCallStack: () => Error) => Error = __DEV__
+  ? // We use this technique to trick minifiers to preserve the function name.
+    (createFakeCallStack['react-stack-bottom-frame'].bind(
+      createFakeCallStack,
+    ): any)
+  : (null: any);
+
+function initializeFakeStack(
+  response: Response,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): void {
+  if ((debugInfo: any)._stackInitialized) {
+    return;
+  }
+  if (typeof debugInfo.stack === 'string') {
+    const callStackForError = buildFakeCallStack(
+      response,
+      debugInfo.stack,
+      // $FlowFixMe[incompatible-use]
+      Error.bind(null, 'react-stack-top-frame'),
+    );
+    // TODO: Ideally we should leave this as an Error instead of eagerly force it.
+    // TODO: This object identity is important because it might be used as an owner
+    // so we cannot clone it. But by changing the format we also cannot reuse the stack
+    // elsewhere to create fake tasks. We have already done that above so should be ok.
+    // $FlowFixMe[cannot-write]
+    debugInfo.stack = createFakeCallStackInDEV(callStackForError).stack;
+    (debugInfo: any)._stackInitialized = true;
+  }
+  if (debugInfo.owner != null) {
+    // Initialize any owners not yet initialized.
+    initializeFakeStack(response, debugInfo.owner);
+  }
+}
+
 function resolveDebugInfo(
   response: Response,
   id: number,
@@ -2054,6 +2124,8 @@ function resolveDebugInfo(
   // render phase so we're not inside a user space stack at this point. If we waited
   // to initialize it when we need it, we might be inside user code.
   initializeFakeTask(response, debugInfo);
+  initializeFakeStack(response, debugInfo);
+
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
@@ -2096,6 +2168,7 @@ function resolveConsoleEntry(
   );
   if (owner != null) {
     const task = initializeFakeTask(response, owner);
+    initializeFakeStack(response, owner);
     if (task !== null) {
       task.run(callStack);
       return;
