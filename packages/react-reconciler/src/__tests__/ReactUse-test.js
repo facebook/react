@@ -1562,7 +1562,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Async!');
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('unwrap uncached promises in component that accesses legacy context', async () => {
     class ContextProvider extends React.Component {
       static childContextTypes = {
