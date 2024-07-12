@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7a18f874f122a94b6ea996fd34e4bdec>>
+ * @generated SignedSource<<cb52d8f0a33b4839c55863e4803d246e>>
  */
 
 "use strict";
@@ -2051,11 +2051,7 @@ __DEV__ &&
       "string" === typeof args[offset]
         ? args.splice(offset, 1, "[%s] " + args[offset], " " + badgeName + " ")
         : args.splice(offset, 0, "[%s] ", " " + badgeName + " ");
-      "error" === methodName
-        ? error$jscomp$0.apply(console, args)
-        : "warn" === methodName
-        ? warn.apply(console, args)
-        : console[methodName].apply(console, args);
+      console[methodName].apply(console, args);
     }
     function createCursor(defaultValue) {
       return { current: defaultValue };
@@ -16821,12 +16817,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ff3f1fac-20240712"
+        reconcilerVersion: "19.0.0-native-fb-ff89ba73-20240712"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-ff3f1fac-20240712",
+      version: "19.0.0-native-fb-ff89ba73-20240712",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a55b3ae9fc483a5ea92aaa34fe44b5df>>
+ * @generated SignedSource<<19de64da095c2c7e3388344fab7cc610>>
  */
 
 "use strict";
@@ -1149,11 +1149,7 @@ __DEV__ &&
       "string" === typeof args[offset]
         ? args.splice(offset, 1, "[%s] " + args[offset], " " + badgeName + " ")
         : args.splice(offset, 0, "[%s] ", " " + badgeName + " ");
-      "error" === methodName
-        ? error$jscomp$0.apply(console, args)
-        : "warn" === methodName
-        ? warn.apply(console, args)
-        : console[methodName].apply(console, args);
+      console[methodName].apply(console, args);
     }
     function createCursor(defaultValue) {
       return { current: defaultValue };
@@ -15191,14 +15187,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ff3f1fac-20240712"
+        reconcilerVersion: "19.0.0-native-fb-ff89ba73-20240712"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-ff3f1fac-20240712",
+      version: "19.0.0-native-fb-ff89ba73-20240712",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<79882b876f72e14d4955ae2a47490ee7>>
+ * @generated SignedSource<<f40fe7e4fcad53bb52ff550e9c1ac46c>>
  */
 
 "use strict";
@@ -2004,11 +2004,7 @@ __DEV__ &&
       "string" === typeof args[offset]
         ? args.splice(offset, 1, "[%s] " + args[offset], " " + badgeName + " ")
         : args.splice(offset, 0, "[%s] ", " " + badgeName + " ");
-      "error" === methodName
-        ? error$jscomp$0.apply(console, args)
-        : "warn" === methodName
-        ? warn.apply(console, args)
-        : console[methodName].apply(console, args);
+      console[methodName].apply(console, args);
     }
     function createCursor(defaultValue) {
       return { current: defaultValue };
@@ -17009,11 +17005,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-ff3f1fac-20240712" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-ff89ba73-20240712" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-ff3f1fac-20240712\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-ff89ba73-20240712\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17061,12 +17057,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ff3f1fac-20240712"
+        reconcilerVersion: "19.0.0-native-fb-ff89ba73-20240712"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-ff3f1fac-20240712",
+      version: "19.0.0-native-fb-ff89ba73-20240712",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
