@@ -52,3 +52,45 @@ jobs:
           name: build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
           path: |
             build
+
+  process_artifacts_combined:
+    name: Process artifacts combined
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
+      - name: Scrape warning messages
+        run: |
+          mkdir -p ./build/__test_utils__
+          node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
+        # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build.tgz ./build
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: cp ./build.tgz ./build2.tgz
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined_artifacts_${{ github.sha }}
+          path: |
+            ./build.tgz
+            ./build2.tgz
