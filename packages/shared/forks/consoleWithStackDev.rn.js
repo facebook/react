@@ -23,7 +23,7 @@ export function setSuppressWarning(newSuppressWarning) {
 export function warn(format, ...args) {
   if (__DEV__) {
     if (!suppressWarning) {
-      printWarning('warn', format, args, new Error('react-stack-top-frame'));
+      printWarning('warn', format, args);
     }
   }
 }
@@ -31,17 +31,17 @@ export function warn(format, ...args) {
 export function error(format, ...args) {
   if (__DEV__) {
     if (!suppressWarning) {
-      printWarning('error', format, args, new Error('react-stack-top-frame'));
+      printWarning('error', format, args);
     }
   }
 }
 
 export let isWritingAppendedStack = false;
 
-function printWarning(level, format, args, currentStack) {
+function printWarning(level, format, args) {
   if (__DEV__) {
     if (ReactSharedInternals.getCurrentStack) {
-      const stack = ReactSharedInternals.getCurrentStack(currentStack);
+      const stack = ReactSharedInternals.getCurrentStack();
       if (stack !== '') {
         isWritingAppendedStack = true;
         format += '%s';

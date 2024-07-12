@@ -66,9 +66,9 @@ export function printToConsole(
     );
   }
 
-  if (methodName === 'error') {
+  if (methodName === 'error' && __DEV__) {
     error.apply(console, newArgs);
-  } else if (methodName === 'warn') {
+  } else if (methodName === 'warn' && __DEV__) {
     warn.apply(console, newArgs);
   } else {
     // $FlowFixMe[invalid-computed-prop]

@@ -15,6 +15,7 @@
 
 export const alwaysThrottleRetries = true;
 export const disableDefaultPropsExceptForClasses = __VARIANT__;
+export const disableLegacyContextForFunctionComponents = __VARIANT__;
 export const disableLegacyMode = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableAddPropertiesFastPath = __VARIANT__;
