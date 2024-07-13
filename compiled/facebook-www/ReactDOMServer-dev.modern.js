@@ -2634,7 +2634,7 @@ __DEV__ &&
                 fetchPriority: props.fetchPriority,
                 referrerPolicy: props.refererPolicy
               })),
-              2 <= (headers.remainingCapacity -= header.length))
+              0 <= (headers.remainingCapacity -= header.length + 2))
                 ? ((renderState.resets.image[key$jscomp$0] = PRELOAD_NO_CREDS),
                   headers.highImagePreloads &&
                     (headers.highImagePreloads += ", "),
@@ -6256,7 +6256,7 @@ __DEV__ &&
                       media: props$jscomp$0.media
                     }
                   );
-                  if (2 <= (headers.remainingCapacity -= header.length))
+                  if (0 <= (headers.remainingCapacity -= header.length + 2))
                     (renderState.resets.style[key] = PRELOAD_NO_CREDS),
                       linkHeader && (linkHeader += ", "),
                       (linkHeader += header),
@@ -7962,7 +7962,7 @@ __DEV__ &&
                     "<" +
                     escapeHrefForLinkHeaderURLContext(href) +
                     ">; rel=dns-prefetch"),
-                  2 <= (resumableState.remainingCapacity -= header.length));
+                  0 <= (resumableState.remainingCapacity -= header.length + 2));
               JSCompiler_temp
                 ? ((renderState.resets.dns[href] = EXISTS),
                   resumableState.preconnects &&
@@ -8011,7 +8011,7 @@ __DEV__ &&
                 }
                 JSCompiler_temp =
                   ((header = JSCompiler_temp),
-                  2 <= (resumableState.remainingCapacity -= header.length));
+                  0 <= (resumableState.remainingCapacity -= header.length + 2));
               }
               JSCompiler_temp
                 ? ((renderState.resets.connect[bucket][href] = EXISTS),
@@ -8054,7 +8054,7 @@ __DEV__ &&
                 0 < resumableState.remainingCapacity &&
                 "high" === fetchPriority &&
                 ((header = getPreloadAsHeader(href, as, options)),
-                2 <= (resumableState.remainingCapacity -= header.length))
+                0 <= (resumableState.remainingCapacity -= header.length + 2))
                   ? ((renderState.resets.image[key] = PRELOAD_NO_CREDS),
                     resumableState.highImagePreloads &&
                       (resumableState.highImagePreloads += ", "),
@@ -8124,7 +8124,7 @@ __DEV__ &&
                   0 < resumableState.remainingCapacity &&
                   "font" === as &&
                   ((key = getPreloadAsHeader(href, as, options)),
-                  2 <= (resumableState.remainingCapacity -= key.length))
+                  0 <= (resumableState.remainingCapacity -= key.length + 2))
                 )
                   (renderState.resets.font[href] = PRELOAD_NO_CREDS),
                     resumableState.fontPreloads &&
@@ -8671,5 +8671,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-ff89ba73-20240712";
+    exports.version = "19.0.0-www-modern-79e4f238-20240713";
   })();

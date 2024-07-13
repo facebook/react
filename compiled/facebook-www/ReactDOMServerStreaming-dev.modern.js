@@ -2594,7 +2594,7 @@ __DEV__ &&
                 fetchPriority: props.fetchPriority,
                 referrerPolicy: props.refererPolicy
               })),
-              2 <= (headers.remainingCapacity -= header.length))
+              0 <= (headers.remainingCapacity -= header.length + 2))
                 ? ((renderState.resets.image[key$jscomp$0] = PRELOAD_NO_CREDS),
                   headers.highImagePreloads &&
                     (headers.highImagePreloads += ", "),
@@ -6038,7 +6038,7 @@ __DEV__ &&
                       media: props$jscomp$0.media
                     }
                   );
-                  if (2 <= (headers.remainingCapacity -= header.length))
+                  if (0 <= (headers.remainingCapacity -= header.length + 2))
                     (renderState.resets.style[key] = PRELOAD_NO_CREDS),
                       linkHeader && (linkHeader += ", "),
                       (linkHeader += header),
@@ -7457,7 +7457,7 @@ __DEV__ &&
                     "<" +
                     escapeHrefForLinkHeaderURLContext(href) +
                     ">; rel=dns-prefetch"),
-                  2 <= (resumableState.remainingCapacity -= header.length));
+                  0 <= (resumableState.remainingCapacity -= header.length + 2));
               JSCompiler_temp
                 ? ((renderState.resets.dns[href] = EXISTS),
                   resumableState.preconnects &&
@@ -7506,7 +7506,7 @@ __DEV__ &&
                 }
                 JSCompiler_temp =
                   ((header = JSCompiler_temp),
-                  2 <= (resumableState.remainingCapacity -= header.length));
+                  0 <= (resumableState.remainingCapacity -= header.length + 2));
               }
               JSCompiler_temp
                 ? ((renderState.resets.connect[bucket][href] = EXISTS),
@@ -7549,7 +7549,7 @@ __DEV__ &&
                 0 < resumableState.remainingCapacity &&
                 "high" === fetchPriority &&
                 ((header = getPreloadAsHeader(href, as, options)),
-                2 <= (resumableState.remainingCapacity -= header.length))
+                0 <= (resumableState.remainingCapacity -= header.length + 2))
                   ? ((renderState.resets.image[key] = PRELOAD_NO_CREDS),
                     resumableState.highImagePreloads &&
                       (resumableState.highImagePreloads += ", "),
@@ -7619,7 +7619,7 @@ __DEV__ &&
                   0 < resumableState.remainingCapacity &&
                   "font" === as &&
                   ((key = getPreloadAsHeader(href, as, options)),
-                  2 <= (resumableState.remainingCapacity -= key.length))
+                  0 <= (resumableState.remainingCapacity -= key.length + 2))
                 )
                   (renderState.resets.font[href] = PRELOAD_NO_CREDS),
                     resumableState.fontPreloads &&
