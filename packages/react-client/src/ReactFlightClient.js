@@ -1891,19 +1891,33 @@ function createFakeFunction<T>(
   const comment =
     '/* This module was rendered by a Server Component. Turn on Source Maps to see the server source. */';
 
+  if (!name) {
+    // An eval:ed function with no name gets the name "eval". We give it something more descriptive.
+    name = '(anonymous)';
+  }
+  const encodedName = JSON.stringify(name);
   // We generate code where the call is at the line and column of the server executed code.
   // This allows us to use the original source map as the source map of this fake file to
   // point to the original source.
   let code;
   if (line <= 1) {
-    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment;
+    const minSize = encodedName.length + 7;
+    code =
+      '({' +
+      encodedName +
+      ':_=>' +
+      ' '.repeat(col < minSize ? 0 : col - minSize) +
+      '_()})\n' +
+      comment;
   } else {
     code =
       comment +
       '\n'.repeat(line - 2) +
-      '_=>\n' +
+      '({' +
+      encodedName +
+      ':_=>\n' +
       ' '.repeat(col < 1 ? 0 : col - 1) +
-      '_()';
+      '_()})';
   }
 
   if (filename.startsWith('/')) {
@@ -1931,7 +1945,7 @@ function createFakeFunction<T>(
   let fn: FakeFunction<T>;
   try {
     // eslint-disable-next-line no-eval
-    fn = (0, eval)(code);
+    fn = (0, eval)(code)[name];
   } catch (x) {
     // If eval fails, such as if in an environment that doesn't support it,
     // we fallback to creating a function here. It'll still have the right
@@ -1940,10 +1954,6 @@ function createFakeFunction<T>(
       return _();
     };
   }
-  // $FlowFixMe[cannot-write]
-  Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
-  // $FlowFixMe[prop-missing]
-  fn.displayName = name;
   return fn;
 }
 
