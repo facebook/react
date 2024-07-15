@@ -243,8 +243,10 @@ function* runWithEnvironment(
   inferReactiveScopeVariables(hir);
   yield log({ kind: "hir", name: "InferReactiveScopeVariables", value: hir });
 
-  outlineFunctions(hir);
-  yield log({ kind: "hir", name: "OutlineFunctions", value: hir });
+  if (env.config.enableFunctionOutlining) {
+    outlineFunctions(hir);
+    yield log({ kind: "hir", name: "OutlineFunctions", value: hir });
+  }
 
   alignMethodCallScopes(hir);
   yield log({
