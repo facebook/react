@@ -1436,12 +1436,23 @@ describe('ReactFlight', () => {
 
   it('should warn in DEV a child is missing keys on server component', () => {
     function NoKey({children}) {
-      return <div key="this has a key but parent doesn't" />;
+      return ReactServer.createElement('div', {
+        key: "this has a key but parent doesn't",
+      });
     }
     expect(() => {
+      // While we're on the server we need to have the Server version active to track component stacks.
+      jest.resetModules();
+      jest.mock('react', () => ReactServer);
       const transport = ReactNoopFlightServer.render(
-        <div>{Array(6).fill(<NoKey />)}</div>,
+        ReactServer.createElement(
+          'div',
+          null,
+          Array(6).fill(ReactServer.createElement(NoKey)),
+        ),
       );
+      jest.resetModules();
+      jest.mock('react', () => React);
       ReactNoopFlightClient.read(transport);
     }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
@@ -2814,7 +2825,7 @@ describe('ReactFlight', () => {
   });
 
   // @gate (enableOwnerStacks && enableServerComponentLogs) || !__DEV__
-  it('should not include component stacks in replayed logs (unless DevTools add them)', () => {
+  it('should include only one component stack in replayed logs (if DevTools or polyfill adds them)', () => {
     class MyError extends Error {
       toJSON() {
         return 123;
@@ -2839,6 +2850,9 @@ describe('ReactFlight', () => {
       return ReactServer.createElement(Bar);
     }
 
+    // While we're on the server we need to have the Server version active to track component stacks.
+    jest.resetModules();
+    jest.mock('react', () => ReactServer);
     const transport = ReactNoopFlightServer.render(
       ReactServer.createElement(App),
     );
@@ -2857,6 +2871,8 @@ describe('ReactFlight', () => {
     ]);
 
     // Replay logs on the client
+    jest.resetModules();
+    jest.mock('react', () => React);
     ReactNoopFlightClient.read(transport);
     assertConsoleErrorDev(
       [
@@ -2866,8 +2882,8 @@ describe('ReactFlight', () => {
           '  <div>Womp womp: {Error}</div>\n' +
           '                  ^^^^^^^',
       ],
-      // We should not have a stack in the replay because that should be added either by console.createTask
-      // or React DevTools on the client. Neither of which we do here.
+      // We should have a stack in the replay but we don't yet set the owner from the Flight replaying
+      // so our simulated polyfill doesn't end up getting any component stacks yet.
       {withoutStack: true},
     );
   });
