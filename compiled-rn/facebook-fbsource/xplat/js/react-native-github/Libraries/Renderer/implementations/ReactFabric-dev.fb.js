@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c187e11a9478ecae821aa269657417f6>>
+ * @generated SignedSource<<33b19db231c19a7465cf06a85e551523>>
  */
 
 "use strict";
@@ -1336,11 +1336,14 @@ __DEV__ &&
         return payload;
       }
       for (i in props) {
-        var prop = props[i];
-        if (void 0 !== prop) {
-          var attributeConfig = validAttributes[i];
-          if (null != attributeConfig) {
-            var newValue = void 0;
+        var prop = props[i],
+          attributeConfig = validAttributes[i];
+        if (null != attributeConfig) {
+          var newValue = void 0;
+          if (void 0 === prop)
+            if (payload && void 0 !== payload[i]) newValue = null;
+            else continue;
+          else
             "function" === typeof prop
               ? (newValue = !0)
               : "object" !== typeof attributeConfig
@@ -1348,10 +1351,9 @@ __DEV__ &&
               : "function" === typeof attributeConfig.process
               ? (newValue = attributeConfig.process(prop))
               : "function" === typeof attributeConfig.diff && (newValue = prop);
-            void 0 !== newValue
-              ? (payload || (payload = {}), (payload[i] = newValue))
-              : (payload = fastAddProperties(payload, prop, attributeConfig));
-          }
+          void 0 !== newValue
+            ? (payload || (payload = {}), (payload[i] = newValue))
+            : (payload = fastAddProperties(payload, prop, attributeConfig));
         }
       }
       return payload;
@@ -16811,12 +16813,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-fc1371f6-20240715"
+        reconcilerVersion: "19.0.0-native-fb-f510ece8-20240715"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-fc1371f6-20240715",
+      version: "19.0.0-native-fb-f510ece8-20240715",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

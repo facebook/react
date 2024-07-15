@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e70e2f329e5ac6a6a2556a1a11ffc8f2>>
+ * @generated SignedSource<<d389f07884880b4a598ea92a00df86e9>>
  */
 
 "use strict";
@@ -1529,11 +1529,14 @@ function fastAddProperties(payload, props, validAttributes) {
     return payload;
   }
   for (i in props) {
-    var prop = props[i];
-    if (void 0 !== prop) {
-      var attributeConfig = validAttributes[i];
-      if (null != attributeConfig) {
-        var newValue = void 0;
+    var prop = props[i],
+      attributeConfig = validAttributes[i];
+    if (null != attributeConfig) {
+      var newValue = void 0;
+      if (void 0 === prop)
+        if (payload && void 0 !== payload[i]) newValue = null;
+        else continue;
+      else
         "function" === typeof prop
           ? (newValue = !0)
           : "object" !== typeof attributeConfig
@@ -1541,10 +1544,9 @@ function fastAddProperties(payload, props, validAttributes) {
           : "function" === typeof attributeConfig.process
           ? (newValue = attributeConfig.process(prop))
           : "function" === typeof attributeConfig.diff && (newValue = prop);
-        void 0 !== newValue
-          ? (payload || (payload = {}), (payload[i] = newValue))
-          : (payload = fastAddProperties(payload, prop, attributeConfig));
-      }
+      void 0 !== newValue
+        ? (payload || (payload = {}), (payload[i] = newValue))
+        : (payload = fastAddProperties(payload, prop, attributeConfig));
     }
   }
   return payload;
@@ -10626,7 +10628,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1136 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-fc1371f6-20240715",
+    version: "19.0.0-native-fb-f510ece8-20240715",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10669,7 +10671,7 @@ var internals$jscomp$inline_1362 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-fc1371f6-20240715"
+  reconcilerVersion: "19.0.0-native-fb-f510ece8-20240715"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1363 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
