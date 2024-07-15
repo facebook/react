@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5faabf73666ec4dc0d2fa62bc5fd9940>>
+ * @generated SignedSource<<279a717ea54af9f40c729d53d7a24318>>
  */
 
 "use strict";
@@ -15,10 +15,7 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
-  disableDefaultPropsExceptForClasses =
-    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-  enableFastJSX = dynamicFlagsUntyped.enableFastJSX,
+var enableFastJSX = require("ReactNativeInternalFeatureFlags").enableFastJSX,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -115,12 +112,6 @@ function jsxProd(type, config, maybeKey) {
     for (var propName in config)
       "key" !== propName && (maybeKey[propName] = config[propName]);
   } else maybeKey = config;
-  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
-    config = type.defaultProps;
-    for (var propName$0 in config)
-      void 0 === maybeKey[propName$0] &&
-        (maybeKey[propName$0] = config[propName$0]);
-  }
   return ReactElement(type, key, null, void 0, void 0, null, maybeKey);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
@@ -417,34 +408,22 @@ exports.cloneElement = function (element, config, children) {
   var props = assign({}, element.props),
     key = element.key,
     owner = void 0;
-  if (null != config) {
-    void 0 !== config.ref && (owner = void 0);
-    void 0 !== config.key && (key = "" + config.key);
-    if (
-      !disableDefaultPropsExceptForClasses &&
-      element.type &&
-      element.type.defaultProps
-    )
-      var defaultProps = element.type.defaultProps;
-    for (propName in config)
+  if (null != config)
+    for (propName in (void 0 !== config.ref && (owner = void 0),
+    void 0 !== config.key && (key = "" + config.key),
+    config))
       !hasOwnProperty.call(config, propName) ||
         "key" === propName ||
         "__self" === propName ||
         "__source" === propName ||
         ("ref" === propName && void 0 === config.ref) ||
-        (props[propName] =
-          disableDefaultPropsExceptForClasses ||
-          void 0 !== config[propName] ||
-          void 0 === defaultProps
-            ? config[propName]
-            : defaultProps[propName]);
-  }
+        (props[propName] = config[propName]);
   var propName = arguments.length - 2;
   if (1 === propName) props.children = children;
   else if (1 < propName) {
-    defaultProps = Array(propName);
-    for (var i = 0; i < propName; i++) defaultProps[i] = arguments[i + 2];
-    props.children = defaultProps;
+    for (var childArray = Array(propName), i = 0; i < propName; i++)
+      childArray[i] = arguments[i + 2];
+    props.children = childArray;
   }
   return ReactElement(element.type, key, null, void 0, void 0, owner, props);
 };
@@ -608,7 +587,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-native-fb-f510ece8-20240715";
+exports.version = "19.0.0-native-fb-1d5a208f-20240715";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

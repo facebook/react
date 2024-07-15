@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8de8fd144d056267c7877ddd4494da73>>
+ * @generated SignedSource<<ab96f617c43c6ee6c335cb94e85f4bb4>>
  */
 
 "use strict";
@@ -535,18 +535,12 @@ __DEV__ &&
         for (var propName in config)
           "key" !== propName && (maybeKey[propName] = config[propName]);
       } else maybeKey = config;
-      if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
-        config = type.defaultProps;
-        for (var _propName2 in config)
-          void 0 === maybeKey[_propName2] &&
-            (maybeKey[_propName2] = config[_propName2]);
-      }
       children &&
-        ((_propName2 =
+        ((config =
           "function" === typeof type
             ? type.displayName || type.name || "Unknown"
             : type),
-        children && defineKeyPropWarningGetter(maybeKey, _propName2));
+        children && defineKeyPropWarningGetter(maybeKey, config));
       return ReactElement(
         type,
         children,
@@ -639,11 +633,8 @@ __DEV__ &&
       return info;
     }
     var React = require("react"),
-      dynamicFlags = require("ReactNativeInternalFeatureFlags"),
-      disableDefaultPropsExceptForClasses =
-        dynamicFlags.disableDefaultPropsExceptForClasses;
-    dynamicFlags = dynamicFlags.enableFastJSX;
-    var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+      enableFastJSX = require("ReactNativeInternalFeatureFlags").enableFastJSX,
+      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -683,7 +674,7 @@ __DEV__ &&
     var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       specialPropKeyWarningShown;
     var didWarnAboutElementRef = {};
-    var enableFastJSXWithStringRefs = dynamicFlags && !0,
+    var enableFastJSXWithStringRefs = enableFastJSX && !0,
       enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !0,
       didWarnAboutKeySpread = {},
       ownerHasKeyUseWarning = {};

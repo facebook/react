@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<774ee23c4580a270ea6ffd6e54c906bb>>
+ * @generated SignedSource<<0d1a6f0ae1b1f18f2e4948774966bee8>>
  */
 
 "use strict";
@@ -598,18 +598,12 @@ __DEV__ &&
         for (var propName in config)
           "key" !== propName && (maybeKey[propName] = config[propName]);
       } else maybeKey = config;
-      if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
-        config = type.defaultProps;
-        for (var _propName2 in config)
-          void 0 === maybeKey[_propName2] &&
-            (maybeKey[_propName2] = config[_propName2]);
-      }
       children &&
-        ((_propName2 =
+        ((config =
           "function" === typeof type
             ? type.displayName || type.name || "Unknown"
             : type),
-        children && defineKeyPropWarningGetter(maybeKey, _propName2));
+        children && defineKeyPropWarningGetter(maybeKey, config));
       return ReactElement(
         type,
         children,
@@ -1029,10 +1023,8 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-    var dynamicFlags = require("ReactNativeInternalFeatureFlags"),
-      disableDefaultPropsExceptForClasses =
-        dynamicFlags.disableDefaultPropsExceptForClasses,
-      enableFastJSX = dynamicFlags.enableFastJSX,
+    var enableFastJSX =
+        require("ReactNativeInternalFeatureFlags").enableFastJSX,
       REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1366,35 +1358,23 @@ __DEV__ &&
       var props = assign({}, element.props),
         key = element.key,
         owner = element._owner;
-      if (null != config) {
-        hasValidRef(config) && (owner = getOwner());
+      if (null != config)
+        for (propName in (hasValidRef(config) && (owner = getOwner()),
         hasValidKey(config) &&
-          (checkKeyStringCoercion(config.key), (key = "" + config.key));
-        if (
-          !disableDefaultPropsExceptForClasses &&
-          element.type &&
-          element.type.defaultProps
-        )
-          var defaultProps = element.type.defaultProps;
-        for (propName in config)
+          (checkKeyStringCoercion(config.key), (key = "" + config.key)),
+        config))
           !hasOwnProperty.call(config, propName) ||
             "key" === propName ||
             "__self" === propName ||
             "__source" === propName ||
             ("ref" === propName && void 0 === config.ref) ||
-            (props[propName] =
-              disableDefaultPropsExceptForClasses ||
-              void 0 !== config[propName] ||
-              void 0 === defaultProps
-                ? config[propName]
-                : defaultProps[propName]);
-      }
+            (props[propName] = config[propName]);
       var propName = arguments.length - 2;
       if (1 === propName) props.children = children;
       else if (1 < propName) {
-        defaultProps = Array(propName);
-        for (var i = 0; i < propName; i++) defaultProps[i] = arguments[i + 2];
-        props.children = defaultProps;
+        for (var childArray = Array(propName), i = 0; i < propName; i++)
+          childArray[i] = arguments[i + 2];
+        props.children = childArray;
       }
       props = ReactElement(
         element.type,
@@ -1577,32 +1557,11 @@ __DEV__ &&
       return jsxDEVImpl(type, config, maybeKey, !0, source, self);
     };
     exports.lazy = function (ctor) {
-      var lazyType = {
+      return {
         $$typeof: REACT_LAZY_TYPE,
         _payload: { _status: -1, _result: ctor },
         _init: lazyInitializer
       };
-      if (!disableDefaultPropsExceptForClasses) {
-        var defaultProps;
-        Object.defineProperties(lazyType, {
-          defaultProps: {
-            configurable: !0,
-            get: function () {
-              return defaultProps;
-            },
-            set: function (newDefaultProps) {
-              error$jscomp$0(
-                "It is not supported to assign `defaultProps` to a lazy component import. Either specify them where the component is defined, or create a wrapping component around it."
-              );
-              defaultProps = newDefaultProps;
-              Object.defineProperty(lazyType, "defaultProps", {
-                enumerable: !0
-              });
-            }
-          }
-        });
-      }
-      return lazyType;
     };
     exports.memo = function (type, compare) {
       isValidElementType(type) ||
@@ -1748,7 +1707,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-f510ece8-20240715";
+    exports.version = "19.0.0-native-fb-1d5a208f-20240715";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

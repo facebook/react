@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6da80fcc0b995a2ab635400377d3a276>>
+ * @generated SignedSource<<ce301f0cf080b03b1cbf8490193ca5ce>>
  */
 
 "use strict";
@@ -3842,35 +3842,20 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   "function" === typeof instance.componentDidMount &&
     (workInProgress.flags |= 4194308);
 }
-function resolveClassComponentProps(
-  Component,
-  baseProps,
-  alreadyResolvedDefaultProps
-) {
+function resolveClassComponentProps(Component, baseProps) {
   var newProps = baseProps;
   if ("ref" in baseProps) {
     newProps = {};
     for (var propName in baseProps)
       "ref" !== propName && (newProps[propName] = baseProps[propName]);
   }
-  if ((Component = Component.defaultProps) && !alreadyResolvedDefaultProps) {
+  if ((Component = Component.defaultProps)) {
     newProps === baseProps && (newProps = assign({}, newProps));
     for (var propName$46 in Component)
       void 0 === newProps[propName$46] &&
         (newProps[propName$46] = Component[propName$46]);
   }
   return newProps;
-}
-function resolveDefaultPropsOnNonClassComponent(Component, baseProps) {
-  if (Component && Component.defaultProps) {
-    baseProps = assign({}, baseProps);
-    Component = Component.defaultProps;
-    for (var propName in Component)
-      void 0 === baseProps[propName] &&
-        (baseProps[propName] = Component[propName]);
-    return baseProps;
-  }
-  return baseProps;
 }
 var reportGlobalError =
   "function" === typeof reportError
@@ -4188,8 +4173,7 @@ function updateMemoComponent(
       "function" === typeof type &&
       !shouldConstruct(type) &&
       void 0 === type.defaultProps &&
-      null === Component.compare &&
-      void 0 === Component.defaultProps
+      null === Component.compare
     )
       return (
         (workInProgress.tag = 15),
@@ -4430,11 +4414,7 @@ function updateClassComponent(
   else if (null === current) {
     var instance = workInProgress.stateNode,
       unresolvedOldProps = workInProgress.memoizedProps,
-      oldProps = resolveClassComponentProps(
-        Component,
-        unresolvedOldProps,
-        workInProgress.type === workInProgress.elementType
-      );
+      oldProps = resolveClassComponentProps(Component, unresolvedOldProps);
     instance.props = oldProps;
     var oldContext = instance.context,
       contextType = Component.contextType;
@@ -4512,11 +4492,7 @@ function updateClassComponent(
     instance = workInProgress.stateNode;
     cloneUpdateQueue(current, workInProgress);
     oldProps = workInProgress.memoizedProps;
-    contextType = resolveClassComponentProps(
-      Component,
-      oldProps,
-      workInProgress.type === workInProgress.elementType
-    );
+    contextType = resolveClassComponentProps(Component, oldProps);
     instance.props = contextType;
     hasNewLifecycles = workInProgress.pendingProps;
     unresolvedOldProps = instance.context;
@@ -5296,95 +5272,82 @@ function beginWork(current, workInProgress, renderLanes) {
       var elementType = workInProgress.elementType;
       a: {
         resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress);
-        var props = workInProgress.pendingProps;
-        current = elementType._init;
-        current = current(elementType._payload);
-        workInProgress.type = current;
-        if ("function" === typeof current)
-          shouldConstruct(current)
-            ? ((props = resolveClassComponentProps(current, props, !1)),
+        current = workInProgress.pendingProps;
+        var init = elementType._init;
+        elementType = init(elementType._payload);
+        workInProgress.type = elementType;
+        if ("function" === typeof elementType)
+          shouldConstruct(elementType)
+            ? ((current = resolveClassComponentProps(elementType, current)),
               (workInProgress.tag = 1),
               (workInProgress = updateClassComponent(
                 null,
                 workInProgress,
+                elementType,
                 current,
-                props,
                 renderLanes
               )))
-            : ((props = resolveDefaultPropsOnNonClassComponent(current, props)),
-              (workInProgress.tag = 0),
+            : ((workInProgress.tag = 0),
               (workInProgress = updateFunctionComponent(
                 null,
                 workInProgress,
+                elementType,
                 current,
-                props,
                 renderLanes
               )));
         else {
-          if (void 0 !== current && null !== current)
+          if (void 0 !== elementType && null !== elementType)
             if (
-              ((elementType = current.$$typeof),
-              elementType === REACT_FORWARD_REF_TYPE)
+              ((init = elementType.$$typeof), init === REACT_FORWARD_REF_TYPE)
             ) {
-              props = resolveDefaultPropsOnNonClassComponent(current, props);
               workInProgress.tag = 11;
               workInProgress = updateForwardRef(
                 null,
                 workInProgress,
+                elementType,
                 current,
-                props,
                 renderLanes
               );
               break a;
-            } else if (elementType === REACT_MEMO_TYPE) {
-              props = resolveDefaultPropsOnNonClassComponent(current, props);
+            } else if (init === REACT_MEMO_TYPE) {
               workInProgress.tag = 14;
               workInProgress = updateMemoComponent(
                 null,
                 workInProgress,
+                elementType,
                 current,
-                resolveDefaultPropsOnNonClassComponent(current.type, props),
                 renderLanes
               );
               break a;
             }
           throw Error(
             "Element type is invalid. Received a promise that resolves to: " +
-              current +
+              elementType +
               ". Lazy element type must resolve to a class or function."
           );
         }
       }
       return workInProgress;
     case 0:
-      return (
-        (props = workInProgress.type),
-        (elementType = workInProgress.pendingProps),
-        (elementType =
-          workInProgress.elementType === props
-            ? elementType
-            : resolveDefaultPropsOnNonClassComponent(props, elementType)),
-        updateFunctionComponent(
-          current,
-          workInProgress,
-          props,
-          elementType,
-          renderLanes
-        )
+      return updateFunctionComponent(
+        current,
+        workInProgress,
+        workInProgress.type,
+        workInProgress.pendingProps,
+        renderLanes
       );
     case 1:
       return (
-        (props = workInProgress.type),
-        (elementType = resolveClassComponentProps(
-          props,
-          workInProgress.pendingProps,
-          workInProgress.elementType === props
+        (elementType = workInProgress.type),
+        (init = resolveClassComponentProps(
+          elementType,
+          workInProgress.pendingProps
         )),
         updateClassComponent(
           current,
           workInProgress,
-          props,
           elementType,
+          init,
           renderLanes
         )
       );
@@ -5393,24 +5356,24 @@ function beginWork(current, workInProgress, renderLanes) {
       if (null === current)
         throw Error("Should have a current fiber. This is a bug in React.");
       var nextProps = workInProgress.pendingProps;
-      elementType = workInProgress.memoizedState;
-      props = elementType.element;
+      init = workInProgress.memoizedState;
+      elementType = init.element;
       cloneUpdateQueue(current, workInProgress);
       processUpdateQueue(workInProgress, nextProps, null, renderLanes);
       nextProps = workInProgress.memoizedState;
       var nextCache = nextProps.cache;
       pushProvider(workInProgress, CacheContext, nextCache);
-      nextCache !== elementType.cache &&
+      nextCache !== init.cache &&
         propagateContextChange(workInProgress, CacheContext, renderLanes);
       suspendIfUpdateReadFromEntangledAsyncAction();
-      elementType = nextProps.element;
-      elementType === props
+      init = nextProps.element;
+      init === elementType
         ? (workInProgress = bailoutOnAlreadyFinishedWork(
             current,
             workInProgress,
             renderLanes
           ))
-        : (reconcileChildren(current, workInProgress, elementType, renderLanes),
+        : (reconcileChildren(current, workInProgress, init, renderLanes),
           (workInProgress = workInProgress.child));
       return workInProgress;
     case 26:
@@ -5418,9 +5381,9 @@ function beginWork(current, workInProgress, renderLanes) {
     case 5:
       return (
         pushHostContext(workInProgress),
-        (props = workInProgress.pendingProps.children),
+        (elementType = workInProgress.pendingProps.children),
         null !== workInProgress.memoizedState &&
-          ((elementType = renderWithHooks(
+          ((init = renderWithHooks(
             current,
             workInProgress,
             TransitionAwareHostComponent,
@@ -5428,17 +5391,17 @@ function beginWork(current, workInProgress, renderLanes) {
             null,
             renderLanes
           )),
-          (HostTransitionContext._currentValue2 = elementType),
+          (HostTransitionContext._currentValue2 = init),
           didReceiveUpdate &&
             null !== current &&
-            current.memoizedState.memoizedState !== elementType &&
+            current.memoizedState.memoizedState !== init &&
             propagateContextChange(
               workInProgress,
               HostTransitionContext,
               renderLanes
             )),
         markRef(current, workInProgress),
-        reconcileChildren(current, workInProgress, props, renderLanes),
+        reconcileChildren(current, workInProgress, elementType, renderLanes),
         workInProgress.child
       );
     case 6:
@@ -5451,32 +5414,29 @@ function beginWork(current, workInProgress, renderLanes) {
           workInProgress,
           workInProgress.stateNode.containerInfo
         ),
-        (props = workInProgress.pendingProps),
+        (elementType = workInProgress.pendingProps),
         null === current
           ? (workInProgress.child = reconcileChildFibers(
               workInProgress,
               null,
-              props,
+              elementType,
               renderLanes
             ))
-          : reconcileChildren(current, workInProgress, props, renderLanes),
+          : reconcileChildren(
+              current,
+              workInProgress,
+              elementType,
+              renderLanes
+            ),
         workInProgress.child
       );
     case 11:
-      return (
-        (props = workInProgress.type),
-        (elementType = workInProgress.pendingProps),
-        (elementType =
-          workInProgress.elementType === props
-            ? elementType
-            : resolveDefaultPropsOnNonClassComponent(props, elementType)),
-        updateForwardRef(
-          current,
-          workInProgress,
-          props,
-          elementType,
-          renderLanes
-        )
+      return updateForwardRef(
+        current,
+        workInProgress,
+        workInProgress.type,
+        workInProgress.pendingProps,
+        renderLanes
       );
     case 7:
       return (
@@ -5501,9 +5461,9 @@ function beginWork(current, workInProgress, renderLanes) {
     case 12:
       return (
         (workInProgress.flags |= 4),
-        (props = workInProgress.stateNode),
-        (props.effectDuration = 0),
-        (props.passiveEffectDuration = 0),
+        (elementType = workInProgress.stateNode),
+        (elementType.effectDuration = 0),
+        (elementType.passiveEffectDuration = 0),
         reconcileChildren(
           current,
           workInProgress,
@@ -5514,15 +5474,15 @@ function beginWork(current, workInProgress, renderLanes) {
       );
     case 10:
       a: {
-        props = workInProgress.type;
-        elementType = workInProgress.pendingProps;
+        elementType = workInProgress.type;
+        init = workInProgress.pendingProps;
         nextProps = workInProgress.memoizedProps;
-        nextCache = elementType.value;
-        pushProvider(workInProgress, props, nextCache);
+        nextCache = init.value;
+        pushProvider(workInProgress, elementType, nextCache);
         if (null !== nextProps)
           if (objectIs(nextProps.value, nextCache)) {
             if (
-              nextProps.children === elementType.children &&
+              nextProps.children === init.children &&
               !didPerformWorkStackCursor.current
             ) {
               workInProgress = bailoutOnAlreadyFinishedWork(
@@ -5532,47 +5492,32 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
-          } else propagateContextChange(workInProgress, props, renderLanes);
-        reconcileChildren(
-          current,
-          workInProgress,
-          elementType.children,
-          renderLanes
-        );
+          } else
+            propagateContextChange(workInProgress, elementType, renderLanes);
+        reconcileChildren(current, workInProgress, init.children, renderLanes);
         workInProgress = workInProgress.child;
       }
       return workInProgress;
     case 9:
       return (
-        (elementType = workInProgress.type._context),
-        (props = workInProgress.pendingProps.children),
+        (init = workInProgress.type._context),
+        (elementType = workInProgress.pendingProps.children),
         prepareToReadContext(workInProgress, renderLanes),
-        (elementType = readContext(elementType)),
+        (init = readContext(init)),
         markComponentRenderStarted(workInProgress),
-        (props = props(elementType)),
+        (elementType = elementType(init)),
         markComponentRenderStopped(),
         (workInProgress.flags |= 1),
-        reconcileChildren(current, workInProgress, props, renderLanes),
+        reconcileChildren(current, workInProgress, elementType, renderLanes),
         workInProgress.child
       );
     case 14:
-      return (
-        (props = workInProgress.type),
-        (elementType = resolveDefaultPropsOnNonClassComponent(
-          props,
-          workInProgress.pendingProps
-        )),
-        (elementType = resolveDefaultPropsOnNonClassComponent(
-          props.type,
-          elementType
-        )),
-        updateMemoComponent(
-          current,
-          workInProgress,
-          props,
-          elementType,
-          renderLanes
-        )
+      return updateMemoComponent(
+        current,
+        workInProgress,
+        workInProgress.type,
+        workInProgress.pendingProps,
+        renderLanes
       );
     case 15:
       return updateSimpleMemoComponent(
@@ -5584,24 +5529,23 @@ function beginWork(current, workInProgress, renderLanes) {
       );
     case 17:
       return (
-        (props = workInProgress.type),
-        (elementType = resolveClassComponentProps(
-          props,
-          workInProgress.pendingProps,
-          workInProgress.elementType === props
+        (elementType = workInProgress.type),
+        (init = resolveClassComponentProps(
+          elementType,
+          workInProgress.pendingProps
         )),
         resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress),
         (workInProgress.tag = 1),
-        isContextProvider(props)
+        isContextProvider(elementType)
           ? ((current = !0), pushContextProvider(workInProgress))
           : (current = !1),
         prepareToReadContext(workInProgress, renderLanes),
-        constructClassInstance(workInProgress, props, elementType),
-        mountClassInstance(workInProgress, props, elementType, renderLanes),
+        constructClassInstance(workInProgress, elementType, init),
+        mountClassInstance(workInProgress, elementType, init, renderLanes),
         finishClassComponent(
           null,
           workInProgress,
-          props,
+          elementType,
           !0,
           current,
           renderLanes
@@ -5609,19 +5553,18 @@ function beginWork(current, workInProgress, renderLanes) {
       );
     case 28:
       return (
-        (props = workInProgress.type),
-        (elementType = resolveClassComponentProps(
-          props,
-          workInProgress.pendingProps,
-          workInProgress.elementType === props
+        (elementType = workInProgress.type),
+        (init = resolveClassComponentProps(
+          elementType,
+          workInProgress.pendingProps
         )),
         resetSuspendedCurrentOnMountInLegacyMode(current, workInProgress),
         (workInProgress.tag = 0),
         updateFunctionComponent(
           null,
           workInProgress,
-          props,
           elementType,
+          init,
           renderLanes
         )
       );
@@ -5632,40 +5575,39 @@ function beginWork(current, workInProgress, renderLanes) {
     case 24:
       return (
         prepareToReadContext(workInProgress, renderLanes),
-        (props = readContext(CacheContext)),
+        (elementType = readContext(CacheContext)),
         null === current
-          ? ((elementType = peekCacheFromPool()),
-            null === elementType &&
-              ((elementType = workInProgressRoot),
+          ? ((init = peekCacheFromPool()),
+            null === init &&
+              ((init = workInProgressRoot),
               (nextProps = createCache()),
-              (elementType.pooledCache = nextProps),
+              (init.pooledCache = nextProps),
               nextProps.refCount++,
-              null !== nextProps &&
-                (elementType.pooledCacheLanes |= renderLanes),
-              (elementType = nextProps)),
+              null !== nextProps && (init.pooledCacheLanes |= renderLanes),
+              (init = nextProps)),
             (workInProgress.memoizedState = {
-              parent: props,
-              cache: elementType
+              parent: elementType,
+              cache: init
             }),
             initializeUpdateQueue(workInProgress),
-            pushProvider(workInProgress, CacheContext, elementType))
+            pushProvider(workInProgress, CacheContext, init))
           : (0 !== (current.lanes & renderLanes) &&
               (cloneUpdateQueue(current, workInProgress),
               processUpdateQueue(workInProgress, null, null, renderLanes),
               suspendIfUpdateReadFromEntangledAsyncAction()),
-            (elementType = current.memoizedState),
+            (init = current.memoizedState),
             (nextProps = workInProgress.memoizedState),
-            elementType.parent !== props
-              ? ((elementType = { parent: props, cache: props }),
-                (workInProgress.memoizedState = elementType),
+            init.parent !== elementType
+              ? ((init = { parent: elementType, cache: elementType }),
+                (workInProgress.memoizedState = init),
                 0 === workInProgress.lanes &&
                   (workInProgress.memoizedState =
                     workInProgress.updateQueue.baseState =
-                      elementType),
-                pushProvider(workInProgress, CacheContext, props))
-              : ((props = nextProps.cache),
-                pushProvider(workInProgress, CacheContext, props),
-                props !== elementType.cache &&
+                      init),
+                pushProvider(workInProgress, CacheContext, elementType))
+              : ((elementType = nextProps.cache),
+                pushProvider(workInProgress, CacheContext, elementType),
+                elementType !== init.cache &&
                   propagateContextChange(
                     workInProgress,
                     CacheContext,
@@ -6440,8 +6382,7 @@ function shouldProfile(current) {
 function callComponentWillUnmountWithTimer(current, instance) {
   instance.props = resolveClassComponentProps(
     current.type,
-    current.memoizedProps,
-    current.elementType === current.type
+    current.memoizedProps
   );
   instance.state = current.memoizedState;
   if (shouldProfile(current))
@@ -6549,8 +6490,7 @@ function commitBeforeMutationEffects(root, firstChild) {
                   snapshot = instance.getSnapshotBeforeUpdate(
                     resolveClassComponentProps(
                       root.type,
-                      current.memoizedProps,
-                      root.elementType === root.type
+                      current.memoizedProps
                     ),
                     prevState
                   );
@@ -6768,8 +6708,7 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
         else {
           var prevProps = resolveClassComponentProps(
             finishedWork.type,
-            current.memoizedProps,
-            finishedWork.elementType === finishedWork.type
+            current.memoizedProps
           );
           current = current.memoizedState;
           if (shouldProfile(finishedWork)) {
@@ -8802,11 +8741,7 @@ function replaySuspendedUnitOfWork(unitOfWork) {
     case 15:
     case 0:
       var Component = next.type,
-        unresolvedProps = next.pendingProps;
-      unresolvedProps =
-        next.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
+        resolvedProps = next.pendingProps;
       var context = isContextProvider(Component)
         ? previousContext
         : contextStackCursor$1.current;
@@ -8814,24 +8749,18 @@ function replaySuspendedUnitOfWork(unitOfWork) {
       current = replayFunctionComponent(
         current,
         next,
-        unresolvedProps,
+        resolvedProps,
         Component,
         context,
         workInProgressRootRenderLanes
       );
       break;
     case 11:
-      Component = next.type.render;
-      unresolvedProps = next.pendingProps;
-      unresolvedProps =
-        next.elementType === Component
-          ? unresolvedProps
-          : resolveDefaultPropsOnNonClassComponent(Component, unresolvedProps);
       current = replayFunctionComponent(
         current,
         next,
-        unresolvedProps,
-        Component,
+        next.pendingProps,
+        next.type.render,
         next.ref,
         workInProgressRootRenderLanes
       );
@@ -10026,7 +9955,7 @@ var devToolsConfig$jscomp$inline_1117 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-f510ece8-20240715",
+  version: "19.0.0-native-fb-1d5a208f-20240715",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -10070,7 +9999,7 @@ var devToolsConfig$jscomp$inline_1117 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-f510ece8-20240715"
+  reconcilerVersion: "19.0.0-native-fb-1d5a208f-20240715"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

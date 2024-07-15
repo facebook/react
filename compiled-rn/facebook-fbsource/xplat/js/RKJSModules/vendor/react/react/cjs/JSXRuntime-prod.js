@@ -7,14 +7,11 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3c36d2bec2ca67d95aca9dd486109ea6>>
+ * @generated SignedSource<<8027b340b0802f1154774d36f8da90fd>>
  */
 
 "use strict";
-var dynamicFlagsUntyped = require("ReactNativeInternalFeatureFlags"),
-  disableDefaultPropsExceptForClasses =
-    dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
-  enableFastJSX = dynamicFlagsUntyped.enableFastJSX,
+var enableFastJSX = require("ReactNativeInternalFeatureFlags").enableFastJSX,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   enableFastJSXWithStringRefs = enableFastJSX && !0,
@@ -32,18 +29,12 @@ function jsxProd(type, config, maybeKey) {
     for (var propName in config)
       "key" !== propName && (maybeKey[propName] = config[propName]);
   } else maybeKey = config;
-  if (!disableDefaultPropsExceptForClasses && type && type.defaultProps) {
-    config = type.defaultProps;
-    for (var propName$0 in config)
-      void 0 === maybeKey[propName$0] &&
-        (maybeKey[propName$0] = config[propName$0]);
-  }
-  propName$0 = maybeKey.ref;
+  config = maybeKey.ref;
   return {
     $$typeof: REACT_LEGACY_ELEMENT_TYPE,
     type: type,
     key: key,
-    ref: void 0 !== propName$0 ? propName$0 : null,
+    ref: void 0 !== config ? config : null,
     props: maybeKey
   };
 }
