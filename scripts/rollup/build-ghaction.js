@@ -809,7 +809,7 @@ function handleRollupError(error) {
   }
 }
 
-async function buildEverything() {
+async function buildEverything(index, total) {
   if (!argv['unsafe-partial']) {
     await asyncRimRaf('build');
   }
@@ -846,12 +846,9 @@ async function buildEverything() {
     return !shouldSkipBundle(bundle, bundleType);
   });
 
-  if (process.env.CIRCLE_NODE_TOTAL) {
-    // In CI, parallelize bundles across multiple tasks.
-    const nodeTotal = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
-    const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
-    bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
-  }
+  const nodeTotal = parseInt(total, 10);
+  const nodeIndex = parseInt(index, 10);
+  bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const [bundle, bundleType] of bundles) {
@@ -873,4 +870,6 @@ async function buildEverything() {
   }
 }
 
-buildEverything();
+module.exports = {
+  buildEverything,
+};

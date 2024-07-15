@@ -124,7 +124,7 @@ export function defaultOnCaughtError(
             error,
             componentNameMessage,
             recreateMessage,
-            // We let our consoleWithStackDev wrapper add the component stack to the end.
+            // We let DevTools or console.createTask add the component stack to the end.
           ],
           error.environmentName,
         );
@@ -134,7 +134,7 @@ export function defaultOnCaughtError(
           error,
           componentNameMessage,
           recreateMessage,
-          // We let our consoleWithStackDev wrapper add the component stack to the end.
+          // We let our DevTools or console.createTask add the component stack to the end.
         );
       }
     } finally {

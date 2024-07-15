@@ -5,6 +5,9 @@ on:
   issue_comment:
     types: [created, edited]
 
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
 jobs:
   check-repro:
     runs-on: ubuntu-latest

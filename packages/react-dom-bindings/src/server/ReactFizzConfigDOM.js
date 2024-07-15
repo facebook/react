@@ -431,9 +431,13 @@ export function createRenderState(
         fontPreloads: '',
         highImagePreloads: '',
         remainingCapacity:
-          typeof maxHeadersLength === 'number'
+          // We seed the remainingCapacity with 2 extra bytes because when we decrement the capacity
+          // we always assume we are inserting an interstitial ", " however the first header does not actually
+          // consume these two extra bytes.
+          2 +
+          (typeof maxHeadersLength === 'number'
             ? maxHeadersLength
-            : DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS,
+            : DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS),
       }
     : null;
   const renderState: RenderState = {
@@ -2953,7 +2957,7 @@ function pushImg(
         // make this behavior different between render and prerender since in the latter case
         // we are less sensitive to the current requests runtime per and more sensitive to maximizing
         // headers.
-        (headers.remainingCapacity -= header.length) >= 2)
+        (headers.remainingCapacity -= header.length + 2) >= 0)
       ) {
         // If we postpone in the shell we will still emit this preload so we track
         // it to make sure we don't reset it.
@@ -5393,7 +5397,7 @@ function prefetchDNS(href: string) {
         // make this behavior different between render and prerender since in the latter case
         // we are less sensitive to the current requests runtime per and more sensitive to maximizing
         // headers.
-        (headers.remainingCapacity -= header.length) >= 2)
+        (headers.remainingCapacity -= header.length + 2) >= 0)
       ) {
         // Store this as resettable in case we are prerendering and postpone in the Shell
         renderState.resets.dns[key] = EXISTS;
@@ -5452,7 +5456,7 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
         // make this behavior different between render and prerender since in the latter case
         // we are less sensitive to the current requests runtime per and more sensitive to maximizing
         // headers.
-        (headers.remainingCapacity -= header.length) >= 2)
+        (headers.remainingCapacity -= header.length + 2) >= 0)
       ) {
         // Store this in resettableState in case we are prerending and postpone in the Shell
         renderState.resets.connect[bucket][key] = EXISTS;
@@ -5518,7 +5522,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           // make this behavior different between render and prerender since in the latter case
           // we are less sensitive to the current requests runtime per and more sensitive to maximizing
           // headers.
-          (headers.remainingCapacity -= header.length) >= 2)
+          (headers.remainingCapacity -= header.length + 2) >= 0)
         ) {
           // If we postpone in the shell we will still emit a preload as a header so we
           // track this to make sure we don't reset it.
@@ -5633,7 +5637,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           // make this behavior different between render and prerender since in the latter case
           // we are less sensitive to the current requests runtime per and more sensitive to maximizing
           // headers.
-          (headers.remainingCapacity -= header.length) >= 2)
+          (headers.remainingCapacity -= header.length + 2) >= 0)
         ) {
           // If we postpone in the shell we will still emit this preload so we
           // track it here to prevent it from being reset.
@@ -6260,7 +6264,7 @@ export function emitEarlyPreloads(
             // This means that a particularly long header might close out the header queue where later
             // headers could still fit. We could in the future alter the behavior here based on prerender vs render
             // since during prerender we aren't as concerned with pure runtime performance.
-            if ((headers.remainingCapacity -= header.length) >= 2) {
+            if ((headers.remainingCapacity -= header.length + 2) >= 0) {
               renderState.resets.style[key] = PRELOAD_NO_CREDS;
               if (linkHeader) {
                 linkHeader += ', ';
