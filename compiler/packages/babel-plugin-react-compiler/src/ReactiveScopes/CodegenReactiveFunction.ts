@@ -41,7 +41,6 @@ import {
   ValidIdentifierName,
   getHookKind,
   makeIdentifierName,
-  promoteTemporary,
 } from "../HIR/HIR";
 import { printIdentifier, printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
