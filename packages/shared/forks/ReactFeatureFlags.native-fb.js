@@ -20,7 +20,6 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses,
   enableAddPropertiesFastPath,
   enableFastJSX,
@@ -31,6 +30,7 @@ export const {
 
 // The rest of the flags are static for better dead code elimination.
 export const allowConcurrentByDefault = false;
+export const consoleManagedByDevToolsDuringStrictMode = true;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
