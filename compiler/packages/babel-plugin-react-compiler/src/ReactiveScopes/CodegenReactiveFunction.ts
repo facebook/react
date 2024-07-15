@@ -272,7 +272,7 @@ export function codegenFunction(
   }
 
   const outlined: CodegenFunction["outlined"] = [];
-  for (const { fn: outlinedFunction, type } of cx.env.takeOutlinedFunctions()) {
+  for (const { fn: outlinedFunction, type } of cx.env.getOutlinedFunctions()) {
     const reactiveFunction = buildReactiveFunction(outlinedFunction);
     pruneUnusedLabels(reactiveFunction);
     pruneUnusedLValues(reactiveFunction);

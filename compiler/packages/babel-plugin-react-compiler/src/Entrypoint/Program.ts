@@ -414,11 +414,16 @@ export function compileProgram(
       fn.skip();
       ALREADY_COMPILED.add(fn.node);
       if (outlined.type !== null) {
-        queue.push({
-          kind: "outlined",
-          fn,
-          fnType: outlined.type,
+        CompilerError.throwTodo({
+          reason: `Implement support for outlining React functions (components/hooks)`,
+          loc: outlined.fn.loc,
         });
+        // Above should be as simple as the following, but needs testing:
+        // queue.push({
+        //   kind: "outlined",
+        //   fn,
+        //   fnType: outlined.type,
+        // });
       }
     }
     compiledFns.push({

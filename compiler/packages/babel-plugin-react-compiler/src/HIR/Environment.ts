@@ -623,13 +623,11 @@ export class Environment {
     this.#outlinedFunctions.push({ fn, type });
   }
 
-  takeOutlinedFunctions(): Array<{
+  getOutlinedFunctions(): Array<{
     fn: HIRFunction;
     type: ReactFunctionType | null;
   }> {
-    const outlined = this.#outlinedFunctions;
-    this.#outlinedFunctions = [];
-    return outlined;
+    return this.#outlinedFunctions;
   }
 
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {
