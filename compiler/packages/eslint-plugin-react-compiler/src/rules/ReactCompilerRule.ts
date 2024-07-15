@@ -15,9 +15,9 @@ import BabelPluginReactCompiler, {
   ErrorSeverity,
   parsePluginOptions,
   validateEnvironmentConfig,
-  type CompilerError,
   type PluginOptions,
 } from "babel-plugin-react-compiler/src";
+import { Logger } from "babel-plugin-react-compiler/src/Entrypoint";
 import type { Rule } from "eslint";
 import * as HermesParser from "hermes-parser";
 
@@ -27,10 +27,6 @@ type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetailOptions, "loc"> & {
 
 function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
-}
-
-function isReactCompilerError(err: Error): err is CompilerError {
-  return err.name === "ReactCompilerError";
 }
 
 const DEFAULT_REPORTABLE_LEVELS = new Set([
@@ -105,7 +101,7 @@ function makeSuggestions(
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
   compilationMode: "infer",
-  panicThreshold: "all_errors",
+  panicThreshold: "none",
 };
 
 const rule: Rule.RuleModule = {
@@ -136,6 +132,33 @@ const rule: Rule.RuleModule = {
     const options: PluginOptions = {
       ...parsePluginOptions(userOpts),
       ...COMPILER_OPTIONS,
+    };
+    const userLogger: Logger | null = options.logger;
+    options.logger = {
+      logEvent: (filename, event): void => {
+        userLogger?.logEvent(filename, event);
+        if (event.kind === "CompileError") {
+          const detail = event.detail;
+          if (!isReportableDiagnostic(detail)) {
+            return;
+          }
+          if (hasFlowSuppression(detail.loc, "react-rule-hook")) {
+            // If Flow already caught this error, we don't need to report it again.
+            return;
+          }
+          const loc =
+            detail.loc == null || typeof detail.loc == "symbol"
+              ? event.fnLoc
+              : detail.loc;
+          if (loc != null) {
+            context.report({
+              message: detail.reason,
+              loc,
+              suggest: makeSuggestions(detail),
+            });
+          }
+        }
+      },
     };
 
     try {
@@ -206,24 +229,7 @@ const rule: Rule.RuleModule = {
           babelrc: false,
         });
       } catch (err) {
-        if (isReactCompilerError(err) && Array.isArray(err.details)) {
-          for (const detail of err.details) {
-            if (!isReportableDiagnostic(detail)) {
-              continue;
-            }
-            if (hasFlowSuppression(detail.loc, "react-rule-hook")) {
-              // If Flow already caught this error, we don't need to report it again.
-              continue;
-            }
-            context.report({
-              message: detail.reason,
-              loc: detail.loc,
-              suggest: makeSuggestions(detail),
-            });
-          }
-        } else {
-          options.logger?.logEvent("", err);
-        }
+        /* errors handled by injected logger */
       }
     }
     return {};
