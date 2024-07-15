@@ -143,7 +143,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             expect.stringContaining('%s'),
             expect.stringContaining('An error occurred in the <Foo> component'),
             expect.stringContaining('Consider adding an error boundary'),
-            expect.stringContaining('Foo'),
+            // The component stack is not added without the polyfill/devtools.
+            // expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -208,7 +209,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
               'The above error occurred in the <Foo> component',
             ),
             expect.stringContaining('ErrorBoundary'),
-            expect.stringContaining('Foo'),
+            // The component stack is not added without the polyfill/devtools.
+            // expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -274,7 +276,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             expect.stringContaining('%s'),
             expect.stringContaining('An error occurred in the <Foo> component'),
             expect.stringContaining('Consider adding an error boundary'),
-            expect.stringContaining('Foo'),
+            // The component stack is not added without the polyfill/devtools.
+            // expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -344,7 +347,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
               'The above error occurred in the <Foo> component',
             ),
             expect.stringContaining('ErrorBoundary'),
-            expect.stringContaining('Foo'),
+            // The component stack is not added without the polyfill/devtools.
+            // expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -410,7 +414,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             expect.stringContaining('%s'),
             expect.stringContaining('An error occurred in the <Foo> component'),
             expect.stringContaining('Consider adding an error boundary'),
-            expect.stringContaining('Foo'),
+            // The component stack is not added without the polyfill/devtools.
+            // expect.stringContaining('Foo'),
           ],
         ]);
       } else {
@@ -478,7 +483,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
               'The above error occurred in the <Foo> component',
             ),
             expect.stringContaining('ErrorBoundary'),
-            expect.stringContaining('Foo'),
+            // The component stack is not added without the polyfill/devtools.
+            // expect.stringContaining('Foo'),
           ],
         ]);
       } else {
