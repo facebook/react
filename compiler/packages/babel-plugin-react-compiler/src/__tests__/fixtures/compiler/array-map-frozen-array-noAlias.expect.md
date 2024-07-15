@@ -33,13 +33,16 @@ function Component(props) {
   const x = t0;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    const y = x.map((item) => item);
+    const y = x.map(_temp);
     t1 = [x, y];
     $[1] = t1;
   } else {
     t1 = $[1];
   }
   return t1;
+}
+function _temp(item) {
+  return item;
 }
 
 export const FIXTURE_ENTRYPOINT = {

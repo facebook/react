@@ -30,7 +30,7 @@ function Component(props) {
   );
   let posts;
   if ($[0] !== user.timeline.posts.edges.nodes) {
-    posts = user.timeline.posts.edges.nodes.map((node) => <Post post={node} />);
+    posts = user.timeline.posts.edges.nodes.map(_temp);
     let t0;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
       t0 = {};
@@ -55,6 +55,9 @@ function Component(props) {
     t0 = $[4];
   }
   return t0;
+}
+function _temp(node) {
+  return <Post post={node} />;
 }
 
 ```

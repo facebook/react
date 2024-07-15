@@ -36,48 +36,44 @@ import { useEffect, useState } from "react";
 let someGlobal = false;
 
 function Component() {
-  const $ = _c(6);
+  const $ = _c(5);
   const [state, setState] = useState(someGlobal);
   let t0;
-  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
-      someGlobal = true;
-    };
-
-    t1 = [];
+    t0 = [];
     $[0] = t0;
-    $[1] = t1;
   } else {
     t0 = $[0];
-    t1 = $[1];
   }
-  useEffect(t0, t1);
+  useEffect(_temp, t0);
+  let t1;
   let t2;
-  let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = () => {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = () => {
       setState(someGlobal);
     };
-    t3 = [someGlobal];
+    t2 = [someGlobal];
+    $[1] = t1;
     $[2] = t2;
-    $[3] = t3;
   } else {
+    t1 = $[1];
     t2 = $[2];
-    t3 = $[3];
   }
-  useEffect(t2, t3);
+  useEffect(t1, t2);
 
-  const t4 = String(state);
-  let t5;
-  if ($[4] !== t4) {
-    t5 = <div>{t4}</div>;
+  const t3 = String(state);
+  let t4;
+  if ($[3] !== t3) {
+    t4 = <div>{t3}</div>;
+    $[3] = t3;
     $[4] = t4;
-    $[5] = t5;
   } else {
-    t5 = $[5];
+    t4 = $[4];
   }
-  return t5;
+  return t4;
+}
+function _temp() {
+  someGlobal = true;
 }
 
 export const FIXTURE_ENTRYPOINT = {

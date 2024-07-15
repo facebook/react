@@ -23,14 +23,17 @@ import {
   BuiltInType,
   Effect,
   FunctionType,
+  HIRFunction,
   IdentifierId,
   NonLocalBinding,
   PolyType,
   ScopeId,
   Type,
+  ValidatedIdentifier,
   ValueKind,
   makeBlockId,
   makeIdentifierId,
+  makeIdentifierName,
   makeScopeId,
 } from "./HIR";
 import {
@@ -284,6 +287,12 @@ const EnvironmentConfigSchema = z.object({
    */
   enableInstructionReordering: z.boolean().default(false),
 
+  /**
+   * Enables function outlinining, where anonymous functions that do not close over
+   * local variables can be extracted into top-level helper functions.
+   */
+  enableFunctionOutlining: z.boolean().default(true),
+
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
    * instrumentation function, for components and hooks that Forget compiles.
@@ -506,6 +515,10 @@ export class Environment {
   #nextBlock: number = 0;
   #nextScope: number = 0;
   #scope: BabelScope;
+  #outlinedFunctions: Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> = [];
   logger: Logger | null;
   filename: string | null;
   code: string | null;
@@ -597,6 +610,24 @@ export class Environment {
 
   isHoistedIdentifier(node: t.Identifier): boolean {
     return this.#hoistedIdentifiers.has(node);
+  }
+
+  generateGloballyUniqueIdentifierName(
+    name: string | null
+  ): ValidatedIdentifier {
+    const identifierNode = this.#scope.generateUidIdentifier(name ?? undefined);
+    return makeIdentifierName(identifierNode.name);
+  }
+
+  outlineFunction(fn: HIRFunction, type: ReactFunctionType | null): void {
+    this.#outlinedFunctions.push({ fn, type });
+  }
+
+  getOutlinedFunctions(): Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> {
+    return this.#outlinedFunctions;
   }
 
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {

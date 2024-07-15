@@ -24,18 +24,11 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(4);
   const data = useFreeze();
   let t0;
   if ($[0] !== data.items) {
-    let t1;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = (item) => <Item item={item} />;
-      $[2] = t1;
-    } else {
-      t1 = $[2];
-    }
-    t0 = data.items.map(t1);
+    t0 = data.items.map(_temp);
     $[0] = data.items;
     $[1] = t0;
   } else {
@@ -43,14 +36,17 @@ function Component(props) {
   }
   const items = t0;
   let t1;
-  if ($[3] !== items) {
+  if ($[2] !== items) {
     t1 = <div>{items}</div>;
-    $[3] = items;
-    $[4] = t1;
+    $[2] = items;
+    $[3] = t1;
   } else {
-    t1 = $[4];
+    t1 = $[3];
   }
   return t1;
+}
+function _temp(item) {
+  return <Item item={item} />;
 }
 
 ```

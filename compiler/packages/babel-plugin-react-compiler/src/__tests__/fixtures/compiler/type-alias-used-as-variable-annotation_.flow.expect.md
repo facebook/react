@@ -25,12 +25,13 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 type Bar = string;
 function TypeAliasUsedAsAnnotation() {
-  const fun = (f) => {
-    const g = f;
-    console.log(g);
-  };
+  const fun = _temp;
 
   fun("hello, world");
+}
+function _temp(f) {
+  const g = f;
+  console.log(g);
 }
 
 export const FIXTURE_ENTRYPOINT = {
