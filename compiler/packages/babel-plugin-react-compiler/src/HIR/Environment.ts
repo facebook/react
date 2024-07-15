@@ -31,6 +31,8 @@ import {
   PolyType,
   ScopeId,
   Type,
+  ValidIdentifierName,
+  ValidatedIdentifier,
   ValueKind,
   makeBlockId,
   makeIdentifierId,
@@ -610,17 +612,11 @@ export class Environment {
     return this.#hoistedIdentifiers.has(node);
   }
 
-  generateUniqueGlobalIdentifier(name: string | null): Identifier {
-    const id = this.nextIdentifierId;
+  generateGloballyUniqueIdentifierName(
+    name: string | null
+  ): ValidatedIdentifier {
     const identifierNode = this.#scope.generateUidIdentifier(name ?? undefined);
-    return {
-      id,
-      loc: GeneratedSource,
-      mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) },
-      name: makeIdentifierName(identifierNode.name),
-      scope: null,
-      type: { kind: "Poly" },
-    };
+    return makeIdentifierName(identifierNode.name);
   }
 
   outlineFunction(fn: HIRFunction, type: ReactFunctionType | null): void {

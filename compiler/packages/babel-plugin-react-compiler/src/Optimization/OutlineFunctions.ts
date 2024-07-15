@@ -30,19 +30,15 @@ export function outlineFunctions(fn: HIRFunction): void {
       ) {
         const loweredFunc = value.loweredFunc.func;
 
-        const id = fn.env.generateUniqueGlobalIdentifier(loweredFunc.id);
-        CompilerError.invariant(id.name !== null && id.name.kind === "named", {
-          reason: "Expected to generate a named variable",
-          loc: value.loc,
-        });
-        loweredFunc.id = id.name.value;
+        const id = fn.env.generateGloballyUniqueIdentifierName(loweredFunc.id);
+        loweredFunc.id = id.value;
 
         fn.env.outlineFunction(loweredFunc, null);
         instr.value = {
           kind: "LoadGlobal",
           binding: {
             kind: "Global",
-            name: id.name.value,
+            name: id.value,
           },
           loc: value.loc,
         };

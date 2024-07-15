@@ -496,7 +496,7 @@ export function compileProgram(
     const { kind, originalFn, compiledFn } = result;
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
 
-    if (gating != null && kind == "original") {
+    if (gating != null && kind === "original") {
       insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
     } else {
       originalFn.replaceWith(transformedFn);

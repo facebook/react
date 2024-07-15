@@ -278,7 +278,7 @@ export function codegenFunction(
     pruneUnusedLValues(reactiveFunction);
     pruneHoistedContexts(reactiveFunction);
 
-    // TODO: temporary function params (due to destructuring) should alwasy be
+    // TODO: temporary function params (due to destructuring) should always be
     // promoted so that they can be renamed
     for (const param of reactiveFunction.params) {
       const place = param.kind === "Identifier" ? param : param.place;
