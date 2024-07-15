@@ -149,6 +149,36 @@ const tests: CompilerTestCases = {
         },
       ],
     },
+    {
+      name: "Multiple diagnostics are surfaced",
+      options: [
+        {
+          reportableLevels: new Set([
+            ErrorSeverity.Todo,
+            ErrorSeverity.InvalidReact,
+          ]),
+        },
+      ],
+      code: normalizeIndent`
+        function Foo(x) {
+          var y = 1;
+          return <div>{y * x}</div>;
+        }
+        function Bar(props) {
+          props.a.b = 2;
+          return <div>{props.c}</div>
+        }`,
+      errors: [
+        {
+          message:
+            "(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration",
+        },
+        {
+          message:
+            "Mutating component props or hook arguments is not allowed. Consider using a local variable instead",
+        },
+      ],
+    },
   ],
 };
 
