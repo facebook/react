@@ -18,7 +18,6 @@
 // add a test configuration for React Native.
 
 export const alwaysThrottleRetries = __VARIANT__;
-export const disableDefaultPropsExceptForClasses = __VARIANT__;
 export const enableAddPropertiesFastPath = __VARIANT__;
 export const enableFastJSX = __VARIANT__;
 export const enableObjectFiber = __VARIANT__;
