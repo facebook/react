@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
 import { HIRFunction } from "../HIR";
 
 export function outlineFunctions(fn: HIRFunction): void {
