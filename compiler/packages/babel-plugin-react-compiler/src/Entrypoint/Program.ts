@@ -31,7 +31,6 @@ import {
   findProgramSuppressions,
   suppressionsToCompilerError,
 } from "./Suppression";
-import { GeneratedSource } from "../HIR";
 
 export type CompilerPass = {
   opts: PluginOptions;
