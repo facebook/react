@@ -88,6 +88,12 @@ export type BabelFn =
   | NodePath<t.ArrowFunctionExpression>;
 
 export type CompileResult = {
+  /**
+   * Distinguishes existing functions that were compiled ('original') from
+   * functions which were outlined. Only original functions need to be gated
+   * if gating mode is enabled.
+   */
+  kind: "original" | "outlined";
   originalFn: BabelFn;
   compiledFn: CodegenFunction;
 };
@@ -267,6 +273,7 @@ export function compileProgram(
   const lintError = suppressionsToCompilerError(suppressions);
   let hasCriticalError = lintError != null;
   const queue: Array<{
+    kind: "original" | "outlined";
     fn: BabelFn;
     fnType: ReactFunctionType;
   }> = [];
@@ -286,7 +293,7 @@ export function compileProgram(
     ALREADY_COMPILED.add(fn.node);
     fn.skip();
 
-    queue.push({ fn, fnType });
+    queue.push({ kind: "original", fn, fnType });
   };
 
   // Main traversal to compile with Forget
@@ -396,7 +403,26 @@ export function compileProgram(
     if (compiled === null) {
       continue;
     }
+    for (const outlined of compiled.outlined) {
+      CompilerError.invariant(outlined.fn.outlined.length === 0, {
+        reason: "Unexpected nested outlined functions",
+        loc: outlined.fn.loc,
+      });
+      const fn = current.fn.insertAfter(
+        createNewFunctionNode(current.fn, outlined.fn)
+      )[0]!;
+      fn.skip();
+      ALREADY_COMPILED.add(fn.node);
+      if (outlined.type !== null) {
+        queue.push({
+          kind: "outlined",
+          fn,
+          fnType: outlined.type,
+        });
+      }
+    }
     compiledFns.push({
+      kind: current.kind,
       compiledFn: compiled,
       originalFn: current.fn,
     });
@@ -467,10 +493,10 @@ export function compileProgram(
    * error elsewhere in the file, regardless of bailout mode.
    */
   for (const result of compiledFns) {
-    const { originalFn, compiledFn } = result;
+    const { kind, originalFn, compiledFn } = result;
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
 
-    if (gating != null) {
+    if (gating != null && kind == "original") {
       insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
     } else {
       originalFn.replaceWith(transformedFn);

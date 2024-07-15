@@ -34,7 +34,7 @@ import { c as _c } from "react/compiler-runtime";
 import { useEffect, useState } from "react";
 
 function Component(props) {
-  const $ = _c(11);
+  const $ = _c(10);
   let t0;
   if ($[0] !== props.value) {
     t0 = [props.value];
@@ -45,47 +45,47 @@ function Component(props) {
   }
   const x = t0;
   let t1;
-  let t2;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = () => {};
-    t2 = [];
+    t1 = [];
     $[2] = t1;
-    $[3] = t2;
   } else {
     t1 = $[2];
-    t2 = $[3];
   }
-  useEffect(t1, t2);
-  let t3;
-  if ($[4] !== x.length) {
-    t3 = () => {
+  useEffect(_temp, t1);
+  let t2;
+  if ($[3] !== x.length) {
+    t2 = () => {
       console.log(x.length);
     };
-    $[4] = x.length;
-    $[5] = t3;
+    $[3] = x.length;
+    $[4] = t2;
   } else {
-    t3 = $[5];
+    t2 = $[4];
   }
-  const onClick = t3;
+  const onClick = t2;
+  let t3;
+  if ($[5] !== x) {
+    t3 = x.map(_temp2);
+    $[5] = x;
+    $[6] = t3;
+  } else {
+    t3 = $[6];
+  }
   let t4;
-  if ($[6] !== x) {
-    t4 = x.map((item) => <span key={item}>{item}</span>);
-    $[6] = x;
-    $[7] = t4;
-  } else {
-    t4 = $[7];
-  }
-  let t5;
-  if ($[8] !== onClick || $[9] !== t4) {
-    t5 = <div onClick={onClick}>{t4}</div>;
-    $[8] = onClick;
+  if ($[7] !== onClick || $[8] !== t3) {
+    t4 = <div onClick={onClick}>{t3}</div>;
+    $[7] = onClick;
+    $[8] = t3;
     $[9] = t4;
-    $[10] = t5;
   } else {
-    t5 = $[10];
+    t4 = $[9];
   }
-  return t5;
+  return t4;
 }
+function _temp2(item) {
+  return <span key={item}>{item}</span>;
+}
+function _temp() {}
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,

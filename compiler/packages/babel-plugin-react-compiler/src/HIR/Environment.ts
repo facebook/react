@@ -23,6 +23,9 @@ import {
   BuiltInType,
   Effect,
   FunctionType,
+  GeneratedSource,
+  HIRFunction,
+  Identifier,
   IdentifierId,
   NonLocalBinding,
   PolyType,
@@ -31,7 +34,10 @@ import {
   ValueKind,
   makeBlockId,
   makeIdentifierId,
+  makeIdentifierName,
+  makeInstructionId,
   makeScopeId,
+  makeType,
 } from "./HIR";
 import {
   BuiltInMixedReadonlyId,
@@ -42,6 +48,7 @@ import {
   addHook,
 } from "./ObjectShape";
 import { Scope as BabelScope } from "@babel/traverse";
+import { CodegenFunction } from "../ReactiveScopes";
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -506,6 +513,10 @@ export class Environment {
   #nextBlock: number = 0;
   #nextScope: number = 0;
   #scope: BabelScope;
+  #outlinedFunctions: Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> = [];
   logger: Logger | null;
   filename: string | null;
   code: string | null;
@@ -597,6 +608,32 @@ export class Environment {
 
   isHoistedIdentifier(node: t.Identifier): boolean {
     return this.#hoistedIdentifiers.has(node);
+  }
+
+  generateUniqueGlobalIdentifier(name: string | null): Identifier {
+    const id = this.nextIdentifierId;
+    const identifierNode = this.#scope.generateUidIdentifier(name ?? undefined);
+    return {
+      id,
+      loc: GeneratedSource,
+      mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) },
+      name: makeIdentifierName(identifierNode.name),
+      scope: null,
+      type: { kind: "Poly" },
+    };
+  }
+
+  outlineFunction(fn: HIRFunction, type: ReactFunctionType | null): void {
+    this.#outlinedFunctions.push({ fn, type });
+  }
+
+  takeOutlinedFunctions(): Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> {
+    const outlined = this.#outlinedFunctions;
+    this.#outlinedFunctions = [];
+    return outlined;
   }
 
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {

@@ -97,6 +97,7 @@ import {
   validateUseMemo,
 } from "../Validation";
 import { validateLocalsNotReassignedAfterRender } from "../Validation/ValidateLocalsNotReassignedAfterRender";
+import { outlineFunctions } from "../Optimization/OutlineFunctions";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -241,6 +242,9 @@ function* runWithEnvironment(
 
   inferReactiveScopeVariables(hir);
   yield log({ kind: "hir", name: "InferReactiveScopeVariables", value: hir });
+
+  outlineFunctions(hir);
+  yield log({ kind: "hir", name: "OutlineFunctions", value: hir });
 
   alignMethodCallScopes(hir);
   yield log({
@@ -480,6 +484,9 @@ function* runWithEnvironment(
 
   const ast = codegenFunction(reactiveFunction, uniqueIdentifiers).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
+  for (const outlined of ast.outlined) {
+    yield log({ kind: "ast", name: "Codegen (outlined)", value: outlined.fn });
+  }
 
   /**
    * This flag should be only set for unit / fixture tests to check
