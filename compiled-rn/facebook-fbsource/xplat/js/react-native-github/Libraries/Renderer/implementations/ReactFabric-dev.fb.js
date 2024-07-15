@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cb52d8f0a33b4839c55863e4803d246e>>
+ * @generated SignedSource<<c187e11a9478ecae821aa269657417f6>>
  */
 
 "use strict";
@@ -1495,24 +1495,20 @@ __DEV__ &&
         }
     }
     function setIsStrictModeForDevtools(newIsStrictMode) {
-      if (consoleManagedByDevToolsDuringStrictMode) {
-        if (
-          ("function" === typeof log$1 &&
-            (unstable_setDisableYieldValue(newIsStrictMode),
-            (suppressWarning = newIsStrictMode)),
-          injectedHook && "function" === typeof injectedHook.setStrictMode)
-        )
-          try {
-            injectedHook.setStrictMode(rendererID, newIsStrictMode);
-          } catch (err) {
-            hasLoggedError ||
-              ((hasLoggedError = !0),
-              error$jscomp$0(
-                "React instrumentation encountered an error: %s",
-                err
-              ));
-          }
-      } else newIsStrictMode ? disableLogs() : reenableLogs();
+      "function" === typeof log$1 &&
+        (unstable_setDisableYieldValue(newIsStrictMode),
+        (suppressWarning = newIsStrictMode));
+      if (injectedHook && "function" === typeof injectedHook.setStrictMode)
+        try {
+          injectedHook.setStrictMode(rendererID, newIsStrictMode);
+        } catch (err) {
+          hasLoggedError ||
+            ((hasLoggedError = !0),
+            error$jscomp$0(
+              "React instrumentation encountered an error: %s",
+              err
+            ));
+        }
     }
     function injectProfilingHooks(profilingHooks) {
       injectedProfilingHooks = profilingHooks;
@@ -14251,8 +14247,6 @@ __DEV__ &&
       suppressWarning = !1,
       isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-      consoleManagedByDevToolsDuringStrictMode =
-        dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
       disableDefaultPropsExceptForClasses =
         dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
       enableAddPropertiesFastPath =
@@ -16817,12 +16811,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ff89ba73-20240712"
+        reconcilerVersion: "19.0.0-native-fb-fc1371f6-20240715"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-ff89ba73-20240712",
+      version: "19.0.0-native-fb-fc1371f6-20240715",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

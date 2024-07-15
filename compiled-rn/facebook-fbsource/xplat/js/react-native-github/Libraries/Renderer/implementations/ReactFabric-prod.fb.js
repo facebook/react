@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<019180a5199710c4c1aa6124653222df>>
+ * @generated SignedSource<<e70e2f329e5ac6a6a2556a1a11ffc8f2>>
  */
 
 "use strict";
@@ -18,8 +18,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   Scheduler = require("scheduler"),
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-  consoleManagedByDevToolsDuringStrictMode =
-    dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
   enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
@@ -1657,12 +1655,8 @@ function onCommitRoot(root) {
     } catch (err) {}
 }
 function setIsStrictModeForDevtools(newIsStrictMode) {
-  if (
-    consoleManagedByDevToolsDuringStrictMode &&
-    ("function" === typeof log$1 &&
-      unstable_setDisableYieldValue(newIsStrictMode),
-    injectedHook && "function" === typeof injectedHook.setStrictMode)
-  )
+  "function" === typeof log$1 && unstable_setDisableYieldValue(newIsStrictMode);
+  if (injectedHook && "function" === typeof injectedHook.setStrictMode)
     try {
       injectedHook.setStrictMode(rendererID, newIsStrictMode);
     } catch (err) {}
@@ -10632,7 +10626,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1136 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-ff89ba73-20240712",
+    version: "19.0.0-native-fb-fc1371f6-20240715",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10675,7 +10669,7 @@ var internals$jscomp$inline_1362 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-ff89ba73-20240712"
+  reconcilerVersion: "19.0.0-native-fb-fc1371f6-20240715"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1363 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f40fe7e4fcad53bb52ff550e9c1ac46c>>
+ * @generated SignedSource<<ab02954b794765fe68c9cb9644087ac1>>
  */
 
 "use strict";
@@ -1594,24 +1594,20 @@ __DEV__ &&
         }
     }
     function setIsStrictModeForDevtools(newIsStrictMode) {
-      if (consoleManagedByDevToolsDuringStrictMode) {
-        if (
-          ("function" === typeof log$1 &&
-            (unstable_setDisableYieldValue(newIsStrictMode),
-            (suppressWarning = newIsStrictMode)),
-          injectedHook && "function" === typeof injectedHook.setStrictMode)
-        )
-          try {
-            injectedHook.setStrictMode(rendererID, newIsStrictMode);
-          } catch (err) {
-            hasLoggedError ||
-              ((hasLoggedError = !0),
-              error$jscomp$0(
-                "React instrumentation encountered an error: %s",
-                err
-              ));
-          }
-      } else newIsStrictMode ? disableLogs() : reenableLogs();
+      "function" === typeof log$1 &&
+        (unstable_setDisableYieldValue(newIsStrictMode),
+        (suppressWarning = newIsStrictMode));
+      if (injectedHook && "function" === typeof injectedHook.setStrictMode)
+        try {
+          injectedHook.setStrictMode(rendererID, newIsStrictMode);
+        } catch (err) {
+          hasLoggedError ||
+            ((hasLoggedError = !0),
+            error$jscomp$0(
+              "React instrumentation encountered an error: %s",
+              err
+            ));
+        }
     }
     function injectProfilingHooks(profilingHooks) {
       injectedProfilingHooks = profilingHooks;
@@ -14387,8 +14383,6 @@ __DEV__ &&
       suppressWarning = !1,
       isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-      consoleManagedByDevToolsDuringStrictMode =
-        dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
       disableDefaultPropsExceptForClasses =
         dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
@@ -17005,11 +16999,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-ff89ba73-20240712" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-fc1371f6-20240715" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-ff89ba73-20240712\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-fc1371f6-20240715\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17057,12 +17051,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-ff89ba73-20240712"
+        reconcilerVersion: "19.0.0-native-fb-fc1371f6-20240715"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-ff89ba73-20240712",
+      version: "19.0.0-native-fb-fc1371f6-20240715",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

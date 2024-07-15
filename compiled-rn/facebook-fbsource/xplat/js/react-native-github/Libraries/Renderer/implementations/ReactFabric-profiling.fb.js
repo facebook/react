@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<30378a5bc02b2b4f128d1c2c9b10ecd1>>
+ * @generated SignedSource<<d8be9c00f80e631c9664177db73e5c3b>>
  */
 
 "use strict";
@@ -22,8 +22,6 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   React = require("react"),
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
-  consoleManagedByDevToolsDuringStrictMode =
-    dynamicFlagsUntyped.consoleManagedByDevToolsDuringStrictMode,
   disableDefaultPropsExceptForClasses =
     dynamicFlagsUntyped.disableDefaultPropsExceptForClasses,
   enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
@@ -1680,12 +1678,8 @@ function onCommitRoot(root, eventPriority) {
     } catch (err) {}
 }
 function setIsStrictModeForDevtools(newIsStrictMode) {
-  if (
-    consoleManagedByDevToolsDuringStrictMode &&
-    ("function" === typeof log$1 &&
-      unstable_setDisableYieldValue(newIsStrictMode),
-    injectedHook && "function" === typeof injectedHook.setStrictMode)
-  )
+  "function" === typeof log$1 && unstable_setDisableYieldValue(newIsStrictMode);
+  if (injectedHook && "function" === typeof injectedHook.setStrictMode)
     try {
       injectedHook.setStrictMode(rendererID, newIsStrictMode);
     } catch (err) {}
@@ -11342,7 +11336,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1217 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-ff89ba73-20240712",
+    version: "19.0.0-native-fb-fc1371f6-20240715",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11398,7 +11392,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-ff89ba73-20240712"
+  reconcilerVersion: "19.0.0-native-fb-fc1371f6-20240715"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
