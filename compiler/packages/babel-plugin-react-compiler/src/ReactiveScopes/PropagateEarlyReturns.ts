@@ -24,8 +24,6 @@ import { EARLY_RETURN_SENTINEL } from "./CodegenReactiveFunction";
 import { ReactiveFunctionTransform, Transformed } from "./visitors";
 
 /**
- * TODO: Actualy propagate early return information, for now we throw a Todo bailout.
- *
  * This pass ensures that reactive blocks honor the control flow behavior of the
  * original code including early return semantics. Specifically, if a reactive
  * scope early returned during the previous execution and the inputs to that block
@@ -135,6 +133,14 @@ class Transform extends ReactiveFunctionTransform<State> {
     scopeBlock: ReactiveScopeBlock,
     parentState: State
   ): void {
+    /**
+     * Exit early if an earlier pass has already created an early return,
+     * which may happen in alternate compiler configurations.
+     */
+    if (scopeBlock.scope.earlyReturnValue !== null) {
+      return;
+    }
+
     const innerState: State = {
       withinReactiveScope: true,
       earlyReturnValue: parentState.earlyReturnValue,
