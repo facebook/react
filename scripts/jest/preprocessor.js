@@ -16,9 +16,6 @@ const pathToBabel = path.join(
   '../..',
   'package.json'
 );
-const pathToBabelPluginReplaceConsoleCalls = require.resolve(
-  '../babel/transform-replace-console-calls'
-);
 const pathToTransformInfiniteLoops = require.resolve(
   '../babel/transform-prevent-infinite-loops'
 );
@@ -73,14 +70,7 @@ module.exports = {
       const isInDevToolsPackages = !!filePath.match(
         /\/packages\/react-devtools.*\//
       );
-      const testOnlyPlugins = [];
-      const sourceOnlyPlugins = [];
-      if (process.env.NODE_ENV === 'development' && !isInDevToolsPackages) {
-        sourceOnlyPlugins.push(pathToBabelPluginReplaceConsoleCalls);
-      }
-      const plugins = (isTestFile ? testOnlyPlugins : sourceOnlyPlugins).concat(
-        babelOptions.plugins
-      );
+      const plugins = [].concat(babelOptions.plugins);
       if (isTestFile && isInDevToolsPackages) {
         plugins.push(pathToTransformReactVersionPragma);
       }

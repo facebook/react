@@ -18,6 +18,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
 
 defaults:
   run:
