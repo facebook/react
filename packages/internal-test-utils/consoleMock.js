@@ -44,6 +44,34 @@ const patchConsoleMethod = (
       return;
     }
 
+    // Append Component Stacks. Simulates a framework or DevTools appending them.
+    if (
+      typeof format === 'string' &&
+      (methodName === 'error' || methodName === 'warn')
+    ) {
+      const React = require('react');
+      if (React.captureOwnerStack) {
+        // enableOwnerStacks enabled. When it's always on, we can assume this case.
+        const stack = React.captureOwnerStack();
+        if (stack) {
+          format += '%s';
+          args.push(stack);
+        }
+      } else {
+        // Otherwise we have to use internals to emulate parent stacks.
+        const ReactSharedInternals =
+          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
+          React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+        if (ReactSharedInternals && ReactSharedInternals.getCurrentStack) {
+          const stack = ReactSharedInternals.getCurrentStack();
+          if (stack !== '') {
+            format += '%s';
+            args.push(stack);
+          }
+        }
+      }
+    }
+
     // Capture the call stack now so we can warn about it later.
     // The call stack has helpful information for the test author.
     // Don't throw yet though b'c it might be accidentally caught and suppressed.
@@ -204,7 +232,7 @@ export function assertConsoleLogsCleared() {
     if (warnings.length > 0) {
       message += `\nconsole.warn was called without assertConsoleWarnDev:\n${diff(
         '',
-        warnings.join('\n'),
+        warnings.map(normalizeComponentStack).join('\n'),
         {
           omitAnnotationLines: true,
         },
@@ -213,7 +241,7 @@ export function assertConsoleLogsCleared() {
     if (errors.length > 0) {
       message += `\nconsole.error was called without assertConsoleErrorDev:\n${diff(
         '',
-        errors.join('\n'),
+        errors.map(normalizeComponentStack).join('\n'),
         {
           omitAnnotationLines: true,
         },
@@ -247,6 +275,19 @@ function normalizeCodeLocInfo(str) {
     }
     return '\n    in ' + name + ' (at **)';
   });
+}
+
+function normalizeComponentStack(entry) {
+  if (
+    typeof entry[0] === 'string' &&
+    entry[0].endsWith('%s') &&
+    isLikelyAComponentStack(entry[entry.length - 1])
+  ) {
+    const clone = entry.slice(0);
+    clone[clone.length - 1] = normalizeCodeLocInfo(entry[entry.length - 1]);
+    return clone;
+  }
+  return entry;
 }
 
 const isLikelyAComponentStack = message =>
