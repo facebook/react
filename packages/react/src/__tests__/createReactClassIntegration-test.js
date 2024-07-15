@@ -804,7 +804,7 @@ describe('create-react-class-integration', () => {
       'MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',
-      {withoutStack: true},
+      // This now has a component stack even though it's part of a third-party library.
     );
 
     // Dedupe
