@@ -129,6 +129,7 @@ export function lower(
         reactive: false,
         loc: param.node.loc ?? GeneratedSource,
       };
+      promoteTemporary(place.identifier);
       params.push(place);
       lowerAssignment(
         builder,
