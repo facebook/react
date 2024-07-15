@@ -6,22 +6,22 @@
  */
 
 import { transformFromAstSync } from "@babel/core";
-// @ts-expect-error
+// @ts-expect-error: no types available
 import PluginProposalPrivateMethods from "@babel/plugin-proposal-private-methods";
 import type { SourceLocation as BabelSourceLocation } from "@babel/types";
 import BabelPluginReactCompiler, {
+  CompilerErrorDetailOptions,
   CompilerSuggestionOperation,
   ErrorSeverity,
   parsePluginOptions,
   validateEnvironmentConfig,
   type CompilerError,
-  type CompilerErrorDetail,
   type PluginOptions,
 } from "babel-plugin-react-compiler/src";
 import type { Rule } from "eslint";
 import * as HermesParser from "hermes-parser";
 
-type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetail, "loc"> & {
+type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetailOptions, "loc"> & {
   loc: BabelSourceLocation;
 };
 
@@ -40,13 +40,66 @@ const DEFAULT_REPORTABLE_LEVELS = new Set([
 let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
 
 function isReportableDiagnostic(
-  detail: CompilerErrorDetail
+  detail: CompilerErrorDetailOptions
 ): detail is CompilerErrorDetailWithLoc {
   return (
     reportableLevels.has(detail.severity) &&
     detail.loc != null &&
     typeof detail.loc !== "symbol"
   );
+}
+
+function makeSuggestions(
+  detail: CompilerErrorDetailOptions
+): Array<Rule.SuggestionReportDescriptor> {
+  let suggest: Array<Rule.SuggestionReportDescriptor> = [];
+  if (Array.isArray(detail.suggestions)) {
+    for (const suggestion of detail.suggestions) {
+      switch (suggestion.op) {
+        case CompilerSuggestionOperation.InsertBefore:
+          suggest.push({
+            desc: suggestion.description,
+            fix(fixer) {
+              return fixer.insertTextBeforeRange(
+                suggestion.range,
+                suggestion.text
+              );
+            },
+          });
+          break;
+        case CompilerSuggestionOperation.InsertAfter:
+          suggest.push({
+            desc: suggestion.description,
+            fix(fixer) {
+              return fixer.insertTextAfterRange(
+                suggestion.range,
+                suggestion.text
+              );
+            },
+          });
+          break;
+        case CompilerSuggestionOperation.Replace:
+          suggest.push({
+            desc: suggestion.description,
+            fix(fixer) {
+              return fixer.replaceTextRange(suggestion.range, suggestion.text);
+            },
+          });
+          break;
+        case CompilerSuggestionOperation.Remove:
+          suggest.push({
+            desc: suggestion.description,
+            fix(fixer) {
+              return fixer.removeRange(suggestion.range);
+            },
+          });
+          break;
+        default:
+          assertExhaustive(suggestion, "Unhandled suggestion operation");
+      }
+    }
+  }
+  return suggest;
 }
 
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
@@ -96,7 +149,7 @@ const rule: Rule.RuleModule = {
     function hasFlowSuppression(
       nodeLoc: BabelSourceLocation,
       suppression: string
-    ) {
+    ): boolean {
       const sourceCode = context.getSourceCode();
       const comments = sourceCode.getAllComments();
       const flowSuppressionRegex = new RegExp(
@@ -122,7 +175,9 @@ const rule: Rule.RuleModule = {
           sourceType: "unambiguous",
           plugins: ["typescript", "jsx"],
         });
-      } catch {}
+      } catch {
+        /* empty */
+      }
     } else {
       try {
         babelAST = HermesParser.parse(sourceCode, {
@@ -131,7 +186,9 @@ const rule: Rule.RuleModule = {
           sourceFilename: filename,
           sourceType: "module",
         });
-      } catch {}
+      } catch {
+        /* empty */
+      }
     }
 
     if (babelAST != null) {
@@ -158,63 +215,10 @@ const rule: Rule.RuleModule = {
               // If Flow already caught this error, we don't need to report it again.
               continue;
             }
-            let suggest: Array<Rule.SuggestionReportDescriptor> = [];
-            if (Array.isArray(detail.suggestions)) {
-              for (const suggestion of detail.suggestions) {
-                switch (suggestion.op) {
-                  case CompilerSuggestionOperation.InsertBefore:
-                    suggest.push({
-                      desc: suggestion.description,
-                      fix(fixer) {
-                        return fixer.insertTextBeforeRange(
-                          suggestion.range,
-                          suggestion.text
-                        );
-                      },
-                    });
-                    break;
-                  case CompilerSuggestionOperation.InsertAfter:
-                    suggest.push({
-                      desc: suggestion.description,
-                      fix(fixer) {
-                        return fixer.insertTextAfterRange(
-                          suggestion.range,
-                          suggestion.text
-                        );
-                      },
-                    });
-                    break;
-                  case CompilerSuggestionOperation.Replace:
-                    suggest.push({
-                      desc: suggestion.description,
-                      fix(fixer) {
-                        return fixer.replaceTextRange(
-                          suggestion.range,
-                          suggestion.text
-                        );
-                      },
-                    });
-                    break;
-                  case CompilerSuggestionOperation.Remove:
-                    suggest.push({
-                      desc: suggestion.description,
-                      fix(fixer) {
-                        return fixer.removeRange(suggestion.range);
-                      },
-                    });
-                    break;
-                  default:
-                    assertExhaustive(
-                      suggestion,
-                      "Unhandled suggestion operation"
-                    );
-                }
-              }
-            }
             context.report({
               message: detail.reason,
               loc: detail.loc,
-              suggest,
+              suggest: makeSuggestions(detail),
             });
           }
         } else {
