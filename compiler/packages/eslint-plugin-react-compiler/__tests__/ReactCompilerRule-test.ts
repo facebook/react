@@ -179,6 +179,26 @@ const tests: CompilerTestCases = {
         },
       ],
     },
+    {
+      name: "Test experimental/unstable report all bailouts mode",
+      options: [
+        {
+          reportableLevels: new Set([ErrorSeverity.InvalidReact]),
+          __unstable_donotuse_reportAllBailouts: true,
+        },
+      ],
+      code: normalizeIndent`
+        function Foo(x) {
+          var y = 1;
+          return <div>{y * x}</div>;
+        }`,
+      errors: [
+        {
+          message:
+            "[ReactCompilerBailout] (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (@:3:2)",
+        },
+      ],
+    },
   ],
 };
 

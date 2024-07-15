@@ -129,6 +129,22 @@ const rule: Rule.RuleModule = {
     } else {
       reportableLevels = DEFAULT_REPORTABLE_LEVELS;
     }
+    /**
+     * Experimental setting to report all compilation bailouts on the compilation
+     * unit (e.g. function or hook) instead of the offensive line.
+     * Intended to be used when a codebase is 100% reliant on the compiler for
+     * memoization (i.e. deleted all manual memo) and needs compilation success
+     * signals for perf debugging.
+     */
+    let __unstable_donotuse_reportAllBailouts: boolean = false;
+    if (
+      userOpts["__unstable_donotuse_reportAllBailouts"] != null &&
+      typeof userOpts["__unstable_donotuse_reportAllBailouts"] === "boolean"
+    ) {
+      __unstable_donotuse_reportAllBailouts =
+        userOpts["__unstable_donotuse_reportAllBailouts"];
+    }
+
     const options: PluginOptions = {
       ...parsePluginOptions(userOpts),
       ...COMPILER_OPTIONS,
@@ -139,6 +155,19 @@ const rule: Rule.RuleModule = {
         userLogger?.logEvent(filename, event);
         if (event.kind === "CompileError") {
           const detail = event.detail;
+          const suggest = makeSuggestions(detail);
+          if (__unstable_donotuse_reportAllBailouts && event.fnLoc != null) {
+            const locStr =
+              detail.loc != null && typeof detail.loc !== "symbol"
+                ? ` (@:${detail.loc.start.line}:${detail.loc.start.column})`
+                : "";
+            context.report({
+              message: `[ReactCompilerBailout] ${detail.reason}${locStr}`,
+              loc: event.fnLoc,
+              suggest,
+            });
+          }
+
           if (!isReportableDiagnostic(detail)) {
             return;
           }
@@ -154,7 +183,7 @@ const rule: Rule.RuleModule = {
             context.report({
               message: detail.reason,
               loc,
-              suggest: makeSuggestions(detail),
+              suggest,
             });
           }
         }
