@@ -41,6 +41,7 @@ import {
   ShapeRegistry,
   addHook,
 } from "./ObjectShape";
+import { Scope as BabelScope } from "@babel/traverse";
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -504,6 +505,7 @@ export class Environment {
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
+  #scope: BabelScope;
   logger: Logger | null;
   filename: string | null;
   code: string | null;
@@ -515,6 +517,7 @@ export class Environment {
   #hoistedIdentifiers: Set<t.Identifier>;
 
   constructor(
+    scope: BabelScope,
     fnType: ReactFunctionType,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
@@ -523,6 +526,7 @@ export class Environment {
     code: string | null,
     useMemoCacheIdentifier: string
   ) {
+    this.#scope = scope;
     this.fnType = fnType;
     this.config = config;
     this.filename = filename;
