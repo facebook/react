@@ -23,23 +23,18 @@ import {
   BuiltInType,
   Effect,
   FunctionType,
-  GeneratedSource,
   HIRFunction,
-  Identifier,
   IdentifierId,
   NonLocalBinding,
   PolyType,
   ScopeId,
   Type,
-  ValidIdentifierName,
   ValidatedIdentifier,
   ValueKind,
   makeBlockId,
   makeIdentifierId,
   makeIdentifierName,
-  makeInstructionId,
   makeScopeId,
-  makeType,
 } from "./HIR";
 import {
   BuiltInMixedReadonlyId,
@@ -50,7 +45,6 @@ import {
   addHook,
 } from "./ObjectShape";
 import { Scope as BabelScope } from "@babel/traverse";
-import { CodegenFunction } from "../ReactiveScopes";
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions

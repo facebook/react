@@ -31,7 +31,6 @@ import {
   findProgramSuppressions,
   suppressionsToCompilerError,
 } from "./Suppression";
-import { GeneratedSource } from "../HIR";
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -418,12 +417,14 @@ export function compileProgram(
           reason: `Implement support for outlining React functions (components/hooks)`,
           loc: outlined.fn.loc,
         });
-        // Above should be as simple as the following, but needs testing:
-        // queue.push({
-        //   kind: "outlined",
-        //   fn,
-        //   fnType: outlined.type,
-        // });
+        /*
+         * Above should be as simple as the following, but needs testing:
+         * queue.push({
+         *   kind: "outlined",
+         *   fn,
+         *   fnType: outlined.type,
+         * });
+         */
       }
     }
     compiledFns.push({
