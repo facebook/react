@@ -7,7 +7,7 @@
 
 import { transformFromAstSync } from "@babel/core";
 // @ts-expect-error: no types available
-import PluginProposalPrivateMethods from "@babel/plugin-transform-private-methods";
+import PluginProposalPrivateMethods from "@babel/plugin-proposal-private-methods";
 import type { SourceLocation as BabelSourceLocation } from "@babel/types";
 import BabelPluginReactCompiler, {
   CompilerErrorDetailOptions,
