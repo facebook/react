@@ -117,6 +117,7 @@ export function* run(
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(
+    func.scope,
     fnType,
     config,
     contextIdentifiers,
