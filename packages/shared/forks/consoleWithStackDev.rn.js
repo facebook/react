@@ -36,14 +36,11 @@ export function error(format, ...args) {
   }
 }
 
-export let isWritingAppendedStack = false;
-
 function printWarning(level, format, args) {
   if (__DEV__) {
     if (ReactSharedInternals.getCurrentStack) {
       const stack = ReactSharedInternals.getCurrentStack();
       if (stack !== '') {
-        isWritingAppendedStack = true;
         format += '%s';
         args = args.concat([stack]);
       }
@@ -54,6 +51,5 @@ function printWarning(level, format, args) {
     // breaks IE9: https://github.com/facebook/react/issues/13610
     // eslint-disable-next-line react-internal/no-production-logging
     Function.prototype.apply.call(console[level], console, args);
-    isWritingAppendedStack = false;
   }
 }

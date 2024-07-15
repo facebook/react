@@ -7,8 +7,6 @@
  * @flow
  */
 
-import {warn, error} from 'shared/consoleWithStackDev';
-
 const badgeFormat = '[%s] ';
 const pad = ' ';
 
@@ -46,12 +44,6 @@ export function printToConsole(
     newArgs.splice(offset, 0, badgeFormat, pad + badgeName + pad);
   }
 
-  if (methodName === 'error' && __DEV__) {
-    error.apply(console, newArgs);
-  } else if (methodName === 'warn' && __DEV__) {
-    warn.apply(console, newArgs);
-  } else {
-    // $FlowFixMe[invalid-computed-prop]
-    console[methodName].apply(console, newArgs); // eslint-disable-line react-internal/no-production-logging
-  }
+  // $FlowFixMe[invalid-computed-prop]
+  console[methodName].apply(console, newArgs); // eslint-disable-line react-internal/no-production-logging
 }
