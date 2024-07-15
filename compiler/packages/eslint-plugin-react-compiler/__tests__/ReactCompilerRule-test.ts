@@ -15,7 +15,7 @@ import ReactCompilerRule from "../src/rules/ReactCompilerRule";
  */
 function normalizeIndent(strings: TemplateStringsArray): string {
   const codeLines = strings[0].split("\n");
-  const leftPadding = codeLines[1].match(/\s+/)[0];
+  const leftPadding = codeLines[1].match(/\s+/)![0];
   return codeLines.map((line) => line.slice(leftPadding.length)).join("\n");
 }
 
