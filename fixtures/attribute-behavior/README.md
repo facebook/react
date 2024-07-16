@@ -28,3 +28,11 @@ Right now, we use a purple outline to call out cases where the assigned property
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 You can find the guide for how to do things in a CRA [here](https://github.com/facebook/create-react-app/blob/main/packages/cra-template/template/README.md).
+
+
+## Tests
+
+### end-to-end
+
+End-to-end tests are written for [Playwright](https://playwright.dev/).
+For local debugging, run `yarn test --ui`.

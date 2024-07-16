@@ -268,6 +268,54 @@ jobs:
       - store_artifacts:
           path: fixtures/flight/test-results
 
+  run_fixtures_attribute-behavior_tests:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - restore_cache:
+          name: Restore yarn cache
+          keys:
+            - v2-yarn_cache_fixtures_attribute-behavior-{{ arch }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install dependencies
+          working_directory: fixtures/attribute-behavior
+          command: |
+            # --ignore-optional is required to work around https://github.com/yarnpkg/yarn/pull/7273 on Linux.
+            yarn install --ignore-optional --frozen-lockfile --cache-folder ~/.cache/yarn
+            if [ $? -ne 0 ]; then
+              yarn install --ignore-optional --frozen-lockfile --cache-folder ~/.cache/yarn
+            fi
+      - save_cache:
+          name: Save yarn cache
+          key: v2-yarn_cache_fixtures_attribute-behavior-{{ arch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+      - run:
+          working_directory: fixtures/attribute-behavior
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run:
+          name: Run tests
+          working_directory: fixtures/attribute-behavior
+          command: yarn test
+
+      - run:
+          name: Check if snapshot is unchanged
+          working_directory: fixtures/attribute-behavior
+          command: |
+            git diff --exit-code HEAD -- AttributeTableSnapshot.md
+      - store_artifacts:
+          path: fixtures/attribute-behavior/AttributeTableSnapshot.md
+      - store_artifacts:
+          path: fixtures/attribute-behavior/playwright-report
+      - store_artifacts:
+          path: fixtures/attribute-behavior/test-results
+
   run_devtools_tests_for_versions:
     docker: *docker
     environment: *environment
@@ -488,6 +536,9 @@ workflows:
           requires:
             - build_devtools_and_process_artifacts
       - run_fixtures_flight_tests:
+          requires:
+            - yarn_build
+      - run_fixtures_attribute-behavior_tests:
           requires:
             - yarn_build
 
