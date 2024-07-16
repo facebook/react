@@ -99,12 +99,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
     }
   }
   let lastPassOutput: string | null = null;
-  let nonDiffPasses = [
-    "HIR",
-    "BuildReactiveFunction",
-    "EnvironmentConfig",
-    "Outlined",
-  ];
+  let nonDiffPasses = ["HIR", "BuildReactiveFunction", "EnvironmentConfig"];
   for (const [passName, text] of concattedResults) {
     tabs.set(
       passName,

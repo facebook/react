@@ -278,7 +278,6 @@ export function codegenFunction(
     pruneHoistedContexts(reactiveFunction);
 
     const identifiers = renameVariables(reactiveFunction);
-    logReactiveFunction("Outline", reactiveFunction);
     const codegen = codegenReactiveFunction(
       new Context(
         cx.env,
