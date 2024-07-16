@@ -368,6 +368,13 @@ jobs:
         with:
           path: "**/node_modules"
           key: v2-yarn_cache_fixtures_flight-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
       - name: Install fixture dependencies
         working-directory: fixtures/flight
         run: |
