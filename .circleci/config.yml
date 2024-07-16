@@ -7,32 +7,6 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
-  - &restore_yarn_cache_fixtures_dom
-    restore_cache:
-      name: Restore yarn cache for fixtures/dom
-      keys:
-        - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
-
-  - &yarn_install_fixtures_dom
-    run:
-      name: Install dependencies in fixtures/dom
-      working_directory: fixtures/dom
-      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-
-  - &yarn_install_fixtures_dom_retry
-    run:
-      name: Install dependencies in fixtures/dom (retry)
-      when: on_fail
-      working_directory: fixtures/dom
-      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-
-  - &save_yarn_cache_fixtures_dom
-    save_cache:
-      name: Save yarn cache for fixtures/dom
-      key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
-      paths:
-        - ~/.cache/yarn
-
   - &TEST_PARALLELISM 20
 
   - &attach_workspace
@@ -265,27 +239,6 @@ jobs:
       - store_artifacts:
           path: ./tmp/screenshots
 
-  RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - *restore_yarn_cache_fixtures_dom
-      - *yarn_install_fixtures_dom
-      - *yarn_install_fixtures_dom_retry
-      - *save_yarn_cache_fixtures_dom
-      - run:
-          name: Run DOM fixture tests
-          environment:
-            RELEASE_CHANNEL: stable
-          working_directory: fixtures/dom
-          command: |
-            yarn predev
-            yarn test --maxWorkers=2
-
   publish_prerelease:
     parameters:
       commit_sha:
@@ -340,9 +293,6 @@ workflows:
                 - main
           requires:
             - download_base_build_for_sizebot
-            - yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-          requires:
             - yarn_build
 
   devtools_regression_tests:
