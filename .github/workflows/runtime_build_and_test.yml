@@ -346,7 +346,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: devtools.tgz
-          path: build
+          path: build/devtools
       # Simplifies getting the extension for local testing
       - name: Archive chrome extension
         uses: actions/upload-artifact@v4
