@@ -20032,59 +20032,87 @@ __DEV__ &&
         case "p":
         case "li":
           break;
-        case "input":
-          checkControlledValueProps("input", props);
-          listenToNonDelegatedEvent("invalid", domElement);
-          var name = null,
-            type = null,
-            value = null,
-            defaultValue = null,
-            checked = null,
-            defaultChecked = null;
+        case "img":
+          listenToNonDelegatedEvent("error", domElement);
+          listenToNonDelegatedEvent("load", domElement);
+          var hasSrc = !1,
+            hasSrcSet = !1,
+            propKey;
           for (propKey in props)
             if (props.hasOwnProperty(propKey)) {
               var propValue = props[propKey];
               if (null != propValue)
                 switch (propKey) {
-                  case "name":
-                    name = propValue;
+                  case "src":
+                    hasSrc = !0;
                     break;
-                  case "type":
-                    type = propValue;
-                    break;
-                  case "checked":
-                    checked = propValue;
-                    break;
-                  case "defaultChecked":
-                    defaultChecked = propValue;
-                    break;
-                  case "value":
-                    value = propValue;
-                    break;
-                  case "defaultValue":
-                    defaultValue = propValue;
+                  case "srcSet":
+                    hasSrcSet = !0;
                     break;
                   case "children":
                   case "dangerouslySetInnerHTML":
-                    if (null != propValue)
+                    throw Error(
+                      tag +
+                        " is a void element tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
+                    );
+                  default:
+                    setProp(domElement, tag, propKey, propValue, props, null);
+                }
+            }
+          hasSrcSet &&
+            setProp(domElement, tag, "srcSet", props.srcSet, props, null);
+          hasSrc && setProp(domElement, tag, "src", props.src, props, null);
+          return;
+        case "input":
+          checkControlledValueProps("input", props);
+          listenToNonDelegatedEvent("invalid", domElement);
+          var defaultValue = (propValue = propKey = hasSrcSet = null),
+            checked = null,
+            defaultChecked = null;
+          for (hasSrc in props)
+            if (props.hasOwnProperty(hasSrc)) {
+              var _propValue = props[hasSrc];
+              if (null != _propValue)
+                switch (hasSrc) {
+                  case "name":
+                    hasSrcSet = _propValue;
+                    break;
+                  case "type":
+                    propKey = _propValue;
+                    break;
+                  case "checked":
+                    checked = _propValue;
+                    break;
+                  case "defaultChecked":
+                    defaultChecked = _propValue;
+                    break;
+                  case "value":
+                    propValue = _propValue;
+                    break;
+                  case "defaultValue":
+                    defaultValue = _propValue;
+                    break;
+                  case "children":
+                  case "dangerouslySetInnerHTML":
+                    if (null != _propValue)
                       throw Error(
                         tag +
                           " is a void element tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
                       );
                     break;
                   default:
-                    setProp(domElement, tag, propKey, propValue, props, null);
+                    setProp(domElement, tag, hasSrc, _propValue, props, null);
                 }
             }
           validateInputProps(domElement, props);
           initInput(
             domElement,
-            value,
+            propValue,
             defaultValue,
             checked,
             defaultChecked,
-            type,
-            name,
+            propKey,
+            hasSrcSet,
             !1
           );
           track(domElement);
@@ -20092,79 +20120,86 @@ __DEV__ &&
         case "select":
           checkControlledValueProps("select", props);
           listenToNonDelegatedEvent("invalid", domElement);
-          var propKey = (type = value = null);
-          for (name in props)
+          hasSrc = propKey = propValue = null;
+          for (hasSrcSet in props)
             if (
-              props.hasOwnProperty(name) &&
-              ((defaultValue = props[name]), null != defaultValue)
+              props.hasOwnProperty(hasSrcSet) &&
+              ((defaultValue = props[hasSrcSet]), null != defaultValue)
             )
-              switch (name) {
+              switch (hasSrcSet) {
                 case "value":
-                  value = defaultValue;
+                  propValue = defaultValue;
                   break;
                 case "defaultValue":
-                  type = defaultValue;
+                  propKey = defaultValue;
                   break;
                 case "multiple":
-                  propKey = defaultValue;
+                  hasSrc = defaultValue;
                 default:
-                  setProp(domElement, tag, name, defaultValue, props, null);
+                  setProp(
+                    domElement,
+                    tag,
+                    hasSrcSet,
+                    defaultValue,
+                    props,
+                    null
+                  );
               }
           validateSelectProps(domElement, props);
-          tag = value;
-          props = type;
-          domElement.multiple = !!propKey;
+          tag = propValue;
+          props = propKey;
+          domElement.multiple = !!hasSrc;
           null != tag
-            ? updateOptions(domElement, !!propKey, tag, !1)
-            : null != props && updateOptions(domElement, !!propKey, props, !0);
+            ? updateOptions(domElement, !!hasSrc, tag, !1)
+            : null != props && updateOptions(domElement, !!hasSrc, props, !0);
           return;
         case "textarea":
           checkControlledValueProps("textarea", props);
           listenToNonDelegatedEvent("invalid", domElement);
-          name = propKey = null;
-          for (type in props)
+          hasSrcSet = hasSrc = null;
+          for (propValue in props)
             if (
-              props.hasOwnProperty(type) &&
-              ((value = props[type]), null != value)
+              props.hasOwnProperty(propValue) &&
+              ((propKey = props[propValue]), null != propKey)
             )
-              switch (type) {
+              switch (propValue) {
                 case "value":
-                  propKey = value;
+                  hasSrc = propKey;
                   break;
                 case "defaultValue":
-                  name = value;
+                  hasSrcSet = propKey;
                   break;
                 case "children":
                   break;
                 case "dangerouslySetInnerHTML":
-                  if (null != value)
+                  if (null != propKey)
                     throw Error(
                       "`dangerouslySetInnerHTML` does not make sense on <textarea>."
                     );
                   break;
                 default:
-                  setProp(domElement, tag, type, value, props, null);
+                  setProp(domElement, tag, propValue, propKey, props, null);
               }
           validateTextareaProps(domElement, props);
-          initTextarea(domElement, propKey, name);
+          initTextarea(domElement, hasSrc, hasSrcSet);
           track(domElement);
           return;
         case "option":
           validateOptionProps(domElement, props);
-          for (defaultValue in props)
+          for (checked in props)
             if (
-              props.hasOwnProperty(defaultValue) &&
-              ((propKey = props[defaultValue]), null != propKey)
+              props.hasOwnProperty(checked) &&
+              ((hasSrc = props[checked]), null != hasSrc)
             )
-              switch (defaultValue) {
+              switch (checked) {
                 case "selected":
                   domElement.selected =
-                    propKey &&
-                    "function" !== typeof propKey &&
-                    "symbol" !== typeof propKey;
+                    hasSrc &&
+                    "function" !== typeof hasSrc &&
+                    "symbol" !== typeof hasSrc;
                   break;
                 default:
-                  setProp(domElement, tag, defaultValue, propKey, props, null);
+                  setProp(domElement, tag, checked, hasSrc, props, null);
               }
           return;
         case "dialog":
@@ -20177,8 +20212,8 @@ __DEV__ &&
           break;
         case "video":
         case "audio":
-          for (propKey = 0; propKey < mediaEventTypes.length; propKey++)
-            listenToNonDelegatedEvent(mediaEventTypes[propKey], domElement);
+          for (hasSrc = 0; hasSrc < mediaEventTypes.length; hasSrc++)
+            listenToNonDelegatedEvent(mediaEventTypes[hasSrc], domElement);
           break;
         case "image":
           listenToNonDelegatedEvent("error", domElement);
@@ -20189,7 +20224,6 @@ __DEV__ &&
           break;
         case "embed":
         case "source":
-        case "img":
         case "link":
           listenToNonDelegatedEvent("error", domElement),
             listenToNonDelegatedEvent("load", domElement);
@@ -20204,12 +20238,12 @@ __DEV__ &&
         case "track":
         case "wbr":
         case "menuitem":
-          for (checked in props)
+          for (defaultChecked in props)
             if (
-              props.hasOwnProperty(checked) &&
-              ((propKey = props[checked]), null != propKey)
+              props.hasOwnProperty(defaultChecked) &&
+              ((hasSrc = props[defaultChecked]), null != hasSrc)
             )
-              switch (checked) {
+              switch (defaultChecked) {
                 case "children":
                 case "dangerouslySetInnerHTML":
                   throw Error(
@@ -20217,31 +20251,31 @@ __DEV__ &&
                       " is a void element tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
                   );
                 default:
-                  setProp(domElement, tag, checked, propKey, props, null);
+                  setProp(domElement, tag, defaultChecked, hasSrc, props, null);
               }
           return;
         default:
           if (isCustomElement(tag)) {
-            for (defaultChecked in props)
-              props.hasOwnProperty(defaultChecked) &&
-                ((propKey = props[defaultChecked]),
-                void 0 !== propKey &&
+            for (_propValue in props)
+              props.hasOwnProperty(_propValue) &&
+                ((hasSrc = props[_propValue]),
+                void 0 !== hasSrc &&
                   setPropOnCustomElement(
                     domElement,
                     tag,
-                    defaultChecked,
-                    propKey,
+                    _propValue,
+                    hasSrc,
                     props,
                     void 0
                   ));
             return;
           }
       }
-      for (value in props)
-        props.hasOwnProperty(value) &&
-          ((propKey = props[value]),
-          null != propKey &&
-            setProp(domElement, tag, value, propKey, props, null));
+      for (defaultValue in props)
+        props.hasOwnProperty(defaultValue) &&
+          ((hasSrc = props[defaultValue]),
+          null != hasSrc &&
+            setProp(domElement, tag, defaultValue, hasSrc, props, null));
     }
     function updateProperties(domElement, tag, lastProps, nextProps) {
       validatePropertiesInDevelopment(tag, nextProps);
@@ -20285,14 +20319,14 @@ __DEV__ &&
                     );
               }
           }
-          for (var _propKey7 in nextProps) {
-            var propKey = nextProps[_propKey7];
-            lastProp = lastProps[_propKey7];
+          for (var _propKey8 in nextProps) {
+            var propKey = nextProps[_propKey8];
+            lastProp = lastProps[_propKey8];
             if (
-              nextProps.hasOwnProperty(_propKey7) &&
+              nextProps.hasOwnProperty(_propKey8) &&
               (null != propKey || null != lastProp)
             )
-              switch (_propKey7) {
+              switch (_propKey8) {
                 case "type":
                   type = propKey;
                   break;
@@ -20324,7 +20358,7 @@ __DEV__ &&
                     setProp(
                       domElement,
                       tag,
-                      _propKey7,
+                      _propKey8,
                       propKey,
                       nextProps,
                       lastProp
@@ -20365,7 +20399,7 @@ __DEV__ &&
           );
           return;
         case "select":
-          propKey = value = defaultValue = _propKey7 = null;
+          propKey = value = defaultValue = _propKey8 = null;
           for (type in lastProps)
             if (
               ((lastDefaultValue = lastProps[type]),
@@ -20396,7 +20430,7 @@ __DEV__ &&
             )
               switch (name) {
                 case "value":
-                  _propKey7 = type;
+                  _propKey8 = type;
                   break;
                 case "defaultValue":
                   defaultValue = type;
@@ -20417,15 +20451,15 @@ __DEV__ &&
           nextProps = defaultValue;
           tag = value;
           lastProps = propKey;
-          null != _propKey7
-            ? updateOptions(domElement, !!tag, _propKey7, !1)
+          null != _propKey8
+            ? updateOptions(domElement, !!tag, _propKey8, !1)
             : !!lastProps !== !!tag &&
               (null != nextProps
                 ? updateOptions(domElement, !!tag, nextProps, !0)
                 : updateOptions(domElement, !!tag, tag ? [] : "", !1));
           return;
         case "textarea":
-          propKey = _propKey7 = null;
+          propKey = _propKey8 = null;
           for (defaultValue in lastProps)
             if (
               ((name = lastProps[defaultValue]),
@@ -20449,7 +20483,7 @@ __DEV__ &&
             )
               switch (value) {
                 case "value":
-                  _propKey7 = name;
+                  _propKey8 = name;
                   break;
                 case "defaultValue":
                   propKey = name;
@@ -20466,17 +20500,17 @@ __DEV__ &&
                   name !== type &&
                     setProp(domElement, tag, value, name, nextProps, type);
               }
-          updateTextarea(domElement, _propKey7, propKey);
+          updateTextarea(domElement, _propKey8, propKey);
           return;
         case "option":
-          for (var _propKey12 in lastProps)
+          for (var _propKey13 in lastProps)
             if (
-              ((_propKey7 = lastProps[_propKey12]),
-              lastProps.hasOwnProperty(_propKey12) &&
-                null != _propKey7 &&
-                !nextProps.hasOwnProperty(_propKey12))
+              ((_propKey8 = lastProps[_propKey13]),
+              lastProps.hasOwnProperty(_propKey13) &&
+                null != _propKey8 &&
+                !nextProps.hasOwnProperty(_propKey13))
             )
-              switch (_propKey12) {
+              switch (_propKey13) {
                 case "selected":
                   domElement.selected = !1;
                   break;
@@ -20484,33 +20518,33 @@ __DEV__ &&
                   setProp(
                     domElement,
                     tag,
-                    _propKey12,
+                    _propKey13,
                     null,
                     nextProps,
-                    _propKey7
+                    _propKey8
                   );
               }
           for (lastDefaultValue in nextProps)
             if (
-              ((_propKey7 = nextProps[lastDefaultValue]),
+              ((_propKey8 = nextProps[lastDefaultValue]),
               (propKey = lastProps[lastDefaultValue]),
               nextProps.hasOwnProperty(lastDefaultValue) &&
-                _propKey7 !== propKey &&
-                (null != _propKey7 || null != propKey))
+                _propKey8 !== propKey &&
+                (null != _propKey8 || null != propKey))
             )
               switch (lastDefaultValue) {
                 case "selected":
                   domElement.selected =
-                    _propKey7 &&
-                    "function" !== typeof _propKey7 &&
-                    "symbol" !== typeof _propKey7;
+                    _propKey8 &&
+                    "function" !== typeof _propKey8 &&
+                    "symbol" !== typeof _propKey8;
                   break;
                 default:
                   setProp(
                     domElement,
                     tag,
                     lastDefaultValue,
-                    _propKey7,
+                    _propKey8,
                     nextProps,
                     propKey
                   );
@@ -20531,31 +20565,31 @@ __DEV__ &&
         case "track":
         case "wbr":
         case "menuitem":
-          for (var _propKey14 in lastProps)
-            (_propKey7 = lastProps[_propKey14]),
-              lastProps.hasOwnProperty(_propKey14) &&
-                null != _propKey7 &&
-                !nextProps.hasOwnProperty(_propKey14) &&
+          for (var _propKey15 in lastProps)
+            (_propKey8 = lastProps[_propKey15]),
+              lastProps.hasOwnProperty(_propKey15) &&
+                null != _propKey8 &&
+                !nextProps.hasOwnProperty(_propKey15) &&
                 setProp(
                   domElement,
                   tag,
-                  _propKey14,
+                  _propKey15,
                   null,
                   nextProps,
-                  _propKey7
+                  _propKey8
                 );
           for (checked in nextProps)
             if (
-              ((_propKey7 = nextProps[checked]),
+              ((_propKey8 = nextProps[checked]),
               (propKey = lastProps[checked]),
               nextProps.hasOwnProperty(checked) &&
-                _propKey7 !== propKey &&
-                (null != _propKey7 || null != propKey))
+                _propKey8 !== propKey &&
+                (null != _propKey8 || null != propKey))
             )
               switch (checked) {
                 case "children":
                 case "dangerouslySetInnerHTML":
-                  if (null != _propKey7)
+                  if (null != _propKey8)
                     throw Error(
                       tag +
                         " is a void element tag and must neither have `children` nor use `dangerouslySetInnerHTML`."
@@ -20566,7 +20600,7 @@ __DEV__ &&
                     domElement,
                     tag,
                     checked,
-                    _propKey7,
+                    _propKey8,
                     nextProps,
                     propKey
                   );
@@ -20574,49 +20608,49 @@ __DEV__ &&
           return;
         default:
           if (isCustomElement(tag)) {
-            for (var _propKey16 in lastProps)
-              (_propKey7 = lastProps[_propKey16]),
-                lastProps.hasOwnProperty(_propKey16) &&
-                  void 0 !== _propKey7 &&
-                  !nextProps.hasOwnProperty(_propKey16) &&
+            for (var _propKey17 in lastProps)
+              (_propKey8 = lastProps[_propKey17]),
+                lastProps.hasOwnProperty(_propKey17) &&
+                  void 0 !== _propKey8 &&
+                  !nextProps.hasOwnProperty(_propKey17) &&
                   setPropOnCustomElement(
                     domElement,
                     tag,
-                    _propKey16,
+                    _propKey17,
                     void 0,
                     nextProps,
-                    _propKey7
+                    _propKey8
                   );
             for (defaultChecked in nextProps)
-              (_propKey7 = nextProps[defaultChecked]),
+              (_propKey8 = nextProps[defaultChecked]),
                 (propKey = lastProps[defaultChecked]),
                 !nextProps.hasOwnProperty(defaultChecked) ||
-                  _propKey7 === propKey ||
-                  (void 0 === _propKey7 && void 0 === propKey) ||
+                  _propKey8 === propKey ||
+                  (void 0 === _propKey8 && void 0 === propKey) ||
                   setPropOnCustomElement(
                     domElement,
                     tag,
                     defaultChecked,
-                    _propKey7,
+                    _propKey8,
                     nextProps,
                     propKey
                   );
             return;
           }
       }
-      for (var _propKey18 in lastProps)
-        (_propKey7 = lastProps[_propKey18]),
-          lastProps.hasOwnProperty(_propKey18) &&
-            null != _propKey7 &&
-            !nextProps.hasOwnProperty(_propKey18) &&
-            setProp(domElement, tag, _propKey18, null, nextProps, _propKey7);
+      for (var _propKey19 in lastProps)
+        (_propKey8 = lastProps[_propKey19]),
+          lastProps.hasOwnProperty(_propKey19) &&
+            null != _propKey8 &&
+            !nextProps.hasOwnProperty(_propKey19) &&
+            setProp(domElement, tag, _propKey19, null, nextProps, _propKey8);
       for (lastProp in nextProps)
-        (_propKey7 = nextProps[lastProp]),
+        (_propKey8 = nextProps[lastProp]),
           (propKey = lastProps[lastProp]),
           !nextProps.hasOwnProperty(lastProp) ||
-            _propKey7 === propKey ||
-            (null == _propKey7 && null == propKey) ||
-            setProp(domElement, tag, lastProp, _propKey7, nextProps, propKey);
+            _propKey8 === propKey ||
+            (null == _propKey8 && null == propKey) ||
+            setProp(domElement, tag, lastProp, _propKey8, nextProps, propKey);
     }
     function getPropNameFromAttributeName(attrName) {
       switch (attrName) {
@@ -27028,11 +27062,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-79e4f238-20240713" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-01172397-20240716" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-79e4f238-20240713\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-01172397-20240716\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27097,12 +27131,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-79e4f238-20240713"
+          reconcilerVersion: "19.0.0-www-modern-01172397-20240716"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-79e4f238-20240713",
+        version: "19.0.0-www-modern-01172397-20240716",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27864,5 +27898,5 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-79e4f238-20240713";
+    exports.version = "19.0.0-www-modern-01172397-20240716";
   })();
