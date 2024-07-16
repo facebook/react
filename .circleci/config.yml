@@ -294,9 +294,6 @@ workflows:
           requires:
             - download_base_build_for_sizebot
             - yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-          requires:
-            - yarn_build
 
   devtools_regression_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
