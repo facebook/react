@@ -61,13 +61,12 @@ function createDrainHandler(destination: Destination, request: Request) {
 function createCancelHandler(request: Request, reason: string) {
   return () => {
     stopFlowing(request);
-    // eslint-disable-next-line react-internal/prod-error-codes
     abort(request, new Error(reason));
   };
 }
 
 type Options = {
-  environmentName?: string,
+  environmentName?: string | (() => string),
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
   identifierPrefix?: string,

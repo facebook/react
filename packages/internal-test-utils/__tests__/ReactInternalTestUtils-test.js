@@ -36,7 +36,7 @@ const {
 } = require('../ReactInternalTestUtils');
 
 describe('ReactInternalTestUtils', () => {
-  test('waitFor', async () => {
+  it('waitFor', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
       return id;
@@ -61,7 +61,7 @@ describe('ReactInternalTestUtils', () => {
     expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
   });
 
-  test('waitForAll', async () => {
+  it('waitForAll', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
       return id;
@@ -82,7 +82,7 @@ describe('ReactInternalTestUtils', () => {
     expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
   });
 
-  test('waitForThrow', async () => {
+  it('waitForThrow', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
       return id;
@@ -117,7 +117,7 @@ describe('ReactInternalTestUtils', () => {
     ]);
   });
 
-  test('waitForPaint', async () => {
+  it('waitForPaint', async () => {
     function App({prop}) {
       const deferred = useDeferredValue(prop);
       const text = `Urgent: ${prop}, Deferred: ${deferred}`;
@@ -143,7 +143,7 @@ describe('ReactInternalTestUtils', () => {
     expect(root).toMatchRenderedOutput('Urgent: B, Deferred: B');
   });
 
-  test('assertLog', async () => {
+  it('assertLog', async () => {
     const Yield = ({id}) => {
       Scheduler.log(id);
       React.useEffect(() => {
@@ -732,7 +732,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['foo', 'bar', 'baz']);
     });
 
-    test('should fail if waitForThrow is called before asserting', async () => {
+    it('should fail if waitForThrow is called before asserting', async () => {
       const Yield = ({id}) => {
         Scheduler.log(id);
         return id;
@@ -774,7 +774,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['A', 'B', 'A', 'B']);
     });
 
-    test('should fail if waitForPaint is called before asserting', async () => {
+    it('should fail if waitForPaint is called before asserting', async () => {
       function App({prop}) {
         const deferred = useDeferredValue(prop);
         const text = `Urgent: ${prop}, Deferred: ${deferred}`;
@@ -866,16 +866,40 @@ describe('ReactInternalTestUtils console assertions', () => {
       const message = expectToThrowFailure(() => {
         expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
       });
-      expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+      if (!__DEV__) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
 
-        console.log was called without assertConsoleLogDev:
-        + Not asserted
-        + Not asserted
-        + Not asserted
+          console.log was called without assertConsoleLogDev:
+          + Not asserted
+          + Not asserted
+          + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
-      `);
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else if (gate(flags => flags.enableOwnerStacks)) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.log was called without assertConsoleLogDev:
+          + Not asserted
+          + Not asserted
+          + Not asserted
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.log was called without assertConsoleLogDev:
+          + Not asserted
+          + Not asserted
+          + Not asserted
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      }
 
       expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
     });
@@ -922,16 +946,52 @@ describe('ReactInternalTestUtils console assertions', () => {
         });
       });
 
-      expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+      if (!__DEV__) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
 
-        console.warn was called without assertConsoleWarnDev:
-        + A
-        + B
-        + C
+          console.warn was called without assertConsoleWarnDev:
+          + A
+          + B
+          + C
 
-        You must call one of the assertConsoleDev helpers between each act call."
-      `);
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else if (gate(flags => flags.enableOwnerStacks)) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.warn was called without assertConsoleWarnDev:
+          + A%s,
+          +     in App (at **)
+          + B%s,
+          +     in App (at **)
+          + C%s,
+          +     in App (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.warn was called without assertConsoleWarnDev:
+          + A%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + B%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + C%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      }
     });
 
     it('fails if act is called without any assertConsoleDev helpers', async () => {
@@ -962,26 +1022,94 @@ describe('ReactInternalTestUtils console assertions', () => {
         });
       });
 
-      expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+      if (!__DEV__) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
 
-        console.log was called without assertConsoleLogDev:
-        + A
-        + B
-        + C
+          console.log was called without assertConsoleLogDev:
+          + A
+          + B
+          + C
 
-        console.warn was called without assertConsoleWarnDev:
-        + A
-        + B
-        + C
+          console.warn was called without assertConsoleWarnDev:
+          + A
+          + B
+          + C
 
-        console.error was called without assertConsoleErrorDev:
-        + A
-        + B
-        + C
+          console.error was called without assertConsoleErrorDev:
+          + A
+          + B
+          + C
 
-        You must call one of the assertConsoleDev helpers between each act call."
-      `);
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else if (gate(flags => flags.enableOwnerStacks)) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.log was called without assertConsoleLogDev:
+          + A
+          + B
+          + C
+
+          console.warn was called without assertConsoleWarnDev:
+          + A%s,
+          +     in App (at **)
+          + B%s,
+          +     in App (at **)
+          + C%s,
+          +     in App (at **)
+
+          console.error was called without assertConsoleErrorDev:
+          + A%s,
+          +     in App (at **)
+          + B%s,
+          +     in App (at **)
+          + C%s,
+          +     in App (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.log was called without assertConsoleLogDev:
+          + A
+          + B
+          + C
+
+          console.warn was called without assertConsoleWarnDev:
+          + A%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + B%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + C%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+
+          console.error was called without assertConsoleErrorDev:
+          + A%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + B%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + C%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      }
     });
 
     // @gate __DEV__
@@ -1002,8 +1130,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1025,8 +1153,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1048,8 +1176,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)"
       `);
     });
 
@@ -1071,9 +1199,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1095,9 +1223,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Hi
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1119,9 +1247,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Hi
         - Wow
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1297,7 +1425,8 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleWarnDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           If this warning should include a component stack, remove {withoutStack: true} from this warning.
           If all warnings should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleWarnDev call."
@@ -1318,10 +1447,12 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleWarnDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           Unexpected component stack for:
-            "Bye <component stack>"
+            "Bye
+              in div (at **)"
 
           If this warning should include a component stack, remove {withoutStack: true} from this warning.
           If all warnings should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleWarnDev call."
@@ -1444,7 +1575,8 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleWarnDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           If this warning should include a component stack, remove {withoutStack: true} from this warning.
           If all warnings should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleWarnDev call."
@@ -1477,10 +1609,12 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleWarnDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           Unexpected component stack for:
-            "Bye <component stack>"
+            "Bye
+              in div (at **)"
 
           If this warning should include a component stack, remove {withoutStack: true} from this warning.
           If all warnings should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleWarnDev call."
@@ -1664,7 +1798,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['foo', 'bar', 'baz']);
     });
 
-    test('should fail if waitForThrow is called before asserting', async () => {
+    it('should fail if waitForThrow is called before asserting', async () => {
       const Yield = ({id}) => {
         Scheduler.log(id);
         return id;
@@ -1706,7 +1840,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['A', 'B', 'A', 'B']);
     });
 
-    test('should fail if waitForPaint is called before asserting', async () => {
+    it('should fail if waitForPaint is called before asserting', async () => {
       function App({prop}) {
         const deferred = useDeferredValue(prop);
         const text = `Urgent: ${prop}, Deferred: ${deferred}`;
@@ -1798,16 +1932,49 @@ describe('ReactInternalTestUtils console assertions', () => {
       const message = expectToThrowFailure(() => {
         expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
       });
-      expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+      if (!__DEV__) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
 
-        console.warn was called without assertConsoleWarnDev:
-        + Not asserted
-        + Not asserted
-        + Not asserted
+          console.warn was called without assertConsoleWarnDev:
+          + Not asserted
+          + Not asserted
+          + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
-      `);
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else if (gate(flags => flags.enableOwnerStacks)) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.warn was called without assertConsoleWarnDev:
+          + Not asserted%s,
+          +     in Yield (at **)
+          + Not asserted%s,
+          +     in Yield (at **)
+          + Not asserted%s,
+          +     in Yield (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.warn was called without assertConsoleWarnDev:
+          + Not asserted%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          + Not asserted%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          + Not asserted%s,
+          +     in Yield (at **)
+          +     in div (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      }
 
       expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
     });
@@ -1854,16 +2021,52 @@ describe('ReactInternalTestUtils console assertions', () => {
         });
       });
 
-      expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+      if (!__DEV__) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
 
-        console.error was called without assertConsoleErrorDev:
-        + A
-        + B
-        + C
+          console.error was called without assertConsoleErrorDev:
+          + A
+          + B
+          + C
 
-        You must call one of the assertConsoleDev helpers between each act call."
-      `);
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else if (gate(flags => flags.enableOwnerStacks)) {
+        expect(message).toMatchInlineSnapshot(`
+                  "asserConsoleLogsCleared(expected)
+
+                  console.error was called without assertConsoleErrorDev:
+                  + A%s,
+                  +     in App (at **)
+                  + B%s,
+                  +     in App (at **)
+                  + C%s,
+                  +     in App (at **)
+
+                  You must call one of the assertConsoleDev helpers between each act call."
+              `);
+      } else {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.error was called without assertConsoleErrorDev:
+          + A%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + B%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + C%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      }
     });
 
     it('fails if act is called without any assertConsoleDev helpers', async () => {
@@ -1894,26 +2097,94 @@ describe('ReactInternalTestUtils console assertions', () => {
         });
       });
 
-      expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+      if (!__DEV__) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
 
-        console.log was called without assertConsoleLogDev:
-        + A
-        + B
-        + C
+          console.log was called without assertConsoleLogDev:
+          + A
+          + B
+          + C
 
-        console.warn was called without assertConsoleWarnDev:
-        + A
-        + B
-        + C
+          console.warn was called without assertConsoleWarnDev:
+          + A
+          + B
+          + C
 
-        console.error was called without assertConsoleErrorDev:
-        + A
-        + B
-        + C
+          console.error was called without assertConsoleErrorDev:
+          + A
+          + B
+          + C
 
-        You must call one of the assertConsoleDev helpers between each act call."
-      `);
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else if (gate(flags => flags.enableOwnerStacks)) {
+        expect(message).toMatchInlineSnapshot(`
+                  "asserConsoleLogsCleared(expected)
+
+                  console.log was called without assertConsoleLogDev:
+                  + A
+                  + B
+                  + C
+
+                  console.warn was called without assertConsoleWarnDev:
+                  + A%s,
+                  +     in App (at **)
+                  + B%s,
+                  +     in App (at **)
+                  + C%s,
+                  +     in App (at **)
+
+                  console.error was called without assertConsoleErrorDev:
+                  + A%s,
+                  +     in App (at **)
+                  + B%s,
+                  +     in App (at **)
+                  + C%s,
+                  +     in App (at **)
+
+                  You must call one of the assertConsoleDev helpers between each act call."
+              `);
+      } else {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.log was called without assertConsoleLogDev:
+          + A
+          + B
+          + C
+
+          console.warn was called without assertConsoleWarnDev:
+          + A%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + B%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + C%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+
+          console.error was called without assertConsoleErrorDev:
+          + A%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + B%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+          + C%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          +     in App (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      }
     });
 
     // @gate __DEV__
@@ -1934,8 +2205,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1957,8 +2228,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -1980,8 +2251,8 @@ describe('ReactInternalTestUtils console assertions', () => {
         - Hi
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)"
       `);
     });
 
@@ -2003,9 +2274,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Wow
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -2027,9 +2298,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Hi
         - Bye
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
 
@@ -2051,9 +2322,9 @@ describe('ReactInternalTestUtils console assertions', () => {
 
         - Hi
         - Wow
-        + Hi  <component stack>
-        + Wow  <component stack>
-        + Bye  <component stack>"
+        + Hi      in div (at **)
+        + Wow      in div (at **)
+        + Bye      in div (at **)"
       `);
     });
     // @gate __DEV__
@@ -2170,7 +2441,7 @@ describe('ReactInternalTestUtils console assertions', () => {
         + Received errors
 
         - This is a completely different message that happens to start with "T"
-        + Message that happens to contain a "T" <component stack>"
+        + Message that happens to contain a "T"     in div (at **)"
       `);
     });
 
@@ -2247,7 +2518,8 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleErrorDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
@@ -2268,10 +2540,12 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleErrorDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           Unexpected component stack for:
-            "Bye <component stack>"
+            "Bye
+              in div (at **)"
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
@@ -2394,7 +2668,8 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleErrorDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
@@ -2427,10 +2702,12 @@ describe('ReactInternalTestUtils console assertions', () => {
           "assertConsoleErrorDev(expected)
 
           Unexpected component stack for:
-            "Hello <component stack>"
+            "Hello
+              in div (at **)"
 
           Unexpected component stack for:
-            "Bye <component stack>"
+            "Bye
+              in div (at **)"
 
           If this error should include a component stack, remove {withoutStack: true} from this error.
           If all errors should include the component stack, you may need to remove {withoutStack: true} from the assertConsoleErrorDev call."
@@ -2459,7 +2736,7 @@ describe('ReactInternalTestUtils console assertions', () => {
           + Received errors
 
           - Hello
-          + Bye <component stack>"
+          + Bye     in div (at **)"
         `);
       });
     });
@@ -2640,7 +2917,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['foo', 'bar', 'baz']);
     });
 
-    test('should fail if waitForThrow is called before asserting', async () => {
+    it('should fail if waitForThrow is called before asserting', async () => {
       const Yield = ({id}) => {
         Scheduler.log(id);
         return id;
@@ -2682,7 +2959,7 @@ describe('ReactInternalTestUtils console assertions', () => {
       await waitForAll(['A', 'B', 'A', 'B']);
     });
 
-    test('should fail if waitForPaint is called before asserting', async () => {
+    it('should fail if waitForPaint is called before asserting', async () => {
       function App({prop}) {
         const deferred = useDeferredValue(prop);
         const text = `Urgent: ${prop}, Deferred: ${deferred}`;
@@ -2774,16 +3051,49 @@ describe('ReactInternalTestUtils console assertions', () => {
       const message = expectToThrowFailure(() => {
         expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
       });
-      expect(message).toMatchInlineSnapshot(`
-        "asserConsoleLogsCleared(expected)
+      if (!__DEV__) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
 
-        console.error was called without assertConsoleErrorDev:
-        + Not asserted
-        + Not asserted
-        + Not asserted
+          console.error was called without assertConsoleErrorDev:
+          + Not asserted
+          + Not asserted
+          + Not asserted
 
-        You must call one of the assertConsoleDev helpers between each act call."
-      `);
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else if (gate(flags => flags.enableOwnerStacks)) {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.error was called without assertConsoleErrorDev:
+          + Not asserted%s,
+          +     in Yield (at **)
+          + Not asserted%s,
+          +     in Yield (at **)
+          + Not asserted%s,
+          +     in Yield (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      } else {
+        expect(message).toMatchInlineSnapshot(`
+          "asserConsoleLogsCleared(expected)
+
+          console.error was called without assertConsoleErrorDev:
+          + Not asserted%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          + Not asserted%s,
+          +     in Yield (at **)
+          +     in div (at **)
+          + Not asserted%s,
+          +     in Yield (at **)
+          +     in div (at **)
+
+          You must call one of the assertConsoleDev helpers between each act call."
+        `);
+      }
 
       expect(root).toMatchRenderedOutput(<div>foobarbaz</div>);
     });

@@ -1,9 +1,12 @@
-name: DevTools Check for bug repro
+name: (DevTools) Check for bug repro
 on:
   issues:
     types: [opened, edited]
   issue_comment:
     types: [created, edited]
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
 
 jobs:
   check-repro:

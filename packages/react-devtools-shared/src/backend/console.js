@@ -15,18 +15,24 @@ import type {
   WorkTagMap,
   ConsolePatchSettings,
 } from './types';
-import {format, formatWithStyles} from './utils';
 
+import {
+  formatConsoleArguments,
+  formatWithStyles,
+} from 'react-devtools-shared/src/backend/utils';
+import {
+  FIREFOX_CONSOLE_DIMMING_COLOR,
+  ANSI_STYLE_DIMMING_TEMPLATE,
+  ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK,
+} from 'react-devtools-shared/src/constants';
 import {getInternalReactConstants, getDispatcherRef} from './renderer';
 import {
   getStackByFiberInDevAndProd,
   supportsNativeConsoleTasks,
 } from './DevToolsFiberComponentStack';
-import {consoleManagedByDevToolsDuringStrictMode} from 'react-devtools-feature-flags';
 import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];
-const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
 
 // React's custom built component stack strings match "\s{4}in"
 // Chrome's prefix matches "\s{4}at"
@@ -45,31 +51,42 @@ const STYLE_DIRECTIVE_REGEX = /^%c/;
 // method has been overridden by the patchForStrictMode function.
 // If it has we'll need to do some special formatting of the arguments
 // so the console color stays consistent
-function isStrictModeOverride(args: Array<string>, method: string): boolean {
-  return (
-    args.length >= 2 &&
-    STYLE_DIRECTIVE_REGEX.test(args[0]) &&
-    args[1] === `color: ${getConsoleColor(method) || ''}`
-  );
-}
-
-function getConsoleColor(method: string): ?string {
-  switch (method) {
-    case 'warn':
-      return consoleSettingsRef.browserTheme === 'light'
-        ? process.env.LIGHT_MODE_DIMMED_WARNING_COLOR
-        : process.env.DARK_MODE_DIMMED_WARNING_COLOR;
-    case 'error':
-      return consoleSettingsRef.browserTheme === 'light'
-        ? process.env.LIGHT_MODE_DIMMED_ERROR_COLOR
-        : process.env.DARK_MODE_DIMMED_ERROR_COLOR;
-    case 'log':
-    default:
-      return consoleSettingsRef.browserTheme === 'light'
-        ? process.env.LIGHT_MODE_DIMMED_LOG_COLOR
-        : process.env.DARK_MODE_DIMMED_LOG_COLOR;
+function isStrictModeOverride(args: Array<any>): boolean {
+  if (__IS_FIREFOX__) {
+    return (
+      args.length >= 2 &&
+      STYLE_DIRECTIVE_REGEX.test(args[0]) &&
+      args[1] === FIREFOX_CONSOLE_DIMMING_COLOR
+    );
+  } else {
+    return args.length >= 2 && args[0] === ANSI_STYLE_DIMMING_TEMPLATE;
   }
 }
+
+// We add a suffix to some frames that older versions of React didn't do.
+// To compare if it's equivalent we strip out the suffix to see if they're
+// still equivalent. Similarly, we sometimes use [] and sometimes () so we
+// strip them to for the comparison.
+const frameDiffs = / \(\<anonymous\>\)$|\@unknown\:0\:0$|\(|\)|\[|\]/gm;
+function areStackTracesEqual(a: string, b: string): boolean {
+  return a.replace(frameDiffs, '') === b.replace(frameDiffs, '');
+}
+
+function restorePotentiallyModifiedArgs(args: Array<any>): Array<any> {
+  // If the arguments don't have any styles applied, then just copy
+  if (!isStrictModeOverride(args)) {
+    return args.slice();
+  }
+
+  if (__IS_FIREFOX__) {
+    // Filter out %c from the start of the first argument and color as a second argument
+    return [args[0].slice(2)].concat(args.slice(2));
+  } else {
+    // Filter out the `\x1b...%s\x1b` template
+    return args.slice(1);
+  }
+}
+
 type OnErrorOrWarning = (
   fiber: Fiber,
   type: 'error' | 'warn',
@@ -89,15 +106,11 @@ const injectedRenderers: Map<
 let targetConsole: Object = console;
 let targetConsoleMethods: {[string]: $FlowFixMe} = {};
 for (const method in console) {
+  // $FlowFixMe[invalid-computed-prop]
   targetConsoleMethods[method] = console[method];
 }
 
 let unpatchFn: null | (() => void) = null;
-
-let isNode = false;
-try {
-  isNode = this === global;
-} catch (error) {}
 
 // Enables e.g. Jest tests to inject a mock console object.
 export function dangerous_setTargetConsoleForTesting(
@@ -107,6 +120,7 @@ export function dangerous_setTargetConsoleForTesting(
 
   targetConsoleMethods = ({}: {[string]: $FlowFixMe});
   for (const method in targetConsole) {
+    // $FlowFixMe[invalid-computed-prop]
     targetConsoleMethods[method] = console[method];
   }
 }
@@ -199,17 +213,11 @@ export function patch({
 
         // $FlowFixMe[missing-local-annot]
         const overrideMethod = (...args) => {
-          let shouldAppendWarningStack = false;
-          if (method !== 'log') {
-            if (consoleSettingsRef.appendComponentStack) {
-              const lastArg = args.length > 0 ? args[args.length - 1] : null;
-              const alreadyHasComponentStack =
-                typeof lastArg === 'string' && isStringComponentStack(lastArg);
-
-              // If we are ever called with a string that already has a component stack,
-              // e.g. a React error/warning, don't append a second stack.
-              shouldAppendWarningStack = !alreadyHasComponentStack;
-            }
+          let alreadyHasComponentStack = false;
+          if (method !== 'log' && consoleSettingsRef.appendComponentStack) {
+            const lastArg = args.length > 0 ? args[args.length - 1] : null;
+            alreadyHasComponentStack =
+              typeof lastArg === 'string' && isStringComponentStack(lastArg); // The last argument should be a component stack.
           }
 
           const shouldShowInlineWarningsAndErrors =
@@ -232,14 +240,14 @@ export function patch({
                     onErrorOrWarning(
                       current,
                       ((method: any): 'error' | 'warn'),
-                      // Copy args before we mutate them (e.g. adding the component stack)
-                      args.slice(),
+                      // Restore and copy args before we mutate them (e.g. adding the component stack)
+                      restorePotentiallyModifiedArgs(args),
                     );
                   }
                 }
 
                 if (
-                  shouldAppendWarningStack &&
+                  consoleSettingsRef.appendComponentStack &&
                   !supportsNativeConsoleTasks(current)
                 ) {
                   const componentStack = getStackByFiberInDevAndProd(
@@ -248,11 +256,55 @@ export function patch({
                     (currentDispatcherRef: any),
                   );
                   if (componentStack !== '') {
-                    if (isStrictModeOverride(args, method)) {
-                      args[0] = `${args[0]} %s`;
-                      args.push(componentStack);
+                    // Create a fake Error so that when we print it we get native source maps. Every
+                    // browser will print the .stack property of the error and then parse it back for source
+                    // mapping. Rather than print the internal slot. So it doesn't matter that the internal
+                    // slot doesn't line up.
+                    const fakeError = new Error('');
+                    // In Chromium, only the stack property is printed but in Firefox the <name>:<message>
+                    // gets printed so to make the colon make sense, we name it so we print Component Stack:
+                    // and similarly Safari leave an expandable slot.
+                    fakeError.name = 'Component Stack'; // This gets printed
+                    // In Chromium, the stack property needs to start with ^[\w.]*Error\b to trigger stack
+                    // formatting. Otherwise it is left alone. So we prefix it. Otherwise we just override it
+                    // to our own stack.
+                    fakeError.stack =
+                      __IS_CHROME__ || __IS_EDGE__
+                        ? 'Error Component Stack:' + componentStack
+                        : componentStack;
+                    if (alreadyHasComponentStack) {
+                      // Only modify the component stack if it matches what we would've added anyway.
+                      // Otherwise we assume it was a non-React stack.
+                      if (isStrictModeOverride(args)) {
+                        // We do nothing to Strict Mode overrides that already has a stack
+                        // because we have already lost some context for how to format it
+                        // since we've already merged the stack into the log at this point.
+                      } else if (
+                        areStackTracesEqual(
+                          args[args.length - 1],
+                          componentStack,
+                        )
+                      ) {
+                        const firstArg = args[0];
+                        if (
+                          args.length > 1 &&
+                          typeof firstArg === 'string' &&
+                          firstArg.endsWith('%s')
+                        ) {
+                          args[0] = firstArg.slice(0, firstArg.length - 2); // Strip the %s param
+                        }
+                        args[args.length - 1] = fakeError;
+                      }
                     } else {
-                      args.push(componentStack);
+                      args.push(fakeError);
+                      if (isStrictModeOverride(args)) {
+                        if (__IS_FIREFOX__) {
+                          args[0] = `${args[0]} %o`;
+                        } else {
+                          args[0] =
+                            ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK;
+                        }
+                      }
                     }
                   }
                 }
@@ -302,76 +354,71 @@ let unpatchForStrictModeFn: null | (() => void) = null;
 
 // NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialCommitInStrictMode
 export function patchForStrictMode() {
-  if (consoleManagedByDevToolsDuringStrictMode) {
-    const overrideConsoleMethods = [
-      'error',
-      'group',
-      'groupCollapsed',
-      'info',
-      'log',
-      'trace',
-      'warn',
-    ];
+  const overrideConsoleMethods = [
+    'error',
+    'group',
+    'groupCollapsed',
+    'info',
+    'log',
+    'trace',
+    'warn',
+  ];
 
-    if (unpatchForStrictModeFn !== null) {
-      // Don't patch twice.
-      return;
-    }
-
-    const originalConsoleMethods: {[string]: $FlowFixMe} = {};
-
-    unpatchForStrictModeFn = () => {
-      for (const method in originalConsoleMethods) {
-        try {
-          targetConsole[method] = originalConsoleMethods[method];
-        } catch (error) {}
-      }
-    };
-
-    overrideConsoleMethods.forEach(method => {
-      try {
-        const originalMethod = (originalConsoleMethods[method] = targetConsole[
-          method
-        ].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
-          ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
-          : targetConsole[method]);
-
-        // $FlowFixMe[missing-local-annot]
-        const overrideMethod = (...args) => {
-          if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
-            // Dim the text color of the double logs if we're not
-            // hiding them.
-            if (isNode) {
-              originalMethod(DIMMED_NODE_CONSOLE_COLOR, format(...args));
-            } else {
-              const color = getConsoleColor(method);
-              if (color) {
-                originalMethod(...formatWithStyles(args, `color: ${color}`));
-              } else {
-                throw Error('Console color is not defined');
-              }
-            }
-          }
-        };
-
-        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ =
-          originalMethod;
-        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ =
-          overrideMethod;
-
-        targetConsole[method] = overrideMethod;
-      } catch (error) {}
-    });
+  if (unpatchForStrictModeFn !== null) {
+    // Don't patch twice.
+    return;
   }
+
+  const originalConsoleMethods: {[string]: $FlowFixMe} = {};
+
+  unpatchForStrictModeFn = () => {
+    for (const method in originalConsoleMethods) {
+      try {
+        targetConsole[method] = originalConsoleMethods[method];
+      } catch (error) {}
+    }
+  };
+
+  overrideConsoleMethods.forEach(method => {
+    try {
+      const originalMethod = (originalConsoleMethods[method] = targetConsole[
+        method
+      ].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
+        ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
+        : targetConsole[method]);
+
+      // $FlowFixMe[missing-local-annot]
+      const overrideMethod = (...args) => {
+        if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
+          // Dim the text color of the double logs if we're not hiding them.
+          if (__IS_FIREFOX__) {
+            originalMethod(
+              ...formatWithStyles(args, FIREFOX_CONSOLE_DIMMING_COLOR),
+            );
+          } else {
+            originalMethod(
+              ANSI_STYLE_DIMMING_TEMPLATE,
+              ...formatConsoleArguments(...args),
+            );
+          }
+        }
+      };
+
+      overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ =
+        originalMethod;
+      originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ =
+        overrideMethod;
+
+      targetConsole[method] = overrideMethod;
+    } catch (error) {}
+  });
 }
 
 // NOTE: KEEP IN SYNC with src/hook.js:unpatchConsoleForInitialCommitInStrictMode
 export function unpatchForStrictMode(): void {
-  if (consoleManagedByDevToolsDuringStrictMode) {
-    if (unpatchForStrictModeFn !== null) {
-      unpatchForStrictModeFn();
-      unpatchForStrictModeFn = null;
-    }
+  if (unpatchForStrictModeFn !== null) {
+    unpatchForStrictModeFn();
+    unpatchForStrictModeFn = null;
   }
 }
 

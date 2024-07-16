@@ -319,7 +319,7 @@ describe('ReactElementClone', () => {
       await act(() => root.render(<Parent />));
       expect(child.refs.xyz.tagName).toBe('DIV');
     }).toErrorDev([
-      'Warning: Component "Child" contains the string ref "xyz". Support for ' +
+      'Component "Child" contains the string ref "xyz". Support for ' +
         'string refs will be removed in a future major release. We recommend ' +
         'using useRef() or createRef() instead. Learn more about using refs ' +
         'safely here: https://react.dev/link/strict-mode-string-ref',

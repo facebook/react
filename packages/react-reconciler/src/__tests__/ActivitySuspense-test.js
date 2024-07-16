@@ -99,7 +99,7 @@ describe('Activity Suspense', () => {
   }
 
   // @gate enableActivity
-  test('basic example of suspending inside hidden tree', async () => {
+  it('basic example of suspending inside hidden tree', async () => {
     const root = ReactNoop.createRoot();
 
     function App() {

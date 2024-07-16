@@ -13,6 +13,7 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMClient;
+let assertConsoleErrorDev;
 
 describe('ReactES6Class', () => {
   let container;
@@ -30,6 +31,7 @@ describe('ReactES6Class', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
+    ({assertConsoleErrorDev} = require('internal-test-utils'));
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     attachedListener = null;
@@ -46,7 +48,7 @@ describe('ReactES6Class', () => {
     };
   });
 
-  function test(element, expectedTag, expectedClassName) {
+  function runTest(element, expectedTag, expectedClassName) {
     ReactDOM.flushSync(() => root.render(element));
     expect(container.firstChild).not.toBeNull();
     expect(container.firstChild.tagName).toBe(expectedTag);
@@ -71,9 +73,9 @@ describe('ReactES6Class', () => {
         ReactDOM.flushSync(() => root.render(<Foo />));
       }).toErrorDev([
         // A failed component renders twice in DEV in concurrent mode
-        'Warning: No `render` method found on the Foo instance: ' +
+        'No `render` method found on the Foo instance: ' +
           'you may have forgotten to define `render`.',
-        'Warning: No `render` method found on the Foo instance: ' +
+        'No `render` method found on the Foo instance: ' +
           'you may have forgotten to define `render`.',
       ]);
     } finally {
@@ -92,8 +94,8 @@ describe('ReactES6Class', () => {
         return <Inner name={this.props.bar} />;
       }
     }
-    test(<Foo bar="foo" />, 'DIV', 'foo');
-    test(<Foo bar="bar" />, 'DIV', 'bar');
+    runTest(<Foo bar="foo" />, 'DIV', 'foo');
+    runTest(<Foo bar="bar" />, 'DIV', 'bar');
   });
 
   it('renders based on state using initial values in this.props', () => {
@@ -106,7 +108,7 @@ describe('ReactES6Class', () => {
         return <span className={this.state.bar} />;
       }
     }
-    test(<Foo initialValue="foo" />, 'SPAN', 'foo');
+    runTest(<Foo initialValue="foo" />, 'SPAN', 'foo');
   });
 
   it('renders based on state using props in the constructor', () => {
@@ -126,9 +128,9 @@ describe('ReactES6Class', () => {
       }
     }
     const ref = React.createRef();
-    test(<Foo initialValue="foo" ref={ref} />, 'DIV', 'foo');
+    runTest(<Foo initialValue="foo" ref={ref} />, 'DIV', 'foo');
     ReactDOM.flushSync(() => ref.current.changeState());
-    test(<Foo />, 'SPAN', 'bar');
+    runTest(<Foo />, 'SPAN', 'bar');
   });
 
   it('sets initial state with value returned by static getDerivedStateFromProps', () => {
@@ -144,7 +146,7 @@ describe('ReactES6Class', () => {
         return <div className={`${this.state.foo} ${this.state.bar}`} />;
       }
     }
-    test(<Foo foo="foo" />, 'DIV', 'foo bar');
+    runTest(<Foo foo="foo" />, 'DIV', 'foo bar');
   });
 
   it('warns if getDerivedStateFromProps is not static', () => {
@@ -233,7 +235,7 @@ describe('ReactES6Class', () => {
         return <div className={`${this.state.foo} ${this.state.bar}`} />;
       }
     }
-    test(<Foo />, 'DIV', 'not-foo bar');
+    runTest(<Foo />, 'DIV', 'not-foo bar');
   });
 
   it('renders updated state with values returned by static getDerivedStateFromProps', () => {
@@ -253,8 +255,8 @@ describe('ReactES6Class', () => {
         return <div className={this.state.value} />;
       }
     }
-    test(<Foo update={false} />, 'DIV', 'initial');
-    test(<Foo update={true} />, 'DIV', 'updated');
+    runTest(<Foo update={false} />, 'DIV', 'initial');
+    runTest(<Foo update={true} />, 'DIV', 'updated');
   });
 
   if (!require('shared/ReactFeatureFlags').disableLegacyContext) {
@@ -286,7 +288,12 @@ describe('ReactES6Class', () => {
         tag: PropTypes.string,
         className: PropTypes.string,
       };
-      test(<Outer />, 'SPAN', 'foo');
+      runTest(<Outer />, 'SPAN', 'foo');
+
+      assertConsoleErrorDev([
+        'Outer uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Foo uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      ]);
     });
   }
 
@@ -305,7 +312,7 @@ describe('ReactES6Class', () => {
         return <span className={this.state.bar} />;
       }
     }
-    test(<Foo initialValue="foo" />, 'SPAN', 'bar');
+    runTest(<Foo initialValue="foo" />, 'SPAN', 'bar');
     expect(renderCount).toBe(1);
   });
 
@@ -320,7 +327,7 @@ describe('ReactES6Class', () => {
           return <span />;
         }
       }
-      expect(() => test(<Foo />, 'SPAN', '')).toErrorDev(
+      expect(() => runTest(<Foo />, 'SPAN', '')).toErrorDev(
         'Foo.state: must be set to an object or null',
       );
     });
@@ -336,7 +343,7 @@ describe('ReactES6Class', () => {
         return <span />;
       }
     }
-    test(<Foo />, 'SPAN', '');
+    runTest(<Foo />, 'SPAN', '');
   });
 
   it('setState through an event handler', () => {
@@ -354,7 +361,7 @@ describe('ReactES6Class', () => {
         );
       }
     }
-    test(<Foo initialValue="foo" />, 'DIV', 'foo');
+    runTest(<Foo initialValue="foo" />, 'DIV', 'foo');
 
     ReactDOM.flushSync(() => attachedListener());
     expect(renderedName).toBe('bar');
@@ -373,7 +380,7 @@ describe('ReactES6Class', () => {
         return <Inner name={this.state.bar} onClick={this.handleClick} />;
       }
     }
-    test(<Foo initialValue="foo" />, 'DIV', 'foo');
+    runTest(<Foo initialValue="foo" />, 'DIV', 'foo');
     expect(attachedListener).toThrow();
   });
 
@@ -396,7 +403,7 @@ describe('ReactES6Class', () => {
         );
       }
     }
-    test(<Foo initialValue="foo" />, 'DIV', 'foo');
+    runTest(<Foo initialValue="foo" />, 'DIV', 'foo');
     ReactDOM.flushSync(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
@@ -434,10 +441,10 @@ describe('ReactES6Class', () => {
         return <span className={this.props.value} />;
       }
     }
-    test(<Foo value="foo" />, 'SPAN', 'foo');
+    runTest(<Foo value="foo" />, 'SPAN', 'foo');
     expect(lifeCycles).toEqual(['will-mount', 'did-mount']);
     lifeCycles = []; // reset
-    test(<Foo value="bar" />, 'SPAN', 'bar');
+    runTest(<Foo value="bar" />, 'SPAN', 'bar');
     // prettier-ignore
     expect(lifeCycles).toEqual([
       'receive-props', freeze({value: 'bar'}),
@@ -459,7 +466,6 @@ describe('ReactES6Class', () => {
           super();
           this.contextTypes = {};
           this.contextType = {};
-          this.propTypes = {};
         }
         getInitialState() {
           getInitialStateWasCalled = true;
@@ -474,10 +480,9 @@ describe('ReactES6Class', () => {
         }
       }
 
-      expect(() => test(<Foo />, 'SPAN', 'foo')).toErrorDev([
+      expect(() => runTest(<Foo />, 'SPAN', 'foo')).toErrorDev([
         'getInitialState was defined on Foo, a plain JavaScript class.',
         'getDefaultProps was defined on Foo, a plain JavaScript class.',
-        'propTypes was defined as an instance property on Foo.',
         'contextType was defined as an instance property on Foo.',
         'contextTypes was defined as an instance property on Foo.',
       ]);
@@ -496,7 +501,7 @@ describe('ReactES6Class', () => {
         return <span className="foo" />;
       }
     }
-    test(<Foo />, 'SPAN', 'foo');
+    runTest(<Foo />, 'SPAN', 'foo');
   });
 
   it('should warn when misspelling shouldComponentUpdate', () => {
@@ -509,9 +514,8 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
-      'Warning: ' +
-        'NamedComponent has a method called componentShouldUpdate(). Did you ' +
+    expect(() => runTest(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
+      'NamedComponent has a method called componentShouldUpdate(). Did you ' +
         'mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.',
     );
@@ -527,9 +531,8 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
-      'Warning: ' +
-        'NamedComponent has a method called componentWillRecieveProps(). Did ' +
+    expect(() => runTest(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
+      'NamedComponent has a method called componentWillRecieveProps(). Did ' +
         'you mean componentWillReceiveProps()?',
     );
   });
@@ -544,16 +547,15 @@ describe('ReactES6Class', () => {
       }
     }
 
-    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
-      'Warning: ' +
-        'NamedComponent has a method called UNSAFE_componentWillRecieveProps(). ' +
+    expect(() => runTest(<NamedComponent />, 'SPAN', 'foo')).toErrorDev(
+      'NamedComponent has a method called UNSAFE_componentWillRecieveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?',
     );
   });
 
   it('should throw AND warn when trying to access classic APIs', () => {
     const ref = React.createRef();
-    test(<Inner name="foo" ref={ref} />, 'DIV', 'foo');
+    runTest(<Inner name="foo" ref={ref} />, 'DIV', 'foo');
     expect(() =>
       expect(() => ref.current.replaceState({})).toThrow(),
     ).toWarnDev(
@@ -583,7 +585,11 @@ describe('ReactES6Class', () => {
         }
       }
       Foo.childContextTypes = {bar: PropTypes.string};
-      test(<Foo />, 'DIV', 'bar-through-context');
+      runTest(<Foo />, 'DIV', 'bar-through-context');
+      assertConsoleErrorDev([
+        'Foo uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Bar uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      ]);
     });
   }
 
@@ -596,9 +602,9 @@ describe('ReactES6Class', () => {
       }
       const ref = React.createRef();
       expect(() => {
-        test(<Foo ref={ref} />, 'DIV', 'foo');
+        runTest(<Foo ref={ref} />, 'DIV', 'foo');
       }).toErrorDev([
-        'Warning: Component "Foo" contains the string ref "inner". ' +
+        'Component "Foo" contains the string ref "inner". ' +
           'Support for string refs will be removed in a future major release. ' +
           'We recommend using useRef() or createRef() instead. ' +
           'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +

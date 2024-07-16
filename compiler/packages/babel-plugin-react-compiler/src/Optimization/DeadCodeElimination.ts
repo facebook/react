@@ -350,6 +350,7 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       return false;
     }
     case "RegExpLiteral":
+    case "MetaProperty":
     case "LoadGlobal":
     case "ArrayExpression":
     case "BinaryExpression":

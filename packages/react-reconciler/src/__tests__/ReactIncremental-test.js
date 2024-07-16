@@ -14,6 +14,8 @@ let React;
 let ReactNoop;
 let Scheduler;
 let PropTypes;
+
+let assertConsoleErrorDev;
 let waitForAll;
 let waitFor;
 let waitForThrow;
@@ -27,11 +29,13 @@ describe('ReactIncremental', () => {
     Scheduler = require('scheduler');
     PropTypes = require('prop-types');
 
-    const InternalTestUtils = require('internal-test-utils');
-    waitForAll = InternalTestUtils.waitForAll;
-    waitFor = InternalTestUtils.waitFor;
-    waitForThrow = InternalTestUtils.waitForThrow;
-    assertLog = InternalTestUtils.assertLog;
+    ({
+      assertConsoleErrorDev,
+      waitForAll,
+      waitFor,
+      waitForThrow,
+      assertLog,
+    } = require('internal-test-utils'));
   });
 
   // Note: This is based on a similar component we use in www. We can delete
@@ -325,7 +329,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle', 'Middle']);
   });
 
-  xit('can resume work in a subtree even when a parent bails out', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can resume work in a subtree even when a parent bails out', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
@@ -381,7 +386,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle']);
   });
 
-  xit('can resume work in a bailed subtree within one pass', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can resume work in a bailed subtree within one pass', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
@@ -467,7 +473,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Foo', 'Bar', 'Bar']);
   });
 
-  xit('can resume mounting a class component', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can resume mounting a class component', async () => {
     let foo;
     class Parent extends React.Component {
       shouldComponentUpdate() {
@@ -505,7 +512,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Foo', 'Bar']);
   });
 
-  xit('reuses the same instance when resuming a class instance', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('reuses the same instance when resuming a class instance', async () => {
     let foo;
     class Parent extends React.Component {
       shouldComponentUpdate() {
@@ -572,7 +580,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('can reuse work done after being preempted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can reuse work done after being preempted', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
@@ -650,7 +659,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Middle']);
   });
 
-  xit('can reuse work that began but did not complete, after being preempted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can reuse work that began but did not complete, after being preempted', async () => {
     let child;
     let sibling;
 
@@ -724,7 +734,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('can reuse work if shouldComponentUpdate is false, after being preempted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can reuse work if shouldComponentUpdate is false, after being preempted', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return <div>{props.children}</div>;
@@ -1048,7 +1059,8 @@ describe('ReactIncremental', () => {
     await waitForAll([]);
   });
 
-  xit('can call sCU while resuming a partly mounted component', () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can call sCU while resuming a partly mounted component', () => {
     const instances = new Set();
 
     class Bar extends React.Component {
@@ -1093,7 +1105,8 @@ describe('ReactIncremental', () => {
     expect(instances.size).toBe(4);
   });
 
-  xit('gets new props when setting state on a partly updated component', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('gets new props when setting state on a partly updated component', async () => {
     const instances = [];
 
     class Bar extends React.Component {
@@ -1155,7 +1168,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Bar:A-1', 'Baz']);
   });
 
-  xit('calls componentWillMount twice if the initial render is aborted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('calls componentWillMount twice if the initial render is aborted', async () => {
     class LifeCycle extends React.Component {
       state = {x: this.props.x};
       UNSAFE_componentWillReceiveProps(nextProps) {
@@ -1207,7 +1221,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('uses state set in componentWillMount even if initial render was aborted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('uses state set in componentWillMount even if initial render was aborted', async () => {
     class LifeCycle extends React.Component {
       constructor(props) {
         super(props);
@@ -1245,7 +1260,8 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  xit('calls componentWill* twice if an update render is aborted', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('calls componentWill* twice if an update render is aborted', async () => {
     class LifeCycle extends React.Component {
       UNSAFE_componentWillMount() {
         Scheduler.log('componentWillMount:' + this.props.x);
@@ -1390,7 +1406,8 @@ describe('ReactIncremental', () => {
     await waitForAll(['Child']);
   });
 
-  xit('does not call componentWillReceiveProps for state-only updates', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('does not call componentWillReceiveProps for state-only updates', async () => {
     const instances = [];
 
     class LifeCycle extends React.Component {
@@ -1527,7 +1544,8 @@ describe('ReactIncremental', () => {
     // incomplete parents.
   });
 
-  xit('skips will/DidUpdate when bailing unless an update was already in progress', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('skips will/DidUpdate when bailing unless an update was already in progress', async () => {
     class LifeCycle extends React.Component {
       UNSAFE_componentWillMount() {
         Scheduler.log('componentWillMount');
@@ -1683,7 +1701,7 @@ describe('ReactIncremental', () => {
     expect(instance.state.n).toEqual(3);
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('merges and masks context', async () => {
     class Intl extends React.Component {
       static childContextTypes = {
@@ -1779,6 +1797,11 @@ describe('ReactIncremental', () => {
       'ShowLocale {"locale":"fr"}',
       'ShowBoth {"locale":"fr"}',
     ]);
+    assertConsoleErrorDev([
+      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowLocale uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'ShowBoth uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
 
     ReactNoop.render(
       <Intl locale="de">
@@ -1829,6 +1852,10 @@ describe('ReactIncremental', () => {
       'ShowBoth {"locale":"en","route":"/about"}',
       'ShowBoth {"locale":"en"}',
     ]);
+    assertConsoleErrorDev([
+      'Router uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowRoute uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
   });
 
   // @gate !disableLegacyContext
@@ -1861,6 +1888,10 @@ describe('ReactIncremental', () => {
       'Recurse {"n":2}',
       'Recurse {"n":1}',
       'Recurse {"n":0}',
+    ]);
+    assertConsoleErrorDev([
+      'Recurse uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Recurse uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
     ]);
   });
 
@@ -1911,6 +1942,10 @@ describe('ReactIncremental', () => {
       'ShowLocale {"locale":"fr"}',
       'ShowLocale {"locale":"fr"}',
     ]);
+    assertConsoleErrorDev([
+      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowLocale uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
 
     await waitForAll([
       'ShowLocale {"locale":"fr"}',
@@ -1919,7 +1954,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('reads context when setState is below the provider', async () => {
     let statefulInst;
 
@@ -1998,6 +2033,11 @@ describe('ReactIncremental', () => {
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
+    assertConsoleErrorDev([
+      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowLocaleClass uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'ShowLocaleFn uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
 
     statefulInst.setState({x: 1});
     await waitForAll([]);
@@ -2006,7 +2046,7 @@ describe('ReactIncremental', () => {
     assertLog([]);
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('reads context when setState is above the provider', async () => {
     let statefulInst;
 
@@ -2084,6 +2124,12 @@ describe('ReactIncremental', () => {
       'ShowLocaleFn:read {"locale":"fr"}',
     ]);
 
+    assertConsoleErrorDev([
+      'Intl uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'ShowLocaleClass uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      'ShowLocaleFn uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
+
     statefulInst.setState({locale: 'gr'});
     await waitForAll([
       // Intl is below setState() so it might have been
@@ -2140,6 +2186,10 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Root />);
     await waitForAll([]);
 
+    assertConsoleErrorDev([
+      'Child uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+    ]);
+
     // Trigger an update in the middle of the tree
     instance.setState({});
     await waitForAll([]);
@@ -2185,7 +2235,9 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    await waitForAll([]);
+    await expect(async () => await waitForAll([])).toErrorDev([
+      'ContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+    ]);
 
     // Trigger an update in the middle of the tree
     // This is necessary to reproduce the error as it currently exists.
@@ -2238,9 +2290,14 @@ describe('ReactIncremental', () => {
       'render',
       'componentDidUpdate',
     ]);
+
+    assertConsoleErrorDev([
+      'MyComponent uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
   });
 
-  xit('should reuse memoized work if pointers are updated before calling lifecycles', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should reuse memoized work if pointers are updated before calling lifecycles', async () => {
     const cduNextProps = [];
     const cduPrevProps = [];
     const scuNextProps = [];
@@ -2369,6 +2426,10 @@ describe('ReactIncremental', () => {
     );
 
     await waitForAll(['count:0']);
+    assertConsoleErrorDev([
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     instance.updateCount();
     await waitForAll(['count:1']);
   });
@@ -2425,6 +2486,11 @@ describe('ReactIncremental', () => {
     );
 
     await waitForAll(['count:0']);
+    assertConsoleErrorDev([
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     instance.updateCount();
     await waitForAll(['count:1']);
   });
@@ -2490,6 +2556,11 @@ describe('ReactIncremental', () => {
     );
 
     await waitForAll(['count:0']);
+    assertConsoleErrorDev([
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     instance.updateCount();
     await waitForAll([]);
   });
@@ -2565,6 +2636,11 @@ describe('ReactIncremental', () => {
     );
 
     await waitForAll(['count:0, name:brian']);
+    assertConsoleErrorDev([
+      'TopContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'MiddleContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     topInstance.updateCount();
     await waitForAll([]);
     middleInstance.updateName('not brian');
@@ -2670,6 +2746,7 @@ describe('ReactIncremental', () => {
       await expect(async () => {
         await waitForAll([]);
       }).toErrorDev([
+        'Boundary uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
         'Legacy context API has been detected within a strict-mode tree',
       ]);
     }

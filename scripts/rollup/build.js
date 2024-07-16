@@ -85,9 +85,11 @@ function parseRequestedNames(names, toCase) {
   return result;
 }
 
+const argvType = Array.isArray(argv.type) ? argv.type : [argv.type];
 const requestedBundleTypes = argv.type
-  ? parseRequestedNames([argv.type], 'uppercase')
+  ? parseRequestedNames(argvType, 'uppercase')
   : [];
+
 const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
@@ -147,16 +149,22 @@ function getBabelConfig(
     sourcemap: false,
   };
   if (isDevelopment) {
-    options.plugins.push(
-      ...babelToES5Plugins,
-      // Turn console.error/warn() into a custom wrapper
-      [
-        require('../babel/transform-replace-console-calls'),
-        {
-          shouldError: !canAccessReactObject,
-        },
-      ]
-    );
+    options.plugins.push(...babelToES5Plugins);
+    if (
+      bundleType === FB_WWW_DEV ||
+      bundleType === RN_OSS_DEV ||
+      bundleType === RN_FB_DEV
+    ) {
+      options.plugins.push(
+        // Turn console.error/warn() into a custom wrapper
+        [
+          require('../babel/transform-replace-console-calls'),
+          {
+            shouldError: !canAccessReactObject,
+          },
+        ]
+      );
+    }
   }
   if (updateBabelOptions) {
     options = updateBabelOptions(options);
@@ -528,8 +536,8 @@ function shouldSkipBundle(bundle, bundleType) {
     return true;
   }
   if (requestedBundleTypes.length > 0) {
-    const isAskingForDifferentType = requestedBundleTypes.every(
-      requestedType => bundleType.indexOf(requestedType) === -1
+    const isAskingForDifferentType = requestedBundleTypes.some(
+      requestedType => !bundleType.includes(requestedType)
     );
     if (isAskingForDifferentType) {
       return true;
@@ -567,16 +575,31 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   // .stable.js
   // .experimental.js
   // .js
+  // or any of those plus .development.js
 
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
+    const developmentFBEntry = resolvedFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentFBEntry)) {
+      return developmentFBEntry;
+    }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
     const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    const developmentGenericFBEntry = resolvedGenericFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentGenericFBEntry)) {
+      return developmentGenericFBEntry;
+    }
     if (fs.existsSync(resolvedGenericFBEntry)) {
       return resolvedGenericFBEntry;
     }
@@ -586,6 +609,10 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     '.js',
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
+  const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
+  if (fs.existsSync(devForkedEntry)) {
+    return devForkedEntry;
+  }
   if (fs.existsSync(resolvedForkedEntry)) {
     return resolvedForkedEntry;
   }
@@ -604,7 +631,8 @@ async function createBundle(bundle, bundleType) {
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
-    isFBWWWBundle || isFBRNBundle
+    isFBWWWBundle || isFBRNBundle,
+    !isProductionBundleType(bundleType)
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);

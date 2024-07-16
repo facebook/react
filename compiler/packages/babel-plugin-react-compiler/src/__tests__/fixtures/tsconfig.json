@@ -23,8 +23,12 @@
   },
   "include": [
     "./compiler/**/*.js",
-    "./compiler/**/*.jsx",
+    "./compiler/**/*.mjs",
+    "./compiler/**/*.cjs",
     "./compiler/**/*.ts",
+    "./compiler/**/*.mts",
+    "./compiler/**/*.cts",
+    "./compiler/**/*.jsx",
     "./compiler/**/*.tsx"
   ]
 }

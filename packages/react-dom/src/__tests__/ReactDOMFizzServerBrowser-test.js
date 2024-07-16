@@ -412,7 +412,10 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     let result;
     result = await readResult(stream);
+
     expect(result).toMatchInlineSnapshot(
+      // TODO: remove interpolation because it prevents snapshot updates.
+      // eslint-disable-next-line jest/no-interpolation-in-snapshots
       `"<div><span></span></div><div>${str492}</div><div>${str492}</div>"`,
     );
 
@@ -428,6 +431,8 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
 
     result = await readResult(stream);
+    // TODO: remove interpolation because it prevents snapshot updates.
+    // eslint-disable-next-line jest/no-interpolation-in-snapshots
     expect(result).toMatchInlineSnapshot(`"<div>${str2049}</div>"`);
   });
 
@@ -540,6 +545,8 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
+      // TODO: remove interpolation because it prevents snapshot updates.
+      // eslint-disable-next-line jest/no-interpolation-in-snapshots
       `"<link rel="preload" as="script" fetchPriority="low" nonce="R4nd0m" href="init.js"/><link rel="modulepreload" fetchPriority="low" nonce="R4nd0m" href="init.mjs"/><div>hello world</div><script nonce="${nonce}">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
     );
   });

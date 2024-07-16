@@ -198,8 +198,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Warning: Expected the last optional `callback` argument to be a function. Instead received: no.',
-        'Warning: Expected the last optional `callback` argument to be a function. Instead received: no.',
+        'Expected the last optional `callback` argument to be a function. Instead received: no.',
+        'Expected the last optional `callback` argument to be a function. Instead received: no.',
       ],
       {withoutStack: 2},
     );
@@ -215,8 +215,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }",
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
       ],
       {withoutStack: 2},
     );
@@ -232,8 +232,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
       ],
       {withoutStack: 2},
     );
@@ -285,8 +285,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
+        "Expected the last optional `callback` argument to be a function. Instead received: { foo: 'bar' }.",
       ],
       {withoutStack: 2},
     );
@@ -303,8 +303,8 @@ describe('ReactDOM', () => {
       );
     }).toErrorDev(
       [
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
-        'Expected the last optional `callback` argument to be a function. Instead received: [object Object].',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
+        'Expected the last optional `callback` argument to be a function. Instead received: Foo { a: 1, b: 2 }.',
       ],
       {withoutStack: 2},
     );

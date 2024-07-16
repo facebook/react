@@ -443,7 +443,7 @@ export function createInstance(
               didWarnScriptTags = true;
             }
           }
-          div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
+          div.innerHTML = '<script><' + '/script>';
           // This is guaranteed to yield a script element.
           const firstChild = ((div.firstChild: any): HTMLScriptElement);
           domElement = div.removeChild(firstChild);

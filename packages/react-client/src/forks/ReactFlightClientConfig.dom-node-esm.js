@@ -8,7 +8,7 @@
  */
 
 export * from 'react-client/src/ReactFlightClientStreamConfigNode';
-export * from 'react-client/src/ReactFlightClientConsoleConfigServer';
+export * from 'react-client/src/ReactClientConsoleConfigServer';
 export * from 'react-server-dom-esm/src/ReactFlightClientConfigBundlerESM';
 export * from 'react-server-dom-esm/src/ReactFlightClientConfigTargetESMServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';

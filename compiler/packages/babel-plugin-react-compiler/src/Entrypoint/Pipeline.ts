@@ -13,6 +13,7 @@ import {
   HIRFunction,
   ReactiveFunction,
   assertConsistentIdentifiers,
+  assertTerminalPredsExist,
   assertTerminalSuccessorsExist,
   assertValidBlockNesting,
   assertValidMutableRanges,
@@ -41,6 +42,7 @@ import {
   deadCodeElimination,
   pruneMaybeThrows,
 } from "../Optimization";
+import { instructionReordering } from "../Optimization/InstructionReordering";
 import {
   CodegenFunction,
   alignObjectMethodScopes,
@@ -70,7 +72,10 @@ import {
 } from "../ReactiveScopes";
 import { alignMethodCallScopes } from "../ReactiveScopes/AlignMethodCallScopes";
 import { alignReactiveScopesToBlockScopesHIR } from "../ReactiveScopes/AlignReactiveScopesToBlockScopesHIR";
+import { flattenReactiveLoopsHIR } from "../ReactiveScopes/FlattenReactiveLoopsHIR";
+import { flattenScopesWithHooksOrUseHIR } from "../ReactiveScopes/FlattenScopesWithHooksOrUseHIR";
 import { pruneAlwaysInvalidatingScopes } from "../ReactiveScopes/PruneAlwaysInvalidatingScopes";
+import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
 import { stabilizeBlockIds } from "../ReactiveScopes/StabilizeBlockIds";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
@@ -91,7 +96,7 @@ import {
   validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
-import pruneInitializationDependencies from "../ReactiveScopes/PruneInitializationDependencies";
+import { validateLocalsNotReassignedAfterRender } from "../Validation/ValidateLocalsNotReassignedAfterRender";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -198,9 +203,16 @@ function* runWithEnvironment(
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
 
+  validateLocalsNotReassignedAfterRender(hir);
+
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);
   yield log({ kind: "hir", name: "DeadCodeElimination", value: hir });
+
+  if (env.config.enableInstructionReordering) {
+    instructionReordering(hir);
+    yield log({ kind: "hir", name: "InstructionReordering", value: hir });
+  }
 
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
@@ -246,7 +258,7 @@ function* runWithEnvironment(
   memoizeFbtOperandsInSameScope(hir);
   yield log({
     kind: "hir",
-    name: "MemoizeFbtOperandsInSameScope",
+    name: "MemoizeFbtAndMacroOperandsInSameScope",
     value: hir,
   });
 
@@ -281,6 +293,22 @@ function* runWithEnvironment(
     });
 
     assertValidBlockNesting(hir);
+
+    flattenReactiveLoopsHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "FlattenReactiveLoopsHIR",
+      value: hir,
+    });
+
+    flattenScopesWithHooksOrUseHIR(hir);
+    yield log({
+      kind: "hir",
+      name: "FlattenScopesWithHooksOrUseHIR",
+      value: hir,
+    });
+    assertTerminalSuccessorsExist(hir);
+    assertTerminalPredsExist(hir);
   }
 
   const reactiveFunction = buildReactiveFunction(hir);
@@ -320,23 +348,23 @@ function* runWithEnvironment(
       name: "BuildReactiveBlocks",
       value: reactiveFunction,
     });
+
+    flattenReactiveLoops(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "FlattenReactiveLoops",
+      value: reactiveFunction,
+    });
+
+    flattenScopesWithHooksOrUse(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "FlattenScopesWithHooks",
+      value: reactiveFunction,
+    });
   }
 
-  flattenReactiveLoops(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "FlattenReactiveLoops",
-    value: reactiveFunction,
-  });
-
   assertScopeInstructionsWithinScopes(reactiveFunction);
-
-  flattenScopesWithHooksOrUse(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "FlattenScopesWithHooks",
-    value: reactiveFunction,
-  });
 
   propagateScopeDependencies(reactiveFunction);
   yield log({

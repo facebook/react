@@ -50,7 +50,16 @@ const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
 });
 
 function read<T>(source: Source): Thenable<T> {
-  const response = createResponse(source, null);
+  const response = createResponse(
+    source,
+    null,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    true,
+  );
   for (let i = 0; i < source.length; i++) {
     processBinaryChunk(response, source[i], 0);
   }

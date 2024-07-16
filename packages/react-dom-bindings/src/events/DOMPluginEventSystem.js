@@ -52,6 +52,7 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
@@ -69,6 +70,8 @@ import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
 import * as FormActionEventPlugin from './plugins/FormActionEventPlugin';
 
 import reportGlobalError from 'shared/reportGlobalError';
+
+import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
 
 type DispatchListener = {
   instance: null | Fiber,
@@ -255,7 +258,17 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      executeDispatch(event, listener, currentTarget);
+      if (__DEV__ && enableOwnerStacks && instance !== null) {
+        runWithFiberInDEV(
+          instance,
+          executeDispatch,
+          event,
+          listener,
+          currentTarget,
+        );
+      } else {
+        executeDispatch(event, listener, currentTarget);
+      }
       previousInstance = instance;
     }
   } else {
@@ -264,7 +277,17 @@ function processDispatchQueueItemsInOrder(
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
-      executeDispatch(event, listener, currentTarget);
+      if (__DEV__ && enableOwnerStacks && instance !== null) {
+        runWithFiberInDEV(
+          instance,
+          executeDispatch,
+          event,
+          listener,
+          currentTarget,
+        );
+      } else {
+        executeDispatch(event, listener, currentTarget);
+      }
       previousInstance = instance;
     }
   }

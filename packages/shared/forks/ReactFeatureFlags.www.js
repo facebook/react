@@ -15,27 +15,29 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  enableTrustedTypesIntegration,
+  alwaysThrottleRetries,
+  disableDefaultPropsExceptForClasses,
+  disableLegacyContextForFunctionComponents,
+  disableSchedulerTimeoutInWorkLoop,
+  enableAddPropertiesFastPath,
   enableDebugTracing,
+  enableDeferRootSchedulingToMicrotask,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableFastJSX,
+  enableInfiniteRenderLoopDetection,
   enableLazyContextPropagation,
-  enableUnifiedSyncLane,
+  enableNoCloningMemoCache,
+  enableObjectFiber,
+  enableRenderableContext,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleRetries,
-  enableDO_NOT_USE_disableStrictPassiveEffect,
-  disableSchedulerTimeoutInWorkLoop,
+  enableTrustedTypesIntegration,
   enableUseDeferredValueInitialArg,
+  favorSafetyOverHydrationPerf,
+  renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableInfiniteRenderLoopDetection,
-  enableRenderableContext,
-  favorSafetyOverHydrationPerf,
-  disableDefaultPropsExceptForClasses,
-  enableNoCloningMemoCache,
-  enableAddPropertiesFastPath,
-  enableFastJSX,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -65,8 +67,6 @@ export const enableSchedulingProfiler: boolean =
 
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
-
-export const renameElementSymbol = false;
 
 export const enableCache = true;
 export const enableLegacyCache = true;

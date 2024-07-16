@@ -122,7 +122,7 @@ describe('reactiverefs', () => {
         );
       });
     }).toErrorDev([
-      'Warning: Component "TestRefsComponent" contains the string ' +
+      'Component "TestRefsComponent" contains the string ' +
         'ref "resetDiv". Support for string refs will be removed in a ' +
         'future major release. We recommend using useRef() or createRef() ' +
         'instead. Learn more about using refs safely ' +
@@ -130,7 +130,7 @@ describe('reactiverefs', () => {
         '    in div (at **)\n' +
         '    in div (at **)\n' +
         '    in TestRefsComponent (at **)',
-      'Warning: Component "ClickCounter" contains the string ' +
+      'Component "ClickCounter" contains the string ' +
         'ref "clickLog0". Support for string refs will be removed in a ' +
         'future major release. We recommend using useRef() or createRef() ' +
         'instead. Learn more about using refs safely ' +
@@ -336,7 +336,7 @@ describe('ref swapping', () => {
         root.render(<A ref={current => (a = current)} />);
       });
     }).toErrorDev([
-      'Warning: Component "A" contains the string ref "1". ' +
+      'Component "A" contains the string ref "1". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
@@ -565,7 +565,7 @@ describe('strings refs across renderers', () => {
         );
       });
     }).toErrorDev([
-      'Warning: Component "Parent" contains the string ref "child1". ' +
+      'Component "Parent" contains the string ref "child1". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +

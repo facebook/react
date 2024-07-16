@@ -292,7 +292,7 @@ describe('rendering React components at document', () => {
         favorSafetyOverHydrationPerf
           ? []
           : [
-              "Warning: A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
+              "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties.",
             ],
         {withoutStack: true},
       );

@@ -6,6 +6,8 @@
  */
 'use strict';
 
+const compilerPaths = ['compiler/**'];
+
 // Files that are transformed and can use ES6/Flow/JSX.
 const esNextPaths = [
   // Internal forwarding modules
@@ -28,6 +30,7 @@ const es5Paths = ['packages/*/npm/**/*.js'];
 const typescriptPaths = ['packages/**/*.d.ts'];
 
 module.exports = {
+  compilerPaths,
   esNextPaths,
   es5Paths,
   typescriptPaths,

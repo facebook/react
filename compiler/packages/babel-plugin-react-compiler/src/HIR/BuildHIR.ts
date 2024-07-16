@@ -1332,6 +1332,7 @@ function lowerStatement(
       return;
     }
     case "TypeAlias":
+    case "TSInterfaceDeclaration":
     case "TSTypeAliasDeclaration": {
       // We do not preserve type annotations/syntax through transformation
       return;
@@ -1358,7 +1359,6 @@ function lowerStatement(
     case "TSEnumDeclaration":
     case "TSExportAssignment":
     case "TSImportEqualsDeclaration":
-    case "TSInterfaceDeclaration":
     case "TSModuleDeclaration":
     case "TSNamespaceExportDeclaration":
     case "WithStatement": {
@@ -1668,6 +1668,15 @@ function lowerExpression(
       const left = lowerExpressionToTemporary(builder, leftPath);
       const right = lowerExpressionToTemporary(builder, expr.get("right"));
       const operator = expr.node.operator;
+      if (operator === "|>") {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Pipe operator not supported`,
+          severity: ErrorSeverity.Todo,
+          loc: leftPath.node.loc ?? null,
+          suggestions: null,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      }
       return {
         kind: "BinaryExpression",
         operator,
@@ -1906,7 +1915,9 @@ function lowerExpression(
         );
       }
 
-      const operators: { [key: string]: t.BinaryExpression["operator"] } = {
+      const operators: {
+        [key: string]: Exclude<t.BinaryExpression["operator"], "|>">;
+      } = {
         "+=": "+",
         "-=": "-",
         "/=": "/",
@@ -2320,6 +2331,20 @@ function lowerExpression(
           });
           return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
         }
+      } else if (expr.node.operator === "throw") {
+        builder.errors.push({
+          reason: `Throw expressions are not supported`,
+          severity: ErrorSeverity.InvalidJS,
+          loc: expr.node.loc ?? null,
+          suggestions: [
+            {
+              description: "Remove this line",
+              range: [expr.node.start!, expr.node.end!],
+              op: CompilerSuggestionOperation.Remove,
+            },
+          ],
+        });
+        return { kind: "UnsupportedNode", node: expr.node, loc: exprLoc };
       } else {
         return {
           kind: "UnaryExpression",
@@ -2443,6 +2468,28 @@ function lowerExpression(
     case "TSSatisfiesExpression": {
       const expr = exprPath as NodePath<t.TSSatisfiesExpression>;
       return lowerExpression(builder, expr.get("expression"));
+    }
+    case "MetaProperty": {
+      let expr = exprPath as NodePath<t.MetaProperty>;
+      if (
+        expr.node.meta.name === "import" &&
+        expr.node.property.name === "meta"
+      ) {
+        return {
+          kind: "MetaProperty",
+          meta: expr.node.meta.name,
+          property: expr.node.property.name,
+          loc: expr.node.loc ?? GeneratedSource,
+        };
+      }
+
+      builder.errors.push({
+        reason: `(BuildHIR::lowerExpression) Handle MetaProperty expressions other than import.meta`,
+        severity: ErrorSeverity.Todo,
+        loc: exprPath.node.loc ?? null,
+        suggestions: null,
+      });
+      return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
     }
     default: {
       builder.errors.push({

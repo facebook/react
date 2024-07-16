@@ -7,6 +7,10 @@
 
 import isArray from 'shared/isArray';
 
+import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
+
+import {runWithFiberInDEV} from 'react-reconciler/src/ReactCurrentFiber';
+
 let hasError = false;
 let caughtError = null;
 
@@ -93,10 +97,22 @@ export function executeDispatchesInOrder(event) {
         break;
       }
       // Listeners and Instances are two parallel arrays that are always in sync.
-      executeDispatch(event, dispatchListeners[i], dispatchInstances[i]);
+      const listener = dispatchListeners[i];
+      const instance = dispatchInstances[i];
+      if (__DEV__ && enableOwnerStacks && instance !== null) {
+        runWithFiberInDEV(instance, executeDispatch, event, listener, instance);
+      } else {
+        executeDispatch(event, listener, instance);
+      }
     }
   } else if (dispatchListeners) {
-    executeDispatch(event, dispatchListeners, dispatchInstances);
+    const listener = dispatchListeners;
+    const instance = dispatchInstances;
+    if (__DEV__ && enableOwnerStacks && instance !== null) {
+      runWithFiberInDEV(instance, executeDispatch, event, listener, instance);
+    } else {
+      executeDispatch(event, listener, instance);
+    }
   }
   event._dispatchListeners = null;
   event._dispatchInstances = null;

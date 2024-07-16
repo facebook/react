@@ -1,3 +1,4 @@
+// @enableInstructionReordering
 import { useState } from "react";
 
 function Component() {

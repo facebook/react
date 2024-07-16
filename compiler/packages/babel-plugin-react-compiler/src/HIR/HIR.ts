@@ -65,12 +65,19 @@ export type ReactiveScopeBlock = {
   instructions: ReactiveBlock;
 };
 
+export type PrunedReactiveScopeBlock = {
+  kind: "pruned-scope";
+  scope: ReactiveScope;
+  instructions: ReactiveBlock;
+};
+
 export type ReactiveBlock = Array<ReactiveStatement>;
 
 export type ReactiveStatement =
   | ReactiveInstructionStatement
   | ReactiveTerminalStatement
-  | ReactiveScopeBlock;
+  | ReactiveScopeBlock
+  | PrunedReactiveScopeBlock;
 
 export type ReactiveInstructionStatement = {
   kind: "instruction";
@@ -328,6 +335,28 @@ export type HIR = {
  * statements and not implicit exceptions which may occur.
  */
 export type BlockKind = "block" | "value" | "loop" | "sequence" | "catch";
+
+/**
+ * Returns true for "block" and "catch" block kinds which correspond to statements
+ * in the source, including BlockStatement, CatchStatement.
+ *
+ * Inverse of isExpressionBlockKind()
+ */
+export function isStatementBlockKind(kind: BlockKind): boolean {
+  return kind === "block" || kind === "catch";
+}
+
+/**
+ * Returns true for "value", "loop", and "sequence" block kinds which correspond to
+ * expressions in the source, such as ConditionalExpression, LogicalExpression, loop
+ * initializer/test/updaters, etc
+ *
+ * Inverse of isStatementBlockKind()
+ */
+export function isExpressionBlockKind(kind: BlockKind): boolean {
+  return !isStatementBlockKind(kind);
+}
+
 export type BasicBlock = {
   kind: BlockKind;
   id: BlockId;
@@ -362,7 +391,8 @@ export type Terminal =
   | SequenceTerminal
   | MaybeThrowTerminal
   | TryTerminal
-  | ReactiveScopeTerminal;
+  | ReactiveScopeTerminal
+  | PrunedScopeTerminal;
 
 export type TerminalWithFallthrough = Terminal & { fallthrough: BlockId };
 
@@ -589,6 +619,15 @@ export type MaybeThrowTerminal = {
 
 export type ReactiveScopeTerminal = {
   kind: "scope";
+  fallthrough: BlockId;
+  block: BlockId;
+  scope: ReactiveScope;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type PrunedScopeTerminal = {
+  kind: "pruned-scope";
   fallthrough: BlockId;
   block: BlockId;
   scope: ReactiveScope;
@@ -849,7 +888,7 @@ export type InstructionValue =
   | JSXText
   | {
       kind: "BinaryExpression";
-      operator: t.BinaryExpression["operator"];
+      operator: Exclude<t.BinaryExpression["operator"], "|>">;
       left: Place;
       right: Place;
       loc: SourceLocation;
@@ -864,7 +903,7 @@ export type InstructionValue =
   | MethodCall
   | {
       kind: "UnaryExpression";
-      operator: t.UnaryExpression["operator"];
+      operator: Exclude<t.UnaryExpression["operator"], "throw" | "delete">;
       value: Place;
       loc: SourceLocation;
     }
@@ -896,6 +935,12 @@ export type InstructionValue =
       kind: "RegExpLiteral";
       pattern: string;
       flags: string;
+      loc: SourceLocation;
+    }
+  | {
+      kind: "MetaProperty";
+      meta: string;
+      property: string;
       loc: SourceLocation;
     }
 
@@ -1498,12 +1543,28 @@ export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
 }
 
+export function isUseActionStateType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Object" && id.type.shapeId === "BuiltInUseActionState"
+  );
+}
+
+export function isSetActionStateType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Function" && id.type.shapeId === "BuiltInSetActionState"
+  );
+}
+
 export function isUseReducerType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInUseReducer";
 }
 
 export function isDispatcherType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInDispatch";
+}
+
+export function isStableType(id: Identifier): boolean {
+  return isSetStateType(id) || isSetActionStateType(id) || isDispatcherType(id);
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

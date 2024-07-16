@@ -9,7 +9,9 @@ import {
   IdentifierId,
   InstructionId,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveFunction,
+  isPrimitiveType,
 } from "../HIR/HIR";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
@@ -38,6 +40,19 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
   ): void {
     if (place.reactive) {
       state.add(place.identifier.id);
+    }
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: Set<IdentifierId>
+  ): void {
+    this.traversePrunedScope(scopeBlock, state);
+
+    for (const [id, decl] of scopeBlock.scope.declarations) {
+      if (!isPrimitiveType(decl.identifier)) {
+        state.add(id);
+      }
     }
   }
 }

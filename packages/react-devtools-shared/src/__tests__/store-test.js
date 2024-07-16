@@ -1927,7 +1927,7 @@ describe('Store', () => {
       }
 
       withErrorsOrWarningsIgnored(
-        ['Warning: Each child in a list should have a unique "key" prop'],
+        ['Each child in a list should have a unique "key" prop'],
         () => {
           act(() => render(<Example />));
         },
@@ -1952,7 +1952,7 @@ describe('Store', () => {
       }
 
       withErrorsOrWarningsIgnored(
-        ['Warning: Each child in a list should have a unique "key" prop'],
+        ['Each child in a list should have a unique "key" prop'],
         () => {
           act(() => render(<Example />));
         },

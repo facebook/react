@@ -29,12 +29,19 @@ export function describeBuiltInComponentFrame(name: string): string {
       prefix = (match && match[1]) || '';
     }
   }
+  let suffix = '';
+  if (__IS_CHROME__ || __IS_EDGE__) {
+    suffix = ' (<anonymous>)';
+  } else if (__IS_FIREFOX__) {
+    suffix = '@unknown:0:0';
+  }
   // We use the prefix to ensure our stacks line up with native stack frames.
-  return '\n' + prefix + name;
+  // We use a suffix to ensure it gets parsed natively.
+  return '\n' + prefix + name + suffix;
 }
 
 export function describeDebugInfoFrame(name: string, env: ?string): string {
-  return describeBuiltInComponentFrame(name + (env ? ' (' + env + ')' : ''));
+  return describeBuiltInComponentFrame(name + (env ? ' [' + env + ']' : ''));
 }
 
 let reentry = false;

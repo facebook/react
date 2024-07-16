@@ -213,14 +213,18 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      );
+    }
+
     let error;
     try {
       await act(() => {
-        root.update(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <LazyText text="Hi" />
-          </Suspense>,
-        );
+        root.update(<App />);
       });
     } catch (e) {
       error = e;
@@ -703,7 +707,7 @@ describe('ReactLazy', () => {
       await act(() => resolveFakeImport(T));
       assertLog(['Hi Bye']);
     }).toErrorDev(
-      'Warning: T: Support for defaultProps ' +
+      'T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );

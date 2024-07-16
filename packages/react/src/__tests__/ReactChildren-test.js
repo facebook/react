@@ -338,7 +338,7 @@ describe('ReactChildren', () => {
       // With the flag on this doesn't warn eagerly but only when rendered
       gate(flag => flag.enableOwnerStacks)
         ? []
-        : ['Warning: Each child in a list should have a unique "key" prop.'],
+        : ['Each child in a list should have a unique "key" prop.'],
     );
 
     React.Children.forEach(instance.props.children, callback, context);
@@ -363,9 +363,7 @@ describe('ReactChildren', () => {
       await act(() => {
         root.render(instance);
       });
-    }).toErrorDev(
-      'Warning: Each child in a list should have a unique "key" prop.',
-    );
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('should be called for each child in an iterable with keys', () => {
@@ -543,7 +541,7 @@ describe('ReactChildren', () => {
     expect(mappedChildren[0]).toBe(scopeTester);
   });
 
-  it('should be called for each child', () => {
+  it('should be called for each child in array', () => {
     const zero = <div key="keyZero" />;
     const one = null;
     const two = <div key="keyTwo" />;
@@ -605,7 +603,7 @@ describe('ReactChildren', () => {
     expect(mappedChildren[3]).toEqual(<div key=".$keyFour" />);
   });
 
-  it('should be called for each child in nested structure', () => {
+  it('should be called for each child in nested structure with mapping', () => {
     const zero = <div key="keyZero" />;
     const one = null;
     const two = <div key="keyTwo" />;
@@ -678,7 +676,7 @@ describe('ReactChildren', () => {
     expect(mappedChildren[3]).toEqual(<div key=".0:$keyFive" />);
   });
 
-  it('should retain key across two mappings', () => {
+  it('should retain key across two mappings with conditions', () => {
     const zeroForceKey = <div key="keyZero" />;
     const oneForceKey = <div key="keyOne" />;
 
@@ -889,9 +887,7 @@ describe('ReactChildren', () => {
           </ComponentRenderingMappedChildren>,
         );
       });
-    }).toErrorDev([
-      'Warning: Each child in a list should have a unique "key" prop.',
-    ]);
+    }).toErrorDev(['Each child in a list should have a unique "key" prop.']);
   });
 
   it('does not warn for mapped static children without keys', async () => {
@@ -938,9 +934,7 @@ describe('ReactChildren', () => {
           </ComponentRenderingClonedChildren>,
         );
       });
-    }).toErrorDev([
-      'Warning: Each child in a list should have a unique "key" prop.',
-    ]);
+    }).toErrorDev(['Each child in a list should have a unique "key" prop.']);
   });
 
   it('does not warn for cloned static children without keys', async () => {
@@ -981,9 +975,7 @@ describe('ReactChildren', () => {
           </ComponentRenderingFlattenedChildren>,
         );
       });
-    }).toErrorDev([
-      'Warning: Each child in a list should have a unique "key" prop.',
-    ]);
+    }).toErrorDev(['Each child in a list should have a unique "key" prop.']);
   });
 
   it('does not warn for flattened static children without keys', async () => {
@@ -1166,7 +1158,7 @@ describe('ReactChildren', () => {
           root.render(<ComponentReturningArray />);
         });
       }).toErrorDev(
-        'Warning: ' +
+        '' +
           'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <ComponentReturningArray>. It was passed a child from ComponentReturningArray. ' +
           'See https://react.dev/link/warning-keys for more information.' +
@@ -1197,7 +1189,7 @@ describe('ReactChildren', () => {
           root.render([<div />, <div />]);
         });
       }).toErrorDev(
-        'Warning: ' +
+        '' +
           'Each child in a list should have a unique "key" prop.' +
           '\n\nCheck the top-level render call using <Root>. ' +
           'See https://react.dev/link/warning-keys for more information.' +

@@ -59,7 +59,7 @@ describe('ReactDOMRoot', () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('warn if a container is passed to root.render(...)', async () => {
+  it('warn if a object is passed to root.render(...)', async () => {
     function App() {
       return 'Child';
     }

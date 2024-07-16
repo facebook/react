@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-react-compiler",
-  "version": "0.0.0-experimental-938cd9a-20240601",
+  "version": "0.0.0-experimental-696af53-20240625",
   "description": "Babel plugin for React Compiler.",
   "main": "dist/index.js",
   "license": "MIT",

@@ -541,13 +541,8 @@ describe('ReactHooks', () => {
       });
     };
 
-    if (gate(flags => flags.enableUnifiedSyncLane)) {
-      // Update at transition priority
-      React.startTransition(() => update(n => n * 100));
-    } else {
-      // Update at normal priority
-      ReactTestRenderer.unstable_batchedUpdates(() => update(n => n * 100));
-    }
+    // Update at transition priority
+    React.startTransition(() => update(n => n * 100));
     // The new state is eagerly computed.
     assertLog(['Compute state (1 -> 100)']);
 
@@ -594,7 +589,7 @@ describe('ReactHooks', () => {
         root.update(<App dependencies={['A', 'B']} />);
       });
     }).toErrorDev([
-      'Warning: The final argument passed to useLayoutEffect changed size ' +
+      'The final argument passed to useLayoutEffect changed size ' +
         'between renders. The order and size of this array must remain ' +
         'constant.\n\n' +
         'Previous: [A]\n' +
@@ -630,7 +625,7 @@ describe('ReactHooks', () => {
         root.update(<App text="Hello" hasDeps={false} />);
       });
     }).toErrorDev([
-      'Warning: useMemo received a final argument during this render, but ' +
+      'useMemo received a final argument during this render, but ' +
         'not during the previous render. Even though the final argument is ' +
         'optional, its type cannot change between renders.',
     ]);
@@ -654,13 +649,13 @@ describe('ReactHooks', () => {
         });
       });
     }).toErrorDev([
-      'Warning: useEffect received a final argument that is not an array (instead, received `string`). ' +
+      'useEffect received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useLayoutEffect received a final argument that is not an array (instead, received `string`). ' +
+      'useLayoutEffect received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useMemo received a final argument that is not an array (instead, received `string`). ' +
+      'useMemo received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useCallback received a final argument that is not an array (instead, received `string`). ' +
+      'useCallback received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
     ]);
     await expect(async () => {
@@ -670,13 +665,13 @@ describe('ReactHooks', () => {
         });
       });
     }).toErrorDev([
-      'Warning: useEffect received a final argument that is not an array (instead, received `number`). ' +
+      'useEffect received a final argument that is not an array (instead, received `number`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useLayoutEffect received a final argument that is not an array (instead, received `number`). ' +
+      'useLayoutEffect received a final argument that is not an array (instead, received `number`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useMemo received a final argument that is not an array (instead, received `number`). ' +
+      'useMemo received a final argument that is not an array (instead, received `number`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useCallback received a final argument that is not an array (instead, received `number`). ' +
+      'useCallback received a final argument that is not an array (instead, received `number`). ' +
         'When specified, the final argument must be an array.',
     ]);
     await expect(async () => {
@@ -686,13 +681,13 @@ describe('ReactHooks', () => {
         });
       });
     }).toErrorDev([
-      'Warning: useEffect received a final argument that is not an array (instead, received `object`). ' +
+      'useEffect received a final argument that is not an array (instead, received `object`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useLayoutEffect received a final argument that is not an array (instead, received `object`). ' +
+      'useLayoutEffect received a final argument that is not an array (instead, received `object`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useMemo received a final argument that is not an array (instead, received `object`). ' +
+      'useMemo received a final argument that is not an array (instead, received `object`). ' +
         'When specified, the final argument must be an array.',
-      'Warning: useCallback received a final argument that is not an array (instead, received `object`). ' +
+      'useCallback received a final argument that is not an array (instead, received `object`). ' +
         'When specified, the final argument must be an array.',
     ]);
 
@@ -725,7 +720,7 @@ describe('ReactHooks', () => {
         });
       });
     }).toErrorDev([
-      'Warning: useImperativeHandle received a final argument that is not an array (instead, received `string`). ' +
+      'useImperativeHandle received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
     ]);
     await act(() => {
@@ -1127,7 +1122,7 @@ describe('ReactHooks', () => {
       );
     }).toErrorDev([
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
-      'Warning: React has detected a change in the order of Hooks called by App. ' +
+      'React has detected a change in the order of Hooks called by App. ' +
         'This will lead to bugs and errors if not fixed. For more information, ' +
         'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
         '   Previous render            Next render\n' +
@@ -1242,25 +1237,6 @@ describe('ReactHooks', () => {
       'Context can only be read while React is rendering',
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
     ]);
-  });
-
-  it('warns when reading context inside useMemo', async () => {
-    const {useMemo, createContext} = React;
-    const ReactSharedInternals =
-      React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-
-    const ThemeContext = createContext('light');
-    function App() {
-      return useMemo(() => {
-        return ReactSharedInternals.H.readContext(ThemeContext);
-      }, []);
-    }
-
-    await expect(async () => {
-      await act(() => {
-        ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
-      });
-    }).toErrorDev('Context can only be read while React is rendering');
   });
 
   it('double-invokes components with Hooks in Strict Mode', async () => {
@@ -1582,7 +1558,6 @@ describe('ReactHooks', () => {
 
       it(`warns on using differently ordered hooks (${hookNameA}, ${hookNameB}) on subsequent renders`, async () => {
         function App(props) {
-          /* eslint-disable no-unused-vars */
           if (props.update) {
             secondHelper();
             firstHelper();
@@ -1593,7 +1568,6 @@ describe('ReactHooks', () => {
           // This should not appear in the warning message because it occurs after the first mismatch
           useRefHelper();
           return null;
-          /* eslint-enable no-unused-vars */
         }
         let root;
         await act(() => {
@@ -1612,7 +1586,7 @@ describe('ReactHooks', () => {
             // We just want to verify that warnings are always logged.
           }
         }).toErrorDev([
-          'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
             'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
@@ -1635,7 +1609,6 @@ describe('ReactHooks', () => {
 
       it(`warns when more hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, async () => {
         function App(props) {
-          /* eslint-disable no-unused-vars */
           if (props.update) {
             firstHelper();
             secondHelper();
@@ -1643,7 +1616,6 @@ describe('ReactHooks', () => {
             firstHelper();
           }
           return null;
-          /* eslint-enable no-unused-vars */
         }
         let root;
         await act(() => {
@@ -1663,7 +1635,7 @@ describe('ReactHooks', () => {
             // We just want to verify that warnings are always logged.
           }
         }).toErrorDev([
-          'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
             'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
@@ -1690,7 +1662,6 @@ describe('ReactHooks', () => {
 
       it(`warns when fewer hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, async () => {
         function App(props) {
-          /* eslint-disable no-unused-vars */
           if (props.update) {
             firstHelper();
           } else {
@@ -1698,7 +1669,6 @@ describe('ReactHooks', () => {
             secondHelper();
           }
           return null;
-          /* eslint-enable no-unused-vars */
         }
         let root;
         await act(() => {
@@ -1720,7 +1690,6 @@ describe('ReactHooks', () => {
         '(useImperativeHandleHelper, useMemoHelper) on subsequent renders',
       async () => {
         function App(props) {
-          /* eslint-disable no-unused-vars */
           if (props.update) {
             useMemoHelper();
             useImperativeHandleHelper();
@@ -1731,7 +1700,6 @@ describe('ReactHooks', () => {
           // This should not appear in the warning message because it occurs after the first mismatch
           useRefHelper();
           return null;
-          /* eslint-enable no-unused-vars */
         }
         let root;
         await act(() => {
@@ -1747,7 +1715,7 @@ describe('ReactHooks', () => {
           // This is okay as far as this test is concerned.
           // We just want to verify that warnings are always logged.
         }).toErrorDev([
-          'Warning: React has detected a change in the order of Hooks called by App. ' +
+          'React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
             'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
@@ -1772,7 +1740,6 @@ describe('ReactHooks', () => {
         useState(0);
       }
       function App(props) {
-        /* eslint-disable no-unused-vars */
         if (props.update) {
           useCustomHook();
           useReducer((s, a) => a, 0);
@@ -1782,7 +1749,6 @@ describe('ReactHooks', () => {
           useCustomHook();
         }
         return null;
-        /* eslint-enable no-unused-vars */
       }
       let root;
       await act(() => {
@@ -1797,7 +1763,7 @@ describe('ReactHooks', () => {
           });
         }).rejects.toThrow('custom error');
       }).toErrorDev([
-        'Warning: React has detected a change in the order of Hooks called by App. ' +
+        'React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
           'read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n' +
           '   Previous render            Next render\n' +
@@ -1838,7 +1804,7 @@ describe('ReactHooks', () => {
       });
     }).rejects.toThrow('Hello');
     assertConsoleErrorDev([
-      'Warning: Cannot update a component (`A`) while rendering ' +
+      'Cannot update a component (`A`) while rendering ' +
         'a different component (`B`).',
     ]);
   });

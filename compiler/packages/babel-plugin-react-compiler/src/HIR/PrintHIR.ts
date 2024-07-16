@@ -127,7 +127,8 @@ export function printMixedHIR(
     case "do-while":
     case "for-in":
     case "for-of":
-    case "scope": {
+    case "scope":
+    case "pruned-scope": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
         return terminal.join("; ");
@@ -193,7 +194,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case "optional": {
-      value = `[${terminal.id}] Optional test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
+      value = `[${terminal.id}] Optional (optional=${terminal.optional}) test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "throw": {
@@ -278,6 +279,12 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       value = `Scope ${printReactiveScopeSummary(terminal.scope)} block=bb${
         terminal.block
       } fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "pruned-scope": {
+      value = `<pruned> Scope ${printReactiveScopeSummary(
+        terminal.scope
+      )} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "try": {
@@ -634,6 +641,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "RegExpLiteral": {
       value = `RegExp /${instrValue.pattern}/${instrValue.flags}`;
+      break;
+    }
+    case "MetaProperty": {
+      value = `MetaProperty ${instrValue.meta}.${instrValue.property}`;
       break;
     }
     case "Await": {

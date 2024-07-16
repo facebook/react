@@ -71,7 +71,8 @@ type ErrorAndWarningTuples = Array<{id: number, index: number}>;
 export type Config = {
   checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
-  supportsNativeInspection?: boolean,
+  supportsInspectMatchingDOMElement?: boolean,
+  supportsClickToInspect?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
@@ -172,7 +173,8 @@ export default class Store extends EventEmitter<{
   _rootIDToRendererID: Map<number, number> = new Map();
 
   // These options may be initially set by a configuration option when constructing the Store.
-  _supportsNativeInspection: boolean = false;
+  _supportsInspectMatchingDOMElement: boolean = false;
+  _supportsClickToInspect: boolean = false;
   _supportsReloadAndProfile: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
@@ -211,13 +213,17 @@ export default class Store extends EventEmitter<{
       isProfiling = config.isProfiling === true;
 
       const {
-        supportsNativeInspection,
+        supportsInspectMatchingDOMElement,
+        supportsClickToInspect,
         supportsReloadAndProfile,
         supportsTimeline,
         supportsTraceUpdates,
       } = config;
-      if (supportsNativeInspection) {
-        this._supportsNativeInspection = true;
+      if (supportsInspectMatchingDOMElement) {
+        this._supportsInspectMatchingDOMElement = true;
+      }
+      if (supportsClickToInspect) {
+        this._supportsClickToInspect = true;
       }
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
@@ -437,8 +443,12 @@ export default class Store extends EventEmitter<{
     return this._rootSupportsTimelineProfiling;
   }
 
-  get supportsNativeInspection(): boolean {
-    return this._supportsNativeInspection;
+  get supportsInspectMatchingDOMElement(): boolean {
+    return this._supportsInspectMatchingDOMElement;
+  }
+
+  get supportsClickToInspect(): boolean {
+    return this._supportsClickToInspect;
   }
 
   get supportsNativeStyleEditor(): boolean {

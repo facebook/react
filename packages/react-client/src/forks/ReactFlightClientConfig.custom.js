@@ -42,7 +42,7 @@ export const usedWithSSR = true;
 
 export opaque type Source = mixed;
 
-export opaque type StringDecoder = mixed; // eslint-disable-line no-undef
+export opaque type StringDecoder = mixed;
 
 export const createStringDecoder = $$$config.createStringDecoder;
 export const readPartialStringChunk = $$$config.readPartialStringChunk;

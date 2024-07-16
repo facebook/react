@@ -72,6 +72,8 @@ import {
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
+import isArray from 'shared/isArray';
+
 export type {CallServerCallback, EncodeFormActionCallback};
 
 interface FlightStreamController {
@@ -101,7 +103,6 @@ type RowParserState = 0 | 1 | 2 | 3 | 4;
 
 const PENDING = 'pending';
 const BLOCKED = 'blocked';
-const CYCLIC = 'cyclic';
 const RESOLVED_MODEL = 'resolved_model';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
@@ -117,14 +118,6 @@ type PendingChunk<T> = {
 };
 type BlockedChunk<T> = {
   status: 'blocked',
-  value: null | Array<(T) => mixed>,
-  reason: null | Array<(mixed) => mixed>,
-  _response: Response,
-  _debugInfo?: null | ReactDebugInfo,
-  then(resolve: (T) => mixed, reject?: (mixed) => mixed): void,
-};
-type CyclicChunk<T> = {
-  status: 'cyclic',
   value: null | Array<(T) => mixed>,
   reason: null | Array<(mixed) => mixed>,
   _response: Response,
@@ -162,6 +155,7 @@ type InitializedStreamChunk<
   value: T,
   reason: FlightStreamController,
   _response: Response,
+  _debugInfo?: null | ReactDebugInfo,
   then(resolve: (ReadableStream) => mixed, reject?: (mixed) => mixed): void,
 };
 type ErroredChunk<T> = {
@@ -175,7 +169,6 @@ type ErroredChunk<T> = {
 type SomeChunk<T> =
   | PendingChunk<T>
   | BlockedChunk<T>
-  | CyclicChunk<T>
   | ResolvedModelChunk<T>
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
@@ -217,7 +210,6 @@ Chunk.prototype.then = function <T>(
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       if (resolve) {
         if (chunk.value === null) {
           chunk.value = ([]: Array<(T) => mixed>);
@@ -258,6 +250,7 @@ export type Response = {
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
+  _replayConsole: boolean, // DEV-only
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -277,7 +270,6 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       return chunk.value;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       // eslint-disable-next-line no-throw-literal
       throw ((chunk: any): Thenable<T>);
     default:
@@ -326,7 +318,6 @@ function wakeChunkIfInitialized<T>(
       break;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
       if (chunk.value) {
         for (let i = 0; i < resolveListeners.length; i++) {
           chunk.value.push(resolveListeners[i]);
@@ -500,51 +491,61 @@ function resolveModuleChunk<T>(
   }
 }
 
-let initializingChunk: ResolvedModelChunk<any> = (null: any);
-let initializingChunkBlockedModel: null | {deps: number, value: any} = null;
+type InitializationHandler = {
+  parent: null | InitializationHandler,
+  chunk: null | BlockedChunk<any>,
+  value: any,
+  deps: number,
+  errored: boolean,
+};
+let initializingHandler: null | InitializationHandler = null;
+
 function initializeModelChunk<T>(chunk: ResolvedModelChunk<T>): void {
-  const prevChunk = initializingChunk;
-  const prevBlocked = initializingChunkBlockedModel;
-  initializingChunk = chunk;
-  initializingChunkBlockedModel = null;
+  const prevHandler = initializingHandler;
+  initializingHandler = null;
 
   const resolvedModel = chunk.value;
 
-  // We go to the CYCLIC state until we've fully resolved this.
+  // We go to the BLOCKED state until we've fully resolved this.
   // We do this before parsing in case we try to initialize the same chunk
   // while parsing the model. Such as in a cyclic reference.
-  const cyclicChunk: CyclicChunk<T> = (chunk: any);
-  cyclicChunk.status = CYCLIC;
+  const cyclicChunk: BlockedChunk<T> = (chunk: any);
+  cyclicChunk.status = BLOCKED;
   cyclicChunk.value = null;
   cyclicChunk.reason = null;
 
   try {
     const value: T = parseModel(chunk._response, resolvedModel);
-    if (
-      initializingChunkBlockedModel !== null &&
-      initializingChunkBlockedModel.deps > 0
-    ) {
-      initializingChunkBlockedModel.value = value;
-      // We discovered new dependencies on modules that are not yet resolved.
-      // We have to go the BLOCKED state until they're resolved.
-      const blockedChunk: BlockedChunk<T> = (chunk: any);
-      blockedChunk.status = BLOCKED;
-    } else {
-      const resolveListeners = cyclicChunk.value;
-      const initializedChunk: InitializedChunk<T> = (chunk: any);
-      initializedChunk.status = INITIALIZED;
-      initializedChunk.value = value;
-      if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, value);
+    // Invoke any listeners added while resolving this model. I.e. cyclic
+    // references. This may or may not fully resolve the model depending on
+    // if they were blocked.
+    const resolveListeners = cyclicChunk.value;
+    if (resolveListeners !== null) {
+      cyclicChunk.value = null;
+      cyclicChunk.reason = null;
+      wakeChunk(resolveListeners, value);
+    }
+    if (initializingHandler !== null) {
+      if (initializingHandler.errored) {
+        throw initializingHandler.value;
+      }
+      if (initializingHandler.deps > 0) {
+        // We discovered new dependencies on modules that are not yet resolved.
+        // We have to keep the BLOCKED state until they're resolved.
+        initializingHandler.value = value;
+        initializingHandler.chunk = cyclicChunk;
+        return;
       }
     }
+    const initializedChunk: InitializedChunk<T> = (chunk: any);
+    initializedChunk.status = INITIALIZED;
+    initializedChunk.value = value;
   } catch (error) {
     const erroredChunk: ErroredChunk<T> = (chunk: any);
     erroredChunk.status = ERRORED;
     erroredChunk.reason = error;
   } finally {
-    initializingChunk = prevChunk;
-    initializingChunkBlockedModel = prevBlocked;
+    initializingHandler = prevHandler;
   }
 }
 
@@ -625,7 +626,9 @@ function createElement(
   owner: null | ReactComponentInfo, // DEV-only
   stack: null | string, // DEV-only
   validated: number, // DEV-only
-): React$Element<any> {
+):
+  | React$Element<any>
+  | LazyComponent<React$Element<any>, SomeChunk<React$Element<any>>> {
   let element: any;
   if (__DEV__ && enableRefAsProp) {
     // `ref` is non-enumerable in dev
@@ -722,15 +725,60 @@ function createElement(
         value: task,
       });
     }
+  }
+
+  if (initializingHandler !== null) {
+    const handler = initializingHandler;
+    // We pop the stack to the previous outer handler before leaving the Element.
+    // This is effectively the complete phase.
+    initializingHandler = handler.parent;
+    if (handler.errored) {
+      // Something errored inside this Element's props. We can turn this Element
+      // into a Lazy so that we can still render up until that Lazy is rendered.
+      const erroredChunk: ErroredChunk<React$Element<any>> = createErrorChunk(
+        response,
+        handler.value,
+      );
+      if (__DEV__) {
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.stack = element._debugStack;
+          // $FlowFixMe[cannot-write]
+          erroredComponent.task = element._debugTask;
+        }
+        erroredChunk._debugInfo = [erroredComponent];
+      }
+      return createLazyChunkWrapper(erroredChunk);
+    }
+    if (handler.deps > 0) {
+      // We have blocked references inside this Element but we can turn this into
+      // a Lazy node referencing this Element to let everything around it proceed.
+      const blockedChunk: BlockedChunk<React$Element<any>> =
+        createBlockedChunk(response);
+      handler.value = element;
+      handler.chunk = blockedChunk;
+      if (__DEV__) {
+        const freeze = Object.freeze.bind(Object, element.props);
+        blockedChunk.then(freeze, freeze);
+      }
+      return createLazyChunkWrapper(blockedChunk);
+    }
+  } else if (__DEV__) {
     // TODO: We should be freezing the element but currently, we might write into
     // _debugInfo later. We could move it into _store which remains mutable.
-    if (initializingChunkBlockedModel !== null) {
-      const freeze = Object.freeze.bind(Object, element.props);
-      initializingChunk.then(freeze, freeze);
-    } else {
-      Object.freeze(element.props);
-    }
+    Object.freeze(element.props);
   }
+
   return element;
 }
 
@@ -761,57 +809,129 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
   return chunk;
 }
 
-function createModelResolver<T>(
-  chunk: SomeChunk<T>,
+function waitForReference<T>(
+  referencedChunk: PendingChunk<T> | BlockedChunk<T>,
   parentObject: Object,
   key: string,
-  cyclic: boolean,
   response: Response,
   map: (response: Response, model: any) => T,
   path: Array<string>,
-): (value: any) => void {
-  let blocked;
-  if (initializingChunkBlockedModel) {
-    blocked = initializingChunkBlockedModel;
-    if (!cyclic) {
-      blocked.deps++;
-    }
+): T {
+  let handler: InitializationHandler;
+  if (initializingHandler) {
+    handler = initializingHandler;
+    handler.deps++;
   } else {
-    blocked = initializingChunkBlockedModel = {
-      deps: cyclic ? 0 : 1,
-      value: (null: any),
+    handler = initializingHandler = {
+      parent: null,
+      chunk: null,
+      value: null,
+      deps: 1,
+      errored: false,
     };
   }
-  return value => {
+
+  function fulfill(value: any): void {
     for (let i = 1; i < path.length; i++) {
+      while (value.$$typeof === REACT_LAZY_TYPE) {
+        // We never expect to see a Lazy node on this path because we encode those as
+        // separate models. This must mean that we have inserted an extra lazy node
+        // e.g. to replace a blocked element. We must instead look for it inside.
+        const chunk: SomeChunk<any> = value._payload;
+        if (chunk === handler.chunk) {
+          // This is a reference to the thing we're currently blocking. We can peak
+          // inside of it to get the value.
+          value = handler.value;
+          continue;
+        } else if (chunk.status === INITIALIZED) {
+          value = chunk.value;
+          continue;
+        } else {
+          // If we're not yet initialized we need to skip what we've already drilled
+          // through and then wait for the next value to become available.
+          path.splice(0, i - 1);
+          chunk.then(fulfill, reject);
+          return;
+        }
+      }
       value = value[path[i]];
     }
     parentObject[key] = map(response, value);
 
-    // If this is the root object for a model reference, where `blocked.value`
+    // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
-    if (key === '' && blocked.value === null) {
-      blocked.value = parentObject[key];
+    if (key === '' && handler.value === null) {
+      handler.value = parentObject[key];
     }
 
-    blocked.deps--;
-    if (blocked.deps === 0) {
-      if (chunk.status !== BLOCKED) {
+    handler.deps--;
+
+    if (handler.deps === 0) {
+      const chunk = handler.chunk;
+      if (chunk === null || chunk.status !== BLOCKED) {
         return;
       }
       const resolveListeners = chunk.value;
       const initializedChunk: InitializedChunk<T> = (chunk: any);
       initializedChunk.status = INITIALIZED;
-      initializedChunk.value = blocked.value;
+      initializedChunk.value = handler.value;
       if (resolveListeners !== null) {
-        wakeChunk(resolveListeners, blocked.value);
+        wakeChunk(resolveListeners, handler.value);
       }
     }
-  };
-}
+  }
 
-function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
-  return (error: mixed) => triggerErrorOnChunk(chunk, error);
+  function reject(error: mixed): void {
+    if (handler.errored) {
+      // We've already errored. We could instead build up an AggregateError
+      // but if there are multiple errors we just take the first one like
+      // Promise.all.
+      return;
+    }
+    const blockedValue = handler.value;
+    handler.errored = true;
+    handler.value = error;
+    const chunk = handler.chunk;
+    if (chunk === null || chunk.status !== BLOCKED) {
+      return;
+    }
+
+    if (__DEV__) {
+      if (
+        typeof blockedValue === 'object' &&
+        blockedValue !== null &&
+        blockedValue.$$typeof === REACT_ELEMENT_TYPE
+      ) {
+        const element = blockedValue;
+        // Conceptually the error happened inside this Element but right before
+        // it was rendered. We don't have a client side component to render but
+        // we can add some DebugInfo to explain that this was conceptually a
+        // Server side error that errored inside this element. That way any stack
+        // traces will point to the nearest JSX that errored - e.g. during
+        // serialization.
+        const erroredComponent: ReactComponentInfo = {
+          name: getComponentNameFromType(element.type) || '',
+          owner: element._owner,
+        };
+        if (enableOwnerStacks) {
+          // $FlowFixMe[cannot-write]
+          erroredComponent.stack = element._debugStack;
+          // $FlowFixMe[cannot-write]
+          erroredComponent.task = element._debugTask;
+        }
+        const chunkDebugInfo: ReactDebugInfo =
+          chunk._debugInfo || (chunk._debugInfo = []);
+        chunkDebugInfo.push(erroredComponent);
+      }
+    }
+
+    triggerErrorOnChunk(chunk, error);
+  }
+
+  referencedChunk.then(fulfill, reject);
+
+  // Return a place holder value for now.
+  return (null: any);
 }
 
 function createServerReferenceProxy<A: Iterable<any>, T>(
@@ -879,7 +999,7 @@ function getOutlinedModel<T>(
         if (
           typeof chunkValue === 'object' &&
           chunkValue !== null &&
-          (Array.isArray(chunkValue) ||
+          (isArray(chunkValue) ||
             typeof chunkValue[ASYNC_ITERATOR] === 'function' ||
             chunkValue.$$typeof === REACT_ELEMENT_TYPE) &&
           !chunkValue._debugInfo
@@ -897,23 +1017,24 @@ function getOutlinedModel<T>(
       return chunkValue;
     case PENDING:
     case BLOCKED:
-    case CYCLIC:
-      const parentChunk = initializingChunk;
-      chunk.then(
-        createModelResolver(
-          parentChunk,
-          parentObject,
-          key,
-          chunk.status === CYCLIC,
-          response,
-          map,
-          path,
-        ),
-        createModelReject(parentChunk),
-      );
-      return (null: any);
+      return waitForReference(chunk, parentObject, key, response, map, path);
     default:
-      throw chunk.reason;
+      // This is an error. Instead of erroring directly, we're going to encode this on
+      // an initialization handler so that we can catch it at the nearest Element.
+      if (initializingHandler) {
+        initializingHandler.errored = true;
+        initializingHandler.value = chunk.reason;
+      } else {
+        initializingHandler = {
+          parent: null,
+          chunk: null,
+          value: chunk.reason,
+          deps: 0,
+          errored: true,
+        };
+      }
+      // Placeholder
+      return (null: any);
   }
 }
 
@@ -961,6 +1082,19 @@ function parseModelString(
   if (value[0] === '$') {
     if (value === '$') {
       // A very common symbol.
+      if (initializingHandler !== null && key === '0') {
+        // We we already have an initializing handler and we're abound to enter
+        // a new element, we need to shadow it because we're now in a new scope.
+        // This is effectively the "begin" or "push" phase of Element parsing.
+        // We'll pop later when we parse the array itself.
+        initializingHandler = {
+          parent: initializingHandler,
+          chunk: null,
+          value: null,
+          deps: 0,
+          errored: false,
+        };
+      }
       return REACT_ELEMENT_TYPE;
     }
     switch (value[1]) {
@@ -1097,6 +1231,29 @@ function parseModelString(
         }
         // Fallthrough
       }
+      case 'Y': {
+        if (__DEV__) {
+          // In DEV mode we encode omitted objects in logs as a getter that throws
+          // so that when you try to access it on the client, you know why that
+          // happened.
+          Object.defineProperty(parentObject, key, {
+            get: function () {
+              // We intentionally don't throw an error object here because it looks better
+              // without the stack in the console which isn't useful anyway.
+              // eslint-disable-next-line no-throw-literal
+              throw (
+                'This object has been omitted by React in the console log ' +
+                'to avoid sending too much data from the server. Try logging smaller ' +
+                'or more specific objects.'
+              );
+            },
+            enumerable: true,
+            configurable: false,
+          });
+          return null;
+        }
+        // Fallthrough
+      }
       default: {
         // We assume that anything else is a reference ID.
         const ref = value.slice(1);
@@ -1136,6 +1293,48 @@ function missingCall() {
   );
 }
 
+function ResponseInstance(
+  this: $FlowFixMe,
+  bundlerConfig: SSRModuleMap,
+  moduleLoading: ModuleLoading,
+  callServer: void | CallServerCallback,
+  encodeFormAction: void | EncodeFormActionCallback,
+  nonce: void | string,
+  temporaryReferences: void | TemporaryReferenceSet,
+  findSourceMapURL: void | FindSourceMapURLCallback,
+  replayConsole: boolean,
+) {
+  const chunks: Map<number, SomeChunk<any>> = new Map();
+  this._bundlerConfig = bundlerConfig;
+  this._moduleLoading = moduleLoading;
+  this._callServer = callServer !== undefined ? callServer : missingCall;
+  this._encodeFormAction = encodeFormAction;
+  this._nonce = nonce;
+  this._chunks = chunks;
+  this._stringDecoder = createStringDecoder();
+  this._fromJSON = (null: any);
+  this._rowState = 0;
+  this._rowID = 0;
+  this._rowTag = 0;
+  this._rowLength = 0;
+  this._buffer = [];
+  this._tempRefs = temporaryReferences;
+  if (supportsCreateTask) {
+    // Any stacks that appear on the server need to be rooted somehow on the client
+    // so we create a root Task for this response which will be the root owner for any
+    // elements created by the server. We use the "use server" string to indicate that
+    // this is where we enter the server from the client.
+    // TODO: Make this string configurable.
+    this._debugRootTask = (console: any).createTask('"use server"');
+  }
+  if (__DEV__) {
+    this._debugFindSourceMapURL = findSourceMapURL;
+    this._replayConsole = replayConsole;
+  }
+  // Don't inline this call because it causes closure to outline the call above.
+  this._fromJSON = createFromJSONCallback(this);
+}
+
 export function createResponse(
   bundlerConfig: SSRModuleMap,
   moduleLoading: ModuleLoading,
@@ -1144,38 +1343,19 @@ export function createResponse(
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
+  replayConsole: boolean,
 ): Response {
-  const chunks: Map<number, SomeChunk<any>> = new Map();
-  const response: Response = {
-    _bundlerConfig: bundlerConfig,
-    _moduleLoading: moduleLoading,
-    _callServer: callServer !== undefined ? callServer : missingCall,
-    _encodeFormAction: encodeFormAction,
-    _nonce: nonce,
-    _chunks: chunks,
-    _stringDecoder: createStringDecoder(),
-    _fromJSON: (null: any),
-    _rowState: 0,
-    _rowID: 0,
-    _rowTag: 0,
-    _rowLength: 0,
-    _buffer: [],
-    _tempRefs: temporaryReferences,
-  };
-  if (supportsCreateTask) {
-    // Any stacks that appear on the server need to be rooted somehow on the client
-    // so we create a root Task for this response which will be the root owner for any
-    // elements created by the server. We use the "use server" string to indicate that
-    // this is where we enter the server from the client.
-    // TODO: Make this string configurable.
-    response._debugRootTask = (console: any).createTask('"use server"');
-  }
-  if (__DEV__) {
-    response._debugFindSourceMapURL = findSourceMapURL;
-  }
-  // Don't inline this call because it causes closure to outline the call above.
-  response._fromJSON = createFromJSONCallback(response);
-  return response;
+  // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
+  return new ResponseInstance(
+    bundlerConfig,
+    moduleLoading,
+    callServer,
+    encodeFormAction,
+    nonce,
+    temporaryReferences,
+    findSourceMapURL,
+    replayConsole,
+  );
 }
 
 function resolveModel(
@@ -1578,6 +1758,7 @@ function resolveErrorDev(
   digest: string,
   message: string,
   stack: string,
+  env: string,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1617,6 +1798,7 @@ function resolveErrorDev(
   }
 
   (error: any).digest = digest;
+  (error: any).environmentName = env;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -1687,14 +1869,8 @@ function resolveHint<Code: HintCode>(
   dispatchHint(code, hintModel);
 }
 
-// eslint-disable-next-line react-internal/no-production-logging
 const supportsCreateTask =
   __DEV__ && enableOwnerStacks && !!(console: any).createTask;
-
-const taskCache: null | WeakMap<
-  ReactComponentInfo | ReactAsyncInfo,
-  ConsoleTask,
-> = supportsCreateTask ? new WeakMap() : null;
 
 type FakeFunction<T> = (() => T) => T;
 const fakeFunctionCache: Map<string, FakeFunction<any>> = __DEV__
@@ -1715,19 +1891,33 @@ function createFakeFunction<T>(
   const comment =
     '/* This module was rendered by a Server Component. Turn on Source Maps to see the server source. */';
 
+  if (!name) {
+    // An eval:ed function with no name gets the name "eval". We give it something more descriptive.
+    name = '(anonymous)';
+  }
+  const encodedName = JSON.stringify(name);
   // We generate code where the call is at the line and column of the server executed code.
   // This allows us to use the original source map as the source map of this fake file to
   // point to the original source.
   let code;
   if (line <= 1) {
-    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment;
+    const minSize = encodedName.length + 7;
+    code =
+      '({' +
+      encodedName +
+      ':_=>' +
+      ' '.repeat(col < minSize ? 0 : col - minSize) +
+      '_()})\n' +
+      comment;
   } else {
     code =
       comment +
       '\n'.repeat(line - 2) +
-      '_=>\n' +
+      '({' +
+      encodedName +
+      ':_=>\n' +
       ' '.repeat(col < 1 ? 0 : col - 1) +
-      '_()';
+      '_()})';
   }
 
   if (filename.startsWith('/')) {
@@ -1755,7 +1945,7 @@ function createFakeFunction<T>(
   let fn: FakeFunction<T>;
   try {
     // eslint-disable-next-line no-eval
-    fn = (0, eval)(code);
+    fn = (0, eval)(code)[name];
   } catch (x) {
     // If eval fails, such as if in an environment that doesn't support it,
     // we fallback to creating a function here. It'll still have the right
@@ -1764,10 +1954,6 @@ function createFakeFunction<T>(
       return _();
     };
   }
-  // $FlowFixMe[cannot-write]
-  Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
-  // $FlowFixMe[prop-missing]
-  fn.displayName = name;
   return fn;
 }
 
@@ -1815,12 +2001,12 @@ function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): null | ConsoleTask {
-  if (taskCache === null || typeof debugInfo.stack !== 'string') {
+  if (!supportsCreateTask || typeof debugInfo.stack !== 'string') {
     return null;
   }
   const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
   const stack: string = debugInfo.stack;
-  const cachedEntry = taskCache.get((componentInfo: any));
+  const cachedEntry = componentInfo.task;
   if (cachedEntry !== undefined) {
     return cachedEntry;
   }
@@ -1830,23 +2016,26 @@ function initializeFakeTask(
       ? null
       : initializeFakeTask(response, componentInfo.owner);
 
-  // eslint-disable-next-line react-internal/no-production-logging
   const createTaskFn = (console: any).createTask.bind(
     console,
     getServerComponentTaskName(componentInfo),
   );
   const callStack = buildFakeCallStack(response, stack, createTaskFn);
 
+  let componentTask;
   if (ownerTask === null) {
     const rootTask = response._debugRootTask;
     if (rootTask != null) {
-      return rootTask.run(callStack);
+      componentTask = rootTask.run(callStack);
     } else {
-      return callStack();
+      componentTask = callStack();
     }
   } else {
-    return ownerTask.run(callStack);
+    componentTask = ownerTask.run(callStack);
   }
+  // $FlowFixMe[cannot-write]: We consider this part of initialization.
+  componentInfo.task = componentTask;
+  return componentTask;
 }
 
 function resolveDebugInfo(
@@ -1883,6 +2072,10 @@ function resolveConsoleEntry(
     );
   }
 
+  if (!response._replayConsole) {
+    return;
+  }
+
   const payload: [string, string, null | ReactComponentInfo, string, mixed] =
     parseModel(response, value);
   const methodName = payload[0];
@@ -1907,6 +2100,8 @@ function resolveConsoleEntry(
       task.run(callStack);
       return;
     }
+    // TODO: Set the current owner so that captureOwnerStack() adds the component
+    // stack during the replay - if needed.
   }
   const rootTask = response._debugRootTask;
   if (rootTask != null) {
@@ -1968,7 +2163,7 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
-function processFullRow(
+function processFullBinaryRow(
   response: Response,
   id: number,
   tag: number,
@@ -2030,6 +2225,15 @@ function processFullRow(
     row += readPartialStringChunk(stringDecoder, buffer[i]);
   }
   row += readFinalStringChunk(stringDecoder, chunk);
+  processFullStringRow(response, id, tag, row);
+}
+
+function processFullStringRow(
+  response: Response,
+  id: number,
+  tag: number,
+  row: string,
+): void {
   switch (tag) {
     case 73 /* "I" */: {
       resolveModule(response, id, row);
@@ -2049,6 +2253,7 @@ function processFullRow(
           errorInfo.digest,
           errorInfo.message,
           errorInfo.stack,
+          errorInfo.env,
         );
       } else {
         resolveErrorProd(response, id, errorInfo.digest);
@@ -2231,7 +2436,7 @@ export function processBinaryChunk(
       // We found the last chunk of the row
       const length = lastIdx - i;
       const lastChunk = new Uint8Array(chunk.buffer, offset, length);
-      processFullRow(response, rowID, rowTag, buffer, lastChunk);
+      processFullBinaryRow(response, rowID, rowTag, buffer, lastChunk);
       // Reset state machine for a new row
       i = lastIdx;
       if (rowState === ROW_CHUNK_BY_NEWLINE) {
@@ -2253,6 +2458,151 @@ export function processBinaryChunk(
       // a newline, this doesn't hurt since we'll just ignore it.
       rowLength -= remainingSlice.byteLength;
       break;
+    }
+  }
+  response._rowState = rowState;
+  response._rowID = rowID;
+  response._rowTag = rowTag;
+  response._rowLength = rowLength;
+}
+
+export function processStringChunk(response: Response, chunk: string): void {
+  // This is a fork of processBinaryChunk that takes a string as input.
+  // This can't be just any binary chunk coverted to a string. It needs to be
+  // in the same offsets given from the Flight Server. E.g. if it's shifted by
+  // one byte then it won't line up to the UCS-2 encoding. It also needs to
+  // be valid Unicode. Also binary chunks cannot use this even if they're
+  // value Unicode. Large strings are encoded as binary and cannot be passed
+  // here. Basically, only if Flight Server gave you this string as a chunk,
+  // you can use it here.
+  let i = 0;
+  let rowState = response._rowState;
+  let rowID = response._rowID;
+  let rowTag = response._rowTag;
+  let rowLength = response._rowLength;
+  const buffer = response._buffer;
+  const chunkLength = chunk.length;
+  while (i < chunkLength) {
+    let lastIdx = -1;
+    switch (rowState) {
+      case ROW_ID: {
+        const byte = chunk.charCodeAt(i++);
+        if (byte === 58 /* ":" */) {
+          // Finished the rowID, next we'll parse the tag.
+          rowState = ROW_TAG;
+        } else {
+          rowID = (rowID << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_TAG: {
+        const resolvedRowTag = chunk.charCodeAt(i);
+        if (
+          resolvedRowTag === 84 /* "T" */ ||
+          (enableBinaryFlight &&
+            (resolvedRowTag === 65 /* "A" */ ||
+              resolvedRowTag === 79 /* "O" */ ||
+              resolvedRowTag === 111 /* "o" */ ||
+              resolvedRowTag === 85 /* "U" */ ||
+              resolvedRowTag === 83 /* "S" */ ||
+              resolvedRowTag === 115 /* "s" */ ||
+              resolvedRowTag === 76 /* "L" */ ||
+              resolvedRowTag === 108 /* "l" */ ||
+              resolvedRowTag === 71 /* "G" */ ||
+              resolvedRowTag === 103 /* "g" */ ||
+              resolvedRowTag === 77 /* "M" */ ||
+              resolvedRowTag === 109 /* "m" */ ||
+              resolvedRowTag === 86)) /* "V" */
+        ) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_LENGTH;
+          i++;
+        } else if (
+          (resolvedRowTag > 64 && resolvedRowTag < 91) /* "A"-"Z" */ ||
+          resolvedRowTag === 114 /* "r" */ ||
+          resolvedRowTag === 120 /* "x" */
+        ) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          i++;
+        } else {
+          rowTag = 0;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          // This was an unknown tag so it was probably part of the data.
+        }
+        continue;
+      }
+      case ROW_LENGTH: {
+        const byte = chunk.charCodeAt(i++);
+        if (byte === 44 /* "," */) {
+          // Finished the rowLength, next we'll buffer up to that length.
+          rowState = ROW_CHUNK_BY_LENGTH;
+        } else {
+          rowLength = (rowLength << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_CHUNK_BY_NEWLINE: {
+        // We're looking for a newline
+        lastIdx = chunk.indexOf('\n', i);
+        break;
+      }
+      case ROW_CHUNK_BY_LENGTH: {
+        if (rowTag !== 84) {
+          throw new Error(
+            'Binary RSC chunks cannot be encoded as strings. ' +
+              'This is a bug in the wiring of the React streams.',
+          );
+        }
+        // For a large string by length, we don't know how many unicode characters
+        // we are looking for but we can assume that the raw string will be its own
+        // chunk. We add extra validation that the length is at least within the
+        // possible byte range it could possibly be to catch mistakes.
+        if (rowLength < chunk.length || chunk.length > rowLength * 3) {
+          throw new Error(
+            'String chunks need to be passed in their original shape. ' +
+              'Not split into smaller string chunks. ' +
+              'This is a bug in the wiring of the React streams.',
+          );
+        }
+        lastIdx = chunk.length;
+        break;
+      }
+    }
+    if (lastIdx > -1) {
+      // We found the last chunk of the row
+      if (buffer.length > 0) {
+        // If we had a buffer already, it means that this chunk was split up into
+        // binary chunks preceeding it.
+        throw new Error(
+          'String chunks need to be passed in their original shape. ' +
+            'Not split into smaller string chunks. ' +
+            'This is a bug in the wiring of the React streams.',
+        );
+      }
+      const lastChunk = chunk.slice(i, lastIdx);
+      processFullStringRow(response, rowID, rowTag, lastChunk);
+      // Reset state machine for a new row
+      i = lastIdx;
+      if (rowState === ROW_CHUNK_BY_NEWLINE) {
+        // If we're trailing by a newline we need to skip it.
+        i++;
+      }
+      rowState = ROW_ID;
+      rowTag = 0;
+      rowID = 0;
+      rowLength = 0;
+      buffer.length = 0;
+    } else if (chunk.length !== i) {
+      // The rest of this row is in a future chunk. We only support passing the
+      // string from chunks in their entirety. Not split up into smaller string chunks.
+      // We could support this by buffering them but we shouldn't need to for
+      // this use case.
+      throw new Error(
+        'String chunks need to be passed in their original shape. ' +
+          'Not split into smaller string chunks. ' +
+          'This is a bug in the wiring of the React streams.',
+      );
     }
   }
   response._rowState = rowState;

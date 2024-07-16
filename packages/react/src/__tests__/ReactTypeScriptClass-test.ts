@@ -244,7 +244,6 @@ let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
   contextTypes = {};
   contextType = {};
-  propTypes = {};
   getDefaultProps() {
     getDefaultPropsWasCalled = true;
     return {};
@@ -339,9 +338,9 @@ describe('ReactTypeScriptClass', function() {
         ReactDOM.flushSync(() => root.render(React.createElement(Empty)))
       }).toErrorDev([
         // A failed component renders twice in DEV in concurrent mode
-        'Warning: No `render` method found on the Empty instance: ' +
+        'No `render` method found on the Empty instance: ' +
           'you may have forgotten to define `render`.',
-        'Warning: No `render` method found on the Empty instance: ' +
+        'No `render` method found on the Empty instance: ' +
           'you may have forgotten to define `render`.',
       ]);
     } finally {
@@ -519,7 +518,10 @@ describe('ReactTypeScriptClass', function() {
 
   if (!ReactFeatureFlags.disableLegacyContext) {
     it('renders based on context in the constructor', function() {
-      test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo');
+      expect(() => test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo')).toErrorDev([
+        'ProvideChildContextTypes uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'StateBasedOnContext uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.'
+      ]);
     });
   }
 
@@ -612,7 +614,6 @@ describe('ReactTypeScriptClass', function() {
             'a plain JavaScript class.',
           'getDefaultProps was defined on ClassicProperties, ' +
             'a plain JavaScript class.',
-          'propTypes was defined as an instance property on ClassicProperties.',
           'contextTypes was defined as an instance property on ClassicProperties.',
           'contextType was defined as an instance property on ClassicProperties.',
         ]);
@@ -644,7 +645,7 @@ describe('ReactTypeScriptClass', function() {
     expect(() =>
       test(React.createElement(MisspelledComponent1), 'SPAN', 'foo')
     ).toErrorDev(
-      'Warning: ' +
+      '' +
         'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
         'you mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.'
@@ -655,7 +656,7 @@ describe('ReactTypeScriptClass', function() {
     expect(() =>
       test(React.createElement(MisspelledComponent2), 'SPAN', 'foo')
     ).toErrorDev(
-      'Warning: ' +
+      '' +
         'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
         'Did you mean componentWillReceiveProps()?'
     );
@@ -665,7 +666,7 @@ describe('ReactTypeScriptClass', function() {
     expect(() =>
       test(React.createElement(MisspelledComponent3), 'SPAN', 'foo')
     ).toErrorDev(
-      'Warning: ' +
+      '' +
         'MisspelledComponent3 has a method called UNSAFE_componentWillRecieveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?'
     );
@@ -689,8 +690,11 @@ describe('ReactTypeScriptClass', function() {
   });
 
   if (!ReactFeatureFlags.disableLegacyContext) {
-    it('supports this.context passed via getChildContext', function() {
-      test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
+    it('supports this.context passed via getChildContext', () => {
+      expect(() => test(React.createElement(ProvideContext), 'DIV', 'bar-through-context')).toErrorDev([
+        'ProvideContext uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'ReadContext uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+]      );
     });
   }
 
@@ -700,7 +704,7 @@ describe('ReactTypeScriptClass', function() {
       expect(() => {
         test(React.createElement(ClassicRefs, {ref: ref}), 'DIV', 'foo');
       }).toErrorDev([
-        'Warning: Component "ClassicRefs" contains the string ref "inner". ' +
+        'Component "ClassicRefs" contains the string ref "inner". ' +
           'Support for string refs will be removed in a future major release. ' +
           'We recommend using useRef() or createRef() instead. ' +
           'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +

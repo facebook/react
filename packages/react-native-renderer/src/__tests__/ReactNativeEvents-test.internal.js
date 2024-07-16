@@ -80,7 +80,7 @@ beforeEach(() => {
 });
 
 // @gate !disableLegacyMode
-it('fails to register the same event name with different types', async () => {
+test('fails to register the same event name with different types', async () => {
   const InvalidEvents = createReactNativeComponentClass('InvalidEvents', () => {
     if (!__DEV__) {
       // Simulate a registration error in prod.
@@ -124,7 +124,7 @@ it('fails to register the same event name with different types', async () => {
 });
 
 // @gate !disableLegacyMode
-it('fails if unknown/unsupported event types are dispatched', () => {
+test('fails if unknown/unsupported event types are dispatched', () => {
   expect(RCTEventEmitter.register).toHaveBeenCalledTimes(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const View = fakeRequireNativeComponent('View', {});
@@ -149,7 +149,7 @@ it('fails if unknown/unsupported event types are dispatched', () => {
 });
 
 // @gate !disableLegacyMode
-it('handles events', () => {
+test('handles events', () => {
   expect(RCTEventEmitter.register).toHaveBeenCalledTimes(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const View = fakeRequireNativeComponent('View', {foo: true});
@@ -211,7 +211,7 @@ it('handles events', () => {
 
 // @gate !disableLegacyContext || !__DEV__
 // @gate !disableLegacyMode
-it('handles events on text nodes', () => {
+test('handles events on text nodes', () => {
   expect(RCTEventEmitter.register).toHaveBeenCalledTimes(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const Text = fakeRequireNativeComponent('RCTText', {});
@@ -227,27 +227,31 @@ it('handles events on text nodes', () => {
   }
 
   const log = [];
-  ReactNative.render(
-    <ContextHack>
-      <Text>
-        <Text
-          onTouchEnd={() => log.push('string touchend')}
-          onTouchEndCapture={() => log.push('string touchend capture')}
-          onTouchStart={() => log.push('string touchstart')}
-          onTouchStartCapture={() => log.push('string touchstart capture')}>
-          Text Content
+  expect(() => {
+    ReactNative.render(
+      <ContextHack>
+        <Text>
+          <Text
+            onTouchEnd={() => log.push('string touchend')}
+            onTouchEndCapture={() => log.push('string touchend capture')}
+            onTouchStart={() => log.push('string touchstart')}
+            onTouchStartCapture={() => log.push('string touchstart capture')}>
+            Text Content
+          </Text>
+          <Text
+            onTouchEnd={() => log.push('number touchend')}
+            onTouchEndCapture={() => log.push('number touchend capture')}
+            onTouchStart={() => log.push('number touchstart')}
+            onTouchStartCapture={() => log.push('number touchstart capture')}>
+            {123}
+          </Text>
         </Text>
-        <Text
-          onTouchEnd={() => log.push('number touchend')}
-          onTouchEndCapture={() => log.push('number touchend capture')}
-          onTouchStart={() => log.push('number touchstart')}
-          onTouchStartCapture={() => log.push('number touchstart capture')}>
-          {123}
-        </Text>
-      </Text>
-    </ContextHack>,
-    1,
-  );
+      </ContextHack>,
+      1,
+    );
+  }).toErrorDev([
+    'ContextHack uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+  ]);
 
   expect(UIManager.createView).toHaveBeenCalledTimes(5);
 
@@ -295,7 +299,7 @@ it('handles events on text nodes', () => {
 });
 
 // @gate !disableLegacyMode
-it('handles when a responder is unmounted while a touch sequence is in progress', () => {
+test('handles when a responder is unmounted while a touch sequence is in progress', () => {
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const View = fakeRequireNativeComponent('View', {id: true});
 
@@ -385,7 +389,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
 });
 
 // @gate !disableLegacyMode
-it('handles events without target', () => {
+test('handles events without target', () => {
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
 
   const View = fakeRequireNativeComponent('View', {id: true});
@@ -476,7 +480,7 @@ it('handles events without target', () => {
 });
 
 // @gate !disableLegacyMode
-it('dispatches event with target as instance', () => {
+test('dispatches event with target as instance', () => {
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
 
   const View = fakeRequireNativeComponent('View', {id: true});

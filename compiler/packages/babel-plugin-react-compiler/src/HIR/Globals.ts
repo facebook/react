@@ -9,6 +9,7 @@ import { Effect, ValueKind, ValueReason } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInUseActionStateId,
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
@@ -267,6 +268,18 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
     }),
   ],
   [
+    "useActionState",
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Object", shapeId: BuiltInUseActionStateId },
+      calleeEffect: Effect.Read,
+      hookKind: "useActionState",
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.State,
+    }),
+  ],
+  [
     "useReducer",
     addHook(DEFAULT_SHAPES, {
       positionalParams: [],
@@ -350,7 +363,7 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
         restParam: Effect.Freeze,
         returnType: { kind: "Poly" },
         calleeEffect: Effect.Read,
-        hookKind: "useLayoutEffect",
+        hookKind: "useInsertionEffect",
         returnValueKind: ValueKind.Frozen,
       },
       BuiltInUseInsertionEffectHookId

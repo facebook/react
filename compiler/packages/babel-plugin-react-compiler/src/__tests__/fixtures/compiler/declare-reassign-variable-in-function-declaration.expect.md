@@ -18,7 +18,7 @@ function Component() {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component() {
-  const $ = _c(2);
+  const $ = _c(1);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     let x;
@@ -27,20 +27,13 @@ function Component() {
       x = 9;
     };
 
-    t0 = bar(foo);
+    const y = bar(foo);
+    t0 = <Child y={y} />;
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  const y = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = <Child y={y} />;
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  return t1;
+  return t0;
 }
 
 ```

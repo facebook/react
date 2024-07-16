@@ -297,7 +297,7 @@ describe('ReactJSXRuntime', () => {
         root.render(JSXRuntime.jsx(Parent, {}));
       });
     }).toErrorDev(
-      'Warning: Each child in a list should have a unique "key" prop.\n\n' +
+      'Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://react.dev/link/warning-keys for more information.\n' +
         (gate(flags => flags.enableOwnerStacks)
           ? ''
@@ -326,7 +326,7 @@ describe('ReactJSXRuntime', () => {
         root.render(JSXRuntime.jsx(Parent, {}));
       });
     }).toErrorDev(
-      'Warning: A props object containing a "key" prop is being spread into JSX:\n' +
+      'A props object containing a "key" prop is being spread into JSX:\n' +
         '  let props = {key: someKey, prop: ...};\n' +
         '  <Child {...props} />\n' +
         'React keys must be passed directly to JSX without using spread:\n' +

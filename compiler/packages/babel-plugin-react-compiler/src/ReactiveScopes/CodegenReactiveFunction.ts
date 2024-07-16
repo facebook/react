@@ -22,6 +22,7 @@ import {
   ObjectPropertyKey,
   Pattern,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
@@ -36,13 +37,13 @@ import {
   getHookKind,
   makeIdentifierName,
 } from "../HIR/HIR";
-import { printPlace } from "../HIR/PrintHIR";
+import { printIdentifier, printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
 import { Err, Ok, Result } from "../Utils/Result";
 import { GuardKind } from "../Utils/RuntimeDiagnosticConstants";
 import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
-import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtOperandsInSameScope";
+import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtAndMacroOperandsInSameScope";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 export const MEMO_CACHE_SENTINEL = "react.memo_cache_sentinel";
@@ -67,6 +68,23 @@ export type CodegenFunction = {
    * how many inputs/outputs each block has
    */
   memoBlocks: number;
+
+  /**
+   * Number of memoized values across all reactive scopes
+   */
+  memoValues: number;
+
+  /**
+   * The number of reactive scopes that were created but had to be discarded
+   * because they contained hook calls.
+   */
+  prunedMemoBlocks: number;
+
+  /**
+   * The total number of values that should have been memoized but weren't
+   * because they were part of a pruned memo block.
+   */
+  prunedMemoValues: number;
 };
 
 export function codegenFunction(
@@ -272,7 +290,7 @@ function codegenReactiveFunction(
     return Err(cx.errors);
   }
 
-  const countMemoBlockVisitor = new CountMemoBlockVisitor();
+  const countMemoBlockVisitor = new CountMemoBlockVisitor(fn.env);
   visitReactiveFunction(fn, countMemoBlockVisitor, undefined);
 
   return Ok({
@@ -284,16 +302,38 @@ function codegenReactiveFunction(
     generator: fn.generator,
     async: fn.async,
     memoSlotsUsed: cx.nextCacheIndex,
-    memoBlocks: countMemoBlockVisitor.count,
+    memoBlocks: countMemoBlockVisitor.memoBlocks,
+    memoValues: countMemoBlockVisitor.memoValues,
+    prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
+    prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
   });
 }
 
 class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void> {
-  count: number = 0;
+  env: Environment;
+  memoBlocks: number = 0;
+  memoValues: number = 0;
+  prunedMemoBlocks: number = 0;
+  prunedMemoValues: number = 0;
 
-  override visitScope(scope: ReactiveScopeBlock, state: void): void {
-    this.count += 1;
-    this.traverseScope(scope, state);
+  constructor(env: Environment) {
+    super();
+    this.env = env;
+  }
+
+  override visitScope(scopeBlock: ReactiveScopeBlock, state: void): void {
+    this.memoBlocks += 1;
+    this.memoValues += scopeBlock.scope.declarations.size;
+    this.traverseScope(scopeBlock, state);
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: void
+  ): void {
+    this.prunedMemoBlocks += 1;
+    this.prunedMemoValues += scopeBlock.scope.declarations.size;
+    this.traversePrunedScope(scopeBlock, state);
   }
 }
 
@@ -398,6 +438,11 @@ function codegenBlockNoReset(
         if (statement !== null) {
           statements.push(statement);
         }
+        break;
+      }
+      case "pruned-scope": {
+        const scopeBlock = codegenBlockNoReset(cx, item.instructions);
+        statements.push(...scopeBlock.body);
         break;
       }
       case "scope": {
@@ -519,8 +564,10 @@ function codegenReactiveScope(
     }
 
     CompilerError.invariant(identifier.name != null, {
-      reason: `Expected identifier '@${identifier.id}' to be named`,
-      description: null,
+      reason: `Expected scope declaration identifier to be named`,
+      description: `Declaration \`${printIdentifier(
+        identifier
+      )}\` is unnamed in scope @${scope.id}`,
       loc: null,
       suggestions: null,
     });
@@ -626,7 +673,7 @@ function codegenReactiveScope(
         t.expressionStatement(
           t.callExpression(t.identifier(detectionFunction), [
             t.identifier(loadName),
-            name,
+            t.cloneNode(name, true),
             t.stringLiteral(name.name),
             t.stringLiteral(cx.fnName),
             t.stringLiteral("cached"),
@@ -637,8 +684,8 @@ function codegenReactiveScope(
       idempotenceDetectionStatements.push(
         t.expressionStatement(
           t.callExpression(t.identifier(detectionFunction), [
-            slot,
-            name,
+            t.cloneNode(slot, true),
+            t.cloneNode(name, true),
             t.stringLiteral(name.name),
             t.stringLiteral(cx.fnName),
             t.stringLiteral("recomputed"),
@@ -651,6 +698,7 @@ function codegenReactiveScope(
       );
     }
     const condition = cx.synthesizeName("condition");
+    const recomputationBlock = t.cloneNode(computationBlock, true);
     memoStatement = t.blockStatement([
       ...computationBlock.body,
       t.variableDeclaration("let", [
@@ -667,7 +715,7 @@ function codegenReactiveScope(
       t.ifStatement(
         t.identifier(condition),
         t.blockStatement([
-          ...computationBlock.body,
+          ...recomputationBlock.body,
           ...idempotenceDetectionStatements,
         ])
       ),
@@ -2021,6 +2069,13 @@ function codegenInstructionValue(
       value = t.regExpLiteral(instrValue.pattern, instrValue.flags);
       break;
     }
+    case "MetaProperty": {
+      value = t.metaProperty(
+        t.identifier(instrValue.meta),
+        t.identifier(instrValue.property)
+      );
+      break;
+    }
     case "Await": {
       value = t.awaitExpression(codegenPlaceToExpression(cx, instrValue.value));
       break;
@@ -2105,10 +2160,18 @@ function codegenInstructionValue(
 }
 
 /**
- * Due to a bug in earlier Babel versions, JSX string attributes with double quotes or with unicode characters
- * may be escaped unnecessarily. To avoid trigger this Babel bug, we use a JsxExpressionContainer for such strings.
+ * Due to a bug in earlier Babel versions, JSX string attributes with double quotes, unicode characters, or special
+ * control characters such as \n may be escaped unnecessarily. To avoid trigger this Babel bug, we use a
+ * JsxExpressionContainer for such strings.
+ *
+ * u0000 to u001F: C0 control codes
+ * u007F         : Delete character
+ * u0080 to u009F: C1 control codes
+ * u00A0 to uFFFF: All non-basic Latin characters
+ * https://en.wikipedia.org/wiki/List_of_Unicode_characters#Control_codes
  */
-const STRING_REQUIRES_EXPR_CONTAINER_PATTERN = /[\u{0080}-\u{FFFF}]|"/u;
+const STRING_REQUIRES_EXPR_CONTAINER_PATTERN =
+  /[\u{0000}-\u{001F}|\u{007F}|\u{0080}-\u{FFFF}]|"/u;
 function codegenJsxAttribute(
   cx: Context,
   attribute: JsxAttribute

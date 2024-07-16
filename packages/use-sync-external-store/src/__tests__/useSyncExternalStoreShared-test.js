@@ -20,7 +20,7 @@ let useState;
 let useEffect;
 let useLayoutEffect;
 let assertLog;
-let originalError;
+let assertConsoleErrorDev;
 
 // This tests shared behavior between the built-in and shim implementations of
 // of useSyncExternalStore.
@@ -50,9 +50,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
             : 'react-dom-17/umd/react-dom.production.min.js',
         ),
       );
-      // Because React 17 prints extra logs we need to ignore them.
-      originalError = console.error;
-      console.error = jest.fn();
     }
     React = require('react');
     ReactDOM = require('react-dom');
@@ -63,6 +60,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     useLayoutEffect = React.useLayoutEffect;
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     const internalAct = require('internal-test-utils').act;
 
     // The internal act implementation doesn't batch updates by default, since
@@ -84,11 +82,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       require('use-sync-external-store/shim').useSyncExternalStore;
     useSyncExternalStoreWithSelector =
       require('use-sync-external-store/shim/with-selector').useSyncExternalStoreWithSelector;
-  });
-  afterEach(() => {
-    if (gate(flags => flags.enableUseSyncExternalStoreShim)) {
-      console.error = originalError;
-    }
   });
   function Text({text}) {
     Scheduler.log(text);
@@ -630,36 +623,30 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     await expect(async () => {
-      await expect(async () => {
-        await act(() => {
-          ReactDOM.flushSync(async () =>
-            root.render(React.createElement(App, null)),
-          );
-        });
-      }).rejects.toThrow(
-        'Maximum update depth exceeded. This can happen when a component repeatedly ' +
-          'calls setState inside componentWillUpdate or componentDidUpdate. React limits ' +
-          'the number of nested updates to prevent infinite loops.',
-      );
-    }).toErrorDev(
+      await act(() => {
+        ReactDOM.flushSync(async () =>
+          root.render(React.createElement(App, null)),
+        );
+      });
+    }).rejects.toThrow(
+      'Maximum update depth exceeded. This can happen when a component repeatedly ' +
+        'calls setState inside componentWillUpdate or componentDidUpdate. React limits ' +
+        'the number of nested updates to prevent infinite loops.',
+    );
+
+    assertConsoleErrorDev(
       gate(flags => flags.enableUseSyncExternalStoreShim)
         ? [
-            'Maximum update depth exceeded. ',
-            'The result of getSnapshot should be cached to avoid an infinite loop',
-            'The above error occurred in the',
+            [
+              'The result of getSnapshot should be cached to avoid an infinite loop',
+              {withoutStack: true},
+            ],
+            'Error: Maximum update depth exceeded',
+            'The above error occurred i',
           ]
         : [
             'The result of getSnapshot should be cached to avoid an infinite loop',
           ],
-      {
-        withoutStack: gate(flags => {
-          if (flags.enableUseSyncExternalStoreShim) {
-            // Stacks don't work when mixing the source and the npm package.
-            return flags.source ? 1 : 0;
-          }
-          return false;
-        }),
-      },
     );
   });
   it('getSnapshot can return NaN without infinite loop warning', async () => {
@@ -850,10 +837,9 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         // client. To avoid this server mismatch warning, user must account for
         // this themselves and return the correct value inside `getSnapshot`.
         await act(() => {
-          expect(() =>
-            ReactDOM.hydrate(React.createElement(App, null), container),
-          ).toErrorDev('Text content did not match');
+          ReactDOM.hydrate(React.createElement(App, null), container);
         });
+        assertConsoleErrorDev(['Text content did not match']);
         assertLog(['client', 'Passive effect: client']);
       }
       expect(container.textContent).toEqual('client');

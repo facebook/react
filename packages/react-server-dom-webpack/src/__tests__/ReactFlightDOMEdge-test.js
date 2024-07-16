@@ -39,6 +39,15 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    str.replace(/^ +(?:at|in) ([\S]+)[^\n]*/gm, function (m, name) {
+      return '    in ' + name + (/\d/.test(m) ? ' (at **)' : '');
+    })
+  );
+}
+
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -224,14 +233,12 @@ describe('ReactFlightDOMEdge', () => {
       this: {is: 'a large objected'},
       with: {many: 'properties in it'},
     };
-    const props = {
-      items: new Array(30).fill(obj),
-    };
+    const props = {root: <div>{new Array(30).fill(obj)}</div>};
     const stream = ReactServerDOMServer.renderToReadableStream(props);
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(470);
+    expect(serializedContent.length).toBeLessThan(1100);
 
     const result = await ReactServerDOMClient.createFromReadableStream(
       stream2,
@@ -242,10 +249,13 @@ describe('ReactFlightDOMEdge', () => {
         },
       },
     );
+    // TODO: Cyclic references currently cause a Lazy wrapper which is not ideal.
+    const resultElement = result.root._init(result.root._payload);
     // Should still match the result when parsed
-    expect(result).toEqual(props);
-    expect(result.items[5]).toBe(result.items[10]); // two random items are the same instance
-    // TODO: items[0] is not the same as the others in this case
+    expect(resultElement).toEqual(props.root);
+    expect(resultElement.props.children[5]).toBe(
+      resultElement.props.children[10],
+    ); // two random items are the same instance
   });
 
   it('should execute repeated server components only once', async () => {
@@ -881,5 +891,113 @@ describe('ReactFlightDOMEdge', () => {
         gate(flags => flags.disableStringRefs) ? undefined : null,
       );
     }
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can get the component owner stacks asynchronously', async () => {
+    let stack;
+
+    function Foo() {
+      return ReactServer.createElement(Bar, null);
+    }
+    function Bar() {
+      return ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Baz, null),
+      );
+    }
+
+    const promise = Promise.resolve(0);
+
+    async function Baz() {
+      await promise;
+      stack = ReactServer.captureOwnerStack();
+      return ReactServer.createElement('span', null, 'hi');
+    }
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Foo, null),
+      ),
+      webpackMap,
+    );
+    await readResult(stream);
+
+    expect(normalizeCodeLocInfo(stack)).toBe(
+      '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
+  });
+
+  it('supports server components in ssr component stacks', async () => {
+    let reject;
+    const promise = new Promise((_, r) => (reject = r));
+    async function Erroring() {
+      await promise;
+      return 'should not render';
+    }
+
+    const model = {
+      root: ReactServer.createElement(Erroring),
+    };
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      model,
+      webpackMap,
+      {
+        onError() {},
+      },
+    );
+
+    const rootModel = await ReactServerDOMClient.createFromReadableStream(
+      stream,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+
+    const errors = [];
+    const result = ReactDOMServer.renderToReadableStream(
+      <div>{rootModel.root}</div>,
+      {
+        onError(error, {componentStack}) {
+          errors.push({
+            error,
+            componentStack: normalizeCodeLocInfo(componentStack),
+          });
+        },
+      },
+    );
+
+    const theError = new Error('my error');
+    reject(theError);
+
+    const expectedMessage = __DEV__
+      ? 'my error'
+      : 'An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.';
+
+    try {
+      await result;
+    } catch (x) {
+      expect(x).toEqual(
+        expect.objectContaining({
+          message: expectedMessage,
+        }),
+      );
+    }
+
+    expect(errors).toEqual([
+      {
+        error: expect.objectContaining({
+          message: expectedMessage,
+        }),
+        componentStack: (__DEV__ ? '\n    in Erroring' : '') + '\n    in div',
+      },
+    ]);
   });
 });

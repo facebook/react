@@ -59,7 +59,6 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import {has as hasInstance} from 'shared/ReactInstanceMap';
 
 import {
   current as currentOwner,
@@ -415,46 +414,6 @@ export function render(
     null,
     element,
     container,
-    false,
-    callback,
-  );
-}
-
-export function unstable_renderSubtreeIntoContainer(
-  parentComponent: React$Component<any, any>,
-  element: React$Element<any>,
-  containerNode: Container,
-  callback: ?Function,
-): React$Component<any, any> | PublicInstance | null {
-  if (disableLegacyMode) {
-    if (__DEV__) {
-      console.error(
-        'ReactDOM.unstable_renderSubtreeIntoContainer() was removed in React 19. Consider using a portal instead.',
-      );
-    }
-    throw new Error('ReactDOM: Unsupported Legacy Mode API.');
-  }
-  if (__DEV__) {
-    console.error(
-      'ReactDOM.unstable_renderSubtreeIntoContainer() has not been supported ' +
-        'since React 18. Consider using a portal instead. Until you switch to ' +
-        "the createRoot API, your app will behave as if it's running React " +
-        '17. Learn more: https://react.dev/link/switch-to-createroot',
-    );
-  }
-
-  if (!isValidContainerLegacy(containerNode)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  if (parentComponent == null || !hasInstance(parentComponent)) {
-    throw new Error('parentComponent must be a valid React Component');
-  }
-
-  return legacyRenderSubtreeIntoContainer(
-    parentComponent,
-    element,
-    containerNode,
     false,
     callback,
   );

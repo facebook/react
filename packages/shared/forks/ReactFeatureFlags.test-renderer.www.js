@@ -32,6 +32,7 @@ export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = true;
 export const disableLegacyContext = false;
+export const disableLegacyContextForFunctionComponents = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const enableSuspenseAvoidThisFallback = true;
@@ -56,7 +57,6 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
@@ -91,6 +91,7 @@ export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = false;
 
+export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 export const enableShallowPropDiffing = false;
 

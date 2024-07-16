@@ -154,23 +154,22 @@ beforeEach(() => {
 
   const originalConsoleError = console.error;
   console.error = (...args) => {
-    const firstArg = args[0];
-    if (
-      firstArg === 'Warning: React instrumentation encountered an error: %s'
-    ) {
+    let firstArg = args[0];
+    if (typeof firstArg === 'string' && firstArg.startsWith('Warning: ')) {
+      // Older React versions might use the Warning: prefix. I'm not sure
+      // if they use this code path.
+      firstArg = firstArg.slice(9);
+    }
+    if (firstArg === 'React instrumentation encountered an error: %s') {
       // Rethrow errors from React.
       throw args[1];
     } else if (
       typeof firstArg === 'string' &&
-      (firstArg.startsWith(
-        "Warning: It looks like you're using the wrong act()",
-      ) ||
+      (firstArg.startsWith("It looks like you're using the wrong act()") ||
         firstArg.startsWith(
-          'Warning: The current testing environment is not configured to support act',
+          'The current testing environment is not configured to support act',
         ) ||
-        firstArg.startsWith(
-          'Warning: You seem to have overlapping act() calls',
-        ))
+        firstArg.startsWith('You seem to have overlapping act() calls'))
     ) {
       // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
       // since test updates are expected to impact both renderers.

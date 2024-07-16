@@ -108,7 +108,7 @@ describe('CSSPropertyOperations', () => {
         root.render(<Comp />);
       });
     }).toErrorDev(
-      'Warning: Unsupported style property background-color. Did you mean backgroundColor?' +
+      'Unsupported style property background-color. Did you mean backgroundColor?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
     );
@@ -137,10 +137,10 @@ describe('CSSPropertyOperations', () => {
         root.render(<Comp style={styles} />);
       });
     }).toErrorDev([
-      'Warning: Unsupported style property -ms-transform. Did you mean msTransform?' +
+      'Unsupported style property -ms-transform. Did you mean msTransform?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
-      'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform?' +
+      'Unsupported style property -webkit-transform. Did you mean WebkitTransform?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
     ]);
@@ -171,11 +171,11 @@ describe('CSSPropertyOperations', () => {
       });
     }).toErrorDev([
       // msTransform is correct already and shouldn't warn
-      'Warning: Unsupported vendor-prefixed style property oTransform. ' +
+      'Unsupported vendor-prefixed style property oTransform. ' +
         'Did you mean OTransform?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
-      'Warning: Unsupported vendor-prefixed style property webkitTransform. ' +
+      'Unsupported vendor-prefixed style property webkitTransform. ' +
         'Did you mean WebkitTransform?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
@@ -207,11 +207,11 @@ describe('CSSPropertyOperations', () => {
         root.render(<Comp />);
       });
     }).toErrorDev([
-      "Warning: Style property values shouldn't contain a semicolon. " +
+      "Style property values shouldn't contain a semicolon. " +
         'Try "backgroundColor: blue" instead.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
-      "Warning: Style property values shouldn't contain a semicolon. " +
+      "Style property values shouldn't contain a semicolon. " +
         'Try "color: red" instead.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
@@ -234,7 +234,7 @@ describe('CSSPropertyOperations', () => {
         root.render(<Comp />);
       });
     }).toErrorDev(
-      'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
+      '`NaN` is an invalid value for the `fontSize` css style property.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
     );
@@ -270,7 +270,7 @@ describe('CSSPropertyOperations', () => {
         root.render(<Comp />);
       });
     }).toErrorDev(
-      'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
+      '`Infinity` is an invalid value for the `fontSize` css style property.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
     );

@@ -22,39 +22,29 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(8);
-  let x;
-  let y;
+  const $ = _c(4);
+  let t0;
   if ($[0] !== props.p0 || $[1] !== props.p1) {
-    x = [];
+    let x = [];
     x.push(props.p0);
-    y = x;
-    let t0;
-    if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = [];
-      $[4] = t0;
+    const y = x;
+    let t1;
+    if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+      t1 = [];
+      $[3] = t1;
     } else {
-      t0 = $[4];
+      t1 = $[3];
     }
-    x = t0;
+    x = t1;
 
     y.push(props.p1);
+
+    t0 = <Component x={x} y={y} />;
     $[0] = props.p0;
     $[1] = props.p1;
-    $[2] = x;
-    $[3] = y;
+    $[2] = t0;
   } else {
-    x = $[2];
-    y = $[3];
-  }
-  let t0;
-  if ($[5] !== x || $[6] !== y) {
-    t0 = <Component x={x} y={y} />;
-    $[5] = x;
-    $[6] = y;
-    $[7] = t0;
-  } else {
-    t0 = $[7];
+    t0 = $[2];
   }
   return t0;
 }

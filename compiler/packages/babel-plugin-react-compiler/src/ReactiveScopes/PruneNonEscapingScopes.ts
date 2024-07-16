@@ -459,6 +459,7 @@ function computeMemoizationInputs(
     case "ComputedDelete":
     case "PropertyDelete":
     case "LoadGlobal":
+    case "MetaProperty":
     case "TemplateLiteral":
     case "Primitive":
     case "JSXText":
@@ -931,10 +932,14 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
      * is early-returned from within the scope. For now we intentionaly keep
      * these scopes, and let them get pruned later by PruneUnusedScopes
      * _after_ handling the early-return case in PropagateEarlyReturns.
+     *
+     * Also keep the scope if an early return was created by some earlier pass,
+     * which may happen in alternate compiler configurations.
      */
     if (
-      scopeBlock.scope.declarations.size === 0 &&
-      scopeBlock.scope.reassignments.size === 0
+      (scopeBlock.scope.declarations.size === 0 &&
+        scopeBlock.scope.reassignments.size === 0) ||
+      scopeBlock.scope.earlyReturnValue !== null
     ) {
       return { kind: "keep" };
     }
@@ -950,7 +955,10 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
       return { kind: "keep" };
     } else {
       this.prunedScopes.add(scopeBlock.scope.id);
-      return { kind: "replace-many", value: scopeBlock.instructions };
+      return {
+        kind: "replace-many",
+        value: scopeBlock.instructions,
+      };
     }
   }
 

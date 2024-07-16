@@ -27,14 +27,27 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+function normalizeComponentInfo(debugInfo) {
+  if (typeof debugInfo.stack === 'string') {
+    const {task, ...copy} = debugInfo;
+    copy.stack = normalizeCodeLocInfo(debugInfo.stack);
+    if (debugInfo.owner) {
+      copy.owner = normalizeComponentInfo(debugInfo.owner);
+    }
+    return copy;
+  } else {
+    return debugInfo;
+  }
+}
+
 function getDebugInfo(obj) {
   const debugInfo = obj._debugInfo;
   if (debugInfo) {
+    const copy = [];
     for (let i = 0; i < debugInfo.length; i++) {
-      if (typeof debugInfo[i].stack === 'string') {
-        debugInfo[i].stack = normalizeCodeLocInfo(debugInfo[i].stack);
-      }
+      copy.push(normalizeComponentInfo(debugInfo[i]));
     }
+    return copy;
   }
   return debugInfo;
 }
@@ -68,6 +81,7 @@ let ErrorBoundary;
 let NoErrorExpected;
 let Scheduler;
 let assertLog;
+let assertConsoleErrorDev;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -89,6 +103,7 @@ describe('ReactFlight', () => {
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -114,6 +129,7 @@ describe('ReactFlight', () => {
             this.props.expectedMessage,
           );
           expect(this.state.error.digest).toBe('a dev digest');
+          expect(this.state.error.environmentName).toBe('Server');
         } else {
           expect(this.state.error.message).toBe(
             'An error occurred in the Server Components render. The specific message is omitted in production' +
@@ -130,6 +146,7 @@ describe('ReactFlight', () => {
             expectedDigest = '[]';
           }
           expect(this.state.error.digest).toContain(expectedDigest);
+          expect(this.state.error.environmentName).toBe(undefined);
           expect(this.state.error.stack).toBe(
             'Error: ' + this.state.error.message,
           );
@@ -677,14 +694,22 @@ describe('ReactFlight', () => {
 
     const transport = ReactNoopFlightServer.render(<ServerComponent />);
 
-    await act(async () => {
-      const rootModel = await ReactNoopFlightClient.read(transport);
-      ReactNoop.render(rootModel);
-    });
-    expect(ReactNoop).toMatchRenderedOutput('Loading...');
-    spyOnDevAndProd(console, 'error').mockImplementation(() => {});
     await load();
-    expect(console.error).toHaveBeenCalledTimes(1);
+
+    await expect(async () => {
+      await act(async () => {
+        const rootModel = await ReactNoopFlightClient.read(transport);
+        ReactNoop.render(rootModel);
+      });
+    }).rejects.toThrow(
+      __DEV__
+        ? 'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+            '(for composite components) but got: <div />. ' +
+            'Did you accidentally export a JSX literal instead of a component?'
+        : 'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+            '(for composite components) but got: object.',
+    );
+    expect(ReactNoop).toMatchRenderedOutput(null);
   });
 
   it('can render a lazy element', async () => {
@@ -964,67 +989,47 @@ describe('ReactFlight', () => {
     const testCases = (
       <>
         <ClientErrorBoundary expectedMessage="This is a real Error.">
-          <div>
-            <Throw value={new TypeError('This is a real Error.')} />
-          </div>
+          <Throw value={new TypeError('This is a real Error.')} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="This is a string error.">
-          <div>
-            <Throw value="This is a string error." />
-          </div>
+          <Throw value="This is a string error." />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="{message: ..., extra: ..., nested: ...}">
-          <div>
-            <Throw
-              value={{
-                message: 'This is a long message',
-                extra: 'properties',
-                nested: {more: 'prop'},
-              }}
-            />
-          </div>
+          <Throw
+            value={{
+              message: 'This is a long message',
+              extra: 'properties',
+              nested: {more: 'prop'},
+            }}
+          />
         </ClientErrorBoundary>
         <ClientErrorBoundary
           expectedMessage={'{message: "Short", extra: ..., nested: ...}'}>
-          <div>
-            <Throw
-              value={{
-                message: 'Short',
-                extra: 'properties',
-                nested: {more: 'prop'},
-              }}
-            />
-          </div>
+          <Throw
+            value={{
+              message: 'Short',
+              extra: 'properties',
+              nested: {more: 'prop'},
+            }}
+          />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="Symbol(hello)">
-          <div>
-            <Throw value={Symbol('hello')} />
-          </div>
+          <Throw value={Symbol('hello')} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="123">
-          <div>
-            <Throw value={123} />
-          </div>
+          <Throw value={123} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="undefined">
-          <div>
-            <Throw value={undefined} />
-          </div>
+          <Throw value={undefined} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="<div/>">
-          <div>
-            <Throw value={<div />} />
-          </div>
+          <Throw value={<div />} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage="function Foo() {}">
-          <div>
-            <Throw value={function Foo() {}} />
-          </div>
+          <Throw value={function Foo() {}} />
         </ClientErrorBoundary>
         <ClientErrorBoundary expectedMessage={'["array"]'}>
-          <div>
-            <Throw value={['array']} />
-          </div>
+          <Throw value={['array']} />
         </ClientErrorBoundary>
         <ClientErrorBoundary
           expectedMessage={
@@ -1034,9 +1039,7 @@ describe('ReactFlight', () => {
             '- A library pre-bundled an old copy of "react" or "react/jsx-runtime".\n' +
             '- A compiler tries to "inline" JSX instead of using the runtime.'
           }>
-          <div>
-            <LazyInlined />
-          </div>
+          <LazyInlined />
         </ClientErrorBoundary>
       </>
     );
@@ -1072,8 +1075,10 @@ describe('ReactFlight', () => {
     }
 
     const expectedStack = __DEV__
-      ? // TODO: This should include Throw but it doesn't have a Fiber.
-        '\n    in div' + '\n    in ErrorBoundary (at **)' + '\n    in App'
+      ? '\n    in Throw' +
+        '\n    in div' +
+        '\n    in ErrorBoundary (at **)' +
+        '\n    in App'
       : '\n    in div' + '\n    in ErrorBoundary (at **)';
 
     function App() {
@@ -1084,6 +1089,46 @@ describe('ReactFlight', () => {
           <div>
             <Throw value={new TypeError('This is a real Error.')} />
           </div>
+        </ClientErrorBoundary>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<App />, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        if (x instanceof Error) {
+          return `digest("${x.message}")`;
+        } else if (Array.isArray(x)) {
+          return `digest([])`;
+        } else if (typeof x === 'object' && x !== null) {
+          return `digest({})`;
+        }
+        return `digest(${String(x)})`;
+      },
+    });
+
+    await act(() => {
+      startTransition(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+    });
+  });
+
+  it('should handle serialization errors in element inside error boundary', async () => {
+    const ClientErrorBoundary = clientReference(ErrorBoundary);
+
+    const expectedStack = __DEV__
+      ? '\n    in div' + '\n    in ErrorBoundary (at **)' + '\n    in App'
+      : '\n    in ErrorBoundary (at **)';
+
+    function App() {
+      return (
+        <ClientErrorBoundary
+          expectedMessage="Event handlers cannot be passed to Client Component props."
+          expectedStack={expectedStack}>
+          <div onClick={function () {}} />
         </ClientErrorBoundary>
       );
     }
@@ -1391,16 +1436,25 @@ describe('ReactFlight', () => {
 
   it('should warn in DEV a child is missing keys on server component', () => {
     function NoKey({children}) {
-      return <div key="this has a key but parent doesn't" />;
+      return ReactServer.createElement('div', {
+        key: "this has a key but parent doesn't",
+      });
     }
     expect(() => {
+      // While we're on the server we need to have the Server version active to track component stacks.
+      jest.resetModules();
+      jest.mock('react', () => ReactServer);
       const transport = ReactNoopFlightServer.render(
-        <div>{Array(6).fill(<NoKey />)}</div>,
+        ReactServer.createElement(
+          'div',
+          null,
+          Array(6).fill(ReactServer.createElement(NoKey)),
+        ),
       );
+      jest.resetModules();
+      jest.mock('react', () => React);
       ReactNoopFlightClient.read(transport);
-    }).toErrorDev('Each child in a list should have a unique "key" prop.', {
-      withoutStack: gate(flags => flags.enableOwnerStacks),
-    });
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
   it('should warn in DEV a child is missing keys in client component', async () => {
@@ -1439,7 +1493,10 @@ describe('ReactFlight', () => {
 
     expect(errors).toEqual([
       'Only plain objects, and a few built-ins, can be passed to Client Components ' +
-        'from Server Components. Classes or null prototypes are not supported.',
+        'from Server Components. Classes or null prototypes are not supported.' +
+        (__DEV__
+          ? '\n' + '  <input value={{}}>\n' + '               ^^^^'
+          : '\n' + '  {value: {}}\n' + '          ^^'),
     ]);
   });
 
@@ -2532,13 +2589,57 @@ describe('ReactFlight', () => {
     );
   });
 
+  it('can change the environment name inside a component', async () => {
+    let env = 'A';
+    function Component(props) {
+      env = 'B';
+      return <div>hi</div>;
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      {
+        greeting: <Component />,
+      },
+      {
+        environmentName() {
+          return env;
+        },
+      },
+    );
+
+    await act(async () => {
+      const rootModel = await ReactNoopFlightClient.read(transport);
+      const greeting = rootModel.greeting;
+      expect(getDebugInfo(greeting)).toEqual(
+        __DEV__
+          ? [
+              {
+                name: 'Component',
+                env: 'A',
+                owner: null,
+                stack: gate(flag => flag.enableOwnerStacks)
+                  ? '    in Object.<anonymous> (at **)'
+                  : undefined,
+              },
+              {
+                env: 'B',
+              },
+            ]
+          : undefined,
+      );
+      ReactNoop.render(greeting);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>hi</div>);
+  });
+
   // @gate enableServerComponentLogs && __DEV__
   it('replays logs, but not onError logs', async () => {
     function foo() {
       return 'hello';
     }
     function ServerComponent() {
-      console.log('hi', {prop: 123, fn: foo});
+      console.log('hi', {prop: 123, fn: foo, map: new Map([['foo', foo]])});
       throw new Error('err');
     }
 
@@ -2580,6 +2681,13 @@ describe('ReactFlight', () => {
     expect(typeof loggedFn).toBe('function');
     expect(loggedFn).not.toBe(foo);
     expect(loggedFn.toString()).toBe(foo.toString());
+
+    const loggedMap = mockConsoleLog.mock.calls[0][1].map;
+    expect(loggedMap instanceof Map).toBe(true);
+    const loggedFn2 = loggedMap.get('foo');
+    expect(typeof loggedFn2).toBe('function');
+    expect(loggedFn2).not.toBe(foo);
+    expect(loggedFn2.toString()).toBe(foo.toString());
   });
 
   it('uses the server component debug info as the element owner in DEV', async () => {
@@ -2640,5 +2748,143 @@ describe('ReactFlight', () => {
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb</span>);
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can get the component owner stacks during rendering in dev', () => {
+    let stack;
+
+    function Foo() {
+      return ReactServer.createElement(Bar, null);
+    }
+    function Bar() {
+      return ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Baz, null),
+      );
+    }
+
+    function Baz() {
+      stack = ReactServer.captureOwnerStack();
+      return ReactServer.createElement('span', null, 'hi');
+    }
+    ReactNoopFlightServer.render(
+      ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Foo, null),
+      ),
+    );
+
+    expect(normalizeCodeLocInfo(stack)).toBe(
+      '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
+  });
+
+  // @gate __DEV__ && enableOwnerStacks
+  it('can get the component owner stacks for onError in dev', async () => {
+    const thrownError = new Error('hi');
+    let caughtError;
+    let ownerStack;
+
+    function Foo() {
+      return ReactServer.createElement(Bar, null);
+    }
+    function Bar() {
+      return ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Baz, null),
+      );
+    }
+    function Baz() {
+      throw thrownError;
+    }
+
+    ReactNoopFlightServer.render(
+      ReactServer.createElement(
+        'div',
+        null,
+        ReactServer.createElement(Foo, null),
+      ),
+      {
+        onError(error, errorInfo) {
+          caughtError = error;
+          ownerStack = ReactServer.captureOwnerStack
+            ? ReactServer.captureOwnerStack()
+            : null;
+        },
+      },
+    );
+
+    expect(caughtError).toBe(thrownError);
+    expect(normalizeCodeLocInfo(ownerStack)).toBe(
+      '\n    in Bar (at **)' + '\n    in Foo (at **)',
+    );
+  });
+
+  // @gate (enableOwnerStacks && enableServerComponentLogs) || !__DEV__
+  it('should include only one component stack in replayed logs (if DevTools or polyfill adds them)', () => {
+    class MyError extends Error {
+      toJSON() {
+        return 123;
+      }
+    }
+
+    function Foo() {
+      return ReactServer.createElement('div', null, [
+        'Womp womp: ',
+        new MyError('spaghetti'),
+      ]);
+    }
+
+    function Bar() {
+      const array = [];
+      // Trigger key warning
+      array.push(ReactServer.createElement(Foo));
+      return ReactServer.createElement('div', null, array);
+    }
+
+    function App() {
+      return ReactServer.createElement(Bar);
+    }
+
+    // While we're on the server we need to have the Server version active to track component stacks.
+    jest.resetModules();
+    jest.mock('react', () => ReactServer);
+    const transport = ReactNoopFlightServer.render(
+      ReactServer.createElement(App),
+    );
+
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.' +
+        ' See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Bar (at **)\n' +
+        '    in App (at **)',
+      'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
+        '  <div>Womp womp: {Error}</div>\n' +
+        '                  ^^^^^^^\n' +
+        '    in Foo (at **)\n' +
+        '    in Bar (at **)\n' +
+        '    in App (at **)',
+    ]);
+
+    // Replay logs on the client
+    jest.resetModules();
+    jest.mock('react', () => React);
+    ReactNoopFlightClient.read(transport);
+    assertConsoleErrorDev(
+      [
+        'Each child in a list should have a unique "key" prop.' +
+          ' See https://react.dev/link/warning-keys for more information.',
+        'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
+          '  <div>Womp womp: {Error}</div>\n' +
+          '                  ^^^^^^^',
+      ],
+      // We should have a stack in the replay but we don't yet set the owner from the Flight replaying
+      // so our simulated polyfill doesn't end up getting any component stacks yet.
+      {withoutStack: true},
+    );
   });
 });

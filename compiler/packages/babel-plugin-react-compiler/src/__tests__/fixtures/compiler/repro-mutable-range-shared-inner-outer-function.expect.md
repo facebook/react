@@ -18,7 +18,7 @@ function Component(props) {
     a.property = true;
     b.push(false);
   };
-  return <div onClick={f} />;
+  return <div onClick={f()} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -35,10 +35,10 @@ import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRul
 let cond = true;
 function Component(props) {
   const $ = _c(1);
-  let a;
-  let b;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    let a;
+    let b;
     const f = () => {
       if (cond) {
         a = {};
@@ -52,7 +52,7 @@ function Component(props) {
       b.push(false);
     };
 
-    t0 = <div onClick={f} />;
+    t0 = <div onClick={f()} />;
     $[0] = t0;
   } else {
     t0 = $[0];

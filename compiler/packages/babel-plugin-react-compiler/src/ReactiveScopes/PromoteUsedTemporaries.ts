@@ -12,21 +12,20 @@ import {
   IdentifierId,
   InstructionId,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveScopeBlock,
   ReactiveValue,
+  ScopeId,
   promoteTemporary,
   promoteTemporaryJsxTag,
 } from "../HIR/HIR";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
-type VisitorState = {
-  tags: JsxExpressionTags;
-};
-class Visitor extends ReactiveFunctionVisitor<VisitorState> {
-  override visitScope(block: ReactiveScopeBlock, state: VisitorState): void {
-    this.traverseScope(block, state);
-    for (const dep of block.scope.dependencies) {
+class Visitor extends ReactiveFunctionVisitor<State> {
+  override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
+    this.traverseScope(scopeBlock, state);
+    for (const dep of scopeBlock.scope.dependencies) {
       const { identifier } = dep;
       if (identifier.name == null) {
         promoteIdentifier(identifier, state);
@@ -39,14 +38,29 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
      * Many of our current test fixtures do not return a value, so
      * it is better for now to promote (and memoize) every output.
      */
-    for (const [, declaration] of block.scope.declarations) {
+    for (const [, declaration] of scopeBlock.scope.declarations) {
       if (declaration.identifier.name == null) {
         promoteIdentifier(declaration.identifier, state);
       }
     }
   }
 
-  override visitParam(place: Place, state: VisitorState): void {
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: State
+  ): void {
+    this.traversePrunedScope(scopeBlock, state);
+    for (const [, declaration] of scopeBlock.scope.declarations) {
+      if (
+        declaration.identifier.name == null &&
+        state.pruned.get(declaration.identifier.id)?.usedOutsideScope === true
+      ) {
+        promoteIdentifier(declaration.identifier, state);
+      }
+    }
+  }
+
+  override visitParam(place: Place, state: State): void {
     if (place.identifier.name === null) {
       promoteIdentifier(place.identifier, state);
     }
@@ -55,7 +69,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: VisitorState
+    state: State
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
@@ -67,7 +81,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     fn: ReactiveFunction,
-    state: VisitorState
+    state: State
   ): void {
     for (const operand of fn.params) {
       const place = operand.kind === "Identifier" ? operand : operand.place;
@@ -80,25 +94,65 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 }
 
 type JsxExpressionTags = Set<IdentifierId>;
-class CollectJsxTagsVisitor extends ReactiveFunctionVisitor<JsxExpressionTags> {
+type State = {
+  tags: JsxExpressionTags;
+  pruned: Map<
+    IdentifierId,
+    { activeScopes: Array<ScopeId>; usedOutsideScope: boolean }
+  >; // true if referenced within another scope, false if only accessed outside of scopes
+};
+
+class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
+  activeScopes: Array<ScopeId> = [];
+
+  override visitPlace(_id: InstructionId, place: Place, state: State): void {
+    if (
+      this.activeScopes.length !== 0 &&
+      state.pruned.has(place.identifier.id)
+    ) {
+      const prunedPlace = state.pruned.get(place.identifier.id)!;
+      if (prunedPlace.activeScopes.indexOf(this.activeScopes.at(-1)!) === -1) {
+        prunedPlace.usedOutsideScope = true;
+      }
+    }
+  }
+
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: JsxExpressionTags
+    state: State
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === "JsxExpression" && value.tag.kind === "Identifier") {
-      state.add(value.tag.identifier.id);
+      state.tags.add(value.tag.identifier.id);
     }
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: State
+  ): void {
+    for (const [id] of scopeBlock.scope.declarations) {
+      state.pruned.set(id, {
+        activeScopes: [...this.activeScopes],
+        usedOutsideScope: false,
+      });
+    }
+  }
+
+  override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
+    this.activeScopes.push(scopeBlock.scope.id);
+    this.traverseScope(scopeBlock, state);
+    this.activeScopes.pop();
   }
 }
 
 export function promoteUsedTemporaries(fn: ReactiveFunction): void {
-  const tags: JsxExpressionTags = new Set();
-  visitReactiveFunction(fn, new CollectJsxTagsVisitor(), tags);
-  const state: VisitorState = {
-    tags,
+  const state: State = {
+    tags: new Set(),
+    pruned: new Map(),
   };
+  visitReactiveFunction(fn, new CollectPromotableTemporaries(), state);
   for (const operand of fn.params) {
     const place = operand.kind === "Identifier" ? operand : operand.place;
     if (place.identifier.name === null) {
@@ -108,7 +162,7 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   visitReactiveFunction(fn, new Visitor(), state);
 }
 
-function promoteIdentifier(identifier: Identifier, state: VisitorState): void {
+function promoteIdentifier(identifier: Identifier, state: State): void {
   CompilerError.invariant(identifier.name === null, {
     reason:
       "promoteTemporary: Expected to be called only for temporary variables",

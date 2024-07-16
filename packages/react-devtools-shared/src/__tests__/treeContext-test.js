@@ -2549,7 +2549,7 @@ describe('TreeListContext', () => {
     });
 
     describe('error boundaries', () => {
-      it('should properly handle errors/warnings from components that dont mount because of an error', () => {
+      it('should properly handle errors from components that dont mount because of an error', () => {
         class ErrorBoundary extends React.Component {
           state = {error: null};
           static getDerivedStateFromError(error) {
@@ -2604,7 +2604,7 @@ describe('TreeListContext', () => {
         expect(state).toMatchInlineSnapshot(``);
       });
 
-      it('should properly handle errors/warnings from components that dont mount because of an error', () => {
+      it('should properly handle warnings from components that dont mount because of an error', () => {
         class ErrorBoundary extends React.Component {
           state = {error: null};
           static getDerivedStateFromError(error) {
