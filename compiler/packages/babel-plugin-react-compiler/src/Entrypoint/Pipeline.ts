@@ -21,6 +21,7 @@ import {
   lower,
   mergeConsecutiveBlocks,
   mergeOverlappingReactiveScopesHIR,
+  printFunction,
   pruneUnusedLabelsHIR,
 } from "../HIR";
 import {
@@ -249,9 +250,9 @@ function* runWithEnvironment(
 
     for (const outlined of env.getOutlinedFunctions()) {
       yield log({
-        kind: "hir",
-        name: "OutlineFunctions (outlined)",
-        value: outlined.fn,
+        kind: "debug",
+        name: "Outlined",
+        value: printFunction(outlined.fn),
       });
     }
   }

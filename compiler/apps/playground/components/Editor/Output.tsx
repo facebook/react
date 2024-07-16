@@ -103,7 +103,7 @@ async function tabify(source: string, compilerOutput: CompilerOutput) {
     "HIR",
     "BuildReactiveFunction",
     "EnvironmentConfig",
-    "OutlineFunctions (outlined)",
+    "Outlined",
   ];
   for (const [passName, text] of concattedResults) {
     tabs.set(
