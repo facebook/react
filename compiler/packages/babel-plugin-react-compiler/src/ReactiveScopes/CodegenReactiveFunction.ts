@@ -51,7 +51,6 @@ import { buildReactiveFunction } from "./BuildReactiveFunction";
 import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtAndMacroOperandsInSameScope";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 import { ReactFunctionType } from "../HIR/Environment";
-import { logReactiveFunction } from "../Utils/logger";
 
 export const MEMO_CACHE_SENTINEL = "react.memo_cache_sentinel";
 export const EARLY_RETURN_SENTINEL = "react.early_return_sentinel";
@@ -278,7 +277,6 @@ export function codegenFunction(
     pruneHoistedContexts(reactiveFunction);
 
     const identifiers = renameVariables(reactiveFunction);
-    logReactiveFunction("Outline", reactiveFunction);
     const codegen = codegenReactiveFunction(
       new Context(
         cx.env,

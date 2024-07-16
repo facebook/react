@@ -41,6 +41,14 @@ export type Options = {
   indent: number;
 };
 
+export function printFunctionWithOutlined(fn: HIRFunction): string {
+  const output = [printFunction(fn)];
+  for (const outlined of fn.env.getOutlinedFunctions()) {
+    output.push(`\nfunction ${outlined.fn.id}:\n${printHIR(outlined.fn.body)}`);
+  }
+  return output.join("\n");
+}
+
 export function printFunction(fn: HIRFunction): string {
   const output = [];
   let definition = "";
