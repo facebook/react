@@ -481,12 +481,6 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
             - yarn_build
-      - build_devtools_and_process_artifacts:
-          requires:
-            - yarn_build
-      - run_devtools_e2e_tests:
-          requires:
-            - build_devtools_and_process_artifacts
       - run_fixtures_flight_tests:
           requires:
             - yarn_build
