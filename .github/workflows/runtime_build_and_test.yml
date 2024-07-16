@@ -346,18 +346,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: devtools.tgz
-          path: build/devtools
+          path: build/devtools/devtools.tgz
       # Simplifies getting the extension for local testing
       - name: Archive chrome extension
         uses: actions/upload-artifact@v4
         with:
-          name: chrome-extension.zip
-          path: ./build/devtools/
+          name: react-devtools-chrome-extension
+          path: build/devtools/chrome-extension.zip
       - name: Archive firefox extension
         uses: actions/upload-artifact@v4
         with:
-          name: firefox-extension.zip
-          path: ./build/devtools/
+          name: react-devtools-firefox-extension
+          path: build/devtools/firefox-extension.zip
 
   run_devtools_e2e_tests:
     name: Run DevTools e2e tests
