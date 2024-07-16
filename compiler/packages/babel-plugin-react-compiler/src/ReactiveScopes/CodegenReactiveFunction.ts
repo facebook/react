@@ -41,7 +41,6 @@ import {
   ValidIdentifierName,
   getHookKind,
   makeIdentifierName,
-  promoteTemporary,
 } from "../HIR/HIR";
 import { printIdentifier, printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
@@ -278,16 +277,6 @@ export function codegenFunction(
     pruneUnusedLValues(reactiveFunction);
     pruneHoistedContexts(reactiveFunction);
 
-    /*
-     * TODO: temporary function params (due to destructuring) should always be
-     * promoted so that they can be renamed
-     */
-    for (const param of reactiveFunction.params) {
-      const place = param.kind === "Identifier" ? param : param.place;
-      if (place.identifier.name === null) {
-        promoteTemporary(place.identifier);
-      }
-    }
     const identifiers = renameVariables(reactiveFunction);
     logReactiveFunction("Outline", reactiveFunction);
     const codegen = codegenReactiveFunction(
