@@ -347,6 +347,64 @@ jobs:
         run: ls -R build
       - run: yarn check-release-dependencies
 
+  # ----- FLIGHT -----
+  run_fixtures_flight_tests:
+    name: Run fixtures Flight tests
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      # Fixture copies some built packages from the workroot after install.
+      # That means dependencies of the built packages are not installed.
+      # We need to install dependencies of the workroot to fulfill all dependency constraints
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: v2-yarn_cache_fixtures_flight-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - name: Install fixture dependencies
+        working-directory: fixtures/flight
+        run: |
+          yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+          if [ $? -ne 0 ]; then
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+          fi
+      - name: Playwright install deps
+        working-directory: fixtures/flight
+        run: |
+          npx playwright install
+          sudo npx playwright install-deps
+      - name: Run tests
+        working-directory: fixtures/flight
+        run: yarn test
+        env:
+          # Otherwise the webserver is a blackbox
+          DEBUG: pw:webserver
+      - name: Archive Flight fixture artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-playwright-report
+          path: fixtures/flight/playwright-report
+      - name: Archive Flight fixture artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-test-results
+          path: fixtures/flight/test-results
+
   # ----- DEVTOOLS -----
   build_devtools_and_process_artifacts:
     name: Build DevTools and process artifacts
