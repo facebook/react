@@ -246,6 +246,14 @@ function* runWithEnvironment(
   if (env.config.enableFunctionOutlining) {
     outlineFunctions(hir);
     yield log({ kind: "hir", name: "OutlineFunctions", value: hir });
+
+    for (const outlined of env.getOutlinedFunctions()) {
+      yield log({
+        kind: "hir",
+        name: "OutlineFunctions (outlined)",
+        value: outlined.fn,
+      });
+    }
   }
 
   alignMethodCallScopes(hir);
