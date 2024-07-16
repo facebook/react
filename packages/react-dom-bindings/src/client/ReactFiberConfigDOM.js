@@ -692,8 +692,19 @@ export function commitMount(
       }
       return;
     case 'img': {
+      // The technique here is to assign the src or srcSet property to cause the browser
+      // to issue a new load event. If it hasn't loaded yet it'll fire whenever the load actually completes.
+      // If it has already loaded we missed it so the second load will still be the first one that executes
+      // any associated onLoad props.
+      // Even if we have srcSet we prefer to reassign src. The reason is that Firefox does not trigger a new
+      // load event when only srcSet is assigned. Chrome will trigger a load event if either is assigned so we
+      // only need to assign one. And Safari just never triggers a new load event which means this technique
+      // is already a noop regardless of which properties are assigned. We should revisit if browsers update
+      // this heuristic in the future.
       if ((newProps: any).src) {
         ((domElement: any): HTMLImageElement).src = (newProps: any).src;
+      } else if ((newProps: any).srcSet) {
+        ((domElement: any): HTMLImageElement).srcset = (newProps: any).srcSet;
       }
       return;
     }
