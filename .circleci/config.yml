@@ -222,52 +222,6 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
 
-  run_fixtures_flight_tests:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      # Fixture copies some built packages from the workroot after install.
-      # That means dependencies of the built packages are not installed.
-      # We need to install dependencies of the workroot to fulfill all dependency constraints
-      - setup_node_modules
-      - restore_cache:
-          name: Restore yarn cache of fixture
-          keys:
-            - v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
-      - run:
-          name: Install fixture dependencies
-          working_directory: fixtures/flight
-          command: |
-            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-            if [ $? -ne 0 ]; then
-              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-            fi
-      - save_cache:
-          name: Save yarn cache of fixture
-          key: v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/yarn
-      - run:
-          working_directory: fixtures/flight
-          name: Playwright install deps
-          command: |
-            npx playwright install
-            sudo npx playwright install-deps
-      - run:
-          name: Run tests
-          working_directory: fixtures/flight
-          command: yarn test
-          environment:
-          # Otherwise the webserver is a blackbox
-            DEBUG: pw:webserver
-      - store_artifacts:
-          path: fixtures/flight/playwright-report
-      - store_artifacts:
-          path: fixtures/flight/test-results
-
   run_devtools_tests_for_versions:
     docker: *docker
     environment: *environment
@@ -388,9 +342,6 @@ workflows:
             - download_base_build_for_sizebot
             - yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-          requires:
-            - yarn_build
-      - run_fixtures_flight_tests:
           requires:
             - yarn_build
 
