@@ -1891,8 +1891,10 @@ function lowerExpression(
       if (operator === "=") {
         const left = expr.get("left");
 
-        // Babel already supports parsing optional member expressions: https://github.com/tc39/proposal-optional-chaining-assignment
-        // But we don't
+        /*
+         * Babel already supports parsing optional member expressions: https://github.com/tc39/proposal-optional-chaining-assignment
+         * But we don't
+         */
         if (left.type === "OptionalMemberExpression") {
           builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Handle OptionalMemberExpression operators in AssignmentExpression`,

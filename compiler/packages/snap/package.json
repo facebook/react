@@ -46,8 +46,8 @@
     "@types/fbt": "^1.0.4",
     "@types/glob": "^8.1.0",
     "@types/node": "^18.7.18",
-    "@typescript-eslint/eslint-plugin": "^7.4.0",
-    "@typescript-eslint/parser": "^7.4.0",
+    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@typescript-eslint/parser": "^7.16.1",
     "rimraf": "^3.0.2"
   },
   "resolutions": {
