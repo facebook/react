@@ -31,7 +31,7 @@ export function printReactiveFunctionWithOutlined(
   const writer = new Writer();
   writeReactiveFunction(fn, writer);
   for (const outlined of fn.env.getOutlinedFunctions()) {
-    writer.writeLine("\n" + printFunction(outlined.fn));
+    writer.writeLine("\nfunction " + printFunction(outlined.fn));
   }
   return writer.complete();
 }

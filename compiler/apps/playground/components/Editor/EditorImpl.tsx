@@ -42,6 +42,8 @@ import {
   default as Output,
   PrintedCompilerPipelineValue,
 } from "./Output";
+import { printFunctionWithOutlined } from "babel-plugin-react-compiler/src/HIR/PrintHIR";
+import { printReactiveFunctionWithOutlined } from "babel-plugin-react-compiler/src/ReactiveScopes/PrintReactiveFunction";
 
 function parseInput(input: string, language: "flow" | "typescript") {
   // Extract the first line to quickly check for custom test directives
@@ -242,7 +244,7 @@ function compile(source: string): [CompilerOutput, "flow" | "typescript"] {
               kind: "hir",
               fnName,
               name: result.name,
-              value: printHIR(result.value.body),
+              value: printFunctionWithOutlined(result.value),
             });
             break;
           }
@@ -251,7 +253,7 @@ function compile(source: string): [CompilerOutput, "flow" | "typescript"] {
               kind: "reactive",
               fnName,
               name: result.name,
-              value: printReactiveFunction(result.value),
+              value: printReactiveFunctionWithOutlined(result.value),
             });
             break;
           }
