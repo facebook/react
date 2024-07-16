@@ -1038,7 +1038,7 @@ export function setInitialProperties(
     case 'img': {
       listenToNonDelegatedEvent('error', domElement);
       listenToNonDelegatedEvent('load', domElement);
-      // Mostlye a port of Void Element logic with special casing to ensure srcset and src are set last
+      // Mostly a port of Void Element logic with special casing to ensure srcset and src are set last
       let hasSrc = false;
       let hasSrcSet = false;
       for (const propKey in props) {
