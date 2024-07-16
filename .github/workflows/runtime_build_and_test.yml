@@ -312,3 +312,79 @@ jobs:
       - name: Display structure of build
         run: ls -R build
       - run: yarn check-release-dependencies
+
+  # ----- DEVTOOLS -----
+  build_devtools_and_process_artifacts:
+    name: Build DevTools and process artifacts
+    needs: build_and_lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - run: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
+        env:
+          RELEASE_CHANNEL: experimental
+      - name: Display structure of build
+        run: ls -R build
+      - name: Archive devtools build
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools
+          path: build/devtools.tgz
+      # Simplifies getting the extension for local testing
+      - name: Archive chrome extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools-chrome-extension
+          path: build/devtools/chrome-extension.zip
+      - name: Archive firefox extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-devtools-firefox-extension
+          path: build/devtools/firefox-extension.zip
+
+  run_devtools_e2e_tests:
+    name: Run DevTools e2e tests
+    needs: build_devtools_and_process_artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          path: build
+          merge-multiple: true
+      - run: |
+          npx playwright install
+          sudo npx playwright install-deps
+      - run: ./scripts/circleci/run_devtools_e2e_tests.js
+        env:
+          RELEASE_CHANNEL: experimental
