@@ -9,12 +9,8 @@ import generate from "@babel/generator";
 import * as t from "@babel/types";
 import chalk from "chalk";
 import { HIR, HIRFunction, ReactiveFunction } from "../HIR/HIR";
-import {
-  printFunction,
-  printFunctionWithOutlined,
-  printHIR,
-} from "../HIR/PrintHIR";
-import { CodegenFunction, printReactiveFunction } from "../ReactiveScopes";
+import { printFunctionWithOutlined, printHIR } from "../HIR/PrintHIR";
+import { CodegenFunction } from "../ReactiveScopes";
 import { printReactiveFunctionWithOutlined } from "../ReactiveScopes/PrintReactiveFunction";
 
 let ENABLED: boolean = false;

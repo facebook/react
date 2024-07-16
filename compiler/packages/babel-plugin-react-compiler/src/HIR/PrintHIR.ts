@@ -74,7 +74,6 @@ export function printFunction(fn: HIRFunction): string {
   }
   output.push(printHIR(fn.body));
   output.push(...fn.directives);
-
   return output.join("\n");
 }
 
