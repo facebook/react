@@ -219,6 +219,10 @@ jobs:
 
           # TODO: Test more persistent configurations?
         ]
+        shard:
+          - 1/3
+          - 2/3
+          - 3/3
     continue-on-error: true
     runs-on: ubuntu-latest
     steps:
@@ -242,7 +246,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: yarn test --build ${{ matrix.test_params }} --ci=github
+      - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci=github
 
   process_artifacts_combined:
     name: Process artifacts combined
