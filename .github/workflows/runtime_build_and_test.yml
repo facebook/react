@@ -397,9 +397,13 @@ jobs:
       - name: Archive Flight fixture artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: |
-            fixtures/flight/playwright-report
-            fixtures/flight/test-results
+          name: flight-playwright-report
+          path: fixtures/flight/playwright-report
+      - name: Archive Flight fixture artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-test-results
+          path: fixtures/flight/test-results
 
   # ----- DEVTOOLS -----
   build_devtools_and_process_artifacts:
