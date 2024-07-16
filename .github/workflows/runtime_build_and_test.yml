@@ -348,7 +348,7 @@ jobs:
       - run: yarn check-release-dependencies
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-    name: Check yarn_test_dom_fixtures (stable)
+    name: Check fixtures DOM (stable)
     needs: build_and_lint
     runs-on: ubuntu-latest
     steps:
