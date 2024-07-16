@@ -368,6 +368,7 @@ jobs:
         with:
           path: "**/node_modules"
           key: v2-yarn_cache_fixtures_flight-${{ runner.arch }}-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+      - run: yarn install --frozen-lockfile
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
