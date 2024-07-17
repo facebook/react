@@ -26,6 +26,7 @@ function getComments(path) {
     i--;
   }
   return comments;
+  // returning comments 
 }
 
 module.exports = getComments;
