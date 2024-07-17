@@ -75,8 +75,6 @@ import {
   isServerReference,
   supportsRequestStorage,
   requestStorage,
-  supportsComponentStorage,
-  componentStorage,
   createHints,
   initAsyncDebugInfo,
 } from './ReactFlightServerConfig';
@@ -98,6 +96,12 @@ import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
 import {getOwnerStackByComponentInfoInDev} from './flight/ReactFlightComponentStack';
+
+import {
+  callComponentInDEV,
+  callLazyInitInDEV,
+  callIteratorInDEV,
+} from './ReactFlightCallUserSpace';
 
 import {
   getIteratorFn,
@@ -128,10 +132,6 @@ import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
 // TODO: Make this configurable on the Request.
 const externalRegExp = /\/node\_modules\/| \(node\:| node\:|\(\<anonymous\>\)/;
-
-let callComponentFrame: null | string = null;
-let callIteratorFrame: null | string = null;
-let callLazyInitFrame: null | string = null;
 
 function isNotExternal(stackFrame: string): boolean {
   return !externalRegExp.test(stackFrame);
@@ -168,52 +168,6 @@ function getStack(error: Error): string {
   }
 }
 
-function initCallComponentFrame(): string {
-  // Extract the stack frame of the callComponentInDEV function.
-  const error = callComponentInDEV(Error, 'react-stack-top-frame', {}, null);
-  const stack = getStack(error);
-  const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
-  const endIdx = stack.indexOf('\n', startIdx);
-  if (endIdx === -1) {
-    return stack.slice(startIdx);
-  }
-  return stack.slice(startIdx, endIdx);
-}
-
-function initCallIteratorFrame(): string {
-  // Extract the stack frame of the callIteratorInDEV function.
-  try {
-    (callIteratorInDEV: any)({next: null});
-    return '';
-  } catch (error) {
-    const stack = getStack(error);
-    const startIdx = stack.startsWith('TypeError: ')
-      ? stack.indexOf('\n') + 1
-      : 0;
-    const endIdx = stack.indexOf('\n', startIdx);
-    if (endIdx === -1) {
-      return stack.slice(startIdx);
-    }
-    return stack.slice(startIdx, endIdx);
-  }
-}
-
-function initCallLazyInitFrame(): string {
-  // Extract the stack frame of the callLazyInitInDEV function.
-  const error = callLazyInitInDEV({
-    $$typeof: REACT_LAZY_TYPE,
-    _init: Error,
-    _payload: 'react-stack-top-frame',
-  });
-  const stack = getStack(error);
-  const startIdx = stack.startsWith('Error: react-stack-top-frame\n') ? 29 : 0;
-  const endIdx = stack.indexOf('\n', startIdx);
-  if (endIdx === -1) {
-    return stack.slice(startIdx);
-  }
-  return stack.slice(startIdx, endIdx);
-}
-
 function filterDebugStack(error: Error): string {
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
@@ -225,27 +179,15 @@ function filterDebugStack(error: Error): string {
     // don't want/need.
     stack = stack.slice(29);
   }
+  let idx = stack.indexOf('react-stack-bottom-frame');
+  if (idx !== -1) {
+    idx = stack.lastIndexOf('\n', idx);
+  }
+  if (idx !== -1) {
+    // Cut off everything after the bottom frame since it'll be internals.
+    stack = stack.slice(0, idx);
+  }
   const frames = stack.split('\n').slice(1);
-  if (callComponentFrame === null) {
-    callComponentFrame = initCallComponentFrame();
-  }
-  let lastFrameIdx = frames.indexOf(callComponentFrame);
-  if (lastFrameIdx === -1) {
-    if (callLazyInitFrame === null) {
-      callLazyInitFrame = initCallLazyInitFrame();
-    }
-    lastFrameIdx = frames.indexOf(callLazyInitFrame);
-    if (lastFrameIdx === -1) {
-      if (callIteratorFrame === null) {
-        callIteratorFrame = initCallIteratorFrame();
-      }
-      lastFrameIdx = frames.indexOf(callIteratorFrame);
-    }
-  }
-  if (lastFrameIdx !== -1) {
-    // Cut off everything after our "callComponent" slot since it'll be Flight internals.
-    frames.length = lastFrameIdx;
-  }
   return frames.filter(isNotExternal).join('\n');
 }
 
@@ -816,20 +758,6 @@ function serializeReadableStream(
   return serializeByValueID(streamTask.id);
 }
 
-// This indirect exists so we can exclude its stack frame in DEV (and anything below it).
-/** @noinline */
-function callIteratorInDEV(
-  iterator: $AsyncIterator<ReactClientValue, ReactClientValue, void>,
-  progress: (
-    entry:
-      | {done: false, +value: ReactClientValue, ...}
-      | {done: true, +value: ReactClientValue, ...},
-  ) => void,
-  error: (reason: mixed) => void,
-) {
-  iterator.next().then(progress, error);
-}
-
 function serializeAsyncIterable(
   request: Request,
   task: Task,
@@ -1027,57 +955,6 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
     lazyType._debugInfo = (thenable: any)._debugInfo || [];
   }
   return lazyType;
-}
-
-// This indirect exists so we can exclude its stack frame in DEV (and anything below it).
-/** @noinline */
-function callComponentInDEV<Props, R>(
-  Component: (p: Props, arg: void) => R,
-  props: Props,
-  componentDebugInfo: ReactComponentInfo,
-  debugTask: null | ConsoleTask,
-): R {
-  // The secondArg is always undefined in Server Components since refs error early.
-  const secondArg = undefined;
-  setCurrentOwner(componentDebugInfo);
-  try {
-    if (supportsComponentStorage) {
-      // Run the component in an Async Context that tracks the current owner.
-      if (enableOwnerStacks && debugTask) {
-        return debugTask.run(
-          // $FlowFixMe[method-unbinding]
-          componentStorage.run.bind(
-            componentStorage,
-            componentDebugInfo,
-            Component,
-            props,
-            secondArg,
-          ),
-        );
-      }
-      return componentStorage.run(
-        componentDebugInfo,
-        Component,
-        props,
-        secondArg,
-      );
-    } else {
-      if (enableOwnerStacks && debugTask) {
-        return debugTask.run(Component.bind(null, props, secondArg));
-      }
-      return Component(props, secondArg);
-    }
-  } finally {
-    setCurrentOwner(null);
-  }
-}
-
-// This indirect exists so we can exclude its stack frame in DEV (and anything below it).
-/** @noinline */
-function callLazyInitInDEV(lazy: LazyComponent<any, any>): any {
-  const payload = lazy._payload;
-  const init = lazy._init;
-  return init(payload);
 }
 
 function callWithDebugContextInDEV<A, T>(
