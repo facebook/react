@@ -39,7 +39,9 @@ import { eachReactiveValueOperand } from "./visitors";
  * Users can also specify their own functions to be treated similarly to fbt via the
  * `customMacros` environment configuration.
  */
-export function memoizeFbtAndMacroOperandsInSameScope(fn: HIRFunction): void {
+export function memoizeFbtAndMacroOperandsInSameScope(
+  fn: HIRFunction
+): Set<IdentifierId> {
   const fbtMacroTags = new Set([
     ...FBT_TAGS,
     ...(fn.env.config.customMacros ?? []),
@@ -52,6 +54,7 @@ export function memoizeFbtAndMacroOperandsInSameScope(fn: HIRFunction): void {
       break;
     }
   }
+  return fbtValues;
 }
 
 export const FBT_TAGS: Set<string> = new Set([

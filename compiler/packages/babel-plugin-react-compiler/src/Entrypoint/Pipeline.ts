@@ -262,7 +262,7 @@ function* runWithEnvironment(
     value: hir,
   });
 
-  memoizeFbtOperandsInSameScope(hir);
+  const fbtOperands = memoizeFbtOperandsInSameScope(hir);
   yield log({
     kind: "hir",
     name: "MemoizeFbtAndMacroOperandsInSameScope",
@@ -484,7 +484,10 @@ function* runWithEnvironment(
     validatePreservedManualMemoization(reactiveFunction);
   }
 
-  const ast = codegenFunction(reactiveFunction, uniqueIdentifiers).unwrap();
+  const ast = codegenFunction(reactiveFunction, {
+    uniqueIdentifiers,
+    fbtOperands,
+  }).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
   for (const outlined of ast.outlined) {
     yield log({ kind: "ast", name: "Codegen (outlined)", value: outlined.fn });

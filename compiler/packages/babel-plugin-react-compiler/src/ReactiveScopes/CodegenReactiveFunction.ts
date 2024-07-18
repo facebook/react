@@ -100,12 +100,19 @@ export type CodegenFunction = {
 
 export function codegenFunction(
   fn: ReactiveFunction,
-  uniqueIdentifiers: Set<string>
+  {
+    uniqueIdentifiers,
+    fbtOperands,
+  }: {
+    uniqueIdentifiers: Set<string>;
+    fbtOperands: Set<IdentifierId>;
+  }
 ): Result<CodegenFunction, CompilerError> {
   const cx = new Context(
     fn.env,
     fn.id ?? "[[ anonymous ]]",
     uniqueIdentifiers,
+    fbtOperands,
     null
   );
 
@@ -281,7 +288,8 @@ export function codegenFunction(
       new Context(
         cx.env,
         reactiveFunction.id ?? "[[ anonymous ]]",
-        identifiers
+        identifiers,
+        cx.fbtOperands
       ),
       reactiveFunction
     );
@@ -391,17 +399,20 @@ class Context {
   errors: CompilerError = new CompilerError();
   objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
   uniqueIdentifiers: Set<string>;
+  fbtOperands: Set<IdentifierId>;
   synthesizedNames: Map<string, ValidIdentifierName> = new Map();
 
   constructor(
     env: Environment,
     fnName: string,
     uniqueIdentifiers: Set<string>,
+    fbtOperands: Set<IdentifierId>,
     temporaries: Temporaries | null = null
   ) {
     this.env = env;
     this.fnName = fnName;
     this.uniqueIdentifiers = uniqueIdentifiers;
+    this.fbtOperands = fbtOperands;
     this.temp = temporaries !== null ? new Map(temporaries) : new Map();
   }
   get nextCacheIndex(): number {
@@ -1776,6 +1787,7 @@ function codegenInstructionValue(
                   cx.env,
                   reactiveFunction.id ?? "[[ anonymous ]]",
                   cx.uniqueIdentifiers,
+                  cx.fbtOperands,
                   cx.temp
                 ),
                 reactiveFunction
@@ -1979,6 +1991,7 @@ function codegenInstructionValue(
           cx.env,
           reactiveFunction.id ?? "[[ anonymous ]]",
           cx.uniqueIdentifiers,
+          cx.fbtOperands,
           cx.temp
         ),
         reactiveFunction
@@ -2229,7 +2242,10 @@ function codegenJsxAttribute(
       switch (innerValue.type) {
         case "StringLiteral": {
           value = innerValue;
-          if (STRING_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value)) {
+          if (
+            STRING_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value) &&
+            !cx.fbtOperands.has(attribute.place.identifier.id)
+          ) {
             value = createJsxExpressionContainer(value.loc, value);
           }
           break;
