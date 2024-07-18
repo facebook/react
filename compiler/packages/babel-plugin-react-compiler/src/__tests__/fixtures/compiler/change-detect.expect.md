@@ -19,12 +19,6 @@ function Component(props) {
   );
 }
 
-export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{ x: 1, y: { b: 2, c: 3, d: 4 } }],
-  isComponent: true,
-};
-
 ```
 
 ## Code
@@ -141,13 +135,5 @@ function Component(props) {
   return t3;
 }
 
-export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{ x: 1, y: { b: 2, c: 3, d: 4 } }],
-  isComponent: true,
-};
-
 ```
       
-### Eval output
-(kind: ok) <div>1231</div>
