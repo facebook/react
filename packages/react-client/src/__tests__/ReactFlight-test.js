@@ -10,6 +10,8 @@
 
 'use strict';
 
+const path = require('path');
+
 if (typeof Blob === 'undefined') {
   global.Blob = require('buffer').Blob;
 }
@@ -41,15 +43,23 @@ function formatV8Stack(stack) {
   return v8StyleStack;
 }
 
+const repoRoot = path.resolve(__dirname, '../../../../');
+function normalizeReactCodeLocInfo(str) {
+  const repoRootForRegexp = repoRoot.replace(/\//g, '\\/');
+  const repoFileLocMatch = new RegExp(`${repoRootForRegexp}.+?:\\d+:\\d+`, 'g');
+  return str && str.replace(repoFileLocMatch, '**');
+}
+
 // If we just use the original Error prototype, Jest will only display the error message if assertions fail.
 // But we usually want to also assert on our expando properties or even the stack.
 // By hiding the fact from Jest that this is an error, it will show all enumerable properties on mismatch.
+
 function getErrorForJestMatcher(error) {
   return {
     ...error,
     // non-enumerable properties that are still relevant for testing
     message: error.message,
-    stack: error.stack,
+    stack: normalizeReactCodeLocInfo(error.stack),
   };
 }
 
@@ -1211,7 +1221,7 @@ describe('ReactFlight', () => {
       throw error;
     }
 
-    const findSourceMapURL = jest.fn();
+    const findSourceMapURL = jest.fn(() => null);
     const errors = [];
     class MyErrorBoundary extends React.Component {
       state = {error: null};
@@ -1273,11 +1283,15 @@ describe('ReactFlight', () => {
             stack: gate(flags => flags.enableOwnerStacks)
               ? expect.stringContaining(
                   'Error: This is an error\n' +
+                    '    at eval (eval at testFunction (eval at createFakeFunction (**), <anonymous>:1:35)\n' +
+                    '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
                     '    at (anonymous) (file:///testing.js:42:3)\n' +
                     '    at (anonymous) (file:///testing.js:42:3)\n',
                 )
               : expect.stringContaining(
                   'Error: This is an error\n' +
+                    '    at eval (eval at testFunction (inspected-page.html:29:11), <anonymous>:1:10)\n' +
+                    '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
                     '    at file:///testing.js:42:3\n' +
                     '    at file:///testing.js:42:3',
                 ),
@@ -1286,7 +1300,15 @@ describe('ReactFlight', () => {
           },
         ],
         findSourceMapURLCalls: gate(flags => flags.enableOwnerStacks)
-          ? [[__filename], [__filename], ['file:///testing.js'], [__filename]]
+          ? [
+              [__filename],
+              [__filename],
+              // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
+              ['inspected-page.html:29:11), <anonymous>'],
+              ['file://~/(some)(really)(exotic-directory)/ReactFlight-test.js'],
+              ['file:///testing.js'],
+              [__filename],
+            ]
           : [],
       });
     } else {
