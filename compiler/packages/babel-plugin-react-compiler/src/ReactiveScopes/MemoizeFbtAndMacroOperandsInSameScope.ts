@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { CompilerError } from "..";
 import {
   HIRFunction,
   IdentifierId,
@@ -12,6 +13,7 @@ import {
   Place,
   ReactiveValue,
 } from "../HIR";
+import { STRING_REQUIRES_EXPR_CONTAINER_PATTERN } from "./CodegenReactiveFunction";
 import { eachReactiveValueOperand } from "./visitors";
 
 /**
@@ -50,6 +52,25 @@ export function memoizeFbtAndMacroOperandsInSameScope(fn: HIRFunction): void {
     visit(fn, fbtMacroTags, fbtValues);
     if (size === fbtValues.size) {
       break;
+    }
+  }
+
+  /**
+   * Hack in a check to ensure that we don't produce invalid ASTs in codegen
+   * (see https://github.com/facebook/react/pull/29997 and `fbt-param-with-quotes` fixture)
+   */
+  for (const [, block] of fn.body.blocks) {
+    for (const { lvalue, value } of block.instructions) {
+      if (fbtValues.has(lvalue.identifier.id) && value.kind === "Primitive") {
+        if (typeof value.value === "string") {
+          if (STRING_REQUIRES_EXPR_CONTAINER_PATTERN.test(value.value)) {
+            CompilerError.throwTodo({
+              reason: "Handle non-ascii character in fbt-like macro operand",
+              loc: value.loc,
+            });
+          }
+        }
+      }
     }
   }
 }
