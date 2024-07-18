@@ -82,24 +82,23 @@ async function getWorkflowRunId(commit, cwd) {
   ).stdout;
 
   const json = JSON.parse(res);
-  console.log(json);
-  let workflowRunId;
+  let workflowRun;
   if (json.total_count === 1) {
-    workflowRunId = json.workflow_runs[0].id;
+    workflowRun = json.workflow_runs[0];
   } else {
-    workflowRunId = json.workflow_runs.find(
+    workflowRun = json.workflow_runs.find(
       run => run.head_sha === commit && run.head_branch === 'main'
-    ).id;
+    );
   }
 
-  if (workflowRunId == null) {
+  if (workflowRun == null || workflowRun.id == null) {
     console.log(
       theme`{error The workflow run for the specified commit (${commit}) could not be found.}`
     );
     process.exit(1);
   }
 
-  return workflowRunId;
+  return workflowRun.id;
 }
 
 async function getArtifact(workflowRunId, artifactName) {
