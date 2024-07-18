@@ -97,33 +97,6 @@ jobs:
           paths:
             - build
 
-  download_base_build_for_sizebot:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - setup_node_modules
-      - run:
-          name: Download artifacts for base revision
-          command: |
-            git fetch origin main
-            cd ./scripts/release && yarn && cd ../../
-            scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main) --allowBrokenCI
-            mv ./build ./base-build
-
-      - run:
-          # TODO: The `download-experimental-build` script copies the npm
-          # packages into the `node_modules` directory. This is a historical
-          # quirk of how the release script works. Let's pretend they
-          # don't exist.
-          name: Delete extraneous files
-          command: rm -rf ./base-build/node_modules
-
-      - persist_to_workspace:
-          root: .
-          paths:
-            - base-build
-
   process_artifacts_combined:
     docker: *docker
     environment: *environment
@@ -141,20 +114,6 @@ jobs:
           path: ./build2.tgz
       - store_artifacts:
           path: ./build.tgz
-
-  sizebot:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
-      - setup_node_modules
-      - run:
-          command: node ./scripts/tasks/danger
-      - store_artifacts:
-          path: sizebot-message.md
 
   build_devtools_and_process_artifacts:
     docker: *docker
@@ -279,20 +238,6 @@ workflows:
       - process_artifacts_combined:
           requires:
             - scrape_warning_messages
-            - yarn_build
-      - download_base_build_for_sizebot:
-          filters:
-            branches:
-              ignore:
-                - main
-                - builds/facebook-www
-      - sizebot:
-          filters:
-            branches:
-              ignore:
-                - main
-          requires:
-            - download_base_build_for_sizebot
             - yarn_build
 
   devtools_regression_tests:
