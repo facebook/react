@@ -184,6 +184,7 @@ export type ReactComponentInfo = {
   +owner?: null | ReactComponentInfo,
   +stack?: null | string,
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
+  +debugStack?: null | Error,
   +debugTask?: null | ConsoleTask,
 };
 

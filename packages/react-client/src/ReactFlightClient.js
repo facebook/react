@@ -697,13 +697,7 @@ function createElement(
         // source mapping information.
         // This can unfortunately happen within a user space callstack which will
         // remain on the stack.
-        const callStackForError = buildFakeCallStack(
-          response,
-          stack,
-          // $FlowFixMe[incompatible-use]
-          Error.bind(null, 'react-stack-top-frame'),
-        );
-        normalizedStackTrace = callStackForError();
+        normalizedStackTrace = createFakeJSXCallStackInDEV(response, stack);
       }
       Object.defineProperty(element, '_debugStack', {
         configurable: false,
@@ -774,7 +768,7 @@ function createElement(
         };
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.stack = element._debugStack;
+          erroredComponent.debugStack = element._debugStack;
           // $FlowFixMe[cannot-write]
           erroredComponent.debugTask = element._debugTask;
         }
@@ -937,7 +931,7 @@ function waitForReference<T>(
         };
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.stack = element._debugStack;
+          erroredComponent.debugStack = element._debugStack;
           // $FlowFixMe[cannot-write]
           erroredComponent.debugTask = element._debugTask;
         }
@@ -2067,40 +2061,52 @@ function initializeFakeTask(
   return componentTask;
 }
 
-const createFakeCallStack = {
-  'react-stack-bottom-frame': function (fakeCallStack: () => Error): Error {
-    return fakeCallStack();
+const createFakeJSXCallStack = {
+  'react-stack-bottom-frame': function (
+    response: Response,
+    stack: string,
+  ): Error {
+    const callStackForError = buildFakeCallStack(
+      response,
+      stack,
+      fakeJSXCallSite,
+    );
+    return callStackForError();
   },
 };
 
-const createFakeCallStackInDEV: (fakeCallStack: () => Error) => Error = __DEV__
+const createFakeJSXCallStackInDEV: (
+  response: Response,
+  stack: string,
+) => Error = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
-    (createFakeCallStack['react-stack-bottom-frame'].bind(
-      createFakeCallStack,
+    (createFakeJSXCallStack['react-stack-bottom-frame'].bind(
+      createFakeJSXCallStack,
     ): any)
   : (null: any);
+
+/** @noinline */
+function fakeJSXCallSite() {
+  // This extra call frame represents the JSX creation function. We always pop this frame
+  // off before presenting so it needs to be part of the stack.
+  return new Error('react-stack-top-frame');
+}
 
 function initializeFakeStack(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): void {
-  if ((debugInfo: any)._stackInitialized) {
+  const cachedEntry = debugInfo.debugStack;
+  if (cachedEntry !== undefined) {
     return;
   }
   if (typeof debugInfo.stack === 'string') {
-    const callStackForError = buildFakeCallStack(
+    // $FlowFixMe[cannot-write]
+    // $FlowFixMe[prop-missing]
+    debugInfo.debugStack = createFakeJSXCallStackInDEV(
       response,
       debugInfo.stack,
-      // $FlowFixMe[incompatible-use]
-      Error.bind(null, 'react-stack-top-frame'),
     );
-    // TODO: Ideally we should leave this as an Error instead of eagerly force it.
-    // TODO: This object identity is important because it might be used as an owner
-    // so we cannot clone it. But by changing the format we also cannot reuse the stack
-    // elsewhere to create fake tasks. We have already done that above so should be ok.
-    // $FlowFixMe[cannot-write]
-    debugInfo.stack = createFakeCallStackInDEV(callStackForError).stack;
-    (debugInfo: any)._stackInitialized = true;
   }
   if (debugInfo.owner != null) {
     // Initialize any owners not yet initialized.
