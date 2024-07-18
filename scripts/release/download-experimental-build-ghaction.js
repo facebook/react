@@ -82,6 +82,7 @@ async function getWorkflowRunId(commit, cwd) {
   ).stdout;
 
   const json = JSON.parse(res);
+  console.log(json);
   let workflowRunId;
   if (json.total_count === 1) {
     workflowRunId = json.workflow_runs[0].id;
