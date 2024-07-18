@@ -25,7 +25,7 @@ import {
 import { printManualMemoDependency } from "../HIR/PrintHIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { collectMaybeMemoDependencies } from "../Inference/DropManualMemoization";
-import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
+import { isMutableAtInstruction } from "../ReactiveScopes/InferReactiveScopeVariables";
 import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
@@ -464,7 +464,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         instruction.value as InstructionValue
       )) {
         if (
-          isMutable(instruction as Instruction, value) ||
+          isMutableAtInstruction(instruction as Instruction, value) ||
           (isDecl && isUnmemoized(value.identifier, this.scopes))
         ) {
           state.errors.push({

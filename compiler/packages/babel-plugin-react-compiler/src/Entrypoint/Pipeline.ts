@@ -383,12 +383,14 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  pruneNonReactiveDependencies(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "PruneNonReactiveDependencies",
-    value: reactiveFunction,
-  });
+  if (env.config.enableChangeDetectionForDebugging == null) {
+    pruneNonReactiveDependencies(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "PruneNonReactiveDependencies",
+      value: reactiveFunction,
+    });
+  }
 
   pruneUnusedScopes(reactiveFunction);
   yield log({

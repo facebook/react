@@ -675,10 +675,7 @@ function codegenReactiveScope(
   let computationBlock = codegenBlock(cx, block);
 
   let memoStatement;
-  if (
-    cx.env.config.enableChangeDetectionForDebugging != null &&
-    changeExpressions.length > 0
-  ) {
+  if (cx.env.config.enableChangeDetectionForDebugging != null) {
     const loc =
       typeof scope.loc === "symbol"
         ? "unknown location"

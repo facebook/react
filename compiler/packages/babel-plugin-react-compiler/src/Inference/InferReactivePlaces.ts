@@ -26,7 +26,7 @@ import {
 } from "../HIR/visitors";
 import {
   findDisjointMutableValues,
-  isMutable,
+  isMutableAtInstruction,
 } from "../ReactiveScopes/InferReactiveScopeVariables";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
@@ -232,7 +232,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               case Effect.Store:
               case Effect.ConditionallyMutate:
               case Effect.Mutate: {
-                if (isMutable(instruction, operand)) {
+                if (isMutableAtInstruction(instruction, operand)) {
                   const resolvedId = identifierMapping.get(operand.identifier);
                   if (resolvedId !== undefined) {
                     reactiveIdentifiers.markReactiveIdentifier(resolvedId);

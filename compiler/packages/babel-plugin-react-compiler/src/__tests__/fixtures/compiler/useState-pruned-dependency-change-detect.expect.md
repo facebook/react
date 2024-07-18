@@ -20,32 +20,25 @@ import { c as _c } from "react/compiler-runtime"; // @enableChangeDetectionForDe
 import { useState } from "react";
 
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(2);
+  const [x] = useState(f(props.x));
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = f(props.x);
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const [x] = useState(t0);
-  let t1;
   {
-    t1 = <div>{x}</div>;
-    let condition = $[1] !== x;
+    t0 = <div>{x}</div>;
+    let condition = $[0] !== x;
     if (!condition) {
-      let old$t1 = $[2];
-      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(6:6)");
+      let old$t0 = $[1];
+      $structuralCheck(old$t0, t0, "t0", "Component", "cached", "(6:6)");
     }
-    $[1] = x;
-    $[2] = t1;
+    $[0] = x;
+    $[1] = t0;
     if (condition) {
-      t1 = <div>{x}</div>;
-      $structuralCheck($[2], t1, "t1", "Component", "recomputed", "(6:6)");
-      t1 = $[2];
+      t0 = <div>{x}</div>;
+      $structuralCheck($[1], t0, "t0", "Component", "recomputed", "(6:6)");
+      t0 = $[1];
     }
   }
-  return t1;
+  return t0;
 }
 
 ```
