@@ -92,6 +92,9 @@ async function getWorkflowRunId(commit) {
 }
 
 async function getArtifact(workflowRunId, artifactName) {
+  console.log(
+    `https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`
+  );
   const res = (
     await exec(`curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS}
   https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`)
