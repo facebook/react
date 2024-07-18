@@ -572,7 +572,11 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
+      - name: Restore archived base-build
+        uses: actions/download-artifact@v4
+        with:
+          path: base-build
+      - run: echo ${{ github.sha }} >> build/COMMIT_SHA
       - run: node ./scripts/tasks/danger
       - name: Archive sizebot results
         uses: actions/upload-artifact@v4
