@@ -765,6 +765,14 @@ export class Environment {
       return DefaultMutatingHook;
     }
   }
+
+  preserveManualMemo(): boolean {
+    return (
+      this.config.enablePreserveExistingManualUseMemo ||
+      this.config.disableMemoizationForDebugging ||
+      this.config.enableChangeDetectionForDebugging != null
+    );
+  }
 }
 
 // From https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#LL18C1-L23C2
