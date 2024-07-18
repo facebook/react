@@ -25,16 +25,6 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
     requiresArg: true,
     type: 'string',
   },
-  skipTests: {
-    requiresArg: false,
-    type: 'boolean',
-    default: false,
-  },
-  allowBrokenCI: {
-    requiresArg: false,
-    type: 'boolean',
-    default: false,
-  },
 }).argv;
 
 function printSummary(commit) {
@@ -73,13 +63,10 @@ function getWorkflowId() {
   }
 }
 
-async function getWorkflowRunId(commit, cwd) {
-  const res = (
-    await exec(
-      `curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS} \
-  https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${getWorkflowId()}/runs?head_sha=${commit}&branch=main&exclude_pull_requests=true`
-    )
-  ).stdout;
+async function getWorkflowRunId(commit) {
+  const command = `curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS} https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${getWorkflowId()}/runs?head_sha=${commit}&branch=main&exclude_pull_requests=true`;
+  console.log(theme`{command ${command}}`);
+  const res = (await exec(command)).stdout;
 
   const json = JSON.parse(res);
   let workflowRun;
@@ -102,12 +89,10 @@ async function getWorkflowRunId(commit, cwd) {
 }
 
 async function getArtifact(workflowRunId, artifactName) {
-  const res = (
-    await exec(
-      `curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS} \
-  https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`
-    )
-  ).stdout;
+  const command = `curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS} \
+  https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`;
+  console.log(theme`{command ${command}}`);
+  const res = (await exec(command)).stdout;
 
   const json = JSON.parse(res);
   let artifact;
