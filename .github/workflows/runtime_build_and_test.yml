@@ -547,7 +547,7 @@ jobs:
       # don't exist.
       - name: Delete extraneous files
         run: rm -rf ./base-build/node_modules
-      - name: Display structure of build
+      - name: Display structure of base-build
         run: ls -R base-build
       - name: Archive base-build
         uses: actions/upload-artifact@v4
@@ -573,6 +573,12 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: build_*
+          path: build
+          merge-multiple: true
       - name: Restore archived base-build
         uses: actions/download-artifact@v4
         with:
