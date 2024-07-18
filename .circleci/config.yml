@@ -91,8 +91,8 @@ jobs:
       - setup_node_modules
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
       - run: |
-        mkdir -p ./build/__test_utils__
-        node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
+          mkdir -p ./build/__test_utils__
+          node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build.tgz ./build
         # TODO: Migrate scripts to use `build` directory instead of `build2`
