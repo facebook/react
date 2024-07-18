@@ -100,6 +100,7 @@ async function getArtifact(workflowRunId, artifactName) {
   https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`)
   ).stdout;
 
+  console.log(res);
   const json = JSON.parse(res);
   let artifact;
   if (json.total_count === 1) {
