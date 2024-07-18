@@ -250,6 +250,7 @@ export type Response = {
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
+  _replayConsole: boolean, // DEV-only
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -1230,6 +1231,29 @@ function parseModelString(
         }
         // Fallthrough
       }
+      case 'Y': {
+        if (__DEV__) {
+          // In DEV mode we encode omitted objects in logs as a getter that throws
+          // so that when you try to access it on the client, you know why that
+          // happened.
+          Object.defineProperty(parentObject, key, {
+            get: function () {
+              // We intentionally don't throw an error object here because it looks better
+              // without the stack in the console which isn't useful anyway.
+              // eslint-disable-next-line no-throw-literal
+              throw (
+                'This object has been omitted by React in the console log ' +
+                'to avoid sending too much data from the server. Try logging smaller ' +
+                'or more specific objects.'
+              );
+            },
+            enumerable: true,
+            configurable: false,
+          });
+          return null;
+        }
+        // Fallthrough
+      }
       default: {
         // We assume that anything else is a reference ID.
         const ref = value.slice(1);
@@ -1278,6 +1302,7 @@ function ResponseInstance(
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
+  replayConsole: boolean,
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   this._bundlerConfig = bundlerConfig;
@@ -1304,6 +1329,7 @@ function ResponseInstance(
   }
   if (__DEV__) {
     this._debugFindSourceMapURL = findSourceMapURL;
+    this._replayConsole = replayConsole;
   }
   // Don't inline this call because it causes closure to outline the call above.
   this._fromJSON = createFromJSONCallback(this);
@@ -1317,6 +1343,7 @@ export function createResponse(
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
+  replayConsole: boolean,
 ): Response {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new ResponseInstance(
@@ -1327,6 +1354,7 @@ export function createResponse(
     nonce,
     temporaryReferences,
     findSourceMapURL,
+    replayConsole,
   );
 }
 
@@ -1863,19 +1891,33 @@ function createFakeFunction<T>(
   const comment =
     '/* This module was rendered by a Server Component. Turn on Source Maps to see the server source. */';
 
+  if (!name) {
+    // An eval:ed function with no name gets the name "eval". We give it something more descriptive.
+    name = '(anonymous)';
+  }
+  const encodedName = JSON.stringify(name);
   // We generate code where the call is at the line and column of the server executed code.
   // This allows us to use the original source map as the source map of this fake file to
   // point to the original source.
   let code;
   if (line <= 1) {
-    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment;
+    const minSize = encodedName.length + 7;
+    code =
+      '({' +
+      encodedName +
+      ':_=>' +
+      ' '.repeat(col < minSize ? 0 : col - minSize) +
+      '_()})\n' +
+      comment;
   } else {
     code =
       comment +
       '\n'.repeat(line - 2) +
-      '_=>\n' +
+      '({' +
+      encodedName +
+      ':_=>\n' +
       ' '.repeat(col < 1 ? 0 : col - 1) +
-      '_()';
+      '_()})';
   }
 
   if (filename.startsWith('/')) {
@@ -1903,7 +1945,7 @@ function createFakeFunction<T>(
   let fn: FakeFunction<T>;
   try {
     // eslint-disable-next-line no-eval
-    fn = (0, eval)(code);
+    fn = (0, eval)(code)[name];
   } catch (x) {
     // If eval fails, such as if in an environment that doesn't support it,
     // we fallback to creating a function here. It'll still have the right
@@ -1912,10 +1954,6 @@ function createFakeFunction<T>(
       return _();
     };
   }
-  // $FlowFixMe[cannot-write]
-  Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
-  // $FlowFixMe[prop-missing]
-  fn.displayName = name;
   return fn;
 }
 
@@ -2034,6 +2072,10 @@ function resolveConsoleEntry(
     );
   }
 
+  if (!response._replayConsole) {
+    return;
+  }
+
   const payload: [string, string, null | ReactComponentInfo, string, mixed] =
     parseModel(response, value);
   const methodName = payload[0];
@@ -2058,7 +2100,7 @@ function resolveConsoleEntry(
       task.run(callStack);
       return;
     }
-    // TODO: Set the current owner so that consoleWithStackDev adds the component
+    // TODO: Set the current owner so that captureOwnerStack() adds the component
     // stack during the replay - if needed.
   }
   const rootTask = response._debugRootTask;
@@ -2121,7 +2163,7 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
-function processFullRow(
+function processFullBinaryRow(
   response: Response,
   id: number,
   tag: number,
@@ -2183,6 +2225,15 @@ function processFullRow(
     row += readPartialStringChunk(stringDecoder, buffer[i]);
   }
   row += readFinalStringChunk(stringDecoder, chunk);
+  processFullStringRow(response, id, tag, row);
+}
+
+function processFullStringRow(
+  response: Response,
+  id: number,
+  tag: number,
+  row: string,
+): void {
   switch (tag) {
     case 73 /* "I" */: {
       resolveModule(response, id, row);
@@ -2385,7 +2436,7 @@ export function processBinaryChunk(
       // We found the last chunk of the row
       const length = lastIdx - i;
       const lastChunk = new Uint8Array(chunk.buffer, offset, length);
-      processFullRow(response, rowID, rowTag, buffer, lastChunk);
+      processFullBinaryRow(response, rowID, rowTag, buffer, lastChunk);
       // Reset state machine for a new row
       i = lastIdx;
       if (rowState === ROW_CHUNK_BY_NEWLINE) {
@@ -2407,6 +2458,151 @@ export function processBinaryChunk(
       // a newline, this doesn't hurt since we'll just ignore it.
       rowLength -= remainingSlice.byteLength;
       break;
+    }
+  }
+  response._rowState = rowState;
+  response._rowID = rowID;
+  response._rowTag = rowTag;
+  response._rowLength = rowLength;
+}
+
+export function processStringChunk(response: Response, chunk: string): void {
+  // This is a fork of processBinaryChunk that takes a string as input.
+  // This can't be just any binary chunk coverted to a string. It needs to be
+  // in the same offsets given from the Flight Server. E.g. if it's shifted by
+  // one byte then it won't line up to the UCS-2 encoding. It also needs to
+  // be valid Unicode. Also binary chunks cannot use this even if they're
+  // value Unicode. Large strings are encoded as binary and cannot be passed
+  // here. Basically, only if Flight Server gave you this string as a chunk,
+  // you can use it here.
+  let i = 0;
+  let rowState = response._rowState;
+  let rowID = response._rowID;
+  let rowTag = response._rowTag;
+  let rowLength = response._rowLength;
+  const buffer = response._buffer;
+  const chunkLength = chunk.length;
+  while (i < chunkLength) {
+    let lastIdx = -1;
+    switch (rowState) {
+      case ROW_ID: {
+        const byte = chunk.charCodeAt(i++);
+        if (byte === 58 /* ":" */) {
+          // Finished the rowID, next we'll parse the tag.
+          rowState = ROW_TAG;
+        } else {
+          rowID = (rowID << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_TAG: {
+        const resolvedRowTag = chunk.charCodeAt(i);
+        if (
+          resolvedRowTag === 84 /* "T" */ ||
+          (enableBinaryFlight &&
+            (resolvedRowTag === 65 /* "A" */ ||
+              resolvedRowTag === 79 /* "O" */ ||
+              resolvedRowTag === 111 /* "o" */ ||
+              resolvedRowTag === 85 /* "U" */ ||
+              resolvedRowTag === 83 /* "S" */ ||
+              resolvedRowTag === 115 /* "s" */ ||
+              resolvedRowTag === 76 /* "L" */ ||
+              resolvedRowTag === 108 /* "l" */ ||
+              resolvedRowTag === 71 /* "G" */ ||
+              resolvedRowTag === 103 /* "g" */ ||
+              resolvedRowTag === 77 /* "M" */ ||
+              resolvedRowTag === 109 /* "m" */ ||
+              resolvedRowTag === 86)) /* "V" */
+        ) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_LENGTH;
+          i++;
+        } else if (
+          (resolvedRowTag > 64 && resolvedRowTag < 91) /* "A"-"Z" */ ||
+          resolvedRowTag === 114 /* "r" */ ||
+          resolvedRowTag === 120 /* "x" */
+        ) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          i++;
+        } else {
+          rowTag = 0;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          // This was an unknown tag so it was probably part of the data.
+        }
+        continue;
+      }
+      case ROW_LENGTH: {
+        const byte = chunk.charCodeAt(i++);
+        if (byte === 44 /* "," */) {
+          // Finished the rowLength, next we'll buffer up to that length.
+          rowState = ROW_CHUNK_BY_LENGTH;
+        } else {
+          rowLength = (rowLength << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_CHUNK_BY_NEWLINE: {
+        // We're looking for a newline
+        lastIdx = chunk.indexOf('\n', i);
+        break;
+      }
+      case ROW_CHUNK_BY_LENGTH: {
+        if (rowTag !== 84) {
+          throw new Error(
+            'Binary RSC chunks cannot be encoded as strings. ' +
+              'This is a bug in the wiring of the React streams.',
+          );
+        }
+        // For a large string by length, we don't know how many unicode characters
+        // we are looking for but we can assume that the raw string will be its own
+        // chunk. We add extra validation that the length is at least within the
+        // possible byte range it could possibly be to catch mistakes.
+        if (rowLength < chunk.length || chunk.length > rowLength * 3) {
+          throw new Error(
+            'String chunks need to be passed in their original shape. ' +
+              'Not split into smaller string chunks. ' +
+              'This is a bug in the wiring of the React streams.',
+          );
+        }
+        lastIdx = chunk.length;
+        break;
+      }
+    }
+    if (lastIdx > -1) {
+      // We found the last chunk of the row
+      if (buffer.length > 0) {
+        // If we had a buffer already, it means that this chunk was split up into
+        // binary chunks preceeding it.
+        throw new Error(
+          'String chunks need to be passed in their original shape. ' +
+            'Not split into smaller string chunks. ' +
+            'This is a bug in the wiring of the React streams.',
+        );
+      }
+      const lastChunk = chunk.slice(i, lastIdx);
+      processFullStringRow(response, rowID, rowTag, lastChunk);
+      // Reset state machine for a new row
+      i = lastIdx;
+      if (rowState === ROW_CHUNK_BY_NEWLINE) {
+        // If we're trailing by a newline we need to skip it.
+        i++;
+      }
+      rowState = ROW_ID;
+      rowTag = 0;
+      rowID = 0;
+      rowLength = 0;
+      buffer.length = 0;
+    } else if (chunk.length !== i) {
+      // The rest of this row is in a future chunk. We only support passing the
+      // string from chunks in their entirety. Not split up into smaller string chunks.
+      // We could support this by buffering them but we shouldn't need to for
+      // this use case.
+      throw new Error(
+        'String chunks need to be passed in their original shape. ' +
+          'Not split into smaller string chunks. ' +
+          'This is a bug in the wiring of the React streams.',
+      );
     }
   }
   response._rowState = rowState;

@@ -9,6 +9,10 @@ on:
     inputs:
       prerelease_commit_sha:
         required: false
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
 jobs:
   test_fuzz:
     if: inputs.prerelease_commit_sha == ''

@@ -43,7 +43,6 @@ class Transform extends ReactiveFunctionTransform<State> {
     this.visitScope(scopeBlock, scopeState);
     if (
       !scopeState.hasReturnStatement &&
-      !scopeBlock.scope.source &&
       scopeBlock.scope.reassignments.size === 0 &&
       (scopeBlock.scope.declarations.size === 0 ||
         /*

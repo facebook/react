@@ -58,7 +58,7 @@ export function collectMaybeMemoDependencies(
       return {
         root: {
           kind: "Global",
-          binding: value,
+          identifierName: value.binding.name,
         },
         path: [],
       };
@@ -173,53 +173,24 @@ function makeManualMemoizationMarkers(
   env: Environment,
   depsList: Array<ManualMemoDependency> | null,
   memoDecl: Place,
-  manualMemoId: number,
-  isManualUseMemoEnabled: boolean
-): [
-  Array<TInstruction<StartMemoize> | TInstruction<LoadGlobal>>,
-  TInstruction<FinishMemoize>,
-] {
-  let globals: Array<TInstruction<StartMemoize> | TInstruction<LoadGlobal>> =
-    [];
-  for (const dep of depsList ?? []) {
-    if (dep.root.kind === "Global" && isManualUseMemoEnabled) {
-      const place = createTemporaryPlace(env, dep.root.binding.loc);
-      globals.push({
-        id: makeInstructionId(0),
-        lvalue: place,
-        value: {
-          kind: "LoadGlobal",
-          binding: dep.root.binding.binding,
-          loc: dep.root.binding.loc,
-        },
-        loc: dep.root.binding.loc,
-      });
-      dep.root = {
-        kind: "InlinedGlobal",
-        value: place,
-        name: dep.root.binding.binding.name,
-      };
-    }
-  }
+  manualMemoId: number
+): [TInstruction<StartMemoize>, TInstruction<FinishMemoize>] {
   return [
-    [
-      ...globals,
-      {
-        id: makeInstructionId(0),
-        lvalue: createTemporaryPlace(env, fnExpr.loc),
-        value: {
-          kind: "StartMemoize",
-          manualMemoId,
-          /*
-           * Use deps list from source instead of inferred deps
-           * as dependencies
-           */
-          deps: depsList,
-          loc: fnExpr.loc,
-        },
+    {
+      id: makeInstructionId(0),
+      lvalue: createTemporaryPlace(env, fnExpr.loc),
+      value: {
+        kind: "StartMemoize",
+        manualMemoId,
+        /*
+         * Use deps list from source instead of inferred deps
+         * as dependencies
+         */
+        deps: depsList,
         loc: fnExpr.loc,
       },
-    ],
+      loc: fnExpr.loc,
+    },
     {
       id: makeInstructionId(0),
       lvalue: createTemporaryPlace(env, fnExpr.loc),
@@ -362,14 +333,9 @@ function extractManualMemoizationArgs(
  * eg `React.useMemo()`.
  */
 export function dropManualMemoization(func: HIRFunction): void {
-  const isManualUseMemoEnabled =
-    func.env.config.enablePreserveExistingManualUseMemo === "scope" ||
-    func.env.config.enableChangeDetection != null ||
-    func.env.config.disableMemoizationForDebugging;
   const isValidationEnabled =
     func.env.config.validatePreserveExistingMemoizationGuarantees ||
-    func.env.config.enablePreserveExistingMemoizationGuarantees ||
-    isManualUseMemoEnabled;
+    func.env.config.enablePreserveExistingMemoizationGuarantees;
   const sidemap: IdentifierSidemap = {
     functions: new Map(),
     manualMemos: new Map(),
@@ -390,11 +356,7 @@ export function dropManualMemoization(func: HIRFunction): void {
    */
   const queuedInserts: Map<
     InstructionId,
-    Array<
-      | TInstruction<StartMemoize>
-      | TInstruction<FinishMemoize>
-      | TInstruction<LoadGlobal>
-    >
+    TInstruction<StartMemoize> | TInstruction<FinishMemoize>
   > = new Map();
   for (const [_, block] of func.body.blocks) {
     for (let i = 0; i < block.instructions.length; i++) {
@@ -457,8 +419,7 @@ export function dropManualMemoization(func: HIRFunction): void {
               func.env,
               depsList,
               memoDecl,
-              nextManualMemoId++,
-              isManualUseMemoEnabled
+              nextManualMemoId++
             );
 
             /**
@@ -475,7 +436,7 @@ export function dropManualMemoization(func: HIRFunction): void {
              * ```
              */
             queuedInserts.set(manualMemo.loadInstr.id, startMarker);
-            queuedInserts.set(instr.id, [finishMarker]);
+            queuedInserts.set(instr.id, finishMarker);
           }
         }
       } else {
@@ -496,16 +457,8 @@ export function dropManualMemoization(func: HIRFunction): void {
         const insertInstr = queuedInserts.get(instr.id);
         if (insertInstr != null) {
           nextInstructions = nextInstructions ?? block.instructions.slice(0, i);
-          const postInstructions: Array<Instruction> = [];
-          insertInstr.forEach((instr) => {
-            if (instr.value.kind === "LoadGlobal") {
-              nextInstructions?.push(instr);
-            } else {
-              postInstructions.push(instr);
-            }
-          });
           nextInstructions.push(instr);
-          postInstructions.forEach((instr) => nextInstructions?.push(instr));
+          nextInstructions.push(insertInstr);
         } else if (nextInstructions != null) {
           nextInstructions.push(instr);
         }

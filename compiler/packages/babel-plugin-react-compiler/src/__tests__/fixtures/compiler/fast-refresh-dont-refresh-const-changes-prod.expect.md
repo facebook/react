@@ -58,37 +58,31 @@ function unsafeUpdateConst() {
 }
 
 function Component() {
-  const $ = _c(3);
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = () => {
-      unsafeResetConst();
-    };
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  useState(t0);
+  const $ = _c(2);
+  useState(_temp);
 
   unsafeUpdateConst();
+  let t0;
   let t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = [{ pretendConst }];
+    $[0] = t1;
+  } else {
+    t1 = $[0];
+  }
+  t0 = t1;
+  const value = t0;
   let t2;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = [{ pretendConst }];
+    t2 = <ValidateMemoization inputs={[]} output={value} />;
     $[1] = t2;
   } else {
     t2 = $[1];
   }
-  t1 = t2;
-  const value = t1;
-  let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = <ValidateMemoization inputs={[]} output={value} />;
-    $[2] = t3;
-  } else {
-    t3 = $[2];
-  }
-  return t3;
+  return t2;
+}
+function _temp() {
+  unsafeResetConst();
 }
 
 export const FIXTURE_ENTRYPOINT = {

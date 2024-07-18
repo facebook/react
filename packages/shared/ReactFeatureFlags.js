@@ -87,6 +87,11 @@ export const enableTaint = __EXPERIMENTAL__;
 
 export const enablePostpone = __EXPERIMENTAL__;
 
+/**
+ * Switches Fiber creation to a simple object instead of a constructor.
+ */
+export const enableObjectFiber = false;
+
 export const enableTransitionTracing = false;
 
 // No known bugs, but needs performance testing
@@ -150,8 +155,14 @@ export const transitionLaneExpirationMs = 5000;
 // Renames the internal symbol for elements since they have changed signature/constructor
 export const renameElementSymbol = true;
 
-// Removes legacy style context
+/**
+ * Removes legacy style context defined using static `contextTypes` and consumed with static `childContextTypes`.
+ */
 export const disableLegacyContext = true;
+/**
+ * Removes legacy style context just from function components.
+ */
+export const disableLegacyContextForFunctionComponents = true;
 
 // Not ready to break experimental yet.
 // Modern <StrictMode /> behaviour aligns more with what components

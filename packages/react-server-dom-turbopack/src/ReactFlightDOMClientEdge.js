@@ -71,6 +71,7 @@ export type Options = {
   encodeFormAction?: EncodeFormActionCallback,
   temporaryReferences?: TemporaryReferenceSet,
   findSourceMapURL?: FindSourceMapURLCallback,
+  replayConsoleLogs?: boolean,
 };
 
 function createResponseFromOptions(options: Options) {
@@ -86,6 +87,7 @@ function createResponseFromOptions(options: Options) {
     __DEV__ && options && options.findSourceMapURL
       ? options.findSourceMapURL
       : undefined,
+    __DEV__ && options ? options.replayConsoleLogs === true : false, // defaults to false
   );
 }
 

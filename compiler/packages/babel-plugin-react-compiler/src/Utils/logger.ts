@@ -9,8 +9,9 @@ import generate from "@babel/generator";
 import * as t from "@babel/types";
 import chalk from "chalk";
 import { HIR, HIRFunction, ReactiveFunction } from "../HIR/HIR";
-import { printFunction, printHIR } from "../HIR/PrintHIR";
-import { CodegenFunction, printReactiveFunction } from "../ReactiveScopes";
+import { printFunctionWithOutlined, printHIR } from "../HIR/PrintHIR";
+import { CodegenFunction } from "../ReactiveScopes";
+import { printReactiveFunctionWithOutlined } from "../ReactiveScopes/PrintReactiveFunction";
 
 let ENABLED: boolean = false;
 
@@ -79,7 +80,7 @@ export function logCodegenFunction(step: string, fn: CodegenFunction): void {
 
 export function logHIRFunction(step: string, fn: HIRFunction): void {
   if (ENABLED) {
-    const printed = printFunction(fn);
+    const printed = printFunctionWithOutlined(fn);
     if (printed !== lastLogged) {
       lastLogged = printed;
       process.stdout.write(`${chalk.green(step)}:\n${printed}\n\n`);
@@ -91,7 +92,7 @@ export function logHIRFunction(step: string, fn: HIRFunction): void {
 
 export function logReactiveFunction(step: string, fn: ReactiveFunction): void {
   if (ENABLED) {
-    const printed = printReactiveFunction(fn);
+    const printed = printReactiveFunctionWithOutlined(fn);
     if (printed !== lastLogged) {
       lastLogged = printed;
       process.stdout.write(`${chalk.green(step)}:\n${printed}\n\n`);

@@ -34,7 +34,6 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
 import { makeArray, useHook } from "shared-runtime";
 
 /**
@@ -46,16 +45,8 @@ import { makeArray, useHook } from "shared-runtime";
  * merged with the scope producing customList
  */
 function Foo(t0) {
-  const $ = _c(1);
   const { defaultList, cond } = t0;
-  let t1;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (a, b) => a - b;
-    $[0] = t1;
-  } else {
-    t1 = $[0];
-  }
-  const comparator = t1;
+  const comparator = _temp;
   useHook();
   const customList = makeArray(1, 5, 2);
   useHook();
@@ -63,6 +54,9 @@ function Foo(t0) {
     ? [...customList.sort(comparator), { text: ["text"] }]
     : defaultList;
   return result;
+}
+function _temp(a, b) {
+  return a - b;
 }
 
 export const FIXTURE_ENTRYPOINT = {

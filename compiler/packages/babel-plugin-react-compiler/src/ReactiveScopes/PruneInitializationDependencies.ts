@@ -183,7 +183,7 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
       ident.path.forEach((key) => {
         target &&= this.paths.get(target)?.get(key);
       });
-      if (target && this.map.get(target) === "Create" && !scope.scope.source) {
+      if (target && this.map.get(target) === "Create") {
         scope.scope.dependencies.delete(ident);
       }
     });
