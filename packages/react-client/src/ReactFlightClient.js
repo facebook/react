@@ -776,7 +776,7 @@ function createElement(
           // $FlowFixMe[cannot-write]
           erroredComponent.stack = element._debugStack;
           // $FlowFixMe[cannot-write]
-          erroredComponent.task = element._debugTask;
+          erroredComponent.debugTask = element._debugTask;
         }
         erroredChunk._debugInfo = [erroredComponent];
       }
@@ -939,7 +939,7 @@ function waitForReference<T>(
           // $FlowFixMe[cannot-write]
           erroredComponent.stack = element._debugStack;
           // $FlowFixMe[cannot-write]
-          erroredComponent.task = element._debugTask;
+          erroredComponent.debugTask = element._debugTask;
         }
         const chunkDebugInfo: ReactDebugInfo =
           chunk._debugInfo || (chunk._debugInfo = []);
@@ -2027,7 +2027,7 @@ function initializeFakeTask(
     return null;
   }
   const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
-  const cachedEntry = componentInfo.task;
+  const cachedEntry = componentInfo.debugTask;
   if (cachedEntry !== undefined) {
     return cachedEntry;
   }
@@ -2063,7 +2063,7 @@ function initializeFakeTask(
     componentTask = ownerTask.run(callStack);
   }
   // $FlowFixMe[cannot-write]: We consider this part of initialization.
-  componentInfo.task = componentTask;
+  componentInfo.debugTask = componentTask;
   return componentTask;
 }
 

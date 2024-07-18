@@ -183,7 +183,8 @@ export type ReactComponentInfo = {
   +env?: string,
   +owner?: null | ReactComponentInfo,
   +stack?: null | string,
-  +task?: null | ConsoleTask,
+  // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
+  +debugTask?: null | ConsoleTask,
 };
 
 export type ReactAsyncInfo = {

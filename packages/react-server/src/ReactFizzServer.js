@@ -869,7 +869,7 @@ function pushServerComponentStack(
         stack: componentInfo.stack,
       };
       if (enableOwnerStacks) {
-        task.debugTask = (componentInfo.task: any);
+        task.debugTask = (componentInfo.debugTask: any);
       }
     }
   }
