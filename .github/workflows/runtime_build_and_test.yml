@@ -525,6 +525,7 @@ jobs:
 
   # ----- SIZEBOT -----
   download_base_build_for_sizebot:
+    if: ${{ github.event_name == 'pull_request' && github.ref_name != 'main' }}
     name: Download base build for sizebot
     runs-on: ubuntu-latest
     steps:
