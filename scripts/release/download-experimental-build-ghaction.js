@@ -69,7 +69,6 @@ async function getWorkflowRunId(commit) {
     `curl -L ${GITHUB_HEADERS} https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${getWorkflowId()}/runs?head_sha=${commit}&branch=main&exclude_pull_requests=true`
   );
 
-  console.log(res);
   const json = JSON.parse(res.stdout);
   let workflowRun;
   if (json.total_count === 1) {
@@ -95,7 +94,6 @@ async function getArtifact(workflowRunId, artifactName) {
     `curl -L ${GITHUB_HEADERS} https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`
   );
 
-  console.log(res);
   const json = JSON.parse(res.stdout);
   let artifact;
   if (json.total_count === 1) {
