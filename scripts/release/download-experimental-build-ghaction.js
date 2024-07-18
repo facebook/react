@@ -67,7 +67,7 @@ function getWorkflowId() {
 async function getWorkflowRunId(commit) {
   const res = (
     await exec(
-      `curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS} https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${getWorkflowId()}/runs?head_sha=${commit}&branch=main&exclude_pull_requests=true`
+      `curl -L ${GITHUB_HEADERS} https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${getWorkflowId()}/runs?head_sha=${commit}&branch=main&exclude_pull_requests=true`
     )
   ).stdout;
 
@@ -92,10 +92,9 @@ async function getWorkflowRunId(commit) {
 }
 
 async function getArtifact(workflowRunId, artifactName) {
-  const res = (
-    await exec(`curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS}
+  const res = await exec(`curl -L ${GITHUB_HEADERS}
   https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`)
-  ).stdout;
+    .stdout;
 
   const json = JSON.parse(res);
   let artifact;
@@ -125,7 +124,7 @@ async function downloadArtifactsFromGitHub(commit, releaseChannel) {
   const cwd = join(__dirname, '..', '..');
   await exec(`rm -rf ./build`, {cwd});
   await exec(
-    `curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS} ${artifact.archive_download_url} \
+    `curl -L ${GITHUB_HEADERS} ${artifact.archive_download_url} \
     > a.zip && unzip a.zip -d . && rm a.zip build2.tgz && tar -xvzf build.tgz && rm build.tgz`,
     {
       cwd,
@@ -173,5 +172,12 @@ const main = async () => {
     handleError(error);
   }
 };
+
+if (process.env.GH_TOKEN == null) {
+  console.log(
+    theme`{error Expected GH_TOKEN to be provided as an env variable}`
+  );
+  process.exit(1);
+}
 
 main();
