@@ -565,7 +565,7 @@ jobs:
 
   sizebot:
     name: Run sizebot
-    needs: download_base_build_for_sizebot
+    needs: [build_and_lint, download_base_build_for_sizebot]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
