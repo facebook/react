@@ -180,9 +180,8 @@ jobs:
       - name: Archive build
         uses: actions/upload-artifact@v4
         with:
-          name: build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
-          path: |
-            build
+          name: _build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
+          path: build
 
   test_build:
     name: yarn test-build
@@ -242,6 +241,7 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          pattern: _build_*
           path: build
           merge-multiple: true
       - name: Display structure of build
@@ -269,6 +269,7 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          pattern: _build_*
           path: build
           merge-multiple: true
       - name: Display structure of build
@@ -311,6 +312,7 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          pattern: _build_*
           path: build
           merge-multiple: true
       - name: Display structure of build
@@ -341,6 +343,7 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          pattern: _build_*
           path: build
           merge-multiple: true
       - name: Display structure of build
@@ -370,6 +373,7 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          pattern: _build_*
           path: build
           merge-multiple: true
       - name: Display structure of build
@@ -407,6 +411,7 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          pattern: _build_*
           path: build
           merge-multiple: true
       - name: Display structure of build
@@ -462,6 +467,7 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          pattern: _build_*
           path: build
           merge-multiple: true
       - run: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
@@ -507,6 +513,7 @@ jobs:
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
+          pattern: _build_*
           path: build
           merge-multiple: true
       - run: |
