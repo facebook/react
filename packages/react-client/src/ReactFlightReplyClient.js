@@ -47,6 +47,8 @@ const ObjectPrototype = Object.prototype;
 
 import {usedWithSSR} from './ReactFlightClientConfig';
 
+const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
+
 type ReactJSONValue =
   | string
   | boolean
@@ -1051,6 +1053,9 @@ export function registerServerReference(
       bind: {value: bind},
     });
   }
+  Object.defineProperties((proxy: any), {
+    $$typeof: {value: SERVER_REFERENCE_TAG},
+  });
   knownServerReferences.set(proxy, reference);
 }
 
