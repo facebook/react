@@ -35,7 +35,7 @@ import { c as _c } from "react/compiler-runtime"; // @enableChangeDetectionForDe
 let glob = 1;
 
 function Component(props) {
-  const $ = _c(13);
+  const $ = _c(12);
   let t0;
   {
     t0 = props.x;
@@ -116,16 +116,15 @@ function Component(props) {
         {t2}
       </div>
     );
-    let condition = $[8] !== a || $[9] !== b || $[10] !== t1 || $[11] !== t2;
+    let condition = $[8] !== a || $[9] !== b || $[10] !== t1;
     if (!condition) {
-      let old$t3 = $[12];
+      let old$t3 = $[11];
       $structuralCheck(old$t3, t3, "t3", "Component", "cached", "(9:14)");
     }
     $[8] = a;
     $[9] = b;
     $[10] = t1;
-    $[11] = t2;
-    $[12] = t3;
+    $[11] = t3;
     if (condition) {
       t3 = (
         <div>
@@ -135,8 +134,8 @@ function Component(props) {
           {t2}
         </div>
       );
-      $structuralCheck($[12], t3, "t3", "Component", "recomputed", "(9:14)");
-      t3 = $[12];
+      $structuralCheck($[11], t3, "t3", "Component", "recomputed", "(9:14)");
+      t3 = $[11];
     }
   }
   return t3;
