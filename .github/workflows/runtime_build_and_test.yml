@@ -589,6 +589,7 @@ jobs:
       - name: Restore archived base-build from origin/main
         uses: actions/download-artifact@v4
         with:
+          name: base-build
           path: base-build
       - run: echo ${{ github.sha }} >> build/COMMIT_SHA
       - run: node ./scripts/tasks/danger
