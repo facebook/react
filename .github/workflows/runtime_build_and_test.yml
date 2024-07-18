@@ -285,7 +285,7 @@ jobs:
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: combined_artifacts_${{ github.sha }}
+          name: artifacts_combined
           path: |
             ./build.tgz
             ./build2.tgz
