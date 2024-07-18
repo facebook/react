@@ -47,7 +47,6 @@ export function describeFiber(
     case HostComponent:
       return describeBuiltInComponentFrame(workInProgress.type);
     case LazyComponent:
-      // TODO: When we support Thenables as component types we should rename this.
       return describeBuiltInComponentFrame('Lazy');
     case SuspenseComponent:
       return describeBuiltInComponentFrame('Suspense');
