@@ -7,7 +7,12 @@
 
 import * as t from "@babel/types";
 import { createHmac } from "crypto";
-import { pruneHoistedContexts, pruneUnusedLValues, pruneUnusedLabels } from ".";
+import {
+  pruneHoistedContexts,
+  pruneUnusedLValues,
+  pruneUnusedLabels,
+  renameVariables,
+} from ".";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Environment, EnvironmentConfig, ExternalFunction } from "../HIR";
 import {
@@ -45,6 +50,7 @@ import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
 import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtAndMacroOperandsInSameScope";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+import { ReactFunctionType } from "../HIR/Environment";
 
 export const MEMO_CACHE_SENTINEL = "react.memo_cache_sentinel";
 export const EARLY_RETURN_SENTINEL = "react.early_return_sentinel";
@@ -85,6 +91,11 @@ export type CodegenFunction = {
    * because they were part of a pruned memo block.
    */
   prunedMemoValues: number;
+
+  outlined: Array<{
+    fn: CodegenFunction;
+    type: ReactFunctionType | null;
+  }>;
 };
 
 export function codegenFunction(
@@ -258,6 +269,29 @@ export function codegenFunction(
     compiled.body.body.unshift(test);
   }
 
+  const outlined: CodegenFunction["outlined"] = [];
+  for (const { fn: outlinedFunction, type } of cx.env.getOutlinedFunctions()) {
+    const reactiveFunction = buildReactiveFunction(outlinedFunction);
+    pruneUnusedLabels(reactiveFunction);
+    pruneUnusedLValues(reactiveFunction);
+    pruneHoistedContexts(reactiveFunction);
+
+    const identifiers = renameVariables(reactiveFunction);
+    const codegen = codegenReactiveFunction(
+      new Context(
+        cx.env,
+        reactiveFunction.id ?? "[[ anonymous ]]",
+        identifiers
+      ),
+      reactiveFunction
+    );
+    if (codegen.isErr()) {
+      return codegen;
+    }
+    outlined.push({ fn: codegen.unwrap(), type });
+  }
+  compiled.outlined = outlined;
+
   return compileResult;
 }
 
@@ -306,6 +340,7 @@ function codegenReactiveFunction(
     memoValues: countMemoBlockVisitor.memoValues,
     prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
+    outlined: [],
   });
 }
 
@@ -622,11 +657,7 @@ function codegenReactiveScope(
     );
   }
 
-  if (
-    cx.env.config.disableMemoization &&
-    !scope.source &&
-    cx.env.config.enableChangeDetection == null
-  ) {
+  if (cx.env.config.disableMemoization) {
     testCondition = t.logicalExpression(
       "||",
       testCondition,
@@ -636,10 +667,7 @@ function codegenReactiveScope(
   let computationBlock = codegenBlock(cx, block);
 
   let memoStatement;
-  if (
-    cx.env.config.enableChangeDetection != null &&
-    changeExpressions.length > 0
-  ) {
+  if (cx.env.config.enableChangeDetection != null) {
     const loc =
       typeof scope.loc === "symbol"
         ? "unknown location"
@@ -647,9 +675,9 @@ function codegenReactiveScope(
     const detectionFunction =
       cx.env.config.enableChangeDetection.structuralCheck;
     const cacheLoadOldValueStatements: Array<t.Statement> = [];
+    const restoreOldValueStatements: Array<t.Statement> = [];
     const changeDetectionStatements: Array<t.Statement> = [];
     const idempotenceDetectionStatements: Array<t.Statement> = [];
-    const restoreOldValueStatements: Array<t.Statement> = [];
 
     for (const {
       name: { name: nameStr },
@@ -691,7 +719,7 @@ function codegenReactiveScope(
           t.variableDeclarator(t.identifier(loadNameStr), genSlot()),
         ])
       );
-      if (scope.source || !cx.env.config.disableMemoization) {
+      if (!cx.env.config.disableMemoization) {
         restoreOldValueStatements.push(
           t.expressionStatement(
             t.assignmentExpression("=", t.identifier(nameStr), restoredValue)
@@ -740,7 +768,6 @@ function codegenReactiveScope(
         t.blockStatement([
           ...cacheLoadOldValueStatements,
           ...changeDetectionStatements,
-          ...restoreOldValueStatements,
         ])
       ),
       ...cacheStoreStatements,

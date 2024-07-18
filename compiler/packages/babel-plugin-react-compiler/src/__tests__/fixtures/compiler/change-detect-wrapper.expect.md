@@ -30,7 +30,6 @@ function Component(props) {
       if (!condition) {
         let old$x = $[1];
         $structuralCheck(old$x, x, "x", "Component", "cached", "(3:6)");
-        x = $restore(old$x);
       }
       $[0] = props.value;
       $[1] = $store(x);

@@ -227,27 +227,31 @@ test('handles events on text nodes', () => {
   }
 
   const log = [];
-  ReactNative.render(
-    <ContextHack>
-      <Text>
-        <Text
-          onTouchEnd={() => log.push('string touchend')}
-          onTouchEndCapture={() => log.push('string touchend capture')}
-          onTouchStart={() => log.push('string touchstart')}
-          onTouchStartCapture={() => log.push('string touchstart capture')}>
-          Text Content
+  expect(() => {
+    ReactNative.render(
+      <ContextHack>
+        <Text>
+          <Text
+            onTouchEnd={() => log.push('string touchend')}
+            onTouchEndCapture={() => log.push('string touchend capture')}
+            onTouchStart={() => log.push('string touchstart')}
+            onTouchStartCapture={() => log.push('string touchstart capture')}>
+            Text Content
+          </Text>
+          <Text
+            onTouchEnd={() => log.push('number touchend')}
+            onTouchEndCapture={() => log.push('number touchend capture')}
+            onTouchStart={() => log.push('number touchstart')}
+            onTouchStartCapture={() => log.push('number touchstart capture')}>
+            {123}
+          </Text>
         </Text>
-        <Text
-          onTouchEnd={() => log.push('number touchend')}
-          onTouchEndCapture={() => log.push('number touchend capture')}
-          onTouchStart={() => log.push('number touchstart')}
-          onTouchStartCapture={() => log.push('number touchstart capture')}>
-          {123}
-        </Text>
-      </Text>
-    </ContextHack>,
-    1,
-  );
+      </ContextHack>,
+      1,
+    );
+  }).toErrorDev([
+    'ContextHack uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+  ]);
 
   expect(UIManager.createView).toHaveBeenCalledTimes(5);
 

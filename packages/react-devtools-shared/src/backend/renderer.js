@@ -3391,6 +3391,7 @@ export function attach(
       // Temporarily disable all console logging before re-running the hook.
       for (const method in console) {
         try {
+          // $FlowFixMe[invalid-computed-prop]
           originalConsoleMethods[method] = console[method];
           // $FlowFixMe[prop-missing]
           console[method] = () => {};

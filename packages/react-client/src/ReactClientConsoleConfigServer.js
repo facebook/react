@@ -7,8 +7,6 @@
  * @flow
  */
 
-import {warn, error} from 'shared/consoleWithStackDev';
-
 // This flips color using ANSI, then sets a color styling, then resets.
 const badgeFormat = '\x1b[0m\x1b[7m%c%s\x1b[0m%c ';
 // Same badge styling as DevTools.
@@ -66,12 +64,6 @@ export function printToConsole(
     );
   }
 
-  if (methodName === 'error') {
-    error.apply(console, newArgs);
-  } else if (methodName === 'warn') {
-    warn.apply(console, newArgs);
-  } else {
-    // eslint-disable-next-line react-internal/no-production-logging
-    console[methodName].apply(console, newArgs);
-  }
+  // $FlowFixMe[invalid-computed-prop]
+  console[methodName].apply(console, newArgs); // eslint-disable-line react-internal/no-production-logging
 }

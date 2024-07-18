@@ -17,6 +17,7 @@ import {
   ReactiveValue,
 } from "../HIR/HIR";
 import {
+  printFunction,
   printIdentifier,
   printInstructionValue,
   printPlace,
@@ -24,8 +25,24 @@ import {
 } from "../HIR/PrintHIR";
 import { assertExhaustive } from "../Utils/utils";
 
+export function printReactiveFunctionWithOutlined(
+  fn: ReactiveFunction
+): string {
+  const writer = new Writer();
+  writeReactiveFunction(fn, writer);
+  for (const outlined of fn.env.getOutlinedFunctions()) {
+    writer.writeLine("\nfunction " + printFunction(outlined.fn));
+  }
+  return writer.complete();
+}
+
 export function printReactiveFunction(fn: ReactiveFunction): string {
   const writer = new Writer();
+  writeReactiveFunction(fn, writer);
+  return writer.complete();
+}
+
+function writeReactiveFunction(fn: ReactiveFunction, writer: Writer): void {
   writer.writeLine(`function ${fn.id !== null ? fn.id : "<unknown>"}(`);
   writer.indented(() => {
     for (const param of fn.params) {
@@ -39,7 +56,6 @@ export function printReactiveFunction(fn: ReactiveFunction): string {
   writer.writeLine(") {");
   writeReactiveInstructions(writer, fn.body);
   writer.writeLine("}");
-  return writer.complete();
 }
 
 export function printReactiveScopeSummary(scope: ReactiveScope): string {

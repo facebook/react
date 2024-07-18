@@ -514,6 +514,11 @@ function createChildReconciler(
       const created = createFiberFromText(textContent, returnFiber.mode, lanes);
       created.return = returnFiber;
       if (__DEV__) {
+        // We treat the parent as the owner for stack purposes.
+        created._debugOwner = returnFiber;
+        if (enableOwnerStacks) {
+          created._debugTask = returnFiber._debugTask;
+        }
         created._debugInfo = currentDebugInfo;
       }
       return created;
@@ -630,6 +635,11 @@ function createChildReconciler(
       );
       created.return = returnFiber;
       if (__DEV__) {
+        // We treat the parent as the owner for stack purposes.
+        created._debugOwner = returnFiber;
+        if (enableOwnerStacks) {
+          created._debugTask = returnFiber._debugTask;
+        }
         created._debugInfo = currentDebugInfo;
       }
       return created;
@@ -665,6 +675,11 @@ function createChildReconciler(
       );
       created.return = returnFiber;
       if (__DEV__) {
+        // We treat the parent as the owner for stack purposes.
+        created._debugOwner = returnFiber;
+        if (enableOwnerStacks) {
+          created._debugTask = returnFiber._debugTask;
+        }
         created._debugInfo = currentDebugInfo;
       }
       return created;
@@ -729,6 +744,11 @@ function createChildReconciler(
         );
         created.return = returnFiber;
         if (__DEV__) {
+          // We treat the parent as the owner for stack purposes.
+          created._debugOwner = returnFiber;
+          if (enableOwnerStacks) {
+            created._debugTask = returnFiber._debugTask;
+          }
           const prevDebugInfo = pushDebugInfo(newChild._debugInfo);
           created._debugInfo = currentDebugInfo;
           currentDebugInfo = prevDebugInfo;
@@ -1610,6 +1630,14 @@ function createChildReconciler(
     deleteRemainingChildren(returnFiber, currentFirstChild);
     const created = createFiberFromText(textContent, returnFiber.mode, lanes);
     created.return = returnFiber;
+    if (__DEV__) {
+      // We treat the parent as the owner for stack purposes.
+      created._debugOwner = returnFiber;
+      if (enableOwnerStacks) {
+        created._debugTask = returnFiber._debugTask;
+      }
+      created._debugInfo = currentDebugInfo;
+    }
     return created;
   }
 
@@ -1683,6 +1711,11 @@ function createChildReconciler(
       );
       created.return = returnFiber;
       if (__DEV__) {
+        // We treat the parent as the owner for stack purposes.
+        created._debugOwner = returnFiber;
+        if (enableOwnerStacks) {
+          created._debugTask = returnFiber._debugTask;
+        }
         created._debugInfo = currentDebugInfo;
       }
       validateFragmentProps(element, created, returnFiber);

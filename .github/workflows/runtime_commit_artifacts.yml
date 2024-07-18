@@ -4,6 +4,9 @@ on:
   push:
     branches: [main, meta-www, meta-fbsource]
 
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
 jobs:
   download_artifacts:
     runs-on: ubuntu-latest

@@ -97,7 +97,7 @@ import {
   validateUseMemo,
 } from "../Validation";
 import { validateLocalsNotReassignedAfterRender } from "../Validation/ValidateLocalsNotReassignedAfterRender";
-import { memoizeExistingUseMemos } from "../ReactiveScopes/MemoizeExistingUseMemos";
+import { outlineFunctions } from "../Optimization/OutlineFunctions";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -118,6 +118,7 @@ export function* run(
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(
+    func.scope,
     fnType,
     config,
     contextIdentifiers,
@@ -154,7 +155,7 @@ function* runWithEnvironment(
   validateContextVariableLValues(hir);
   validateUseMemo(hir);
 
-  if (env.config.enablePreserveExistingManualUseMemo !== "hook") {
+  if (!env.preserveManualMemo()) {
     dropManualMemoization(hir);
     yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
   }
@@ -238,6 +239,11 @@ function* runWithEnvironment(
   inferReactiveScopeVariables(hir);
   yield log({ kind: "hir", name: "InferReactiveScopeVariables", value: hir });
 
+  if (env.config.enableFunctionOutlining) {
+    outlineFunctions(hir);
+    yield log({ kind: "hir", name: "OutlineFunctions", value: hir });
+  }
+
   alignMethodCallScopes(hir);
   yield log({
     kind: "hir",
@@ -266,19 +272,6 @@ function* runWithEnvironment(
       name: "PruneUnusedLabelsHIR",
       value: hir,
     });
-
-    if (
-      env.config.enablePreserveExistingManualUseMemo === "scope" ||
-      env.config.enableChangeDetection != null ||
-      env.config.disableMemoization
-    ) {
-      memoizeExistingUseMemos(hir);
-      yield log({
-        kind: "hir",
-        name: "MemoizeExistingUseMemos",
-        value: hir,
-      });
-    }
 
     alignReactiveScopesToBlockScopesHIR(hir);
     yield log({
@@ -390,12 +383,14 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  pruneNonReactiveDependencies(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "PruneNonReactiveDependencies",
-    value: reactiveFunction,
-  });
+  if (env.config.enableChangeDetection == null) {
+    pruneNonReactiveDependencies(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "PruneNonReactiveDependencies",
+      value: reactiveFunction,
+    });
+  }
 
   pruneUnusedScopes(reactiveFunction);
   yield log({
@@ -489,6 +484,9 @@ function* runWithEnvironment(
 
   const ast = codegenFunction(reactiveFunction, uniqueIdentifiers).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
+  for (const outlined of ast.outlined) {
+    yield log({ kind: "ast", name: "Codegen (outlined)", value: outlined.fn });
+  }
 
   /**
    * This flag should be only set for unit / fixture tests to check

@@ -28,6 +28,12 @@ function saveResults() {
       join('build', 'sizes', `bundle-sizes-${nodeIndex}.json`),
       JSON.stringify(currentBuildResults, null, 2)
     );
+  } else if (process.env.CI === 'github') {
+    mkdirp.sync('build/sizes');
+    fs.writeFileSync(
+      join('build', 'sizes', `bundle-sizes-${process.env.NODE_INDEX}.json`),
+      JSON.stringify(currentBuildResults, null, 2)
+    );
   } else {
     // Write all the bundle sizes to a single JSON file.
     fs.writeFileSync(

@@ -585,7 +585,7 @@ describe('ReactDOMFizzServerNode', () => {
     let isComplete = false;
     let rendered = false;
     const promise = new Promise(r => (resolve = r));
-    function Wait() {
+    function Wait({prop}) {
       if (!hasLoaded) {
         throw promise;
       }

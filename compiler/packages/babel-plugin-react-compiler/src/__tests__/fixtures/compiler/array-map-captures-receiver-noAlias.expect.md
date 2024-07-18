@@ -44,7 +44,7 @@ function Component(props) {
   const items = t1;
   let t2;
   if ($[4] !== items) {
-    t2 = items.map((item_0) => item_0);
+    t2 = items.map(_temp);
     $[4] = items;
     $[5] = t2;
   } else {
@@ -52,6 +52,9 @@ function Component(props) {
   }
   const mapped = t2;
   return mapped;
+}
+function _temp(item_0) {
+  return item_0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

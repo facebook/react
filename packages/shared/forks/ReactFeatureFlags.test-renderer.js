@@ -92,10 +92,12 @@ export const disableStringRefs = true;
 export const enableFastJSX = true;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
+export const disableLegacyContextForFunctionComponents = true;
 export const enableRenderableContext = true;
 export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;
 
+export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 
 // Flow magic to verify the exports of this file match the original version.

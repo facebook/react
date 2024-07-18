@@ -15,7 +15,7 @@ import ReactCompilerRule from "../src/rules/ReactCompilerRule";
  */
 function normalizeIndent(strings: TemplateStringsArray): string {
   const codeLines = strings[0].split("\n");
-  const leftPadding = codeLines[1].match(/\s+/)[0];
+  const leftPadding = codeLines[1].match(/\s+/)![0];
   return codeLines.map((line) => line.slice(leftPadding.length)).join("\n");
 }
 
@@ -146,6 +146,56 @@ const tests: CompilerTestCases = {
         {
           message:
             "Definition for rule 'react-hooks/rules-of-hooks' was not found.",
+        },
+      ],
+    },
+    {
+      name: "Multiple diagnostics are surfaced",
+      options: [
+        {
+          reportableLevels: new Set([
+            ErrorSeverity.Todo,
+            ErrorSeverity.InvalidReact,
+          ]),
+        },
+      ],
+      code: normalizeIndent`
+        function Foo(x) {
+          var y = 1;
+          return <div>{y * x}</div>;
+        }
+        function Bar(props) {
+          props.a.b = 2;
+          return <div>{props.c}</div>
+        }`,
+      errors: [
+        {
+          message:
+            "(BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration",
+        },
+        {
+          message:
+            "Mutating component props or hook arguments is not allowed. Consider using a local variable instead",
+        },
+      ],
+    },
+    {
+      name: "Test experimental/unstable report all bailouts mode",
+      options: [
+        {
+          reportableLevels: new Set([ErrorSeverity.InvalidReact]),
+          __unstable_donotuse_reportAllBailouts: true,
+        },
+      ],
+      code: normalizeIndent`
+        function Foo(x) {
+          var y = 1;
+          return <div>{y * x}</div>;
+        }`,
+      errors: [
+        {
+          message:
+            "[ReactCompilerBailout] (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (@:3:2)",
         },
       ],
     },

@@ -16,7 +16,7 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(8);
+  const $ = _c(7);
   let t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -37,25 +37,21 @@ function Component(props) {
     t2 = $[3];
   }
   const x = t2;
-  let t3;
-  if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-    t3 = () => "this closure gets stringified, not called";
-    $[4] = t3;
-  } else {
-    t3 = $[4];
-  }
-  const y = x.join(t3);
+  const y = x.join(_temp);
   foo(y);
-  let t4;
-  if ($[5] !== x || $[6] !== y) {
-    t4 = [x, y];
-    $[5] = x;
-    $[6] = y;
-    $[7] = t4;
+  let t3;
+  if ($[4] !== x || $[5] !== y) {
+    t3 = [x, y];
+    $[4] = x;
+    $[5] = y;
+    $[6] = t3;
   } else {
-    t4 = $[7];
+    t3 = $[6];
   }
-  return t4;
+  return t3;
+}
+function _temp() {
+  return "this closure gets stringified, not called";
 }
 
 ```
