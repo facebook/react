@@ -92,9 +92,6 @@ async function getWorkflowRunId(commit) {
 }
 
 async function getArtifact(workflowRunId, artifactName) {
-  console.log(
-    `https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`
-  );
   const res = await exec(`curl -L ${GITHUB_HEADERS}
   https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`);
 
@@ -127,7 +124,7 @@ async function downloadArtifactsFromGitHub(commit, releaseChannel) {
   const cwd = join(__dirname, '..', '..');
   await exec(`rm -rf ./build`, {cwd});
   await exec(
-    `curl -L $(fwdproxy-config curl) ${GITHUB_HEADERS} ${artifact.archive_download_url} \
+    `curl -L ${GITHUB_HEADERS} ${artifact.archive_download_url} \
     > a.zip && unzip a.zip -d . && rm a.zip build2.tgz && tar -xvzf build.tgz && rm build.tgz`,
     {
       cwd,
