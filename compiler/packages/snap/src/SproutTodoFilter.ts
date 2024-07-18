@@ -496,6 +496,7 @@ const skipFilter = new Set([
   "useState-unpruned-dependency",
   "useState-and-other-hook-unpruned-dependency",
   "change-detect-reassign",
+  "change-detect",
   "nomemo-and-change-detect",
   "change-detect-wrapper",
 
