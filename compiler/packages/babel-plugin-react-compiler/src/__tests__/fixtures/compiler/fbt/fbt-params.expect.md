@@ -6,9 +6,14 @@ import fbt from "fbt";
 
 function Component(props) {
   return (
-    <fbt desc={"Dialog to show to user"}>
-      Hello <fbt:param name="user name">{props.name}</fbt:param>
-    </fbt>
+    <div>
+      <fbt desc={"Dialog to show to user"}>
+        Hello <fbt:param name="user name">{props.name}</fbt:param>
+      </fbt>
+      <fbt desc={"Available actions|response"}>
+        <fbt:param name="actions|response">{props.actions}</fbt:param>
+      </fbt>
+    </div>
   );
 }
 
@@ -27,7 +32,7 @@ import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
 
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(7);
   let t0;
   if ($[0] !== props.name) {
     t0 = fbt._("Hello {user name}", [fbt._param("user name", props.name)], {
@@ -38,7 +43,33 @@ function Component(props) {
   } else {
     t0 = $[1];
   }
-  return t0;
+  let t1;
+  if ($[2] !== props.actions) {
+    t1 = fbt._(
+      "{actions|response}",
+      [fbt._param("actions|response", props.actions)],
+      { hk: "1cjfbg" },
+    );
+    $[2] = props.actions;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  let t2;
+  if ($[4] !== t0 || $[5] !== t1) {
+    t2 = (
+      <div>
+        {t0}
+        {t1}
+      </div>
+    );
+    $[4] = t0;
+    $[5] = t1;
+    $[6] = t2;
+  } else {
+    t2 = $[6];
+  }
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {
