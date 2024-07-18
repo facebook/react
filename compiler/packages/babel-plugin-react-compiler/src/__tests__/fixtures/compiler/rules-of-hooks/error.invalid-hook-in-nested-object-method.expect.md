@@ -4,7 +4,7 @@
 ```javascript
 // @compilationMode(infer)
 function Component() {
-  "use memo";
+  'use memo';
   const x = {
     outer() {
       const y = {

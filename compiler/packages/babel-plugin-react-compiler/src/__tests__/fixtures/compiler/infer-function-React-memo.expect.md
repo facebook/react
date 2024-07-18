@@ -3,7 +3,7 @@
 
 ```javascript
 // @compilationMode(infer)
-React.memo((props) => {
+React.memo(props => {
   return <div />;
 });
 

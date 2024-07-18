@@ -3,8 +3,8 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
-import { identity } from "shared-runtime";
+import {useMemo} from 'react';
+import {identity} from 'shared-runtime';
 
 function useFoo(cond) {
   const sourceDep = 0;
