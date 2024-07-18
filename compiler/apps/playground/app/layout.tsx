@@ -5,26 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import "../styles/globals.css";
+import '../styles/globals.css';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  "use no memo";
+export default function RootLayout({children}: {children: React.ReactNode}) {
+  'use no memo';
   return (
     <html lang="en">
       <head>
         <title>
-          {process.env.NODE_ENV === "development"
-            ? "[DEV] React Compiler Playground"
-            : "React Compiler Playground"}
+          {process.env.NODE_ENV === 'development'
+            ? '[DEV] React Compiler Playground'
+            : 'React Compiler Playground'}
         </title>
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"
-        ></meta>
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"></meta>
         <link rel="icon" href="/favicon.ico" />
         <link rel="manifest" href="/site.webmanifest" />
         <link

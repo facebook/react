@@ -4,7 +4,7 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
 // Here, Forget infers that the memo block dependency is input1
 // 1. StartMemoize is emitted before the function expression

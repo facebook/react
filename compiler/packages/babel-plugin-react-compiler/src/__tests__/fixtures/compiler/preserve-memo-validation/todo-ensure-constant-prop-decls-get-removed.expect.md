@@ -4,7 +4,7 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
 // Todo: we currently only generate a `constVal` declaration when
 // validatePreserveExistingMemoizationGuarantees is enabled, as the

@@ -3,7 +3,7 @@ import {
   Stringify,
   makeObject_Primitives,
   mutateAndReturn,
-} from "shared-runtime";
+} from 'shared-runtime';
 
 /**
  * In this example, the `<Stringify ... />` JSX block mutates then captures obj.
@@ -31,7 +31,7 @@ import {
  * a result, developers can never observe myDiv can aliasing a different value generation
  * than `obj` (e.g. the invariant `myDiv.props.value === obj` always holds).
  */
-function useFoo({ data }) {
+function useFoo({data}) {
   let obj = null;
   let myDiv = null;
   if (data.cond) {
@@ -45,9 +45,9 @@ function useFoo({ data }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ data: { cond: true, cond1: true } }],
+  params: [{data: {cond: true, cond1: true}}],
   sequentialRenders: [
-    { data: { cond: true, cond1: true } },
-    { data: { cond: true, cond1: true } },
+    {data: {cond: true, cond1: true}},
+    {data: {cond: true, cond1: true}},
   ],
 };

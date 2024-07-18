@@ -13,8 +13,7 @@ function Component(props) {
     <Button
       onClick={() => {
         setX(10 * y);
-      }}
-    ></Button>
+      }}></Button>
   );
 }
 

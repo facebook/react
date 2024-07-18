@@ -6,10 +6,10 @@
  */
 
 module.exports = {
-  displayName: "main",
-  preset: "ts-jest",
-  rootDir: "../../src",
-  testPathIgnorePatterns: ["e2e", "TestDriver", "test-utils", "fixtures"],
+  displayName: 'main',
+  preset: 'ts-jest',
+  rootDir: '../../src',
+  testPathIgnorePatterns: ['e2e', 'TestDriver', 'test-utils', 'fixtures'],
   globals: {
     __DEV__: true,
   },

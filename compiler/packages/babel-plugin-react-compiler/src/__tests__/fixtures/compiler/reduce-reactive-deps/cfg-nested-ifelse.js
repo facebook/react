@@ -2,7 +2,7 @@
 // scope that produces x, since it is accessed unconditionally in all cfg
 // paths
 
-import { getNull, identity } from "shared-runtime";
+import {getNull, identity} from 'shared-runtime';
 
 function useCondDepInNestedIfElse(props, cond) {
   const x = {};
@@ -22,5 +22,5 @@ function useCondDepInNestedIfElse(props, cond) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useCondDepInNestedIfElse,
-  params: [{ a: { b: 2 } }, true],
+  params: [{a: {b: 2}}, true],
 };

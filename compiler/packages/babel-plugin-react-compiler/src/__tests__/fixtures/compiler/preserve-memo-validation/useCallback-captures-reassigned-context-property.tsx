@@ -1,11 +1,11 @@
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
-import { Stringify } from "shared-runtime";
+import {useCallback} from 'react';
+import {Stringify} from 'shared-runtime';
 
 function Foo(props) {
   let contextVar;
   if (props.cond) {
-    contextVar = { val: 2 };
+    contextVar = {val: 2};
   } else {
     contextVar = {};
   }
@@ -17,5 +17,5 @@ function Foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ cond: true }],
+  params: [{cond: true}],
 };

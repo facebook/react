@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { mutate } from "shared-runtime";
+import {mutate} from 'shared-runtime';
 
 /**
  * Similar fixture to `align-scopes-nested-block-structure`, but

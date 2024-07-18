@@ -5,7 +5,7 @@
 // Note: Everything below this is sketchy
 /* eslint-disable react-hooks/rules-of-hooks */
 function lowercasecomponent() {
-  "use forget";
+  'use forget';
   const x = [];
   return <div>{x}</div>;
 }
@@ -42,7 +42,7 @@ function CrimesAgainstReact() {
 
 InvalidReact: React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled. React Compiler only works when your components follow all the rules of React, disabling them may result in unexpected or incorrect behavior. eslint-disable-next-line react-hooks/rules-of-hooks (25:25)
   3 | function lowercasecomponent() {
-  4 |   "use forget";
+  4 |   'use forget';
   5 |   const x = [];
 ```
           

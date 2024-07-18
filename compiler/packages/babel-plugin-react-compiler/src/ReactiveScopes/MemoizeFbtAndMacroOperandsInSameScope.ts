@@ -11,8 +11,8 @@ import {
   makeInstructionId,
   Place,
   ReactiveValue,
-} from "../HIR";
-import { eachReactiveValueOperand } from "./visitors";
+} from '../HIR';
+import {eachReactiveValueOperand} from './visitors';
 
 /**
  * This pass supports the `fbt` translation system (https://facebook.github.io/fbt/)
@@ -40,7 +40,7 @@ import { eachReactiveValueOperand } from "./visitors";
  * `customMacros` environment configuration.
  */
 export function memoizeFbtAndMacroOperandsInSameScope(
-  fn: HIRFunction
+  fn: HIRFunction,
 ): Set<IdentifierId> {
   const fbtMacroTags = new Set([
     ...FBT_TAGS,
@@ -58,30 +58,30 @@ export function memoizeFbtAndMacroOperandsInSameScope(
 }
 
 export const FBT_TAGS: Set<string> = new Set([
-  "fbt",
-  "fbt:param",
-  "fbs",
-  "fbs:param",
+  'fbt',
+  'fbt:param',
+  'fbs',
+  'fbs:param',
 ]);
 export const SINGLE_CHILD_FBT_TAGS: Set<string> = new Set([
-  "fbt:param",
-  "fbs:param",
+  'fbt:param',
+  'fbs:param',
 ]);
 
 function visit(
   fn: HIRFunction,
   fbtMacroTags: Set<string>,
-  fbtValues: Set<IdentifierId>
+  fbtValues: Set<IdentifierId>,
 ): void {
   for (const [, block] of fn.body.blocks) {
     for (const instruction of block.instructions) {
-      const { lvalue, value } = instruction;
+      const {lvalue, value} = instruction;
       if (lvalue === null) {
         continue;
       }
       if (
-        value.kind === "Primitive" &&
-        typeof value.value === "string" &&
+        value.kind === 'Primitive' &&
+        typeof value.value === 'string' &&
         fbtMacroTags.has(value.value)
       ) {
         /*
@@ -90,7 +90,7 @@ function visit(
          */
         fbtValues.add(lvalue.identifier.id);
       } else if (
-        value.kind === "LoadGlobal" &&
+        value.kind === 'LoadGlobal' &&
         fbtMacroTags.has(value.binding.name)
       ) {
         // Record references to `fbt` as a global
@@ -113,8 +113,8 @@ function visit(
           fbtScope.range.start = makeInstructionId(
             Math.min(
               fbtScope.range.start,
-              operand.identifier.mutableRange.start
-            )
+              operand.identifier.mutableRange.start,
+            ),
           );
           fbtValues.add(operand.identifier.id);
         }
@@ -139,8 +139,8 @@ function visit(
           fbtScope.range.start = makeInstructionId(
             Math.min(
               fbtScope.range.start,
-              operand.identifier.mutableRange.start
-            )
+              operand.identifier.mutableRange.start,
+            ),
           );
 
           /*
@@ -158,7 +158,7 @@ function visit(
         for (const operand of eachReactiveValueOperand(value)) {
           if (
             operand.identifier.name !== null &&
-            operand.identifier.name.kind === "named"
+            operand.identifier.name.kind === 'named'
           ) {
             /*
              * named identifiers were already locals, we only have to force temporaries
@@ -172,8 +172,8 @@ function visit(
           fbtScope.range.start = makeInstructionId(
             Math.min(
               fbtScope.range.start,
-              operand.identifier.mutableRange.start
-            )
+              operand.identifier.mutableRange.start,
+            ),
           );
         }
       }
@@ -183,33 +183,33 @@ function visit(
 
 function isFbtCallExpression(
   fbtValues: Set<IdentifierId>,
-  value: ReactiveValue
+  value: ReactiveValue,
 ): boolean {
   return (
-    value.kind === "CallExpression" && fbtValues.has(value.callee.identifier.id)
+    value.kind === 'CallExpression' && fbtValues.has(value.callee.identifier.id)
   );
 }
 
 function isFbtJsxExpression(
   fbtMacroTags: Set<string>,
   fbtValues: Set<IdentifierId>,
-  value: ReactiveValue
+  value: ReactiveValue,
 ): boolean {
   return (
-    value.kind === "JsxExpression" &&
-    ((value.tag.kind === "Identifier" &&
+    value.kind === 'JsxExpression' &&
+    ((value.tag.kind === 'Identifier' &&
       fbtValues.has(value.tag.identifier.id)) ||
-      (value.tag.kind === "BuiltinTag" && fbtMacroTags.has(value.tag.name)))
+      (value.tag.kind === 'BuiltinTag' && fbtMacroTags.has(value.tag.name)))
   );
 }
 
 function isFbtJsxChild(
   fbtValues: Set<IdentifierId>,
   lvalue: Place | null,
-  value: ReactiveValue
+  value: ReactiveValue,
 ): boolean {
   return (
-    (value.kind === "JsxExpression" || value.kind === "JsxFragment") &&
+    (value.kind === 'JsxExpression' || value.kind === 'JsxFragment') &&
     lvalue !== null &&
     fbtValues.has(lvalue.identifier.id)
   );

@@ -18,18 +18,18 @@ import {
   ReactiveTerminal,
   ReactiveTerminalStatement,
   ReactiveValue,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/visitors';
+import {assertExhaustive} from '../Utils/utils';
 
 export function visitReactiveFunction<TState>(
   fn: ReactiveFunction,
   visitor: ReactiveFunctionVisitor<TState>,
-  state: TState
+  state: TState,
 ): void {
   visitor.visitBlock(fn.body, state);
 }
@@ -43,7 +43,7 @@ export class ReactiveFunctionVisitor<TState = void> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     _fn: ReactiveFunction,
-    _state: TState
+    _state: TState,
   ): void {}
 
   visitValue(id: InstructionId, value: ReactiveValue, state: TState): void {
@@ -51,34 +51,34 @@ export class ReactiveFunctionVisitor<TState = void> {
   }
   traverseValue(id: InstructionId, value: ReactiveValue, state: TState): void {
     switch (value.kind) {
-      case "OptionalExpression": {
+      case 'OptionalExpression': {
         this.visitValue(id, value.value, state);
         break;
       }
-      case "LogicalExpression": {
+      case 'LogicalExpression': {
         this.visitValue(id, value.left, state);
         this.visitValue(id, value.right, state);
         break;
       }
-      case "ConditionalExpression": {
+      case 'ConditionalExpression': {
         this.visitValue(id, value.test, state);
         this.visitValue(id, value.consequent, state);
         this.visitValue(id, value.alternate, state);
         break;
       }
-      case "SequenceExpression": {
+      case 'SequenceExpression': {
         for (const instr of value.instructions) {
           this.visitInstruction(instr, state);
         }
         this.visitValue(value.id, value.value, state);
         break;
       }
-      case "ReactiveFunctionValue": {
+      case 'ReactiveFunctionValue': {
         this.visitReactiveFunctionValue(
           id,
           value.dependencies,
           value.fn,
-          state
+          state,
         );
         break;
       }
@@ -105,24 +105,24 @@ export class ReactiveFunctionVisitor<TState = void> {
     this.traverseTerminal(stmt, state);
   }
   traverseTerminal(stmt: ReactiveTerminalStatement, state: TState): void {
-    const { terminal } = stmt;
+    const {terminal} = stmt;
     if (terminal.id !== null) {
       this.visitID(terminal.id, state);
     }
     switch (terminal.kind) {
-      case "break":
-      case "continue": {
+      case 'break':
+      case 'continue': {
         break;
       }
-      case "return": {
+      case 'return': {
         this.visitPlace(terminal.id, terminal.value, state);
         break;
       }
-      case "throw": {
+      case 'throw': {
         this.visitPlace(terminal.id, terminal.value, state);
         break;
       }
-      case "for": {
+      case 'for': {
         this.visitValue(terminal.id, terminal.init, state);
         this.visitValue(terminal.id, terminal.test, state);
         this.visitBlock(terminal.loop, state);
@@ -131,28 +131,28 @@ export class ReactiveFunctionVisitor<TState = void> {
         }
         break;
       }
-      case "for-of": {
+      case 'for-of': {
         this.visitValue(terminal.id, terminal.init, state);
         this.visitValue(terminal.id, terminal.test, state);
         this.visitBlock(terminal.loop, state);
         break;
       }
-      case "for-in": {
+      case 'for-in': {
         this.visitValue(terminal.id, terminal.init, state);
         this.visitBlock(terminal.loop, state);
         break;
       }
-      case "do-while": {
+      case 'do-while': {
         this.visitBlock(terminal.loop, state);
         this.visitValue(terminal.id, terminal.test, state);
         break;
       }
-      case "while": {
+      case 'while': {
         this.visitValue(terminal.id, terminal.test, state);
         this.visitBlock(terminal.loop, state);
         break;
       }
-      case "if": {
+      case 'if': {
         this.visitPlace(terminal.id, terminal.test, state);
         this.visitBlock(terminal.consequent, state);
         if (terminal.alternate !== null) {
@@ -160,7 +160,7 @@ export class ReactiveFunctionVisitor<TState = void> {
         }
         break;
       }
-      case "switch": {
+      case 'switch': {
         this.visitPlace(terminal.id, terminal.test, state);
         for (const case_ of terminal.cases) {
           if (case_.test !== null) {
@@ -172,11 +172,11 @@ export class ReactiveFunctionVisitor<TState = void> {
         }
         break;
       }
-      case "label": {
+      case 'label': {
         this.visitBlock(terminal.block, state);
         break;
       }
-      case "try": {
+      case 'try': {
         this.visitBlock(terminal.block, state);
         this.visitBlock(terminal.handler, state);
         break;
@@ -184,7 +184,7 @@ export class ReactiveFunctionVisitor<TState = void> {
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind \`${(terminal as any).kind}\``
+          `Unexpected terminal kind \`${(terminal as any).kind}\``,
         );
       }
     }
@@ -202,7 +202,7 @@ export class ReactiveFunctionVisitor<TState = void> {
   }
   traversePrunedScope(
     scopeBlock: PrunedReactiveScopeBlock,
-    state: TState
+    state: TState,
   ): void {
     this.visitBlock(scopeBlock.instructions, state);
   }
@@ -213,26 +213,26 @@ export class ReactiveFunctionVisitor<TState = void> {
   traverseBlock(block: ReactiveBlock, state: TState): void {
     for (const instr of block) {
       switch (instr.kind) {
-        case "instruction": {
+        case 'instruction': {
           this.visitInstruction(instr.instruction, state);
           break;
         }
-        case "scope": {
+        case 'scope': {
           this.visitScope(instr, state);
           break;
         }
-        case "pruned-scope": {
+        case 'pruned-scope': {
           this.visitPrunedScope(instr, state);
           break;
         }
-        case "terminal": {
+        case 'terminal': {
           this.visitTerminal(instr, state);
           break;
         }
         default: {
           assertExhaustive(
             instr,
-            `Unexpected instruction kind \`${(instr as any).kind}\``
+            `Unexpected instruction kind \`${(instr as any).kind}\``,
           );
         }
       }
@@ -241,15 +241,15 @@ export class ReactiveFunctionVisitor<TState = void> {
 
   visitHirFunction(fn: HIRFunction, state: TState): void {
     for (const param of fn.params) {
-      const place = param.kind === "Identifier" ? param : param.place;
+      const place = param.kind === 'Identifier' ? param : param.place;
       this.visitParam(place, state);
     }
     for (const [, block] of fn.body.blocks) {
       for (const instr of block.instructions) {
         this.visitInstruction(instr, state);
         if (
-          instr.value.kind === "FunctionExpression" ||
-          instr.value.kind === "ObjectMethod"
+          instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod'
         ) {
           this.visitHirFunction(instr.value.loweredFunc.func, state);
         }
@@ -262,14 +262,14 @@ export class ReactiveFunctionVisitor<TState = void> {
 }
 
 export type TransformedValue =
-  | { kind: "keep" }
-  | { kind: "replace"; value: ReactiveValue };
+  | {kind: 'keep'}
+  | {kind: 'replace'; value: ReactiveValue};
 
 export type Transformed<T> =
-  | { kind: "remove" }
-  | { kind: "keep" }
-  | { kind: "replace"; value: T }
-  | { kind: "replace-many"; value: Array<T> };
+  | {kind: 'remove'}
+  | {kind: 'keep'}
+  | {kind: 'replace'; value: T}
+  | {kind: 'replace-many'; value: Array<T>};
 
 export class ReactiveFunctionTransform<
   TState = void,
@@ -280,48 +280,48 @@ export class ReactiveFunctionTransform<
       const instr = block[i]!;
       let transformed: Transformed<ReactiveStatement>;
       switch (instr.kind) {
-        case "instruction": {
+        case 'instruction': {
           transformed = this.transformInstruction(instr.instruction, state);
           break;
         }
-        case "scope": {
+        case 'scope': {
           transformed = this.transformScope(instr, state);
           break;
         }
-        case "pruned-scope": {
+        case 'pruned-scope': {
           transformed = this.transformPrunedScope(instr, state);
           break;
         }
-        case "terminal": {
+        case 'terminal': {
           transformed = this.transformTerminal(instr, state);
           break;
         }
         default: {
           assertExhaustive(
             instr,
-            `Unexpected instruction kind \`${(instr as any).kind}\``
+            `Unexpected instruction kind \`${(instr as any).kind}\``,
           );
         }
       }
       switch (transformed.kind) {
-        case "keep": {
+        case 'keep': {
           if (nextBlock !== null) {
             nextBlock.push(instr);
           }
           break;
         }
-        case "remove": {
+        case 'remove': {
           if (nextBlock === null) {
             nextBlock = block.slice(0, i);
           }
           break;
         }
-        case "replace": {
+        case 'replace': {
           nextBlock ??= block.slice(0, i);
           nextBlock.push(transformed.value);
           break;
         }
-        case "replace-many": {
+        case 'replace-many': {
           nextBlock ??= block.slice(0, i);
           nextBlock.push(...transformed.value);
           break;
@@ -336,112 +336,112 @@ export class ReactiveFunctionTransform<
 
   transformInstruction(
     instruction: ReactiveInstruction,
-    state: TState
+    state: TState,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 
   transformTerminal(
     stmt: ReactiveTerminalStatement,
-    state: TState
+    state: TState,
   ): Transformed<ReactiveStatement> {
     this.visitTerminal(stmt, state);
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 
   transformScope(
     scope: ReactiveScopeBlock,
-    state: TState
+    state: TState,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scope, state);
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 
   transformPrunedScope(
     scope: PrunedReactiveScopeBlock,
-    state: TState
+    state: TState,
   ): Transformed<ReactiveStatement> {
     this.visitPrunedScope(scope, state);
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 
   transformValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: TState
+    state: TState,
   ): TransformedValue {
     this.visitValue(id, value, state);
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 
   transformReactiveFunctionValue(
     id: InstructionId,
     dependencies: Array<Place>,
     fn: ReactiveFunction,
-    state: TState
-  ): { kind: "keep" } | { kind: "replace"; value: ReactiveFunction } {
+    state: TState,
+  ): {kind: 'keep'} | {kind: 'replace'; value: ReactiveFunction} {
     this.visitReactiveFunctionValue(id, dependencies, fn, state);
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 
   override traverseValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: TState
+    state: TState,
   ): void {
     switch (value.kind) {
-      case "OptionalExpression": {
+      case 'OptionalExpression': {
         const nextValue = this.transformValue(id, value.value, state);
-        if (nextValue.kind === "replace") {
+        if (nextValue.kind === 'replace') {
           value.value = nextValue.value;
         }
         break;
       }
-      case "LogicalExpression": {
+      case 'LogicalExpression': {
         const left = this.transformValue(id, value.left, state);
-        if (left.kind === "replace") {
+        if (left.kind === 'replace') {
           value.left = left.value;
         }
         const right = this.transformValue(id, value.right, state);
-        if (right.kind === "replace") {
+        if (right.kind === 'replace') {
           value.right = right.value;
         }
         break;
       }
-      case "ConditionalExpression": {
+      case 'ConditionalExpression': {
         const test = this.transformValue(id, value.test, state);
-        if (test.kind === "replace") {
+        if (test.kind === 'replace') {
           value.test = test.value;
         }
         const consequent = this.transformValue(id, value.consequent, state);
-        if (consequent.kind === "replace") {
+        if (consequent.kind === 'replace') {
           value.consequent = consequent.value;
         }
         const alternate = this.transformValue(id, value.alternate, state);
-        if (alternate.kind === "replace") {
+        if (alternate.kind === 'replace') {
           value.alternate = alternate.value;
         }
         break;
       }
-      case "SequenceExpression": {
+      case 'SequenceExpression': {
         for (const instr of value.instructions) {
           this.visitInstruction(instr, state);
         }
         const nextValue = this.transformValue(value.id, value.value, state);
-        if (nextValue.kind === "replace") {
+        if (nextValue.kind === 'replace') {
           value.value = nextValue.value;
         }
         break;
       }
-      case "ReactiveFunctionValue": {
+      case 'ReactiveFunctionValue': {
         const nextValue = this.transformReactiveFunctionValue(
           id,
           value.dependencies,
           value.fn,
-          state
+          state,
         );
-        if (nextValue.kind === "replace") {
+        if (nextValue.kind === 'replace') {
           value.fn = nextValue.value;
         }
         break;
@@ -456,7 +456,7 @@ export class ReactiveFunctionTransform<
 
   override traverseInstruction(
     instruction: ReactiveInstruction,
-    state: TState
+    state: TState,
   ): void {
     this.visitID(instruction.id, state);
     for (const operand of eachInstructionLValue(instruction)) {
@@ -465,93 +465,93 @@ export class ReactiveFunctionTransform<
     const nextValue = this.transformValue(
       instruction.id,
       instruction.value,
-      state
+      state,
     );
-    if (nextValue.kind === "replace") {
+    if (nextValue.kind === 'replace') {
       instruction.value = nextValue.value;
     }
   }
 
   override traverseTerminal(
     stmt: ReactiveTerminalStatement,
-    state: TState
+    state: TState,
   ): void {
-    const { terminal } = stmt;
+    const {terminal} = stmt;
     if (terminal.id !== null) {
       this.visitID(terminal.id, state);
     }
     switch (terminal.kind) {
-      case "break":
-      case "continue": {
+      case 'break':
+      case 'continue': {
         break;
       }
-      case "return": {
+      case 'return': {
         this.visitPlace(terminal.id, terminal.value, state);
         break;
       }
-      case "throw": {
+      case 'throw': {
         this.visitPlace(terminal.id, terminal.value, state);
         break;
       }
-      case "for": {
+      case 'for': {
         const init = this.transformValue(terminal.id, terminal.init, state);
-        if (init.kind === "replace") {
+        if (init.kind === 'replace') {
           terminal.init = init.value;
         }
         const test = this.transformValue(terminal.id, terminal.test, state);
-        if (test.kind === "replace") {
+        if (test.kind === 'replace') {
           terminal.test = test.value;
         }
         if (terminal.update !== null) {
           const update = this.transformValue(
             terminal.id,
             terminal.update,
-            state
+            state,
           );
-          if (update.kind === "replace") {
+          if (update.kind === 'replace') {
             terminal.update = update.value;
           }
         }
         this.visitBlock(terminal.loop, state);
         break;
       }
-      case "for-of": {
+      case 'for-of': {
         const init = this.transformValue(terminal.id, terminal.init, state);
-        if (init.kind === "replace") {
+        if (init.kind === 'replace') {
           terminal.init = init.value;
         }
         const test = this.transformValue(terminal.id, terminal.test, state);
-        if (test.kind === "replace") {
+        if (test.kind === 'replace') {
           terminal.test = test.value;
         }
         this.visitBlock(terminal.loop, state);
         break;
       }
-      case "for-in": {
+      case 'for-in': {
         const init = this.transformValue(terminal.id, terminal.init, state);
-        if (init.kind === "replace") {
+        if (init.kind === 'replace') {
           terminal.init = init.value;
         }
         this.visitBlock(terminal.loop, state);
         break;
       }
-      case "do-while": {
+      case 'do-while': {
         this.visitBlock(terminal.loop, state);
         const test = this.transformValue(terminal.id, terminal.test, state);
-        if (test.kind === "replace") {
+        if (test.kind === 'replace') {
           terminal.test = test.value;
         }
         break;
       }
-      case "while": {
+      case 'while': {
         const test = this.transformValue(terminal.id, terminal.test, state);
-        if (test.kind === "replace") {
+        if (test.kind === 'replace') {
           terminal.test = test.value;
         }
         this.visitBlock(terminal.loop, state);
         break;
       }
-      case "if": {
+      case 'if': {
         this.visitPlace(terminal.id, terminal.test, state);
         this.visitBlock(terminal.consequent, state);
         if (terminal.alternate !== null) {
@@ -559,7 +559,7 @@ export class ReactiveFunctionTransform<
         }
         break;
       }
-      case "switch": {
+      case 'switch': {
         this.visitPlace(terminal.id, terminal.test, state);
         for (const case_ of terminal.cases) {
           if (case_.test !== null) {
@@ -571,11 +571,11 @@ export class ReactiveFunctionTransform<
         }
         break;
       }
-      case "label": {
+      case 'label': {
         this.visitBlock(terminal.block, state);
         break;
       }
-      case "try": {
+      case 'try': {
         this.visitBlock(terminal.block, state);
         if (terminal.handlerBinding !== null) {
           this.visitPlace(terminal.id, terminal.handlerBinding, state);
@@ -586,7 +586,7 @@ export class ReactiveFunctionTransform<
       default: {
         assertExhaustive(
           terminal,
-          `Unexpected terminal kind \`${(terminal as any).kind}\``
+          `Unexpected terminal kind \`${(terminal as any).kind}\``,
         );
       }
     }
@@ -594,32 +594,32 @@ export class ReactiveFunctionTransform<
 }
 
 export function* eachReactiveValueOperand(
-  instrValue: ReactiveValue
+  instrValue: ReactiveValue,
 ): Iterable<Place> {
   switch (instrValue.kind) {
-    case "OptionalExpression": {
+    case 'OptionalExpression': {
       yield* eachReactiveValueOperand(instrValue.value);
       break;
     }
-    case "LogicalExpression": {
+    case 'LogicalExpression': {
       yield* eachReactiveValueOperand(instrValue.left);
       yield* eachReactiveValueOperand(instrValue.right);
       break;
     }
-    case "SequenceExpression": {
+    case 'SequenceExpression': {
       for (const instr of instrValue.instructions) {
         yield* eachReactiveValueOperand(instr.value);
       }
       yield* eachReactiveValueOperand(instrValue.value);
       break;
     }
-    case "ConditionalExpression": {
+    case 'ConditionalExpression': {
       yield* eachReactiveValueOperand(instrValue.test);
       yield* eachReactiveValueOperand(instrValue.consequent);
       yield* eachReactiveValueOperand(instrValue.alternate);
       break;
     }
-    case "ReactiveFunctionValue": {
+    case 'ReactiveFunctionValue': {
       yield* instrValue.dependencies;
       break;
     }
@@ -631,40 +631,40 @@ export function* eachReactiveValueOperand(
 
 export function mapTerminalBlocks(
   terminal: ReactiveTerminal,
-  fn: (block: ReactiveBlock) => ReactiveBlock
+  fn: (block: ReactiveBlock) => ReactiveBlock,
 ): void {
   switch (terminal.kind) {
-    case "break":
-    case "continue":
-    case "return":
-    case "throw": {
+    case 'break':
+    case 'continue':
+    case 'return':
+    case 'throw': {
       break;
     }
-    case "for": {
+    case 'for': {
       terminal.loop = fn(terminal.loop);
       break;
     }
-    case "for-of": {
+    case 'for-of': {
       terminal.loop = fn(terminal.loop);
       break;
     }
-    case "for-in": {
+    case 'for-in': {
       terminal.loop = fn(terminal.loop);
       break;
     }
-    case "do-while":
-    case "while": {
+    case 'do-while':
+    case 'while': {
       terminal.loop = fn(terminal.loop);
       break;
     }
-    case "if": {
+    case 'if': {
       terminal.consequent = fn(terminal.consequent);
       if (terminal.alternate !== null) {
         terminal.alternate = fn(terminal.alternate);
       }
       break;
     }
-    case "switch": {
+    case 'switch': {
       for (const case_ of terminal.cases) {
         if (case_.block !== undefined) {
           case_.block = fn(case_.block);
@@ -672,11 +672,11 @@ export function mapTerminalBlocks(
       }
       break;
     }
-    case "label": {
+    case 'label': {
       terminal.block = fn(terminal.block);
       break;
     }
-    case "try": {
+    case 'try': {
       terminal.block = fn(terminal.block);
       terminal.handler = fn(terminal.handler);
       break;
@@ -684,7 +684,7 @@ export function mapTerminalBlocks(
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }
