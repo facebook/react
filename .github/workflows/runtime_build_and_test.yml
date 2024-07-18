@@ -586,11 +586,15 @@ jobs:
           pattern: _build_*
           path: build
           merge-multiple: true
+      - name: Display structure of build for PR
+        run: ls -R build
       - name: Restore archived base-build from origin/main
         uses: actions/download-artifact@v4
         with:
           name: base-build
           path: base-build
+      - name: Display structure of base-build from origin/main
+        run: ls -R base-build
       - run: echo ${{ github.sha }} >> build/COMMIT_SHA
       - run: node ./scripts/tasks/danger
       - name: Archive sizebot results
