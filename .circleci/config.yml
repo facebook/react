@@ -48,22 +48,6 @@ parameters:
     default: ''
 
 jobs:
-  scrape_warning_messages:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - setup_node_modules
-      - run:
-          command: |
-            mkdir -p ./build/__test_utils__
-            node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
-      - persist_to_workspace:
-          root: .
-          paths:
-            - build
-
   yarn_build:
     docker: *docker
     environment: *environment
@@ -106,7 +90,10 @@ jobs:
           at: .
       - setup_node_modules
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
-        # Compress build directory into a single tarball for easy download
+      - run: |
+          mkdir -p ./build/__test_utils__
+          node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
+      # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build.tgz ./build
         # TODO: Migrate scripts to use `build` directory instead of `build2`
       - run: cp ./build.tgz ./build2.tgz
@@ -230,14 +217,8 @@ workflows:
             branches:
               ignore:
                 - builds/facebook-www
-      - scrape_warning_messages:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
       - process_artifacts_combined:
           requires:
-            - scrape_warning_messages
             - yarn_build
 
   devtools_regression_tests:
