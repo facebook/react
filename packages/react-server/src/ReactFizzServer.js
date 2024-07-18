@@ -163,6 +163,7 @@ import {
   enableAsyncIterableChildren,
   disableStringRefs,
   enableOwnerStacks,
+  disableFizzStacksAndResume,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -2448,12 +2449,18 @@ function renderNodeDestructive(
   node: ReactNodeList,
   childIndex: number,
 ): void {
+  if (disableFizzStacksAndResume) {
+    retryNode(request, task, node, childIndex);
+    return;
+  }
+
   if (task.replay !== null && typeof task.replay.slots === 'number') {
     // TODO: Figure out a cheaper place than this hot path to do this check.
     const resumeSegmentID = task.replay.slots;
     resumeNode(request, task, resumeSegmentID, node, childIndex);
     return;
   }
+
   // Stash the node we're working on. We'll pick up from this task in case
   // something suspends.
   task.node = node;
@@ -2465,7 +2472,7 @@ function renderNodeDestructive(
 
   pushComponentStack(task);
 
-  retryNode(request, task);
+  retryNode(request, task, node, childIndex);
 
   task.componentStack = previousComponentStack;
   if (__DEV__ && enableOwnerStacks) {
@@ -2473,9 +2480,18 @@ function renderNodeDestructive(
   }
 }
 
-function retryNode(request: Request, task: Task): void {
-  const node = task.node;
-  const childIndex = task.childIndex;
+function retryNode(
+  request: Request,
+  task: Task,
+  node: ReactNodeList,
+  childIndex: number,
+): void {
+  if (disableFizzStacksAndResume) {
+    // Stash the node we're working on. We'll pick up from this task in case
+    // something suspends.
+    task.node = node;
+    task.childIndex = childIndex;
+  }
 
   if (node === null) {
     return;
@@ -4001,7 +4017,7 @@ function retryRenderTask(
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
 
-    retryNode(request, task);
+    retryNode(request, task, task.node, task.childIndex);
     pushSegmentFinale(
       segment.chunks,
       request.renderState,
@@ -4103,7 +4119,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
       const resumeSegmentID = task.replay.slots;
       resumeNode(request, task, resumeSegmentID, task.node, task.childIndex);
     } else {
-      retryNode(request, task);
+      retryNode(request, task, task.node, task.childIndex);
     }
 
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
