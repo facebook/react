@@ -32,88 +32,69 @@ import { c as _c } from "react/compiler-runtime"; // @disableMemoizationForDebug
 import { useMemo } from "react";
 
 function Component(props) {
-  const $ = _c(9);
+  const $ = _c(7);
+  const a = useMemo(() => <div>{props.a}</div>, [props]);
   let t0;
+  {
+    t0 = props.b;
+    let condition = $[0] !== props.b || true;
+    if (!condition) {
+      let old$t0 = $[1];
+      $structuralCheck(old$t0, t0, "t0", "Component", "cached", "(6:6)");
+    }
+    $[0] = props.b;
+    $[1] = t0;
+    if (condition) {
+      t0 = props.b;
+      $structuralCheck($[1], t0, "t0", "Component", "recomputed", "(6:6)");
+      t0 = $[1];
+    }
+  }
   let t1;
   {
-    t1 = <div>{props.a}</div>;
-    let condition = $[0] !== props;
+    t1 = <div>{t0}</div>;
+    let condition = $[2] !== t0 || true;
     if (!condition) {
-      let old$t1 = $[1];
-      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(5:5)");
-      t1 = old$t1;
+      let old$t1 = $[3];
+      $structuralCheck(old$t1, t1, "t1", "Component", "cached", "(6:6)");
     }
-    $[0] = props;
-    $[1] = t1;
+    $[2] = t0;
+    $[3] = t1;
     if (condition) {
-      t1 = <div>{props.a}</div>;
-      $structuralCheck($[1], t1, "t1", "Component", "recomputed", "(5:5)");
-      t1 = $[1];
+      t1 = <div>{t0}</div>;
+      $structuralCheck($[3], t1, "t1", "Component", "recomputed", "(6:6)");
+      t1 = $[3];
     }
   }
-  t0 = t1;
-  const a = t0;
+  const b = t1;
   let t2;
   {
-    t2 = props.b;
-    let condition = $[2] !== props.b;
-    if (!condition) {
-      let old$t2 = $[3];
-      $structuralCheck(old$t2, t2, "t2", "Component", "cached", "(6:6)");
-    }
-    $[2] = props.b;
-    $[3] = t2;
-    if (condition) {
-      t2 = props.b;
-      $structuralCheck($[3], t2, "t2", "Component", "recomputed", "(6:6)");
-      t2 = $[3];
-    }
-  }
-  let t3;
-  {
-    t3 = <div>{t2}</div>;
-    let condition = $[4] !== t2;
-    if (!condition) {
-      let old$t3 = $[5];
-      $structuralCheck(old$t3, t3, "t3", "Component", "cached", "(6:6)");
-    }
-    $[4] = t2;
-    $[5] = t3;
-    if (condition) {
-      t3 = <div>{t2}</div>;
-      $structuralCheck($[5], t3, "t3", "Component", "recomputed", "(6:6)");
-      t3 = $[5];
-    }
-  }
-  const b = t3;
-  let t4;
-  {
-    t4 = (
+    t2 = (
       <div>
         {a}
         {b}
       </div>
     );
-    let condition = $[6] !== a || $[7] !== b;
+    let condition = $[4] !== a || $[5] !== b || true;
     if (!condition) {
-      let old$t4 = $[8];
-      $structuralCheck(old$t4, t4, "t4", "Component", "cached", "(8:11)");
+      let old$t2 = $[6];
+      $structuralCheck(old$t2, t2, "t2", "Component", "cached", "(8:11)");
     }
-    $[6] = a;
-    $[7] = b;
-    $[8] = t4;
+    $[4] = a;
+    $[5] = b;
+    $[6] = t2;
     if (condition) {
-      t4 = (
+      t2 = (
         <div>
           {a}
           {b}
         </div>
       );
-      $structuralCheck($[8], t4, "t4", "Component", "recomputed", "(8:11)");
-      t4 = $[8];
+      $structuralCheck($[6], t2, "t2", "Component", "recomputed", "(8:11)");
+      t2 = $[6];
     }
   }
-  return t4;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

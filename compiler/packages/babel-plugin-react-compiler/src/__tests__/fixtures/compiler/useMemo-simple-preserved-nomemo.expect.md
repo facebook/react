@@ -25,27 +25,18 @@ import { c as _c } from "react/compiler-runtime"; // @disableMemoizationForDebug
 import { useMemo } from "react";
 
 function Component(t0) {
-  const $ = _c(3);
+  const $ = _c(2);
   const { a } = t0;
+  const x = useMemo(() => [a], []);
   let t1;
-  let t2;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = [a];
-    $[0] = t2;
+  if ($[0] !== x || true) {
+    t1 = <div>{x}</div>;
+    $[0] = x;
+    $[1] = t1;
   } else {
-    t2 = $[0];
+    t1 = $[1];
   }
-  t1 = t2;
-  const x = t1;
-  let t3;
-  if ($[1] !== x || true) {
-    t3 = <div>{x}</div>;
-    $[1] = x;
-    $[2] = t3;
-  } else {
-    t3 = $[2];
-  }
-  return t3;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

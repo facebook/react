@@ -28,6 +28,7 @@ import { basename } from "path";
 const e2eTransformerCacheKey = 1;
 const forgetOptions: EnvironmentConfig = validateEnvironmentConfig({
   enableAssumeHooksFollowRulesOfReact: true,
+  enableFunctionOutlining: false,
 });
 const debugMode = process.env["DEBUG_FORGET_COMPILER"] != null;
 

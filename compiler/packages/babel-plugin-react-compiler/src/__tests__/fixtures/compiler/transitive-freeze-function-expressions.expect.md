@@ -33,7 +33,7 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions
 function Component(props) {
-  const $ = _c(10);
+  const $ = _c(9);
   const { data, loadNext, isLoadingNext } =
     usePaginationFragment(props.key).items ?? [];
   let t0;
@@ -74,14 +74,7 @@ function Component(props) {
   useEffect(t1, t2);
   let t3;
   if ($[7] !== data) {
-    let t4;
-    if ($[9] === Symbol.for("react.memo_cache_sentinel")) {
-      t4 = (x) => x;
-      $[9] = t4;
-    } else {
-      t4 = $[9];
-    }
-    t3 = data.map(t4);
+    t3 = data.map(_temp);
     $[7] = data;
     $[8] = t3;
   } else {
@@ -89,6 +82,9 @@ function Component(props) {
   }
   const items = t3;
   return items;
+}
+function _temp(x) {
+  return x;
 }
 
 ```

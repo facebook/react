@@ -22,24 +22,20 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 import { Stringify } from "shared-runtime";
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(2);
+  const cb = _temp;
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = (x, y, z) => x + y + z;
-    $[0] = t0;
+  if ($[0] !== props.id) {
+    t0 = <Stringify cb={cb} id={props.id} />;
+    $[0] = props.id;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
-  const cb = t0;
-  let t1;
-  if ($[1] !== props.id) {
-    t1 = <Stringify cb={cb} id={props.id} />;
-    $[1] = props.id;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  return t1;
+  return t0;
+}
+function _temp(x, y, z) {
+  return x + y + z;
 }
 
 export const FIXTURE_ENTRYPOINT = {

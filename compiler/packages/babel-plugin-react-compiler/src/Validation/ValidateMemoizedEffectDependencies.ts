@@ -17,7 +17,7 @@ import {
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
 } from "../HIR";
-import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
+import { isMutableAtInstruction } from "../ReactiveScopes/InferReactiveScopeVariables";
 import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
@@ -99,7 +99,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
       const deps = instruction.value.args[1]!;
       if (
         deps.kind === "Identifier" &&
-        (isMutable(instruction as Instruction, deps) ||
+        (isMutableAtInstruction(instruction as Instruction, deps) ||
           isUnmemoized(deps.identifier, this.scopes))
       ) {
         state.push({

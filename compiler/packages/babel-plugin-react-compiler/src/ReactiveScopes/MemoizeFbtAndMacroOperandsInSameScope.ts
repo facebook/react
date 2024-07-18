@@ -43,6 +43,7 @@ export function memoizeFbtAndMacroOperandsInSameScope(fn: HIRFunction): void {
   const fbtMacroTags = new Set([
     ...FBT_TAGS,
     ...(fn.env.config.customMacros ?? []),
+    ...(fn.env.preserveManualMemo() ? ["useMemo", "useCallback"] : []),
   ]);
   const fbtValues: Set<IdentifierId> = new Set();
   while (true) {

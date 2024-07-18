@@ -271,9 +271,14 @@ export default class HIRBuilder {
           module: importDeclaration.node.source.value,
         };
       } else {
+        const immutable =
+          (path.isVariableDeclaration() && path.node.kind === "const") ||
+          path.isClassDeclaration() ||
+          path.isClassExpression();
         return {
           kind: "ModuleLocal",
           name: originalName,
+          immutable,
         };
       }
     }

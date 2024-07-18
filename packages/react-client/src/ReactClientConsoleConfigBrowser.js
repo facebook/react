@@ -7,8 +7,6 @@
  * @flow
  */
 
-import {warn, error} from 'shared/consoleWithStackDev';
-
 const badgeFormat = '%c%s%c ';
 // Same badge styling as DevTools.
 const badgeStyle =
@@ -65,12 +63,6 @@ export function printToConsole(
     );
   }
 
-  if (methodName === 'error') {
-    error.apply(console, newArgs);
-  } else if (methodName === 'warn') {
-    warn.apply(console, newArgs);
-  } else {
-    // eslint-disable-next-line react-internal/no-production-logging
-    console[methodName].apply(console, newArgs);
-  }
+  // $FlowFixMe[invalid-computed-prop]
+  console[methodName].apply(console, newArgs); // eslint-disable-line react-internal/no-production-logging
 }

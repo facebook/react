@@ -7,32 +7,6 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
-  - &restore_yarn_cache_fixtures_dom
-    restore_cache:
-      name: Restore yarn cache for fixtures/dom
-      keys:
-        - v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
-
-  - &yarn_install_fixtures_dom
-    run:
-      name: Install dependencies in fixtures/dom
-      working_directory: fixtures/dom
-      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-
-  - &yarn_install_fixtures_dom_retry
-    run:
-      name: Install dependencies in fixtures/dom (retry)
-      when: on_fail
-      working_directory: fixtures/dom
-      command: yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-
-  - &save_yarn_cache_fixtures_dom
-    save_cache:
-      name: Save yarn cache for fixtures/dom
-      key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}-fixtures/dom
-      paths:
-        - ~/.cache/yarn
-
   - &TEST_PARALLELISM 20
 
   - &attach_workspace
@@ -97,7 +71,7 @@ jobs:
     steps:
       - checkout
       - setup_node_modules
-      - run: yarn build
+      - run: yarn build --ci=circleci
       - persist_to_workspace:
           root: .
           paths:
@@ -222,52 +196,6 @@ jobs:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/run_devtools_e2e_tests.js
 
-  run_fixtures_flight_tests:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      # Fixture copies some built packages from the workroot after install.
-      # That means dependencies of the built packages are not installed.
-      # We need to install dependencies of the workroot to fulfill all dependency constraints
-      - setup_node_modules
-      - restore_cache:
-          name: Restore yarn cache of fixture
-          keys:
-            - v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
-      - run:
-          name: Install fixture dependencies
-          working_directory: fixtures/flight
-          command: |
-            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-            if [ $? -ne 0 ]; then
-              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
-            fi
-      - save_cache:
-          name: Save yarn cache of fixture
-          key: v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/.cache/yarn
-      - run:
-          working_directory: fixtures/flight
-          name: Playwright install deps
-          command: |
-            npx playwright install
-            sudo npx playwright install-deps
-      - run:
-          name: Run tests
-          working_directory: fixtures/flight
-          command: yarn test
-          environment:
-          # Otherwise the webserver is a blackbox
-            DEBUG: pw:webserver
-      - store_artifacts:
-          path: fixtures/flight/playwright-report
-      - store_artifacts:
-          path: fixtures/flight/test-results
-
   run_devtools_tests_for_versions:
     docker: *docker
     environment: *environment
@@ -311,75 +239,6 @@ jobs:
       - store_artifacts:
           path: ./tmp/screenshots
 
-  yarn_lint_build:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - run: yarn lint-build
-
-  yarn_check_release_dependencies:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - run: yarn check-release-dependencies
-
-
-  check_error_codes:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - setup_node_modules
-      - run:
-          name: Search build artifacts for unminified errors
-          command: |
-            yarn extract-errors
-            git diff --quiet || (echo "Found unminified errors. Either update the error codes map or disable error minification for the affected build, if appropriate." && false)
-
-  yarn_test_build:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    parameters:
-      args:
-        type: string
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - run: yarn test --build <<parameters.args>> --ci=circleci
-
-  RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - *restore_yarn_cache_fixtures_dom
-      - *yarn_install_fixtures_dom
-      - *yarn_install_fixtures_dom_retry
-      - *save_yarn_cache_fixtures_dom
-      - run:
-          name: Run DOM fixture tests
-          environment:
-            RELEASE_CHANNEL: stable
-          working_directory: fixtures/dom
-          command: |
-            yarn predev
-            yarn test --maxWorkers=2
-
   publish_prerelease:
     parameters:
       commit_sha:
@@ -421,40 +280,6 @@ workflows:
           requires:
             - scrape_warning_messages
             - yarn_build
-      - yarn_test_build:
-          requires:
-            - yarn_build
-          matrix:
-            parameters:
-              args:
-                # Intentionally passing these as strings instead of creating a
-                # separate parameter per CLI argument, since it's easier to
-                # control/see which combinations we want to run.
-                - "-r=stable --env=development"
-                - "-r=stable --env=production"
-                - "-r=experimental --env=development"
-                - "-r=experimental --env=production"
-
-                # Dev Tools
-                - "--project=devtools -r=experimental"
-
-                # TODO: Update test config to support www build tests
-                # - "-r=www-classic --env=development --variant=false"
-                # - "-r=www-classic --env=production --variant=false"
-                # - "-r=www-classic --env=development --variant=true"
-                # - "-r=www-classic --env=production --variant=true"
-                # - "-r=www-modern --env=development --variant=false"
-                # - "-r=www-modern --env=production --variant=false"
-                # - "-r=www-modern --env=development --variant=true"
-                # - "-r=www-modern --env=production --variant=true"
-
-                # TODO: Update test config to support xplat build tests
-                # - "-r=xplat --env=development --variant=false"
-                # - "-r=xplat --env=development --variant=true"
-                # - "-r=xplat --env=production --variant=false"
-                # - "-r=xplat --env=production --variant=true"
-
-                # TODO: Test more persistent configurations?
       - download_base_build_for_sizebot:
           filters:
             branches:
@@ -468,27 +293,6 @@ workflows:
                 - main
           requires:
             - download_base_build_for_sizebot
-            - yarn_build
-      - yarn_lint_build:
-          requires:
-            - yarn_build
-      - yarn_check_release_dependencies:
-          requires:
-            - yarn_build
-      - check_error_codes:
-          requires:
-            - yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-          requires:
-            - yarn_build
-      - build_devtools_and_process_artifacts:
-          requires:
-            - yarn_build
-      - run_devtools_e2e_tests:
-          requires:
-            - build_devtools_and_process_artifacts
-      - run_fixtures_flight_tests:
-          requires:
             - yarn_build
 
   devtools_regression_tests:

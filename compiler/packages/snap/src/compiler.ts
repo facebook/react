@@ -46,7 +46,6 @@ function makePluginOptions(
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
   let enableChangeDetection = null;
-  let enablePreserveExistingManualUseMemo: "hook" | "scope" | null = null;
   let customMacros = null;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
@@ -141,28 +140,6 @@ function makePluginOptions(
       },
     };
   }
-
-  const useMemoMatch = /@enablePreserveExistingManualUseMemo:"([^"]+)"/.exec(
-    firstLine
-  );
-  if (
-    useMemoMatch &&
-    (useMemoMatch[1] === "hook" || useMemoMatch[1] === "scope")
-  ) {
-    enablePreserveExistingManualUseMemo = useMemoMatch[1];
-  } else if (
-    useMemoMatch &&
-    (useMemoMatch[1] === "false" || useMemoMatch[1] === "off")
-  ) {
-    enablePreserveExistingManualUseMemo = null;
-  } else if (useMemoMatch) {
-    throw new Error(
-      `Invalid setting '${useMemoMatch[1]}' for 'enablePreserveExistingManualUseMemo'. Valid settings are 'hook', 'scope', or 'off'.`
-    );
-  } else if (firstLine.includes("@enablePreserveExistingManualUseMemo")) {
-    enablePreserveExistingManualUseMemo = "scope";
-  }
-
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -240,7 +217,6 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       enableChangeDetection,
-      enablePreserveExistingManualUseMemo,
     },
     compilationMode,
     logger,

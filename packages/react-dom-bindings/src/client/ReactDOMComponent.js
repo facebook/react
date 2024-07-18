@@ -1031,6 +1031,53 @@ export function setInitialProperties(
       // Fast track the most common tag types
       break;
     }
+    // img tags previously were implemented as void elements with non delegated events however Safari (and possibly Firefox)
+    // begin fetching the image as soon as the `src` or `srcSet` property is set and if we set these before other properties
+    // that can modify the request (such as crossorigin) or the resource fetch (such as sizes) then the browser will load
+    // the wrong thing or load more than one thing. This implementation ensures src and srcSet are set on the instance last
+    case 'img': {
+      listenToNonDelegatedEvent('error', domElement);
+      listenToNonDelegatedEvent('load', domElement);
+      // Mostly a port of Void Element logic with special casing to ensure srcset and src are set last
+      let hasSrc = false;
+      let hasSrcSet = false;
+      for (const propKey in props) {
+        if (!props.hasOwnProperty(propKey)) {
+          continue;
+        }
+        const propValue = props[propKey];
+        if (propValue == null) {
+          continue;
+        }
+        switch (propKey) {
+          case 'src':
+            hasSrc = true;
+            break;
+          case 'srcSet':
+            hasSrcSet = true;
+            break;
+          case 'children':
+          case 'dangerouslySetInnerHTML': {
+            // TODO: Can we make this a DEV warning to avoid this deny list?
+            throw new Error(
+              `${tag} is a void element tag and must neither have \`children\` nor ` +
+                'use `dangerouslySetInnerHTML`.',
+            );
+          }
+          // defaultChecked and defaultValue are ignored by setProp
+          default: {
+            setProp(domElement, tag, propKey, propValue, props, null);
+          }
+        }
+      }
+      if (hasSrcSet) {
+        setProp(domElement, tag, 'srcSet', props.srcSet, props, null);
+      }
+      if (hasSrc) {
+        setProp(domElement, tag, 'src', props.src, props, null);
+      }
+      return;
+    }
     case 'input': {
       if (__DEV__) {
         checkControlledValueProps('input', props);
@@ -1269,7 +1316,6 @@ export function setInitialProperties(
     }
     case 'embed':
     case 'source':
-    case 'img':
     case 'link': {
       // These are void elements that also need delegated events.
       listenToNonDelegatedEvent('error', domElement);

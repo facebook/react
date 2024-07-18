@@ -6,7 +6,7 @@ import {
   makeInstructionId,
 } from ".";
 import { getPlaceScope } from "../ReactiveScopes/BuildReactiveBlocks";
-import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
+import { isMutableAtInstruction } from "../ReactiveScopes/InferReactiveScopeVariables";
 import DisjointSet from "../Utils/DisjointSet";
 import { getOrInsertDefault } from "../Utils/utils";
 import {
@@ -254,7 +254,7 @@ function visitPlace(
    * of the stack to the mutated outer scope.
    */
   const placeScope = getPlaceScope(id, place);
-  if (placeScope != null && isMutable({ id } as any, place)) {
+  if (placeScope != null && isMutableAtInstruction({ id } as any, place)) {
     const placeScopeIdx = activeScopes.indexOf(placeScope);
     if (placeScopeIdx !== -1 && placeScopeIdx !== activeScopes.length - 1) {
       joined.union([placeScope, ...activeScopes.slice(placeScopeIdx + 1)]);

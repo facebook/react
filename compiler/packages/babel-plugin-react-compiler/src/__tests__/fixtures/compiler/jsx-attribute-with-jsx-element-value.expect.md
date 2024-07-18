@@ -49,23 +49,16 @@ function Component(t0) {
   let t1;
   if ($[0] !== items) {
     t1 =
-      items.length > 0 ? (
-        <Foo
-          value={
-            <Bar>
-              {items.map((item) => (
-                <Item key={item.id} item={item} />
-              ))}
-            </Bar>
-          }
-        />
-      ) : null;
+      items.length > 0 ? <Foo value={<Bar>{items.map(_temp)}</Bar>} /> : null;
     $[0] = items;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
   return t1;
+}
+function _temp(item) {
+  return <Item key={item.id} item={item} />;
 }
 
 function Foo(t0) {
