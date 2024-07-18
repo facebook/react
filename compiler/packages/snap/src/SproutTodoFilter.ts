@@ -497,6 +497,7 @@ const skipFilter = new Set([
   "useState-unpruned-dependency",
   "useState-and-other-hook-unpruned-dependency",
   "change-detect-reassign",
+  "change-detect",
 
   // needs to be executed as a module
   "meta-property",
