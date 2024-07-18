@@ -11,6 +11,6 @@ function bar(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: bar,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };

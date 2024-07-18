@@ -1,4 +1,4 @@
-import { identity, mutate } from "shared-runtime";
+import {identity, mutate} from 'shared-runtime';
 
 /**
  * Currently, InferReactiveScopeVariables do not ensure that maybe-aliased
@@ -18,24 +18,24 @@ import { identity, mutate } from "shared-runtime";
  * that all aliases refer to the same value.
  *
  */
-function useFoo({ a, b }) {
-  const x = { a };
+function useFoo({a, b}) {
+  const x = {a};
   const y = {};
   mutate(x);
   const z = [identity(y), b];
   mutate(y);
 
   if (z[0] !== y) {
-    throw new Error("oh no!");
+    throw new Error('oh no!');
   }
   return z;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ a: 2, b: 3 }],
+  params: [{a: 2, b: 3}],
   sequentialRenders: [
-    { a: 2, b: 3 },
-    { a: 4, b: 3 },
+    {a: 2, b: 3},
+    {a: 4, b: 3},
   ],
 };

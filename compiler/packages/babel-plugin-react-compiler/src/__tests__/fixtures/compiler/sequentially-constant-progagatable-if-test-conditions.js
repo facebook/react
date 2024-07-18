@@ -10,13 +10,13 @@ function Component() {
 
   let c;
   if (b) {
-    c = "hello";
+    c = 'hello';
   } else {
     c = null;
   }
 
   let d;
-  if (c === "hello") {
+  if (c === 'hello') {
     d = 42.0;
   } else {
     d = 42.001;
@@ -24,9 +24,9 @@ function Component() {
 
   let e;
   if (d === 42.0) {
-    e = "ok";
+    e = 'ok';
   } else {
-    e = "nope";
+    e = 'nope';
   }
 
   // should constant-propagate to "ok"

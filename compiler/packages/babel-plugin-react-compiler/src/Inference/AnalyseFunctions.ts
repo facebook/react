@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   Effect,
   HIRFunction,
@@ -17,14 +17,14 @@ import {
   isRefValueType,
   isUseRefType,
   makeInstructionId,
-} from "../HIR";
-import { deadCodeElimination } from "../Optimization";
-import { inferReactiveScopeVariables } from "../ReactiveScopes";
-import { leaveSSA } from "../SSA";
-import { logHIRFunction } from "../Utils/logger";
-import { inferMutableContextVariables } from "./InferMutableContextVariables";
-import { inferMutableRanges } from "./InferMutableRanges";
-import inferReferenceEffects from "./InferReferenceEffects";
+} from '../HIR';
+import {deadCodeElimination} from '../Optimization';
+import {inferReactiveScopeVariables} from '../ReactiveScopes';
+import {leaveSSA} from '../SSA';
+import {logHIRFunction} from '../Utils/logger';
+import {inferMutableContextVariables} from './InferMutableContextVariables';
+import {inferMutableRanges} from './InferMutableRanges';
+import inferReferenceEffects from './InferReferenceEffects';
 
 // Helper class to track indirections such as LoadLocal and PropertyLoad.
 export class IdentifierState {
@@ -42,7 +42,7 @@ export class IdentifierState {
     const objectDependency = this.properties.get(object.identifier);
     let nextDependency: ReactiveScopeDependency;
     if (objectDependency === undefined) {
-      nextDependency = { identifier: object.identifier, path: [property] };
+      nextDependency = {identifier: object.identifier, path: [property]};
     } else {
       nextDependency = {
         identifier: objectDependency.identifier,
@@ -54,7 +54,7 @@ export class IdentifierState {
 
   declareTemporary(lvalue: Place, value: Place): void {
     const resolved: ReactiveScopeDependency = this.properties.get(
-      value.identifier
+      value.identifier,
     ) ?? {
       identifier: value.identifier,
       path: [],
@@ -69,30 +69,30 @@ export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
-        case "ObjectMethod":
-        case "FunctionExpression": {
+        case 'ObjectMethod':
+        case 'FunctionExpression': {
           lower(instr.value.loweredFunc.func);
           infer(instr.value.loweredFunc, state, func.context);
           break;
         }
-        case "PropertyLoad": {
+        case 'PropertyLoad': {
           state.declareProperty(
             instr.lvalue,
             instr.value.object,
-            instr.value.property
+            instr.value.property,
           );
           break;
         }
-        case "ComputedLoad": {
+        case 'ComputedLoad': {
           /*
            * The path is set to an empty string as the path doesn't really
            * matter for a computed load.
            */
-          state.declareProperty(instr.lvalue, instr.value.object, "");
+          state.declareProperty(instr.lvalue, instr.value.object, '');
           break;
         }
-        case "LoadLocal":
-        case "LoadContext": {
+        case 'LoadLocal':
+        case 'LoadContext': {
           if (instr.lvalue.identifier.name === null) {
             state.declareTemporary(instr.lvalue, instr.value.place);
           }
@@ -105,19 +105,19 @@ export default function analyseFunctions(func: HIRFunction): void {
 
 function lower(func: HIRFunction): void {
   analyseFunctions(func);
-  inferReferenceEffects(func, { isFunctionExpression: true });
+  inferReferenceEffects(func, {isFunctionExpression: true});
   deadCodeElimination(func);
   inferMutableRanges(func);
   leaveSSA(func);
   inferReactiveScopeVariables(func);
   inferMutableContextVariables(func);
-  logHIRFunction("AnalyseFunction (inner)", func);
+  logHIRFunction('AnalyseFunction (inner)', func);
 }
 
 function infer(
   loweredFunc: LoweredFunction,
   state: IdentifierState,
-  context: Array<Place>
+  context: Array<Place>,
 ): void {
   const mutations = new Map<string, Effect>();
   for (const operand of loweredFunc.func.context) {
@@ -166,7 +166,7 @@ function infer(
    */
   for (const place of context) {
     CompilerError.invariant(place.identifier.name !== null, {
-      reason: "context refs should always have a name",
+      reason: 'context refs should always have a name',
       description: null,
       loc: place.loc,
       suggestions: null,

@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import generate from "@babel/generator";
-import { printReactiveFunction } from "..";
-import { CompilerError } from "../CompilerError";
-import { printReactiveScopeSummary } from "../ReactiveScopes/PrintReactiveFunction";
-import DisjointSet from "../Utils/DisjointSet";
-import { assertExhaustive } from "../Utils/utils";
+import generate from '@babel/generator';
+import {printReactiveFunction} from '..';
+import {CompilerError} from '../CompilerError';
+import {printReactiveScopeSummary} from '../ReactiveScopes/PrintReactiveFunction';
+import DisjointSet from '../Utils/DisjointSet';
+import {assertExhaustive} from '../Utils/utils';
 import type {
   FunctionExpression,
   HIR,
@@ -34,8 +34,8 @@ import type {
   SpreadPattern,
   Terminal,
   Type,
-} from "./HIR";
-import { GotoVariant, InstructionKind } from "./HIR";
+} from './HIR';
+import {GotoVariant, InstructionKind} from './HIR';
 
 export type Options = {
   indent: number;
@@ -46,51 +46,51 @@ export function printFunctionWithOutlined(fn: HIRFunction): string {
   for (const outlined of fn.env.getOutlinedFunctions()) {
     output.push(`\nfunction ${outlined.fn.id}:\n${printHIR(outlined.fn.body)}`);
   }
-  return output.join("\n");
+  return output.join('\n');
 }
 
 export function printFunction(fn: HIRFunction): string {
   const output = [];
-  let definition = "";
+  let definition = '';
   if (fn.id !== null) {
     definition += fn.id;
   }
   if (fn.params.length !== 0) {
     definition +=
-      "(" +
+      '(' +
       fn.params
-        .map((param) => {
-          if (param.kind === "Identifier") {
+        .map(param => {
+          if (param.kind === 'Identifier') {
             return printPlace(param);
           } else {
             return `...${printPlace(param.place)}`;
           }
         })
-        .join(", ") +
-      ")";
+        .join(', ') +
+      ')';
   }
   if (definition.length !== 0) {
     output.push(definition);
   }
   output.push(printHIR(fn.body));
   output.push(...fn.directives);
-  return output.join("\n");
+  return output.join('\n');
 }
 
 export function printHIR(ir: HIR, options: Options | null = null): string {
   let output = [];
-  let indent = " ".repeat(options?.indent ?? 0);
-  const push = (text: string, indent: string = "  "): void => {
+  let indent = ' '.repeat(options?.indent ?? 0);
+  const push = (text: string, indent: string = '  '): void => {
     output.push(`${indent}${text}`);
   };
   for (const [blockId, block] of ir.blocks) {
     output.push(`bb${blockId} (${block.kind}):`);
     if (block.preds.size > 0) {
-      const preds = ["predecessor blocks:"];
+      const preds = ['predecessor blocks:'];
       for (const pred of block.preds) {
         preds.push(`bb${pred}`);
       }
-      push(preds.join(" "));
+      push(preds.join(' '));
     }
     for (const phi of block.phis) {
       push(printPhi(phi));
@@ -100,46 +100,46 @@ export function printHIR(ir: HIR, options: Options | null = null): string {
     }
     const terminal = printTerminal(block.terminal);
     if (Array.isArray(terminal)) {
-      terminal.forEach((line) => push(line));
+      terminal.forEach(line => push(line));
     } else {
       push(terminal);
     }
   }
-  return output.map((line) => indent + line).join("\n");
+  return output.map(line => indent + line).join('\n');
 }
 
 export function printMixedHIR(
-  value: Instruction | InstructionValue | Terminal
+  value: Instruction | InstructionValue | Terminal,
 ): string {
-  if (!("kind" in value)) {
+  if (!('kind' in value)) {
     return printInstruction(value);
   }
   switch (value.kind) {
-    case "try":
-    case "maybe-throw":
-    case "sequence":
-    case "label":
-    case "optional":
-    case "branch":
-    case "if":
-    case "logical":
-    case "ternary":
-    case "return":
-    case "switch":
-    case "throw":
-    case "while":
-    case "for":
-    case "unreachable":
-    case "unsupported":
-    case "goto":
-    case "do-while":
-    case "for-in":
-    case "for-of":
-    case "scope":
-    case "pruned-scope": {
+    case 'try':
+    case 'maybe-throw':
+    case 'sequence':
+    case 'label':
+    case 'optional':
+    case 'branch':
+    case 'if':
+    case 'logical':
+    case 'ternary':
+    case 'return':
+    case 'switch':
+    case 'throw':
+    case 'while':
+    case 'for':
+    case 'unreachable':
+    case 'unsupported':
+    case 'goto':
+    case 'do-while':
+    case 'for-in':
+    case 'for-of':
+    case 'scope':
+    case 'pruned-scope': {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
-        return terminal.join("; ");
+        return terminal.join('; ');
       }
       return terminal;
     }
@@ -165,66 +165,66 @@ export function printPhi(phi: Phi): string {
   items.push(printIdentifier(phi.id));
   items.push(printMutableRange(phi.id));
   items.push(printType(phi.type));
-  items.push(": phi(");
+  items.push(': phi(');
   const phis = [];
   for (const [blockId, id] of phi.operands) {
     phis.push(`bb${blockId}: ${printIdentifier(id)}`);
   }
 
-  items.push(phis.join(", "));
-  items.push(")");
-  return items.join("");
+  items.push(phis.join(', '));
+  items.push(')');
+  return items.join('');
 }
 
 export function printTerminal(terminal: Terminal): Array<string> | string {
   let value;
   switch (terminal.kind) {
-    case "if": {
+    case 'if': {
       value = `[${terminal.id}] If (${printPlace(terminal.test)}) then:bb${
         terminal.consequent
       } else:bb${terminal.alternate}${
-        terminal.fallthrough ? ` fallthrough=bb${terminal.fallthrough}` : ""
+        terminal.fallthrough ? ` fallthrough=bb${terminal.fallthrough}` : ''
       }`;
       break;
     }
-    case "branch": {
+    case 'branch': {
       value = `[${terminal.id}] Branch (${printPlace(terminal.test)}) then:bb${
         terminal.consequent
       } else:bb${terminal.alternate}`;
       break;
     }
-    case "logical": {
+    case 'logical': {
       value = `[${terminal.id}] Logical ${terminal.operator} test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "ternary": {
+    case 'ternary': {
       value = `[${terminal.id}] Ternary test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "optional": {
+    case 'optional': {
       value = `[${terminal.id}] Optional (optional=${terminal.optional}) test:bb${terminal.test} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "throw": {
+    case 'throw': {
       value = `[${terminal.id}] Throw ${printPlace(terminal.value)}`;
       break;
     }
-    case "return": {
+    case 'return': {
       value = `[${terminal.id}] Return${
-        terminal.value != null ? " " + printPlace(terminal.value) : ""
+        terminal.value != null ? ' ' + printPlace(terminal.value) : ''
       }`;
       break;
     }
-    case "goto": {
+    case 'goto': {
       value = `[${terminal.id}] Goto${
-        terminal.variant === GotoVariant.Continue ? "(Continue)" : ""
+        terminal.variant === GotoVariant.Continue ? '(Continue)' : ''
       } bb${terminal.block}`;
       break;
     }
-    case "switch": {
+    case 'switch': {
       const output = [];
       output.push(`[${terminal.id}] Switch (${printPlace(terminal.test)})`);
-      terminal.cases.forEach((case_) => {
+      terminal.cases.forEach(case_ => {
         if (case_.test !== null) {
           output.push(`  Case ${printPlace(case_.test)}: bb${case_.block}`);
         } else {
@@ -237,78 +237,78 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       value = output;
       break;
     }
-    case "do-while": {
+    case 'do-while': {
       value = `[${terminal.id}] DoWhile loop=${`bb${terminal.loop}`} test=bb${
         terminal.test
       } fallthrough=${`bb${terminal.fallthrough}`}`;
       break;
     }
-    case "while": {
+    case 'while': {
       value = `[${terminal.id}] While test=bb${terminal.test} loop=${
-        terminal.loop !== null ? `bb${terminal.loop}` : ""
-      } fallthrough=${terminal.fallthrough ? `bb${terminal.fallthrough}` : ""}`;
+        terminal.loop !== null ? `bb${terminal.loop}` : ''
+      } fallthrough=${terminal.fallthrough ? `bb${terminal.fallthrough}` : ''}`;
       break;
     }
-    case "for": {
+    case 'for': {
       value = `[${terminal.id}] For init=bb${terminal.init} test=bb${terminal.test} loop=bb${terminal.loop} update=bb${terminal.update} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "for-of": {
+    case 'for-of': {
       value = `[${terminal.id}] ForOf init=bb${terminal.init} test=bb${terminal.test} loop=bb${terminal.loop} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "for-in": {
+    case 'for-in': {
       value = `[${terminal.id}] ForIn init=bb${terminal.init} loop=bb${terminal.loop} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "label": {
+    case 'label': {
       value = `[${terminal.id}] Label block=bb${terminal.block} fallthrough=${
-        terminal.fallthrough ? `bb${terminal.fallthrough}` : ""
+        terminal.fallthrough ? `bb${terminal.fallthrough}` : ''
       }`;
       break;
     }
-    case "sequence": {
+    case 'sequence': {
       value = `[${terminal.id}] Sequence block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "unreachable": {
+    case 'unreachable': {
       value = `[${terminal.id}] Unreachable`;
       break;
     }
-    case "unsupported": {
+    case 'unsupported': {
       value = `Unsupported`;
       break;
     }
-    case "maybe-throw": {
+    case 'maybe-throw': {
       value = `MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
       break;
     }
-    case "scope": {
+    case 'scope': {
       value = `Scope ${printReactiveScopeSummary(terminal.scope)} block=bb${
         terminal.block
       } fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "pruned-scope": {
+    case 'pruned-scope': {
       value = `<pruned> Scope ${printReactiveScopeSummary(
-        terminal.scope
+        terminal.scope,
       )} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
-    case "try": {
+    case 'try': {
       value = `Try block=bb${terminal.block} handler=bb${terminal.handler}${
         terminal.handlerBinding !== null
           ? ` handlerBinding=(${printPlace(terminal.handlerBinding)})`
-          : ""
+          : ''
       } fallthrough=${
-        terminal.fallthrough != null ? `bb${terminal.fallthrough}` : ""
+        terminal.fallthrough != null ? `bb${terminal.fallthrough}` : ''
       }`;
       break;
     }
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${terminal as any as Terminal}\``
+        `Unexpected terminal kind \`${terminal as any as Terminal}\``,
       );
     }
   }
@@ -316,311 +316,311 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
 }
 
 function printHole(): string {
-  return "<hole>";
+  return '<hole>';
 }
 
 function printObjectPropertyKey(key: ObjectPropertyKey): string {
   switch (key.kind) {
-    case "identifier":
+    case 'identifier':
       return key.name;
-    case "string":
+    case 'string':
       return `"${key.name}"`;
-    case "computed": {
+    case 'computed': {
       return `[${printPlace(key.name)}]`;
     }
   }
 }
 
 export function printInstructionValue(instrValue: ReactiveValue): string {
-  let value = "";
+  let value = '';
   switch (instrValue.kind) {
-    case "ArrayExpression": {
+    case 'ArrayExpression': {
       value = `Array [${instrValue.elements
-        .map((element) => {
-          if (element.kind === "Identifier") {
+        .map(element => {
+          if (element.kind === 'Identifier') {
             return printPlace(element);
-          } else if (element.kind === "Hole") {
+          } else if (element.kind === 'Hole') {
             return printHole();
           } else {
             return `...${printPlace(element.place)}`;
           }
         })
-        .join(", ")}]`;
+        .join(', ')}]`;
       break;
     }
-    case "ObjectExpression": {
+    case 'ObjectExpression': {
       const properties = [];
       if (instrValue.properties !== null) {
         for (const property of instrValue.properties) {
-          if (property.kind === "ObjectProperty") {
+          if (property.kind === 'ObjectProperty') {
             properties.push(
               `${printObjectPropertyKey(property.key)}: ${printPlace(
-                property.place
-              )}`
+                property.place,
+              )}`,
             );
           } else {
             properties.push(`...${printPlace(property.place)}`);
           }
         }
       }
-      value = `Object { ${properties.join(", ")} }`;
+      value = `Object { ${properties.join(', ')} }`;
       break;
     }
-    case "UnaryExpression": {
+    case 'UnaryExpression': {
       value = `Unary ${printPlace(instrValue.value)}`;
       break;
     }
-    case "BinaryExpression": {
+    case 'BinaryExpression': {
       value = `Binary ${printPlace(instrValue.left)} ${
         instrValue.operator
       } ${printPlace(instrValue.right)}`;
       break;
     }
-    case "NewExpression": {
+    case 'NewExpression': {
       value = `New ${printPlace(instrValue.callee)}(${instrValue.args
-        .map((arg) => printPattern(arg))
-        .join(", ")})`;
+        .map(arg => printPattern(arg))
+        .join(', ')})`;
       break;
     }
-    case "CallExpression": {
+    case 'CallExpression': {
       value = `Call ${printPlace(instrValue.callee)}(${instrValue.args
-        .map((arg) => printPattern(arg))
-        .join(", ")})`;
+        .map(arg => printPattern(arg))
+        .join(', ')})`;
       break;
     }
-    case "MethodCall": {
+    case 'MethodCall': {
       value = `MethodCall ${printPlace(instrValue.receiver)}.${printPlace(
-        instrValue.property
-      )}(${instrValue.args.map((arg) => printPattern(arg)).join(", ")})`;
+        instrValue.property,
+      )}(${instrValue.args.map(arg => printPattern(arg)).join(', ')})`;
       break;
     }
-    case "JSXText": {
+    case 'JSXText': {
       value = `JSXText ${JSON.stringify(instrValue.value)}`;
       break;
     }
-    case "Primitive": {
+    case 'Primitive': {
       if (instrValue.value === undefined) {
-        value = "<undefined>";
+        value = '<undefined>';
       } else {
         value = JSON.stringify(instrValue.value);
       }
       break;
     }
-    case "TypeCastExpression": {
+    case 'TypeCastExpression': {
       value = `TypeCast ${printPlace(instrValue.value)}: ${printType(
-        instrValue.type
+        instrValue.type,
       )}`;
       break;
     }
-    case "JsxExpression": {
+    case 'JsxExpression': {
       const propItems = [];
       for (const attribute of instrValue.props) {
-        if (attribute.kind === "JsxAttribute") {
+        if (attribute.kind === 'JsxAttribute') {
           propItems.push(
             `${attribute.name}={${
-              attribute.place !== null ? printPlace(attribute.place) : "<empty>"
-            }}`
+              attribute.place !== null ? printPlace(attribute.place) : '<empty>'
+            }}`,
           );
         } else {
           propItems.push(`...${printPlace(attribute.argument)}`);
         }
       }
       const tag =
-        instrValue.tag.kind === "Identifier"
+        instrValue.tag.kind === 'Identifier'
           ? printPlace(instrValue.tag)
           : instrValue.tag.name;
-      const props = propItems.length !== 0 ? " " + propItems.join(" ") : "";
+      const props = propItems.length !== 0 ? ' ' + propItems.join(' ') : '';
       if (instrValue.children !== null) {
-        const children = instrValue.children.map((child) => {
+        const children = instrValue.children.map(child => {
           return `{${printPlace(child)}}`;
         });
         value = `JSX <${tag}${props}${
-          props.length > 0 ? " " : ""
-        }>${children.join("")}</${tag}>`;
+          props.length > 0 ? ' ' : ''
+        }>${children.join('')}</${tag}>`;
       } else {
-        value = `JSX <${tag}${props}${props.length > 0 ? " " : ""}/>`;
+        value = `JSX <${tag}${props}${props.length > 0 ? ' ' : ''}/>`;
       }
       break;
     }
-    case "JsxFragment": {
+    case 'JsxFragment': {
       value = `JsxFragment [${instrValue.children
-        .map((child) => printPlace(child))
-        .join(", ")}]`;
+        .map(child => printPlace(child))
+        .join(', ')}]`;
       break;
     }
-    case "UnsupportedNode": {
+    case 'UnsupportedNode': {
       value = `UnsupportedNode(${generate(instrValue.node).code})`;
       break;
     }
-    case "LoadLocal": {
+    case 'LoadLocal': {
       value = `LoadLocal ${printPlace(instrValue.place)}`;
       break;
     }
-    case "DeclareLocal": {
+    case 'DeclareLocal': {
       value = `DeclareLocal ${instrValue.lvalue.kind} ${printPlace(
-        instrValue.lvalue.place
+        instrValue.lvalue.place,
       )}`;
       break;
     }
-    case "DeclareContext": {
+    case 'DeclareContext': {
       value = `DeclareContext ${instrValue.lvalue.kind} ${printPlace(
-        instrValue.lvalue.place
+        instrValue.lvalue.place,
       )}`;
       break;
     }
-    case "StoreLocal": {
+    case 'StoreLocal': {
       value = `StoreLocal ${instrValue.lvalue.kind} ${printPlace(
-        instrValue.lvalue.place
+        instrValue.lvalue.place,
       )} = ${printPlace(instrValue.value)}`;
       break;
     }
-    case "LoadContext": {
+    case 'LoadContext': {
       value = `LoadContext ${printPlace(instrValue.place)}`;
       break;
     }
-    case "StoreContext": {
+    case 'StoreContext': {
       value = `StoreContext ${instrValue.lvalue.kind} ${printPlace(
-        instrValue.lvalue.place
+        instrValue.lvalue.place,
       )} = ${printPlace(instrValue.value)}`;
       break;
     }
-    case "Destructure": {
+    case 'Destructure': {
       value = `Destructure ${instrValue.lvalue.kind} ${printPattern(
-        instrValue.lvalue.pattern
+        instrValue.lvalue.pattern,
       )} = ${printPlace(instrValue.value)}`;
       break;
     }
-    case "PropertyLoad": {
+    case 'PropertyLoad': {
       value = `PropertyLoad ${printPlace(instrValue.object)}.${
         instrValue.property
       }`;
       break;
     }
-    case "PropertyStore": {
+    case 'PropertyStore': {
       value = `PropertyStore ${printPlace(instrValue.object)}.${
         instrValue.property
       } = ${printPlace(instrValue.value)}`;
       break;
     }
-    case "PropertyDelete": {
+    case 'PropertyDelete': {
       value = `PropertyDelete ${printPlace(instrValue.object)}.${
         instrValue.property
       }`;
       break;
     }
-    case "ComputedLoad": {
+    case 'ComputedLoad': {
       value = `ComputedLoad ${printPlace(instrValue.object)}[${printPlace(
-        instrValue.property
+        instrValue.property,
       )}]`;
       break;
     }
-    case "ComputedStore": {
+    case 'ComputedStore': {
       value = `ComputedStore ${printPlace(instrValue.object)}[${printPlace(
-        instrValue.property
+        instrValue.property,
       )}] = ${printPlace(instrValue.value)}`;
       break;
     }
-    case "ComputedDelete": {
+    case 'ComputedDelete': {
       value = `ComputedDelete ${printPlace(instrValue.object)}[${printPlace(
-        instrValue.property
+        instrValue.property,
       )}]`;
       break;
     }
-    case "ObjectMethod":
-    case "FunctionExpression": {
+    case 'ObjectMethod':
+    case 'FunctionExpression': {
       const kind =
-        instrValue.kind === "FunctionExpression" ? "Function" : "ObjectMethod";
-      const name = getFunctionName(instrValue, "");
+        instrValue.kind === 'FunctionExpression' ? 'Function' : 'ObjectMethod';
+      const name = getFunctionName(instrValue, '');
       const fn = printFunction(instrValue.loweredFunc.func)
-        .split("\n")
-        .map((line) => `      ${line}`)
-        .join("\n");
+        .split('\n')
+        .map(line => `      ${line}`)
+        .join('\n');
       const deps = instrValue.loweredFunc.dependencies
-        .map((dep) => printPlace(dep))
-        .join(",");
+        .map(dep => printPlace(dep))
+        .join(',');
       const context = instrValue.loweredFunc.func.context
-        .map((dep) => printPlace(dep))
-        .join(",");
+        .map(dep => printPlace(dep))
+        .join(',');
       const effects =
         instrValue.loweredFunc.func.effects
-          ?.map((effect) => {
-            if (effect.kind === "ContextMutation") {
+          ?.map(effect => {
+            if (effect.kind === 'ContextMutation') {
               return `ContextMutation places=[${[...effect.places]
-                .map((place) => printPlace(place))
-                .join(", ")}] effect=${effect.effect}`;
+                .map(place => printPlace(place))
+                .join(', ')}] effect=${effect.effect}`;
             } else {
               return `GlobalMutation`;
             }
           })
-          .join(", ") ?? "";
+          .join(', ') ?? '';
       value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]:\n${fn}`;
       break;
     }
-    case "TaggedTemplateExpression": {
+    case 'TaggedTemplateExpression': {
       value = `${printPlace(instrValue.tag)}\`${instrValue.value.raw}\``;
       break;
     }
-    case "LogicalExpression": {
+    case 'LogicalExpression': {
       value = `Logical ${printInstructionValue(instrValue.left)} ${
         instrValue.operator
       } ${printInstructionValue(instrValue.right)}`;
       break;
     }
-    case "SequenceExpression": {
+    case 'SequenceExpression': {
       value = [
         `Sequence`,
         ...instrValue.instructions.map(
-          (instr) => `    ${printInstruction(instr)}`
+          instr => `    ${printInstruction(instr)}`,
         ),
         `    ${printInstructionValue(instrValue.value)}`,
-      ].join("\n");
+      ].join('\n');
       break;
     }
-    case "ConditionalExpression": {
+    case 'ConditionalExpression': {
       value = `Ternary ${printInstructionValue(
-        instrValue.test
+        instrValue.test,
       )} ? ${printInstructionValue(
-        instrValue.consequent
+        instrValue.consequent,
       )} : ${printInstructionValue(instrValue.alternate)}`;
       break;
     }
-    case "TemplateLiteral": {
-      value = "`";
+    case 'TemplateLiteral': {
+      value = '`';
       CompilerError.invariant(
         instrValue.subexprs.length === instrValue.quasis.length - 1,
         {
-          reason: "Bad assumption about quasi length.",
+          reason: 'Bad assumption about quasi length.',
           description: null,
           loc: instrValue.loc,
           suggestions: null,
-        }
+        },
       );
       for (let i = 0; i < instrValue.subexprs.length; i++) {
         value += instrValue.quasis[i].raw;
         value += `\${${printPlace(instrValue.subexprs[i])}}`;
       }
-      value += instrValue.quasis.at(-1)!.raw + "`";
+      value += instrValue.quasis.at(-1)!.raw + '`';
       break;
     }
-    case "LoadGlobal": {
+    case 'LoadGlobal': {
       switch (instrValue.binding.kind) {
-        case "Global": {
+        case 'Global': {
           value = `LoadGlobal(global) ${instrValue.binding.name}`;
           break;
         }
-        case "ModuleLocal": {
+        case 'ModuleLocal': {
           value = `LoadGlobal(module) ${instrValue.binding.name}`;
           break;
         }
-        case "ImportDefault": {
+        case 'ImportDefault': {
           value = `LoadGlobal import ${instrValue.binding.name} from '${instrValue.binding.module}'`;
           break;
         }
-        case "ImportNamespace": {
+        case 'ImportNamespace': {
           value = `LoadGlobal import * as ${instrValue.binding.name} from '${instrValue.binding.module}'`;
           break;
         }
-        case "ImportSpecifier": {
+        case 'ImportSpecifier': {
           if (instrValue.binding.imported !== instrValue.binding.name) {
             value = `LoadGlobal import { ${instrValue.binding.imported} as ${instrValue.binding.name} } from '${instrValue.binding.module}'`;
           } else {
@@ -631,76 +631,76 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         default: {
           assertExhaustive(
             instrValue.binding,
-            `Unexpected binding kind \`${(instrValue.binding as any).kind}\``
+            `Unexpected binding kind \`${(instrValue.binding as any).kind}\``,
           );
         }
       }
       break;
     }
-    case "StoreGlobal": {
+    case 'StoreGlobal': {
       value = `StoreGlobal ${instrValue.name} = ${printPlace(
-        instrValue.value
+        instrValue.value,
       )}`;
       break;
     }
-    case "OptionalExpression": {
+    case 'OptionalExpression': {
       value = `OptionalExpression ${printInstructionValue(instrValue.value)}`;
       break;
     }
-    case "RegExpLiteral": {
+    case 'RegExpLiteral': {
       value = `RegExp /${instrValue.pattern}/${instrValue.flags}`;
       break;
     }
-    case "MetaProperty": {
+    case 'MetaProperty': {
       value = `MetaProperty ${instrValue.meta}.${instrValue.property}`;
       break;
     }
-    case "Await": {
+    case 'Await': {
       value = `Await ${printPlace(instrValue.value)}`;
       break;
     }
-    case "GetIterator": {
+    case 'GetIterator': {
       value = `GetIterator collection=${printPlace(instrValue.collection)}`;
       break;
     }
-    case "IteratorNext": {
+    case 'IteratorNext': {
       value = `IteratorNext iterator=${printPlace(
-        instrValue.iterator
+        instrValue.iterator,
       )} collection=${printPlace(instrValue.collection)}`;
       break;
     }
-    case "NextPropertyOf": {
+    case 'NextPropertyOf': {
       value = `NextPropertyOf ${printPlace(instrValue.value)}`;
       break;
     }
-    case "Debugger": {
+    case 'Debugger': {
       value = `Debugger`;
       break;
     }
-    case "PostfixUpdate": {
+    case 'PostfixUpdate': {
       value = `PostfixUpdate ${printPlace(instrValue.lvalue)} = ${printPlace(
-        instrValue.value
+        instrValue.value,
       )} ${instrValue.operation}`;
       break;
     }
-    case "PrefixUpdate": {
+    case 'PrefixUpdate': {
       value = `PrefixUpdate ${printPlace(instrValue.lvalue)} = ${
         instrValue.operation
       } ${printPlace(instrValue.value)}`;
       break;
     }
-    case "StartMemoize": {
+    case 'StartMemoize': {
       value = `StartMemoize deps=${
-        instrValue.deps?.map((dep) => printManualMemoDependency(dep, false)) ??
-        "(none)"
+        instrValue.deps?.map(dep => printManualMemoDependency(dep, false)) ??
+        '(none)'
       }`;
       break;
     }
-    case "FinishMemoize": {
+    case 'FinishMemoize': {
       value = `FinishMemoize decl=${printPlace(instrValue.decl)}`;
       break;
     }
-    case "ReactiveFunctionValue": {
+    case 'ReactiveFunctionValue': {
       value = `FunctionValue ${printReactiveFunction(instrValue.fn)}`;
       break;
     }
@@ -709,7 +709,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
         instrValue,
         `Unexpected instruction kind '${
           (instrValue as any as InstructionValue).kind
-        }'`
+        }'`,
       );
     }
   }
@@ -732,11 +732,11 @@ function printMutableRange(identifier: Identifier): string {
     ) {
       return `[${range.start}:${range.end}] scope=[${scopeRange.start}:${scopeRange.end}]`;
     }
-    return isMutable(range) ? `[${range.start}:${range.end}]` : "";
+    return isMutable(range) ? `[${range.start}:${range.end}]` : '';
   }
   // in non-debug mode, prefer the scope range if it exists
   const range = identifier.scope?.range ?? identifier.mutableRange;
-  return isMutable(range) ? `[${range.start}:${range.end}]` : "";
+  return isMutable(range) ? `[${range.start}:${range.end}]` : '';
 }
 
 export function printLValue(lval: LValue): string {
@@ -766,53 +766,53 @@ export function printLValue(lval: LValue): string {
 
 export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
   switch (pattern.kind) {
-    case "ArrayPattern": {
+    case 'ArrayPattern': {
       return (
-        "[ " +
+        '[ ' +
         pattern.items
-          .map((item) => {
-            if (item.kind === "Hole") {
-              return "<hole>";
+          .map(item => {
+            if (item.kind === 'Hole') {
+              return '<hole>';
             }
             return printPattern(item);
           })
-          .join(", ") +
-        " ]"
+          .join(', ') +
+        ' ]'
       );
     }
-    case "ObjectPattern": {
+    case 'ObjectPattern': {
       return (
-        "{ " +
+        '{ ' +
         pattern.properties
-          .map((item) => {
+          .map(item => {
             switch (item.kind) {
-              case "ObjectProperty": {
+              case 'ObjectProperty': {
                 return `${printObjectPropertyKey(item.key)}: ${printPattern(
-                  item.place
+                  item.place,
                 )}`;
               }
-              case "Spread": {
+              case 'Spread': {
                 return printPattern(item);
               }
               default: {
-                assertExhaustive(item, "Unexpected object property kind");
+                assertExhaustive(item, 'Unexpected object property kind');
               }
             }
           })
-          .join(", ") +
-        " }"
+          .join(', ') +
+        ' }'
       );
     }
-    case "Spread": {
+    case 'Spread': {
       return `...${printPlace(pattern.place)}`;
     }
-    case "Identifier": {
+    case 'Identifier': {
       return printPlace(pattern);
     }
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -821,13 +821,13 @@ export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
 export function printPlace(place: Place): string {
   const items = [
     place.effect,
-    " ",
+    ' ',
     printIdentifier(place.identifier),
     printMutableRange(place.identifier),
     printType(place.identifier.type),
-    place.reactive ? "{reactive}" : null,
+    place.reactive ? '{reactive}' : null,
   ];
-  return items.filter((x) => x != null).join("");
+  return items.filter(x => x != null).join('');
 }
 
 export function printIdentifier(id: Identifier): string {
@@ -836,25 +836,25 @@ export function printIdentifier(id: Identifier): string {
 
 function printName(name: IdentifierName | null): string {
   if (name === null) {
-    return "";
+    return '';
   }
   return name.value;
 }
 
 function printScope(scope: ReactiveScope | null): string {
-  return `${scope !== null ? `_@${scope.id}` : ""}`;
+  return `${scope !== null ? `_@${scope.id}` : ''}`;
 }
 
 export function printManualMemoDependency(
   val: ManualMemoDependency,
-  nameOnly: boolean
+  nameOnly: boolean,
 ): string {
   let rootStr;
-  if (val.root.kind === "Global") {
+  if (val.root.kind === 'Global') {
     rootStr = val.root.identifierName;
   } else {
-    CompilerError.invariant(val.root.value.identifier.name?.kind === "named", {
-      reason: "DepsValidation: expected named local variable in depslist",
+    CompilerError.invariant(val.root.value.identifier.name?.kind === 'named', {
+      reason: 'DepsValidation: expected named local variable in depslist',
       suggestions: null,
       loc: val.root.value.loc,
     });
@@ -862,14 +862,14 @@ export function printManualMemoDependency(
       ? val.root.value.identifier.name.value
       : printIdentifier(val.root.value.identifier);
   }
-  return `${rootStr}${val.path.length > 0 ? "." : ""}${val.path.join(".")}`;
+  return `${rootStr}${val.path.length > 0 ? '.' : ''}${val.path.join('.')}`;
 }
 export function printType(type: Type): string {
-  if (type.kind === "Type") return "";
+  if (type.kind === 'Type') return '';
   // TODO(mofeiZ): add debugName for generated ids
-  if (type.kind === "Object" && type.shapeId != null) {
+  if (type.kind === 'Object' && type.shapeId != null) {
     return `:T${type.kind}<${type.shapeId}>`;
-  } else if (type.kind === "Function" && type.shapeId != null) {
+  } else if (type.kind === 'Function' && type.shapeId != null) {
     return `:T${type.kind}<${type.shapeId}>`;
   } else {
     return `:T${type.kind}`;
@@ -877,8 +877,8 @@ export function printType(type: Type): string {
 }
 
 export function printSourceLocation(loc: SourceLocation): string {
-  if (typeof loc === "symbol") {
-    return "generated";
+  if (typeof loc === 'symbol') {
+    return 'generated';
   } else {
     return `${loc.start.line}:${loc.start.column}:${loc.end.line}:${loc.end.column}`;
   }
@@ -889,20 +889,20 @@ export function printAliases(aliases: DisjointSet<Identifier>): string {
 
   const items = [];
   for (const aliasSet of aliasSets) {
-    items.push([...aliasSet].map((id) => printIdentifier(id)).join(","));
+    items.push([...aliasSet].map(id => printIdentifier(id)).join(','));
   }
 
-  return items.join("\n");
+  return items.join('\n');
 }
 
 function getFunctionName(
   instrValue: ObjectMethod | FunctionExpression,
-  defaultValue: string
+  defaultValue: string,
 ): string {
   switch (instrValue.kind) {
-    case "FunctionExpression":
+    case 'FunctionExpression':
       return instrValue.name ?? defaultValue;
-    case "ObjectMethod":
+    case 'ObjectMethod':
       return defaultValue;
   }
 }

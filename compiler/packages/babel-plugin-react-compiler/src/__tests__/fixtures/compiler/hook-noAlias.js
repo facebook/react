@@ -1,7 +1,7 @@
-import { useNoAlias } from "shared-runtime";
+import {useNoAlias} from 'shared-runtime';
 
 function Component(props) {
-  const item = { a: props.a };
+  const item = {a: props.a};
   const x = useNoAlias(
     item,
     () => {
@@ -14,6 +14,6 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: { id: 42 } }],
+  params: [{a: {id: 42}}],
   isComponent: true,
 };

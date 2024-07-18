@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Stringify } from "shared-runtime";
+import {useState} from 'react';
+import {Stringify} from 'shared-runtime';
 
 function Component() {
   let [state, setState] = useState(0);
@@ -16,5 +16,5 @@ function Component() {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };

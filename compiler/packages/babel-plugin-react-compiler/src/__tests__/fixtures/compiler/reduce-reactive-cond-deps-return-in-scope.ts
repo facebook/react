@@ -1,4 +1,4 @@
-function useFoo({ obj, objIsNull }) {
+function useFoo({obj, objIsNull}) {
   const x = [];
   if (objIsNull) {
     return;
@@ -11,9 +11,9 @@ function useFoo({ obj, objIsNull }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ obj: null, objIsNull: true }],
+  params: [{obj: null, objIsNull: true}],
   sequentialRenders: [
-    { obj: null, objIsNull: true },
-    { obj: { a: 2 }, objIsNull: false },
+    {obj: null, objIsNull: true},
+    {obj: {a: 2}, objIsNull: false},
   ],
 };

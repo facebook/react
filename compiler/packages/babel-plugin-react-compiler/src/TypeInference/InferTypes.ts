@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
-import { CompilerError } from "../CompilerError";
-import { Environment } from "../HIR";
-import { lowerType } from "../HIR/BuildHIR";
+import * as t from '@babel/types';
+import {CompilerError} from '../CompilerError';
+import {Environment} from '../HIR';
+import {lowerType} from '../HIR/BuildHIR';
 import {
   HIRFunction,
   Identifier,
@@ -20,7 +20,7 @@ import {
   typeEquals,
   TypeId,
   TypeVar,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   BuiltInArrayId,
   BuiltInFunctionId,
@@ -29,28 +29,28 @@ import {
   BuiltInPropsId,
   BuiltInRefValueId,
   BuiltInUseRefId,
-} from "../HIR/ObjectShape";
-import { eachInstructionLValue, eachInstructionOperand } from "../HIR/visitors";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/ObjectShape';
+import {eachInstructionLValue, eachInstructionOperand} from '../HIR/visitors';
+import {assertExhaustive} from '../Utils/utils';
 
-function isPrimitiveBinaryOp(op: t.BinaryExpression["operator"]): boolean {
+function isPrimitiveBinaryOp(op: t.BinaryExpression['operator']): boolean {
   switch (op) {
-    case "+":
-    case "-":
-    case "/":
-    case "%":
-    case "*":
-    case "**":
-    case "&":
-    case "|":
-    case ">>":
-    case "<<":
-    case "^":
-    case ">":
-    case "<":
-    case ">=":
-    case "<=":
-    case "|>":
+    case '+':
+    case '-':
+    case '/':
+    case '%':
+    case '*':
+    case '**':
+    case '&':
+    case '|':
+    case '>>':
+    case '<<':
+    case '^':
+    case '>':
+    case '<':
+    case '>=':
+    case '<=':
+    case '|>':
       return true;
     default:
       return false;
@@ -77,12 +77,12 @@ function apply(func: HIRFunction, unifier: Unifier): void {
       for (const place of eachInstructionOperand(instr)) {
         place.identifier.type = unifier.get(place.identifier.type);
       }
-      const { lvalue, value } = instr;
+      const {lvalue, value} = instr;
       lvalue.identifier.type = unifier.get(lvalue.identifier.type);
 
       if (
-        value.kind === "FunctionExpression" ||
-        value.kind === "ObjectMethod"
+        value.kind === 'FunctionExpression' ||
+        value.kind === 'ObjectMethod'
       ) {
         apply(value.loweredFunc.func, unifier);
       }
@@ -103,19 +103,19 @@ function equation(left: Type, right: Type): TypeEquation {
 }
 
 function* generate(
-  func: HIRFunction
+  func: HIRFunction,
 ): Generator<TypeEquation, void, undefined> {
-  if (func.env.fnType === "Component") {
+  if (func.env.fnType === 'Component') {
     const [props, ref] = func.params;
-    if (props && props.kind === "Identifier") {
+    if (props && props.kind === 'Identifier') {
       yield equation(props.identifier.type, {
-        kind: "Object",
+        kind: 'Object',
         shapeId: BuiltInPropsId,
       });
     }
-    if (ref && ref.kind === "Identifier") {
+    if (ref && ref.kind === 'Identifier') {
       yield equation(ref.identifier.type, {
-        kind: "Object",
+        kind: 'Object',
         shapeId: BuiltInUseRefId,
       });
     }
@@ -125,8 +125,8 @@ function* generate(
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
       yield equation(phi.type, {
-        kind: "Phi",
-        operands: [...phi.operands.values()].map((id) => id.type),
+        kind: 'Phi',
+        operands: [...phi.operands.values()].map(id => id.type),
       });
     }
 
@@ -139,56 +139,56 @@ function* generate(
 function setName(
   names: Map<IdentifierId, string>,
   id: IdentifierId,
-  name: Identifier
+  name: Identifier,
 ): void {
-  if (name.name?.kind === "named") {
+  if (name.name?.kind === 'named') {
     names.set(id, name.name.value);
   }
 }
 
 function getName(names: Map<IdentifierId, string>, id: IdentifierId): string {
-  return names.get(id) ?? "";
+  return names.get(id) ?? '';
 }
 
 function* generateInstructionTypes(
   env: Environment,
   names: Map<IdentifierId, string>,
-  instr: Instruction
+  instr: Instruction,
 ): Generator<TypeEquation, void, undefined> {
-  const { lvalue, value } = instr;
+  const {lvalue, value} = instr;
   const left = lvalue.identifier.type;
 
   switch (value.kind) {
-    case "TemplateLiteral":
-    case "JSXText":
-    case "Primitive": {
-      yield equation(left, { kind: "Primitive" });
+    case 'TemplateLiteral':
+    case 'JSXText':
+    case 'Primitive': {
+      yield equation(left, {kind: 'Primitive'});
       break;
     }
 
-    case "UnaryExpression": {
-      yield equation(left, { kind: "Primitive" });
+    case 'UnaryExpression': {
+      yield equation(left, {kind: 'Primitive'});
       break;
     }
 
-    case "LoadLocal": {
+    case 'LoadLocal': {
       setName(names, lvalue.identifier.id, value.place.identifier);
       yield equation(left, value.place.identifier.type);
       break;
     }
 
     // We intentionally do not infer types for context variables
-    case "DeclareContext":
-    case "StoreContext":
-    case "LoadContext": {
+    case 'DeclareContext':
+    case 'StoreContext':
+    case 'LoadContext': {
       break;
     }
 
-    case "StoreLocal": {
+    case 'StoreLocal': {
       if (env.config.enableUseTypeAnnotations) {
         yield equation(
           value.lvalue.place.identifier.type,
-          value.value.identifier.type
+          value.value.identifier.type,
         );
         const valueType =
           value.type === null ? makeType() : lowerType(value.type);
@@ -198,35 +198,35 @@ function* generateInstructionTypes(
         yield equation(left, value.value.identifier.type);
         yield equation(
           value.lvalue.place.identifier.type,
-          value.value.identifier.type
+          value.value.identifier.type,
         );
       }
       break;
     }
 
-    case "StoreGlobal": {
+    case 'StoreGlobal': {
       yield equation(left, value.value.identifier.type);
       break;
     }
 
-    case "BinaryExpression": {
+    case 'BinaryExpression': {
       if (isPrimitiveBinaryOp(value.operator)) {
-        yield equation(value.left.identifier.type, { kind: "Primitive" });
-        yield equation(value.right.identifier.type, { kind: "Primitive" });
+        yield equation(value.left.identifier.type, {kind: 'Primitive'});
+        yield equation(value.right.identifier.type, {kind: 'Primitive'});
       }
-      yield equation(left, { kind: "Primitive" });
+      yield equation(left, {kind: 'Primitive'});
       break;
     }
 
-    case "PostfixUpdate":
-    case "PrefixUpdate": {
-      yield equation(value.value.identifier.type, { kind: "Primitive" });
-      yield equation(value.lvalue.identifier.type, { kind: "Primitive" });
-      yield equation(left, { kind: "Primitive" });
+    case 'PostfixUpdate':
+    case 'PrefixUpdate': {
+      yield equation(value.value.identifier.type, {kind: 'Primitive'});
+      yield equation(value.lvalue.identifier.type, {kind: 'Primitive'});
+      yield equation(left, {kind: 'Primitive'});
       break;
     }
 
-    case "LoadGlobal": {
+    case 'LoadGlobal': {
       const globalType = env.getGlobalDeclaration(value.binding);
       if (globalType) {
         yield equation(left, globalType);
@@ -234,43 +234,43 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "CallExpression": {
+    case 'CallExpression': {
       /*
        * TODO: callee could be a hook or a function, so this type equation isn't correct.
        * We should change Hook to a subtype of Function or change unifier logic.
        * (see https://github.com/facebook/react-forget/pull/1427)
        */
       yield equation(value.callee.identifier.type, {
-        kind: "Function",
+        kind: 'Function',
         shapeId: null,
         return: left,
       });
       break;
     }
 
-    case "ObjectExpression": {
+    case 'ObjectExpression': {
       for (const property of value.properties) {
         if (
-          property.kind === "ObjectProperty" &&
-          property.key.kind === "computed"
+          property.kind === 'ObjectProperty' &&
+          property.key.kind === 'computed'
         ) {
           yield equation(property.key.name.identifier.type, {
-            kind: "Primitive",
+            kind: 'Primitive',
           });
         }
       }
-      yield equation(left, { kind: "Object", shapeId: BuiltInObjectId });
+      yield equation(left, {kind: 'Object', shapeId: BuiltInObjectId});
       break;
     }
 
-    case "ArrayExpression": {
-      yield equation(left, { kind: "Object", shapeId: BuiltInArrayId });
+    case 'ArrayExpression': {
+      yield equation(left, {kind: 'Object', shapeId: BuiltInArrayId});
       break;
     }
 
-    case "PropertyLoad": {
+    case 'PropertyLoad': {
       yield equation(left, {
-        kind: "Property",
+        kind: 'Property',
         objectType: value.object.identifier.type,
         objectName: getName(names, value.object.identifier.id),
         propertyName: value.property,
@@ -278,10 +278,10 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "MethodCall": {
+    case 'MethodCall': {
       const returnType = makeType();
       yield equation(value.property.identifier.type, {
-        kind: "Function",
+        kind: 'Function',
         return: returnType,
         shapeId: null,
       });
@@ -290,16 +290,16 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "Destructure": {
+    case 'Destructure': {
       const pattern = value.lvalue.pattern;
-      if (pattern.kind === "ArrayPattern") {
+      if (pattern.kind === 'ArrayPattern') {
         for (let i = 0; i < pattern.items.length; i++) {
           const item = pattern.items[i];
-          if (item.kind === "Identifier") {
+          if (item.kind === 'Identifier') {
             // To simulate tuples we use properties with `String(<index>)`, eg "0".
             const propertyName = String(i);
             yield equation(item.identifier.type, {
-              kind: "Property",
+              kind: 'Property',
               objectType: value.value.identifier.type,
               objectName: getName(names, value.value.identifier.id),
               propertyName,
@@ -310,13 +310,13 @@ function* generateInstructionTypes(
         }
       } else {
         for (const property of pattern.properties) {
-          if (property.kind === "ObjectProperty") {
+          if (property.kind === 'ObjectProperty') {
             if (
-              property.key.kind === "identifier" ||
-              property.key.kind === "string"
+              property.key.kind === 'identifier' ||
+              property.key.kind === 'string'
             ) {
               yield equation(property.place.identifier.type, {
-                kind: "Property",
+                kind: 'Property',
                 objectType: value.value.identifier.type,
                 objectName: getName(names, value.value.identifier.id),
                 propertyName: property.key.name,
@@ -328,7 +328,7 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "TypeCastExpression": {
+    case 'TypeCastExpression': {
       if (env.config.enableUseTypeAnnotations) {
         yield equation(value.type, value.value.identifier.type);
         yield equation(left, value.type);
@@ -338,49 +338,49 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "PropertyDelete":
-    case "ComputedDelete": {
-      yield equation(left, { kind: "Primitive" });
+    case 'PropertyDelete':
+    case 'ComputedDelete': {
+      yield equation(left, {kind: 'Primitive'});
       break;
     }
 
-    case "FunctionExpression": {
+    case 'FunctionExpression': {
       yield* generate(value.loweredFunc.func);
-      yield equation(left, { kind: "Object", shapeId: BuiltInFunctionId });
+      yield equation(left, {kind: 'Object', shapeId: BuiltInFunctionId});
       break;
     }
 
-    case "NextPropertyOf": {
-      yield equation(left, { kind: "Primitive" });
+    case 'NextPropertyOf': {
+      yield equation(left, {kind: 'Primitive'});
       break;
     }
 
-    case "ObjectMethod": {
+    case 'ObjectMethod': {
       yield* generate(value.loweredFunc.func);
-      yield equation(left, { kind: "ObjectMethod" });
+      yield equation(left, {kind: 'ObjectMethod'});
       break;
     }
 
-    case "JsxExpression":
-    case "JsxFragment": {
-      yield equation(left, { kind: "Object", shapeId: BuiltInJsxId });
+    case 'JsxExpression':
+    case 'JsxFragment': {
+      yield equation(left, {kind: 'Object', shapeId: BuiltInJsxId});
       break;
     }
-    case "PropertyStore":
-    case "DeclareLocal":
-    case "NewExpression":
-    case "RegExpLiteral":
-    case "MetaProperty":
-    case "ComputedStore":
-    case "ComputedLoad":
-    case "TaggedTemplateExpression":
-    case "Await":
-    case "GetIterator":
-    case "IteratorNext":
-    case "UnsupportedNode":
-    case "Debugger":
-    case "FinishMemoize":
-    case "StartMemoize": {
+    case 'PropertyStore':
+    case 'DeclareLocal':
+    case 'NewExpression':
+    case 'RegExpLiteral':
+    case 'MetaProperty':
+    case 'ComputedStore':
+    case 'ComputedLoad':
+    case 'TaggedTemplateExpression':
+    case 'Await':
+    case 'GetIterator':
+    case 'IteratorNext':
+    case 'UnsupportedNode':
+    case 'Debugger':
+    case 'FinishMemoize':
+    case 'StartMemoize': {
       break;
     }
     default:
@@ -398,17 +398,17 @@ class Unifier {
   }
 
   unify(tA: Type, tB: Type): void {
-    if (tB.kind === "Property") {
+    if (tB.kind === 'Property') {
       if (
         this.env.config.enableTreatRefLikeIdentifiersAsRefs &&
         isRefLikeName(tB)
       ) {
         this.unify(tB.objectType, {
-          kind: "Object",
+          kind: 'Object',
           shapeId: BuiltInUseRefId,
         });
         this.unify(tA, {
-          kind: "Object",
+          kind: 'Object',
           shapeId: BuiltInRefValueId,
         });
         return;
@@ -416,7 +416,7 @@ class Unifier {
       const objectType = this.get(tB.objectType);
       const propertyType = this.env.getPropertyType(
         objectType,
-        tB.propertyName
+        tB.propertyName,
       );
       if (propertyType !== null) {
         this.unify(tA, propertyType);
@@ -432,24 +432,24 @@ class Unifier {
       return;
     }
 
-    if (tA.kind === "Type") {
+    if (tA.kind === 'Type') {
       this.bindVariableTo(tA, tB);
       return;
     }
 
-    if (tB.kind === "Type") {
+    if (tB.kind === 'Type') {
       this.bindVariableTo(tB, tA);
       return;
     }
 
-    if (tB.kind === "Function" && tA.kind === "Function") {
+    if (tB.kind === 'Function' && tA.kind === 'Function') {
       this.unify(tA.return, tB.return);
       return;
     }
   }
 
   bindVariableTo(v: TypeVar, type: Type): void {
-    if (type.kind === "Poly") {
+    if (type.kind === 'Poly') {
       //  Ignore PolyType, since we don't support polymorphic types correctly.
       return;
     }
@@ -459,16 +459,16 @@ class Unifier {
       return;
     }
 
-    if (type.kind === "Type" && this.substitutions.has(type.id)) {
+    if (type.kind === 'Type' && this.substitutions.has(type.id)) {
       this.unify(v, this.substitutions.get(type.id)!);
       return;
     }
 
-    if (type.kind === "Phi") {
-      const operands = new Set(type.operands.map((i) => this.get(i).kind));
+    if (type.kind === 'Phi') {
+      const operands = new Set(type.operands.map(i => this.get(i).kind));
 
       CompilerError.invariant(operands.size > 0, {
-        reason: "there should be at least one operand",
+        reason: 'there should be at least one operand',
         description: null,
         loc: null,
         suggestions: null,
@@ -476,14 +476,14 @@ class Unifier {
       const kind = operands.values().next().value;
 
       // there's only one unique type and it's not a type var
-      if (operands.size === 1 && kind !== "Type") {
+      if (operands.size === 1 && kind !== 'Type') {
         this.unify(v, type.operands[0]);
         return;
       }
     }
 
     if (this.occursCheck(v, type)) {
-      throw new Error("cycle detected");
+      throw new Error('cycle detected');
     }
 
     this.substitutions.set(v.id, type);
@@ -492,15 +492,15 @@ class Unifier {
   occursCheck(v: TypeVar, type: Type): boolean {
     if (typeEquals(v, type)) return true;
 
-    if (type.kind === "Type" && this.substitutions.has(type.id)) {
+    if (type.kind === 'Type' && this.substitutions.has(type.id)) {
       return this.occursCheck(v, this.substitutions.get(type.id)!);
     }
 
-    if (type.kind === "Phi") {
-      return type.operands.some((o) => this.occursCheck(v, o));
+    if (type.kind === 'Phi') {
+      return type.operands.some(o => this.occursCheck(v, o));
     }
 
-    if (type.kind === "Function") {
+    if (type.kind === 'Function') {
       return this.occursCheck(v, type.return);
     }
 
@@ -508,14 +508,14 @@ class Unifier {
   }
 
   get(type: Type): Type {
-    if (type.kind === "Type") {
+    if (type.kind === 'Type') {
       if (this.substitutions.has(type.id)) {
         return this.get(this.substitutions.get(type.id)!);
       }
     }
 
-    if (type.kind === "Phi") {
-      return { kind: "Phi", operands: type.operands.map((o) => this.get(o)) };
+    if (type.kind === 'Phi') {
+      return {kind: 'Phi', operands: type.operands.map(o => this.get(o))};
     }
 
     return type;
@@ -525,5 +525,5 @@ class Unifier {
 const RefLikeNameRE = /^(?:[a-zA-Z$_][a-zA-Z$_0-9]*)Ref$|^ref$/;
 
 function isRefLikeName(t: PropType): boolean {
-  return RefLikeNameRE.test(t.objectName) && t.propertyName === "current";
+  return RefLikeNameRE.test(t.objectName) && t.propertyName === 'current';
 }
