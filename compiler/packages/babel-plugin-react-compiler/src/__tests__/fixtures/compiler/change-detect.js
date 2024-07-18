@@ -9,8 +9,14 @@ function Component(props) {
     <div>
       {a}
       {b}
-      {c}
+      {c.c}
       {d}
     </div>
   );
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ x: 1, y: { b: 2, c: 3, d: 4 } }],
+  isComponent: true,
+};
