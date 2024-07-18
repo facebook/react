@@ -91,8 +91,9 @@ async function getWorkflowRunId(commit) {
 }
 
 async function getArtifact(workflowRunId, artifactName) {
-  const res = await exec(`curl -L ${GITHUB_HEADERS}
-  https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`);
+  const res = await exec(
+    `curl -L ${GITHUB_HEADERS} https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${workflowRunId}/artifacts?per_page=100&name=${artifactName}`
+  );
 
   console.log(res);
   const json = JSON.parse(res.stdout);
