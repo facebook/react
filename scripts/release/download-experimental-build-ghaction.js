@@ -23,6 +23,7 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
     alias: 'c',
     describe: 'Commit hash to download.',
     requiresArg: true,
+    demandOption: true,
     type: 'string',
   },
 }).argv;
@@ -164,7 +165,7 @@ async function downloadBuildArtifacts(commit, releaseChannel) {
 
 const main = async () => {
   try {
-    downloadBuildArtifacts(argv.commit, argv.releaseChannel);
+    await downloadBuildArtifacts(argv.commit, argv.releaseChannel);
     printSummary(argv.commit);
   } catch (error) {
     handleError(error);
