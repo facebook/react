@@ -586,6 +586,10 @@ jobs:
           pattern: _build_*
           path: build
           merge-multiple: true
+      - name: Scrape warning messages
+        run: |
+          mkdir -p ./build/__test_utils__
+          node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - name: Display structure of build for PR
         run: ls -R build
       - name: Restore archived base-build from origin/main
