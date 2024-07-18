@@ -464,10 +464,6 @@ function fastAddProperties(
   for (const propKey in props) {
     const prop = props[propKey];
 
-    if (prop === undefined) {
-      continue;
-    }
-
     const attributeConfig = ((validAttributes[
       propKey
     ]: any): AttributeConfiguration);
@@ -478,7 +474,14 @@ function fastAddProperties(
 
     let newValue;
 
-    if (typeof prop === 'function') {
+    if (prop === undefined) {
+      // Discard the prop if it was previously defined.
+      if (payload && payload[propKey] !== undefined) {
+        newValue = null;
+      } else {
+        continue;
+      }
+    } else if (typeof prop === 'function') {
       // A function prop. It represents an event handler. Pass it to native as 'true'.
       newValue = true;
     } else if (typeof attributeConfig !== 'object') {

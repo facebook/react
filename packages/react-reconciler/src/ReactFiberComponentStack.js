@@ -39,6 +39,7 @@ function describeFiber(fiber: Fiber): string {
     case HostComponent:
       return describeBuiltInComponentFrame(fiber.type);
     case LazyComponent:
+      // TODO: When we support Thenables as component types we should rename this.
       return describeBuiltInComponentFrame('Lazy');
     case SuspenseComponent:
       return describeBuiltInComponentFrame('Suspense');
@@ -90,26 +91,12 @@ function describeFunctionComponentFrameWithoutLineNumber(fn: Function): string {
   return name ? describeBuiltInComponentFrame(name) : '';
 }
 
-export function getOwnerStackByFiberInDev(
-  workInProgress: Fiber,
-  topStack: null | Error,
-): string {
+export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
   if (!enableOwnerStacks || !__DEV__) {
     return '';
   }
   try {
     let info = '';
-
-    if (topStack) {
-      // Prefix with a filtered version of the currently executing
-      // stack. This information will be available in the native
-      // stack regardless but it's hidden since we're reprinting
-      // the stack on top of it.
-      const formattedTopStack = formatOwnerStack(topStack);
-      if (formattedTopStack !== '') {
-        info += '\n' + formattedTopStack;
-      }
-    }
 
     if (workInProgress.tag === HostText) {
       // Text nodes never have an owner/stack because they're not created through JSX.
@@ -185,11 +172,11 @@ export function getOwnerStackByFiberInDev(
         // another code path anyway. I.e. this is likely NOT a V8 based browser.
         // This will cause some of the stack to have different formatting.
         // TODO: Normalize server component stacks to the client formatting.
-        if (owner.stack !== '') {
-          info += '\n' + owner.stack;
+        const ownerStack: string = owner.stack;
+        owner = owner.owner;
+        if (owner && ownerStack !== '') {
+          info += '\n' + ownerStack;
         }
-        const componentInfo: ReactComponentInfo = (owner: any);
-        owner = componentInfo.owner;
       } else {
         break;
       }

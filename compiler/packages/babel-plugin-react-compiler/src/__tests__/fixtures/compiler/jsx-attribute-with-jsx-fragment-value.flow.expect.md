@@ -39,24 +39,16 @@ function Component(t0) {
   const { items } = t0;
   let t1;
   if ($[0] !== items) {
-    t1 =
-      items.length > 0 ? (
-        <Foo
-          value={
-            <>
-              {items.map((item) => (
-                <Stringify key={item.id} item={item} />
-              ))}
-            </>
-          }
-        />
-      ) : null;
+    t1 = items.length > 0 ? <Foo value={<>{items.map(_temp)}</>} /> : null;
     $[0] = items;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
   return t1;
+}
+function _temp(item) {
+  return <Stringify key={item.id} item={item} />;
 }
 
 function Foo(t0) {

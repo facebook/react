@@ -87,6 +87,12 @@ export type BabelFn =
   | NodePath<t.ArrowFunctionExpression>;
 
 export type CompileResult = {
+  /**
+   * Distinguishes existing functions that were compiled ('original') from
+   * functions which were outlined. Only original functions need to be gated
+   * if gating mode is enabled.
+   */
+  kind: "original" | "outlined";
   originalFn: BabelFn;
   compiledFn: CodegenFunction;
 };
@@ -265,6 +271,11 @@ export function compileProgram(
   );
   const lintError = suppressionsToCompilerError(suppressions);
   let hasCriticalError = lintError != null;
+  const queue: Array<{
+    kind: "original" | "outlined";
+    fn: BabelFn;
+    fnType: ReactFunctionType;
+  }> = [];
   const compiledFns: Array<CompileResult> = [];
 
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
@@ -281,6 +292,47 @@ export function compileProgram(
     ALREADY_COMPILED.add(fn.node);
     fn.skip();
 
+    queue.push({ kind: "original", fn, fnType });
+  };
+
+  // Main traversal to compile with Forget
+  program.traverse(
+    {
+      ClassDeclaration(node: NodePath<t.ClassDeclaration>) {
+        /*
+         * Don't visit functions defined inside classes, because they
+         * can reference `this` which is unsafe for compilation
+         */
+        node.skip();
+        return;
+      },
+
+      ClassExpression(node: NodePath<t.ClassExpression>) {
+        /*
+         * Don't visit functions defined inside classes, because they
+         * can reference `this` which is unsafe for compilation
+         */
+        node.skip();
+        return;
+      },
+
+      FunctionDeclaration: traverseFunction,
+
+      FunctionExpression: traverseFunction,
+
+      ArrowFunctionExpression: traverseFunction,
+    },
+    {
+      ...pass,
+      opts: { ...pass.opts, ...pass.opts },
+      filename: pass.filename ?? null,
+    }
+  );
+
+  const processFn = (
+    fn: BabelFn,
+    fnType: ReactFunctionType
+  ): null | CodegenFunction => {
     if (lintError != null) {
       /**
        * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
@@ -335,52 +387,59 @@ export function compileProgram(
     } catch (err) {
       hasCriticalError ||= isCriticalError(err);
       handleError(err, pass, fn.node.loc ?? null);
-      return;
+      return null;
     }
 
     if (!pass.opts.noEmit && !hasCriticalError) {
-      compiledFns.push({ originalFn: fn, compiledFn });
+      return compiledFn;
     }
+    return null;
   };
 
-  // Main traversal to compile with Forget
-  program.traverse(
-    {
-      ClassDeclaration(node: NodePath<t.ClassDeclaration>) {
-        /*
-         * Don't visit functions defined inside classes, because they
-         * can reference `this` which is unsafe for compilation
-         */
-        node.skip();
-        return;
-      },
-
-      ClassExpression(node: NodePath<t.ClassExpression>) {
-        /*
-         * Don't visit functions defined inside classes, because they
-         * can reference `this` which is unsafe for compilation
-         */
-        node.skip();
-        return;
-      },
-
-      FunctionDeclaration: traverseFunction,
-
-      FunctionExpression: traverseFunction,
-
-      ArrowFunctionExpression: traverseFunction,
-    },
-    {
-      ...pass,
-      opts: { ...pass.opts, ...pass.opts },
-      filename: pass.filename ?? null,
+  while (queue.length !== 0) {
+    const current = queue.shift()!;
+    const compiled = processFn(current.fn, current.fnType);
+    if (compiled === null) {
+      continue;
     }
-  );
+    for (const outlined of compiled.outlined) {
+      CompilerError.invariant(outlined.fn.outlined.length === 0, {
+        reason: "Unexpected nested outlined functions",
+        loc: outlined.fn.loc,
+      });
+      const fn = current.fn.insertAfter(
+        createNewFunctionNode(current.fn, outlined.fn)
+      )[0]!;
+      fn.skip();
+      ALREADY_COMPILED.add(fn.node);
+      if (outlined.type !== null) {
+        CompilerError.throwTodo({
+          reason: `Implement support for outlining React functions (components/hooks)`,
+          loc: outlined.fn.loc,
+        });
+        /*
+         * Above should be as simple as the following, but needs testing:
+         * queue.push({
+         *   kind: "outlined",
+         *   fn,
+         *   fnType: outlined.type,
+         * });
+         */
+      }
+    }
+    compiledFns.push({
+      kind: current.kind,
+      compiledFn: compiled,
+      originalFn: current.fn,
+    });
+  }
 
   if (pass.opts.gating != null) {
     const error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
       program,
-      compiledFns.map(({ originalFn }) => originalFn)
+      compiledFns.map((result) => {
+        return result.originalFn;
+      })
     );
     if (error) {
       handleError(error, pass, null);
@@ -439,10 +498,11 @@ export function compileProgram(
    * Only insert Forget-ified functions if we have not encountered a critical
    * error elsewhere in the file, regardless of bailout mode.
    */
-  for (const { originalFn, compiledFn } of compiledFns) {
+  for (const result of compiledFns) {
+    const { kind, originalFn, compiledFn } = result;
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
 
-    if (gating != null) {
+    if (gating != null && kind === "original") {
       insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
     } else {
       originalFn.replaceWith(transformedFn);

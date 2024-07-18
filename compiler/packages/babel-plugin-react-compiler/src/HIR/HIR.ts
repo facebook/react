@@ -771,12 +771,7 @@ export type ManualMemoDependency = {
         kind: "NamedLocal";
         value: Place;
       }
-    | {
-        kind: "InlinedGlobal";
-        value: Place;
-        name: string;
-      }
-    | { kind: "Global"; binding: LoadGlobal };
+    | { kind: "Global"; identifierName: string };
   path: Array<string>;
 };
 
@@ -1173,7 +1168,7 @@ export type NonLocalBinding =
       imported: string;
     }
   // let, const, function, etc declared in the module but outside the current component/hook
-  | { kind: "ModuleLocal"; name: string }
+  | { kind: "ModuleLocal"; name: string; immutable: boolean }
   // an unresolved binding
   | { kind: "Global"; name: string };
 
@@ -1434,8 +1429,6 @@ export type ReactiveScope = {
   merged: Set<ScopeId>;
 
   loc: SourceLocation;
-
-  source: boolean;
 };
 
 export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;

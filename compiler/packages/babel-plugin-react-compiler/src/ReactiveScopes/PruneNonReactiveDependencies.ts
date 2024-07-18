@@ -97,7 +97,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
     this.traverseScope(scopeBlock, state);
     for (const dep of scopeBlock.scope.dependencies) {
       const isReactive = state.has(dep.identifier.id);
-      if (!isReactive && !scopeBlock.scope.source) {
+      if (!isReactive) {
         scopeBlock.scope.dependencies.delete(dep);
       }
     }

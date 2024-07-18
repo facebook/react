@@ -23,14 +23,17 @@ import {
   BuiltInType,
   Effect,
   FunctionType,
+  HIRFunction,
   IdentifierId,
   NonLocalBinding,
   PolyType,
   ScopeId,
   Type,
+  ValidatedIdentifier,
   ValueKind,
   makeBlockId,
   makeIdentifierId,
+  makeIdentifierName,
   makeScopeId,
 } from "./HIR";
 import {
@@ -41,6 +44,7 @@ import {
   ShapeRegistry,
   addHook,
 } from "./ObjectShape";
+import { Scope as BabelScope } from "@babel/traverse";
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -182,9 +186,7 @@ const EnvironmentConfigSchema = z.object({
    * that the memoized values remain memoized, the compiler will simply not prune existing calls to
    * useMemo/useCallback.
    */
-  enablePreserveExistingManualUseMemo: z
-    .nullable(z.enum(["hook", "scope"]))
-    .default(null),
+  enablePreserveExistingManualUseMemo: z.boolean().default(false),
 
   // 🌲
   enableForest: z.boolean().default(false),
@@ -284,6 +286,12 @@ const EnvironmentConfigSchema = z.object({
    * of the approach.
    */
   enableInstructionReordering: z.boolean().default(false),
+
+  /**
+   * Enables function outlinining, where anonymous functions that do not close over
+   * local variables can be extracted into top-level helper functions.
+   */
+  enableFunctionOutlining: z.boolean().default(true),
 
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
@@ -458,31 +466,6 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
       continue;
     }
 
-    if (
-      key === "enablePreserveExistingManualUseMemo" &&
-      (val === undefined || val === "true" || val === "scope")
-    ) {
-      maybeConfig[key] = "scope";
-      continue;
-    }
-
-    if (key === "enablePreserveExistingManualUseMemo" && val === "hook") {
-      maybeConfig[key] = "hook";
-      continue;
-    }
-
-    if (
-      key === "enablePreserveExistingManualUseMemo" &&
-      !(val === "false" || val === "off")
-    ) {
-      CompilerError.throwInvalidConfig({
-        reason: `Invalid setting '${val}' for 'enablePreserveExistingManualUseMemo'. Valid settings are 'hook', 'scope', or 'off'.`,
-        description: null,
-        loc: null,
-        suggestions: null,
-      });
-    }
-
     if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {
       // skip parsing non-boolean properties
       continue;
@@ -531,6 +514,11 @@ export class Environment {
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
+  #scope: BabelScope;
+  #outlinedFunctions: Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> = [];
   logger: Logger | null;
   filename: string | null;
   code: string | null;
@@ -542,6 +530,7 @@ export class Environment {
   #hoistedIdentifiers: Set<t.Identifier>;
 
   constructor(
+    scope: BabelScope,
     fnType: ReactFunctionType,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
@@ -550,6 +539,7 @@ export class Environment {
     code: string | null,
     useMemoCacheIdentifier: string
   ) {
+    this.#scope = scope;
     this.fnType = fnType;
     this.config = config;
     this.filename = filename;
@@ -620,6 +610,24 @@ export class Environment {
 
   isHoistedIdentifier(node: t.Identifier): boolean {
     return this.#hoistedIdentifiers.has(node);
+  }
+
+  generateGloballyUniqueIdentifierName(
+    name: string | null
+  ): ValidatedIdentifier {
+    const identifierNode = this.#scope.generateUidIdentifier(name ?? undefined);
+    return makeIdentifierName(identifierNode.name);
+  }
+
+  outlineFunction(fn: HIRFunction, type: ReactFunctionType | null): void {
+    this.#outlinedFunctions.push({ fn, type });
+  }
+
+  getOutlinedFunctions(): Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> {
+    return this.#outlinedFunctions;
   }
 
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {
@@ -756,6 +764,14 @@ export class Environment {
     } else {
       return DefaultMutatingHook;
     }
+  }
+
+  preserveManualMemo(): boolean {
+    return (
+      this.config.enablePreserveExistingManualUseMemo ||
+      this.config.disableMemoizationForDebugging ||
+      this.config.enableChangeDetectionForDebugging != null
+    );
   }
 }
 

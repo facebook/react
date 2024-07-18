@@ -18,13 +18,16 @@ function Component(props) {
   const item = useFragment(graphql`...`, props.item);
   let t0;
   if ($[0] !== item.items) {
-    t0 = item.items?.map((item_0) => renderItem(item_0)) ?? [];
+    t0 = item.items?.map(_temp) ?? [];
     $[0] = item.items;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
   return t0;
+}
+function _temp(item_0) {
+  return renderItem(item_0);
 }
 
 ```

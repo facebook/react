@@ -111,13 +111,16 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
         earlyReturnValue: null,
         merged: new Set(),
         loc: identifier.loc,
-        source: false,
       };
       scopes.set(groupIdentifier, scope);
     } else {
-      scope.range.start = makeInstructionId(
-        Math.min(scope.range.start, identifier.mutableRange.start)
-      );
+      if (scope.range.start === 0) {
+        scope.range.start = identifier.mutableRange.start;
+      } else if (identifier.mutableRange.start !== 0) {
+        scope.range.start = makeInstructionId(
+          Math.min(scope.range.start, identifier.mutableRange.start)
+        );
+      }
       scope.range.end = makeInstructionId(
         Math.max(scope.range.end, identifier.mutableRange.end)
       );
@@ -162,10 +165,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
   }
 }
 
-export function mergeLocation(
-  l: SourceLocation,
-  r: SourceLocation
-): SourceLocation {
+function mergeLocation(l: SourceLocation, r: SourceLocation): SourceLocation {
   if (l === GeneratedSource) {
     return r;
   } else if (r === GeneratedSource) {
@@ -185,25 +185,23 @@ export function mergeLocation(
 }
 
 // Is the operand mutable at this given instruction
-export function isMutable({ id }: Instruction, place: Place): boolean {
+export function isMutableAtInstruction(
+  { id }: Instruction,
+  place: Place
+): boolean {
   const range = place.identifier.mutableRange;
   return id >= range.start && id < range.end;
 }
 
-export function mayAllocate(
-  env: Environment,
-  instruction: Instruction,
-  conservative: boolean
-): boolean {
+function mayAllocate(env: Environment, instruction: Instruction): boolean {
   const { value } = instruction;
   switch (value.kind) {
     case "Destructure": {
-      return (
-        doesPatternContainSpreadElement(value.lvalue.pattern) || conservative
-      );
+      return doesPatternContainSpreadElement(value.lvalue.pattern);
     }
     case "PostfixUpdate":
     case "PrefixUpdate":
+    case "Await":
     case "DeclareLocal":
     case "DeclareContext":
     case "StoreLocal":
@@ -214,31 +212,26 @@ export function mayAllocate(
     case "LoadContext":
     case "StoreContext":
     case "PropertyDelete":
+    case "ComputedLoad":
     case "ComputedDelete":
     case "JSXText":
     case "TemplateLiteral":
     case "Primitive":
     case "GetIterator":
     case "IteratorNext":
+    case "NextPropertyOf":
     case "Debugger":
     case "StartMemoize":
     case "FinishMemoize":
     case "UnaryExpression":
     case "BinaryExpression":
+    case "PropertyLoad":
     case "StoreGlobal": {
       return false;
     }
-    case "PropertyLoad":
-    case "NextPropertyOf":
-    case "ComputedLoad":
-    case "Await": {
-      return conservative;
-    }
     case "CallExpression":
     case "MethodCall": {
-      return (
-        conservative || instruction.lvalue.identifier.type.kind !== "Primitive"
-      );
+      return instruction.lvalue.identifier.type.kind !== "Primitive";
     }
     case "RegExpLiteral":
     case "PropertyStore":
@@ -263,80 +256,85 @@ export function mayAllocate(
   }
 }
 
-export function collectMutableOperands(
-  fn: HIRFunction,
-  instr: Instruction,
-  conservative: boolean
-): Array<Identifier> {
-  const operands: Array<Identifier> = [];
-  const range = instr.lvalue.identifier.mutableRange;
-  if (range.end > range.start + 1 || mayAllocate(fn.env, instr, conservative)) {
-    operands.push(instr.lvalue!.identifier);
+/*
+ * These instructions may pick up external changes due to rules of react violations.
+ * Instructions should be included here if they may change without their inputs changing.
+ * For example, PostfixUpdate is not included because it only has a changed lval if
+ * it has a changed argument, but LoadProperty is included because the argument can be
+ * mutated elsewhere.
+ */
+function mayHaveChanged(env: Environment, instruction: Instruction): boolean {
+  if (env.config.enableChangeDetectionForDebugging == null) {
+    return false;
   }
-  if (
-    instr.value.kind === "StoreLocal" ||
-    instr.value.kind === "StoreContext"
-  ) {
-    if (
-      instr.value.lvalue.place.identifier.mutableRange.end >
-      instr.value.lvalue.place.identifier.mutableRange.start + 1
-    ) {
-      operands.push(instr.value.lvalue.place.identifier);
+  switch (instruction.value.kind) {
+    case "Await":
+    case "ComputedLoad":
+    case "Destructure":
+    case "GetIterator":
+    case "IteratorNext":
+    case "NextPropertyOf":
+    case "PropertyLoad":
+    case "CallExpression":
+    case "MethodCall":
+    case "NewExpression": {
+      return true;
     }
-    if (
-      isMutable(instr, instr.value.value) &&
-      instr.value.value.identifier.mutableRange.start > 0
-    ) {
-      operands.push(instr.value.value.identifier);
+    case "LoadGlobal": {
+      return (
+        instruction.value.binding.kind === "ModuleLocal" &&
+        !instruction.value.binding.immutable
+      );
     }
-  } else if (instr.value.kind === "Destructure") {
-    for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
-      if (
-        place.identifier.mutableRange.end >
-        place.identifier.mutableRange.start + 1
-      ) {
-        operands.push(place.identifier);
-      }
+    case "PostfixUpdate":
+    case "PrefixUpdate":
+    case "DeclareLocal":
+    case "DeclareContext":
+    case "StoreLocal":
+    case "MetaProperty":
+    case "TypeCastExpression":
+    case "LoadLocal":
+    case "LoadContext":
+    case "StoreContext":
+    case "PropertyDelete":
+    case "ComputedDelete":
+    case "JSXText":
+    case "TemplateLiteral":
+    case "Primitive":
+    case "Debugger":
+    case "StartMemoize":
+    case "FinishMemoize":
+    case "UnaryExpression":
+    case "BinaryExpression":
+    case "StoreGlobal":
+    case "RegExpLiteral":
+    case "PropertyStore":
+    case "ComputedStore":
+    case "ArrayExpression":
+    case "JsxExpression":
+    case "JsxFragment":
+    case "ObjectExpression":
+    case "UnsupportedNode":
+    case "ObjectMethod":
+    case "FunctionExpression":
+    case "TaggedTemplateExpression": {
+      return false;
     }
-    if (
-      isMutable(instr, instr.value.value) &&
-      instr.value.value.identifier.mutableRange.start > 0
-    ) {
-      operands.push(instr.value.value.identifier);
-    }
-  } else if (instr.value.kind === "MethodCall") {
-    for (const operand of eachInstructionOperand(instr)) {
-      if (
-        isMutable(instr, operand) &&
-        /*
-         * exclude global variables from being added to scopes, we can't recreate them!
-         * TODO: improve handling of module-scoped variables and globals
-         */
-        operand.identifier.mutableRange.start > 0
-      ) {
-        operands.push(operand.identifier);
-      }
-    }
-    /*
-     * Ensure that the ComputedLoad to resolve the method is in the same scope as the
-     * call itself
-     */
-    operands.push(instr.value.property.identifier);
-  } else {
-    for (const operand of eachInstructionOperand(instr)) {
-      if (
-        isMutable(instr, operand) &&
-        /*
-         * exclude global variables from being added to scopes, we can't recreate them!
-         * TODO: improve handling of module-scoped variables and globals
-         */
-        operand.identifier.mutableRange.start > 0
-      ) {
-        operands.push(operand.identifier);
-      }
+    default: {
+      assertExhaustive(
+        instruction.value,
+        `Unexpected value kind \`${(instruction.value as any).kind}\``
+      );
     }
   }
-  return operands;
+}
+
+function isIdentifierMutable(id: Identifier): boolean {
+  return id.mutableRange.end > id.mutableRange.start + 1;
+}
+
+function identifierHasMutableRange(id: Identifier): boolean {
+  return id.mutableRange.start > 0;
 }
 
 export function findDisjointMutableValues(
@@ -351,7 +349,7 @@ export function findDisjointMutableValues(
     for (const phi of block.phis) {
       if (
         // The phi was reset because it was not mutated after creation
-        phi.id.mutableRange.start + 1 !== phi.id.mutableRange.end &&
+        isIdentifierMutable(phi.id) &&
         phi.id.mutableRange.end >
           (block.instructions.at(0)?.id ?? block.terminal.id)
       ) {
@@ -366,11 +364,77 @@ export function findDisjointMutableValues(
     }
 
     for (const instr of block.instructions) {
-      const operands = collectMutableOperands(
-        fn,
-        instr,
-        fn.env.config.enableChangeDetectionForDebugging != null
-      );
+      const operands: Array<Identifier> = [];
+      if (
+        isIdentifierMutable(instr.lvalue.identifier) ||
+        mayAllocate(fn.env, instr) ||
+        mayHaveChanged(fn.env, instr)
+      ) {
+        operands.push(instr.lvalue!.identifier);
+      }
+      if (
+        instr.value.kind === "StoreLocal" ||
+        instr.value.kind === "StoreContext"
+      ) {
+        if (isIdentifierMutable(instr.value.lvalue.place.identifier)) {
+          operands.push(instr.value.lvalue.place.identifier);
+        }
+        if (
+          isMutableAtInstruction(instr, instr.value.value) &&
+          identifierHasMutableRange(instr.value.value.identifier)
+        ) {
+          operands.push(instr.value.value.identifier);
+        }
+      } else if (instr.value.kind === "Destructure") {
+        for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+          if (
+            isIdentifierMutable(place.identifier) ||
+            mayHaveChanged(fn.env, instr)
+          ) {
+            operands.push(place.identifier);
+          }
+        }
+        if (
+          (isMutableAtInstruction(instr, instr.value.value) &&
+            identifierHasMutableRange(instr.value.value.identifier)) ||
+          mayHaveChanged(fn.env, instr)
+        ) {
+          operands.push(instr.value.value.identifier);
+        }
+      } else if (instr.value.kind === "MethodCall") {
+        for (const operand of eachInstructionOperand(instr)) {
+          if (
+            (isMutableAtInstruction(instr, operand) &&
+              /*
+               * exclude global variables from being added to scopes, we can't recreate them!
+               * TODO: improve handling of module-scoped variables and globals
+               */
+              identifierHasMutableRange(operand.identifier)) ||
+            mayHaveChanged(fn.env, instr)
+          ) {
+            operands.push(operand.identifier);
+          }
+        }
+        /*
+         * Ensure that the ComputedLoad to resolve the method is in the same scope as the
+         * call itself
+         */
+        operands.push(instr.value.property.identifier);
+      } else {
+        for (const operand of eachInstructionOperand(instr)) {
+          if (
+            (isMutableAtInstruction(instr, operand) &&
+              /*
+               * exclude global variables from being added to scopes, we can't recreate them!
+               * TODO: improve handling of module-scoped variables and globals
+               */
+              identifierHasMutableRange(operand.identifier)) ||
+            mayHaveChanged(fn.env, instr)
+          ) {
+            operands.push(operand.identifier);
+          }
+        }
+      }
       if (operands.length !== 0) {
         scopeIdentifiers.union(operands);
       }

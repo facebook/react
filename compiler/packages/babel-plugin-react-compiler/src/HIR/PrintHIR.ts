@@ -41,6 +41,14 @@ export type Options = {
   indent: number;
 };
 
+export function printFunctionWithOutlined(fn: HIRFunction): string {
+  const output = [printFunction(fn)];
+  for (const outlined of fn.env.getOutlinedFunctions()) {
+    output.push(`\nfunction ${outlined.fn.id}:\n${printHIR(outlined.fn.body)}`);
+  }
+  return output.join("\n");
+}
+
 export function printFunction(fn: HIRFunction): string {
   const output = [];
   let definition = "";
@@ -843,14 +851,7 @@ export function printManualMemoDependency(
 ): string {
   let rootStr;
   if (val.root.kind === "Global") {
-    rootStr = val.root.binding.binding.name;
-  } else if (val.root.kind === "InlinedGlobal") {
-    const nameStr = nameOnly
-      ? val.root.value.identifier.name != null
-        ? printName(val.root.value.identifier.name)
-        : String(val.root.value.identifier.id)
-      : printIdentifier(val.root.value.identifier);
-    rootStr = `G(${val.root.name}=${nameStr})`;
+    rootStr = val.root.identifierName;
   } else {
     CompilerError.invariant(val.root.value.identifier.name?.kind === "named", {
       reason: "DepsValidation: expected named local variable in depslist",

@@ -25,7 +25,7 @@ import {
 import { printManualMemoDependency } from "../HIR/PrintHIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { collectMaybeMemoDependencies } from "../Inference/DropManualMemoization";
-import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
+import { isMutableAtInstruction } from "../ReactiveScopes/InferReactiveScopeVariables";
 import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
@@ -146,13 +146,9 @@ function compareDeps(
   const rootsEqual =
     (inferred.root.kind === "Global" &&
       source.root.kind === "Global" &&
-      inferred.root.binding.binding.name ===
-        source.root.binding.binding.name) ||
-    ((inferred.root.kind === "NamedLocal" ||
-      inferred.root.kind === "InlinedGlobal") &&
-      (source.root.kind === "NamedLocal" ||
-        source.root.kind === "InlinedGlobal") &&
-      source.root.kind === inferred.root.kind &&
+      inferred.root.identifierName === source.root.identifierName) ||
+    (inferred.root.kind === "NamedLocal" &&
+      source.root.kind === "NamedLocal" &&
       inferred.root.value.identifier.id === source.root.value.identifier.id);
   if (!rootsEqual) {
     return CompareDependencyResult.RootDifference;
@@ -382,8 +378,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
     if (
       state.manualMemoState != null &&
-      state.manualMemoState.depsFromSource != null &&
-      !scopeBlock.scope.source
+      state.manualMemoState.depsFromSource != null
     ) {
       for (const dep of scopeBlock.scope.dependencies) {
         validateInferredDep(
@@ -469,7 +464,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         instruction.value as InstructionValue
       )) {
         if (
-          isMutable(instruction as Instruction, value) ||
+          isMutableAtInstruction(instruction as Instruction, value) ||
           (isDecl && isUnmemoized(value.identifier, this.scopes))
         ) {
           state.errors.push({
