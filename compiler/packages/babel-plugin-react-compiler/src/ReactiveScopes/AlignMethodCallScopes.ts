@@ -9,6 +9,7 @@ import {
   HIRFunction,
   IdentifierId,
   ReactiveScope,
+  isRangeMutable,
   makeInstructionId,
 } from "../HIR";
 import DisjointSet from "../Utils/DisjointSet";
@@ -69,10 +70,19 @@ export function alignMethodCallScopes(fn: HIRFunction): void {
       const mappedScope = scopeMapping.get(instr.lvalue.identifier.id);
       if (mappedScope !== undefined) {
         instr.lvalue.identifier.scope = mappedScope;
+        if (
+          mappedScope != null &&
+          isRangeMutable(instr.lvalue.identifier.mutableRange)
+        ) {
+          instr.lvalue.identifier.mutableRange = mappedScope.range;
+        }
       } else if (instr.lvalue.identifier.scope !== null) {
         const mergedScope = mergedScopes.find(instr.lvalue.identifier.scope);
         if (mergedScope != null) {
           instr.lvalue.identifier.scope = mergedScope;
+          if (isRangeMutable(instr.lvalue.identifier.mutableRange)) {
+            instr.lvalue.identifier.mutableRange = mergedScope.range;
+          }
         }
       }
     }

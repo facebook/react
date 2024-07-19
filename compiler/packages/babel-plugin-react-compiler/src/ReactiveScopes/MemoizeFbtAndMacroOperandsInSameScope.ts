@@ -7,10 +7,12 @@
 
 import {
   HIRFunction,
+  Identifier,
   IdentifierId,
   makeInstructionId,
   Place,
   ReactiveValue,
+  isRangeMutable,
 } from "../HIR";
 import { eachReactiveValueOperand } from "./visitors";
 
@@ -134,6 +136,9 @@ function visit(
          */
         for (const operand of eachReactiveValueOperand(value)) {
           operand.identifier.scope = fbtScope;
+          if (isRangeMutable(operand.identifier.mutableRange)) {
+            operand.identifier.mutableRange = fbtScope.range;
+          }
 
           // Expand the jsx element's range to account for its operands
           fbtScope.range.start = makeInstructionId(
@@ -167,6 +172,9 @@ function visit(
             continue;
           }
           operand.identifier.scope = fbtScope;
+          if (isRangeMutable(operand.identifier.mutableRange)) {
+            operand.identifier.mutableRange = fbtScope.range;
+          }
 
           // Expand the jsx element's range to account for its operands
           fbtScope.range.start = makeInstructionId(

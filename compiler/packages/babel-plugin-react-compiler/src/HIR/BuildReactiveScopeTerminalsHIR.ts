@@ -9,10 +9,74 @@ import {
   GotoVariant,
   HIRFunction,
   InstructionId,
+  MutableRange,
+  Place,
   ReactiveScope,
   ReactiveScopeTerminal,
   ScopeId,
 } from "./HIR";
+import { printPlace } from "./PrintHIR";
+import {
+  eachInstructionLValue,
+  eachInstructionOperand,
+  eachTerminalOperand,
+} from "./visitors";
+
+export function assertMutableRangesAreAlwaysScopes(fn: HIRFunction): void {
+  const scopeRanges: Set<MutableRange> = new Set();
+
+  for (const [_, block] of fn.body.blocks) {
+    if (
+      block.terminal.kind === "scope" ||
+      block.terminal.kind === "pruned-scope"
+    ) {
+      scopeRanges.add(block.terminal.scope.range);
+    }
+  }
+
+  const validate = (place: Place): void => {
+    if (
+      place.identifier.mutableRange.end >
+      place.identifier.mutableRange.start + 1
+    ) {
+      if (scopeRanges.size !== 0) {
+        CompilerError.invariant(
+          scopeRanges.has(place.identifier.mutableRange),
+          {
+            reason: "Mutable range not found in scope ranges!",
+            description: `${printPlace(place)}`,
+            loc: place.loc,
+          }
+        );
+      }
+      if (place.identifier.scope != null) {
+        // Useful for debugging before we build reactive scope terminals
+        CompilerError.invariant(
+          place.identifier.scope.range === place.identifier.mutableRange,
+          {
+            reason: "Mutable range inconsistent with range of attached scope",
+            description: `${printPlace(place)}`,
+            loc: place.loc,
+          }
+        );
+      }
+    }
+  };
+
+  for (const [_, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      for (const place of eachInstructionLValue(instr)) {
+        validate(place);
+      }
+      for (const place of eachInstructionOperand(instr)) {
+        validate(place);
+      }
+    }
+    for (const place of eachTerminalOperand(block.terminal)) {
+      validate(place);
+    }
+  }
+}
 
 /**
  * This pass assumes that all program blocks are properly nested with respect to fallthroughs
