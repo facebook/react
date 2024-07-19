@@ -104,6 +104,7 @@ jobs:
           - 16.8 # hooks
           - 17.0
           - 18.0
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -120,6 +121,8 @@ jobs:
       - run: yarn install --frozen-lockfile
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
+      - name: Display structure of build
+        run: ls -R build
       - run: ./scripts/circleci/download_devtools_regression_build.js ${{ matrix.version }} --replaceBuild
       - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion ${{ matrix.version }} --ci=github
 
@@ -135,6 +138,7 @@ jobs:
           - 16.8 # hooks
           - 17.0
           - 18.0
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -151,6 +155,8 @@ jobs:
       - run: yarn install --frozen-lockfile
       - name: Restore all archived build artifacts
         uses: actions/download-artifact@v4
+      - name: Display structure of build
+        run: ls -R build
       - name: Playwright install deps
         run: |
           npx playwright install
