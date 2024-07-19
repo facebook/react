@@ -162,6 +162,7 @@ jobs:
           npx playwright install
           sudo npx playwright install-deps
       - run: ./scripts/circleci/download_devtools_regression_build.js ${{ matrix.version }}
+      - run: ls -R build-regression
       - run: ./scripts/circleci/run_devtools_e2e_tests.js ${{ matrix.version }}
         env:
           RELEASE_CHANNEL: experimental
