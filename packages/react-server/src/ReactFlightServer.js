@@ -618,7 +618,7 @@ function serializeThenable(
     task.keyPath, // the server component sequence continues through Promise-as-a-child.
     task.implicitSlot,
     request.abortableTasks,
-    __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+    __DEV__ ? task.debugOwner : null,
     __DEV__ && enableOwnerStacks ? task.debugStack : null,
     __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
@@ -750,7 +750,7 @@ function serializeReadableStream(
     task.keyPath,
     task.implicitSlot,
     request.abortableTasks,
-    __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+    __DEV__ ? task.debugOwner : null,
     __DEV__ && enableOwnerStacks ? task.debugStack : null,
     __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
@@ -849,7 +849,7 @@ function serializeAsyncIterable(
     task.keyPath,
     task.implicitSlot,
     request.abortableTasks,
-    __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+    __DEV__ ? task.debugOwner : null,
     __DEV__ && enableOwnerStacks ? task.debugStack : null,
     __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
@@ -1572,7 +1572,7 @@ function outlineTask(request: Request, task: Task): ReactJSONValue {
     task.keyPath, // unlike outlineModel this one carries along context
     task.implicitSlot,
     request.abortableTasks,
-    __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+    __DEV__ ? task.debugOwner : null,
     __DEV__ && enableOwnerStacks ? task.debugStack : null,
     __DEV__ && enableOwnerStacks ? task.debugTask : null,
   );
@@ -1799,8 +1799,8 @@ function createTask(
   >): any);
   if (__DEV__) {
     task.environmentName = request.environmentName();
+    task.debugOwner = debugOwner;
     if (enableOwnerStacks) {
-      task.debugOwner = debugOwner;
       task.debugStack = debugStack;
       task.debugTask = debugTask;
     }
@@ -2167,7 +2167,7 @@ function renderModel(
           task.keyPath,
           task.implicitSlot,
           request.abortableTasks,
-          __DEV__ && enableOwnerStacks ? task.debugOwner : null,
+          __DEV__ ? task.debugOwner : null,
           __DEV__ && enableOwnerStacks ? task.debugStack : null,
           __DEV__ && enableOwnerStacks ? task.debugTask : null,
         );
