@@ -24,7 +24,7 @@ describe('Timeline profiler', () => {
   let utils;
   let assertLog;
   let waitFor;
-
+  let waitForPaint;
   describe('User Timing API', () => {
     let currentlyNotClearedMarks;
     let registeredMarks;
@@ -75,6 +75,8 @@ describe('Timeline profiler', () => {
             markOptions.startTime++;
           }
         },
+        measure() {},
+        clearMeasures() {},
       };
     }
 
@@ -101,7 +103,7 @@ describe('Timeline profiler', () => {
       const InternalTestUtils = require('internal-test-utils');
       assertLog = InternalTestUtils.assertLog;
       waitFor = InternalTestUtils.waitFor;
-
+      waitForPaint = InternalTestUtils.waitForPaint;
       setPerformanceMock =
         require('react-devtools-shared/src/backend/profilingHooks').setPerformanceMock_ONLY_FOR_TESTING;
       setPerformanceMock(createUserTimingPolyfill());
@@ -1301,6 +1303,8 @@ describe('Timeline profiler', () => {
             const data = await preprocessData(testMarks);
             const event = data.nativeEvents.find(({type}) => type === 'click');
             expect(event.warning).toBe(null);
+
+            await waitForPaint([]);
           });
 
           // @reactVersion >= 18.0
