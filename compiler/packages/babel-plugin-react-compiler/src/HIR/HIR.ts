@@ -1270,6 +1270,10 @@ export type AbstractValue = {
   context: ReadonlySet<Place>;
 };
 
+export function isRangeMutable(range: MutableRange): boolean {
+  return range.end > range.start + 1;
+}
+
 /**
  * The reason for the kind of a value.
  */

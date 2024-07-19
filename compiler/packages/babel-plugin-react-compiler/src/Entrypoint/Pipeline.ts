@@ -98,6 +98,7 @@ import {
 } from "../Validation";
 import { validateLocalsNotReassignedAfterRender } from "../Validation/ValidateLocalsNotReassignedAfterRender";
 import { outlineFunctions } from "../Optimization/OutlineFunctions";
+import { assertMutableRangesAreAlwaysScopes } from "../HIR/BuildReactiveScopeTerminalsHIR";
 
 export type CompilerPipelineValue =
   | { kind: "ast"; name: string; value: CodegenFunction }
@@ -298,6 +299,8 @@ function* runWithEnvironment(
       name: "BuildReactiveScopeTerminalsHIR",
       value: hir,
     });
+
+    assertMutableRangesAreAlwaysScopes(hir);
 
     assertValidBlockNesting(hir);
 

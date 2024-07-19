@@ -11,6 +11,7 @@ import {
   HIRFunction,
   Identifier,
   ReactiveScope,
+  isRangeMutable,
   makeInstructionId,
 } from "../HIR";
 import { eachInstructionValueOperand } from "../HIR/visitors";
@@ -93,6 +94,9 @@ export function alignObjectMethodScopes(fn: HIRFunction): void {
         const root = scopeGroupsMap.get(identifier.scope);
         if (root != null) {
           identifier.scope = root;
+          if (isRangeMutable(identifier.mutableRange)) {
+            identifier.mutableRange = root.range;
+          }
         }
         // otherwise, this identifier's scope was not affected by this pass
       }

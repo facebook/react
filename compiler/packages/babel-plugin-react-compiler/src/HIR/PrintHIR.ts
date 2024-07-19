@@ -35,7 +35,7 @@ import type {
   Terminal,
   Type,
 } from "./HIR";
-import { GotoVariant, InstructionKind } from "./HIR";
+import { GotoVariant, InstructionKind, isRangeMutable } from "./HIR";
 
 export type Options = {
   indent: number;
@@ -716,10 +716,6 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
   return value;
 }
 
-function isMutable(range: MutableRange): boolean {
-  return range.end > range.start + 1;
-}
-
 const DEBUG_MUTABLE_RANGES = false;
 function printMutableRange(identifier: Identifier): string {
   if (DEBUG_MUTABLE_RANGES) {
@@ -732,11 +728,11 @@ function printMutableRange(identifier: Identifier): string {
     ) {
       return `[${range.start}:${range.end}] scope=[${scopeRange.start}:${scopeRange.end}]`;
     }
-    return isMutable(range) ? `[${range.start}:${range.end}]` : "";
+    return isRangeMutable(range) ? `[${range.start}:${range.end}]` : "";
   }
   // in non-debug mode, prefer the scope range if it exists
   const range = identifier.scope?.range ?? identifier.mutableRange;
-  return isMutable(range) ? `[${range.start}:${range.end}]` : "";
+  return isRangeMutable(range) ? `[${range.start}:${range.end}]` : "";
 }
 
 export function printLValue(lval: LValue): string {

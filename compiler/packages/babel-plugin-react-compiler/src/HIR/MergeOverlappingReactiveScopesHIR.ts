@@ -3,6 +3,7 @@ import {
   InstructionId,
   Place,
   ReactiveScope,
+  isRangeMutable,
   makeInstructionId,
 } from ".";
 import { getPlaceScope } from "../ReactiveScopes/BuildReactiveBlocks";
@@ -124,6 +125,9 @@ export function mergeOverlappingReactiveScopesHIR(fn: HIRFunction): void {
     const nextScope = joinedScopes.find(originalScope);
     if (nextScope !== null && nextScope !== originalScope) {
       place.identifier.scope = nextScope;
+      if (isRangeMutable(place.identifier.mutableRange)) {
+        place.identifier.mutableRange = nextScope.range;
+      }
     }
   }
 }
