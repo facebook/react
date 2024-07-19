@@ -10,7 +10,6 @@ import {
   HIRFunction,
   InstructionId,
   makeInstructionId,
-  Place,
   ReactiveScope,
   ReactiveScopeTerminal,
   ScopeId,
@@ -20,11 +19,7 @@ import {
   markPredecessors,
   reversePostorderBlocks,
 } from './HIRBuilder';
-import {
-  eachInstructionLValue,
-  eachInstructionValueOperand,
-  eachTerminalOperand,
-} from './visitors';
+import {eachInstructionLValue} from './visitors';
 
 /**
  * This pass assumes that all program blocks are properly nested with respect to fallthroughs
@@ -186,9 +181,11 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const instruction of block.instructions) {
       for (const lvalue of eachInstructionLValue(instruction)) {
-        // Any lvalues whose mutable range was a single instruction must have
-        // started at the current instruction, so update the range to match
-        // the instruction's new id
+        /*
+         * Any lvalues whose mutable range was a single instruction must have
+         * started at the current instruction, so update the range to match
+         * the instruction's new id
+         */
         if (
           lvalue.identifier.mutableRange.end ===
           lvalue.identifier.mutableRange.start + 1
@@ -202,8 +199,10 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
     }
     const terminal = block.terminal;
     if (terminal.kind === 'scope' || terminal.kind === 'pruned-scope') {
-      // Scope ranges should always align to start at the 'scope' terminal
-      // and end at the first instruction of the fallthrough block
+      /*
+       * Scope ranges should always align to start at the 'scope' terminal
+       * and end at the first instruction of the fallthrough block
+       */
       const fallthroughBlock = fn.body.blocks.get(terminal.fallthrough)!;
       const firstId =
         fallthroughBlock.instructions[0]?.id ?? fallthroughBlock.terminal.id;

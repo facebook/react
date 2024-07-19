@@ -22,7 +22,7 @@ import {
   ScopeId,
   SourceLocation,
 } from '../HIR';
-import {printManualMemoDependency, printPlace} from '../HIR/PrintHIR';
+import {printManualMemoDependency} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
