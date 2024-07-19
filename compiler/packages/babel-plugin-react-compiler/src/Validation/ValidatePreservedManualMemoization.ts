@@ -22,7 +22,7 @@ import {
   ScopeId,
   SourceLocation,
 } from '../HIR';
-import {printManualMemoDependency} from '../HIR/PrintHIR';
+import {printManualMemoDependency, printPlace} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
@@ -470,7 +470,6 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           state.errors.push({
             reason:
               'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly',
-            description: null,
             severity: ErrorSeverity.CannotPreserveMemoization,
             loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
             suggestions: null,
