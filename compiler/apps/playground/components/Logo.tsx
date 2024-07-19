@@ -7,14 +7,13 @@
 
 // https://github.com/reactjs/reactjs.org/blob/main/beta/src/components/Logo.tsx
 
-export default function Logo(props: JSX.IntrinsicElements["svg"]) {
+export default function Logo(props: JSX.IntrinsicElements['svg']) {
   return (
     <svg
       viewBox="0 0 410 369"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
+      {...props}>
       <path
         d="M204.995 224.552C226.56 224.552 244.042 207.07 244.042 185.506C244.042 163.941 226.56 146.459 204.995 146.459C183.43 146.459 165.948 163.941 165.948 185.506C165.948 207.07 183.43 224.552 204.995 224.552Z"
         fill="currentColor"

@@ -2,13 +2,13 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
 function hoisting() {
   function onClick(x) {
     return x + bar.baz;
   }
-  const bar = { baz: 1 };
+  const bar = {baz: 1};
 
   return <Stringify onClick={onClick} />;
 }

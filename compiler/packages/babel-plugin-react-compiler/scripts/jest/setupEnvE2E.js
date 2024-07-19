@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const ReactCompilerRuntime = require("react/compiler-runtime");
+const ReactCompilerRuntime = require('react/compiler-runtime');
 
 /*
  * Our e2e babel transform currently only compiles functions, not programs.

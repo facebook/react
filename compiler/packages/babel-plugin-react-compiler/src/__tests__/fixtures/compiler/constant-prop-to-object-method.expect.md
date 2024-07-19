@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Foo() {
   const CONSTANT = 1;

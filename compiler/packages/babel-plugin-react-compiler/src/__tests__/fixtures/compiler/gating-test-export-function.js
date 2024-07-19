@@ -1,6 +1,6 @@
 // @gating @compilationMode(annotation)
 export function Bar(props) {
-  "use forget";
+  'use forget';
   return <div>{props.bar}</div>;
 }
 
@@ -9,6 +9,6 @@ export function NoForget(props) {
 }
 
 export function Foo(props) {
-  "use forget";
+  'use forget';
   return <Foo>{props.bar}</Foo>;
 }

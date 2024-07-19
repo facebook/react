@@ -9,7 +9,7 @@ function Component(props) {
   if (props.cond) {
     y = {};
   } else {
-    y = { a: props.a };
+    y = {a: props.a};
   }
   // This should be inferred as `<store> y` s.t. `x` can still
   // be independently memoized. *But* this also must properly
@@ -22,7 +22,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: false, a: "a!" }],
+  params: [{cond: false, a: 'a!'}],
 };
 
 ```

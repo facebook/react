@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { transformFromAstSync } from "@babel/core";
+import {transformFromAstSync} from '@babel/core';
 // @ts-expect-error: no types available
-import PluginProposalPrivateMethods from "@babel/plugin-proposal-private-methods";
-import type { SourceLocation as BabelSourceLocation } from "@babel/types";
+import PluginProposalPrivateMethods from '@babel/plugin-proposal-private-methods';
+import type {SourceLocation as BabelSourceLocation} from '@babel/types';
 import BabelPluginReactCompiler, {
   CompilerErrorDetailOptions,
   CompilerSuggestionOperation,
@@ -16,12 +16,12 @@ import BabelPluginReactCompiler, {
   parsePluginOptions,
   validateEnvironmentConfig,
   type PluginOptions,
-} from "babel-plugin-react-compiler/src";
-import { Logger } from "babel-plugin-react-compiler/src/Entrypoint";
-import type { Rule } from "eslint";
-import * as HermesParser from "hermes-parser";
+} from 'babel-plugin-react-compiler/src';
+import {Logger} from 'babel-plugin-react-compiler/src/Entrypoint';
+import type {Rule} from 'eslint';
+import * as HermesParser from 'hermes-parser';
 
-type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetailOptions, "loc"> & {
+type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetailOptions, 'loc'> & {
   loc: BabelSourceLocation;
 };
 
@@ -36,17 +36,17 @@ const DEFAULT_REPORTABLE_LEVELS = new Set([
 let reportableLevels = DEFAULT_REPORTABLE_LEVELS;
 
 function isReportableDiagnostic(
-  detail: CompilerErrorDetailOptions
+  detail: CompilerErrorDetailOptions,
 ): detail is CompilerErrorDetailWithLoc {
   return (
     reportableLevels.has(detail.severity) &&
     detail.loc != null &&
-    typeof detail.loc !== "symbol"
+    typeof detail.loc !== 'symbol'
   );
 }
 
 function makeSuggestions(
-  detail: CompilerErrorDetailOptions
+  detail: CompilerErrorDetailOptions,
 ): Array<Rule.SuggestionReportDescriptor> {
   let suggest: Array<Rule.SuggestionReportDescriptor> = [];
   if (Array.isArray(detail.suggestions)) {
@@ -58,7 +58,7 @@ function makeSuggestions(
             fix(fixer) {
               return fixer.insertTextBeforeRange(
                 suggestion.range,
-                suggestion.text
+                suggestion.text,
               );
             },
           });
@@ -69,7 +69,7 @@ function makeSuggestions(
             fix(fixer) {
               return fixer.insertTextAfterRange(
                 suggestion.range,
-                suggestion.text
+                suggestion.text,
               );
             },
           });
@@ -91,7 +91,7 @@ function makeSuggestions(
           });
           break;
         default:
-          assertExhaustive(suggestion, "Unhandled suggestion operation");
+          assertExhaustive(suggestion, 'Unhandled suggestion operation');
       }
     }
   }
@@ -100,21 +100,21 @@ function makeSuggestions(
 
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
-  compilationMode: "infer",
-  panicThreshold: "none",
+  compilationMode: 'infer',
+  panicThreshold: 'none',
 };
 
 const rule: Rule.RuleModule = {
   meta: {
-    type: "problem",
+    type: 'problem',
     docs: {
-      description: "Surfaces diagnostics from React Forget",
+      description: 'Surfaces diagnostics from React Forget',
       recommended: true,
     },
-    fixable: "code",
+    fixable: 'code',
     hasSuggestions: true,
     // validation is done at runtime with zod
-    schema: [{ type: "object", additionalProperties: true }],
+    schema: [{type: 'object', additionalProperties: true}],
   },
   create(context: Rule.RuleContext) {
     // Compat with older versions of eslint
@@ -122,10 +122,10 @@ const rule: Rule.RuleModule = {
     const filename = context.filename ?? context.getFilename();
     const userOpts = context.options[0] ?? {};
     if (
-      userOpts["reportableLevels"] != null &&
-      userOpts["reportableLevels"] instanceof Set
+      userOpts['reportableLevels'] != null &&
+      userOpts['reportableLevels'] instanceof Set
     ) {
-      reportableLevels = userOpts["reportableLevels"];
+      reportableLevels = userOpts['reportableLevels'];
     } else {
       reportableLevels = DEFAULT_REPORTABLE_LEVELS;
     }
@@ -138,11 +138,11 @@ const rule: Rule.RuleModule = {
      */
     let __unstable_donotuse_reportAllBailouts: boolean = false;
     if (
-      userOpts["__unstable_donotuse_reportAllBailouts"] != null &&
-      typeof userOpts["__unstable_donotuse_reportAllBailouts"] === "boolean"
+      userOpts['__unstable_donotuse_reportAllBailouts'] != null &&
+      typeof userOpts['__unstable_donotuse_reportAllBailouts'] === 'boolean'
     ) {
       __unstable_donotuse_reportAllBailouts =
-        userOpts["__unstable_donotuse_reportAllBailouts"];
+        userOpts['__unstable_donotuse_reportAllBailouts'];
     }
 
     const options: PluginOptions = {
@@ -153,14 +153,14 @@ const rule: Rule.RuleModule = {
     options.logger = {
       logEvent: (filename, event): void => {
         userLogger?.logEvent(filename, event);
-        if (event.kind === "CompileError") {
+        if (event.kind === 'CompileError') {
           const detail = event.detail;
           const suggest = makeSuggestions(detail);
           if (__unstable_donotuse_reportAllBailouts && event.fnLoc != null) {
             const locStr =
-              detail.loc != null && typeof detail.loc !== "symbol"
+              detail.loc != null && typeof detail.loc !== 'symbol'
                 ? ` (@:${detail.loc.start.line}:${detail.loc.start.column})`
-                : "";
+                : '';
             context.report({
               message: `[ReactCompilerBailout] ${detail.reason}${locStr}`,
               loc: event.fnLoc,
@@ -171,12 +171,12 @@ const rule: Rule.RuleModule = {
           if (!isReportableDiagnostic(detail)) {
             return;
           }
-          if (hasFlowSuppression(detail.loc, "react-rule-hook")) {
+          if (hasFlowSuppression(detail.loc, 'react-rule-hook')) {
             // If Flow already caught this error, we don't need to report it again.
             return;
           }
           const loc =
-            detail.loc == null || typeof detail.loc == "symbol"
+            detail.loc == null || typeof detail.loc == 'symbol'
               ? event.fnLoc
               : detail.loc;
           if (loc != null) {
@@ -192,20 +192,20 @@ const rule: Rule.RuleModule = {
 
     try {
       options.environment = validateEnvironmentConfig(
-        options.environment ?? {}
+        options.environment ?? {},
       );
     } catch (err) {
-      options.logger?.logEvent("", err);
+      options.logger?.logEvent('', err);
     }
 
     function hasFlowSuppression(
       nodeLoc: BabelSourceLocation,
-      suppression: string
+      suppression: string,
     ): boolean {
       const sourceCode = context.getSourceCode();
       const comments = sourceCode.getAllComments();
       const flowSuppressionRegex = new RegExp(
-        "\\$FlowFixMe\\[" + suppression + "\\]"
+        '\\$FlowFixMe\\[' + suppression + '\\]',
       );
       for (const commentNode of comments) {
         if (
@@ -219,13 +219,13 @@ const rule: Rule.RuleModule = {
     }
 
     let babelAST;
-    if (filename.endsWith(".tsx") || filename.endsWith(".ts")) {
+    if (filename.endsWith('.tsx') || filename.endsWith('.ts')) {
       try {
-        const { parse: babelParse } = require("@babel/parser");
+        const {parse: babelParse} = require('@babel/parser');
         babelAST = babelParse(sourceCode, {
           filename,
-          sourceType: "unambiguous",
-          plugins: ["typescript", "jsx"],
+          sourceType: 'unambiguous',
+          plugins: ['typescript', 'jsx'],
         });
       } catch {
         /* empty */
@@ -236,7 +236,7 @@ const rule: Rule.RuleModule = {
           babel: true,
           enableExperimentalComponentSyntax: true,
           sourceFilename: filename,
-          sourceType: "module",
+          sourceType: 'module',
         });
       } catch {
         /* empty */
@@ -250,10 +250,10 @@ const rule: Rule.RuleModule = {
           highlightCode: false,
           retainLines: true,
           plugins: [
-            [PluginProposalPrivateMethods, { loose: true }],
+            [PluginProposalPrivateMethods, {loose: true}],
             [BabelPluginReactCompiler, options],
           ],
-          sourceType: "module",
+          sourceType: 'module',
           configFile: false,
           babelrc: false,
         });

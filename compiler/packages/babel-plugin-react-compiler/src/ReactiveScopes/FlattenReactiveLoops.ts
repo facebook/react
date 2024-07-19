@@ -11,13 +11,13 @@ import {
   ReactiveStatement,
   ReactiveTerminal,
   ReactiveTerminalStatement,
-} from "../HIR/HIR";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/HIR';
+import {assertExhaustive} from '../Utils/utils';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Given a reactive function, flattens any scopes contained within a loop construct.
@@ -30,53 +30,53 @@ export function flattenReactiveLoops(fn: ReactiveFunction): void {
 class Transform extends ReactiveFunctionTransform<boolean> {
   override transformScope(
     scope: ReactiveScopeBlock,
-    isWithinLoop: boolean
+    isWithinLoop: boolean,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scope, isWithinLoop);
     if (isWithinLoop) {
       return {
-        kind: "replace",
+        kind: 'replace',
         value: {
-          kind: "pruned-scope",
+          kind: 'pruned-scope',
           scope: scope.scope,
           instructions: scope.instructions,
         },
       };
     } else {
-      return { kind: "keep" };
+      return {kind: 'keep'};
     }
   }
 
   override visitTerminal(
     stmt: ReactiveTerminalStatement<ReactiveTerminal>,
-    isWithinLoop: boolean
+    isWithinLoop: boolean,
   ): void {
     switch (stmt.terminal.kind) {
       // Loop terminals flatten nested scopes
-      case "do-while":
-      case "while":
-      case "for":
-      case "for-of":
-      case "for-in": {
+      case 'do-while':
+      case 'while':
+      case 'for':
+      case 'for-of':
+      case 'for-in': {
         this.traverseTerminal(stmt, true);
         break;
       }
       // Non-loop terminals passthrough is contextual, inherits the parent isWithinScope
-      case "try":
-      case "label":
-      case "break":
-      case "continue":
-      case "if":
-      case "return":
-      case "switch":
-      case "throw": {
+      case 'try':
+      case 'label':
+      case 'break':
+      case 'continue':
+      case 'if':
+      case 'return':
+      case 'switch':
+      case 'throw': {
         this.traverseTerminal(stmt, isWithinLoop);
         break;
       }
       default: {
         assertExhaustive(
           stmt.terminal,
-          `Unexpected terminal kind \`${(stmt.terminal as any).kind}\``
+          `Unexpected terminal kind \`${(stmt.terminal as any).kind}\``,
         );
       }
     }

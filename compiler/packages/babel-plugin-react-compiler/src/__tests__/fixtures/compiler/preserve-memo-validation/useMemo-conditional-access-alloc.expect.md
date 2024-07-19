@@ -3,10 +3,10 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
-import { identity } from "shared-runtime";
+import {useMemo} from 'react';
+import {identity} from 'shared-runtime';
 
-function Component({ propA, propB }) {
+function Component({propA, propB}) {
   return useMemo(() => {
     return {
       value: identity(propB?.x.y),
@@ -17,7 +17,7 @@ function Component({ propA, propB }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ propA: 2, propB: { x: { y: [] } } }],
+  params: [{propA: 2, propB: {x: {y: []}}}],
 };
 
 ```

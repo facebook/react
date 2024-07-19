@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useEffect } from "react";
+import {useEffect} from 'react';
 
 function someGlobal() {}
 function useFoo() {

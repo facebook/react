@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError, ErrorSeverity } from "../CompilerError";
-import { Environment } from "../HIR";
+import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {Environment} from '../HIR';
 import {
   AbstractValue,
   BasicBlock,
@@ -31,14 +31,14 @@ import {
   isObjectType,
   isRefValueType,
   isUseRefType,
-} from "../HIR/HIR";
-import { FunctionSignature } from "../HIR/ObjectShape";
+} from '../HIR/HIR';
+import {FunctionSignature} from '../HIR/ObjectShape';
 import {
   printIdentifier,
   printMixedHIR,
   printPlace,
   printSourceLocation,
-} from "../HIR/PrintHIR";
+} from '../HIR/PrintHIR';
 import {
   eachCallArgument,
   eachInstructionOperand,
@@ -46,12 +46,12 @@ import {
   eachPatternOperand,
   eachTerminalOperand,
   eachTerminalSuccessor,
-} from "../HIR/visitors";
-import { assertExhaustive } from "../Utils/utils";
-import { isEffectHook } from "../Validation/ValidateMemoizedEffectDependencies";
+} from '../HIR/visitors';
+import {assertExhaustive} from '../Utils/utils';
+import {isEffectHook} from '../Validation/ValidateMemoizedEffectDependencies';
 
 const UndefinedValue: InstructionValue = {
-  kind: "Primitive",
+  kind: 'Primitive',
   loc: GeneratedSource,
   value: undefined,
 };
@@ -100,7 +100,7 @@ const UndefinedValue: InstructionValue = {
  */
 export default function inferReferenceEffects(
   fn: HIRFunction,
-  options: { isFunctionExpression: boolean } = { isFunctionExpression: false }
+  options: {isFunctionExpression: boolean} = {isFunctionExpression: false},
 ): void {
   /*
    * Initial state contains function params
@@ -108,7 +108,7 @@ export default function inferReferenceEffects(
    */
   const initialState = InferenceState.empty(fn.env);
   const value: InstructionValue = {
-    kind: "Primitive",
+    kind: 'Primitive',
     loc: fn.loc,
     value: undefined,
   };
@@ -121,7 +121,7 @@ export default function inferReferenceEffects(
   for (const ref of fn.context) {
     // TODO(gsn): This is a hack.
     const value: InstructionValue = {
-      kind: "ObjectExpression",
+      kind: 'ObjectExpression',
       properties: [],
       loc: ref.loc,
     };
@@ -145,10 +145,10 @@ export default function inferReferenceEffects(
         context: new Set(),
       };
 
-  if (fn.fnType === "Component") {
+  if (fn.fnType === 'Component') {
     CompilerError.invariant(fn.params.length <= 2, {
       reason:
-        "Expected React component to have not more than two parameters: one for props and for ref",
+        'Expected React component to have not more than two parameters: one for props and for ref',
       description: null,
       loc: fn.loc,
       suggestions: null,
@@ -160,17 +160,17 @@ export default function inferReferenceEffects(
       inferParam(props, initialState, paramKind);
     }
     if (ref) {
-      if (ref.kind === "Identifier") {
+      if (ref.kind === 'Identifier') {
         place = ref;
         value = {
-          kind: "ObjectExpression",
+          kind: 'ObjectExpression',
           properties: [],
           loc: ref.loc,
         };
       } else {
         place = ref.place;
         value = {
-          kind: "ObjectExpression",
+          kind: 'ObjectExpression',
           properties: [],
           loc: ref.place.loc,
         };
@@ -238,13 +238,13 @@ export default function inferReferenceEffects(
   }
 
   if (!options.isFunctionExpression) {
-    functionEffects.forEach((eff) => {
+    functionEffects.forEach(eff => {
       switch (eff.kind) {
-        case "ReactMutation":
-        case "GlobalMutation": {
+        case 'ReactMutation':
+        case 'GlobalMutation': {
           CompilerError.throw(eff.error);
         }
-        case "ContextMutation": {
+        case 'ContextMutation': {
           CompilerError.throw({
             severity: ErrorSeverity.Invariant,
             reason: `Unexpected ContextMutation in top-level function effects`,
@@ -254,7 +254,7 @@ export default function inferReferenceEffects(
         default:
           assertExhaustive(
             eff,
-            `Unexpected function effect kind \`${(eff as any).kind}\``
+            `Unexpected function effect kind \`${(eff as any).kind}\``,
           );
       }
     });
@@ -279,7 +279,7 @@ class InferenceState {
   constructor(
     env: Environment,
     values: Map<InstructionValue, AbstractValue>,
-    variables: Map<IdentifierId, Set<InstructionValue>>
+    variables: Map<IdentifierId, Set<InstructionValue>>,
   ) {
     this.#env = env;
     this.#values = values;
@@ -292,9 +292,9 @@ class InferenceState {
 
   // (Re)initializes a @param value with its default @param kind.
   initialize(value: InstructionValue, kind: AbstractValue): void {
-    CompilerError.invariant(value.kind !== "LoadLocal", {
+    CompilerError.invariant(value.kind !== 'LoadLocal', {
       reason:
-        "Expected all top-level identifiers to be defined as variables, not values",
+        'Expected all top-level identifiers to be defined as variables, not values',
       description: null,
       loc: value.loc,
       suggestions: null,
@@ -353,7 +353,7 @@ class InferenceState {
   define(place: Place, value: InstructionValue): void {
     CompilerError.invariant(this.#values.has(value), {
       reason: `Expected value to be initialized at '${printSourceLocation(
-        value.loc
+        value.loc,
       )}'`,
       description: null,
       loc: value.loc,
@@ -382,12 +382,12 @@ class InferenceState {
     place: Place,
     effectKind: Effect,
     reason: ValueReason,
-    functionEffects: Array<FunctionEffect>
+    functionEffects: Array<FunctionEffect>,
   ): void {
     const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
       CompilerError.invariant(effectKind !== Effect.Store, {
-        reason: "[InferReferenceEffects] Unhandled store reference effect",
+        reason: '[InferReferenceEffects] Unhandled store reference effect',
         description: null,
         loc: place.loc,
         suggestions: null,
@@ -402,14 +402,14 @@ class InferenceState {
     // Propagate effects of function expressions to the outer (ie current) effect context
     for (const value of values) {
       if (
-        (value.kind === "FunctionExpression" ||
-          value.kind === "ObjectMethod") &&
+        (value.kind === 'FunctionExpression' ||
+          value.kind === 'ObjectMethod') &&
         value.loweredFunc.func.effects != null
       ) {
         for (const effect of value.loweredFunc.func.effects) {
           if (
-            effect.kind === "GlobalMutation" ||
-            effect.kind === "ReactMutation"
+            effect.kind === 'GlobalMutation' ||
+            effect.kind === 'ReactMutation'
           ) {
             // Known effects are always propagated upwards
             functionEffects.push(effect);
@@ -429,12 +429,12 @@ class InferenceState {
             for (const place of effect.places) {
               if (this.isDefined(place)) {
                 const replayedEffect = this.reference(
-                  { ...place, loc: effect.loc },
+                  {...place, loc: effect.loc},
                   effect.effect,
-                  reason
+                  reason,
                 );
                 if (replayedEffect != null) {
-                  if (replayedEffect.kind === "ContextMutation") {
+                  if (replayedEffect.kind === 'ContextMutation') {
                     // Case 1, still a context value so propagate the original effect
                     functionEffects.push(effect);
                   } else {
@@ -457,11 +457,11 @@ class InferenceState {
   reference(
     place: Place,
     effectKind: Effect,
-    reason: ValueReason
+    reason: ValueReason,
   ): FunctionEffect | null {
     const values = this.#variables.get(place.identifier.id);
     CompilerError.invariant(values !== undefined, {
-      reason: "[InferReferenceEffects] Expected value to be initialized",
+      reason: '[InferReferenceEffects] Expected value to be initialized',
       description: null,
       loc: place.loc,
       suggestions: null,
@@ -483,7 +483,7 @@ class InferenceState {
             reason: reasonSet,
             context: new Set(),
           };
-          values.forEach((value) => {
+          values.forEach(value => {
             this.#values.set(value, {
               kind: ValueKind.Frozen,
               reason: reasonSet,
@@ -494,13 +494,13 @@ class InferenceState {
               this.#env.config.enablePreserveExistingMemoizationGuarantees ||
               this.#env.config.enableTransitivelyFreezeFunctionExpressions
             ) {
-              if (value.kind === "FunctionExpression") {
+              if (value.kind === 'FunctionExpression') {
                 for (const operand of eachInstructionValueOperand(value)) {
                   this.referenceAndRecordEffects(
                     operand,
                     Effect.Freeze,
                     ValueReason.Other,
-                    []
+                    [],
                   );
                 }
               }
@@ -530,7 +530,7 @@ class InferenceState {
           // no-op: refs are validate via ValidateNoRefAccessInRender
         } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
-            kind: "ContextMutation",
+            kind: 'ContextMutation',
             loc: place.loc,
             effect: effectKind,
             places:
@@ -548,13 +548,13 @@ class InferenceState {
             kind:
               valueKind.reason.size === 1 &&
               valueKind.reason.has(ValueReason.Global)
-                ? "GlobalMutation"
-                : "ReactMutation",
+                ? 'GlobalMutation'
+                : 'ReactMutation',
             error: {
               reason,
               description:
                 place.identifier.name !== null &&
-                place.identifier.name.kind === "named"
+                place.identifier.name.kind === 'named'
                   ? `Found mutation of \`${place.identifier.name.value}\``
                   : null,
               loc: place.loc,
@@ -574,7 +574,7 @@ class InferenceState {
           // no-op: refs are validate via ValidateNoRefAccessInRender
         } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
-            kind: "ContextMutation",
+            kind: 'ContextMutation',
             loc: place.loc,
             effect: effectKind,
             places:
@@ -592,13 +592,13 @@ class InferenceState {
             kind:
               valueKind.reason.size === 1 &&
               valueKind.reason.has(ValueReason.Global)
-                ? "GlobalMutation"
-                : "ReactMutation",
+                ? 'GlobalMutation'
+                : 'ReactMutation',
             error: {
               reason,
               description:
                 place.identifier.name !== null &&
-                place.identifier.name.kind === "named"
+                place.identifier.name.kind === 'named'
                   ? `Found mutation of \`${place.identifier.name.value}\``
                   : null,
               loc: place.loc,
@@ -639,7 +639,7 @@ class InferenceState {
       case Effect.Unknown: {
         CompilerError.invariant(false, {
           reason:
-            "Unexpected unknown effect, expected to infer a precise effect kind",
+            'Unexpected unknown effect, expected to infer a precise effect kind',
           description: null,
           loc: place.loc,
           suggestions: null,
@@ -648,12 +648,12 @@ class InferenceState {
       default: {
         assertExhaustive(
           effectKind,
-          `Unexpected reference kind \`${effectKind as any as string}\``
+          `Unexpected reference kind \`${effectKind as any as string}\``,
         );
       }
     }
     CompilerError.invariant(effect !== null, {
-      reason: "Expected effect to be set",
+      reason: 'Expected effect to be set',
       description: null,
       loc: place.loc,
       suggestions: null,
@@ -727,7 +727,7 @@ class InferenceState {
       return new InferenceState(
         this.#env,
         nextValues ?? new Map(this.#values),
-        nextVariables ?? new Map(this.#variables)
+        nextVariables ?? new Map(this.#variables),
       );
     }
   }
@@ -741,7 +741,7 @@ class InferenceState {
     return new InferenceState(
       this.#env,
       new Map(this.#values),
-      new Map(this.#variables)
+      new Map(this.#variables),
     );
   }
 
@@ -750,7 +750,7 @@ class InferenceState {
    * object so that it can printed as JSON.
    */
   debug(): any {
-    const result: any = { values: {}, variables: {} };
+    const result: any = {values: {}, variables: {}};
     const objects: Map<InstructionValue, number> = new Map();
     function identify(value: InstructionValue): number {
       let id = objects.get(value);
@@ -762,7 +762,7 @@ class InferenceState {
     }
     for (const [value, kind] of this.#values) {
       const id = identify(value);
-      result.values[id] = { kind, value: printMixedHIR(value) };
+      result.values[id] = {kind, value: printMixedHIR(value)};
     }
     for (const [variable, values] of this.#variables) {
       result.variables[`$${variable}`] = [...values].map(identify);
@@ -790,21 +790,21 @@ class InferenceState {
 function inferParam(
   param: Place | SpreadPattern,
   initialState: InferenceState,
-  paramKind: AbstractValue
+  paramKind: AbstractValue,
 ): void {
   let value: InstructionValue;
   let place: Place;
-  if (param.kind === "Identifier") {
+  if (param.kind === 'Identifier') {
     place = param;
     value = {
-      kind: "Primitive",
+      kind: 'Primitive',
       loc: param.loc,
       value: undefined,
     };
   } else {
     place = param.place;
     value = {
-      kind: "Primitive",
+      kind: 'Primitive',
       loc: param.place.loc,
       value: undefined,
     };
@@ -908,7 +908,7 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
         reason: `Unexpected value kind in mergeValues()`,
         description: `Found kinds ${a} and ${b}`,
         loc: GeneratedSource,
-      }
+      },
     );
     return ValueKind.Primitive;
   }
@@ -928,7 +928,7 @@ function isSuperset<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
 
 function mergeAbstractValues(
   a: AbstractValue,
-  b: AbstractValue
+  b: AbstractValue,
 ): AbstractValue {
   const kind = mergeValues(a.kind, b.kind);
   if (
@@ -947,7 +947,7 @@ function mergeAbstractValues(
   for (const c of b.context) {
     context.add(c);
   }
-  return { kind, reason, context };
+  return {kind, reason, context};
 }
 
 /*
@@ -958,7 +958,7 @@ function inferBlock(
   env: Environment,
   functionEffects: Array<FunctionEffect>,
   state: InferenceState,
-  block: BasicBlock
+  block: BasicBlock,
 ): void {
   for (const phi of block.phis) {
     state.inferPhi(phi);
@@ -966,11 +966,11 @@ function inferBlock(
 
   for (const instr of block.instructions) {
     const instrValue = instr.value;
-    let effect: { kind: Effect; reason: ValueReason } | null = null;
+    let effect: {kind: Effect; reason: ValueReason} | null = null;
     let lvalueEffect = Effect.ConditionallyMutate;
     let valueKind: AbstractValue;
     switch (instrValue.kind) {
-      case "BinaryExpression": {
+      case 'BinaryExpression': {
         valueKind = {
           kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
@@ -982,7 +982,7 @@ function inferBlock(
         };
         break;
       }
-      case "ArrayExpression": {
+      case 'ArrayExpression': {
         valueKind = hasContextRefOperand(state, instrValue)
           ? {
               kind: ValueKind.Context,
@@ -994,11 +994,11 @@ function inferBlock(
               reason: new Set([ValueReason.Other]),
               context: new Set(),
             };
-        effect = { kind: Effect.Capture, reason: ValueReason.Other };
+        effect = {kind: Effect.Capture, reason: ValueReason.Other};
         lvalueEffect = Effect.Store;
         break;
       }
-      case "NewExpression": {
+      case 'NewExpression': {
         /**
          * For new expressions, we infer a `read` effect on the Class / Function type
          * to avoid extending mutable ranges of locally created classes, e.g.
@@ -1021,7 +1021,7 @@ function inferBlock(
           instrValue.callee,
           Effect.Read,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
 
         for (const operand of eachCallArgument(instrValue.args)) {
@@ -1029,7 +1029,7 @@ function inferBlock(
             operand,
             Effect.ConditionallyMutate,
             ValueReason.Other,
-            functionEffects
+            functionEffects,
           );
         }
 
@@ -1038,7 +1038,7 @@ function inferBlock(
         instr.lvalue.effect = lvalueEffect;
         continue;
       }
-      case "ObjectExpression": {
+      case 'ObjectExpression': {
         valueKind = hasContextRefOperand(state, instrValue)
           ? {
               kind: ValueKind.Context,
@@ -1053,14 +1053,14 @@ function inferBlock(
 
         for (const property of instrValue.properties) {
           switch (property.kind) {
-            case "ObjectProperty": {
-              if (property.key.kind === "computed") {
+            case 'ObjectProperty': {
+              if (property.key.kind === 'computed') {
                 // Object keys must be primitives, so we know they're frozen at this point
                 state.referenceAndRecordEffects(
                   property.key.name,
                   Effect.Freeze,
                   ValueReason.Other,
-                  functionEffects
+                  functionEffects,
                 );
               }
               // Object construction captures but does not modify the key/property values
@@ -1068,24 +1068,24 @@ function inferBlock(
                 property.place,
                 Effect.Capture,
                 ValueReason.Other,
-                functionEffects
+                functionEffects,
               );
               break;
             }
-            case "Spread": {
+            case 'Spread': {
               // Object construction captures but does not modify the key/property values
               state.referenceAndRecordEffects(
                 property.place,
                 Effect.Capture,
                 ValueReason.Other,
-                functionEffects
+                functionEffects,
               );
               break;
             }
             default: {
               assertExhaustive(
                 property,
-                `Unexpected property kind \`${(property as any).kind}\``
+                `Unexpected property kind \`${(property as any).kind}\``,
               );
             }
           }
@@ -1096,16 +1096,16 @@ function inferBlock(
         instr.lvalue.effect = Effect.Store;
         continue;
       }
-      case "UnaryExpression": {
+      case 'UnaryExpression': {
         valueKind = {
           kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
-        effect = { kind: Effect.Read, reason: ValueReason.Other };
+        effect = {kind: Effect.Read, reason: ValueReason.Other};
         break;
       }
-      case "UnsupportedNode": {
+      case 'UnsupportedNode': {
         // TODO: handle other statement kinds
         valueKind = {
           kind: ValueKind.Mutable,
@@ -1114,13 +1114,13 @@ function inferBlock(
         };
         break;
       }
-      case "JsxExpression": {
-        if (instrValue.tag.kind === "Identifier") {
+      case 'JsxExpression': {
+        if (instrValue.tag.kind === 'Identifier') {
           state.referenceAndRecordEffects(
             instrValue.tag,
             Effect.Freeze,
             ValueReason.JsxCaptured,
-            functionEffects
+            functionEffects,
           );
         }
         if (instrValue.children !== null) {
@@ -1129,17 +1129,17 @@ function inferBlock(
               child,
               Effect.Freeze,
               ValueReason.JsxCaptured,
-              functionEffects
+              functionEffects,
             );
           }
         }
         for (const attr of instrValue.props) {
-          if (attr.kind === "JsxSpreadAttribute") {
+          if (attr.kind === 'JsxSpreadAttribute') {
             state.referenceAndRecordEffects(
               attr.argument,
               Effect.Freeze,
               ValueReason.JsxCaptured,
-              functionEffects
+              functionEffects,
             );
           } else {
             const propEffects: Array<FunctionEffect> = [];
@@ -1147,12 +1147,12 @@ function inferBlock(
               attr.place,
               Effect.Freeze,
               ValueReason.JsxCaptured,
-              propEffects
+              propEffects,
             );
             functionEffects.push(
               ...propEffects.filter(
-                (propEffect) => propEffect.kind !== "GlobalMutation"
-              )
+                propEffect => propEffect.kind !== 'GlobalMutation',
+              ),
             );
           }
         }
@@ -1166,7 +1166,7 @@ function inferBlock(
         instr.lvalue.effect = Effect.ConditionallyMutate;
         continue;
       }
-      case "JsxFragment": {
+      case 'JsxFragment': {
         valueKind = {
           kind: ValueKind.Frozen,
           reason: new Set([ValueReason.Other]),
@@ -1178,7 +1178,7 @@ function inferBlock(
         };
         break;
       }
-      case "TaggedTemplateExpression": {
+      case 'TaggedTemplateExpression': {
         valueKind = {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
@@ -1190,7 +1190,7 @@ function inferBlock(
         };
         break;
       }
-      case "TemplateLiteral": {
+      case 'TemplateLiteral': {
         /*
          * template literal (with no tag function) always produces
          * an immutable string
@@ -1200,10 +1200,10 @@ function inferBlock(
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
-        effect = { kind: Effect.Read, reason: ValueReason.Other };
+        effect = {kind: Effect.Read, reason: ValueReason.Other};
         break;
       }
-      case "RegExpLiteral": {
+      case 'RegExpLiteral': {
         // RegExp instances are mutable objects
         valueKind = {
           kind: ValueKind.Mutable,
@@ -1216,8 +1216,8 @@ function inferBlock(
         };
         break;
       }
-      case "MetaProperty": {
-        if (instrValue.meta !== "import" || instrValue.property !== "meta") {
+      case 'MetaProperty': {
+        if (instrValue.meta !== 'import' || instrValue.property !== 'meta') {
           continue;
         }
 
@@ -1228,16 +1228,16 @@ function inferBlock(
         };
         break;
       }
-      case "LoadGlobal":
+      case 'LoadGlobal':
         valueKind = {
           kind: ValueKind.Global,
           reason: new Set([ValueReason.Global]),
           context: new Set(),
         };
         break;
-      case "Debugger":
-      case "JSXText":
-      case "Primitive": {
+      case 'Debugger':
+      case 'JSXText':
+      case 'Primitive': {
         valueKind = {
           kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
@@ -1245,15 +1245,15 @@ function inferBlock(
         };
         break;
       }
-      case "ObjectMethod":
-      case "FunctionExpression": {
+      case 'ObjectMethod':
+      case 'FunctionExpression': {
         let hasMutableOperand = false;
         for (const operand of eachInstructionOperand(instr)) {
           state.referenceAndRecordEffects(
             operand,
             operand.effect === Effect.Unknown ? Effect.Read : operand.effect,
             ValueReason.Other,
-            []
+            [],
           );
           hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
 
@@ -1282,13 +1282,13 @@ function inferBlock(
           const values = state.values(operand);
           for (const value of values) {
             if (
-              (value.kind === "ObjectMethod" ||
-                value.kind === "FunctionExpression") &&
+              (value.kind === 'ObjectMethod' ||
+                value.kind === 'FunctionExpression') &&
               value.loweredFunc.func.effects !== null
             ) {
               instrValue.loweredFunc.func.effects ??= [];
               instrValue.loweredFunc.func.effects.push(
-                ...value.loweredFunc.func.effects
+                ...value.loweredFunc.func.effects,
               );
             }
           }
@@ -1306,10 +1306,10 @@ function inferBlock(
         instr.lvalue.effect = Effect.Store;
         continue;
       }
-      case "CallExpression": {
+      case 'CallExpression': {
         const signature = getFunctionCallSignature(
           env,
-          instrValue.callee.identifier.type
+          instrValue.callee.identifier.type,
         );
 
         const effects =
@@ -1334,20 +1334,20 @@ function inferBlock(
         for (let i = 0; i < instrValue.args.length; i++) {
           const argumentEffects: Array<FunctionEffect> = [];
           const arg = instrValue.args[i];
-          const place = arg.kind === "Identifier" ? arg : arg.place;
+          const place = arg.kind === 'Identifier' ? arg : arg.place;
           if (effects !== null) {
             state.referenceAndRecordEffects(
               place,
               effects[i],
               ValueReason.Other,
-              argumentEffects
+              argumentEffects,
             );
           } else {
             state.referenceAndRecordEffects(
               place,
               Effect.ConditionallyMutate,
               ValueReason.Other,
-              argumentEffects
+              argumentEffects,
             );
           }
           /*
@@ -1356,9 +1356,9 @@ function inferBlock(
            */
           functionEffects.push(
             ...argumentEffects.filter(
-              (argEffect) =>
-                !isUseEffect || i !== 0 || argEffect.kind !== "GlobalMutation"
-            )
+              argEffect =>
+                !isUseEffect || i !== 0 || argEffect.kind !== 'GlobalMutation',
+            ),
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
         }
@@ -1367,14 +1367,14 @@ function inferBlock(
             instrValue.callee,
             signature.calleeEffect,
             ValueReason.Other,
-            functionEffects
+            functionEffects,
           );
         } else {
           state.referenceAndRecordEffects(
             instrValue.callee,
             Effect.ConditionallyMutate,
             ValueReason.Other,
-            functionEffects
+            functionEffects,
           );
         }
         hasCaptureArgument ||= instrValue.callee.effect === Effect.Capture;
@@ -1386,10 +1386,10 @@ function inferBlock(
           : Effect.ConditionallyMutate;
         continue;
       }
-      case "MethodCall": {
+      case 'MethodCall': {
         CompilerError.invariant(state.isDefined(instrValue.receiver), {
           reason:
-            "[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad",
+            '[InferReferenceEffects] Internal error: receiver of PropertyCall should have been defined by corresponding PropertyLoad',
           description: null,
           loc: instrValue.loc,
           suggestions: null,
@@ -1398,12 +1398,12 @@ function inferBlock(
           instrValue.property,
           Effect.Read,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
 
         const signature = getFunctionCallSignature(
           env,
-          instrValue.property.identifier.type
+          instrValue.property.identifier.type,
         );
 
         const returnValueKind: AbstractValue =
@@ -1429,19 +1429,19 @@ function inferBlock(
            * treating as all reads (except that the receiver may be captured)
            */
           for (const arg of instrValue.args) {
-            const place = arg.kind === "Identifier" ? arg : arg.place;
+            const place = arg.kind === 'Identifier' ? arg : arg.place;
             state.referenceAndRecordEffects(
               place,
               Effect.Read,
               ValueReason.Other,
-              functionEffects
+              functionEffects,
             );
           }
           state.referenceAndRecordEffects(
             instrValue.receiver,
             Effect.Capture,
             ValueReason.Other,
-            functionEffects
+            functionEffects,
           );
           state.initialize(instrValue, returnValueKind);
           state.define(instr.lvalue, instrValue);
@@ -1459,7 +1459,7 @@ function inferBlock(
         for (let i = 0; i < instrValue.args.length; i++) {
           const argumentEffects: Array<FunctionEffect> = [];
           const arg = instrValue.args[i];
-          const place = arg.kind === "Identifier" ? arg : arg.place;
+          const place = arg.kind === 'Identifier' ? arg : arg.place;
           if (effects !== null) {
             /*
              * If effects are inferred for an argument, we should fail invalid
@@ -1469,14 +1469,14 @@ function inferBlock(
               place,
               effects[i],
               ValueReason.Other,
-              argumentEffects
+              argumentEffects,
             );
           } else {
             state.referenceAndRecordEffects(
               place,
               Effect.ConditionallyMutate,
               ValueReason.Other,
-              argumentEffects
+              argumentEffects,
             );
           }
           /*
@@ -1485,9 +1485,9 @@ function inferBlock(
            */
           functionEffects.push(
             ...argumentEffects.filter(
-              (argEffect) =>
-                !isUseEffect || i !== 0 || argEffect.kind !== "GlobalMutation"
-            )
+              argEffect =>
+                !isUseEffect || i !== 0 || argEffect.kind !== 'GlobalMutation',
+            ),
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
         }
@@ -1496,14 +1496,14 @@ function inferBlock(
             instrValue.receiver,
             signature.calleeEffect,
             ValueReason.Other,
-            functionEffects
+            functionEffects,
           );
         } else {
           state.referenceAndRecordEffects(
             instrValue.receiver,
             Effect.ConditionallyMutate,
             ValueReason.Other,
-            functionEffects
+            functionEffects,
           );
         }
         hasCaptureArgument ||= instrValue.receiver.effect === Effect.Capture;
@@ -1515,7 +1515,7 @@ function inferBlock(
           : Effect.ConditionallyMutate;
         continue;
       }
-      case "PropertyStore": {
+      case 'PropertyStore': {
         const effect =
           state.kind(instrValue.object).kind === ValueKind.Context
             ? Effect.ConditionallyMutate
@@ -1524,13 +1524,13 @@ function inferBlock(
           instrValue.value,
           effect,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         state.referenceAndRecordEffects(
           instrValue.object,
           Effect.Store,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
 
         const lvalue = instr.lvalue;
@@ -1538,22 +1538,22 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         continue;
       }
-      case "PropertyDelete": {
+      case 'PropertyDelete': {
         // `delete` returns a boolean (immutable) and modifies the object
         valueKind = {
           kind: ValueKind.Primitive,
           reason: new Set([ValueReason.Other]),
           context: new Set(),
         };
-        effect = { kind: Effect.Mutate, reason: ValueReason.Other };
+        effect = {kind: Effect.Mutate, reason: ValueReason.Other};
         break;
       }
-      case "PropertyLoad": {
+      case 'PropertyLoad': {
         state.referenceAndRecordEffects(
           instrValue.object,
           Effect.Read,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
@@ -1561,7 +1561,7 @@ function inferBlock(
         state.define(lvalue, instrValue);
         continue;
       }
-      case "ComputedStore": {
+      case 'ComputedStore': {
         const effect =
           state.kind(instrValue.object).kind === ValueKind.Context
             ? Effect.ConditionallyMutate
@@ -1570,19 +1570,19 @@ function inferBlock(
           instrValue.value,
           effect,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         state.referenceAndRecordEffects(
           instrValue.property,
           Effect.Capture,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         state.referenceAndRecordEffects(
           instrValue.object,
           Effect.Store,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
 
         const lvalue = instr.lvalue;
@@ -1590,18 +1590,18 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         continue;
       }
-      case "ComputedDelete": {
+      case 'ComputedDelete': {
         state.referenceAndRecordEffects(
           instrValue.object,
           Effect.Mutate,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         state.referenceAndRecordEffects(
           instrValue.property,
           Effect.Read,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         state.initialize(instrValue, {
           kind: ValueKind.Primitive,
@@ -1612,18 +1612,18 @@ function inferBlock(
         instr.lvalue.effect = Effect.Mutate;
         continue;
       }
-      case "ComputedLoad": {
+      case 'ComputedLoad': {
         state.referenceAndRecordEffects(
           instrValue.object,
           Effect.Read,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         state.referenceAndRecordEffects(
           instrValue.property,
           Effect.Read,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
@@ -1631,7 +1631,7 @@ function inferBlock(
         state.define(lvalue, instrValue);
         continue;
       }
-      case "Await": {
+      case 'Await': {
         state.initialize(instrValue, state.kind(instrValue.value));
         /*
          * Awaiting a value causes it to change state (go from unresolved to resolved or error)
@@ -1642,14 +1642,14 @@ function inferBlock(
           instrValue.value,
           Effect.ConditionallyMutate,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
         state.alias(lvalue, instrValue.value);
         continue;
       }
-      case "TypeCastExpression": {
+      case 'TypeCastExpression': {
         /*
          * A type cast expression has no effect at runtime, so it's equivalent to a raw
          * identifier:
@@ -1663,29 +1663,29 @@ function inferBlock(
           instrValue.value,
           Effect.Read,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
         state.alias(lvalue, instrValue.value);
         continue;
       }
-      case "StartMemoize":
-      case "FinishMemoize": {
+      case 'StartMemoize':
+      case 'FinishMemoize': {
         for (const val of eachInstructionValueOperand(instrValue)) {
           if (env.config.enablePreserveExistingMemoizationGuarantees) {
             state.referenceAndRecordEffects(
               val,
               Effect.Freeze,
               ValueReason.Other,
-              []
+              [],
             );
           } else {
             state.referenceAndRecordEffects(
               val,
               Effect.Read,
               ValueReason.Other,
-              []
+              [],
             );
           }
         }
@@ -1699,7 +1699,7 @@ function inferBlock(
         state.define(lvalue, instrValue);
         continue;
       }
-      case "LoadLocal": {
+      case 'LoadLocal': {
         const lvalue = instr.lvalue;
         const effect =
           state.isDefined(lvalue) &&
@@ -1710,19 +1710,19 @@ function inferBlock(
           instrValue.place,
           effect,
           ValueReason.Other,
-          []
+          [],
         );
         lvalue.effect = Effect.ConditionallyMutate;
         // direct aliasing: `a = b`;
         state.alias(lvalue, instrValue.place);
         continue;
       }
-      case "LoadContext": {
+      case 'LoadContext': {
         state.referenceAndRecordEffects(
           instrValue.place,
           Effect.Capture,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
@@ -1731,7 +1731,7 @@ function inferBlock(
         state.define(lvalue, instrValue);
         continue;
       }
-      case "DeclareLocal": {
+      case 'DeclareLocal': {
         const value = UndefinedValue;
         state.initialize(
           value,
@@ -1746,12 +1746,12 @@ function inferBlock(
                 kind: ValueKind.Primitive,
                 reason: new Set([ValueReason.Other]),
                 context: new Set(),
-              }
+              },
         );
         state.define(instrValue.lvalue.place, value);
         continue;
       }
-      case "DeclareContext": {
+      case 'DeclareContext': {
         state.initialize(instrValue, {
           kind: ValueKind.Mutable,
           reason: new Set([ValueReason.Other]),
@@ -1760,8 +1760,8 @@ function inferBlock(
         state.define(instrValue.lvalue.place, instrValue);
         continue;
       }
-      case "PostfixUpdate":
-      case "PrefixUpdate": {
+      case 'PostfixUpdate':
+      case 'PrefixUpdate': {
         const effect =
           state.isDefined(instrValue.lvalue) &&
           state.kind(instrValue.lvalue).kind === ValueKind.Context
@@ -1771,7 +1771,7 @@ function inferBlock(
           instrValue.value,
           effect,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
 
         const lvalue = instr.lvalue;
@@ -1787,7 +1787,7 @@ function inferBlock(
         instrValue.lvalue.effect = Effect.Store;
         continue;
       }
-      case "StoreLocal": {
+      case 'StoreLocal': {
         const effect =
           state.isDefined(instrValue.lvalue.place) &&
           state.kind(instrValue.lvalue.place).kind === ValueKind.Context
@@ -1797,7 +1797,7 @@ function inferBlock(
           instrValue.value,
           effect,
           ValueReason.Other,
-          []
+          [],
         );
 
         const lvalue = instr.lvalue;
@@ -1813,18 +1813,18 @@ function inferBlock(
         instrValue.lvalue.place.effect = Effect.Store;
         continue;
       }
-      case "StoreContext": {
+      case 'StoreContext': {
         state.referenceAndRecordEffects(
           instrValue.value,
           Effect.ConditionallyMutate,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         state.referenceAndRecordEffects(
           instrValue.lvalue.place,
           Effect.Mutate,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
 
         const lvalue = instr.lvalue;
@@ -1832,21 +1832,21 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         continue;
       }
-      case "StoreGlobal": {
+      case 'StoreGlobal': {
         state.referenceAndRecordEffects(
           instrValue.value,
           Effect.Capture,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.Store;
 
         functionEffects.push({
-          kind: "GlobalMutation",
+          kind: 'GlobalMutation',
           error: {
             reason:
-              "Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)",
+              'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
             loc: instr.loc,
             suggestions: null,
             severity: ErrorSeverity.InvalidReact,
@@ -1854,7 +1854,7 @@ function inferBlock(
         });
         continue;
       }
-      case "Destructure": {
+      case 'Destructure': {
         let effect: Effect = Effect.Capture;
         for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {
           if (
@@ -1869,7 +1869,7 @@ function inferBlock(
           instrValue.value,
           effect,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
 
         const lvalue = instr.lvalue;
@@ -1887,7 +1887,7 @@ function inferBlock(
         }
         continue;
       }
-      case "GetIterator": {
+      case 'GetIterator': {
         /**
          * This instruction represents the step of retrieving an iterator from the collection
          * in `for (... of <collection>)` syntax. We model two cases:
@@ -1927,7 +1927,7 @@ function inferBlock(
         lvalueEffect = Effect.Store;
         break;
       }
-      case "IteratorNext": {
+      case 'IteratorNext': {
         /**
          * This instruction represents advancing an iterator with .next(). We use a
          * conditional mutate to model the two cases for GetIterator:
@@ -1942,7 +1942,7 @@ function inferBlock(
           instrValue.iterator,
           Effect.ConditionallyMutate,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         /**
          * Regardless of the effect on the iterator, the *result* of advancing the iterator
@@ -1954,15 +1954,15 @@ function inferBlock(
           instrValue.collection,
           Effect.Capture,
           ValueReason.Other,
-          functionEffects
+          functionEffects,
         );
         state.initialize(instrValue, state.kind(instrValue.collection));
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Store;
         continue;
       }
-      case "NextPropertyOf": {
-        effect = { kind: Effect.Read, reason: ValueReason.Other };
+      case 'NextPropertyOf': {
+        effect = {kind: Effect.Read, reason: ValueReason.Other};
         lvalueEffect = Effect.Store;
         valueKind = {
           kind: ValueKind.Primitive,
@@ -1972,7 +1972,7 @@ function inferBlock(
         break;
       }
       default: {
-        assertExhaustive(instrValue, "Unexpected instruction kind");
+        assertExhaustive(instrValue, 'Unexpected instruction kind');
       }
     }
 
@@ -1987,7 +1987,7 @@ function inferBlock(
         operand,
         effect.kind,
         effect.reason,
-        functionEffects
+        functionEffects,
       );
     }
 
@@ -1998,7 +1998,7 @@ function inferBlock(
 
   for (const operand of eachTerminalOperand(block.terminal)) {
     let effect;
-    if (block.terminal.kind === "return" || block.terminal.kind === "throw") {
+    if (block.terminal.kind === 'return' || block.terminal.kind === 'throw') {
       if (
         state.isDefined(operand) &&
         state.kind(operand).kind === ValueKind.Context
@@ -2014,14 +2014,14 @@ function inferBlock(
       operand,
       effect,
       ValueReason.Other,
-      functionEffects
+      functionEffects,
     );
   }
 }
 
 function hasContextRefOperand(
   state: InferenceState,
-  instrValue: InstructionValue
+  instrValue: InstructionValue,
 ): boolean {
   for (const place of eachInstructionValueOperand(instrValue)) {
     if (
@@ -2036,9 +2036,9 @@ function hasContextRefOperand(
 
 export function getFunctionCallSignature(
   env: Environment,
-  type: Type
+  type: Type,
 ): FunctionSignature | null {
-  if (type.kind !== "Function") {
+  if (type.kind !== 'Function') {
     return null;
   }
   return env.getFunctionSignature(type);
@@ -2054,7 +2054,7 @@ export function getFunctionCallSignature(
  */
 function getFunctionEffects(
   fn: MethodCall | CallExpression,
-  sig: FunctionSignature
+  sig: FunctionSignature,
 ): Array<Effect> | null {
   const results = [];
   for (let i = 0; i < fn.args.length; i++) {
@@ -2064,7 +2064,7 @@ function getFunctionEffects(
        * Only infer effects when there is a direct mapping positional arg --> positional param
        * Otherwise, return null to indicate inference failed
        */
-      if (arg.kind === "Identifier") {
+      if (arg.kind === 'Identifier') {
         results.push(sig.positionalParams[i]);
       } else {
         return null;
@@ -2090,10 +2090,10 @@ function getFunctionEffects(
  */
 function areArgumentsImmutableAndNonMutating(
   state: InferenceState,
-  args: MethodCall["args"]
+  args: MethodCall['args'],
 ): boolean {
   for (const arg of args) {
-    const place = arg.kind === "Identifier" ? arg : arg.place;
+    const place = arg.kind === 'Identifier' ? arg : arg.place;
     const kind = state.kind(place).kind;
     switch (kind) {
       case ValueKind.Global:
@@ -2113,9 +2113,9 @@ function areArgumentsImmutableAndNonMutating(
     const values = state.values(place);
     for (const value of values) {
       if (
-        value.kind === "FunctionExpression" &&
-        value.loweredFunc.func.params.some((param) => {
-          const place = param.kind === "Identifier" ? param : param.place;
+        value.kind === 'FunctionExpression' &&
+        value.loweredFunc.func.params.some(param => {
+          const place = param.kind === 'Identifier' ? param : param.place;
           const range = place.identifier.mutableRange;
           return range.end > range.start + 1;
         })
@@ -2130,20 +2130,20 @@ function areArgumentsImmutableAndNonMutating(
 
 function getWriteErrorReason(abstractValue: AbstractValue): string {
   if (abstractValue.reason.has(ValueReason.Global)) {
-    return "Writing to a variable defined outside a component or hook is not allowed. Consider using an effect";
+    return 'Writing to a variable defined outside a component or hook is not allowed. Consider using an effect';
   } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
-    return "Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX";
+    return 'Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX';
   } else if (abstractValue.reason.has(ValueReason.Context)) {
     return `Mutating a value returned from 'useContext()', which should not be mutated`;
   } else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
-    return "Mutating a value returned from a function whose return value should not be mutated";
+    return 'Mutating a value returned from a function whose return value should not be mutated';
   } else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
-    return "Mutating component props or hook arguments is not allowed. Consider using a local variable instead";
+    return 'Mutating component props or hook arguments is not allowed. Consider using a local variable instead';
   } else if (abstractValue.reason.has(ValueReason.State)) {
     return "Mutating a value returned from 'useState()', which should not be mutated. Use the setter function to update instead";
   } else if (abstractValue.reason.has(ValueReason.ReducerState)) {
     return "Mutating a value returned from 'useReducer()', which should not be mutated. Use the dispatch function to update instead";
   } else {
-    return "This mutates a variable that React considers immutable";
+    return 'This mutates a variable that React considers immutable';
   }
 }
