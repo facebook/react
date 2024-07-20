@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`ReactARTComponents should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width 1`] = `
 <Shape
