@@ -245,12 +245,6 @@ function shouldProfile(current: Fiber): boolean {
 }
 
 function callComponentWillUnmountWithTimer(current: Fiber, instance: any) {
-  instance.props = resolveClassComponentProps(
-    current.type,
-    current.memoizedProps,
-    current.elementType === current.type,
-  );
-  instance.state = current.memoizedState;
   if (shouldProfile(current)) {
     try {
       startLayoutEffectTimer();

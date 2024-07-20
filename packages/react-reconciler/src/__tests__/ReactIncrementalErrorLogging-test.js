@@ -267,7 +267,7 @@ describe('ReactIncrementalErrorLogging', () => {
         // Retry one more time before handling error
         'render: 1',
 
-        'componentWillUnmount: 0',
+        'componentWillUnmount: 1',
       ].filter(Boolean),
     );
 

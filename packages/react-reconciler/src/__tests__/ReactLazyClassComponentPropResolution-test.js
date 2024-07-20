@@ -38,50 +38,51 @@ describe('ReactLazyClassComponentPropResolution', () => {
     fakeModuleCache = new Map();
   });
 
+  async function fakeImport(Component) {
+    const record = fakeModuleCache.get(Component);
+    if (record === undefined) {
+      const newRecord = {
+        status: 'pending',
+        value: {default: Component},
+        pings: [],
+        then(ping) {
+          switch (newRecord.status) {
+            case 'pending': {
+              newRecord.pings.push(ping);
+              return;
+            }
+            case 'resolved': {
+              ping(newRecord.value);
+              return;
+            }
+            case 'rejected': {
+              throw newRecord.value;
+            }
+          }
+        },
+      };
+      fakeModuleCache.set(Component, newRecord);
+      return newRecord;
+    }
+    return record;
+  }
+
+  function resolveFakeImport(moduleName) {
+    const record = fakeModuleCache.get(moduleName);
+    if (record === undefined) {
+      throw new Error('Module not found');
+    }
+    if (record.status !== 'pending') {
+      throw new Error('Module already resolved');
+    }
+    record.status = 'resolved';
+    record.pings.forEach(ping => ping(record.value));
+  }
+
   it('class component defaultProps should be set with lazy module.', async () => {
     function Text(props) {
       Scheduler.log(props.text);
       return props.text;
-    }
-    async function fakeImport(Component) {
-      const record = fakeModuleCache.get(Component);
-      if (record === undefined) {
-        const newRecord = {
-          status: 'pending',
-          value: {default: Component},
-          pings: [],
-          then(ping) {
-            switch (newRecord.status) {
-              case 'pending': {
-                newRecord.pings.push(ping);
-                return;
-              }
-              case 'resolved': {
-                ping(newRecord.value);
-                return;
-              }
-              case 'rejected': {
-                throw newRecord.value;
-              }
-            }
-          },
-        };
-        fakeModuleCache.set(Component, newRecord);
-        return newRecord;
-      }
-      return record;
-    }
-
-    function resolveFakeImport(moduleName) {
-      const record = fakeModuleCache.get(moduleName);
-      if (record === undefined) {
-        throw new Error('Module not found');
-      }
-      if (record.status !== 'pending') {
-        throw new Error('Module already resolved');
-      }
-      record.status = 'resolved';
-      record.pings.forEach(ping => ping(record.value));
     }
 
     class Component extends React.Component {
