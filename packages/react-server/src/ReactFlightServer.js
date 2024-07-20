@@ -62,6 +62,7 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   ReactAsyncInfo,
+  ReactStackTrace,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -168,7 +169,14 @@ function getStack(error: Error): string {
   }
 }
 
-function filterDebugStack(error: Error): string {
+// This matches either of these V8 formats.
+//     at name (filename:0:0)
+//     at filename:0:0
+//     at async filename:0:0
+const frameRegExp =
+  /^ {3} at (?:(.+) \(([^\)]+):(\d+):(\d+)\)|(?:async )?([^\)]+):(\d+):(\d+))$/;
+
+function parseStackTrace(error: Error, skipFrames: number): ReactStackTrace {
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
@@ -187,8 +195,20 @@ function filterDebugStack(error: Error): string {
     // Cut off everything after the bottom frame since it'll be internals.
     stack = stack.slice(0, idx);
   }
-  const frames = stack.split('\n').slice(1);
-  return frames.filter(isNotExternal).join('\n');
+  const frames = stack.split('\n').slice(skipFrames).filter(isNotExternal);
+  const parsedFrames: ReactStackTrace = [];
+  for (let i = 0; i < frames.length; i++) {
+    const parsed = frameRegExp.exec(frames[i]);
+    if (!parsed) {
+      continue;
+    }
+    const name = parsed[1] || '';
+    const filename = parsed[2] || parsed[5] || '';
+    const line = +(parsed[3] || parsed[6]);
+    const col = +(parsed[4] || parsed[7]);
+    parsedFrames.push([name, filename, line, col]);
+  }
+  return parsedFrames;
 }
 
 initAsyncDebugInfo();
@@ -214,7 +234,7 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // Extract the stack. Not all console logs print the full stack but they have at
         // least the line it was called from. We could optimize transfer by keeping just
         // one stack frame but keeping it simple for now and include all frames.
-        const stack = filterDebugStack(new Error('react-stack-top-frame'));
+        const stack = parseStackTrace(new Error('react-stack-top-frame'), 1);
         request.pendingChunks++;
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
@@ -973,7 +993,7 @@ function callWithDebugContextInDEV<A, T>(
   if (enableOwnerStacks) {
     // $FlowFixMe[cannot-write]
     componentDebugInfo.stack =
-      task.debugStack === null ? null : filterDebugStack(task.debugStack);
+      task.debugStack === null ? null : parseStackTrace(task.debugStack, 1);
     // $FlowFixMe[cannot-write]
     componentDebugInfo.debugStack = task.debugStack;
     // $FlowFixMe[cannot-write]
@@ -1035,7 +1055,7 @@ function renderFunctionComponent<Props>(
       if (enableOwnerStacks) {
         // $FlowFixMe[cannot-write]
         componentDebugInfo.stack =
-          task.debugStack === null ? null : filterDebugStack(task.debugStack);
+          task.debugStack === null ? null : parseStackTrace(task.debugStack, 1);
         // $FlowFixMe[cannot-write]
         componentDebugInfo.debugStack = task.debugStack;
         // $FlowFixMe[cannot-write]
@@ -1429,7 +1449,7 @@ function renderClientElement(
           key,
           props,
           task.debugOwner,
-          task.debugStack === null ? null : filterDebugStack(task.debugStack),
+          task.debugStack === null ? null : parseStackTrace(task.debugStack, 1),
           validated,
         ]
       : [REACT_ELEMENT_TYPE, type, key, props, task.debugOwner]
@@ -2519,12 +2539,12 @@ function renderModelDestructive(
           // $FlowFixMe[method-unbinding]
           typeof value.debugTask.run === 'function') ||
           value.debugStack instanceof Error) &&
+        (enableOwnerStacks
+          ? isArray((value: any).stack)
+          : typeof (value: any).stack === 'undefined') &&
         typeof value.name === 'string' &&
         typeof value.env === 'string' &&
-        value.owner !== undefined &&
-        (enableOwnerStacks
-          ? typeof (value: any).stack === 'string'
-          : typeof (value: any).stack === 'undefined')
+        value.owner !== undefined
       ) {
         // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
         // need to omit it before serializing.
@@ -2824,12 +2844,14 @@ function emitPostponeChunk(
   let row;
   if (__DEV__) {
     let reason = '';
-    let stack = '';
+    let stack: ReactStackTrace;
     try {
       // eslint-disable-next-line react-internal/safe-string-coercion
       reason = String(postponeInstance.message);
-      stack = getStack(postponeInstance);
-    } catch (x) {}
+      stack = parseStackTrace(postponeInstance, 0);
+    } catch (x) {
+      stack = [];
+    }
     row = serializeRowHeader('P', id) + stringify({reason, stack}) + '\n';
   } else {
     // No reason included in prod.
@@ -2848,13 +2870,13 @@ function emitErrorChunk(
   let errorInfo: any;
   if (__DEV__) {
     let message;
-    let stack = '';
+    let stack: ReactStackTrace;
     let env = request.environmentName();
     try {
       if (error instanceof Error) {
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
-        stack = getStack(error);
+        stack = parseStackTrace(error, 0);
         const errorEnv = (error: any).environmentName;
         if (typeof errorEnv === 'string') {
           // This probably came from another FlightClient as a pass through.
@@ -2863,9 +2885,11 @@ function emitErrorChunk(
         }
       } else if (typeof error === 'object' && error !== null) {
         message = describeObjectForErrorMessage(error);
+        stack = [];
       } else {
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error);
+        stack = [];
       }
     } catch (x) {
       message = 'An error occurred but serializing the error message failed.';
@@ -3316,7 +3340,7 @@ function emitConsoleChunk(
   id: number,
   methodName: string,
   owner: null | ReactComponentInfo,
-  stackTrace: string,
+  stackTrace: ReactStackTrace,
   args: Array<any>,
 ): void {
   if (!__DEV__) {

@@ -27,10 +27,24 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+function formatV8Stack(stack) {
+  let v8StyleStack = '';
+  if (stack) {
+    for (let i = 0; i < stack.length; i++) {
+      const [name] = stack[i];
+      if (v8StyleStack !== '') {
+        v8StyleStack += '\n';
+      }
+      v8StyleStack += '    in ' + name + ' (at **)';
+    }
+  }
+  return v8StyleStack;
+}
+
 function normalizeComponentInfo(debugInfo) {
-  if (typeof debugInfo.stack === 'string') {
+  if (Array.isArray(debugInfo.stack)) {
     const {debugTask, debugStack, ...copy} = debugInfo;
-    copy.stack = normalizeCodeLocInfo(debugInfo.stack);
+    copy.stack = formatV8Stack(debugInfo.stack);
     if (debugInfo.owner) {
       copy.owner = normalizeComponentInfo(debugInfo.owner);
     }

@@ -178,11 +178,20 @@ export type Awaited<T> = T extends null | void
     : T // argument was not an object
   : T; // non-thenable
 
+export type ReactCallSite = [
+  string, // function name
+  string, // file name TODO: model nested eval locations as nested arrays
+  number, // line number
+  number, // column number
+];
+
+export type ReactStackTrace = Array<ReactCallSite>;
+
 export type ReactComponentInfo = {
   +name?: string,
   +env?: string,
   +owner?: null | ReactComponentInfo,
-  +stack?: null | string,
+  +stack?: null | ReactStackTrace,
   // Stashed Data for the Specific Execution Environment. Not part of the transport protocol
   +debugStack?: null | Error,
   +debugTask?: null | ConsoleTask,
@@ -191,7 +200,7 @@ export type ReactComponentInfo = {
 export type ReactAsyncInfo = {
   +started?: number,
   +completed?: number,
-  +stack?: string,
+  +stack?: null | ReactStackTrace,
 };
 
 export type ReactDebugInfo = Array<ReactComponentInfo | ReactAsyncInfo>;

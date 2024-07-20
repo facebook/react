@@ -165,16 +165,16 @@ export function getOwnerStackByComponentStackNodeInDev(
         // TODO: Should we stash this somewhere for caching purposes?
         ownerStack = formatOwnerStack(owner.debugStack);
         owner = owner.owner;
-      } else if (owner.stack != null) {
+      } else {
         // Client Component
         const node: ComponentStackNode = (owner: any);
-        if (typeof owner.stack !== 'string') {
-          ownerStack = node.stack = formatOwnerStack(owner.stack);
-        } else {
-          ownerStack = owner.stack;
+        if (node.stack != null) {
+          if (typeof node.stack !== 'string') {
+            ownerStack = node.stack = formatOwnerStack(node.stack);
+          } else {
+            ownerStack = node.stack;
+          }
         }
-        owner = owner.owner;
-      } else {
         owner = owner.owner;
       }
       // If we don't actually print the stack if there is no owner of this JSX element.
