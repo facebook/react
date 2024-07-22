@@ -127,7 +127,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: react-devtools
-          path: build/devtools.tgz
+          path: build
       - name: Display structure of build
         run: ls -R build
       - run: ./scripts/circleci/download_devtools_regression_build.js ${{ matrix.version }} --replaceBuild
@@ -168,7 +168,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: react-devtools
-          path: build/devtools.tgz
+          path: build
       - name: Display structure of build
         run: ls -R build
       - name: Playwright install deps
