@@ -4239,16 +4239,6 @@ __DEV__ &&
       "function" === typeof fn && componentFrameCache.set(fn, sampleLines);
       return sampleLines;
     }
-    function callComponentInDEV(Component, props, secondArg) {
-      return Component(props, secondArg);
-    }
-    function callRenderInDEV(instance) {
-      return instance.render();
-    }
-    function callLazyInitInDEV(lazy) {
-      var init = lazy._init;
-      return init(lazy._payload);
-    }
     function describeComponentStackByType(type) {
       if ("string" === typeof type) return describeBuiltInComponentFrame(type);
       if ("function" === typeof type)
@@ -8641,7 +8631,28 @@ __DEV__ &&
     var componentFrameCache = new (
       "function" === typeof WeakMap ? WeakMap : Map
     )();
-    var CLIENT_RENDERED = 4,
+    var callComponent = {
+        "react-stack-bottom-frame": function (Component, props, secondArg) {
+          return Component(props, secondArg);
+        }
+      },
+      callComponentInDEV =
+        callComponent["react-stack-bottom-frame"].bind(callComponent),
+      callRender = {
+        "react-stack-bottom-frame": function (instance) {
+          return instance.render();
+        }
+      },
+      callRenderInDEV = callRender["react-stack-bottom-frame"].bind(callRender),
+      callLazyInit = {
+        "react-stack-bottom-frame": function (lazy) {
+          var init = lazy._init;
+          return init(lazy._payload);
+        }
+      },
+      callLazyInitInDEV =
+        callLazyInit["react-stack-bottom-frame"].bind(callLazyInit),
+      CLIENT_RENDERED = 4,
       PENDING = 0,
       COMPLETED = 1,
       FLUSHED = 2,
@@ -8671,5 +8682,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-01172397-20240716";
+    exports.version = "19.0.0-www-modern-792f1921-20240722";
   })();

@@ -4034,16 +4034,6 @@ __DEV__ &&
       "function" === typeof fn && componentFrameCache.set(fn, sampleLines);
       return sampleLines;
     }
-    function callComponentInDEV(Component, props, secondArg) {
-      return Component(props, secondArg);
-    }
-    function callRenderInDEV(instance) {
-      return instance.render();
-    }
-    function callLazyInitInDEV(lazy) {
-      var init = lazy._init;
-      return init(lazy._payload);
-    }
     function describeComponentStackByType(type) {
       if ("string" === typeof type) return describeBuiltInComponentFrame(type);
       if ("function" === typeof type)
@@ -8041,7 +8031,28 @@ __DEV__ &&
     var componentFrameCache = new (
       "function" === typeof WeakMap ? WeakMap : Map
     )();
-    var currentRequest = null,
+    var callComponent = {
+        "react-stack-bottom-frame": function (Component, props, secondArg) {
+          return Component(props, secondArg);
+        }
+      },
+      callComponentInDEV =
+        callComponent["react-stack-bottom-frame"].bind(callComponent),
+      callRender = {
+        "react-stack-bottom-frame": function (instance) {
+          return instance.render();
+        }
+      },
+      callRenderInDEV = callRender["react-stack-bottom-frame"].bind(callRender),
+      callLazyInit = {
+        "react-stack-bottom-frame": function (lazy) {
+          var init = lazy._init;
+          return init(lazy._payload);
+        }
+      },
+      callLazyInitInDEV =
+        callLazyInit["react-stack-bottom-frame"].bind(callLazyInit),
+      currentRequest = null,
       didWarnAboutBadClass = {},
       didWarnAboutContextTypes = {},
       didWarnAboutContextTypeOnFunctionComponent = {},
