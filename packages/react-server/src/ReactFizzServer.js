@@ -859,17 +859,17 @@ function pushServerComponentStack(
       if (typeof componentInfo.name !== 'string') {
         continue;
       }
-      if (enableOwnerStacks && componentInfo.stack === undefined) {
+      if (enableOwnerStacks && componentInfo.debugStack === undefined) {
         continue;
       }
       task.componentStack = {
         parent: task.componentStack,
         type: componentInfo,
         owner: componentInfo.owner,
-        stack: componentInfo.stack,
+        stack: enableOwnerStacks ? componentInfo.debugStack : null,
       };
       if (enableOwnerStacks) {
-        task.debugTask = (componentInfo.task: any);
+        task.debugTask = (componentInfo.debugTask: any);
       }
     }
   }
@@ -1528,7 +1528,7 @@ function finishClassComponent(
 ): ReactNodeList {
   let nextChildren;
   if (__DEV__) {
-    nextChildren = callRenderInDEV(instance);
+    nextChildren = (callRenderInDEV(instance): any);
   } else {
     nextChildren = instance.render();
   }

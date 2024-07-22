@@ -13,6 +13,8 @@ import {describeBuiltInComponentFrame} from 'shared/ReactComponentStackFrame';
 
 import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
+import {formatOwnerStack} from '../ReactFlightOwnerStack';
+
 export function getOwnerStackByComponentInfoInDev(
   componentInfo: ReactComponentInfo,
 ): string {
@@ -34,12 +36,13 @@ export function getOwnerStackByComponentInfoInDev(
     let owner: void | null | ReactComponentInfo = componentInfo;
 
     while (owner) {
-      if (typeof owner.stack === 'string') {
+      const ownerStack: ?Error = owner.debugStack;
+      if (ownerStack != null) {
         // Server Component
-        const ownerStack: string = owner.stack;
         owner = owner.owner;
-        if (owner && ownerStack !== '') {
-          info += '\n' + ownerStack;
+        if (owner) {
+          // TODO: Should we stash this somewhere for caching purposes?
+          info += '\n' + formatOwnerStack(ownerStack);
         }
       } else {
         break;
