@@ -143,7 +143,14 @@ describe('ReactFlight', () => {
             this.props.expectedMessage,
           );
           expect(this.state.error.digest).toBe('a dev digest');
-          expect(this.state.error.environmentName).toBe('Server');
+          expect(this.state.error.environmentName).toBe(
+            this.props.expectedEnviromentName || 'Server',
+          );
+          if (this.props.expectedErrorStack !== undefined) {
+            expect(this.state.error.stack).toContain(
+              this.props.expectedErrorStack,
+            );
+          }
         } else {
           expect(this.state.error.message).toBe(
             'An error occurred in the Server Components render. The specific message is omitted in production' +
@@ -2601,6 +2608,104 @@ describe('ReactFlight', () => {
         <span>dis?</span>
       </div>,
     );
+  });
+
+  it('preserves error stacks passed through server-to-server with source maps', async () => {
+    async function ServerComponent({transport}) {
+      // This is a Server Component that receives other Server Components from a third party.
+      const thirdParty = ReactServer.use(
+        ReactNoopFlightClient.read(transport, {
+          findSourceMapURL(url) {
+            // By giving a source map url we're saying that we can't use the original
+            // file as the sourceURL, which gives stack traces a rsc://React/ prefix.
+            return 'source-map://' + url;
+          },
+        }),
+      );
+      // This will throw a third-party error inside the first-party server component.
+      await thirdParty.model;
+      return 'Should never render';
+    }
+
+    async function bar() {
+      throw new Error('third-party-error');
+    }
+
+    async function foo() {
+      await bar();
+    }
+
+    const rejectedPromise = foo();
+
+    const thirdPartyTransport = ReactNoopFlightServer.render(
+      {model: rejectedPromise},
+      {
+        environmentName: 'third-party',
+        onError(x) {
+          if (__DEV__) {
+            return 'a dev digest';
+          }
+          return `digest("${x.message}")`;
+        },
+      },
+    );
+
+    let originalError;
+    try {
+      await rejectedPromise;
+    } catch (x) {
+      originalError = x;
+    }
+    expect(originalError.message).toBe('third-party-error');
+
+    const transport = ReactNoopFlightServer.render(
+      <ServerComponent transport={thirdPartyTransport} />,
+      {
+        onError(x) {
+          if (__DEV__) {
+            return 'a dev digest';
+          }
+          return x.digest; // passthrough
+        },
+      },
+    );
+
+    await 0;
+    await 0;
+    await 0;
+
+    const expectedErrorStack = originalError.stack
+      // Test only the first rows since there's a lot of noise after that is eliminated.
+      .split('\n')
+      .slice(0, 4)
+      .join('\n')
+      .replaceAll(
+        ' (/',
+        gate(flags => flags.enableOwnerStacks) ? ' (file:///' : ' (/',
+      ); // The eval will end up normalizing these
+
+    let sawReactPrefix = false;
+    await act(async () => {
+      ReactNoop.render(
+        <ErrorBoundary
+          expectedMessage="third-party-error"
+          expectedEnviromentName="third-party"
+          expectedErrorStack={expectedErrorStack}>
+          {ReactNoopFlightClient.read(transport, {
+            findSourceMapURL(url) {
+              if (url.startsWith('rsc://React/')) {
+                // We don't expect to see any React prefixed URLs here.
+                sawReactPrefix = true;
+              }
+              // My not giving a source map, we should leave it intact.
+              return null;
+            },
+          })}
+        </ErrorBoundary>,
+      );
+    });
+
+    expect(sawReactPrefix).toBe(false);
   });
 
   it('can change the environment name inside a component', async () => {
