@@ -7,24 +7,17 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8027b340b0802f1154774d36f8da90fd>>
+ * @generated SignedSource<<f4d570e4af3e6311db8ba29ccc9dac66>>
  */
 
 "use strict";
-var enableFastJSX = require("ReactNativeInternalFeatureFlags").enableFastJSX,
-  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
-  REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
-  enableFastJSXWithStringRefs = enableFastJSX && !0,
-  enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !0;
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+  REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
 function jsxProd(type, config, maybeKey) {
   var key = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  if (
-    (!enableFastJSXWithoutStringRefs &&
-      (!enableFastJSXWithStringRefs || "ref" in config)) ||
-    "key" in config
-  ) {
+  if ("key" in config) {
     maybeKey = {};
     for (var propName in config)
       "key" !== propName && (maybeKey[propName] = config[propName]);

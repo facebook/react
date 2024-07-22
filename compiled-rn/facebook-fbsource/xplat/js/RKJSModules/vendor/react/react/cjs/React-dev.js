@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<61f06d7d7ba18a44d1a9e5f62d952d8f>>
+ * @generated SignedSource<<f65556f277c0ddb5de72662cf31257eb>>
  */
 
 "use strict";
@@ -589,11 +589,7 @@ __DEV__ &&
       hasValidKey(config) &&
         (checkKeyStringCoercion(config.key), (children = "" + config.key));
       hasValidRef(config);
-      if (
-        (!enableFastJSXWithoutStringRefs &&
-          (!enableFastJSXWithStringRefs || "ref" in config)) ||
-        "key" in config
-      ) {
+      if ("key" in config) {
         maybeKey = {};
         for (var propName in config)
           "key" !== propName && (maybeKey[propName] = config[propName]);
@@ -1023,9 +1019,7 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-    var enableFastJSX =
-        require("ReactNativeInternalFeatureFlags").enableFastJSX,
-      REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+    var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
       REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -1132,9 +1126,7 @@ __DEV__ &&
       specialPropKeyWarningShown,
       didWarnAboutOldJSXRuntime;
     var didWarnAboutElementRef = {};
-    var enableFastJSXWithStringRefs = enableFastJSX && !0,
-      enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !0,
-      didWarnAboutKeySpread = {},
+    var didWarnAboutKeySpread = {},
       ownerHasKeyUseWarning = {},
       didWarnAboutMaps = !1,
       userProvidedKeyEscapeRegex = /\/+/g,
@@ -1707,7 +1699,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-792f1921-20240722";
+    exports.version = "19.0.0-native-fb-d025ddd3-20240722";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

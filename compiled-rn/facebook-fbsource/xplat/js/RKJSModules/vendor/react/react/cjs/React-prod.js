@@ -7,12 +7,11 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<495b76f9066c31cda14cf8670b4adb6a>>
+ * @generated SignedSource<<2353fd61ee1b67bde9e8cd1746ce037f>>
  */
 
 "use strict";
-var enableFastJSX = require("ReactNativeInternalFeatureFlags").enableFastJSX,
-  REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
+var REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -82,9 +81,7 @@ assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   ReactSharedInternals = { H: null, A: null, T: null, S: null },
-  hasOwnProperty = Object.prototype.hasOwnProperty,
-  enableFastJSXWithStringRefs = enableFastJSX && !0,
-  enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !0;
+  hasOwnProperty = Object.prototype.hasOwnProperty;
 function ReactElement(type, key, _ref, self, source, owner, props) {
   _ref = props.ref;
   return {
@@ -99,11 +96,7 @@ function jsxProd(type, config, maybeKey) {
   var key = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  if (
-    (!enableFastJSXWithoutStringRefs &&
-      (!enableFastJSXWithStringRefs || "ref" in config)) ||
-    "key" in config
-  ) {
+  if ("key" in config) {
     maybeKey = {};
     for (var propName in config)
       "key" !== propName && (maybeKey[propName] = config[propName]);
@@ -583,4 +576,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-native-fb-792f1921-20240722";
+exports.version = "19.0.0-native-fb-d025ddd3-20240722";

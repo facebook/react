@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0caeac94fb93386eb1271e70950fddab>>
+ * @generated SignedSource<<ab5f623e7bc987c78600953a2d5d707d>>
  */
 
 "use strict";
@@ -526,11 +526,7 @@ __DEV__ &&
       hasValidKey(config) &&
         (checkKeyStringCoercion(config.key), (children = "" + config.key));
       hasValidRef(config);
-      if (
-        (!enableFastJSXWithoutStringRefs &&
-          (!enableFastJSXWithStringRefs || "ref" in config)) ||
-        "key" in config
-      ) {
+      if ("key" in config) {
         maybeKey = {};
         for (var propName in config)
           "key" !== propName && (maybeKey[propName] = config[propName]);
@@ -633,7 +629,6 @@ __DEV__ &&
       return info;
     }
     var React = require("react"),
-      enableFastJSX = require("ReactNativeInternalFeatureFlags").enableFastJSX,
       REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -674,9 +669,7 @@ __DEV__ &&
     var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       specialPropKeyWarningShown;
     var didWarnAboutElementRef = {};
-    var enableFastJSXWithStringRefs = enableFastJSX && !0,
-      enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !0,
-      didWarnAboutKeySpread = {},
+    var didWarnAboutKeySpread = {},
       ownerHasKeyUseWarning = {};
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.jsxDEV = function (
