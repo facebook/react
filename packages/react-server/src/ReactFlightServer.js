@@ -458,8 +458,8 @@ function RequestInstance(
       environmentName === undefined
         ? () => 'Server'
         : typeof environmentName !== 'function'
-        ? () => environmentName
-        : environmentName;
+          ? () => environmentName
+          : environmentName;
     this.didWarnForKey = null;
   }
   const rootTask = createTask(
@@ -3795,10 +3795,12 @@ export function abort(request: Request, reason: mixed): void {
                 'The render was aborted by the server without a reason.',
               )
             : typeof reason === 'object' &&
-              reason !== null &&
-              typeof reason.then === 'function'
-            ? new Error('The render was aborted by the server with a promise.')
-            : reason;
+                reason !== null &&
+                typeof reason.then === 'function'
+              ? new Error(
+                  'The render was aborted by the server with a promise.',
+                )
+              : reason;
         const digest = logRecoverableError(request, error, null);
         emitErrorChunk(request, errorId, digest, error);
       }
@@ -3825,10 +3827,12 @@ export function abort(request: Request, reason: mixed): void {
                 'The render was aborted by the server without a reason.',
               )
             : typeof reason === 'object' &&
-              reason !== null &&
-              typeof reason.then === 'function'
-            ? new Error('The render was aborted by the server with a promise.')
-            : reason;
+                reason !== null &&
+                typeof reason.then === 'function'
+              ? new Error(
+                  'The render was aborted by the server with a promise.',
+                )
+              : reason;
       }
       abortListeners.forEach(callback => callback(error));
       abortListeners.clear();

@@ -80,7 +80,7 @@
     "minimist": "^1.2.3",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
-    "prettier": "3.0.3",
+    "prettier": "^3.3.3",
     "prettier-2": "npm:prettier@^2",
     "pretty-format": "^29.4.1",
     "prop-types": "^15.6.2",

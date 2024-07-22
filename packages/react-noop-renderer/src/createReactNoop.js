@@ -245,7 +245,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       id: instance.id,
       type: type,
       parent: instance.parent,
-      children: keepChildren ? instance.children : children ?? [],
+      children: keepChildren ? instance.children : (children ?? []),
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
@@ -503,15 +503,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       typeof queueMicrotask === 'function'
         ? queueMicrotask
         : typeof Promise !== 'undefined'
-        ? callback =>
-            Promise.resolve(null)
-              .then(callback)
-              .catch(error => {
-                setTimeout(() => {
-                  throw error;
-                });
-              })
-        : setTimeout,
+          ? callback =>
+              Promise.resolve(null)
+                .then(callback)
+                .catch(error => {
+                  setTimeout(() => {
+                    throw error;
+                  });
+                })
+          : setTimeout,
 
     prepareForCommit(): null | Object {
       return null;

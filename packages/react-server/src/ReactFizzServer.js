@@ -4763,9 +4763,9 @@ export function prepareForStartFlowingIfBeforeAllReady(request: Request) {
       ? // Render Request, we define shell complete by the pending root tasks
         request.pendingRootTasks === 0
       : // Prerender Request, we define shell complete by completedRootSegemtn
-      request.completedRootSegment === null
-      ? request.pendingRootTasks === 0
-      : request.completedRootSegment.status !== POSTPONED;
+        request.completedRootSegment === null
+        ? request.pendingRootTasks === 0
+        : request.completedRootSegment.status !== POSTPONED;
   safelyEmitEarlyPreloads(request, shellComplete);
 }
 
