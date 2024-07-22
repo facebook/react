@@ -1528,7 +1528,7 @@ function finishClassComponent(
 ): ReactNodeList {
   let nextChildren;
   if (__DEV__) {
-    nextChildren = callRenderInDEV(instance);
+    nextChildren = (callRenderInDEV(instance): any);
   } else {
     nextChildren = instance.render();
   }
