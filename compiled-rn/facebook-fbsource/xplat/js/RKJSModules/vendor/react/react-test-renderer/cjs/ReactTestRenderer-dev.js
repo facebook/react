@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bd7398e0cb9a06131182a104032c82ad>>
+ * @generated SignedSource<<293fd5951a2216d203ca5319eaf57618>>
  */
 
 "use strict";
@@ -520,28 +520,6 @@ __DEV__ &&
         : "";
       "function" === typeof fn && componentFrameCache.set(fn, sampleLines);
       return sampleLines;
-    }
-    function callComponentInDEV(Component, props, secondArg) {
-      var wasRendering = isRendering;
-      isRendering = !0;
-      try {
-        return Component(props, secondArg);
-      } finally {
-        isRendering = wasRendering;
-      }
-    }
-    function callRenderInDEV(instance) {
-      var wasRendering = isRendering;
-      isRendering = !0;
-      try {
-        return instance.render();
-      } finally {
-        isRendering = wasRendering;
-      }
-    }
-    function callLazyInitInDEV(lazy) {
-      var init = lazy._init;
-      return init(lazy._payload);
     }
     function describeFiber(fiber) {
       switch (fiber.tag) {
@@ -13466,6 +13444,39 @@ __DEV__ &&
       },
       suspendedThenable = null,
       needsToResetSuspendedThenableDEV = !1,
+      callComponent = {
+        "react-stack-bottom-frame": function (Component, props, secondArg) {
+          var wasRendering = isRendering;
+          isRendering = !0;
+          try {
+            return Component(props, secondArg);
+          } finally {
+            isRendering = wasRendering;
+          }
+        }
+      },
+      callComponentInDEV =
+        callComponent["react-stack-bottom-frame"].bind(callComponent),
+      callRender = {
+        "react-stack-bottom-frame": function (instance) {
+          var wasRendering = isRendering;
+          isRendering = !0;
+          try {
+            return instance.render();
+          } finally {
+            isRendering = wasRendering;
+          }
+        }
+      },
+      callRenderInDEV = callRender["react-stack-bottom-frame"].bind(callRender),
+      callLazyInit = {
+        "react-stack-bottom-frame": function (lazy) {
+          var init = lazy._init;
+          return init(lazy._payload);
+        }
+      },
+      callLazyInitInDEV =
+        callLazyInit["react-stack-bottom-frame"].bind(callLazyInit),
       thenableState$1 = null,
       thenableIndexCounter$1 = 0,
       currentDebugInfo = null,
@@ -15069,14 +15080,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-1d5a208f-20240715"
+        reconcilerVersion: "19.0.0-native-fb-792f1921-20240722"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-1d5a208f-20240715",
+      version: "19.0.0-native-fb-792f1921-20240722",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

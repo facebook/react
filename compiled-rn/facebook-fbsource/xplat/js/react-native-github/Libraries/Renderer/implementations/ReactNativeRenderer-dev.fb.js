@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6c2e22ae4aa981096edd912761e753ef>>
+ * @generated SignedSource<<0e8b60e07ddcb9e717a9bfa981068faa>>
  */
 
 "use strict";
@@ -385,28 +385,6 @@ __DEV__ &&
         : "";
       "function" === typeof fn && componentFrameCache.set(fn, sampleLines);
       return sampleLines;
-    }
-    function callComponentInDEV(Component, props, secondArg) {
-      var wasRendering = isRendering;
-      isRendering = !0;
-      try {
-        return Component(props, secondArg);
-      } finally {
-        isRendering = wasRendering;
-      }
-    }
-    function callRenderInDEV(instance) {
-      var wasRendering = isRendering;
-      isRendering = !0;
-      try {
-        return instance.render();
-      } finally {
-        isRendering = wasRendering;
-      }
-    }
-    function callLazyInitInDEV(lazy) {
-      var init = lazy._init;
-      return init(lazy._payload);
     }
     function describeFiber(fiber) {
       switch (fiber.tag) {
@@ -15399,6 +15377,39 @@ __DEV__ &&
       },
       suspendedThenable = null,
       needsToResetSuspendedThenableDEV = !1,
+      callComponent = {
+        "react-stack-bottom-frame": function (Component, props, secondArg) {
+          var wasRendering = isRendering;
+          isRendering = !0;
+          try {
+            return Component(props, secondArg);
+          } finally {
+            isRendering = wasRendering;
+          }
+        }
+      },
+      callComponentInDEV =
+        callComponent["react-stack-bottom-frame"].bind(callComponent),
+      callRender = {
+        "react-stack-bottom-frame": function (instance) {
+          var wasRendering = isRendering;
+          isRendering = !0;
+          try {
+            return instance.render();
+          } finally {
+            isRendering = wasRendering;
+          }
+        }
+      },
+      callRenderInDEV = callRender["react-stack-bottom-frame"].bind(callRender),
+      callLazyInit = {
+        "react-stack-bottom-frame": function (lazy) {
+          var init = lazy._init;
+          return init(lazy._payload);
+        }
+      },
+      callLazyInitInDEV =
+        callLazyInit["react-stack-bottom-frame"].bind(callLazyInit),
       thenableState$1 = null,
       thenableIndexCounter$1 = 0,
       currentDebugInfo = null,
@@ -16858,11 +16869,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-1d5a208f-20240715" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-792f1921-20240722" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-1d5a208f-20240715\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-792f1921-20240722\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16910,12 +16921,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-1d5a208f-20240715"
+        reconcilerVersion: "19.0.0-native-fb-792f1921-20240722"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-1d5a208f-20240715",
+      version: "19.0.0-native-fb-792f1921-20240722",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
