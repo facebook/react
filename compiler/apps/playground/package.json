@@ -33,7 +33,7 @@
     "monaco-editor": "^0.34.1",
     "next": "^13.5.6",
     "notistack": "^3.0.0-alpha.7",
-    "prettier": "3.0.3",
+    "prettier": "^3.3.3",
     "pretty-format": "^29.3.1",
     "re-resizable": "^6.9.16",
     "react": "18.2.0",
@@ -42,7 +42,6 @@
   },
   "devDependencies": {
     "@types/node": "18.11.9",
-    "@types/prettier": "^2.7.1",
     "@types/react": "18.0.25",
     "@types/react-dom": "18.0.9",
     "autoprefixer": "^10.4.13",

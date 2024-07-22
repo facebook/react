@@ -37,13 +37,9 @@ function Component(props) {
     t0 = $[1];
   }
   const item = t0;
-  const x = useNoAlias(
-    item,
-    () => {
-      console.log(props);
-    },
-    [props.a],
-  );
+  const x = useNoAlias(item, () => {
+    console.log(props);
+  }, [props.a]);
   let t1;
   if ($[2] !== x || $[3] !== item) {
     t1 = [x, item];

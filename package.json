@@ -82,6 +82,7 @@
     "ncp": "^2.0.0",
     "prettier": "^3.3.3",
     "prettier-2": "npm:prettier@^2",
+    "prettier-plugin-hermes-parser": "^0.23.0",
     "pretty-format": "^29.4.1",
     "prop-types": "^15.6.2",
     "random-seed": "^0.3.0",

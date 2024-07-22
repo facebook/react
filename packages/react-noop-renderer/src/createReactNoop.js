@@ -245,7 +245,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       id: instance.id,
       type: type,
       parent: instance.parent,
-      children: keepChildren ? instance.children : (children ?? []),
+      children: keepChildren ? instance.children : children ?? [],
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
