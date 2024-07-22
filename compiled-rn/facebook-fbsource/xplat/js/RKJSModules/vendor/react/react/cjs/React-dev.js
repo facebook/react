@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f65556f277c0ddb5de72662cf31257eb>>
+ * @generated SignedSource<<30be7a182490ce66443590abf00f7a21>>
  */
 
 "use strict";
@@ -249,8 +249,8 @@ __DEV__ &&
             -1 < x.stack.indexOf("\n    at")
               ? " (<anonymous>)"
               : -1 < x.stack.indexOf("@")
-              ? "@unknown:0:0"
-              : "";
+                ? "@unknown:0:0"
+                : "";
         }
       return "\n" + prefix + name + suffix;
     }
@@ -549,13 +549,15 @@ __DEV__ &&
         null === type
           ? (isStaticChildren = "null")
           : isArrayImpl(type)
-          ? (isStaticChildren = "array")
-          : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
-          ? ((isStaticChildren =
-              "<" + (getComponentNameFromType(type.type) || "Unknown") + " />"),
-            (children =
-              " Did you accidentally export a JSX literal instead of a component?"))
-          : (isStaticChildren = typeof type);
+            ? (isStaticChildren = "array")
+            : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
+              ? ((isStaticChildren =
+                  "<" +
+                  (getComponentNameFromType(type.type) || "Unknown") +
+                  " />"),
+                (children =
+                  " Did you accidentally export a JSX literal instead of a component?"))
+              : (isStaticChildren = typeof type);
         error$jscomp$0(
           "React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s",
           isStaticChildren,
@@ -1418,13 +1420,13 @@ __DEV__ &&
           isArrayImpl(type)
             ? (typeString = "array")
             : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
-            ? ((typeString =
-                "<" +
-                (getComponentNameFromType(type.type) || "Unknown") +
-                " />"),
-              (i =
-                " Did you accidentally export a JSX literal instead of a component?"))
-            : (typeString = typeof type);
+              ? ((typeString =
+                  "<" +
+                  (getComponentNameFromType(type.type) || "Unknown") +
+                  " />"),
+                (i =
+                  " Did you accidentally export a JSX literal instead of a component?"))
+              : (typeString = typeof type);
         error$jscomp$0(
           "React.createElement: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s",
           typeString,
@@ -1496,18 +1498,18 @@ __DEV__ &&
             "forwardRef requires a render function but received a `memo` component. Instead of forwardRef(memo(...)), use memo(forwardRef(...))."
           )
         : "function" !== typeof render
-        ? error$jscomp$0(
-            "forwardRef requires a render function but was given %s.",
-            null === render ? "null" : typeof render
-          )
-        : 0 !== render.length &&
-          2 !== render.length &&
-          error$jscomp$0(
-            "forwardRef render functions accept exactly two parameters: props and ref. %s",
-            1 === render.length
-              ? "Did you forget to use the ref parameter?"
-              : "Any additional parameter will be undefined."
-          );
+          ? error$jscomp$0(
+              "forwardRef requires a render function but was given %s.",
+              null === render ? "null" : typeof render
+            )
+          : 0 !== render.length &&
+            2 !== render.length &&
+            error$jscomp$0(
+              "forwardRef render functions accept exactly two parameters: props and ref. %s",
+              1 === render.length
+                ? "Did you forget to use the ref parameter?"
+                : "Any additional parameter will be undefined."
+            );
       null != render &&
         null != render.defaultProps &&
         error$jscomp$0(
@@ -1699,7 +1701,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-d025ddd3-20240722";
+    exports.version = "19.0.0-native-fb-b7e7f1a3-20240722";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

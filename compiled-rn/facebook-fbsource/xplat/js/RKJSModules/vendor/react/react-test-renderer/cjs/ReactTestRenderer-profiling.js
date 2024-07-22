@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d093be3b8d71535c7436935a2ad7a27b>>
+ * @generated SignedSource<<2806d5853116c243053a4a3f0cc3ca1b>>
  */
 
 "use strict";
@@ -180,8 +180,8 @@ function describeBuiltInComponentFrame(name) {
         -1 < x.stack.indexOf("\n    at")
           ? " (<anonymous>)"
           : -1 < x.stack.indexOf("@")
-          ? "@unknown:0:0"
-          : "";
+            ? "@unknown:0:0"
+            : "";
     }
   return "\n" + prefix + name + suffix;
 }
@@ -651,14 +651,14 @@ function getNextLanes(root, wipLanes) {
   return 0 === nextLanes
     ? 0
     : 0 !== wipLanes &&
-      wipLanes !== nextLanes &&
-      0 === (wipLanes & suspendedLanes) &&
-      ((suspendedLanes = nextLanes & -nextLanes),
-      (root = wipLanes & -wipLanes),
-      suspendedLanes >= root ||
-        (32 === suspendedLanes && 0 !== (root & 4194176)))
-    ? wipLanes
-    : nextLanes;
+        wipLanes !== nextLanes &&
+        0 === (wipLanes & suspendedLanes) &&
+        ((suspendedLanes = nextLanes & -nextLanes),
+        (root = wipLanes & -wipLanes),
+        suspendedLanes >= root ||
+          (32 === suspendedLanes && 0 !== (root & 4194176)))
+      ? wipLanes
+      : nextLanes;
 }
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
@@ -3763,8 +3763,8 @@ function checkShouldComponentUpdate(
   return "function" === typeof workInProgress.shouldComponentUpdate
     ? workInProgress.shouldComponentUpdate(newProps, newState, nextContext)
     : ctor.prototype && ctor.prototype.isPureReactComponent
-    ? !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
-    : !0;
+      ? !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
+      : !0;
 }
 function constructClassInstance(workInProgress, ctor, props) {
   var isLegacyContextConsumer = !1,
@@ -4737,46 +4737,47 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             renderLanes
           )))
         : null !== workInProgress.memoizedState
-        ? (reuseSuspenseHandlerOnStack(workInProgress),
-          (workInProgress.child = current.child),
-          (workInProgress.flags |= 128),
-          (workInProgress = null))
-        : (reuseSuspenseHandlerOnStack(workInProgress),
-          (nextPrimaryChildren = nextProps.fallback),
-          (showFallback = workInProgress.mode),
-          (nextProps = createFiberFromOffscreen(
-            { mode: "visible", children: nextProps.children },
-            showFallback,
-            0,
-            null
-          )),
-          (nextPrimaryChildren = createFiberFromFragment(
-            nextPrimaryChildren,
-            showFallback,
-            renderLanes,
-            null
-          )),
-          (nextPrimaryChildren.flags |= 2),
-          (nextProps.return = workInProgress),
-          (nextPrimaryChildren.return = workInProgress),
-          (nextProps.sibling = nextPrimaryChildren),
-          (workInProgress.child = nextProps),
-          0 !== (workInProgress.mode & 1) &&
-            reconcileChildFibers(
-              workInProgress,
-              current.child,
-              null,
+          ? (reuseSuspenseHandlerOnStack(workInProgress),
+            (workInProgress.child = current.child),
+            (workInProgress.flags |= 128),
+            (workInProgress = null))
+          : (reuseSuspenseHandlerOnStack(workInProgress),
+            (nextPrimaryChildren = nextProps.fallback),
+            (showFallback = workInProgress.mode),
+            (nextProps = createFiberFromOffscreen(
+              { mode: "visible", children: nextProps.children },
+              showFallback,
+              0,
+              null
+            )),
+            (nextPrimaryChildren = createFiberFromFragment(
+              nextPrimaryChildren,
+              showFallback,
+              renderLanes,
+              null
+            )),
+            (nextPrimaryChildren.flags |= 2),
+            (nextProps.return = workInProgress),
+            (nextPrimaryChildren.return = workInProgress),
+            (nextProps.sibling = nextPrimaryChildren),
+            (workInProgress.child = nextProps),
+            0 !== (workInProgress.mode & 1) &&
+              reconcileChildFibers(
+                workInProgress,
+                current.child,
+                null,
+                renderLanes
+              ),
+            (nextProps = workInProgress.child),
+            (nextProps.memoizedState =
+              mountSuspenseOffscreenState(renderLanes)),
+            (nextProps.childLanes = getRemainingWorkInPrimaryTree(
+              current,
+              JSCompiler_temp,
               renderLanes
-            ),
-          (nextProps = workInProgress.child),
-          (nextProps.memoizedState = mountSuspenseOffscreenState(renderLanes)),
-          (nextProps.childLanes = getRemainingWorkInPrimaryTree(
-            current,
-            JSCompiler_temp,
-            renderLanes
-          )),
-          (workInProgress.memoizedState = SUSPENDED_MARKER),
-          (workInProgress = nextPrimaryChildren));
+            )),
+            (workInProgress.memoizedState = SUSPENDED_MARKER),
+            (workInProgress = nextPrimaryChildren));
     else if ((pushPrimaryTreeSuspenseHandler(workInProgress), shim$1()))
       (JSCompiler_temp = shim$1().digest),
         (nextProps = Error(
@@ -7641,29 +7642,32 @@ function commitPassiveMountOnFiber(
               committedTransitions
             )
           : finishedWork.mode & 1
-          ? recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork)
-          : ((instance._visibility |= 4),
-            recursivelyTraversePassiveMountEffects(
+            ? recursivelyTraverseAtomicPassiveEffects(
+                finishedRoot,
+                finishedWork
+              )
+            : ((instance._visibility |= 4),
+              recursivelyTraversePassiveMountEffects(
+                finishedRoot,
+                finishedWork,
+                committedLanes,
+                committedTransitions
+              ))
+        : instance._visibility & 4
+          ? recursivelyTraversePassiveMountEffects(
               finishedRoot,
               finishedWork,
               committedLanes,
               committedTransitions
-            ))
-        : instance._visibility & 4
-        ? recursivelyTraversePassiveMountEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions
-          )
-        : ((instance._visibility |= 4),
-          recursivelyTraverseReconnectPassiveEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions,
-            0 !== (finishedWork.subtreeFlags & 10256)
-          ));
+            )
+          : ((instance._visibility |= 4),
+            recursivelyTraverseReconnectPassiveEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions,
+              0 !== (finishedWork.subtreeFlags & 10256)
+            ));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
           finishedWork.alternate,
@@ -7731,18 +7735,18 @@ function recursivelyTraverseReconnectPassiveEffects(
                 includeWorkInProgressEffects
               )
             : finishedWork.mode & 1
-            ? recursivelyTraverseAtomicPassiveEffects(
-                finishedRoot,
-                finishedWork
-              )
-            : ((instance._visibility |= 4),
-              recursivelyTraverseReconnectPassiveEffects(
-                finishedRoot,
-                finishedWork,
-                committedLanes,
-                committedTransitions,
-                includeWorkInProgressEffects
-              ))
+              ? recursivelyTraverseAtomicPassiveEffects(
+                  finishedRoot,
+                  finishedWork
+                )
+              : ((instance._visibility |= 4),
+                recursivelyTraverseReconnectPassiveEffects(
+                  finishedRoot,
+                  finishedWork,
+                  committedLanes,
+                  committedTransitions,
+                  includeWorkInProgressEffects
+                ))
           : ((instance._visibility |= 4),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
@@ -8486,10 +8490,10 @@ function handleThrow(root, thrownValue) {
           thrownValue === SelectiveHydrationException
             ? 8
             : null !== thrownValue &&
-              "object" === typeof thrownValue &&
-              "function" === typeof thrownValue.then
-            ? 6
-            : 1);
+                "object" === typeof thrownValue &&
+                "function" === typeof thrownValue.then
+              ? 6
+              : 1);
   workInProgressThrownValue = thrownValue;
   handler = workInProgress;
   if (null === handler)
@@ -9702,8 +9706,8 @@ function childrenToTree(node) {
   return 0 === node.length
     ? null
     : 1 === node.length
-    ? toTree(node[0])
-    : flatten(node.map(toTree));
+      ? toTree(node[0])
+      : flatten(node.map(toTree));
 }
 function nodeAndSiblingsArray(nodeWithSibling) {
   for (var array = []; null != nodeWithSibling; )
@@ -9789,8 +9793,8 @@ function getChildren(parent) {
     validWrapperTypes.has(node.tag)
       ? children.push(wrapFiber(node))
       : 6 === node.tag
-      ? children.push("" + node.memoizedProps)
-      : (descend = !0);
+        ? children.push("" + node.memoizedProps)
+        : (descend = !0);
     if (descend && null !== node.child)
       (node.child.return = node), (node = node.child);
     else {
@@ -9955,7 +9959,7 @@ var devToolsConfig$jscomp$inline_1117 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-d025ddd3-20240722",
+  version: "19.0.0-native-fb-b7e7f1a3-20240722",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9999,7 +10003,7 @@ var devToolsConfig$jscomp$inline_1117 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-d025ddd3-20240722"
+  reconcilerVersion: "19.0.0-native-fb-b7e7f1a3-20240722"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

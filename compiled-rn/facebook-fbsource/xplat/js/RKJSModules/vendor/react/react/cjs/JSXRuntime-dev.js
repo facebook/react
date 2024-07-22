@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<31c9222f86ee2d022abecb8d71e7a6e2>>
+ * @generated SignedSource<<61d53156cb278d0e49c30a50dbd0c8c1>>
  */
 
 "use strict";
@@ -168,8 +168,8 @@ __DEV__ &&
             -1 < x.stack.indexOf("\n    at")
               ? " (<anonymous>)"
               : -1 < x.stack.indexOf("@")
-              ? "@unknown:0:0"
-              : "";
+                ? "@unknown:0:0"
+                : "";
         }
       return "\n" + prefix + name + suffix;
     }
@@ -486,13 +486,15 @@ __DEV__ &&
         null === type
           ? (isStaticChildren = "null")
           : isArrayImpl(type)
-          ? (isStaticChildren = "array")
-          : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
-          ? ((isStaticChildren =
-              "<" + (getComponentNameFromType(type.type) || "Unknown") + " />"),
-            (children =
-              " Did you accidentally export a JSX literal instead of a component?"))
-          : (isStaticChildren = typeof type);
+            ? (isStaticChildren = "array")
+            : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
+              ? ((isStaticChildren =
+                  "<" +
+                  (getComponentNameFromType(type.type) || "Unknown") +
+                  " />"),
+                (children =
+                  " Did you accidentally export a JSX literal instead of a component?"))
+              : (isStaticChildren = typeof type);
         error(
           "React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s",
           isStaticChildren,

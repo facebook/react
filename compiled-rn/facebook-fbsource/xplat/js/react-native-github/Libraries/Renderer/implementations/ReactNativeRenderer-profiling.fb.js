@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fe511b7a38bbf95a644823915ef938f5>>
+ * @generated SignedSource<<513bac8c2943e3cb198c65c6f2f44d85>>
  */
 
 "use strict";
@@ -66,8 +66,8 @@ function describeBuiltInComponentFrame(name) {
         -1 < x.stack.indexOf("\n    at")
           ? " (<anonymous>)"
           : -1 < x.stack.indexOf("@")
-          ? "@unknown:0:0"
-          : "";
+            ? "@unknown:0:0"
+            : "";
     }
   return "\n" + prefix + name + suffix;
 }
@@ -398,8 +398,8 @@ function SyntheticEvent(
       ((targetInst = dispatchConfig[propName])
         ? (this[propName] = targetInst(nativeEvent))
         : "target" === propName
-        ? (this.target = nativeEventTarget)
-        : (this[propName] = nativeEvent[propName]));
+          ? (this.target = nativeEventTarget)
+          : (this[propName] = nativeEvent[propName]));
   this.isDefaultPrevented = (
     null != nativeEvent.defaultPrevented
       ? nativeEvent.defaultPrevented
@@ -628,10 +628,10 @@ function accumulate(current, next) {
   return null == current
     ? next
     : isArrayImpl(current)
-    ? current.concat(next)
-    : isArrayImpl(next)
-    ? [current].concat(next)
-    : [current, next];
+      ? current.concat(next)
+      : isArrayImpl(next)
+        ? [current].concat(next)
+        : [current, next];
 }
 function accumulateInto(current, next) {
   if (null == next)
@@ -818,10 +818,10 @@ var ResponderEventPlugin = {
         var shouldSetEventType = isStartish(topLevelType)
           ? eventTypes.startShouldSetResponder
           : isMoveish(topLevelType)
-          ? eventTypes.moveShouldSetResponder
-          : "topSelectionChange" === topLevelType
-          ? eventTypes.selectionChangeShouldSetResponder
-          : eventTypes.scrollShouldSetResponder;
+            ? eventTypes.moveShouldSetResponder
+            : "topSelectionChange" === topLevelType
+              ? eventTypes.selectionChangeShouldSetResponder
+              : eventTypes.scrollShouldSetResponder;
         if (responderInst)
           b: {
             var JSCompiler_temp = responderInst;
@@ -977,10 +977,10 @@ var ResponderEventPlugin = {
         (shouldSetEventType = shouldSetEventType
           ? eventTypes.responderStart
           : JSCompiler_temp
-          ? eventTypes.responderMove
-          : targetInst
-          ? eventTypes.responderEnd
-          : null)
+            ? eventTypes.responderMove
+            : targetInst
+              ? eventTypes.responderEnd
+              : null)
       )
         (shouldSetEventType = ResponderSyntheticEvent.getPooled(
           shouldSetEventType,
@@ -1043,8 +1043,8 @@ var ResponderEventPlugin = {
         (topLevelType = shouldSetEventType
           ? eventTypes.responderTerminate
           : topLevelType
-          ? eventTypes.responderRelease
-          : null)
+            ? eventTypes.responderRelease
+            : null)
       )
         (nativeEvent = ResponderSyntheticEvent.getPooled(
           topLevelType,
@@ -1611,8 +1611,8 @@ function diffNestedProperty(
     return nextProp
       ? addNestedProperty(updatePayload, nextProp, validAttributes)
       : prevProp
-      ? clearNestedProperty(updatePayload, prevProp, validAttributes)
-      : updatePayload;
+        ? clearNestedProperty(updatePayload, prevProp, validAttributes)
+        : updatePayload;
   if (!isArrayImpl(prevProp) && !isArrayImpl(nextProp))
     return diffProperties(updatePayload, prevProp, nextProp, validAttributes);
   if (isArrayImpl(prevProp) && isArrayImpl(nextProp)) {
@@ -2038,14 +2038,14 @@ function getNextLanes(root, wipLanes) {
   return 0 === nextLanes
     ? 0
     : 0 !== wipLanes &&
-      wipLanes !== nextLanes &&
-      0 === (wipLanes & suspendedLanes) &&
-      ((suspendedLanes = nextLanes & -nextLanes),
-      (root = wipLanes & -wipLanes),
-      suspendedLanes >= root ||
-        (32 === suspendedLanes && 0 !== (root & 4194176)))
-    ? wipLanes
-    : nextLanes;
+        wipLanes !== nextLanes &&
+        0 === (wipLanes & suspendedLanes) &&
+        ((suspendedLanes = nextLanes & -nextLanes),
+        (root = wipLanes & -wipLanes),
+        suspendedLanes >= root ||
+          (32 === suspendedLanes && 0 !== (root & 4194176)))
+      ? wipLanes
+      : nextLanes;
 }
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
@@ -5208,8 +5208,8 @@ function checkShouldComponentUpdate(
   return "function" === typeof workInProgress.shouldComponentUpdate
     ? workInProgress.shouldComponentUpdate(newProps, newState, nextContext)
     : ctor.prototype && ctor.prototype.isPureReactComponent
-    ? !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
-    : !0;
+      ? !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
+      : !0;
 }
 function constructClassInstance(workInProgress, ctor, props) {
   var isLegacyContextConsumer = !1,
@@ -6177,46 +6177,47 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             renderLanes
           )))
         : null !== workInProgress.memoizedState
-        ? (reuseSuspenseHandlerOnStack(workInProgress),
-          (workInProgress.child = current.child),
-          (workInProgress.flags |= 128),
-          (workInProgress = null))
-        : (reuseSuspenseHandlerOnStack(workInProgress),
-          (nextPrimaryChildren = nextProps.fallback),
-          (showFallback = workInProgress.mode),
-          (nextProps = createFiberFromOffscreen(
-            { mode: "visible", children: nextProps.children },
-            showFallback,
-            0,
-            null
-          )),
-          (nextPrimaryChildren = createFiberFromFragment(
-            nextPrimaryChildren,
-            showFallback,
-            renderLanes,
-            null
-          )),
-          (nextPrimaryChildren.flags |= 2),
-          (nextProps.return = workInProgress),
-          (nextPrimaryChildren.return = workInProgress),
-          (nextProps.sibling = nextPrimaryChildren),
-          (workInProgress.child = nextProps),
-          0 !== (workInProgress.mode & 1) &&
-            reconcileChildFibers(
-              workInProgress,
-              current.child,
-              null,
+          ? (reuseSuspenseHandlerOnStack(workInProgress),
+            (workInProgress.child = current.child),
+            (workInProgress.flags |= 128),
+            (workInProgress = null))
+          : (reuseSuspenseHandlerOnStack(workInProgress),
+            (nextPrimaryChildren = nextProps.fallback),
+            (showFallback = workInProgress.mode),
+            (nextProps = createFiberFromOffscreen(
+              { mode: "visible", children: nextProps.children },
+              showFallback,
+              0,
+              null
+            )),
+            (nextPrimaryChildren = createFiberFromFragment(
+              nextPrimaryChildren,
+              showFallback,
+              renderLanes,
+              null
+            )),
+            (nextPrimaryChildren.flags |= 2),
+            (nextProps.return = workInProgress),
+            (nextPrimaryChildren.return = workInProgress),
+            (nextProps.sibling = nextPrimaryChildren),
+            (workInProgress.child = nextProps),
+            0 !== (workInProgress.mode & 1) &&
+              reconcileChildFibers(
+                workInProgress,
+                current.child,
+                null,
+                renderLanes
+              ),
+            (nextProps = workInProgress.child),
+            (nextProps.memoizedState =
+              mountSuspenseOffscreenState(renderLanes)),
+            (nextProps.childLanes = getRemainingWorkInPrimaryTree(
+              current,
+              JSCompiler_temp,
               renderLanes
-            ),
-          (nextProps = workInProgress.child),
-          (nextProps.memoizedState = mountSuspenseOffscreenState(renderLanes)),
-          (nextProps.childLanes = getRemainingWorkInPrimaryTree(
-            current,
-            JSCompiler_temp,
-            renderLanes
-          )),
-          (workInProgress.memoizedState = SUSPENDED_MARKER),
-          (workInProgress = nextPrimaryChildren));
+            )),
+            (workInProgress.memoizedState = SUSPENDED_MARKER),
+            (workInProgress = nextPrimaryChildren));
     else if ((pushPrimaryTreeSuspenseHandler(workInProgress), shim$1()))
       (JSCompiler_temp = shim$1().digest),
         (nextProps = Error(
@@ -9241,29 +9242,32 @@ function commitPassiveMountOnFiber(
               committedTransitions
             )
           : finishedWork.mode & 1
-          ? recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork)
-          : ((instance._visibility |= 4),
-            recursivelyTraversePassiveMountEffects(
+            ? recursivelyTraverseAtomicPassiveEffects(
+                finishedRoot,
+                finishedWork
+              )
+            : ((instance._visibility |= 4),
+              recursivelyTraversePassiveMountEffects(
+                finishedRoot,
+                finishedWork,
+                committedLanes,
+                committedTransitions
+              ))
+        : instance._visibility & 4
+          ? recursivelyTraversePassiveMountEffects(
               finishedRoot,
               finishedWork,
               committedLanes,
               committedTransitions
-            ))
-        : instance._visibility & 4
-        ? recursivelyTraversePassiveMountEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions
-          )
-        : ((instance._visibility |= 4),
-          recursivelyTraverseReconnectPassiveEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions,
-            0 !== (finishedWork.subtreeFlags & 10256)
-          ));
+            )
+          : ((instance._visibility |= 4),
+            recursivelyTraverseReconnectPassiveEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions,
+              0 !== (finishedWork.subtreeFlags & 10256)
+            ));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
           finishedWork.alternate,
@@ -9331,18 +9335,18 @@ function recursivelyTraverseReconnectPassiveEffects(
                 includeWorkInProgressEffects
               )
             : finishedWork.mode & 1
-            ? recursivelyTraverseAtomicPassiveEffects(
-                finishedRoot,
-                finishedWork
-              )
-            : ((instance._visibility |= 4),
-              recursivelyTraverseReconnectPassiveEffects(
-                finishedRoot,
-                finishedWork,
-                committedLanes,
-                committedTransitions,
-                includeWorkInProgressEffects
-              ))
+              ? recursivelyTraverseAtomicPassiveEffects(
+                  finishedRoot,
+                  finishedWork
+                )
+              : ((instance._visibility |= 4),
+                recursivelyTraverseReconnectPassiveEffects(
+                  finishedRoot,
+                  finishedWork,
+                  committedLanes,
+                  committedTransitions,
+                  includeWorkInProgressEffects
+                ))
           : ((instance._visibility |= 4),
             recursivelyTraverseReconnectPassiveEffects(
               finishedRoot,
@@ -10066,10 +10070,10 @@ function handleThrow(root, thrownValue) {
           thrownValue === SelectiveHydrationException
             ? 8
             : null !== thrownValue &&
-              "object" === typeof thrownValue &&
-              "function" === typeof thrownValue.then
-            ? 6
-            : 1);
+                "object" === typeof thrownValue &&
+                "function" === typeof thrownValue.then
+              ? 6
+              : 1);
   workInProgressThrownValue = thrownValue;
   handler = workInProgress;
   if (null === handler)
@@ -11297,10 +11301,10 @@ function findNodeHandle(componentOrHandle) {
   return null == componentOrHandle
     ? componentOrHandle
     : null != componentOrHandle._nativeTag
-    ? componentOrHandle._nativeTag
-    : ReactNativePrivateInterface.getNativeTagFromPublicInstance(
-        componentOrHandle
-      );
+      ? componentOrHandle._nativeTag
+      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+          componentOrHandle
+        );
 }
 var emptyObject = {};
 function createHierarchy(fiberHierarchy) {
@@ -11405,11 +11409,11 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     traverseOwnerTreeUp(hierarchy, instance);
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-d025ddd3-20240722" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-b7e7f1a3-20240722" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-d025ddd3-20240722\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-b7e7f1a3-20240722\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11459,7 +11463,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1291 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-native-fb-d025ddd3-20240722",
+    version: "19.0.0-native-fb-b7e7f1a3-20240722",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11515,7 +11519,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-d025ddd3-20240722"
+  reconcilerVersion: "19.0.0-native-fb-b7e7f1a3-20240722"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
@@ -11551,10 +11555,10 @@ exports.findHostInstance_DEPRECATED = function (componentOrHandle) {
   return null == componentOrHandle
     ? null
     : componentOrHandle.canonical && componentOrHandle.canonical.publicInstance
-    ? componentOrHandle.canonical.publicInstance
-    : componentOrHandle._nativeTag
-    ? componentOrHandle
-    : findHostInstance(componentOrHandle);
+      ? componentOrHandle.canonical.publicInstance
+      : componentOrHandle._nativeTag
+        ? componentOrHandle
+        : findHostInstance(componentOrHandle);
 };
 exports.findNodeHandle = findNodeHandle;
 exports.getInspectorDataForInstance = getInspectorDataForInstance;
