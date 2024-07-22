@@ -146,7 +146,21 @@ function filterStackTrace(error: Error, skipFrames: number): ReactStackTrace {
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
   // the DevTools or framework's ignore lists to filter them out.
-  return parseStackTrace(error, skipFrames).filter(isNotExternal);
+  const stack = parseStackTrace(error, skipFrames).filter(isNotExternal);
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const url = callsite[1];
+    if (url.startsWith('rsc://React/')) {
+      // This callsite is a virtual fake callsite that came from another Flight client.
+      // We need to reverse it back into the original location by stripping its prefix
+      // and suffix.
+      const suffixIdx = url.lastIndexOf('?');
+      if (suffixIdx > -1) {
+        callsite[1] = url.slice(12, suffixIdx);
+      }
+    }
+  }
+  return stack;
 }
 
 initAsyncDebugInfo();
