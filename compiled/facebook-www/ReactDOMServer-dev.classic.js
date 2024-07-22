@@ -4563,7 +4563,7 @@ __DEV__ &&
               parent: task.componentStack,
               type: componentInfo,
               owner: componentInfo.owner,
-              stack: componentInfo.stack
+              stack: null
             });
         }
     }
@@ -8857,5 +8857,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-classic-792f1921-20240722";
+    exports.version = "19.0.0-www-classic-b15c1983-20240722";
   })();

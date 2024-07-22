@@ -4329,7 +4329,7 @@ __DEV__ &&
               parent: task.componentStack,
               type: componentInfo,
               owner: componentInfo.owner,
-              stack: componentInfo.stack
+              stack: null
             });
         }
     }
