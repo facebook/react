@@ -588,8 +588,8 @@ export function createFiberFromTypeAndProps(
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
-        ? HostSingleton
-        : HostComponent;
+          ? HostSingleton
+          : HostComponent;
     } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)

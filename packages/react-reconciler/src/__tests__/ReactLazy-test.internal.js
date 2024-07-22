@@ -815,10 +815,10 @@ describe('ReactLazy', () => {
             'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
           ]
         : shouldWarnAboutMemoDefaultProps
-        ? [
-            'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-          ]
-        : [],
+          ? [
+              'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+            ]
+          : [],
     );
     expect(root).toMatchRenderedOutput('22');
 

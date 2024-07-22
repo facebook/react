@@ -650,9 +650,9 @@ export const scheduleMicrotask: any =
   typeof queueMicrotask === 'function'
     ? queueMicrotask
     : typeof localPromise !== 'undefined'
-    ? callback =>
-        localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
-    : scheduleTimeout; // TODO: Determine the best fallback here.
+      ? callback =>
+          localPromise.resolve(null).then(callback).catch(handleErrorInNextTick)
+      : scheduleTimeout; // TODO: Determine the best fallback here.
 
 function handleErrorInNextTick(error: any) {
   setTimeout(() => {
