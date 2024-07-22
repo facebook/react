@@ -638,11 +638,7 @@ __DEV__ &&
       hasValidKey(config) &&
         (checkKeyStringCoercion(config.key), (children = "" + config.key));
       hasValidRef(config) && warnIfStringRefCannotBeAutoConverted(config, self);
-      if (
-        (!enableFastJSXWithoutStringRefs &&
-          (!enableFastJSXWithStringRefs || "ref" in config)) ||
-        "key" in config
-      ) {
+      if ("ref" in config || "key" in config) {
         maybeKey = {};
         for (var propName in config)
           "key" !== propName &&
@@ -813,7 +809,6 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableFastJSX = dynamicFeatureFlags.enableFastJSX,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -867,9 +862,7 @@ __DEV__ &&
       specialPropKeyWarningShown;
     var didWarnAboutStringRefs = {};
     var didWarnAboutElementRef = {};
-    var enableFastJSXWithStringRefs = enableFastJSX && !0,
-      enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !1,
-      didWarnAboutKeySpread = {},
+    var didWarnAboutKeySpread = {},
       ownerHasKeyUseWarning = {};
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.jsxDEV = function (

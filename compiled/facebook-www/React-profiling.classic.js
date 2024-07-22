@@ -18,7 +18,6 @@
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-  enableFastJSX = dynamicFeatureFlags.enableFastJSX,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -101,8 +100,6 @@ function getOwner() {
   var dispatcher = ReactSharedInternals.A;
   return null === dispatcher ? null : dispatcher.getOwner();
 }
-var enableFastJSXWithStringRefs = enableFastJSX && !0,
-  enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !1;
 function ReactElement(type, key, _ref, self, source, owner, props) {
   _ref = props.ref;
   return {
@@ -118,11 +115,7 @@ function jsxProd(type, config, maybeKey) {
   var key = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  if (
-    (!enableFastJSXWithoutStringRefs &&
-      (!enableFastJSXWithStringRefs || "ref" in config)) ||
-    "key" in config
-  ) {
+  if ("ref" in config || "key" in config) {
     maybeKey = {};
     for (var propName in config)
       "key" !== propName &&
@@ -673,7 +666,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-classic-b15c1983-20240722";
+exports.version = "19.0.0-www-classic-d025ddd3-20240722";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

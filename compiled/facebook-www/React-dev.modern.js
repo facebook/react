@@ -697,11 +697,7 @@ __DEV__ &&
       hasValidKey(config) &&
         (checkKeyStringCoercion(config.key), (children = "" + config.key));
       hasValidRef(config) && warnIfStringRefCannotBeAutoConverted(config, self);
-      if (
-        (!enableFastJSXWithoutStringRefs &&
-          (!enableFastJSXWithStringRefs || "ref" in config)) ||
-        "key" in config
-      ) {
+      if ("ref" in config || "key" in config) {
         maybeKey = {};
         for (var propName in config)
           "key" !== propName &&
@@ -1199,7 +1195,6 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableFastJSX = dynamicFeatureFlags.enableFastJSX,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -1315,9 +1310,7 @@ __DEV__ &&
       didWarnAboutOldJSXRuntime;
     var didWarnAboutStringRefs = {};
     var didWarnAboutElementRef = {};
-    var enableFastJSXWithStringRefs = enableFastJSX && !0,
-      enableFastJSXWithoutStringRefs = enableFastJSXWithStringRefs && !1,
-      didWarnAboutKeySpread = {},
+    var didWarnAboutKeySpread = {},
       ownerHasKeyUseWarning = {},
       didWarnAboutMaps = !1,
       userProvidedKeyEscapeRegex = /\/+/g,
@@ -1978,7 +1971,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-modern-b15c1983-20240722";
+    exports.version = "19.0.0-www-modern-d025ddd3-20240722";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

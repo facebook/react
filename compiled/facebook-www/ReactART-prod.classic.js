@@ -10753,7 +10753,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-b15c1983-20240722",
+    version: "19.0.0-www-classic-d025ddd3-20240722",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1386 = {
@@ -10784,7 +10784,7 @@ var internals$jscomp$inline_1386 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-b15c1983-20240722"
+  reconcilerVersion: "19.0.0-www-classic-d025ddd3-20240722"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1387 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
