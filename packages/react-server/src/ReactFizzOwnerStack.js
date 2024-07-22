@@ -8,7 +8,7 @@
  */
 
 // TODO: Make this configurable on the root.
-const externalRegExp = /\/node\_modules\/|\(\<anonymous\>\)/;
+const externalRegExp = /\/node\_modules\/|\(\<anonymous\>/;
 
 function isNotExternal(stackFrame: string): boolean {
   return !externalRegExp.test(stackFrame);

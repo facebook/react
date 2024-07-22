@@ -8,7 +8,7 @@
  */
 
 // TODO: Make this configurable on the Request.
-const externalRegExp = /\/node\_modules\/| \(node\:| node\:|\(\<anonymous\>\)/;
+const externalRegExp = /\/node\_modules\/| \(node\:| node\:|\(\<anonymous\>/;
 
 function isNotExternal(stackFrame: string): boolean {
   return !externalRegExp.test(stackFrame);
