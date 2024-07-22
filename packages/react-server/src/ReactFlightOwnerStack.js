@@ -7,8 +7,8 @@
  * @flow
  */
 
-// TODO: Make this configurable on the root.
-const externalRegExp = /\/node\_modules\/|\(\<anonymous\>\)/;
+// TODO: Make this configurable on the Request.
+const externalRegExp = /\/node\_modules\/| \(node\:| node\:|\(\<anonymous\>\)/;
 
 function isNotExternal(stackFrame: string): boolean {
   return !externalRegExp.test(stackFrame);
@@ -32,11 +32,6 @@ function filterDebugStack(error: Error): string {
   if (idx !== -1) {
     // Cut off everything after the bottom frame since it'll be internals.
     stack = stack.slice(0, idx);
-  } else {
-    // We didn't find any internal callsite out to user space.
-    // This means that this was called outside an owner or the owner is fully internal.
-    // To keep things light we exclude the entire trace in this case.
-    return '';
   }
   const frames = stack.split('\n').slice(1); // Pop the JSX frame.
   return frames.filter(isNotExternal).join('\n');

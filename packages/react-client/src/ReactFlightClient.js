@@ -689,11 +689,21 @@ function createElement(
       value: null,
     });
     if (enableOwnerStacks) {
+      let normalizedStackTrace: null | Error = null;
+      if (stack !== null) {
+        // We create a fake stack and then create an Error object inside of it.
+        // This means that the stack trace is now normalized into the native format
+        // of the browser and the stack frames will have been registered with
+        // source mapping information.
+        // This can unfortunately happen within a user space callstack which will
+        // remain on the stack.
+        normalizedStackTrace = createFakeJSXCallStackInDEV(response, stack);
+      }
       Object.defineProperty(element, '_debugStack', {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: stack,
+        value: normalizedStackTrace,
       });
 
       let task: null | ConsoleTask = null;
@@ -724,6 +734,12 @@ function createElement(
         writable: true,
         value: task,
       });
+
+      // This owner should ideally have already been initialized to avoid getting
+      // user stack frames on the stack.
+      if (owner !== null) {
+        initializeFakeStack(response, owner);
+      }
     }
   }
 
@@ -752,9 +768,9 @@ function createElement(
         };
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.stack = element._debugStack;
+          erroredComponent.debugStack = element._debugStack;
           // $FlowFixMe[cannot-write]
-          erroredComponent.task = element._debugTask;
+          erroredComponent.debugTask = element._debugTask;
         }
         erroredChunk._debugInfo = [erroredComponent];
       }
@@ -915,9 +931,9 @@ function waitForReference<T>(
         };
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.stack = element._debugStack;
+          erroredComponent.debugStack = element._debugStack;
           // $FlowFixMe[cannot-write]
-          erroredComponent.task = element._debugTask;
+          erroredComponent.debugTask = element._debugTask;
         }
         const chunkDebugInfo: ReactDebugInfo =
           chunk._debugInfo || (chunk._debugInfo = []);
@@ -2001,15 +2017,22 @@ function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): null | ConsoleTask {
-  if (!supportsCreateTask || typeof debugInfo.stack !== 'string') {
+  if (!supportsCreateTask) {
     return null;
   }
   const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
-  const stack: string = debugInfo.stack;
-  const cachedEntry = componentInfo.task;
+  const cachedEntry = componentInfo.debugTask;
   if (cachedEntry !== undefined) {
     return cachedEntry;
   }
+
+  if (typeof debugInfo.stack !== 'string') {
+    // If this is an error, we should've really already initialized the task.
+    // If it's null, we can't initialize a task.
+    return null;
+  }
+
+  const stack = debugInfo.stack;
 
   const ownerTask =
     componentInfo.owner == null
@@ -2034,8 +2057,61 @@ function initializeFakeTask(
     componentTask = ownerTask.run(callStack);
   }
   // $FlowFixMe[cannot-write]: We consider this part of initialization.
-  componentInfo.task = componentTask;
+  componentInfo.debugTask = componentTask;
   return componentTask;
+}
+
+const createFakeJSXCallStack = {
+  'react-stack-bottom-frame': function (
+    response: Response,
+    stack: string,
+  ): Error {
+    const callStackForError = buildFakeCallStack(
+      response,
+      stack,
+      fakeJSXCallSite,
+    );
+    return callStackForError();
+  },
+};
+
+const createFakeJSXCallStackInDEV: (
+  response: Response,
+  stack: string,
+) => Error = __DEV__
+  ? // We use this technique to trick minifiers to preserve the function name.
+    (createFakeJSXCallStack['react-stack-bottom-frame'].bind(
+      createFakeJSXCallStack,
+    ): any)
+  : (null: any);
+
+/** @noinline */
+function fakeJSXCallSite() {
+  // This extra call frame represents the JSX creation function. We always pop this frame
+  // off before presenting so it needs to be part of the stack.
+  return new Error('react-stack-top-frame');
+}
+
+function initializeFakeStack(
+  response: Response,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): void {
+  const cachedEntry = debugInfo.debugStack;
+  if (cachedEntry !== undefined) {
+    return;
+  }
+  if (typeof debugInfo.stack === 'string') {
+    // $FlowFixMe[cannot-write]
+    // $FlowFixMe[prop-missing]
+    debugInfo.debugStack = createFakeJSXCallStackInDEV(
+      response,
+      debugInfo.stack,
+    );
+  }
+  if (debugInfo.owner != null) {
+    // Initialize any owners not yet initialized.
+    initializeFakeStack(response, debugInfo.owner);
+  }
 }
 
 function resolveDebugInfo(
@@ -2054,6 +2130,8 @@ function resolveDebugInfo(
   // render phase so we're not inside a user space stack at this point. If we waited
   // to initialize it when we need it, we might be inside user code.
   initializeFakeTask(response, debugInfo);
+  initializeFakeStack(response, debugInfo);
+
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
@@ -2096,6 +2174,7 @@ function resolveConsoleEntry(
   );
   if (owner != null) {
     const task = initializeFakeTask(response, owner);
+    initializeFakeStack(response, owner);
     if (task !== null) {
       task.run(callStack);
       return;

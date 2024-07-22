@@ -159,21 +159,32 @@ export function getOwnerStackByComponentStackNodeInDev(
       componentStack;
 
     while (owner) {
-      let debugStack: void | null | string | Error = owner.stack;
-      if (typeof debugStack !== 'string' && debugStack != null) {
-        // Stash the formatted stack so that we can avoid redoing the filtering.
-        // $FlowFixMe[cannot-write]: This has been refined to a ComponentStackNode.
-        owner.stack = debugStack = formatOwnerStack(debugStack);
+      let ownerStack: ?string = null;
+      if (owner.debugStack != null) {
+        // Server Component
+        // TODO: Should we stash this somewhere for caching purposes?
+        ownerStack = formatOwnerStack(owner.debugStack);
+        owner = owner.owner;
+      } else if (owner.stack != null) {
+        // Client Component
+        const node: ComponentStackNode = (owner: any);
+        if (typeof owner.stack !== 'string') {
+          ownerStack = node.stack = formatOwnerStack(owner.stack);
+        } else {
+          ownerStack = owner.stack;
+        }
+        owner = owner.owner;
+      } else {
+        owner = owner.owner;
       }
-      owner = owner.owner;
       // If we don't actually print the stack if there is no owner of this JSX element.
       // In a real app it's typically not useful since the root app is always controlled
       // by the framework. These also tend to have noisy stacks because they're not rooted
       // in a React render but in some imperative bootstrapping code. It could be useful
       // if the element was created in module scope. E.g. hoisted. We could add a a single
       // stack frame for context for example but it doesn't say much if that's a wrapper.
-      if (owner && debugStack) {
-        info += '\n' + debugStack;
+      if (owner && ownerStack) {
+        info += '\n' + ownerStack;
       }
     }
     return info;

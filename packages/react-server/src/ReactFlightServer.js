@@ -351,7 +351,7 @@ type Task = {
   thenableState: ThenableState | null,
   environmentName: string, // DEV-only. Used to track if the environment for this task changed.
   debugOwner: null | ReactComponentInfo, // DEV-only
-  debugStack: null | string, // DEV-only
+  debugStack: null | Error, // DEV-only
   debugTask: null | ConsoleTask, // DEV-only
 };
 
@@ -972,7 +972,12 @@ function callWithDebugContextInDEV<A, T>(
   };
   if (enableOwnerStacks) {
     // $FlowFixMe[cannot-write]
-    componentDebugInfo.stack = task.debugStack;
+    componentDebugInfo.stack =
+      task.debugStack === null ? null : filterDebugStack(task.debugStack);
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.debugStack = task.debugStack;
+    // $FlowFixMe[cannot-write]
+    componentDebugInfo.debugTask = task.debugTask;
   }
   const debugTask = task.debugTask;
   // We don't need the async component storage context here so we only set the
@@ -1029,7 +1034,12 @@ function renderFunctionComponent<Props>(
       }: ReactComponentInfo);
       if (enableOwnerStacks) {
         // $FlowFixMe[cannot-write]
-        componentDebugInfo.stack = task.debugStack;
+        componentDebugInfo.stack =
+          task.debugStack === null ? null : filterDebugStack(task.debugStack);
+        // $FlowFixMe[cannot-write]
+        componentDebugInfo.debugStack = task.debugStack;
+        // $FlowFixMe[cannot-write]
+        componentDebugInfo.debugTask = task.debugTask;
       }
       // We outline this model eagerly so that we can refer to by reference as an owner.
       // If we had a smarter way to dedupe we might not have to do this if there ends up
@@ -1419,7 +1429,7 @@ function renderClientElement(
           key,
           props,
           task.debugOwner,
-          task.debugStack,
+          task.debugStack === null ? null : filterDebugStack(task.debugStack),
           validated,
         ]
       : [REACT_ELEMENT_TYPE, type, key, props, task.debugOwner]
@@ -1598,7 +1608,7 @@ function createTask(
   implicitSlot: boolean,
   abortSet: Set<Task>,
   debugOwner: null | ReactComponentInfo, // DEV-only
-  debugStack: null | string, // DEV-only
+  debugStack: null | Error, // DEV-only
   debugTask: null | ConsoleTask, // DEV-only
 ): Task {
   request.pendingChunks++;
@@ -2205,10 +2215,7 @@ function renderModelDestructive(
         if (__DEV__) {
           task.debugOwner = element._owner;
           if (enableOwnerStacks) {
-            task.debugStack =
-              !element._debugStack || typeof element._debugStack === 'string'
-                ? element._debugStack
-                : filterDebugStack(element._debugStack);
+            task.debugStack = element._debugStack;
             task.debugTask = element._debugTask;
           }
           // TODO: Pop this. Since we currently don't have a point where we can pop the stack
@@ -2507,10 +2514,11 @@ function renderModelDestructive(
     if (__DEV__) {
       if (
         // TODO: We don't currently have a brand check on ReactComponentInfo. Reconsider.
-        typeof value.task === 'object' &&
-        value.task !== null &&
-        // $FlowFixMe[method-unbinding]
-        typeof value.task.run === 'function' &&
+        ((typeof value.debugTask === 'object' &&
+          value.debugTask !== null &&
+          // $FlowFixMe[method-unbinding]
+          typeof value.debugTask.run === 'function') ||
+          value.debugStack instanceof Error) &&
         typeof value.name === 'string' &&
         typeof value.env === 'string' &&
         value.owner !== undefined &&
@@ -2520,7 +2528,10 @@ function renderModelDestructive(
       ) {
         // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
         // need to omit it before serializing.
-        const componentDebugInfo: Omit<ReactComponentInfo, 'task'> = {
+        const componentDebugInfo: Omit<
+          ReactComponentInfo,
+          'debugTask' | 'debugStack',
+        > = {
           name: value.name,
           env: value.env,
           owner: (value: any).owner,

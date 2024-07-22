@@ -29,7 +29,7 @@ function normalizeCodeLocInfo(str) {
 
 function normalizeComponentInfo(debugInfo) {
   if (typeof debugInfo.stack === 'string') {
-    const {task, ...copy} = debugInfo;
+    const {debugTask, debugStack, ...copy} = debugInfo;
     copy.stack = normalizeCodeLocInfo(debugInfo.stack);
     if (debugInfo.owner) {
       copy.owner = normalizeComponentInfo(debugInfo.owner);
