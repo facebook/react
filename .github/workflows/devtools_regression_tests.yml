@@ -119,8 +119,15 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - name: Restore all archived build artifacts
+      - name: Restore archived build
         uses: actions/download-artifact@v4
+        with:
+          name: build
+      - name: Restore archived react-devtools
+        uses: actions/download-artifact@v4
+        with:
+          name: react-devtools
+          path: build/devtools.tgz
       - name: Display structure of build
         run: ls -R build
       - run: ./scripts/circleci/download_devtools_regression_build.js ${{ matrix.version }} --replaceBuild
@@ -153,8 +160,15 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - name: Restore all archived build artifacts
+      - name: Restore archived build
         uses: actions/download-artifact@v4
+        with:
+          name: build
+      - name: Restore archived react-devtools
+        uses: actions/download-artifact@v4
+        with:
+          name: react-devtools
+          path: build/devtools.tgz
       - name: Display structure of build
         run: ls -R build
       - name: Playwright install deps
