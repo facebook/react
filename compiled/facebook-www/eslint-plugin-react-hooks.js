@@ -152,18 +152,18 @@
           node.parent.init === node
           ? node.parent.id
           : "AssignmentExpression" === node.parent.type &&
-            node.parent.right === node &&
-            "=" === node.parent.operator
-          ? node.parent.left
-          : "Property" !== node.parent.type ||
-            node.parent.value !== node ||
-            node.parent.computed
-          ? "AssignmentPattern" !== node.parent.type ||
-            node.parent.right !== node ||
-            node.parent.computed
-            ? void 0
-            : node.parent.left
-          : node.parent.key;
+              node.parent.right === node &&
+              "=" === node.parent.operator
+            ? node.parent.left
+            : "Property" !== node.parent.type ||
+                node.parent.value !== node ||
+                node.parent.computed
+              ? "AssignmentPattern" !== node.parent.type ||
+                node.parent.right !== node ||
+                node.parent.computed
+                ? void 0
+                : node.parent.left
+              : node.parent.key;
     }
     function collectRecommendations(_ref6) {
       function createDepTree() {
@@ -221,15 +221,15 @@
           child.isSatisfiedRecursively
             ? child.isSubtreeUsed && satisfyingPaths.add(path)
             : child.isUsed
-            ? missingPaths.add(path)
-            : scanTreeRecursively(
-                child,
-                missingPaths,
-                satisfyingPaths,
-                function (childKey) {
-                  return path + "." + childKey;
-                }
-              );
+              ? missingPaths.add(path)
+              : scanTreeRecursively(
+                  child,
+                  missingPaths,
+                  satisfyingPaths,
+                  function (childKey) {
+                    return path + "." + childKey;
+                  }
+                );
         });
       }
       var dependencies = _ref6.dependencies,
@@ -270,11 +270,11 @@
             ? suggestedDependencies.push(_ref8)
             : duplicateDependencies.add(_ref8)
           : !isEffect ||
-            _ref8.endsWith(".current") ||
-            externalDependencies.has(_ref8)
-          ? unnecessaryDependencies.add(_ref8)
-          : -1 === suggestedDependencies.indexOf(_ref8) &&
-            suggestedDependencies.push(_ref8);
+              _ref8.endsWith(".current") ||
+              externalDependencies.has(_ref8)
+            ? unnecessaryDependencies.add(_ref8)
+            : -1 === suggestedDependencies.indexOf(_ref8) &&
+              suggestedDependencies.push(_ref8);
       });
       _ref6.forEach(function (key) {
         suggestedDependencies.push(key);
@@ -360,8 +360,8 @@
             "FunctionDeclaration" === node.node.type
             ? [_ref10, "function"]
             : "ClassName" === node.type && "ClassDeclaration" === node.node.type
-            ? [_ref10, "class"]
-            : null;
+              ? [_ref10, "class"]
+              : null;
         })
         .filter(Boolean)
         .map(function (_ref11) {
@@ -536,8 +536,8 @@
           0 === i && 2 === arr.length
             ? (s += " and ")
             : i === arr.length - 2 && 2 < arr.length
-            ? (s += ", and ")
-            : i < arr.length - 1 && (s += ", ");
+              ? (s += ", and ")
+              : i < arr.length - 1 && (s += ", ");
       return s;
     }
     function isNodeLike(val) {
@@ -1738,21 +1738,21 @@
                                         form: "updater"
                                       })
                                     : stateVariables.has(id)
-                                    ? (setStateRecommendation = {
-                                        missingDep: missingDep,
-                                        setter: maybeCall.callee.name,
-                                        form: "reducer"
-                                      })
-                                    : ((id = references[_i3].resolved),
-                                      null != id &&
-                                        ((id = id.defs[0]),
+                                      ? (setStateRecommendation = {
+                                          missingDep: missingDep,
+                                          setter: maybeCall.callee.name,
+                                          form: "reducer"
+                                        })
+                                      : ((id = references[_i3].resolved),
                                         null != id &&
-                                          "Parameter" === id.type &&
-                                          (setStateRecommendation = {
-                                            missingDep: missingDep,
-                                            setter: maybeCall.callee.name,
-                                            form: "inlineReducer"
-                                          })));
+                                          ((id = id.defs[0]),
+                                          null != id &&
+                                            "Parameter" === id.type &&
+                                            (setStateRecommendation = {
+                                              missingDep: missingDep,
+                                              setter: maybeCall.callee.name,
+                                              form: "inlineReducer"
+                                            })));
                                   break;
                                 }
                               }

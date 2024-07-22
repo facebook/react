@@ -131,8 +131,8 @@ function describeBuiltInComponentFrame(name) {
         -1 < x.stack.indexOf("\n    at")
           ? " (<anonymous>)"
           : -1 < x.stack.indexOf("@")
-          ? "@unknown:0:0"
-          : "";
+            ? "@unknown:0:0"
+            : "";
     }
   return "\n" + prefix + name + suffix;
 }
@@ -442,8 +442,8 @@ function childrenAsString(children) {
     ? "string" === typeof children
       ? children
       : children.length
-      ? children.join("")
-      : ""
+        ? children.join("")
+        : ""
     : "";
 }
 var scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
@@ -559,14 +559,14 @@ function getNextLanes(root, wipLanes) {
   return 0 === nextLanes
     ? 0
     : 0 !== wipLanes &&
-      wipLanes !== nextLanes &&
-      0 === (wipLanes & suspendedLanes) &&
-      ((suspendedLanes = nextLanes & -nextLanes),
-      (root = wipLanes & -wipLanes),
-      suspendedLanes >= root ||
-        (32 === suspendedLanes && 0 !== (root & 4194176)))
-    ? wipLanes
-    : nextLanes;
+        wipLanes !== nextLanes &&
+        0 === (wipLanes & suspendedLanes) &&
+        ((suspendedLanes = nextLanes & -nextLanes),
+        (root = wipLanes & -wipLanes),
+        suspendedLanes >= root ||
+          (32 === suspendedLanes && 0 !== (root & 4194176)))
+      ? wipLanes
+      : nextLanes;
 }
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
@@ -867,12 +867,12 @@ function applyTextProps(instance, props) {
       JSCompiler_temp === newFont
         ? !0
         : "string" === typeof newFont || "string" === typeof JSCompiler_temp
-        ? !1
-        : newFont.fontSize === JSCompiler_temp.fontSize &&
-          newFont.fontStyle === JSCompiler_temp.fontStyle &&
-          newFont.fontVariant === JSCompiler_temp.fontVariant &&
-          newFont.fontWeight === JSCompiler_temp.fontWeight &&
-          newFont.fontFamily === JSCompiler_temp.fontFamily;
+          ? !1
+          : newFont.fontSize === JSCompiler_temp.fontSize &&
+            newFont.fontStyle === JSCompiler_temp.fontStyle &&
+            newFont.fontVariant === JSCompiler_temp.fontVariant &&
+            newFont.fontWeight === JSCompiler_temp.fontWeight &&
+            newFont.fontFamily === JSCompiler_temp.fontFamily;
     JSCompiler_temp = !JSCompiler_temp;
   }
   if (
@@ -2312,8 +2312,8 @@ function pushPrimaryTreeSuspenseHandler(handler) {
           ? (shellBoundary = handler)
           : null !== current.memoizedState && (shellBoundary = handler)))
     : null === shellBoundary
-    ? push(suspenseHandlerStackCursor, handler)
-    : push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
+      ? push(suspenseHandlerStackCursor, handler)
+      : push(suspenseHandlerStackCursor, suspenseHandlerStackCursor.current);
 }
 function pushOffscreenSuspenseHandler(fiber) {
   if (22 === fiber.tag) {
@@ -3705,8 +3705,8 @@ function checkShouldComponentUpdate(
   return "function" === typeof workInProgress.shouldComponentUpdate
     ? workInProgress.shouldComponentUpdate(newProps, newState, nextContext)
     : ctor.prototype && ctor.prototype.isPureReactComponent
-    ? !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
-    : !0;
+      ? !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
+      : !0;
 }
 function callComponentWillReceiveProps(
   workInProgress,
@@ -4784,43 +4784,44 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             renderLanes
           )))
         : null !== workInProgress.memoizedState
-        ? (reuseSuspenseHandlerOnStack(workInProgress),
-          (workInProgress.child = current.child),
-          (workInProgress.flags |= 128),
-          (workInProgress = null))
-        : (reuseSuspenseHandlerOnStack(workInProgress),
-          (nextPrimaryChildren = nextProps.fallback),
-          (showFallback = workInProgress.mode),
-          (nextProps = mountWorkInProgressOffscreenFiber(
-            { mode: "visible", children: nextProps.children },
-            showFallback
-          )),
-          (nextPrimaryChildren = createFiberFromFragment(
-            nextPrimaryChildren,
-            showFallback,
-            renderLanes,
-            null
-          )),
-          (nextPrimaryChildren.flags |= 2),
-          (nextProps.return = workInProgress),
-          (nextPrimaryChildren.return = workInProgress),
-          (nextProps.sibling = nextPrimaryChildren),
-          (workInProgress.child = nextProps),
-          reconcileChildFibers(
-            workInProgress,
-            current.child,
-            null,
-            renderLanes
-          ),
-          (nextProps = workInProgress.child),
-          (nextProps.memoizedState = mountSuspenseOffscreenState(renderLanes)),
-          (nextProps.childLanes = getRemainingWorkInPrimaryTree(
-            current,
-            JSCompiler_temp,
-            renderLanes
-          )),
-          (workInProgress.memoizedState = SUSPENDED_MARKER),
-          (workInProgress = nextPrimaryChildren));
+          ? (reuseSuspenseHandlerOnStack(workInProgress),
+            (workInProgress.child = current.child),
+            (workInProgress.flags |= 128),
+            (workInProgress = null))
+          : (reuseSuspenseHandlerOnStack(workInProgress),
+            (nextPrimaryChildren = nextProps.fallback),
+            (showFallback = workInProgress.mode),
+            (nextProps = mountWorkInProgressOffscreenFiber(
+              { mode: "visible", children: nextProps.children },
+              showFallback
+            )),
+            (nextPrimaryChildren = createFiberFromFragment(
+              nextPrimaryChildren,
+              showFallback,
+              renderLanes,
+              null
+            )),
+            (nextPrimaryChildren.flags |= 2),
+            (nextProps.return = workInProgress),
+            (nextPrimaryChildren.return = workInProgress),
+            (nextProps.sibling = nextPrimaryChildren),
+            (workInProgress.child = nextProps),
+            reconcileChildFibers(
+              workInProgress,
+              current.child,
+              null,
+              renderLanes
+            ),
+            (nextProps = workInProgress.child),
+            (nextProps.memoizedState =
+              mountSuspenseOffscreenState(renderLanes)),
+            (nextProps.childLanes = getRemainingWorkInPrimaryTree(
+              current,
+              JSCompiler_temp,
+              renderLanes
+            )),
+            (workInProgress.memoizedState = SUSPENDED_MARKER),
+            (workInProgress = nextPrimaryChildren));
     else if ((pushPrimaryTreeSuspenseHandler(workInProgress), shim$2()))
       (JSCompiler_temp = shim$2().digest),
         (nextProps = Error(formatProdErrorMessage(419))),
@@ -4981,16 +4982,16 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             retryQueue: null
           })
         : currentFallbackChildFragment === currentOffscreenQueue
-        ? (nextPrimaryChildren.updateQueue = {
-            transitions: showFallback,
-            markerInstances: didSuspend,
-            retryQueue:
-              null !== currentOffscreenQueue
-                ? currentOffscreenQueue.retryQueue
-                : null
-          })
-        : ((currentFallbackChildFragment.transitions = showFallback),
-          (currentFallbackChildFragment.markerInstances = didSuspend));
+          ? (nextPrimaryChildren.updateQueue = {
+              transitions: showFallback,
+              markerInstances: didSuspend,
+              retryQueue:
+                null !== currentOffscreenQueue
+                  ? currentOffscreenQueue.retryQueue
+                  : null
+            })
+          : ((currentFallbackChildFragment.transitions = showFallback),
+            (currentFallbackChildFragment.markerInstances = didSuspend));
     }
     nextPrimaryChildren.childLanes = getRemainingWorkInPrimaryTree(
       current,
@@ -6035,8 +6036,11 @@ function pushTransition(
     (null === transitionStack.current
       ? push(transitionStack, newTransitions)
       : null === newTransitions
-      ? push(transitionStack, transitionStack.current)
-      : push(transitionStack, transitionStack.current.concat(newTransitions)));
+        ? push(transitionStack, transitionStack.current)
+        : push(
+            transitionStack,
+            transitionStack.current.concat(newTransitions)
+          ));
 }
 function popTransition(workInProgress, current) {
   null !== current &&
@@ -8089,20 +8093,20 @@ function commitPassiveMountOnFiber(
             )
           : recursivelyTraverseAtomicPassiveEffects(finishedRoot, finishedWork)
         : nextCache._visibility & 4
-        ? recursivelyTraversePassiveMountEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions
-          )
-        : ((nextCache._visibility |= 4),
-          recursivelyTraverseReconnectPassiveEffects(
-            finishedRoot,
-            finishedWork,
-            committedLanes,
-            committedTransitions,
-            0 !== (finishedWork.subtreeFlags & 10256)
-          ));
+          ? recursivelyTraversePassiveMountEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions
+            )
+          : ((nextCache._visibility |= 4),
+            recursivelyTraverseReconnectPassiveEffects(
+              finishedRoot,
+              finishedWork,
+              committedLanes,
+              committedTransitions,
+              0 !== (finishedWork.subtreeFlags & 10256)
+            ));
       flags & 2048 &&
         commitOffscreenPassiveMountEffects(
           finishedWork.alternate,
@@ -9047,10 +9051,10 @@ function handleThrow(root, thrownValue) {
           thrownValue === SelectiveHydrationException
             ? 8
             : null !== thrownValue &&
-              "object" === typeof thrownValue &&
-              "function" === typeof thrownValue.then
-            ? 6
-            : 1);
+                "object" === typeof thrownValue &&
+                "function" === typeof thrownValue.then
+              ? 6
+              : 1);
   workInProgressThrownValue = thrownValue;
   null === workInProgress &&
     ((workInProgressRootExitStatus = 1),
@@ -10202,7 +10206,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-d025ddd3-20240722",
+    version: "19.0.0-www-modern-b7e7f1a3-20240722",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1372 = {
@@ -10233,7 +10237,7 @@ var internals$jscomp$inline_1372 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-d025ddd3-20240722"
+  reconcilerVersion: "19.0.0-www-modern-b7e7f1a3-20240722"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1373 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

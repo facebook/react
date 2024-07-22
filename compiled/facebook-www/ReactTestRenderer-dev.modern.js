@@ -365,8 +365,8 @@ __DEV__ &&
             -1 < x.stack.indexOf("\n    at")
               ? " (<anonymous>)"
               : -1 < x.stack.indexOf("@")
-              ? "@unknown:0:0"
-              : "";
+                ? "@unknown:0:0"
+                : "";
         }
       return "\n" + prefix + name + suffix;
     }
@@ -845,14 +845,14 @@ __DEV__ &&
       return 0 === nextLanes
         ? 0
         : 0 !== wipLanes &&
-          wipLanes !== nextLanes &&
-          0 === (wipLanes & suspendedLanes) &&
-          ((suspendedLanes = nextLanes & -nextLanes),
-          (root = wipLanes & -wipLanes),
-          suspendedLanes >= root ||
-            (32 === suspendedLanes && 0 !== (root & 4194176)))
-        ? wipLanes
-        : nextLanes;
+            wipLanes !== nextLanes &&
+            0 === (wipLanes & suspendedLanes) &&
+            ((suspendedLanes = nextLanes & -nextLanes),
+            (root = wipLanes & -wipLanes),
+            suspendedLanes >= root ||
+              (32 === suspendedLanes && 0 !== (root & 4194176)))
+          ? wipLanes
+          : nextLanes;
     }
     function computeExpirationTime(lane, currentTime) {
       switch (lane) {
@@ -1272,10 +1272,10 @@ __DEV__ &&
               : "{" + content.slice(0, maxLength - 7) + '..."}'
             : "{" + content + "}")
         : content.length > maxLength
-        ? 5 > maxLength
-          ? '{"..."}'
-          : content.slice(0, maxLength - 3) + "..."
-        : content;
+          ? 5 > maxLength
+            ? '{"..."}'
+            : content.slice(0, maxLength - 3) + "..."
+          : content;
     }
     function describeTextDiff(clientText, serverProps, indent) {
       var maxLength = 120 - 2 * indent;
@@ -1369,10 +1369,10 @@ __DEV__ &&
       return "string" !== typeof value || needsEscaping.test(value)
         ? "{" + describeValue(value, maxLength - 2) + "}"
         : value.length > maxLength - 2
-        ? 5 > maxLength
-          ? '"..."'
-          : '"' + value.slice(0, maxLength - 5) + '..."'
-        : '"' + value + '"';
+          ? 5 > maxLength
+            ? '"..."'
+            : '"' + value.slice(0, maxLength - 5) + '..."'
+          : '"' + value + '"';
     }
     function describeExpandedElement(type, props, rowPrefix) {
       var remainingRowLength = 120 - rowPrefix.length - type.length,
@@ -1390,17 +1390,17 @@ __DEV__ &&
       return 0 === properties.length
         ? rowPrefix + "<" + type + ">\n"
         : 0 < remainingRowLength
-        ? rowPrefix + "<" + type + " " + properties.join(" ") + ">\n"
-        : rowPrefix +
-          "<" +
-          type +
-          "\n" +
-          rowPrefix +
-          "  " +
-          properties.join("\n" + rowPrefix + "  ") +
-          "\n" +
-          rowPrefix +
-          ">\n";
+          ? rowPrefix + "<" + type + " " + properties.join(" ") + ">\n"
+          : rowPrefix +
+            "<" +
+            type +
+            "\n" +
+            rowPrefix +
+            "  " +
+            properties.join("\n" + rowPrefix + "  ") +
+            "\n" +
+            rowPrefix +
+            ">\n";
     }
     function describePropertiesDiff(clientObject, serverObject, indent) {
       var properties = "",
@@ -1623,16 +1623,16 @@ __DEV__ &&
               )),
               indent++)
             : "string" === typeof node.serverProps
-            ? error$jscomp$0(
-                "Should not have matched a non HostText fiber to a Text node. This is a bug in React."
-              )
-            : ((debugInfo = describeElementDiff(
-                serverComponentName,
-                i,
-                node.serverProps,
-                indent
-              )),
-              indent++);
+              ? error$jscomp$0(
+                  "Should not have matched a non HostText fiber to a Text node. This is a bug in React."
+                )
+              : ((debugInfo = describeElementDiff(
+                  serverComponentName,
+                  i,
+                  node.serverProps,
+                  indent
+                )),
+                indent++);
       var propName = "";
       i = node.fiber.child;
       for (
@@ -3451,12 +3451,12 @@ __DEV__ &&
               ? (shellBoundary = handler)
               : null !== current.memoizedState && (shellBoundary = handler)))
         : null === shellBoundary
-        ? push(suspenseHandlerStackCursor, handler, handler)
-        : push(
-            suspenseHandlerStackCursor,
-            suspenseHandlerStackCursor.current,
-            handler
-          );
+          ? push(suspenseHandlerStackCursor, handler, handler)
+          : push(
+              suspenseHandlerStackCursor,
+              suspenseHandlerStackCursor.current,
+              handler
+            );
     }
     function pushOffscreenSuspenseHandler(fiber) {
       if (22 === fiber.tag) {
@@ -3638,8 +3638,8 @@ __DEV__ &&
         null !== current && null !== current.memoizedState
           ? HooksDispatcherOnUpdateInDEV
           : null !== hookTypesDev
-          ? HooksDispatcherOnMountWithHookTypesInDEV
-          : HooksDispatcherOnMountInDEV;
+            ? HooksDispatcherOnMountWithHookTypesInDEV
+            : HooksDispatcherOnMountInDEV;
       shouldDoubleInvokeUserFnsInHooksDEV = !1;
       nextRenderLanes = callComponentInDEV(Component, props, secondArg);
       shouldDoubleInvokeUserFnsInHooksDEV = !1;
@@ -5048,8 +5048,9 @@ __DEV__ &&
             ),
           oldProps)
         : ctor.prototype && ctor.prototype.isPureReactComponent
-        ? !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
-        : !0;
+          ? !shallowEqual(oldProps, newProps) ||
+            !shallowEqual(oldState, newState)
+          : !0;
     }
     function callComponentWillReceiveProps(
       workInProgress,
@@ -5796,12 +5797,12 @@ __DEV__ &&
             void 0 === context
               ? " However, it is set to undefined. This can be caused by a typo or by mixing up named and default imports. This can also happen due to a circular dependency, so try moving the createContext() call to a separate file."
               : "object" !== typeof context
-              ? " However, it is set to a " + typeof context + "."
-              : context.$$typeof === REACT_CONSUMER_TYPE
-              ? " Did you accidentally pass the Context.Consumer instead?"
-              : " However, it is set to an object with keys {" +
-                Object.keys(context).join(", ") +
-                "}.";
+                ? " However, it is set to a " + typeof context + "."
+                : context.$$typeof === REACT_CONSUMER_TYPE
+                  ? " Did you accidentally pass the Context.Consumer instead?"
+                  : " However, it is set to an object with keys {" +
+                    Object.keys(context).join(", ") +
+                    "}.";
           error$jscomp$0(
             "%s defines an invalid contextType. contextType should point to the Context object returned by React.createContext().%s",
             getComponentNameFromType(Component) || "Component",
@@ -6462,44 +6463,44 @@ __DEV__ &&
                 renderLanes
               )))
             : null !== workInProgress.memoizedState
-            ? (reuseSuspenseHandlerOnStack(workInProgress),
-              (workInProgress.child = current.child),
-              (workInProgress.flags |= 128),
-              (workInProgress = null))
-            : (reuseSuspenseHandlerOnStack(workInProgress),
-              (nextPrimaryChildren = nextProps.fallback),
-              (showFallback = workInProgress.mode),
-              (nextProps = mountWorkInProgressOffscreenFiber(
-                { mode: "visible", children: nextProps.children },
-                showFallback
-              )),
-              (nextPrimaryChildren = createFiberFromFragment(
-                nextPrimaryChildren,
-                showFallback,
-                renderLanes,
-                null
-              )),
-              (nextPrimaryChildren.flags |= 2),
-              (nextProps.return = workInProgress),
-              (nextPrimaryChildren.return = workInProgress),
-              (nextProps.sibling = nextPrimaryChildren),
-              (workInProgress.child = nextProps),
-              reconcileChildFibers(
-                workInProgress,
-                current.child,
-                null,
-                renderLanes
-              ),
-              (nextProps = workInProgress.child),
-              (nextProps.memoizedState =
-                mountSuspenseOffscreenState(renderLanes)),
-              (nextProps.childLanes = getRemainingWorkInPrimaryTree(
-                current,
-                JSCompiler_temp,
-                renderLanes
-              )),
-              (workInProgress.memoizedState = SUSPENDED_MARKER),
-              (workInProgress = nextPrimaryChildren));
+              ? (reuseSuspenseHandlerOnStack(workInProgress),
+                (workInProgress.child = current.child),
+                (workInProgress.flags |= 128),
+                (workInProgress = null))
+              : (reuseSuspenseHandlerOnStack(workInProgress),
+                (nextPrimaryChildren = nextProps.fallback),
+                (showFallback = workInProgress.mode),
+                (nextProps = mountWorkInProgressOffscreenFiber(
+                  { mode: "visible", children: nextProps.children },
+                  showFallback
+                )),
+                (nextPrimaryChildren = createFiberFromFragment(
+                  nextPrimaryChildren,
+                  showFallback,
+                  renderLanes,
+                  null
+                )),
+                (nextPrimaryChildren.flags |= 2),
+                (nextProps.return = workInProgress),
+                (nextPrimaryChildren.return = workInProgress),
+                (nextProps.sibling = nextPrimaryChildren),
+                (workInProgress.child = nextProps),
+                reconcileChildFibers(
+                  workInProgress,
+                  current.child,
+                  null,
+                  renderLanes
+                ),
+                (nextProps = workInProgress.child),
+                (nextProps.memoizedState =
+                  mountSuspenseOffscreenState(renderLanes)),
+                (nextProps.childLanes = getRemainingWorkInPrimaryTree(
+                  current,
+                  JSCompiler_temp,
+                  renderLanes
+                )),
+                (workInProgress.memoizedState = SUSPENDED_MARKER),
+                (workInProgress = nextPrimaryChildren));
         else if (
           (pushPrimaryTreeSuspenseHandler(workInProgress),
           isSuspenseInstanceFallback())
@@ -8712,20 +8713,20 @@ __DEV__ &&
                 0 !== (effect.tag & Layout)
                   ? "useLayoutEffect"
                   : 0 !== (effect.tag & Insertion)
-                  ? "useInsertionEffect"
-                  : "useEffect"),
+                    ? "useInsertionEffect"
+                    : "useEffect"),
               error$jscomp$0(
                 "%s must not return anything besides a function, which is used for clean-up.%s",
                 inst,
                 null === create
                   ? " You returned null. If your effect does not require clean up, return undefined (or nothing)."
                   : "function" === typeof create.then
-                  ? "\n\nIt looks like you wrote " +
-                    inst +
-                    "(async () => ...) or returned a Promise. Instead, write the async function inside your effect and call it immediately:\n\n" +
-                    inst +
-                    "(() => {\n  async function fetchData() {\n    // You can await here\n    const response = await MyAPI.getData(someId);\n    // ...\n  }\n  fetchData();\n}, [someId]); // Or [] if effect doesn't need props or state\n\nLearn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching"
-                  : " You returned: " + create
+                    ? "\n\nIt looks like you wrote " +
+                      inst +
+                      "(async () => ...) or returned a Promise. Instead, write the async function inside your effect and call it immediately:\n\n" +
+                      inst +
+                      "(() => {\n  async function fetchData() {\n    // You can await here\n    const response = await MyAPI.getData(someId);\n    // ...\n  }\n  fetchData();\n}, [someId]); // Or [] if effect doesn't need props or state\n\nLearn more about data fetching with Hooks: https://react.dev/link/hooks-data-fetching"
+                    : " You returned: " + create
               ));
           }
           effect = effect.next;
@@ -9986,20 +9987,20 @@ __DEV__ &&
                   committedTransitions
                 )
             : _instance3._visibility & 4
-            ? recursivelyTraversePassiveMountEffects(
-                finishedRoot,
-                finishedWork,
-                committedLanes,
-                committedTransitions
-              )
-            : ((_instance3._visibility |= 4),
-              recursivelyTraverseReconnectPassiveEffects(
-                finishedRoot,
-                finishedWork,
-                committedLanes,
-                committedTransitions,
-                0 !== (finishedWork.subtreeFlags & 10256)
-              ));
+              ? recursivelyTraversePassiveMountEffects(
+                  finishedRoot,
+                  finishedWork,
+                  committedLanes,
+                  committedTransitions
+                )
+              : ((_instance3._visibility |= 4),
+                recursivelyTraverseReconnectPassiveEffects(
+                  finishedRoot,
+                  finishedWork,
+                  committedLanes,
+                  committedTransitions,
+                  0 !== (finishedWork.subtreeFlags & 10256)
+                ));
           flags & 2048 &&
             commitOffscreenPassiveMountEffects(
               finishedWork.alternate,
@@ -10976,10 +10977,10 @@ __DEV__ &&
               thrownValue === SelectiveHydrationException
                 ? SuspendedOnHydration
                 : null !== thrownValue &&
-                  "object" === typeof thrownValue &&
-                  "function" === typeof thrownValue.then
-                ? SuspendedOnDeprecatedThrowPromise
-                : SuspendedOnError);
+                    "object" === typeof thrownValue &&
+                    "function" === typeof thrownValue.then
+                  ? SuspendedOnDeprecatedThrowPromise
+                  : SuspendedOnError);
       workInProgressThrownValue = thrownValue;
       handler = workInProgress;
       null === handler
@@ -12335,21 +12336,21 @@ __DEV__ &&
             null === type
               ? (pendingProps = "null")
               : isArrayImpl(type)
-              ? (pendingProps = "array")
-              : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
-              ? ((pendingProps =
-                  "<" +
-                  (getComponentNameFromType(type.type) || "Unknown") +
-                  " />"),
-                (resolvedType =
-                  " Did you accidentally export a JSX literal instead of a component?"))
-              : (pendingProps = typeof type);
+                ? (pendingProps = "array")
+                : void 0 !== type && type.$$typeof === REACT_ELEMENT_TYPE
+                  ? ((pendingProps =
+                      "<" +
+                      (getComponentNameFromType(type.type) || "Unknown") +
+                      " />"),
+                    (resolvedType =
+                      " Did you accidentally export a JSX literal instead of a component?"))
+                  : (pendingProps = typeof type);
             fiberTag = owner
               ? "number" === typeof owner.tag
                 ? getComponentNameFromFiber(owner)
                 : "string" === typeof owner.name
-                ? owner.name
-                : null
+                  ? owner.name
+                  : null
               : null;
             fiberTag &&
               (resolvedType +=
@@ -12698,8 +12699,8 @@ __DEV__ &&
       return 0 === node.length
         ? null
         : 1 === node.length
-        ? toTree(node[0])
-        : flatten(node.map(toTree));
+          ? toTree(node[0])
+          : flatten(node.map(toTree));
     }
     function nodeAndSiblingsArray(nodeWithSibling) {
       for (var array = []; null != nodeWithSibling; )
@@ -14821,14 +14822,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-d025ddd3-20240722"
+        reconcilerVersion: "19.0.0-www-modern-b7e7f1a3-20240722"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-www-modern-d025ddd3-20240722",
+      version: "19.0.0-www-modern-b7e7f1a3-20240722",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;
