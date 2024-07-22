@@ -70,9 +70,14 @@ function lazyRequireFunctionExports(moduleName) {
         // If this export is a function, return a wrapper function that lazily
         // requires the implementation from the current module cache.
         if (typeof originalModule[prop] === 'function') {
-          return function () {
-            return jest.requireActual(moduleName)[prop].apply(this, arguments);
-          };
+          // eslint-disable-next-line no-eval
+          const wrapper = eval(`
+            (function () {
+              return jest.requireActual(moduleName)[prop].apply(this, arguments);
+            })
+            // We use this to trick the filtering of Flight to exclude this frame.
+            //# sourceURL=<anonymous>`);
+          return wrapper;
         } else {
           return originalModule[prop];
         }
