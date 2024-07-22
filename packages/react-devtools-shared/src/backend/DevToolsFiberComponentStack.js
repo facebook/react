@@ -208,8 +208,7 @@ export function getOwnerStackByFiberInDev(
         // stack frame for context for example but it doesn't say much if that's a wrapper.
         if (owner && debugStack) {
           if (typeof debugStack !== 'string') {
-            // Stash the formatted stack so that we can avoid redoing the filtering.
-            fiber._debugStack = debugStack = formatOwnerStack(debugStack);
+            debugStack = formatOwnerStack(debugStack);
           }
           if (debugStack !== '') {
             info += '\n' + debugStack;
@@ -220,7 +219,6 @@ export function getOwnerStackByFiberInDev(
         const ownerStack: Error = owner.debugStack;
         owner = owner.owner;
         if (owner && ownerStack) {
-          // TODO: Should we stash this somewhere for caching purposes?
           info += '\n' + formatOwnerStack(ownerStack);
         }
       } else {
