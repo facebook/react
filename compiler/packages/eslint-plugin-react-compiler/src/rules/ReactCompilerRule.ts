@@ -100,7 +100,6 @@ function makeSuggestions(
 
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
-  compilationMode: 'infer',
   panicThreshold: 'none',
 };
 
@@ -161,9 +160,16 @@ const rule: Rule.RuleModule = {
               detail.loc != null && typeof detail.loc !== 'symbol'
                 ? ` (@:${detail.loc.start.line}:${detail.loc.start.column})`
                 : '';
+            const firstLineLoc = {
+              start: event.fnLoc.start,
+              end: {
+                line: event.fnLoc.start.line,
+                column: 10e3,
+              },
+            };
             context.report({
               message: `[ReactCompilerBailout] ${detail.reason}${locStr}`,
-              loc: event.fnLoc,
+              loc: firstLineLoc,
               suggest,
             });
           }
