@@ -250,7 +250,11 @@ function getEvaluatorPresets(
 ): Array<BabelCore.PluginItem> {
   const presets: Array<BabelCore.PluginItem> = [
     {
-      plugins: ['babel-plugin-fbt', 'babel-plugin-fbt-runtime'],
+      plugins: [
+        'babel-plugin-fbt',
+        'babel-plugin-fbt-runtime',
+        'babel-plugin-idx',
+      ],
     },
   ];
   presets.push(
@@ -365,6 +369,7 @@ export async function transformFixtureInput(
       [plugin, options],
       'babel-plugin-fbt',
       'babel-plugin-fbt-runtime',
+      'babel-plugin-idx',
     ],
     sourceType: 'module',
     ast: includeEvaluator,
