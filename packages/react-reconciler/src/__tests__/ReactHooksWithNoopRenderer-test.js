@@ -3446,14 +3446,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       let totalRefUpdates = 0;
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, 0);
-        useImperativeHandle(
-          ref,
-          () => {
-            totalRefUpdates++;
-            return {count, dispatch};
-          },
-          [count],
-        );
+        useImperativeHandle(ref, () => {
+          totalRefUpdates++;
+          return {count, dispatch};
+        }, [count]);
         return <Text text={'Count: ' + count} />;
       }
 

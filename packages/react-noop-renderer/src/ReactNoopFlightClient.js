@@ -14,6 +14,8 @@
  * environment.
  */
 
+import type {FindSourceMapURLCallback} from 'react-client/flight';
+
 import {readModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightClient from 'react-client/flight';
@@ -49,7 +51,11 @@ const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
   },
 });
 
-function read<T>(source: Source): Thenable<T> {
+type ReadOptions = {|
+  findSourceMapURL?: FindSourceMapURLCallback,
+|};
+
+function read<T>(source: Source, options: ReadOptions): Thenable<T> {
   const response = createResponse(
     source,
     null,
@@ -57,7 +63,7 @@ function read<T>(source: Source): Thenable<T> {
     undefined,
     undefined,
     undefined,
-    undefined,
+    options !== undefined ? options.findSourceMapURL : undefined,
     true,
   );
   for (let i = 0; i < source.length; i++) {

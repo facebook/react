@@ -44,9 +44,8 @@ packages.forEach(name => {
   // Root entry point
   moduleNameMapper[`^${name}$`] = `<rootDir>/build/${NODE_MODULES_DIR}/${name}`;
   // Named entry points
-  moduleNameMapper[
-    `^${name}\/([^\/]+)$`
-  ] = `<rootDir>/build/${NODE_MODULES_DIR}/${name}/$1`;
+  moduleNameMapper[`^${name}\/([^\/]+)$`] =
+    `<rootDir>/build/${NODE_MODULES_DIR}/${name}/$1`;
 });
 
 // Allow tests to import shared code (e.g. feature flags, getStackByFiberInDevAndProd)

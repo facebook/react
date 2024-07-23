@@ -459,8 +459,8 @@ function getPlugins(
             bundleType === NODE_ES2015
               ? 'ECMASCRIPT_2020'
               : bundleType === BROWSER_SCRIPT
-              ? 'ECMASCRIPT5'
-              : 'ECMASCRIPT5_STRICT',
+                ? 'ECMASCRIPT5'
+                : 'ECMASCRIPT5_STRICT',
           emit_use_strict:
             bundleType !== BROWSER_SCRIPT &&
             bundleType !== ESM_PROD &&

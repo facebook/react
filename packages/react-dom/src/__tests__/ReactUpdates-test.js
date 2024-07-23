@@ -1858,14 +1858,14 @@ describe('ReactUpdates', () => {
 
       let error = null;
       let ownerStack = null;
-      let nativeStack = null;
+      let debugStack = null;
       const originalConsoleError = console.error;
       console.error = e => {
         error = e;
         ownerStack = gate(flags => flags.enableOwnerStacks)
           ? React.captureOwnerStack()
           : null;
-        nativeStack = new Error().stack;
+        debugStack = new Error().stack;
         Scheduler.log('stop');
       };
       try {
@@ -1879,7 +1879,7 @@ describe('ReactUpdates', () => {
 
       expect(error).toContain('Maximum update depth exceeded');
       // The currently executing effect should be on the native stack
-      expect(nativeStack).toContain('at myEffect');
+      expect(debugStack).toContain('at myEffect');
       if (gate(flags => flags.enableOwnerStacks)) {
         expect(ownerStack).toContain('at App');
       } else {

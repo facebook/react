@@ -7,11 +7,11 @@ function useFoo(cond) {
   const derived1 = useMemo(() => {
     return identity(sourceDep);
   }, [sourceDep]);
-  const derived2 = cond ?? Math.min(sourceDep, 1) ? 1 : 2;
+  const derived2 = (cond ?? Math.min(sourceDep, 1)) ? 1 : 2;
   const derived3 = useMemo(() => {
     return identity(sourceDep);
   }, [sourceDep]);
-  const derived4 = Math.min(sourceDep, -1) ?? cond ? 1 : 2;
+  const derived4 = (Math.min(sourceDep, -1) ?? cond) ? 1 : 2;
   return [derived1, derived2, derived3, derived4];
 }
 
