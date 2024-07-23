@@ -757,6 +757,32 @@ describe('ReactLazy', () => {
     );
   });
 
+  it('throws with a useful error when wrapping fragment with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.Fragment));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.Fragment);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Fragment. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
   it('throws with a useful error when wrapping lazy() multiple times', async () => {
     const Lazy1 = lazy(() => fakeImport(Text));
     const Lazy2 = lazy(() => fakeImport(Lazy1));
