@@ -255,7 +255,7 @@ export function patch({
                 ) {
                   const enableOwnerStacks = supportsOwnerStacks(current);
                   let componentStack = '';
-                  if (supportsOwnerStacks(current)) {
+                  if (enableOwnerStacks) {
                     // Prefix the owner stack with the current stack. I.e. what called
                     // console.error. While this will also be part of the native stack,
                     // it is hidden and not presented alongside this argument so we print
