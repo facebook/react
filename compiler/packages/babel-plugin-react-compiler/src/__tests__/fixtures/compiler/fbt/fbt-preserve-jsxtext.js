@@ -12,3 +12,9 @@ function Foo(props) {
     </fbt>
   );
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Foo,
+  params: [{value: 1}],
+  sequentialRenders: [{value: 1}, {value: 0}],
+};
