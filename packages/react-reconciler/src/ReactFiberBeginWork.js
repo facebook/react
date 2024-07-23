@@ -1891,7 +1891,10 @@ function mountLazyComponent(
     }
   }
 
-  const loggedComponent = getComponentNameFromType(Component) || String(Component);
+  const loggedComponent =
+    getComponentNameFromType(Component) ||
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    '' + Component;
 
   // This message intentionally doesn't mention ForwardRef or MemoComponent
   // because the fact that it's a separate type of work is an
