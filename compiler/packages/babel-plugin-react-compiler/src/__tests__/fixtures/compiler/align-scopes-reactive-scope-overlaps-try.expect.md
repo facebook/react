@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { arrayPush, mutate } from "shared-runtime";
+import {arrayPush, mutate} from 'shared-runtime';
 
-function useFoo({ value }) {
+function useFoo({value}) {
   let items = null;
   try {
     // Mutable range of `items` begins here, but its reactive scope block
@@ -20,8 +20,8 @@ function useFoo({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ value: 2 }],
-  sequentialRenders: [{ value: 2 }, { value: 2 }, { value: 3 }],
+  params: [{value: 2}],
+  sequentialRenders: [{value: 2}, {value: 2}, {value: 3}],
 };
 
 ```

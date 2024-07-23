@@ -5,24 +5,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { RefreshIcon, ShareIcon } from "@heroicons/react/outline";
-import { CheckIcon } from "@heroicons/react/solid";
-import clsx from "clsx";
-import Link from "next/link";
-import { useSnackbar } from "notistack";
-import { useState } from "react";
-import { defaultStore } from "../lib/defaultStore";
-import { IconGitHub } from "./Icons/IconGitHub";
-import Logo from "./Logo";
-import { useStoreDispatch } from "./StoreContext";
+import {RefreshIcon, ShareIcon} from '@heroicons/react/outline';
+import {CheckIcon} from '@heroicons/react/solid';
+import clsx from 'clsx';
+import Link from 'next/link';
+import {useSnackbar} from 'notistack';
+import {useState} from 'react';
+import {defaultStore} from '../lib/defaultStore';
+import {IconGitHub} from './Icons/IconGitHub';
+import Logo from './Logo';
+import {useStoreDispatch} from './StoreContext';
 
 export default function Header() {
   const [showCheck, setShowCheck] = useState(false);
   const dispatchStore = useStoreDispatch();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const {enqueueSnackbar, closeSnackbar} = useSnackbar();
 
   const handleReset = () => {
-    if (confirm("Are you sure you want to reset the playground?")) {
+    if (confirm('Are you sure you want to reset the playground?')) {
       /*
         Close open snackbars if any. This is necessary because when displaying
         outputs (Preview or not), we only close previous snackbars if we received
@@ -31,13 +31,13 @@ export default function Header() {
         such as "Bad URL" will be closed by the outputs calling `closeSnackbar`.
       */
       closeSnackbar();
-      dispatchStore({ type: "setStore", payload: { store: defaultStore } });
+      dispatchStore({type: 'setStore', payload: {store: defaultStore}});
     }
   };
 
   const handleShare = () => {
     navigator.clipboard.writeText(location.href).then(() => {
-      enqueueSnackbar("URL copied to clipboard");
+      enqueueSnackbar('URL copied to clipboard');
       setShowCheck(true);
       // Show the check mark icon briefly after URL is copied
       setTimeout(() => setShowCheck(false), 1000);
@@ -49,8 +49,8 @@ export default function Header() {
       <div className="flex items-center flex-none h-full gap-2 text-lg">
         <Logo
           className={clsx(
-            "w-8 h-8 text-link",
-            process.env.NODE_ENV === "development" && "text-yellow-600"
+            'w-8 h-8 text-link',
+            process.env.NODE_ENV === 'development' && 'text-yellow-600',
           )}
         />
         <p className="hidden select-none sm:block">React Compiler Playground</p>
@@ -60,8 +60,7 @@ export default function Header() {
           title="Reset Playground"
           aria-label="Reset Playground"
           className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
-          onClick={handleReset}
-        >
+          onClick={handleReset}>
           <RefreshIcon className="w-5 h-5" />
           <p className="hidden sm:block">Reset</p>
         </button>
@@ -70,8 +69,7 @@ export default function Header() {
           aria-label="Copy sharable URL"
           className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
           onClick={handleShare}
-          disabled={showCheck}
-        >
+          disabled={showCheck}>
           {!showCheck ? (
             <ShareIcon className="w-5 h-5" />
           ) : (
@@ -84,8 +82,7 @@ export default function Header() {
           target="_blank"
           rel="noreferrer noopener"
           aria-label="Open on GitHub"
-          className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link"
-        >
+          className="flex items-center gap-1 transition-colors duration-150 ease-in text-secondary hover:text-link">
           <IconGitHub />
         </Link>
       </div>

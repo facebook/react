@@ -4,7 +4,7 @@
 // and doesn't kick in unless we're confident we're in
 // a component or a hook.
 function makeListener(instance) {
-  each(pixelsWithInferredEvents, (pixel) => {
+  each(pixelsWithInferredEvents, pixel => {
     if (useExtendedSelector(pixel.id) && extendedButton) {
       foo();
     }

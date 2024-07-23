@@ -1,8 +1,8 @@
-const { identity, mutate } = require("shared-runtime");
+const {identity, mutate} = require('shared-runtime');
 
 function Component(props) {
   let x;
-  const object = { ...props.value };
+  const object = {...props.value};
   for (const y in object) {
     x = y;
   }
@@ -12,5 +12,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: { a: "a", b: "B", c: "C!" } }],
+  params: [{value: {a: 'a', b: 'B', c: 'C!'}}],
 };

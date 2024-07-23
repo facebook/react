@@ -3,7 +3,7 @@
 
 ```javascript
 // @validateNoSetStateInRender
-import { useState } from "react";
+import {useState} from 'react';
 
 function Component(props) {
   const [x, setX] = useState(0);
@@ -29,7 +29,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: false }],
+  params: [{cond: false}],
 };
 
 ```

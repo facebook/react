@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function Component({ c }) {
+function Component({c}) {
   let h = c++;
   let i = --c;
   return [c, h, i];
@@ -10,7 +10,7 @@ function Component({ c }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ c: 4 }],
+  params: [{c: 4}],
   isComponent: false,
 };
 

@@ -5,25 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { codeFrameColumns } from "@babel/code-frame";
-import type { PluginObj } from "@babel/core";
-import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-compiler/src/HIR/Environment";
-import { TransformResult, transformFixtureInput } from "./compiler";
+import {codeFrameColumns} from '@babel/code-frame';
+import type {PluginObj} from '@babel/core';
+import type {parseConfigPragma as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import {TransformResult, transformFixtureInput} from './compiler';
 import {
   COMPILER_PATH,
   LOGGER_PATH,
   PARSE_CONFIG_PRAGMA_PATH,
-} from "./constants";
-import { TestFixture, getBasename, isExpectError } from "./fixture-utils";
-import { TestResult, writeOutputToString } from "./reporter";
-import { runSprout } from "./sprout";
+} from './constants';
+import {TestFixture, getBasename, isExpectError} from './fixture-utils';
+import {TestResult, writeOutputToString} from './reporter';
+import {runSprout} from './sprout';
 
 const originalConsoleError = console.error;
 
 // Try to avoid clearing the entire require cache, which (as of this PR)
 // contains ~1250 files. This assumes that no dependencies have global caches
 // that may need to be invalidated across Forget reloads.
-const invalidationSubpath = "packages/babel-plugin-react-compiler/dist";
+const invalidationSubpath = 'packages/babel-plugin-react-compiler/dist';
 let version: number | null = null;
 export function clearRequireCache() {
   Object.keys(require.cache).forEach(function (path) {
@@ -38,7 +38,7 @@ async function compile(
   fixturePath: string,
   compilerVersion: number,
   shouldLog: boolean,
-  includeEvaluator: boolean
+  includeEvaluator: boolean,
 ): Promise<{
   error: string | null;
   compileResult: TransformResult | null;
@@ -57,11 +57,11 @@ async function compile(
   try {
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
-    const { default: BabelPluginReactCompiler } = require(COMPILER_PATH) as {
+    const {default: BabelPluginReactCompiler} = require(COMPILER_PATH) as {
       default: PluginObj;
     };
-    const { toggleLogging } = require(LOGGER_PATH);
-    const { parseConfigPragma } = require(PARSE_CONFIG_PRAGMA_PATH) as {
+    const {toggleLogging} = require(LOGGER_PATH);
+    const {parseConfigPragma} = require(PARSE_CONFIG_PRAGMA_PATH) as {
       parseConfigPragma: typeof ParseConfigPragma;
     };
 
@@ -73,10 +73,10 @@ async function compile(
       fixturePath,
       parseConfigPragma,
       BabelPluginReactCompiler,
-      includeEvaluator
+      includeEvaluator,
     );
 
-    if (result.kind === "err") {
+    if (result.kind === 'err') {
       error = result.msg;
     } else {
       compileResult = result.value;
@@ -85,7 +85,7 @@ async function compile(
     if (shouldLog) {
       console.error(e.stack);
     }
-    error = e.message.replace(/\u001b[^m]*m/g, "");
+    error = e.message.replace(/\u001b[^m]*m/g, '');
     const loc = e.details?.[0]?.loc;
     if (loc != null) {
       try {
@@ -103,7 +103,7 @@ async function compile(
           },
           {
             message: e.message,
-          }
+          },
         );
       } catch {
         // In case the location data isn't valid, skip printing a code frame.
@@ -131,9 +131,9 @@ export async function transformFixture(
   fixture: TestFixture,
   compilerVersion: number,
   shouldLog: boolean,
-  includeEvaluator: boolean
+  includeEvaluator: boolean,
 ): Promise<TestResult> {
-  const { input, snapshot: expected, snapshotPath: outputPath } = fixture;
+  const {input, snapshot: expected, snapshotPath: outputPath} = fixture;
   const basename = getBasename(fixture);
   const expectError = isExpectError(fixture);
 
@@ -147,12 +147,12 @@ export async function transformFixture(
       unexpectedError: null,
     };
   }
-  const { compileResult, error } = await compile(
+  const {compileResult, error} = await compile(
     input,
     fixture.fixturePath,
     compilerVersion,
     shouldLog,
-    includeEvaluator
+    includeEvaluator,
   );
 
   let unexpectedError: string | null = null;
@@ -173,16 +173,16 @@ export async function transformFixture(
   if (compileResult?.evaluatorCode != null) {
     const sproutResult = runSprout(
       compileResult.evaluatorCode.original,
-      compileResult.evaluatorCode.forget
+      compileResult.evaluatorCode.forget,
     );
-    if (sproutResult.kind === "invalid") {
-      unexpectedError ??= "";
+    if (sproutResult.kind === 'invalid') {
+      unexpectedError ??= '';
       unexpectedError += `\n\n${sproutResult.value}`;
     } else {
       sproutOutput = sproutResult.value;
     }
   } else if (!includeEvaluator && expected != null) {
-    sproutOutput = expected.split("\n### Eval output\n")[1];
+    sproutOutput = expected.split('\n### Eval output\n')[1];
   }
 
   const actualOutput = writeOutputToString(
@@ -190,7 +190,7 @@ export async function transformFixture(
     snapOutput,
     sproutOutput,
     compileResult?.logs ?? null,
-    error
+    error,
   );
 
   return {

@@ -2,10 +2,10 @@
 ## Input
 
 ```javascript
-import { createContext, useContext } from "react";
-import { Stringify } from "shared-runtime";
+import {createContext, useContext} from 'react';
+import {Stringify} from 'shared-runtime';
 
-const FooContext = createContext({ current: true });
+const FooContext = createContext({current: true});
 
 function Component(props) {
   const foo = useContext(FooContext);

@@ -1,6 +1,6 @@
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
-function Component({ useFeature }) {
+function Component({useFeature}) {
   let x;
   if (useFeature) {
     x = [useFeature + useFeature].push(-useFeature);
@@ -18,5 +18,5 @@ function Component({ useFeature }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ useFeature: { useProperty: true } }],
+  params: [{useFeature: {useProperty: true}}],
 };

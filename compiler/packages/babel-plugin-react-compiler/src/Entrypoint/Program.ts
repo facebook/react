@@ -5,32 +5,32 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath } from "@babel/core";
-import * as t from "@babel/types";
+import {NodePath} from '@babel/core';
+import * as t from '@babel/types';
 import {
   CompilerError,
   CompilerErrorDetail,
   ErrorSeverity,
-} from "../CompilerError";
+} from '../CompilerError';
 import {
   ExternalFunction,
   ReactFunctionType,
   parseEnvironmentConfig,
   tryParseExternalFunction,
-} from "../HIR/Environment";
-import { CodegenFunction } from "../ReactiveScopes";
-import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
-import { isHookDeclaration } from "../Utils/HookDeclaration";
-import { assertExhaustive } from "../Utils/utils";
-import { insertGatedFunctionDeclaration } from "./Gating";
-import { addImportsToProgram, updateMemoCacheFunctionImport } from "./Imports";
-import { PluginOptions } from "./Options";
-import { compileFn } from "./Pipeline";
+} from '../HIR/Environment';
+import {CodegenFunction} from '../ReactiveScopes';
+import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
+import {isHookDeclaration} from '../Utils/HookDeclaration';
+import {assertExhaustive} from '../Utils/utils';
+import {insertGatedFunctionDeclaration} from './Gating';
+import {addImportsToProgram, updateMemoCacheFunctionImport} from './Imports';
+import {PluginOptions} from './Options';
+import {compileFn} from './Pipeline';
 import {
   filterSuppressionsThatAffectFunction,
   findProgramSuppressions,
   suppressionsToCompilerError,
-} from "./Suppression";
+} from './Suppression';
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -40,11 +40,11 @@ export type CompilerPass = {
 };
 
 function findDirectiveEnablingMemoization(
-  directives: Array<t.Directive>
+  directives: Array<t.Directive>,
 ): t.Directive | null {
   for (const directive of directives) {
     const directiveValue = directive.value.value;
-    if (directiveValue === "use forget" || directiveValue === "use memo") {
+    if (directiveValue === 'use forget' || directiveValue === 'use memo') {
       return directive;
     }
   }
@@ -53,13 +53,13 @@ function findDirectiveEnablingMemoization(
 
 function findDirectiveDisablingMemoization(
   directives: Array<t.Directive>,
-  options: PluginOptions
+  options: PluginOptions,
 ): t.Directive | null {
   for (const directive of directives) {
     const directiveValue = directive.value.value;
     if (
-      (directiveValue === "use no forget" ||
-        directiveValue === "use no memo") &&
+      (directiveValue === 'use no forget' ||
+        directiveValue === 'use no memo') &&
       !options.ignoreUseNoForget
     ) {
       return directive;
@@ -75,7 +75,7 @@ function isCriticalError(err: unknown): boolean {
 function isConfigError(err: unknown): boolean {
   if (err instanceof CompilerError) {
     return err.details.some(
-      (detail) => detail.severity === ErrorSeverity.InvalidConfig
+      detail => detail.severity === ErrorSeverity.InvalidConfig,
     );
   }
   return false;
@@ -92,7 +92,7 @@ export type CompileResult = {
    * functions which were outlined. Only original functions need to be gated
    * if gating mode is enabled.
    */
-  kind: "original" | "outlined";
+  kind: 'original' | 'outlined';
   originalFn: BabelFn;
   compiledFn: CodegenFunction;
 };
@@ -100,13 +100,13 @@ export type CompileResult = {
 function handleError(
   err: unknown,
   pass: CompilerPass,
-  fnLoc: t.SourceLocation | null
+  fnLoc: t.SourceLocation | null,
 ): void {
   if (pass.opts.logger) {
     if (err instanceof CompilerError) {
       for (const detail of err.details) {
         pass.opts.logger.logEvent(pass.filename, {
-          kind: "CompileError",
+          kind: 'CompileError',
           fnLoc,
           detail: detail.options,
         });
@@ -116,19 +116,19 @@ function handleError(
       if (err instanceof Error) {
         stringifiedError = err.stack ?? err.message;
       } else {
-        stringifiedError = err?.toString() ?? "[ null ]";
+        stringifiedError = err?.toString() ?? '[ null ]';
       }
 
       pass.opts.logger.logEvent(pass.filename, {
-        kind: "PipelineError",
+        kind: 'PipelineError',
         fnLoc,
         data: stringifiedError,
       });
     }
   }
   if (
-    pass.opts.panicThreshold === "all_errors" ||
-    (pass.opts.panicThreshold === "critical_errors" && isCriticalError(err)) ||
+    pass.opts.panicThreshold === 'all_errors' ||
+    (pass.opts.panicThreshold === 'critical_errors' && isCriticalError(err)) ||
     isConfigError(err) // Always throws regardless of panic threshold
   ) {
     throw err;
@@ -137,16 +137,16 @@ function handleError(
 
 export function createNewFunctionNode(
   originalFn: BabelFn,
-  compiledFn: CodegenFunction
+  compiledFn: CodegenFunction,
 ): t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression {
   let transformedFn:
     | t.FunctionDeclaration
     | t.ArrowFunctionExpression
     | t.FunctionExpression;
   switch (originalFn.node.type) {
-    case "FunctionDeclaration": {
+    case 'FunctionDeclaration': {
       const fn: t.FunctionDeclaration = {
-        type: "FunctionDeclaration",
+        type: 'FunctionDeclaration',
         id: compiledFn.id,
         loc: originalFn.node.loc ?? null,
         async: compiledFn.async,
@@ -157,9 +157,9 @@ export function createNewFunctionNode(
       transformedFn = fn;
       break;
     }
-    case "ArrowFunctionExpression": {
+    case 'ArrowFunctionExpression': {
       const fn: t.ArrowFunctionExpression = {
-        type: "ArrowFunctionExpression",
+        type: 'ArrowFunctionExpression',
         loc: originalFn.node.loc ?? null,
         async: compiledFn.async,
         generator: compiledFn.generator,
@@ -170,9 +170,9 @@ export function createNewFunctionNode(
       transformedFn = fn;
       break;
     }
-    case "FunctionExpression": {
+    case 'FunctionExpression': {
       const fn: t.FunctionExpression = {
-        type: "FunctionExpression",
+        type: 'FunctionExpression',
         id: compiledFn.id,
         loc: originalFn.node.loc ?? null,
         async: compiledFn.async,
@@ -198,15 +198,15 @@ export function createNewFunctionNode(
 const ALREADY_COMPILED: WeakSet<object> | Set<object> = new (WeakSet ?? Set)();
 
 const DEFAULT_ESLINT_SUPPRESSIONS = [
-  "react-hooks/exhaustive-deps",
-  "react-hooks/rules-of-hooks",
+  'react-hooks/exhaustive-deps',
+  'react-hooks/rules-of-hooks',
 ];
 
 function isFilePartOfSources(
   sources: Array<string> | ((filename: string) => boolean),
-  filename: string
+  filename: string,
 ): boolean {
-  if (typeof sources === "function") {
+  if (typeof sources === 'function') {
     return sources(filename);
   }
 
@@ -221,7 +221,7 @@ function isFilePartOfSources(
 
 export function compileProgram(
   program: NodePath<t.Program>,
-  pass: CompilerPass
+  pass: CompilerPass,
 ): void {
   if (pass.opts.sources) {
     if (pass.filename === null) {
@@ -233,7 +233,7 @@ export function compileProgram(
             "When the 'sources' config options is specified, the React compiler will only compile files with a name",
           severity: ErrorSeverity.InvalidConfig,
           loc: null,
-        })
+        }),
       );
       handleError(error, pass, null);
       return;
@@ -253,8 +253,8 @@ export function compileProgram(
   }
 
   const environment = parseEnvironmentConfig(pass.opts.environment ?? {});
-  const useMemoCacheIdentifier = program.scope.generateUidIdentifier("c");
-  const moduleName = pass.opts.runtimeModule ?? "react/compiler-runtime";
+  const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
+  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
   if (hasMemoCacheFunctionImport(program, moduleName)) {
     return;
   }
@@ -267,12 +267,12 @@ export function compileProgram(
   const suppressions = findProgramSuppressions(
     pass.comments,
     pass.opts.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
-    pass.opts.flowSuppressions
+    pass.opts.flowSuppressions,
   );
   const lintError = suppressionsToCompilerError(suppressions);
   let hasCriticalError = lintError != null;
   const queue: Array<{
-    kind: "original" | "outlined";
+    kind: 'original' | 'outlined';
     fn: BabelFn;
     fnType: ReactFunctionType;
   }> = [];
@@ -292,7 +292,7 @@ export function compileProgram(
     ALREADY_COMPILED.add(fn.node);
     fn.skip();
 
-    queue.push({ kind: "original", fn, fnType });
+    queue.push({kind: 'original', fn, fnType});
   };
 
   // Main traversal to compile with Forget
@@ -324,14 +324,14 @@ export function compileProgram(
     },
     {
       ...pass,
-      opts: { ...pass.opts, ...pass.opts },
+      opts: {...pass.opts, ...pass.opts},
       filename: pass.filename ?? null,
-    }
+    },
   );
 
   const processFn = (
     fn: BabelFn,
-    fnType: ReactFunctionType
+    fnType: ReactFunctionType,
   ): null | CodegenFunction => {
     if (lintError != null) {
       /**
@@ -341,7 +341,7 @@ export function compileProgram(
        */
       const suppressionsInFunction = filterSuppressionsThatAffectFunction(
         suppressions,
-        fn
+        fn,
       );
       if (suppressionsInFunction.length > 0) {
         handleError(lintError, pass, fn.node.loc ?? null);
@@ -357,7 +357,7 @@ export function compileProgram(
       if (environment.isErr()) {
         CompilerError.throwInvalidConfig({
           reason:
-            "Error in validating environment config. This is an advanced setting and not meant to be used directly",
+            'Error in validating environment config. This is an advanced setting and not meant to be used directly',
           description: environment.unwrapErr().toString(),
           suggestions: null,
           loc: null,
@@ -372,10 +372,10 @@ export function compileProgram(
         useMemoCacheIdentifier.name,
         pass.opts.logger,
         pass.filename,
-        pass.code
+        pass.code,
       );
       pass.opts.logger?.logEvent(pass.filename, {
-        kind: "CompileSuccess",
+        kind: 'CompileSuccess',
         fnLoc: fn.node.loc ?? null,
         fnName: compiledFn.id?.name ?? null,
         memoSlots: compiledFn.memoSlotsUsed,
@@ -404,11 +404,11 @@ export function compileProgram(
     }
     for (const outlined of compiled.outlined) {
       CompilerError.invariant(outlined.fn.outlined.length === 0, {
-        reason: "Unexpected nested outlined functions",
+        reason: 'Unexpected nested outlined functions',
         loc: outlined.fn.loc,
       });
       const fn = current.fn.insertAfter(
-        createNewFunctionNode(current.fn, outlined.fn)
+        createNewFunctionNode(current.fn, outlined.fn),
       )[0]!;
       fn.skip();
       ALREADY_COMPILED.add(fn.node);
@@ -437,9 +437,9 @@ export function compileProgram(
   if (pass.opts.gating != null) {
     const error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
       program,
-      compiledFns.map((result) => {
+      compiledFns.map(result => {
         return result.originalFn;
-      })
+      }),
     );
     if (error) {
       handleError(error, pass, null);
@@ -460,32 +460,32 @@ export function compileProgram(
       pass.opts.environment?.enableEmitInstrumentForget;
     if (enableEmitInstrumentForget != null) {
       externalFunctions.push(
-        tryParseExternalFunction(enableEmitInstrumentForget.fn)
+        tryParseExternalFunction(enableEmitInstrumentForget.fn),
       );
       if (enableEmitInstrumentForget.gating != null) {
         externalFunctions.push(
-          tryParseExternalFunction(enableEmitInstrumentForget.gating)
+          tryParseExternalFunction(enableEmitInstrumentForget.gating),
         );
       }
     }
 
     if (pass.opts.environment?.enableEmitFreeze != null) {
       const enableEmitFreeze = tryParseExternalFunction(
-        pass.opts.environment.enableEmitFreeze
+        pass.opts.environment.enableEmitFreeze,
       );
       externalFunctions.push(enableEmitFreeze);
     }
 
     if (pass.opts.environment?.enableEmitHookGuards != null) {
       const enableEmitHookGuards = tryParseExternalFunction(
-        pass.opts.environment.enableEmitHookGuards
+        pass.opts.environment.enableEmitHookGuards,
       );
       externalFunctions.push(enableEmitHookGuards);
     }
 
     if (pass.opts.environment?.enableChangeDetectionForDebugging != null) {
       const enableChangeDetectionForDebugging = tryParseExternalFunction(
-        pass.opts.environment.enableChangeDetectionForDebugging
+        pass.opts.environment.enableChangeDetectionForDebugging,
       );
       externalFunctions.push(enableChangeDetectionForDebugging);
     }
@@ -499,10 +499,10 @@ export function compileProgram(
    * error elsewhere in the file, regardless of bailout mode.
    */
   for (const result of compiledFns) {
-    const { kind, originalFn, compiledFn } = result;
+    const {kind, originalFn, compiledFn} = result;
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
 
-    if (gating != null && kind === "original") {
+    if (gating != null && kind === 'original') {
       insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
     } else {
       originalFn.replaceWith(transformedFn);
@@ -523,7 +523,7 @@ export function compileProgram(
       updateMemoCacheFunctionImport(
         program,
         moduleName,
-        useMemoCacheIdentifier.name
+        useMemoCacheIdentifier.name,
       );
     }
     addImportsToProgram(program, externalFunctions);
@@ -532,18 +532,18 @@ export function compileProgram(
 
 function getReactFunctionType(
   fn: BabelFn,
-  pass: CompilerPass
+  pass: CompilerPass,
 ): ReactFunctionType | null {
   const hookPattern = pass.opts.environment?.hookPattern ?? null;
-  if (fn.node.body.type === "BlockStatement") {
+  if (fn.node.body.type === 'BlockStatement') {
     // Opt-outs disable compilation regardless of mode
     const useNoForget = findDirectiveDisablingMemoization(
       fn.node.body.directives,
-      pass.opts
+      pass.opts,
     );
     if (useNoForget != null) {
       pass.opts.logger?.logEvent(pass.filename, {
-        kind: "CompileError",
+        kind: 'CompileError',
         fnLoc: fn.node.body.loc ?? null,
         detail: {
           severity: ErrorSeverity.Todo,
@@ -556,7 +556,7 @@ function getReactFunctionType(
     }
     // Otherwise opt-ins enable compilation regardless of mode
     if (findDirectiveEnablingMemoization(fn.node.body.directives) != null) {
-      return getComponentOrHookLike(fn, hookPattern) ?? "Other";
+      return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
     }
   }
 
@@ -564,36 +564,36 @@ function getReactFunctionType(
   let componentSyntaxType: ReactFunctionType | null = null;
   if (fn.isFunctionDeclaration()) {
     if (isComponentDeclaration(fn.node)) {
-      componentSyntaxType = "Component";
+      componentSyntaxType = 'Component';
     } else if (isHookDeclaration(fn.node)) {
-      componentSyntaxType = "Hook";
+      componentSyntaxType = 'Hook';
     }
   }
 
   switch (pass.opts.compilationMode) {
-    case "annotation": {
+    case 'annotation': {
       // opt-ins are checked above
       return null;
     }
-    case "infer": {
+    case 'infer': {
       // Check if this is a component or hook-like function
       return componentSyntaxType ?? getComponentOrHookLike(fn, hookPattern);
     }
-    case "syntax": {
+    case 'syntax': {
       return componentSyntaxType;
     }
-    case "all": {
+    case 'all': {
       // Compile only top level functions
       if (fn.scope.getProgramParent() !== fn.scope.parent) {
         return null;
       }
 
-      return getComponentOrHookLike(fn, hookPattern) ?? "Other";
+      return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
     }
     default: {
       assertExhaustive(
         pass.opts.compilationMode,
-        `Unexpected compilationMode \`${pass.opts.compilationMode}\``
+        `Unexpected compilationMode \`${pass.opts.compilationMode}\``,
       );
     }
   }
@@ -606,12 +606,12 @@ function getReactFunctionType(
  */
 function hasMemoCacheFunctionImport(
   program: NodePath<t.Program>,
-  moduleName: string
+  moduleName: string,
 ): boolean {
   let hasUseMemoCache = false;
   program.traverse({
     ImportSpecifier(path) {
-      const imported = path.get("imported");
+      const imported = path.get('imported');
       let importedName: string | null = null;
       if (imported.isIdentifier()) {
         importedName = imported.node.name;
@@ -619,9 +619,9 @@ function hasMemoCacheFunctionImport(
         importedName = imported.node.value;
       }
       if (
-        importedName === "c" &&
+        importedName === 'c' &&
         path.parentPath.isImportDeclaration() &&
-        path.parentPath.get("source").node.value === moduleName
+        path.parentPath.get('source').node.value === moduleName
       ) {
         hasUseMemoCache = true;
       }
@@ -644,18 +644,18 @@ function isHookName(s: string, hookPattern: string | null): boolean {
 
 function isHook(
   path: NodePath<t.Expression | t.PrivateName>,
-  hookPattern: string | null
+  hookPattern: string | null,
 ): boolean {
   if (path.isIdentifier()) {
     return isHookName(path.node.name, hookPattern);
   } else if (
     path.isMemberExpression() &&
     !path.node.computed &&
-    isHook(path.get("property"), hookPattern)
+    isHook(path.get('property'), hookPattern)
   ) {
-    const obj = path.get("object").node;
+    const obj = path.get('object').node;
     const isPascalCaseNameSpace = /^[A-Z].*/;
-    return obj.type === "Identifier" && isPascalCaseNameSpace.test(obj.name);
+    return obj.type === 'Identifier' && isPascalCaseNameSpace.test(obj.name);
   } else {
     return false;
   }
@@ -672,15 +672,15 @@ function isComponentName(path: NodePath<t.Expression>): boolean {
 
 function isReactAPI(
   path: NodePath<t.Expression | t.PrivateName | t.V8IntrinsicIdentifier>,
-  functionName: string
+  functionName: string,
 ): boolean {
   const node = path.node;
   return (
-    (node.type === "Identifier" && node.name === functionName) ||
-    (node.type === "MemberExpression" &&
-      node.object.type === "Identifier" &&
-      node.object.name === "React" &&
-      node.property.type === "Identifier" &&
+    (node.type === 'Identifier' && node.name === functionName) ||
+    (node.type === 'MemberExpression' &&
+      node.object.type === 'Identifier' &&
+      node.object.name === 'React' &&
+      node.property.type === 'Identifier' &&
       node.property.name === functionName)
   );
 }
@@ -693,8 +693,8 @@ function isReactAPI(
 function isForwardRefCallback(path: NodePath<t.Expression>): boolean {
   return !!(
     path.parentPath.isCallExpression() &&
-    path.parentPath.get("callee").isExpression() &&
-    isReactAPI(path.parentPath.get("callee"), "forwardRef")
+    path.parentPath.get('callee').isExpression() &&
+    isReactAPI(path.parentPath.get('callee'), 'forwardRef')
   );
 }
 
@@ -706,50 +706,50 @@ function isForwardRefCallback(path: NodePath<t.Expression>): boolean {
 function isMemoCallback(path: NodePath<t.Expression>): boolean {
   return (
     path.parentPath.isCallExpression() &&
-    path.parentPath.get("callee").isExpression() &&
-    isReactAPI(path.parentPath.get("callee"), "memo")
+    path.parentPath.get('callee').isExpression() &&
+    isReactAPI(path.parentPath.get('callee'), 'memo')
   );
 }
 
 function isValidPropsAnnotation(
-  annot: t.TypeAnnotation | t.TSTypeAnnotation | t.Noop | null | undefined
+  annot: t.TypeAnnotation | t.TSTypeAnnotation | t.Noop | null | undefined,
 ): boolean {
   if (annot == null) {
     return true;
-  } else if (annot.type === "TSTypeAnnotation") {
+  } else if (annot.type === 'TSTypeAnnotation') {
     switch (annot.typeAnnotation.type) {
-      case "TSArrayType":
-      case "TSBigIntKeyword":
-      case "TSBooleanKeyword":
-      case "TSConstructorType":
-      case "TSFunctionType":
-      case "TSLiteralType":
-      case "TSNeverKeyword":
-      case "TSNumberKeyword":
-      case "TSStringKeyword":
-      case "TSSymbolKeyword":
-      case "TSTupleType":
+      case 'TSArrayType':
+      case 'TSBigIntKeyword':
+      case 'TSBooleanKeyword':
+      case 'TSConstructorType':
+      case 'TSFunctionType':
+      case 'TSLiteralType':
+      case 'TSNeverKeyword':
+      case 'TSNumberKeyword':
+      case 'TSStringKeyword':
+      case 'TSSymbolKeyword':
+      case 'TSTupleType':
         return false;
     }
     return true;
-  } else if (annot.type === "TypeAnnotation") {
+  } else if (annot.type === 'TypeAnnotation') {
     switch (annot.typeAnnotation.type) {
-      case "ArrayTypeAnnotation":
-      case "BooleanLiteralTypeAnnotation":
-      case "BooleanTypeAnnotation":
-      case "EmptyTypeAnnotation":
-      case "FunctionTypeAnnotation":
-      case "NumberLiteralTypeAnnotation":
-      case "NumberTypeAnnotation":
-      case "StringLiteralTypeAnnotation":
-      case "StringTypeAnnotation":
-      case "SymbolTypeAnnotation":
-      case "ThisTypeAnnotation":
-      case "TupleTypeAnnotation":
+      case 'ArrayTypeAnnotation':
+      case 'BooleanLiteralTypeAnnotation':
+      case 'BooleanTypeAnnotation':
+      case 'EmptyTypeAnnotation':
+      case 'FunctionTypeAnnotation':
+      case 'NumberLiteralTypeAnnotation':
+      case 'NumberTypeAnnotation':
+      case 'StringLiteralTypeAnnotation':
+      case 'StringTypeAnnotation':
+      case 'SymbolTypeAnnotation':
+      case 'ThisTypeAnnotation':
+      case 'TupleTypeAnnotation':
         return false;
     }
     return true;
-  } else if (annot.type === "Noop") {
+  } else if (annot.type === 'Noop') {
     return true;
   } else {
     assertExhaustive(annot, `Unexpected annotation node \`${annot}\``);
@@ -757,7 +757,7 @@ function isValidPropsAnnotation(
 }
 
 function isValidComponentParams(
-  params: Array<NodePath<t.Identifier | t.Pattern | t.RestElement>>
+  params: Array<NodePath<t.Identifier | t.Pattern | t.RestElement>>,
 ): boolean {
   if (params.length === 0) {
     return true;
@@ -770,8 +770,8 @@ function isValidComponentParams(
       return !params[0].isRestElement();
     } else if (params[1].isIdentifier()) {
       // check if second param might be a ref
-      const { name } = params[1].node;
-      return name.includes("ref") || name.includes("Ref");
+      const {name} = params[1].node;
+      return name.includes('ref') || name.includes('Ref');
     } else {
       /**
        * Otherwise, avoid helper functions that take more than one argument.
@@ -792,19 +792,19 @@ function getComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  hookPattern: string | null
+  hookPattern: string | null,
 ): ReactFunctionType | null {
   const functionName = getFunctionName(node);
   // Check if the name is component or hook like:
   if (functionName !== null && isComponentName(functionName)) {
     let isComponent =
       callsHooksOrCreatesJsx(node, hookPattern) &&
-      isValidComponentParams(node.get("params")) &&
+      isValidComponentParams(node.get('params')) &&
       !returnsNonNode(node);
-    return isComponent ? "Component" : null;
+    return isComponent ? 'Component' : null;
   } else if (functionName !== null && isHook(functionName, hookPattern)) {
     // Hooks have hook invocations or JSX, but can take any # of arguments
-    return callsHooksOrCreatesJsx(node, hookPattern) ? "Hook" : null;
+    return callsHooksOrCreatesJsx(node, hookPattern) ? 'Hook' : null;
   }
 
   /*
@@ -814,7 +814,7 @@ function getComponentOrHookLike(
   if (node.isFunctionExpression() || node.isArrowFunctionExpression()) {
     if (isForwardRefCallback(node) || isMemoCallback(node)) {
       // As an added check we also look for hook invocations or JSX
-      return callsHooksOrCreatesJsx(node, hookPattern) ? "Component" : null;
+      return callsHooksOrCreatesJsx(node, hookPattern) ? 'Component' : null;
     }
   }
   return null;
@@ -823,12 +823,12 @@ function getComponentOrHookLike(
 function skipNestedFunctions(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
 ) {
   return (
     fn: NodePath<
       t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-    >
+    >,
   ): void => {
     if (fn.node !== node.node) {
       fn.skip();
@@ -840,7 +840,7 @@ function callsHooksOrCreatesJsx(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  hookPattern: string | null
+  hookPattern: string | null,
 ): boolean {
   let invokesHooks = false;
   let createsJsx = false;
@@ -850,7 +850,7 @@ function callsHooksOrCreatesJsx(
       createsJsx = true;
     },
     CallExpression(call) {
-      const callee = call.get("callee");
+      const callee = call.get('callee');
       if (callee.isExpression() && isHook(callee, hookPattern)) {
         invokesHooks = true;
       }
@@ -866,7 +866,7 @@ function callsHooksOrCreatesJsx(
 function returnsNonNode(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
 ): boolean {
   let hasReturn = false;
   let returnsNonNode = false;
@@ -879,12 +879,12 @@ function returnsNonNode(
         returnsNonNode = true;
       } else {
         switch (argument.type) {
-          case "ObjectExpression":
-          case "ArrowFunctionExpression":
-          case "FunctionExpression":
-          case "BigIntLiteral":
-          case "ClassExpression":
-          case "NewExpression": // technically `new Array()` is legit, but unlikely
+          case 'ObjectExpression':
+          case 'ArrowFunctionExpression':
+          case 'FunctionExpression':
+          case 'BigIntLiteral':
+          case 'ClassExpression':
+          case 'NewExpression': // technically `new Array()` is legit, but unlikely
             returnsNonNode = true;
         }
       }
@@ -908,10 +908,10 @@ function returnsNonNode(
 function getFunctionName(
   path: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
 ): NodePath<t.Expression> | null {
   if (path.isFunctionDeclaration()) {
-    const id = path.get("id");
+    const id = path.get('id');
     if (id.isIdentifier()) {
       return id;
     }
@@ -919,31 +919,31 @@ function getFunctionName(
   }
   let id: NodePath<t.LVal | t.Expression | t.PrivateName> | null = null;
   const parent = path.parentPath;
-  if (parent.isVariableDeclarator() && parent.get("init").node === path.node) {
+  if (parent.isVariableDeclarator() && parent.get('init').node === path.node) {
     // const useHook = () => {};
-    id = parent.get("id");
+    id = parent.get('id');
   } else if (
     parent.isAssignmentExpression() &&
-    parent.get("right").node === path.node &&
-    parent.get("operator") === "="
+    parent.get('right').node === path.node &&
+    parent.get('operator') === '='
   ) {
     // useHook = () => {};
-    id = parent.get("left");
+    id = parent.get('left');
   } else if (
     parent.isProperty() &&
-    parent.get("value").node === path.node &&
-    !parent.get("computed") &&
-    parent.get("key").isLVal()
+    parent.get('value').node === path.node &&
+    !parent.get('computed') &&
+    parent.get('key').isLVal()
   ) {
     /*
      * {useHook: () => {}}
      * {useHook() {}}
      */
-    id = parent.get("key");
+    id = parent.get('key');
   } else if (
     parent.isAssignmentPattern() &&
-    parent.get("right").node === path.node &&
-    !parent.get("computed")
+    parent.get('right').node === path.node &&
+    !parent.get('computed')
   ) {
     /*
      * const {useHook = () => {}} = {};
@@ -952,7 +952,7 @@ function getFunctionName(
      * Kinda clowny, but we'd said we'd follow spec convention for
      * `IsAnonymousFunctionDefinition()` usage.
      */
-    id = parent.get("left");
+    id = parent.get('left');
   }
   if (id !== null && (id.isIdentifier() || id.isMemberExpression())) {
     return id;
@@ -963,17 +963,17 @@ function getFunctionName(
 
 function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   program: NodePath<t.Program>,
-  fns: Array<BabelFn>
+  fns: Array<BabelFn>,
 ): CompilerError | null {
   const fnIds = new Set(
     fns
-      .map((fn) => getFunctionName(fn))
+      .map(fn => getFunctionName(fn))
       .filter(
-        (name): name is NodePath<t.Identifier> => !!name && name.isIdentifier()
+        (name): name is NodePath<t.Identifier> => !!name && name.isIdentifier(),
       )
-      .map((name) => name.node)
+      .map(name => name.node),
   );
-  const fnNames = new Map([...fnIds].map((id) => [id.name, id]));
+  const fnNames = new Map([...fnIds].map(id => [id.name, id]));
   const errors = new CompilerError();
 
   program.traverse({
@@ -1019,7 +1019,7 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
             loc: fn.loc ?? null,
             suggestions: null,
             severity: ErrorSeverity.Invariant,
-          })
+          }),
         );
       }
     },

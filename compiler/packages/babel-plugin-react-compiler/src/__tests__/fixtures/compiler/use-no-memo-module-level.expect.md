@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-"use no memo";
+'use no memo';
 
 export default function foo(x, y) {
   if (x) {

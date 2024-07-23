@@ -1,9 +1,9 @@
-import { fbt } from "fbt";
+import {fbt} from 'fbt';
 
 function Component() {
   const buttonLabel = () => {
     if (!someCondition) {
-      return <fbt desc="My label">{"Purchase as a gift"}</fbt>;
+      return <fbt desc="My label">{'Purchase as a gift'}</fbt>;
     } else if (
       !iconOnly &&
       showPrice &&
@@ -11,14 +11,14 @@ function Component() {
     ) {
       return (
         <fbt desc="Gift button's label">
-          {"Gift | "}
+          {'Gift | '}
           <fbt:param name="price">
             {item?.current_gift_offer?.price?.formatted}
           </fbt:param>
         </fbt>
       );
     } else if (!iconOnly && !showPrice) {
-      return <fbt desc="Gift button's label">{"Gift"}</fbt>;
+      return <fbt desc="Gift button's label">{'Gift'}</fbt>;
     }
   };
 

@@ -5,18 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type * as BabelCore from "@babel/core";
-import { transformFromAstSync } from "@babel/core";
-import * as BabelParser from "@babel/parser";
+import type * as BabelCore from '@babel/core';
+import {transformFromAstSync} from '@babel/core';
+import * as BabelParser from '@babel/parser';
 import BabelPluginReactCompiler, {
   ErrorSeverity,
   type CompilerErrorDetailOptions,
   type PluginOptions,
-} from "babel-plugin-react-compiler/src";
-import { LoggerEvent as RawLoggerEvent } from "babel-plugin-react-compiler/src/Entrypoint";
-import chalk from "chalk";
+} from 'babel-plugin-react-compiler/src';
+import {LoggerEvent as RawLoggerEvent} from 'babel-plugin-react-compiler/src/Entrypoint';
+import chalk from 'chalk';
 
-type LoggerEvent = RawLoggerEvent & { filename: string | null };
+type LoggerEvent = RawLoggerEvent & {filename: string | null};
 
 const SucessfulCompilation: Array<LoggerEvent> = [];
 const ActionableFailures: Array<LoggerEvent> = [];
@@ -24,13 +24,13 @@ const OtherFailures: Array<LoggerEvent> = [];
 
 const logger = {
   logEvent(filename: string | null, rawEvent: RawLoggerEvent) {
-    const event = { ...rawEvent, filename };
+    const event = {...rawEvent, filename};
     switch (event.kind) {
-      case "CompileSuccess": {
+      case 'CompileSuccess': {
         SucessfulCompilation.push(event);
         return;
       }
-      case "CompileError": {
+      case 'CompileError': {
         if (isActionableDiagnostic(event.detail)) {
           ActionableFailures.push(event);
           return;
@@ -38,8 +38,8 @@ const logger = {
         OtherFailures.push(event);
         return;
       }
-      case "CompileDiagnostic":
-      case "PipelineError":
+      case 'CompileDiagnostic':
+      case 'PipelineError':
         OtherFailures.push(event);
         return;
     }
@@ -48,8 +48,8 @@ const logger = {
 
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
-  compilationMode: "infer",
-  panicThreshold: "critical_errors",
+  compilationMode: 'infer',
+  panicThreshold: 'critical_errors',
   logger,
 };
 
@@ -71,26 +71,26 @@ function isActionableDiagnostic(detail: CompilerErrorDetailOptions) {
 function runBabelPluginReactCompiler(
   text: string,
   file: string,
-  language: "flow" | "typescript",
-  options: Partial<PluginOptions> | null
+  language: 'flow' | 'typescript',
+  options: Partial<PluginOptions> | null,
 ): BabelCore.BabelFileResult {
   const ast = BabelParser.parse(text, {
     sourceFilename: file,
-    plugins: [language, "jsx"],
-    sourceType: "module",
+    plugins: [language, 'jsx'],
+    sourceType: 'module',
   });
   const result = transformFromAstSync(ast, text, {
     filename: file,
     highlightCode: false,
     retainLines: true,
     plugins: [[BabelPluginReactCompiler, options]],
-    sourceType: "module",
+    sourceType: 'module',
     configFile: false,
     babelrc: false,
   });
   if (result?.code == null) {
     throw new Error(
-      `Expected BabelPluginReactForget to codegen successfully, got: ${result}`
+      `Expected BabelPluginReactForget to codegen successfully, got: ${result}`,
     );
   }
   return result;
@@ -101,8 +101,8 @@ function compile(sourceCode: string, filename: string) {
     runBabelPluginReactCompiler(
       sourceCode,
       filename,
-      "typescript",
-      COMPILER_OPTIONS
+      'typescript',
+      COMPILER_OPTIONS,
     );
   } catch {}
 }
@@ -146,8 +146,8 @@ export default {
       countUniqueLocInEvents(ActionableFailures);
     console.log(
       chalk.green(
-        `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`
-      )
+        `Successfully compiled ${SucessfulCompilation.length} out of ${totalComponents} components.`,
+      ),
     );
   },
 };

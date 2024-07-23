@@ -3,14 +3,14 @@
 
 ```javascript
 // @validateRefAccessDuringRender
-import { useRef } from "react";
+import {useRef} from 'react';
 
 function Component() {
   const ref = useRef(null);
 
   const onClick = () => {
     if (ref.current !== null) {
-      ref.current.value = "";
+      ref.current.value = '';
     }
   };
 

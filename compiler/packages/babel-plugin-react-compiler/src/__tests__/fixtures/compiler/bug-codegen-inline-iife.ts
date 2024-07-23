@@ -1,4 +1,4 @@
-import { makeArray, print } from "shared-runtime";
+import {makeArray, print} from 'shared-runtime';
 
 /**
  * Exposes bug involving iife inlining + codegen.
@@ -26,7 +26,7 @@ function useTest() {
     (function foo() {
       print(2);
       return 2;
-    })()
+    })(),
   );
 }
 

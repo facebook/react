@@ -1,6 +1,6 @@
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
 // It's correct to produce memo blocks with fewer deps than source
 function useFoo(a, b) {
