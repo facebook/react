@@ -124,7 +124,6 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
   getIteratorFn,
-  REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
