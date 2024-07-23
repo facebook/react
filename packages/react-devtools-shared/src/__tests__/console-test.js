@@ -232,7 +232,7 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
@@ -240,7 +240,7 @@ describe('console', () => {
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
@@ -279,7 +279,8 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0][0]).toBe('active warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? // TODO: It would be nice to have a Child stack frame here since it's just the effect function.
+          '\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
@@ -497,7 +498,7 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
@@ -505,7 +506,7 @@ describe('console', () => {
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
@@ -1032,7 +1033,7 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(3);
@@ -1042,7 +1043,8 @@ describe('console', () => {
     expect(mockWarn.mock.calls[1][1]).toMatch('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][2]).trim()).toEqual(
       supportsOwnerStacks
-        ? 'in Parent (at **)'
+        ? 'in Object.overrideMethod (at **)' + // TODO: This leading frame is due to our extra wrapper that shouldn't exist.
+            '\n    in Child (at **)\n    in Parent (at **)'
         : 'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
 
@@ -1050,7 +1052,7 @@ describe('console', () => {
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toEqual(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(3);
@@ -1060,7 +1062,8 @@ describe('console', () => {
     expect(mockError.mock.calls[1][1]).toEqual('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][2]).trim()).toEqual(
       supportsOwnerStacks
-        ? 'in Parent (at **)'
+        ? 'in Object.overrideMethod (at **)' + // TODO: This leading frame is due to our extra wrapper that shouldn't exist.
+            '\n    in Child (at **)\n    in Parent (at **)'
         : 'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
