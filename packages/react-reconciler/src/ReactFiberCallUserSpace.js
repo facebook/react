@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Effect} from './ReactFiberHooks';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {isRendering, setIsRendering} from './ReactCurrentFiber';
 import {captureCommitPhaseError} from './ReactFiberWorkLoop';
@@ -51,6 +52,7 @@ interface ClassInstance<R> {
     prevState: Object,
     snaphot: Object,
   ): void;
+  componentDidCatch(error: mixed, errorInfo: {componentStack: string}): void;
   componentWillUnmount(): void;
 }
 
@@ -122,6 +124,29 @@ export const callComponentDidUpdateInDEV: (
   ? // We use this technique to trick minifiers to preserve the function name.
     (callComponentDidUpdate['react-stack-bottom-frame'].bind(
       callComponentDidUpdate,
+    ): any)
+  : (null: any);
+
+const callComponentDidCatch = {
+  'react-stack-bottom-frame': function (
+    instance: ClassInstance<any>,
+    errorInfo: CapturedValue<mixed>,
+  ): void {
+    const error = errorInfo.value;
+    const stack = errorInfo.stack;
+    instance.componentDidCatch(error, {
+      componentStack: stack !== null ? stack : '',
+    });
+  },
+};
+
+export const callComponentDidCatchInDEV: (
+  instance: ClassInstance<any>,
+  errorInfo: CapturedValue<mixed>,
+) => void = __DEV__
+  ? // We use this technique to trick minifiers to preserve the function name.
+    (callComponentDidCatch['react-stack-bottom-frame'].bind(
+      callComponentDidCatch,
     ): any)
   : (null: any);
 
