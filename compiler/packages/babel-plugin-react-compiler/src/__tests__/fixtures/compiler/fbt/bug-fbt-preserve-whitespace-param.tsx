@@ -1,4 +1,4 @@
-import fbt from "fbt";
+import fbt from 'fbt';
 
 /**
  * Currently fails with the following:
@@ -28,5 +28,5 @@ function Foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ name: "Jason" }],
+  params: [{name: 'Jason'}],
 };
