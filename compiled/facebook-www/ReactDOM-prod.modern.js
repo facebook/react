@@ -92,7 +92,66 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
-Symbol.for("react.client.reference");
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
+function getComponentNameFromType(type) {
+  if (null == type) return null;
+  if ("function" === typeof type)
+    return type.$$typeof === REACT_CLIENT_REFERENCE
+      ? null
+      : type.displayName || type.name || null;
+  if ("string" === typeof type) return type;
+  switch (type) {
+    case REACT_FRAGMENT_TYPE:
+      return "Fragment";
+    case REACT_PORTAL_TYPE:
+      return "Portal";
+    case REACT_PROFILER_TYPE:
+      return "Profiler";
+    case REACT_STRICT_MODE_TYPE:
+      return "StrictMode";
+    case REACT_SUSPENSE_TYPE:
+      return "Suspense";
+    case REACT_SUSPENSE_LIST_TYPE:
+      return "SuspenseList";
+    case REACT_TRACING_MARKER_TYPE:
+      if (enableTransitionTracing) return "TracingMarker";
+  }
+  if ("object" === typeof type)
+    switch (type.$$typeof) {
+      case REACT_PROVIDER_TYPE:
+        if (enableRenderableContext) break;
+        else return (type._context.displayName || "Context") + ".Provider";
+      case REACT_CONTEXT_TYPE:
+        return enableRenderableContext
+          ? (type.displayName || "Context") + ".Provider"
+          : (type.displayName || "Context") + ".Consumer";
+      case REACT_CONSUMER_TYPE:
+        if (enableRenderableContext)
+          return (type._context.displayName || "Context") + ".Consumer";
+        break;
+      case REACT_FORWARD_REF_TYPE:
+        var innerType = type.render;
+        type = type.displayName;
+        type ||
+          ((type = innerType.displayName || innerType.name || ""),
+          (type = "" !== type ? "ForwardRef(" + type + ")" : "ForwardRef"));
+        return type;
+      case REACT_MEMO_TYPE:
+        return (
+          (innerType = type.displayName || null),
+          null !== innerType
+            ? innerType
+            : getComponentNameFromType(type.type) || "Memo"
+        );
+      case REACT_LAZY_TYPE:
+        innerType = type._payload;
+        type = type._init;
+        try {
+          return getComponentNameFromType(type(innerType));
+        } catch (x) {}
+    }
+  return null;
+}
 var ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   prefix,
@@ -6385,7 +6444,8 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
-          throw Error(formatProdErrorMessage(306, current, ""));
+          workInProgress = getComponentNameFromType(current) || current;
+          throw Error(formatProdErrorMessage(306, workInProgress, ""));
         }
       }
       return workInProgress;
@@ -12556,14 +12616,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$374;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1528 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1528) {
-      var element$jscomp$inline_1529 = document.createElement("div");
-      element$jscomp$inline_1529.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1528 =
-        "function" === typeof element$jscomp$inline_1529.oninput;
+    var isSupported$jscomp$inline_1529 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1529) {
+      var element$jscomp$inline_1530 = document.createElement("div");
+      element$jscomp$inline_1530.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1529 =
+        "function" === typeof element$jscomp$inline_1530.oninput;
     }
-    JSCompiler_inline_result$jscomp$374 = isSupported$jscomp$inline_1528;
+    JSCompiler_inline_result$jscomp$374 = isSupported$jscomp$inline_1529;
   } else JSCompiler_inline_result$jscomp$374 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$374 &&
@@ -12977,20 +13037,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1569 = 0;
-  i$jscomp$inline_1569 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1569++
+  var i$jscomp$inline_1570 = 0;
+  i$jscomp$inline_1570 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1570++
 ) {
-  var eventName$jscomp$inline_1570 =
-      simpleEventPluginEvents[i$jscomp$inline_1569],
-    domEventName$jscomp$inline_1571 =
-      eventName$jscomp$inline_1570.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1572 =
-      eventName$jscomp$inline_1570[0].toUpperCase() +
-      eventName$jscomp$inline_1570.slice(1);
+  var eventName$jscomp$inline_1571 =
+      simpleEventPluginEvents[i$jscomp$inline_1570],
+    domEventName$jscomp$inline_1572 =
+      eventName$jscomp$inline_1571.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1573 =
+      eventName$jscomp$inline_1571[0].toUpperCase() +
+      eventName$jscomp$inline_1571.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1571,
-    "on" + capitalizedEvent$jscomp$inline_1572
+    domEventName$jscomp$inline_1572,
+    "on" + capitalizedEvent$jscomp$inline_1573
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16540,16 +16600,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1742 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1743 = React.version;
 if (
-  "19.0.0-www-modern-b7e7f1a3-20240722" !==
-  isomorphicReactPackageVersion$jscomp$inline_1742
+  "19.0.0-www-modern-9cc0f6e6-20240723" !==
+  isomorphicReactPackageVersion$jscomp$inline_1743
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1742,
-      "19.0.0-www-modern-b7e7f1a3-20240722"
+      isomorphicReactPackageVersion$jscomp$inline_1743,
+      "19.0.0-www-modern-9cc0f6e6-20240723"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -16565,17 +16625,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1744 = {
+var devToolsConfig$jscomp$inline_1745 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-b7e7f1a3-20240722",
+  version: "19.0.0-www-modern-9cc0f6e6-20240723",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2213 = {
-  bundleType: devToolsConfig$jscomp$inline_1744.bundleType,
-  version: devToolsConfig$jscomp$inline_1744.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1744.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1744.rendererConfig,
+var internals$jscomp$inline_2214 = {
+  bundleType: devToolsConfig$jscomp$inline_1745.bundleType,
+  version: devToolsConfig$jscomp$inline_1745.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1745.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1745.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16591,26 +16651,26 @@ var internals$jscomp$inline_2213 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1744.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1745.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-www-modern-9cc0f6e6-20240723"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2214 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2215 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2214.isDisabled &&
-    hook$jscomp$inline_2214.supportsFiber
+    !hook$jscomp$inline_2215.isDisabled &&
+    hook$jscomp$inline_2215.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2214.inject(
-        internals$jscomp$inline_2213
+      (rendererID = hook$jscomp$inline_2215.inject(
+        internals$jscomp$inline_2214
       )),
-        (injectedHook = hook$jscomp$inline_2214);
+        (injectedHook = hook$jscomp$inline_2215);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -16969,4 +17029,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-b7e7f1a3-20240722";
+exports.version = "19.0.0-www-modern-9cc0f6e6-20240723";

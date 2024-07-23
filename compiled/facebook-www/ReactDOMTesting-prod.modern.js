@@ -6530,7 +6530,8 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
-          throw Error(formatProdErrorMessage(306, current, ""));
+          workInProgress = getComponentNameFromType(current) || current;
+          throw Error(formatProdErrorMessage(306, workInProgress, ""));
         }
       }
       return workInProgress;
@@ -12887,14 +12888,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$377;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1558 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1558) {
-      var element$jscomp$inline_1559 = document.createElement("div");
-      element$jscomp$inline_1559.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1558 =
-        "function" === typeof element$jscomp$inline_1559.oninput;
+    var isSupported$jscomp$inline_1559 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1559) {
+      var element$jscomp$inline_1560 = document.createElement("div");
+      element$jscomp$inline_1560.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1559 =
+        "function" === typeof element$jscomp$inline_1560.oninput;
     }
-    JSCompiler_inline_result$jscomp$377 = isSupported$jscomp$inline_1558;
+    JSCompiler_inline_result$jscomp$377 = isSupported$jscomp$inline_1559;
   } else JSCompiler_inline_result$jscomp$377 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$377 &&
@@ -13308,20 +13309,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1599 = 0;
-  i$jscomp$inline_1599 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1599++
+  var i$jscomp$inline_1600 = 0;
+  i$jscomp$inline_1600 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1600++
 ) {
-  var eventName$jscomp$inline_1600 =
-      simpleEventPluginEvents[i$jscomp$inline_1599],
-    domEventName$jscomp$inline_1601 =
-      eventName$jscomp$inline_1600.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1602 =
-      eventName$jscomp$inline_1600[0].toUpperCase() +
-      eventName$jscomp$inline_1600.slice(1);
+  var eventName$jscomp$inline_1601 =
+      simpleEventPluginEvents[i$jscomp$inline_1600],
+    domEventName$jscomp$inline_1602 =
+      eventName$jscomp$inline_1601.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1603 =
+      eventName$jscomp$inline_1601[0].toUpperCase() +
+      eventName$jscomp$inline_1601.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1601,
-    "on" + capitalizedEvent$jscomp$inline_1602
+    domEventName$jscomp$inline_1602,
+    "on" + capitalizedEvent$jscomp$inline_1603
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16928,16 +16929,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1772 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1773 = React.version;
 if (
-  "19.0.0-www-modern-b7e7f1a3-20240722" !==
-  isomorphicReactPackageVersion$jscomp$inline_1772
+  "19.0.0-www-modern-9cc0f6e6-20240723" !==
+  isomorphicReactPackageVersion$jscomp$inline_1773
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1772,
-      "19.0.0-www-modern-b7e7f1a3-20240722"
+      isomorphicReactPackageVersion$jscomp$inline_1773,
+      "19.0.0-www-modern-9cc0f6e6-20240723"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -16953,17 +16954,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1774 = {
+var devToolsConfig$jscomp$inline_1775 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-b7e7f1a3-20240722",
+  version: "19.0.0-www-modern-9cc0f6e6-20240723",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2248 = {
-  bundleType: devToolsConfig$jscomp$inline_1774.bundleType,
-  version: devToolsConfig$jscomp$inline_1774.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1774.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1774.rendererConfig,
+var internals$jscomp$inline_2249 = {
+  bundleType: devToolsConfig$jscomp$inline_1775.bundleType,
+  version: devToolsConfig$jscomp$inline_1775.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1775.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1775.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16979,26 +16980,26 @@ var internals$jscomp$inline_2248 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1774.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1775.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-www-modern-9cc0f6e6-20240723"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2249 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2250 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2249.isDisabled &&
-    hook$jscomp$inline_2249.supportsFiber
+    !hook$jscomp$inline_2250.isDisabled &&
+    hook$jscomp$inline_2250.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2249.inject(
-        internals$jscomp$inline_2248
+      (rendererID = hook$jscomp$inline_2250.inject(
+        internals$jscomp$inline_2249
       )),
-        (injectedHook = hook$jscomp$inline_2249);
+        (injectedHook = hook$jscomp$inline_2250);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17508,4 +17509,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-b7e7f1a3-20240722";
+exports.version = "19.0.0-www-modern-9cc0f6e6-20240723";

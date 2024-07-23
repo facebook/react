@@ -6879,7 +6879,8 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
-          throw Error(formatProdErrorMessage(306, current, ""));
+          workInProgress = getComponentNameFromType(current) || current;
+          throw Error(formatProdErrorMessage(306, workInProgress, ""));
         }
       }
       return workInProgress;
@@ -13473,14 +13474,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$390;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1587 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1587) {
-      var element$jscomp$inline_1588 = document.createElement("div");
-      element$jscomp$inline_1588.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1587 =
-        "function" === typeof element$jscomp$inline_1588.oninput;
+    var isSupported$jscomp$inline_1588 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1588) {
+      var element$jscomp$inline_1589 = document.createElement("div");
+      element$jscomp$inline_1589.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1588 =
+        "function" === typeof element$jscomp$inline_1589.oninput;
     }
-    JSCompiler_inline_result$jscomp$390 = isSupported$jscomp$inline_1587;
+    JSCompiler_inline_result$jscomp$390 = isSupported$jscomp$inline_1588;
   } else JSCompiler_inline_result$jscomp$390 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$390 &&
@@ -13894,20 +13895,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1628 = 0;
-  i$jscomp$inline_1628 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1628++
+  var i$jscomp$inline_1629 = 0;
+  i$jscomp$inline_1629 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1629++
 ) {
-  var eventName$jscomp$inline_1629 =
-      simpleEventPluginEvents[i$jscomp$inline_1628],
-    domEventName$jscomp$inline_1630 =
-      eventName$jscomp$inline_1629.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1631 =
-      eventName$jscomp$inline_1629[0].toUpperCase() +
-      eventName$jscomp$inline_1629.slice(1);
+  var eventName$jscomp$inline_1630 =
+      simpleEventPluginEvents[i$jscomp$inline_1629],
+    domEventName$jscomp$inline_1631 =
+      eventName$jscomp$inline_1630.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1632 =
+      eventName$jscomp$inline_1630[0].toUpperCase() +
+      eventName$jscomp$inline_1630.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1630,
-    "on" + capitalizedEvent$jscomp$inline_1631
+    domEventName$jscomp$inline_1631,
+    "on" + capitalizedEvent$jscomp$inline_1632
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17565,16 +17566,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1801 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1802 = React.version;
 if (
-  "19.0.0-www-classic-b7e7f1a3-20240722" !==
-  isomorphicReactPackageVersion$jscomp$inline_1801
+  "19.0.0-www-classic-9cc0f6e6-20240723" !==
+  isomorphicReactPackageVersion$jscomp$inline_1802
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1801,
-      "19.0.0-www-classic-b7e7f1a3-20240722"
+      isomorphicReactPackageVersion$jscomp$inline_1802,
+      "19.0.0-www-classic-9cc0f6e6-20240723"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17617,17 +17618,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1808 = {
+var devToolsConfig$jscomp$inline_1809 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-b7e7f1a3-20240722",
+  version: "19.0.0-www-classic-9cc0f6e6-20240723",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2257 = {
-  bundleType: devToolsConfig$jscomp$inline_1808.bundleType,
-  version: devToolsConfig$jscomp$inline_1808.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1808.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1808.rendererConfig,
+var internals$jscomp$inline_2258 = {
+  bundleType: devToolsConfig$jscomp$inline_1809.bundleType,
+  version: devToolsConfig$jscomp$inline_1809.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1809.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1809.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17643,26 +17644,26 @@ var internals$jscomp$inline_2257 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1808.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1809.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-www-classic-9cc0f6e6-20240723"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2258 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2259 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2258.isDisabled &&
-    hook$jscomp$inline_2258.supportsFiber
+    !hook$jscomp$inline_2259.isDisabled &&
+    hook$jscomp$inline_2259.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2258.inject(
-        internals$jscomp$inline_2257
+      (rendererID = hook$jscomp$inline_2259.inject(
+        internals$jscomp$inline_2258
       )),
-        (injectedHook = hook$jscomp$inline_2258);
+        (injectedHook = hook$jscomp$inline_2259);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18265,4 +18266,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-b7e7f1a3-20240722";
+exports.version = "19.0.0-www-classic-9cc0f6e6-20240723";

@@ -5763,7 +5763,8 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
-          throw Error(formatProdErrorMessage(306, current, ""));
+          workInProgress = getComponentNameFromType(current) || current;
+          throw Error(formatProdErrorMessage(306, workInProgress, ""));
         }
       }
       return workInProgress;
@@ -10757,19 +10758,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1174 = {
+  devToolsConfig$jscomp$inline_1175 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-classic-b7e7f1a3-20240722",
+    version: "19.0.0-www-classic-9cc0f6e6-20240723",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1386 = {
-  bundleType: devToolsConfig$jscomp$inline_1174.bundleType,
-  version: devToolsConfig$jscomp$inline_1174.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1174.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1174.rendererConfig,
+var internals$jscomp$inline_1387 = {
+  bundleType: devToolsConfig$jscomp$inline_1175.bundleType,
+  version: devToolsConfig$jscomp$inline_1175.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1175.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1175.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10786,26 +10787,26 @@ var internals$jscomp$inline_1386 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1174.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1175.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-www-classic-9cc0f6e6-20240723"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1387 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1388 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1387.isDisabled &&
-    hook$jscomp$inline_1387.supportsFiber
+    !hook$jscomp$inline_1388.isDisabled &&
+    hook$jscomp$inline_1388.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1387.inject(
-        internals$jscomp$inline_1386
+      (rendererID = hook$jscomp$inline_1388.inject(
+        internals$jscomp$inline_1387
       )),
-        (injectedHook = hook$jscomp$inline_1387);
+        (injectedHook = hook$jscomp$inline_1388);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

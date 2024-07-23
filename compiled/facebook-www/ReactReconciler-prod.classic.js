@@ -5523,7 +5523,8 @@ module.exports = function ($$$config) {
                 );
                 break a;
               }
-            throw Error(formatProdErrorMessage(306, current, ""));
+            workInProgress = getComponentNameFromType(current) || current;
+            throw Error(formatProdErrorMessage(306, workInProgress, ""));
           }
         }
         return workInProgress;
@@ -12747,7 +12748,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-b7e7f1a3-20240722"
+      reconcilerVersion: "19.0.0-www-classic-9cc0f6e6-20240723"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

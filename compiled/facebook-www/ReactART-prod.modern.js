@@ -115,7 +115,66 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
-Symbol.for("react.client.reference");
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
+function getComponentNameFromType(type) {
+  if (null == type) return null;
+  if ("function" === typeof type)
+    return type.$$typeof === REACT_CLIENT_REFERENCE
+      ? null
+      : type.displayName || type.name || null;
+  if ("string" === typeof type) return type;
+  switch (type) {
+    case REACT_FRAGMENT_TYPE:
+      return "Fragment";
+    case REACT_PORTAL_TYPE:
+      return "Portal";
+    case REACT_PROFILER_TYPE:
+      return "Profiler";
+    case REACT_STRICT_MODE_TYPE:
+      return "StrictMode";
+    case REACT_SUSPENSE_TYPE:
+      return "Suspense";
+    case REACT_SUSPENSE_LIST_TYPE:
+      return "SuspenseList";
+    case REACT_TRACING_MARKER_TYPE:
+      if (enableTransitionTracing) return "TracingMarker";
+  }
+  if ("object" === typeof type)
+    switch (type.$$typeof) {
+      case REACT_PROVIDER_TYPE:
+        if (enableRenderableContext) break;
+        else return (type._context.displayName || "Context") + ".Provider";
+      case REACT_CONTEXT_TYPE:
+        return enableRenderableContext
+          ? (type.displayName || "Context") + ".Provider"
+          : (type.displayName || "Context") + ".Consumer";
+      case REACT_CONSUMER_TYPE:
+        if (enableRenderableContext)
+          return (type._context.displayName || "Context") + ".Consumer";
+        break;
+      case REACT_FORWARD_REF_TYPE:
+        var innerType = type.render;
+        type = type.displayName;
+        type ||
+          ((type = innerType.displayName || innerType.name || ""),
+          (type = "" !== type ? "ForwardRef(" + type + ")" : "ForwardRef"));
+        return type;
+      case REACT_MEMO_TYPE:
+        return (
+          (innerType = type.displayName || null),
+          null !== innerType
+            ? innerType
+            : getComponentNameFromType(type.type) || "Memo"
+        );
+      case REACT_LAZY_TYPE:
+        innerType = type._payload;
+        type = type._init;
+        try {
+          return getComponentNameFromType(type(innerType));
+        } catch (x) {}
+    }
+  return null;
+}
 var ReactSharedInternals =
     React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
   prefix,
@@ -5397,7 +5456,8 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
-          throw Error(formatProdErrorMessage(306, current, ""));
+          workInProgress = getComponentNameFromType(current) || current;
+          throw Error(formatProdErrorMessage(306, workInProgress, ""));
         }
       }
       return workInProgress;
@@ -10201,19 +10261,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1138 = {
+  devToolsConfig$jscomp$inline_1139 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-b7e7f1a3-20240722",
+    version: "19.0.0-www-modern-9cc0f6e6-20240723",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1372 = {
-  bundleType: devToolsConfig$jscomp$inline_1138.bundleType,
-  version: devToolsConfig$jscomp$inline_1138.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1138.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1138.rendererConfig,
+var internals$jscomp$inline_1373 = {
+  bundleType: devToolsConfig$jscomp$inline_1139.bundleType,
+  version: devToolsConfig$jscomp$inline_1139.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1139.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1139.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10230,26 +10290,26 @@ var internals$jscomp$inline_1372 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1138.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1139.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-www-modern-9cc0f6e6-20240723"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1373 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1374 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1373.isDisabled &&
-    hook$jscomp$inline_1373.supportsFiber
+    !hook$jscomp$inline_1374.isDisabled &&
+    hook$jscomp$inline_1374.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1373.inject(
-        internals$jscomp$inline_1372
+      (rendererID = hook$jscomp$inline_1374.inject(
+        internals$jscomp$inline_1373
       )),
-        (injectedHook = hook$jscomp$inline_1373);
+        (injectedHook = hook$jscomp$inline_1374);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
