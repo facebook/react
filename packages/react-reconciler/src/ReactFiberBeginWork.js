@@ -1892,7 +1892,7 @@ function mountLazyComponent(
     }
   }
 
-  const loggedComponent = Component === REACT_FRAGMENT_TYPE ? '<Fragment>' : Component;
+  const loggedComponent = getComponentNameFromType(Component) || String(Component);
 
   // This message intentionally doesn't mention ForwardRef or MemoComponent
   // because the fact that it's a separate type of work is an
