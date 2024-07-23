@@ -1060,7 +1060,7 @@ function updateWorkInProgressHook(): Hook {
 
 function unstable_useContextWithBailout<T>(
   context: ReactContext<T>,
-  compare: void | (T => mixed),
+  compare: (T => mixed) | null,
 ): T {
   return readContextAndCompare(context, compare);
 }
@@ -4049,7 +4049,7 @@ if (__DEV__) {
   }
   if (enableContextProfiling) {
     (HooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+      function <T>(context: ReactContext<T>, compare: (T => mixed) | null): T {
         currentHookNameInDev = 'useContext';
         mountHookTypesDev();
         return unstable_useContextWithBailout(context, compare);
@@ -4238,7 +4238,7 @@ if (__DEV__) {
   }
   if (enableContextProfiling) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+      function <T>(context: ReactContext<T>, compare: (T => mixed) | null): T {
         currentHookNameInDev = 'useContext';
         updateHookTypesDev();
         return unstable_useContextWithBailout(context, compare);
@@ -4426,7 +4426,7 @@ if (__DEV__) {
   }
   if (enableContextProfiling) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+      function <T>(context: ReactContext<T>, compare: (T => mixed) | null): T {
         currentHookNameInDev = 'useContext';
         updateHookTypesDev();
         return unstable_useContextWithBailout(context, compare);
@@ -4614,7 +4614,7 @@ if (__DEV__) {
   }
   if (enableContextProfiling) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+      function <T>(context: ReactContext<T>, compare: (T => mixed) | null): T {
         currentHookNameInDev = 'useContext';
         updateHookTypesDev();
         return unstable_useContextWithBailout(context, compare);
@@ -4828,7 +4828,7 @@ if (__DEV__) {
   }
   if (enableContextProfiling) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+      function <T>(context: ReactContext<T>, compare: (T => mixed) | null): T {
         currentHookNameInDev = 'useContext';
         warnInvalidHookAccess();
         mountHookTypesDev();
@@ -5043,7 +5043,7 @@ if (__DEV__) {
   }
   if (enableContextProfiling) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+      function <T>(context: ReactContext<T>, compare: (T => mixed) | null): T {
         currentHookNameInDev = 'useContext';
         warnInvalidHookAccess();
         updateHookTypesDev();
@@ -5258,7 +5258,7 @@ if (__DEV__) {
   }
   if (enableContextProfiling) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
-      function <T>(context: ReactContext<T>, compare: void | (T => mixed)): T {
+      function <T>(context: ReactContext<T>, compare: (T => mixed) | null): T {
         currentHookNameInDev = 'useContext';
         warnInvalidHookAccess();
         updateHookTypesDev();

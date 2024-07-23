@@ -12,6 +12,7 @@ import type {
   Fiber,
   ContextDependency,
   Dependencies,
+  ContextDependencyWithCompare,
 } from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack';
 import type {Lanes} from './ReactFiberLane';
@@ -72,7 +73,10 @@ if (__DEV__) {
 }
 
 let currentlyRenderingFiber: Fiber | null = null;
-let lastContextDependency: ContextDependency<mixed, mixed> | null = null;
+let lastContextDependency:
+  | ContextDependency<mixed>
+  | ContextDependencyWithCompare<mixed, mixed>
+  | null = null;
 let lastFullyObservedContext: ReactContext<any> | null = null;
 
 let isDisallowedContextReadInDEV: boolean = false;
@@ -403,19 +407,21 @@ function propagateContextChanges<T>(
           const context: ReactContext<T> = contexts[i];
           // Check if the context matches.
           if (dependency.context === context) {
-            const compare = dependency.compare;
-            if (enableContextProfiling && compare != null) {
-              const newValue = isPrimaryRenderer
-                ? dependency.context._currentValue
-                : dependency.context._currentValue2;
-              if (
-                !checkIfComparedContextValuesChanged(
-                  dependency.lastComparedValue,
-                  compare(newValue),
-                )
-              ) {
-                // Compared value hasn't changed. Bail out early.
-                continue findContext;
+            if (enableContextProfiling) {
+              const compare = dependency.compare;
+              if (compare != null) {
+                const newValue = isPrimaryRenderer
+                  ? dependency.context._currentValue
+                  : dependency.context._currentValue2;
+                if (
+                  !checkIfComparedContextValuesChanged(
+                    dependency.lastComparedValue,
+                    compare(newValue),
+                  )
+                ) {
+                  // Compared value hasn't changed. Bail out early.
+                  continue findContext;
+                }
               }
             }
             // Match! Schedule an update on this fiber.
@@ -697,12 +703,11 @@ export function checkIfContextChanged(
       ? context._currentValue
       : context._currentValue2;
     const oldValue = dependency.memoizedValue;
-    const compare = dependency.compare;
-    if (enableContextProfiling && compare != null) {
+    if (enableContextProfiling && dependency.compare != null) {
       if (
         checkIfComparedContextValuesChanged(
           dependency.lastComparedValue,
-          compare(newValue),
+          dependency.compare(newValue),
         )
       ) {
         return true;
@@ -746,13 +751,17 @@ export function prepareToReadContext(
 
 export function readContextAndCompare<C>(
   context: ReactContext<C>,
-  compare: void | (C => mixed),
+  compare: (C => mixed) | null,
 ): C {
   if (!enableLazyContextPropagation) {
     return readContext(context);
   }
 
-  return readContextForConsumer(currentlyRenderingFiber, context, compare);
+  return readContextForConsumer_withCompare(
+    currentlyRenderingFiber,
+    context,
+    compare,
+  );
 }
 
 export function readContext<T>(context: ReactContext<T>): T {
@@ -782,12 +791,12 @@ export function readContextDuringReconciliation<T>(
   return readContextForConsumer(consumer, context);
 }
 
-type ContextCompare<C, S> = C => S;
+type ContextCompare<C, V> = C => V | null;
 
-function readContextForConsumer<C, S>(
+function readContextForConsumer_withCompare<C, S>(
   consumer: Fiber | null,
   context: ReactContext<C>,
-  compare?: void | (C => S),
+  compare: (C => S) | null,
 ): C {
   const value = isPrimaryRenderer
     ? context._currentValue
@@ -800,8 +809,52 @@ function readContextForConsumer<C, S>(
       context: ((context: any): ReactContext<mixed>),
       memoizedValue: value,
       next: null,
-      compare: ((compare: any): ContextCompare<mixed, mixed> | null),
+      compare: compare ? ((compare: any): ContextCompare<mixed, mixed>) : null,
       lastComparedValue: compare != null ? compare(value) : null,
+    };
+
+    if (lastContextDependency === null) {
+      if (consumer === null) {
+        throw new Error(
+          'Context can only be read while React is rendering. ' +
+            'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+            'In function components, you can read it directly in the function body, but not ' +
+            'inside Hooks like useReducer() or useMemo().',
+        );
+      }
+
+      // This is the first dependency for this component. Create a new list.
+      lastContextDependency = contextItem;
+      consumer.dependencies = {
+        lanes: NoLanes,
+        firstContext: contextItem,
+      };
+      if (enableLazyContextPropagation) {
+        consumer.flags |= NeedsPropagation;
+      }
+    } else {
+      // Append a new context item.
+      lastContextDependency = lastContextDependency.next = contextItem;
+    }
+  }
+  return value;
+}
+
+function readContextForConsumer<C>(
+  consumer: Fiber | null,
+  context: ReactContext<C>,
+): C {
+  const value = isPrimaryRenderer
+    ? context._currentValue
+    : context._currentValue2;
+
+  if (lastFullyObservedContext === context) {
+    // Nothing to do. We already observe everything in this context.
+  } else {
+    const contextItem = {
+      context: ((context: any): ReactContext<mixed>),
+      memoizedValue: value,
+      next: null,
     };
 
     if (lastContextDependency === null) {

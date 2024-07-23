@@ -71,7 +71,7 @@ export function useContext<T>(Context: ReactContext<T>): T {
 
 export function unstable_useContextWithBailout<T>(
   context: ReactContext<T>,
-  compare: void | (T => mixed),
+  compare: (T => mixed) | null,
 ): T {
   if (!(enableLazyContextPropagation && enableContextProfiling)) {
     throw new Error('Not implemented.');
