@@ -10,7 +10,6 @@ import {
   GeneratedSource,
   Identifier,
   IdentifierId,
-  Instruction,
   InstructionValue,
   ManualMemoDependency,
   Place,
@@ -26,7 +25,6 @@ import {
 import {printManualMemoDependency} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
-import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,

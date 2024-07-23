@@ -9,7 +9,6 @@ import {
   GotoVariant,
   HIRFunction,
   InstructionId,
-  makeInstructionId,
   ReactiveScope,
   ReactiveScopeTerminal,
   ScopeId,
@@ -19,7 +18,6 @@ import {
   markPredecessors,
   reversePostorderBlocks,
 } from './HIRBuilder';
-import {eachInstructionLValue} from './visitors';
 
 /**
  * This pass assumes that all program blocks are properly nested with respect to fallthroughs
