@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<56fcf1e91db2bcbe74b4d6b16f420153>>
+ * @generated SignedSource<<6a322a8198ba50719bd001b6b2c7c64a>>
  */
 
 "use strict";
@@ -6732,9 +6732,10 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
+          workInProgress = getComponentNameFromType(elementType) || elementType;
           throw Error(
             "Element type is invalid. Received a promise that resolves to: " +
-              elementType +
+              workInProgress +
               ". Lazy element type must resolve to a class or function."
           );
         }
@@ -11253,10 +11254,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1217 = {
+  devToolsConfig$jscomp$inline_1218 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-b7e7f1a3-20240722",
+    version: "19.0.0-native-fb-9cc0f6e6-20240723",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11286,10 +11287,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1217.bundleType,
-  version: devToolsConfig$jscomp$inline_1217.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1217.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1217.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1218.bundleType,
+  version: devToolsConfig$jscomp$inline_1218.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1218.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1218.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11305,14 +11306,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1217.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1218.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-native-fb-9cc0f6e6-20240723"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

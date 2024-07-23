@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<65bc90a1d4a8612a00e4f47b432f77cf>>
+ * @generated SignedSource<<edbdf7422153b5c05f3ba7be58d3edae>>
  */
 
 "use strict";
@@ -6508,9 +6508,10 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
+          workInProgress = getComponentNameFromType(elementType) || elementType;
           throw Error(
             "Element type is invalid. Received a promise that resolves to: " +
-              elementType +
+              workInProgress +
               ". Lazy element type must resolve to a class or function."
           );
         }
@@ -10543,10 +10544,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1136 = {
+  devToolsConfig$jscomp$inline_1137 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-b7e7f1a3-20240722",
+    version: "19.0.0-native-fb-9cc0f6e6-20240723",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10562,11 +10563,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1362 = {
-  bundleType: devToolsConfig$jscomp$inline_1136.bundleType,
-  version: devToolsConfig$jscomp$inline_1136.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1136.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1136.rendererConfig,
+var internals$jscomp$inline_1363 = {
+  bundleType: devToolsConfig$jscomp$inline_1137.bundleType,
+  version: devToolsConfig$jscomp$inline_1137.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1137.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1137.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10582,26 +10583,26 @@ var internals$jscomp$inline_1362 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1136.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1137.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-native-fb-9cc0f6e6-20240723"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1363 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1364 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1363.isDisabled &&
-    hook$jscomp$inline_1363.supportsFiber
+    !hook$jscomp$inline_1364.isDisabled &&
+    hook$jscomp$inline_1364.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1363.inject(
-        internals$jscomp$inline_1362
+      (rendererID = hook$jscomp$inline_1364.inject(
+        internals$jscomp$inline_1363
       )),
-        (injectedHook = hook$jscomp$inline_1363);
+        (injectedHook = hook$jscomp$inline_1364);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

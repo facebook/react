@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<513bac8c2943e3cb198c65c6f2f44d85>>
+ * @generated SignedSource<<3595e9fe0fc97f15f271f729ecb14801>>
  */
 
 "use strict";
@@ -6761,9 +6761,10 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
+          workInProgress = getComponentNameFromType(elementType) || elementType;
           throw Error(
             "Element type is invalid. Received a promise that resolves to: " +
-              elementType +
+              workInProgress +
               ". Lazy element type must resolve to a class or function."
           );
         }
@@ -11409,11 +11410,11 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     traverseOwnerTreeUp(hierarchy, instance);
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-b7e7f1a3-20240722" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-9cc0f6e6-20240723" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-b7e7f1a3-20240722\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-9cc0f6e6-20240723\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11460,10 +11461,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1291 = {
+  devToolsConfig$jscomp$inline_1292 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "19.0.0-native-fb-b7e7f1a3-20240722",
+    version: "19.0.0-native-fb-9cc0f6e6-20240723",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11493,10 +11494,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1291.bundleType,
-  version: devToolsConfig$jscomp$inline_1291.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1291.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1291.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1292.bundleType,
+  version: devToolsConfig$jscomp$inline_1292.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1292.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1292.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11512,14 +11513,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1291.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1292.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-native-fb-9cc0f6e6-20240723"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

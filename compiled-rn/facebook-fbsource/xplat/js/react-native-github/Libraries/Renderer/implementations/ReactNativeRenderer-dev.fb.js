@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<05ceebd583bd04696aa4eb5b97ff45cf>>
+ * @generated SignedSource<<31743e73ed76d321f18d7150e3b1f2e9>>
  */
 
 "use strict";
@@ -8271,9 +8271,10 @@ __DEV__ &&
               current.$$typeof === REACT_LAZY_TYPE &&
               (workInProgress =
                 " Did you wrap a component in React.lazy() more than once?");
+            renderLanes = getComponentNameFromType(current) || current;
             throw Error(
               "Element type is invalid. Received a promise that resolves to: " +
-                current +
+                renderLanes +
                 ". Lazy element type must resolve to a class or function." +
                 workInProgress
             );
@@ -16870,11 +16871,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-b7e7f1a3-20240722" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-9cc0f6e6-20240723" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-b7e7f1a3-20240722\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-9cc0f6e6-20240723\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16922,12 +16923,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-b7e7f1a3-20240722"
+        reconcilerVersion: "19.0.0-native-fb-9cc0f6e6-20240723"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-b7e7f1a3-20240722",
+      version: "19.0.0-native-fb-9cc0f6e6-20240723",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

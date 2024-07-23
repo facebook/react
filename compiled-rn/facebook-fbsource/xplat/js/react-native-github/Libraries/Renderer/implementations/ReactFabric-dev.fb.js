@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<80e274d76efc21755c14cd33de6b413f>>
+ * @generated SignedSource<<a4b4fca074ab48818063825ebddc0757>>
  */
 
 "use strict";
@@ -8328,9 +8328,10 @@ __DEV__ &&
               current.$$typeof === REACT_LAZY_TYPE &&
               (workInProgress =
                 " Did you wrap a component in React.lazy() more than once?");
+            renderLanes = getComponentNameFromType(current) || current;
             throw Error(
               "Element type is invalid. Received a promise that resolves to: " +
-                current +
+                renderLanes +
                 ". Lazy element type must resolve to a class or function." +
                 workInProgress
             );
@@ -16685,12 +16686,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-b7e7f1a3-20240722"
+        reconcilerVersion: "19.0.0-native-fb-9cc0f6e6-20240723"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-b7e7f1a3-20240722",
+      version: "19.0.0-native-fb-9cc0f6e6-20240723",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

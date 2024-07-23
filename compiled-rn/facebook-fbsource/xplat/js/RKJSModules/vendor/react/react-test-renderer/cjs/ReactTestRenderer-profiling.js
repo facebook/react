@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2806d5853116c243053a4a3f0cc3ca1b>>
+ * @generated SignedSource<<27e602ad4018b00bea57649abf8bdc10>>
  */
 
 "use strict";
@@ -5321,9 +5321,10 @@ function beginWork(current, workInProgress, renderLanes) {
               );
               break a;
             }
+          workInProgress = getComponentNameFromType(elementType) || elementType;
           throw Error(
             "Element type is invalid. Received a promise that resolves to: " +
-              elementType +
+              workInProgress +
               ". Lazy element type must resolve to a class or function."
           );
         }
@@ -9954,12 +9955,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1117 = {
+var devToolsConfig$jscomp$inline_1118 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-b7e7f1a3-20240722",
+  version: "19.0.0-native-fb-9cc0f6e6-20240723",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9976,10 +9977,10 @@ var devToolsConfig$jscomp$inline_1117 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1117.bundleType,
-  version: devToolsConfig$jscomp$inline_1117.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1117.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1117.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1118.bundleType,
+  version: devToolsConfig$jscomp$inline_1118.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1118.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1118.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9996,14 +9997,14 @@ var devToolsConfig$jscomp$inline_1117 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1117.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1118.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-b7e7f1a3-20240722"
+  reconcilerVersion: "19.0.0-native-fb-9cc0f6e6-20240723"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
