@@ -32,6 +32,7 @@ import {
   supportsOwnerStacks,
   supportsNativeConsoleTasks,
 } from './DevToolsFiberComponentStack';
+import {formatOwnerStack} from './DevToolsOwnerStack';
 import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];
@@ -252,17 +253,31 @@ export function patch({
                   consoleSettingsRef.appendComponentStack &&
                   !supportsNativeConsoleTasks(current)
                 ) {
-                  const componentStack = supportsOwnerStacks(current)
-                    ? getOwnerStackByFiberInDev(
-                        workTagMap,
-                        current,
-                        (currentDispatcherRef: any),
-                      )
-                    : getStackByFiberInDevAndProd(
-                        workTagMap,
-                        current,
-                        (currentDispatcherRef: any),
-                      );
+                  const enableOwnerStacks = supportsOwnerStacks(current);
+                  let componentStack = '';
+                  if (enableOwnerStacks) {
+                    // Prefix the owner stack with the current stack. I.e. what called
+                    // console.error. While this will also be part of the native stack,
+                    // it is hidden and not presented alongside this argument so we print
+                    // them all together.
+                    const topStackFrames = formatOwnerStack(
+                      new Error('react-stack-top-frame'),
+                    );
+                    if (topStackFrames) {
+                      componentStack += '\n' + topStackFrames;
+                    }
+                    componentStack += getOwnerStackByFiberInDev(
+                      workTagMap,
+                      current,
+                      (currentDispatcherRef: any),
+                    );
+                  } else {
+                    componentStack = getStackByFiberInDevAndProd(
+                      workTagMap,
+                      current,
+                      (currentDispatcherRef: any),
+                    );
+                  }
                   if (componentStack !== '') {
                     // Create a fake Error so that when we print it we get native source maps. Every
                     // browser will print the .stack property of the error and then parse it back for source
@@ -272,13 +287,17 @@ export function patch({
                     // In Chromium, only the stack property is printed but in Firefox the <name>:<message>
                     // gets printed so to make the colon make sense, we name it so we print Component Stack:
                     // and similarly Safari leave an expandable slot.
-                    fakeError.name = 'Component Stack'; // This gets printed
+                    fakeError.name = enableOwnerStacks
+                      ? 'Stack'
+                      : 'Component Stack'; // This gets printed
                     // In Chromium, the stack property needs to start with ^[\w.]*Error\b to trigger stack
                     // formatting. Otherwise it is left alone. So we prefix it. Otherwise we just override it
                     // to our own stack.
                     fakeError.stack =
                       __IS_CHROME__ || __IS_EDGE__
-                        ? 'Error Component Stack:' + componentStack
+                        ? (enableOwnerStacks
+                            ? 'Error Stack:'
+                            : 'Error Component Stack:') + componentStack
                         : componentStack;
                     if (alreadyHasComponentStack) {
                       // Only modify the component stack if it matches what we would've added anyway.
