@@ -778,7 +778,7 @@ describe('ReactLazy', () => {
       </Suspense>,
     );
     await waitForThrow(
-      'Element type is invalid. Received a promise that resolves to: <Fragment>. ' +
+      'Element type is invalid. Received a promise that resolves to: Fragment. ' +
         'Lazy element type must resolve to a class or function.',
     );
   });
