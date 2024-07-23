@@ -349,8 +349,8 @@ export default function ComponentsSettings(_: {}): React.Node {
                     componentFilter.isValid === false
                       ? 'Filter invalid'
                       : componentFilter.isEnabled
-                      ? 'Filter enabled'
-                      : 'Filter disabled'
+                        ? 'Filter enabled'
+                        : 'Filter disabled'
                   }>
                   <ToggleIcon
                     isEnabled={componentFilter.isEnabled}

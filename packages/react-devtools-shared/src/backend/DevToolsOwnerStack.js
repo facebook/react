@@ -7,7 +7,9 @@
  * @flow
  */
 
-// TODO: Make this configurable on the root.
+// This is a DevTools fork of ReactFiberOwnerStack.
+
+// TODO: Make this configurable?
 const externalRegExp = /\/node\_modules\/|\(\<anonymous\>/;
 
 function isNotExternal(stackFrame: string): boolean {
@@ -19,7 +21,11 @@ function filterDebugStack(error: Error): string {
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
   // the DevTools or framework's ignore lists to filter them out.
+  const prevPrepareStackTrace = Error.prepareStackTrace;
+  // $FlowFixMe[incompatible-type] It does accept undefined.
+  Error.prepareStackTrace = undefined;
   let stack = error.stack;
+  Error.prepareStackTrace = prevPrepareStackTrace;
   if (stack.startsWith('Error: react-stack-top-frame\n')) {
     // V8's default formatting prefixes with the error message which we
     // don't want/need.

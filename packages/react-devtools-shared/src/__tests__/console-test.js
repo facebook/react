@@ -22,6 +22,7 @@ let mockWarn;
 let patchConsole;
 let unpatchConsole;
 let rendererID;
+let supportsOwnerStacks = false;
 
 describe('console', () => {
   beforeEach(() => {
@@ -62,6 +63,12 @@ describe('console', () => {
     };
 
     React = require('react');
+    if (
+      React.version.startsWith('19') &&
+      React.version.includes('experimental')
+    ) {
+      supportsOwnerStacks = true;
+    }
     ReactDOMClient = require('react-dom/client');
 
     const utils = require('./utils');
@@ -224,13 +231,17 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -267,23 +278,31 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('active warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('passive warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('active error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('passive error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -325,23 +344,31 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('didMount warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('didUpdate warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('didMount error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('didUpdate error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -375,13 +402,17 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -465,13 +496,17 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
@@ -996,7 +1031,9 @@ describe('console', () => {
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(3);
     expect(mockWarn.mock.calls[1][0]).toEqual(
@@ -1004,13 +1041,17 @@ describe('console', () => {
     );
     expect(mockWarn.mock.calls[1][1]).toMatch('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][2]).trim()).toEqual(
-      'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? 'in Parent (at **)'
+        : 'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
 
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Parent (at **)'
+        : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(3);
     expect(mockError.mock.calls[1][0]).toEqual(
@@ -1018,7 +1059,9 @@ describe('console', () => {
     );
     expect(mockError.mock.calls[1][1]).toEqual('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][2]).trim()).toEqual(
-      'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+      supportsOwnerStacks
+        ? 'in Parent (at **)'
+        : 'in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 });
