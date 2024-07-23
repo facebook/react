@@ -115,15 +115,6 @@ describe('ReactExpiration', () => {
     }
   }
 
-  function flushNextRenderIfExpired() {
-    // This will start rendering the next level of work. If the work hasn't
-    // expired yet, React will exit without doing anything. If it has expired,
-    // it will schedule a sync task.
-    Scheduler.unstable_flushExpired();
-    // Flush the sync task.
-    ReactNoop.flushSync();
-  }
-
   it('increases priority of updates as time progresses', async () => {
     ReactNoop.render(<Text text="Step 1" />);
     React.startTransition(() => {

@@ -23,22 +23,14 @@ import Circle from 'react-art/Circle';
 import Rectangle from 'react-art/Rectangle';
 import Wedge from 'react-art/Wedge';
 
-const {act, waitFor} = require('internal-test-utils');
+const {act} = require('internal-test-utils');
 
 // Isolate DOM renderer.
 jest.resetModules();
 // share isomorphic
 jest.mock('scheduler', () => Scheduler);
 jest.mock('react', () => React);
-const ReactDOM = require('react-dom');
 const ReactDOMClient = require('react-dom/client');
-
-// Isolate the noop renderer
-jest.resetModules();
-// share isomorphic
-jest.mock('scheduler', () => Scheduler);
-jest.mock('react', () => React);
-const ReactNoop = require('react-noop-renderer');
 
 let Group;
 let Shape;
