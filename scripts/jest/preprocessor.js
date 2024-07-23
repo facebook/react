@@ -25,6 +25,9 @@ const pathToTransformTestGatePragma = require.resolve(
 const pathToTransformReactVersionPragma = require.resolve(
   '../babel/transform-react-version-pragma'
 );
+const pathToTransformLazyJSXImport = require.resolve(
+  '../babel/transform-lazy-jsx-import'
+);
 const pathToBabelrc = path.join(__dirname, '..', '..', 'babel.config.js');
 const pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
@@ -93,6 +96,8 @@ module.exports = {
         );
       }
 
+      plugins.push(pathToTransformLazyJSXImport);
+
       let sourceAst = hermesParser.parse(src, {babel: true});
       return {
         code: babel.transformFromAstSync(
@@ -122,6 +127,7 @@ module.exports = {
       pathToTransformInfiniteLoops,
       pathToTransformTestGatePragma,
       pathToTransformReactVersionPragma,
+      pathToTransformLazyJSXImport,
       pathToErrorCodes,
     ],
     [
