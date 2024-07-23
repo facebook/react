@@ -24,4 +24,7 @@ export const componentStorage: AsyncLocalStorage<ReactComponentInfo | void> =
   supportsComponentStorage ? new AsyncLocalStorage() : (null: any);
 
 export {createHook as createAsyncHook, executionAsyncId} from 'async_hooks';
+
 export * from '../ReactFlightServerConfigDebugNode';
+
+export * from '../ReactFlightStackConfigV8';

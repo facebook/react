@@ -14,6 +14,7 @@ describe('component stack', () => {
   let act;
   let mockError;
   let mockWarn;
+  let supportsOwnerStacks;
 
   beforeEach(() => {
     // Intercept native console methods before DevTools bootstraps.
@@ -31,6 +32,12 @@ describe('component stack', () => {
     act = utils.act;
 
     React = require('react');
+    if (
+      React.version.startsWith('19') &&
+      React.version.includes('experimental')
+    ) {
+      supportsOwnerStacks = true;
+    }
   });
 
   const {render} = getVersionedRenderImplementation();
@@ -49,13 +56,13 @@ describe('component stack', () => {
 
     expect(mockError).toHaveBeenCalledWith(
       'Test error.',
-      '\n    in Child (at **)' +
+      (supportsOwnerStacks ? '' : '\n    in Child (at **)') +
         '\n    in Parent (at **)' +
         '\n    in Grandparent (at **)',
     );
     expect(mockWarn).toHaveBeenCalledWith(
       'Test warning.',
-      '\n    in Child (at **)' +
+      (supportsOwnerStacks ? '' : '\n    in Child (at **)') +
         '\n    in Parent (at **)' +
         '\n    in Grandparent (at **)',
     );
@@ -112,17 +119,21 @@ describe('component stack', () => {
 
     expect(mockError).toHaveBeenCalledWith(
       'Test error.',
-      '\n    in Child (at **)' +
-        '\n    in ServerComponent (at **)' +
-        '\n    in Parent (at **)' +
-        '\n    in Grandparent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)'
+        : '\n    in Child (at **)' +
+            '\n    in ServerComponent (at **)' +
+            '\n    in Parent (at **)' +
+            '\n    in Grandparent (at **)',
     );
     expect(mockWarn).toHaveBeenCalledWith(
       'Test warning.',
-      '\n    in Child (at **)' +
-        '\n    in ServerComponent (at **)' +
-        '\n    in Parent (at **)' +
-        '\n    in Grandparent (at **)',
+      supportsOwnerStacks
+        ? '\n    in Child (at **)'
+        : '\n    in Child (at **)' +
+            '\n    in ServerComponent (at **)' +
+            '\n    in Parent (at **)' +
+            '\n    in Grandparent (at **)',
     );
   });
 });

@@ -206,8 +206,8 @@ describe('ReactFlightDOM', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   it('should resolve HTML using Node streams', async () => {

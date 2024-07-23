@@ -284,9 +284,9 @@ function useState<S>(
     hook !== null
       ? hook.memoizedState
       : typeof initialState === 'function'
-      ? // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
-        initialState()
-      : initialState;
+        ? // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+          initialState()
+        : initialState;
   hookLog.push({
     displayName: null,
     primitive: 'State',
