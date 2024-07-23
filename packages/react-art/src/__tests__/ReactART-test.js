@@ -397,58 +397,6 @@ describe('ReactART', () => {
     doClick(instance);
     expect(onClick2).toBeCalled();
   });
-
-  // @gate forceConcurrentByDefaultForTesting
-  it('can concurrently render with a "primary" renderer while sharing context', async () => {
-    const CurrentRendererContext = React.createContext(null);
-
-    function Yield(props) {
-      Scheduler.log(props.value);
-      return null;
-    }
-
-    let ops = [];
-    function LogCurrentRenderer() {
-      return (
-        <CurrentRendererContext.Consumer>
-          {currentRenderer => {
-            ops.push(currentRenderer);
-            return null;
-          }}
-        </CurrentRendererContext.Consumer>
-      );
-    }
-
-    ReactNoop.render(
-      <CurrentRendererContext.Provider value="Test">
-        <Yield value="A" />
-        <Yield value="B" />
-        <LogCurrentRenderer />
-        <Yield value="C" />
-      </CurrentRendererContext.Provider>,
-    );
-
-    await waitFor(['A']);
-
-    const root = ReactDOMClient.createRoot(container);
-    // We use flush sync here because we expect this to render in between
-    // while the concurrent render is yieldy where as act would flush both.
-    ReactDOM.flushSync(() => {
-      root.render(
-        <Surface>
-          <LogCurrentRenderer />
-          <CurrentRendererContext.Provider value="ART">
-            <LogCurrentRenderer />
-          </CurrentRendererContext.Provider>
-        </Surface>,
-      );
-    });
-
-    ops = [];
-    await waitFor(['B', 'C']);
-
-    expect(ops).toEqual(['Test']);
-  });
 });
 
 describe('ReactARTComponents', () => {

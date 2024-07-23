@@ -31,7 +31,6 @@ import {
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
-  forceConcurrentByDefaultForTesting,
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
@@ -534,11 +533,6 @@ export function createHostRootFiber(
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (
-      // We only use this flag for our repo tests to check both behaviors.
-      forceConcurrentByDefaultForTesting
-    ) {
-      mode |= ConcurrentUpdatesByDefaultMode;
-    } else if (
       // Only for internal experiments.
       allowConcurrentByDefault &&
       concurrentUpdatesByDefaultOverride
@@ -588,8 +582,8 @@ export function createFiberFromTypeAndProps(
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
-          ? HostSingleton
-          : HostComponent;
+        ? HostSingleton
+        : HostComponent;
     } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)

@@ -85,7 +85,6 @@ export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
 export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
-export const forceConcurrentByDefaultForTesting = false;
 export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
