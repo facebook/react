@@ -9,10 +9,17 @@ import {
   GotoVariant,
   HIRFunction,
   InstructionId,
+  makeInstructionId,
   ReactiveScope,
   ReactiveScopeTerminal,
   ScopeId,
 } from './HIR';
+import {
+  markInstructionIds,
+  markPredecessors,
+  reversePostorderBlocks,
+} from './HIRBuilder';
+import {eachInstructionLValue} from './visitors';
 
 /**
  * This pass assumes that all program blocks are properly nested with respect to fallthroughs
@@ -142,16 +149,9 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
 
   /**
    * Step 3:
-   * Repoint preds and phis when they refer to a rewritten block.
+   * Repoint phis when they refer to a rewritten block.
    */
   for (const [, block] of originalBlocks) {
-    for (const pred of block.preds) {
-      const newId = rewrittenFinalBlocks.get(pred);
-      if (newId != null) {
-        block.preds.delete(pred);
-        block.preds.add(newId);
-      }
-    }
     for (const phi of block.phis) {
       for (const [originalId, value] of phi.operands) {
         const newId = rewrittenFinalBlocks.get(originalId);
@@ -160,6 +160,54 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
           phi.operands.set(newId, value);
         }
       }
+    }
+  }
+
+  /**
+   * Step 4:
+   * Fixup the HIR to restore RPO, ensure correct predecessors, and
+   * renumber instructions. Note that the renumbering instructions
+   * invalidates scope and identifier ranges, so we fix them in the
+   * next step.
+   */
+  reversePostorderBlocks(fn.body);
+  markPredecessors(fn.body);
+  markInstructionIds(fn.body);
+
+  /**
+   * Step 5:
+   * Fix scope and identifier ranges to account for renumbered instructions
+   */
+  for (const [, block] of fn.body.blocks) {
+    for (const instruction of block.instructions) {
+      for (const lvalue of eachInstructionLValue(instruction)) {
+        /*
+         * Any lvalues whose mutable range was a single instruction must have
+         * started at the current instruction, so update the range to match
+         * the instruction's new id
+         */
+        if (
+          lvalue.identifier.mutableRange.end ===
+          lvalue.identifier.mutableRange.start + 1
+        ) {
+          lvalue.identifier.mutableRange.start = instruction.id;
+          lvalue.identifier.mutableRange.end = makeInstructionId(
+            instruction.id + 1,
+          );
+        }
+      }
+    }
+    const terminal = block.terminal;
+    if (terminal.kind === 'scope' || terminal.kind === 'pruned-scope') {
+      /*
+       * Scope ranges should always align to start at the 'scope' terminal
+       * and end at the first instruction of the fallthrough block
+       */
+      const fallthroughBlock = fn.body.blocks.get(terminal.fallthrough)!;
+      const firstId =
+        fallthroughBlock.instructions[0]?.id ?? fallthroughBlock.terminal.id;
+      terminal.scope.range.start = terminal.id;
+      terminal.scope.range.end = firstId;
     }
   }
 }
