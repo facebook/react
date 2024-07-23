@@ -254,12 +254,12 @@ describe('console', () => {
       </Intermediate>
     );
     const Child = ({children}) => {
-      React.useLayoutEffect(() => {
+      React.useLayoutEffect(function Child_useLayoutEffect() {
         fakeConsole.error('active error');
         fakeConsole.log('active log');
         fakeConsole.warn('active warn');
       });
-      React.useEffect(() => {
+      React.useEffect(function Child_useEffect() {
         fakeConsole.error('passive error');
         fakeConsole.log('passive log');
         fakeConsole.warn('passive warn');
@@ -279,15 +279,14 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0][0]).toBe('active warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
       supportsOwnerStacks
-        ? // TODO: It would be nice to have a Child stack frame here since it's just the effect function.
-          '\n    in Parent (at **)'
+        ? '\n    in Child_useLayoutEffect (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('passive warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child_useEffect (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
@@ -295,14 +294,14 @@ describe('console', () => {
     expect(mockError.mock.calls[0][0]).toBe('active error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child_useLayoutEffect (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('passive error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child_useEffect (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
@@ -346,14 +345,14 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0][0]).toBe('didMount warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child.componentDidMount (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('didUpdate warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child.componentDidUpdate (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
@@ -361,14 +360,14 @@ describe('console', () => {
     expect(mockError.mock.calls[0][0]).toBe('didMount error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child.componentDidMount (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('didUpdate error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
       supportsOwnerStacks
-        ? '\n    in Parent (at **)'
+        ? '\n    in Child.componentDidUpdate (at **)\n    in Parent (at **)'
         : '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
