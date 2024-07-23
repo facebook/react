@@ -21,7 +21,6 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 export const {
   alwaysThrottleRetries,
   enableAddPropertiesFastPath,
-  enableFastJSX,
   enableObjectFiber,
   enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
