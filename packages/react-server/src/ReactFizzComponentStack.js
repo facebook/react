@@ -27,7 +27,7 @@ import {
 
 import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
-import {formatOwnerStack} from './ReactFizzOwnerStack';
+import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
 export type ComponentStackNode = {
   parent: null | ComponentStackNode,

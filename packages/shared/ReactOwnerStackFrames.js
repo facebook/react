@@ -7,8 +7,6 @@
  * @flow
  */
 
-// This is a DevTools fork of shared/ReactOwnerStackFrames.
-
 export function formatOwnerStack(error: Error): string {
   const prevPrepareStackTrace = Error.prepareStackTrace;
   // $FlowFixMe[incompatible-type] It does accept undefined.
