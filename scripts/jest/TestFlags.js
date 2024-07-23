@@ -66,8 +66,8 @@ function getTestFlags() {
       ? 'modern'
       : 'classic'
     : __EXPERIMENTAL__
-    ? 'experimental'
-    : 'stable';
+      ? 'experimental'
+      : 'stable';
 
   // Return a proxy so we can throw if you attempt to access a flag that
   // doesn't exist.
@@ -90,8 +90,8 @@ function getTestFlags() {
       shouldUseFizzExternalRuntime: !featureFlags.enableFizzExternalRuntime
         ? false
         : www
-        ? __VARIANT__
-        : __EXPERIMENTAL__,
+          ? __VARIANT__
+          : __EXPERIMENTAL__,
 
       // This is used by useSyncExternalStoresShared-test.js to decide whether
       // to test the shim or the native implementation of useSES.

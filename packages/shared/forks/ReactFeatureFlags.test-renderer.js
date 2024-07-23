@@ -89,7 +89,6 @@ export const enableShallowPropDiffing = false;
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const enableRefAsProp = true;
 export const disableStringRefs = true;
-export const enableFastJSX = true;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;

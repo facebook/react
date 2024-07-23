@@ -91,13 +91,9 @@ describe('useSyncExternalStore', () => {
 
       const Child = forwardRef(({store, label}, ref) => {
         const value = useSyncExternalStore(store.subscribe, store.getState);
-        useImperativeHandle(
-          ref,
-          () => {
-            return value;
-          },
-          [],
-        );
+        useImperativeHandle(ref, () => {
+          return value;
+        }, []);
         return <Text text={label + value} />;
       });
 

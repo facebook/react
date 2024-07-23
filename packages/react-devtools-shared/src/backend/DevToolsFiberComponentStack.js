@@ -15,12 +15,16 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {CurrentDispatcherRef, WorkTagMap} from './types';
 
+import type {ReactComponentInfo} from 'shared/ReactTypes';
+
 import {
   describeBuiltInComponentFrame,
   describeFunctionComponentFrame,
   describeClassComponentFrame,
   describeDebugInfoFrame,
 } from './DevToolsComponentStackFrame';
+
+import {formatOwnerStack} from './DevToolsOwnerStack';
 
 export function describeFiber(
   workTagMap: WorkTagMap,
@@ -109,4 +113,120 @@ export function supportsNativeConsoleTasks(fiber: Fiber): boolean {
   // inside a native async stack trace if it's active - meaning the DevTools is open.
   // Ideally we'd detect if this task was created while the DevTools was open or not.
   return !!fiber._debugTask;
+}
+
+export function supportsOwnerStacks(fiber: Fiber): boolean {
+  // If this Fiber supports owner stacks then it'll have the _debugStack field.
+  // It might be null but that still means we should use the owner stack logic.
+  return fiber._debugStack !== undefined;
+}
+
+function describeFunctionComponentFrameWithoutLineNumber(fn: Function): string {
+  // We use this because we don't actually want to describe the line of the component
+  // but just the component name.
+  const name = fn ? fn.displayName || fn.name : '';
+  return name ? describeBuiltInComponentFrame(name) : '';
+}
+
+export function getOwnerStackByFiberInDev(
+  workTagMap: WorkTagMap,
+  workInProgress: Fiber,
+  currentDispatcherRef: CurrentDispatcherRef,
+): string {
+  const {
+    HostHoistable,
+    HostSingleton,
+    HostText,
+    HostComponent,
+    SuspenseComponent,
+    SuspenseListComponent,
+    FunctionComponent,
+    SimpleMemoComponent,
+    ForwardRef,
+    ClassComponent,
+  } = workTagMap;
+  try {
+    let info = '';
+
+    if (workInProgress.tag === HostText) {
+      // Text nodes never have an owner/stack because they're not created through JSX.
+      // We use the parent since text nodes are always created through a host parent.
+      workInProgress = (workInProgress.return: any);
+    }
+
+    // The owner stack of the current fiber will be where it was created, i.e. inside its owner.
+    // There's no actual name of the currently executing component. Instead, that is available
+    // on the regular stack that's currently executing. However, for built-ins there is no such
+    // named stack frame and it would be ignored as being internal anyway. Therefore we add
+    // add one extra frame just to describe the "current" built-in component by name.
+    // Similarly, if there is no owner at all, then there's no stack frame so we add the name
+    // of the root component to the stack to know which component is currently executing.
+    switch (workInProgress.tag) {
+      case HostHoistable:
+      case HostSingleton:
+      case HostComponent:
+        info += describeBuiltInComponentFrame(workInProgress.type);
+        break;
+      case SuspenseComponent:
+        info += describeBuiltInComponentFrame('Suspense');
+        break;
+      case SuspenseListComponent:
+        info += describeBuiltInComponentFrame('SuspenseList');
+        break;
+      case FunctionComponent:
+      case SimpleMemoComponent:
+      case ClassComponent:
+        if (!workInProgress._debugOwner && info === '') {
+          // Only if we have no other data about the callsite do we add
+          // the component name as the single stack frame.
+          info += describeFunctionComponentFrameWithoutLineNumber(
+            workInProgress.type,
+          );
+        }
+        break;
+      case ForwardRef:
+        if (!workInProgress._debugOwner && info === '') {
+          info += describeFunctionComponentFrameWithoutLineNumber(
+            workInProgress.type.render,
+          );
+        }
+        break;
+    }
+
+    let owner: void | null | Fiber | ReactComponentInfo = workInProgress;
+
+    while (owner) {
+      if (typeof owner.tag === 'number') {
+        const fiber: Fiber = (owner: any);
+        owner = fiber._debugOwner;
+        let debugStack = fiber._debugStack;
+        // If we don't actually print the stack if there is no owner of this JSX element.
+        // In a real app it's typically not useful since the root app is always controlled
+        // by the framework. These also tend to have noisy stacks because they're not rooted
+        // in a React render but in some imperative bootstrapping code. It could be useful
+        // if the element was created in module scope. E.g. hoisted. We could add a a single
+        // stack frame for context for example but it doesn't say much if that's a wrapper.
+        if (owner && debugStack) {
+          if (typeof debugStack !== 'string') {
+            debugStack = formatOwnerStack(debugStack);
+          }
+          if (debugStack !== '') {
+            info += '\n' + debugStack;
+          }
+        }
+      } else if (owner.debugStack != null) {
+        // Server Component
+        const ownerStack: Error = owner.debugStack;
+        owner = owner.owner;
+        if (owner && ownerStack) {
+          info += '\n' + formatOwnerStack(ownerStack);
+        }
+      } else {
+        break;
+      }
+    }
+    return info;
+  } catch (x) {
+    return '\nError generating stack: ' + x.message + '\n' + x.stack;
+  }
 }
