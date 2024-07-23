@@ -3768,6 +3768,11 @@ babel-plugin-fbt@^1.0.0:
     nullthrows "^1.1.1"
     yargs "^15.3.1"
 
+babel-plugin-idx@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/babel-plugin-idx/-/babel-plugin-idx-3.0.3.tgz#326d25772210a40ff7fc63eee7f3ed239e8dc9ed"
+  integrity sha512-05baCoIGsvZJKemq6KQ4KVFlweEpY4aSY56wk3W781JxCNW3u0KfBElBt26/cPZbHkjF1mnwGIOlFY+9I/VOZA==
+
 babel-plugin-istanbul@^6.1.1:
   version "6.1.1"
   resolved "https://registry.yarnpkg.com/babel-plugin-istanbul/-/babel-plugin-istanbul-6.1.1.tgz#fa88ec59232fd9b4e36dbbc540a8ec9a9b47da73"
