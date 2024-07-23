@@ -14,7 +14,7 @@ function TestNonOverlappingDescendantTracked(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: TestNonOverlappingDescendantTracked,
-  params: [{ a: { x: {}, c: { x: { y: { z: 3 } } } } }],
+  params: [{a: {x: {}, c: {x: {y: {z: 3}}}}}],
 };
 
 ```

@@ -859,17 +859,17 @@ function pushServerComponentStack(
       if (typeof componentInfo.name !== 'string') {
         continue;
       }
-      if (enableOwnerStacks && componentInfo.stack === undefined) {
+      if (enableOwnerStacks && componentInfo.debugStack === undefined) {
         continue;
       }
       task.componentStack = {
         parent: task.componentStack,
         type: componentInfo,
         owner: componentInfo.owner,
-        stack: componentInfo.stack,
+        stack: enableOwnerStacks ? componentInfo.debugStack : null,
       };
       if (enableOwnerStacks) {
-        task.debugTask = (componentInfo.task: any);
+        task.debugTask = (componentInfo.debugTask: any);
       }
     }
   }
@@ -1528,7 +1528,7 @@ function finishClassComponent(
 ): ReactNodeList {
   let nextChildren;
   if (__DEV__) {
-    nextChildren = callRenderInDEV(instance);
+    nextChildren = (callRenderInDEV(instance): any);
   } else {
     nextChildren = instance.render();
   }
@@ -4763,9 +4763,9 @@ export function prepareForStartFlowingIfBeforeAllReady(request: Request) {
       ? // Render Request, we define shell complete by the pending root tasks
         request.pendingRootTasks === 0
       : // Prerender Request, we define shell complete by completedRootSegemtn
-      request.completedRootSegment === null
-      ? request.pendingRootTasks === 0
-      : request.completedRootSegment.status !== POSTPONED;
+        request.completedRootSegment === null
+        ? request.pendingRootTasks === 0
+        : request.completedRootSegment.status !== POSTPONED;
   safelyEmitEarlyPreloads(request, shellComplete);
 }
 

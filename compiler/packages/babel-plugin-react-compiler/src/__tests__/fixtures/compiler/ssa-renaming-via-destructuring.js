@@ -1,9 +1,9 @@
 function foo(props) {
-  let { x } = { x: [] };
+  let {x} = {x: []};
   x.push(props.bar);
   if (props.cond) {
-    ({ x } = { x: {} });
-    ({ x } = { x: [] });
+    ({x} = {x: {}});
+    ({x} = {x: []});
     x.push(props.foo);
   }
   return x;
@@ -11,6 +11,6 @@ function foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };

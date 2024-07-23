@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import { useState as _useState, useCallback, useEffect } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useState as _useState, useCallback, useEffect} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 function useState(value) {
   const [state, setState] = _useState(value);
@@ -11,9 +11,9 @@ function useState(value) {
 }
 
 function Component() {
-  const [state, setState] = useState("hello");
+  const [state, setState] = useState('hello');
 
-  return <div onClick={() => setState("goodbye")}>{state}</div>;
+  return <div onClick={() => setState('goodbye')}>{state}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {

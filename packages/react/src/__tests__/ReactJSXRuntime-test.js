@@ -377,7 +377,7 @@ describe('ReactJSXRuntime', () => {
     expect(didCall).toBe(false);
   });
 
-  // @gate enableFastJSX && enableRefAsProp
+  // @gate enableRefAsProp
   it('does not clone props object if key and ref is not spread', async () => {
     const config = {
       foo: 'foo',

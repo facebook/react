@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
+import {CompilerError} from '..';
 import {
   BlockId,
   HIRFunction,
@@ -14,16 +14,16 @@ import {
   Place,
   ReactiveScope,
   makeInstructionId,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
   mapTerminalSuccessors,
   terminalFallthrough,
-} from "../HIR/visitors";
-import { retainWhere_Set } from "../Utils/utils";
-import { getPlaceScope } from "./BuildReactiveBlocks";
+} from '../HIR/visitors';
+import {retainWhere_Set} from '../Utils/utils';
+import {getPlaceScope} from './BuildReactiveBlocks';
 
 type InstructionRange = MutableRange;
 /*
@@ -80,7 +80,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
   function recordPlace(
     id: InstructionId,
     place: Place,
-    node: ValueBlockNode | null
+    node: ValueBlockNode | null,
   ): void {
     if (place.identifier.scope !== null) {
       placeScopes.set(place, place.identifier.scope);
@@ -91,7 +91,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
       return;
     }
     activeScopes.add(scope);
-    node?.children.push({ kind: "scope", scope, id });
+    node?.children.push({kind: 'scope', scope, id});
 
     if (seen.has(scope)) {
       return;
@@ -99,17 +99,17 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
     seen.add(scope);
     if (node != null && node.valueRange !== null) {
       scope.range.start = makeInstructionId(
-        Math.min(node.valueRange.start, scope.range.start)
+        Math.min(node.valueRange.start, scope.range.start),
       );
       scope.range.end = makeInstructionId(
-        Math.max(node.valueRange.end, scope.range.end)
+        Math.max(node.valueRange.end, scope.range.end),
       );
     }
   }
 
   for (const [, block] of fn.body.blocks) {
     const startingId = block.instructions[0]?.id ?? block.terminal.id;
-    retainWhere_Set(activeScopes, (scope) => scope.range.end > startingId);
+    retainWhere_Set(activeScopes, scope => scope.range.end > startingId);
     const top = activeBlockFallthroughRanges.at(-1);
     if (top?.fallthrough === block.id) {
       activeBlockFallthroughRanges.pop();
@@ -120,12 +120,12 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
        */
       for (const scope of activeScopes) {
         scope.range.start = makeInstructionId(
-          Math.min(scope.range.start, top.range.start)
+          Math.min(scope.range.start, top.range.start),
         );
       }
     }
 
-    const { instructions, terminal } = block;
+    const {instructions, terminal} = block;
     const node = valueBlockNodes.get(block.id) ?? null;
     for (const instr of instructions) {
       for (const lvalue of eachInstructionLValue(instr)) {
@@ -152,7 +152,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
       for (const scope of activeScopes) {
         if (scope.range.end > terminal.id) {
           scope.range.end = makeInstructionId(
-            Math.max(scope.range.end, nextId)
+            Math.max(scope.range.end, nextId),
           );
         }
       }
@@ -169,7 +169,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
       });
 
       CompilerError.invariant(!valueBlockNodes.has(fallthrough), {
-        reason: "Expect hir blocks to have unique fallthroughs",
+        reason: 'Expect hir blocks to have unique fallthroughs',
         loc: terminal.loc,
       });
       if (node != null) {
@@ -185,22 +185,22 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
      * TODO: add a variant of eachTerminalSuccessor() that visits _all_ successors, not
      * just those that are direct successors for normal control-flow ordering.
      */
-    mapTerminalSuccessors(terminal, (successor) => {
+    mapTerminalSuccessors(terminal, successor => {
       if (valueBlockNodes.has(successor)) {
         return successor;
       }
 
       const successorBlock = fn.body.blocks.get(successor)!;
-      if (successorBlock.kind === "block" || successorBlock.kind === "catch") {
+      if (successorBlock.kind === 'block' || successorBlock.kind === 'catch') {
         /*
          * we need the block kind check here because the do..while terminal's
          * successor is a block, and try's successor is a catch block
          */
       } else if (
         node == null ||
-        terminal.kind === "ternary" ||
-        terminal.kind === "logical" ||
-        terminal.kind === "optional"
+        terminal.kind === 'ternary' ||
+        terminal.kind === 'logical' ||
+        terminal.kind === 'optional'
       ) {
         /**
          * Create a new node whenever we transition from non-value -> value block.
@@ -232,7 +232,7 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
           valueRange = node.valueRange;
         }
         const childNode: ValueBlockNode = {
-          kind: "node",
+          kind: 'node',
           id: terminal.id,
           children: [],
           valueRange,
@@ -249,13 +249,13 @@ export function alignReactiveScopesToBlockScopesHIR(fn: HIRFunction): void {
 }
 
 type ValueBlockNode = {
-  kind: "node";
+  kind: 'node';
   id: InstructionId;
   valueRange: MutableRange;
   children: Array<ValueBlockNode | ReactiveScopeNode>;
 };
 type ReactiveScopeNode = {
-  kind: "scope";
+  kind: 'scope';
   id: InstructionId;
   scope: ReactiveScope;
 };
@@ -263,17 +263,17 @@ type ReactiveScopeNode = {
 function _debug(node: ValueBlockNode): string {
   const buf: Array<string> = [];
   _printNode(node, buf, 0);
-  return buf.join("\n");
+  return buf.join('\n');
 }
 function _printNode(
   node: ValueBlockNode | ReactiveScopeNode,
   out: Array<string>,
-  depth: number = 0
+  depth: number = 0,
 ): void {
-  let prefix = "  ".repeat(depth);
-  if (node.kind === "scope") {
+  let prefix = '  '.repeat(depth);
+  if (node.kind === 'scope') {
     out.push(
-      `${prefix}[${node.id}] @${node.scope.id} [${node.scope.range.start}:${node.scope.range.end}]`
+      `${prefix}[${node.id}] @${node.scope.id} [${node.scope.range.start}:${node.scope.range.end}]`,
     );
   } else {
     let range = ` (range=[${node.valueRange.start}:${node.valueRange.end}])`;

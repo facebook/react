@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-"use client";
+'use client';
 
-import { SnackbarProvider } from "notistack";
-import { Editor, Header, StoreProvider } from "../components";
-import MessageSnackbar from "../components/Message";
+import {SnackbarProvider} from 'notistack';
+import {Editor, Header, StoreProvider} from '../components';
+import MessageSnackbar from '../components/Message';
 
 export default function Hoot() {
   return (
@@ -17,8 +17,7 @@ export default function Hoot() {
       <SnackbarProvider
         preventDuplicate
         maxSnack={10}
-        Components={{ message: MessageSnackbar }}
-      >
+        Components={{message: MessageSnackbar}}>
         <Header />
         <Editor />
       </SnackbarProvider>

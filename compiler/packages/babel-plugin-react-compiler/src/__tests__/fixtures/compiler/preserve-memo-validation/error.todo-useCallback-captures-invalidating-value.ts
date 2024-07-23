@@ -1,6 +1,6 @@
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useCallback } from "react";
+import {useCallback} from 'react';
 
 // False positive:
 // We currently bail out on this because we don't understand

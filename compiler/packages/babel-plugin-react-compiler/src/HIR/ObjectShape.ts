@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
-import { Effect, ValueKind, ValueReason } from "./HIR";
+import {CompilerError} from '../CompilerError';
+import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BuiltInType,
   FunctionType,
   ObjectType,
   PolyType,
   PrimitiveType,
-} from "./Types";
+} from './Types';
 
 /*
  * This file exports types and defaults for JavaScript object shapes. These are
@@ -22,7 +22,7 @@ import {
  */
 
 const PRIMITIVE_TYPE: PrimitiveType = {
-  kind: "Primitive",
+  kind: 'Primitive',
 };
 
 let nextAnonId = 0;
@@ -42,8 +42,8 @@ function createAnonId(): string {
 export function addFunction(
   registry: ShapeRegistry,
   properties: Iterable<[string, BuiltInType | PolyType]>,
-  fn: Omit<FunctionSignature, "hookKind">,
-  id: string | null = null
+  fn: Omit<FunctionSignature, 'hookKind'>,
+  id: string | null = null,
 ): FunctionType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, properties, {
@@ -51,7 +51,7 @@ export function addFunction(
     hookKind: null,
   });
   return {
-    kind: "Function",
+    kind: 'Function',
     return: fn.returnType,
     shapeId,
   };
@@ -64,13 +64,13 @@ export function addFunction(
  */
 export function addHook(
   registry: ShapeRegistry,
-  fn: FunctionSignature & { hookKind: HookKind },
-  id: string | null = null
+  fn: FunctionSignature & {hookKind: HookKind},
+  id: string | null = null,
 ): FunctionType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, [], fn);
   return {
-    kind: "Function",
+    kind: 'Function',
     return: fn.returnType,
     shapeId,
   };
@@ -84,12 +84,12 @@ export function addHook(
 export function addObject(
   registry: ShapeRegistry,
   id: string | null,
-  properties: Iterable<[string, BuiltInType | PolyType]>
+  properties: Iterable<[string, BuiltInType | PolyType]>,
 ): ObjectType {
   const shapeId = id ?? createAnonId();
   addShape(registry, shapeId, properties, null);
   return {
-    kind: "Object",
+    kind: 'Object',
     shapeId,
   };
 }
@@ -98,7 +98,7 @@ function addShape(
   registry: ShapeRegistry,
   id: string,
   properties: Iterable<[string, BuiltInType | PolyType]>,
-  functionType: FunctionSignature | null
+  functionType: FunctionSignature | null,
 ): ObjectShape {
   const shape: ObjectShape = {
     properties: new Map(properties),
@@ -116,17 +116,17 @@ function addShape(
 }
 
 export type HookKind =
-  | "useContext"
-  | "useState"
-  | "useActionState"
-  | "useReducer"
-  | "useRef"
-  | "useEffect"
-  | "useLayoutEffect"
-  | "useInsertionEffect"
-  | "useMemo"
-  | "useCallback"
-  | "Custom";
+  | 'useContext'
+  | 'useState'
+  | 'useActionState'
+  | 'useReducer'
+  | 'useRef'
+  | 'useEffect'
+  | 'useLayoutEffect'
+  | 'useInsertionEffect'
+  | 'useMemo'
+  | 'useCallback'
+  | 'Custom';
 
 /*
  * Call signature of a function, used for type and effect inference.
@@ -190,91 +190,91 @@ export type ObjectShape = {
  * the inferred types for [] and {}.
  */
 export type ShapeRegistry = Map<string, ObjectShape>;
-export const BuiltInPropsId = "BuiltInProps";
-export const BuiltInArrayId = "BuiltInArray";
-export const BuiltInFunctionId = "BuiltInFunction";
-export const BuiltInJsxId = "BuiltInJsx";
-export const BuiltInObjectId = "BuiltInObject";
-export const BuiltInUseStateId = "BuiltInUseState";
-export const BuiltInSetStateId = "BuiltInSetState";
-export const BuiltInUseActionStateId = "BuiltInUseActionState";
-export const BuiltInSetActionStateId = "BuiltInSetActionState";
-export const BuiltInUseRefId = "BuiltInUseRefId";
-export const BuiltInRefValueId = "BuiltInRefValue";
-export const BuiltInMixedReadonlyId = "BuiltInMixedReadonly";
-export const BuiltInUseEffectHookId = "BuiltInUseEffectHook";
-export const BuiltInUseLayoutEffectHookId = "BuiltInUseLayoutEffectHook";
-export const BuiltInUseInsertionEffectHookId = "BuiltInUseInsertionEffectHook";
-export const BuiltInUseOperatorId = "BuiltInUseOperator";
-export const BuiltInUseReducerId = "BuiltInUseReducer";
-export const BuiltInDispatchId = "BuiltInDispatch";
+export const BuiltInPropsId = 'BuiltInProps';
+export const BuiltInArrayId = 'BuiltInArray';
+export const BuiltInFunctionId = 'BuiltInFunction';
+export const BuiltInJsxId = 'BuiltInJsx';
+export const BuiltInObjectId = 'BuiltInObject';
+export const BuiltInUseStateId = 'BuiltInUseState';
+export const BuiltInSetStateId = 'BuiltInSetState';
+export const BuiltInUseActionStateId = 'BuiltInUseActionState';
+export const BuiltInSetActionStateId = 'BuiltInSetActionState';
+export const BuiltInUseRefId = 'BuiltInUseRefId';
+export const BuiltInRefValueId = 'BuiltInRefValue';
+export const BuiltInMixedReadonlyId = 'BuiltInMixedReadonly';
+export const BuiltInUseEffectHookId = 'BuiltInUseEffectHook';
+export const BuiltInUseLayoutEffectHookId = 'BuiltInUseLayoutEffectHook';
+export const BuiltInUseInsertionEffectHookId = 'BuiltInUseInsertionEffectHook';
+export const BuiltInUseOperatorId = 'BuiltInUseOperator';
+export const BuiltInUseReducerId = 'BuiltInUseReducer';
+export const BuiltInDispatchId = 'BuiltInDispatch';
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
 
 // If the `ref` prop exists, it has the ref type
 addObject(BUILTIN_SHAPES, BuiltInPropsId, [
-  ["ref", { kind: "Object", shapeId: BuiltInUseRefId }],
+  ['ref', {kind: 'Object', shapeId: BuiltInUseRefId}],
 ]);
 
 /* Built-in array shape */
 addObject(BUILTIN_SHAPES, BuiltInArrayId, [
   [
-    "indexOf",
+    'indexOf',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
     }),
   ],
   [
-    "includes",
+    'includes',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.Read,
       returnValueKind: ValueKind.Primitive,
     }),
   ],
   [
-    "pop",
+    'pop',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: null,
-      returnType: { kind: "Poly" },
+      returnType: {kind: 'Poly'},
       calleeEffect: Effect.Store,
       returnValueKind: ValueKind.Mutable,
     }),
   ],
   [
-    "at",
+    'at',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [Effect.Read],
       restParam: null,
-      returnType: { kind: "Poly" },
+      returnType: {kind: 'Poly'},
       calleeEffect: Effect.Capture,
       returnValueKind: ValueKind.Mutable,
     }),
   ],
   [
-    "concat",
+    'concat',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Capture,
       returnType: {
-        kind: "Object",
+        kind: 'Object',
         shapeId: BuiltInArrayId,
       },
       calleeEffect: Effect.Capture,
       returnValueKind: ValueKind.Mutable,
     }),
   ],
-  ["length", PRIMITIVE_TYPE],
+  ['length', PRIMITIVE_TYPE],
   [
-    "push",
+    'push',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Capture,
@@ -284,12 +284,12 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
-    "slice",
+    'slice',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
       returnType: {
-        kind: "Object",
+        kind: 'Object',
         shapeId: BuiltInArrayId,
       },
       calleeEffect: Effect.Capture,
@@ -297,11 +297,11 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
-    "map",
+    'map',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Object", shapeId: BuiltInArrayId },
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
       /*
        * callee is ConditionallyMutate because items of the array
        * flow into the lambda and may be mutated there, even though
@@ -314,11 +314,11 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
-    "filter",
+    'filter',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Object", shapeId: BuiltInArrayId },
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
       /*
        * callee is ConditionallyMutate because items of the array
        * flow into the lambda and may be mutated there, even though
@@ -331,11 +331,11 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
-    "every",
+    'every',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       /*
        * callee is ConditionallyMutate because items of the array
        * flow into the lambda and may be mutated there, even though
@@ -348,11 +348,11 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
-    "some",
+    'some',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       /*
        * callee is ConditionallyMutate because items of the array
        * flow into the lambda and may be mutated there, even though
@@ -365,11 +365,11 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
-    "find",
+    'find',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Poly" },
+      returnType: {kind: 'Poly'},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
@@ -377,11 +377,11 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
-    "findIndex",
+    'findIndex',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       /*
        * callee is ConditionallyMutate because items of the array
        * flow into the lambda and may be mutated there, even though
@@ -394,7 +394,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
-    "join",
+    'join',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
@@ -409,7 +409,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
 /* Built-in Object shape */
 addObject(BUILTIN_SHAPES, BuiltInObjectId, [
   [
-    "toString",
+    'toString',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: null,
@@ -425,9 +425,9 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
-  ["0", { kind: "Poly" }],
+  ['0', {kind: 'Poly'}],
   [
-    "1",
+    '1',
     addFunction(
       BUILTIN_SHAPES,
       [],
@@ -438,15 +438,15 @@ addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Primitive,
       },
-      BuiltInSetStateId
+      BuiltInSetStateId,
     ),
   ],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInUseActionStateId, [
-  ["0", { kind: "Poly" }],
+  ['0', {kind: 'Poly'}],
   [
-    "1",
+    '1',
     addFunction(
       BUILTIN_SHAPES,
       [],
@@ -457,15 +457,15 @@ addObject(BUILTIN_SHAPES, BuiltInUseActionStateId, [
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Primitive,
       },
-      BuiltInSetActionStateId
+      BuiltInSetActionStateId,
     ),
   ],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInUseReducerId, [
-  ["0", { kind: "Poly" }],
+  ['0', {kind: 'Poly'}],
   [
-    "1",
+    '1',
     addFunction(
       BUILTIN_SHAPES,
       [],
@@ -476,22 +476,22 @@ addObject(BUILTIN_SHAPES, BuiltInUseReducerId, [
         calleeEffect: Effect.Read,
         returnValueKind: ValueKind.Primitive,
       },
-      BuiltInDispatchId
+      BuiltInDispatchId,
     ),
   ],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
-  ["current", { kind: "Object", shapeId: BuiltInRefValueId }],
+  ['current', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
-  ["*", { kind: "Object", shapeId: BuiltInRefValueId }],
+  ['*', {kind: 'Object', shapeId: BuiltInRefValueId}],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   [
-    "toString",
+    'toString',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
@@ -501,34 +501,34 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     }),
   ],
   [
-    "map",
+    'map',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
-      returnType: { kind: "Object", shapeId: BuiltInArrayId },
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
     }),
   ],
   [
-    "filter",
+    'filter',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
-      returnType: { kind: "Object", shapeId: BuiltInArrayId },
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
     }),
   ],
   [
-    "concat",
+    'concat',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Capture,
       returnType: {
-        kind: "Object",
+        kind: 'Object',
         shapeId: BuiltInArrayId,
       },
       calleeEffect: Effect.Capture,
@@ -536,12 +536,12 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     }),
   ],
   [
-    "slice",
+    'slice',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
       returnType: {
-        kind: "Object",
+        kind: 'Object',
         shapeId: BuiltInArrayId,
       },
       calleeEffect: Effect.Capture,
@@ -549,11 +549,11 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     }),
   ],
   [
-    "every",
+    'every',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Primitive,
       noAlias: true,
@@ -561,11 +561,11 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     }),
   ],
   [
-    "some",
+    'some',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Primitive,
       noAlias: true,
@@ -573,11 +573,11 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     }),
   ],
   [
-    "find",
+    'find',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Poly" },
+      returnType: {kind: 'Poly'},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
@@ -585,11 +585,11 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     }),
   ],
   [
-    "findIndex",
+    'findIndex',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
-      returnType: { kind: "Primitive" },
+      returnType: {kind: 'Primitive'},
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Primitive,
       noAlias: true,
@@ -597,7 +597,7 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
     }),
   ],
   [
-    "join",
+    'join',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
@@ -606,7 +606,7 @@ addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
       returnValueKind: ValueKind.Primitive,
     }),
   ],
-  ["*", { kind: "Object", shapeId: BuiltInMixedReadonlyId }],
+  ['*', {kind: 'Object', shapeId: BuiltInMixedReadonlyId}],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInJsxId, []);
@@ -617,12 +617,12 @@ export const DefaultMutatingHook = addHook(
   {
     positionalParams: [],
     restParam: Effect.ConditionallyMutate,
-    returnType: { kind: "Poly" },
+    returnType: {kind: 'Poly'},
     calleeEffect: Effect.Read,
-    hookKind: "Custom",
+    hookKind: 'Custom',
     returnValueKind: ValueKind.Mutable,
   },
-  "DefaultMutatingHook"
+  'DefaultMutatingHook',
 );
 
 export const DefaultNonmutatingHook = addHook(
@@ -630,10 +630,10 @@ export const DefaultNonmutatingHook = addHook(
   {
     positionalParams: [],
     restParam: Effect.Freeze,
-    returnType: { kind: "Poly" },
+    returnType: {kind: 'Poly'},
     calleeEffect: Effect.Read,
-    hookKind: "Custom",
+    hookKind: 'Custom',
     returnValueKind: ValueKind.Frozen,
   },
-  "DefaultNonmutatingHook"
+  'DefaultNonmutatingHook',
 );

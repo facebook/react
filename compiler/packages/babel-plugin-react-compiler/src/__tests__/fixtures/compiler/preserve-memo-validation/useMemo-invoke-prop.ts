@@ -1,8 +1,8 @@
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
-function useFoo({ callback }) {
+function useFoo({callback}) {
   return useMemo(() => new Array(callback()), [callback]);
 }
 
@@ -11,7 +11,7 @@ export const FIXTURE_ENTRYPOINT = {
   params: [
     {
       callback: () => {
-        "use no forget";
+        'use no forget';
         return [1, 2, 3];
       },
     },

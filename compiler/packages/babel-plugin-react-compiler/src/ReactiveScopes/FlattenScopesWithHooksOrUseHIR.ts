@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
+import {CompilerError} from '..';
 import {
   BlockId,
   HIRFunction,
@@ -14,8 +14,8 @@ import {
   ReactiveScope,
   getHookKind,
   isUseOperator,
-} from "../HIR";
-import { retainWhere } from "../Utils/utils";
+} from '../HIR';
+import {retainWhere} from '../Utils/utils';
 
 /**
  * For simplicity the majority of compiler passes do not treat hooks specially. However, hooks are different
@@ -39,31 +39,31 @@ import { retainWhere } from "../Utils/utils";
  * to ensure the hook call does not inadvertently become conditional.
  */
 export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
-  const activeScopes: Array<{ block: BlockId; scope: ReactiveScope }> = [];
+  const activeScopes: Array<{block: BlockId; scope: ReactiveScope}> = [];
   const prune: Array<BlockId> = [];
 
   for (const [, block] of fn.body.blocks) {
     const firstId = block.instructions[0]?.id ?? block.terminal.id;
-    retainWhere(activeScopes, (current) => current.scope.range.end > firstId);
+    retainWhere(activeScopes, current => current.scope.range.end > firstId);
 
     for (const instr of block.instructions) {
-      const { value } = instr;
+      const {value} = instr;
       switch (value.kind) {
-        case "MethodCall":
-        case "CallExpression": {
+        case 'MethodCall':
+        case 'CallExpression': {
           const callee =
-            value.kind === "MethodCall" ? value.property : value.callee;
+            value.kind === 'MethodCall' ? value.property : value.callee;
           if (
             getHookKind(fn.env, callee.identifier) != null ||
             isUseOperator(callee.identifier)
           ) {
-            prune.push(...activeScopes.map((entry) => entry.block));
+            prune.push(...activeScopes.map(entry => entry.block));
             activeScopes.length = 0;
           }
         }
       }
     }
-    if (block.terminal.kind === "scope") {
+    if (block.terminal.kind === 'scope') {
       activeScopes.push({
         block: block.id,
         scope: block.terminal.scope,
@@ -74,7 +74,7 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
   for (const id of prune) {
     const block = fn.body.blocks.get(id)!;
     const terminal = block.terminal;
-    CompilerError.invariant(terminal.kind === "scope", {
+    CompilerError.invariant(terminal.kind === 'scope', {
       reason: `Expected block to have a scope terminal`,
       description: `Expected block bb${block.id} to end in a scope terminal`,
       loc: terminal.loc,
@@ -82,7 +82,7 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
     const body = fn.body.blocks.get(terminal.block)!;
     if (
       body.instructions.length === 1 &&
-      body.terminal.kind === "goto" &&
+      body.terminal.kind === 'goto' &&
       body.terminal.block === terminal.fallthrough
     ) {
       /*
@@ -91,7 +91,7 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
        * flattening
        */
       block.terminal = {
-        kind: "label",
+        kind: 'label',
         block: terminal.block,
         fallthrough: terminal.fallthrough,
         id: terminal.id,
@@ -101,7 +101,7 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
     }
 
     block.terminal = {
-      kind: "pruned-scope",
+      kind: 'pruned-scope',
       block: terminal.block,
       fallthrough: terminal.fallthrough,
       id: terminal.id,

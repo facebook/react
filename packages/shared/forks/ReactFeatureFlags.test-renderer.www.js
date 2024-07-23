@@ -81,7 +81,6 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const enableRefAsProp = true;
 export const disableStringRefs = false;
-export const enableFastJSX = false;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   Environment,
   Identifier,
@@ -20,11 +20,11 @@ import {
   getHookKind,
   isUseRefType,
   isUseStateType,
-} from "../HIR";
-import { eachCallArgument, eachInstructionLValue } from "../HIR/visitors";
-import DisjointSet from "../Utils/DisjointSet";
-import { assertExhaustive } from "../Utils/utils";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR';
+import {eachCallArgument, eachInstructionLValue} from '../HIR/visitors';
+import DisjointSet from '../Utils/DisjointSet';
+import {assertExhaustive} from '../Utils/utils';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /**
  * This pass is built based on the observation by @jbrown215 that arguments
@@ -57,7 +57,7 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  * from the block.
  */
 
-type CreateUpdate = "Create" | "Update" | "Unknown";
+type CreateUpdate = 'Create' | 'Update' | 'Unknown';
 
 type KindMap = Map<IdentifierId, CreateUpdate>;
 
@@ -70,7 +70,7 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
   constructor(
     env: Environment,
     aliases: DisjointSet<IdentifierId>,
-    paths: Map<IdentifierId, Map<string, IdentifierId>>
+    paths: Map<IdentifierId, Map<string, IdentifierId>>,
   ) {
     super();
     this.aliases = aliases;
@@ -80,16 +80,16 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
 
   join(values: Array<CreateUpdate>): CreateUpdate {
     function join2(l: CreateUpdate, r: CreateUpdate): CreateUpdate {
-      if (l === "Update" || r === "Update") {
-        return "Update";
-      } else if (l === "Create" || r === "Create") {
-        return "Create";
-      } else if (l === "Unknown" || r === "Unknown") {
-        return "Unknown";
+      if (l === 'Update' || r === 'Update') {
+        return 'Update';
+      } else if (l === 'Create' || r === 'Create') {
+        return 'Create';
+      } else if (l === 'Unknown' || r === 'Unknown') {
+        return 'Unknown';
       }
       assertExhaustive(r, `Unhandled variable kind ${r}`);
     }
-    return values.reduce(join2, "Unknown");
+    return values.reduce(join2, 'Unknown');
   }
 
   isCreateOnlyHook(id: Identifier): boolean {
@@ -99,11 +99,11 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
   override visitPlace(
     _: InstructionId,
     place: Place,
-    state: CreateUpdate
+    state: CreateUpdate,
   ): void {
     this.map.set(
       place.identifier.id,
-      this.join([state, this.map.get(place.identifier.id) ?? "Unknown"])
+      this.join([state, this.map.get(place.identifier.id) ?? 'Unknown']),
     );
   }
 
@@ -114,17 +114,17 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
   override visitInstruction(instruction: ReactiveInstruction): void {
     const state = this.join(
       [...eachInstructionLValue(instruction)].map(
-        (operand) => this.map.get(operand.identifier.id) ?? "Unknown"
-      )
+        operand => this.map.get(operand.identifier.id) ?? 'Unknown',
+      ),
     );
 
     const visitCallOrMethodNonArgs = (): void => {
       switch (instruction.value.kind) {
-        case "CallExpression": {
+        case 'CallExpression': {
           this.visitPlace(instruction.id, instruction.value.callee, state);
           break;
         }
-        case "MethodCall": {
+        case 'MethodCall': {
           this.visitPlace(instruction.id, instruction.value.property, state);
           this.visitPlace(instruction.id, instruction.value.receiver, state);
           break;
@@ -135,11 +135,11 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
     const isHook = (): boolean => {
       let callee = null;
       switch (instruction.value.kind) {
-        case "CallExpression": {
+        case 'CallExpression': {
           callee = instruction.value.callee.identifier;
           break;
         }
-        case "MethodCall": {
+        case 'MethodCall': {
           callee = instruction.value.property.identifier;
           break;
         }
@@ -148,18 +148,18 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
     };
 
     switch (instruction.value.kind) {
-      case "CallExpression":
-      case "MethodCall": {
+      case 'CallExpression':
+      case 'MethodCall': {
         if (
           instruction.lvalue &&
           this.isCreateOnlyHook(instruction.lvalue.identifier)
         ) {
-          [...eachCallArgument(instruction.value.args)].forEach((operand) =>
-            this.visitPlace(instruction.id, operand, "Create")
+          [...eachCallArgument(instruction.value.args)].forEach(operand =>
+            this.visitPlace(instruction.id, operand, 'Create'),
           );
           visitCallOrMethodNonArgs();
         } else {
-          this.traverseInstruction(instruction, isHook() ? "Update" : state);
+          this.traverseInstruction(instruction, isHook() ? 'Update' : state);
         }
         break;
       }
@@ -173,17 +173,17 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
     const state = this.join(
       [
         ...scope.scope.declarations.keys(),
-        ...[...scope.scope.reassignments.values()].map((ident) => ident.id),
-      ].map((id) => this.map.get(id) ?? "Unknown")
+        ...[...scope.scope.reassignments.values()].map(ident => ident.id),
+      ].map(id => this.map.get(id) ?? 'Unknown'),
     );
     super.visitScope(scope, state);
-    [...scope.scope.dependencies].forEach((ident) => {
+    [...scope.scope.dependencies].forEach(ident => {
       let target: undefined | IdentifierId =
         this.aliases.find(ident.identifier.id) ?? ident.identifier.id;
-      ident.path.forEach((key) => {
+      ident.path.forEach(key => {
         target &&= this.paths.get(target)?.get(key);
       });
-      if (target && this.map.get(target) === "Create") {
+      if (target && this.map.get(target) === 'Create') {
         scope.scope.dependencies.delete(ident);
       }
     });
@@ -191,9 +191,9 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
 
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    state: CreateUpdate
+    state: CreateUpdate,
   ): void {
-    CompilerError.invariant(state !== "Create", {
+    CompilerError.invariant(state !== 'Create', {
       reason: "Visiting a terminal statement with state 'Create'",
       loc: stmt.terminal.loc,
     });
@@ -204,24 +204,24 @@ class Visitor extends ReactiveFunctionVisitor<CreateUpdate> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     fn: ReactiveFunction,
-    state: CreateUpdate
+    state: CreateUpdate,
   ): void {
     visitReactiveFunction(fn, this, state);
   }
 }
 
 export default function pruneInitializationDependencies(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): void {
   const [aliases, paths] = getAliases(fn);
-  visitReactiveFunction(fn, new Visitor(fn.env, aliases, paths), "Update");
+  visitReactiveFunction(fn, new Visitor(fn.env, aliases, paths), 'Update');
 }
 
 function update(
   map: Map<IdentifierId, Map<string, IdentifierId>>,
   key: IdentifierId,
   path: string,
-  value: IdentifierId
+  value: IdentifierId,
 ): void {
   const inner = map.get(key) ?? new Map();
   inner.set(path, value);
@@ -234,43 +234,43 @@ class AliasVisitor extends ReactiveFunctionVisitor {
 
   override visitInstruction(instr: ReactiveInstruction): void {
     if (
-      instr.value.kind === "StoreLocal" ||
-      instr.value.kind === "StoreContext"
+      instr.value.kind === 'StoreLocal' ||
+      instr.value.kind === 'StoreContext'
     ) {
       this.scopeIdentifiers.union([
         instr.value.lvalue.place.identifier.id,
         instr.value.value.identifier.id,
       ]);
     } else if (
-      instr.value.kind === "LoadLocal" ||
-      instr.value.kind === "LoadContext"
+      instr.value.kind === 'LoadLocal' ||
+      instr.value.kind === 'LoadContext'
     ) {
       instr.lvalue &&
         this.scopeIdentifiers.union([
           instr.lvalue.identifier.id,
           instr.value.place.identifier.id,
         ]);
-    } else if (instr.value.kind === "PropertyLoad") {
+    } else if (instr.value.kind === 'PropertyLoad') {
       instr.lvalue &&
         update(
           this.scopePaths,
           instr.value.object.identifier.id,
           instr.value.property,
-          instr.lvalue.identifier.id
+          instr.lvalue.identifier.id,
         );
-    } else if (instr.value.kind === "PropertyStore") {
+    } else if (instr.value.kind === 'PropertyStore') {
       update(
         this.scopePaths,
         instr.value.object.identifier.id,
         instr.value.property,
-        instr.value.value.identifier.id
+        instr.value.value.identifier.id,
       );
     }
   }
 }
 
 function getAliases(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): [DisjointSet<IdentifierId>, Map<IdentifierId, Map<string, IdentifierId>>] {
   const visitor = new AliasVisitor();
   visitReactiveFunction(fn, visitor, null);
@@ -282,7 +282,7 @@ function getAliases(
         scopePaths,
         disjoint.find(key) ?? key,
         path,
-        disjoint.find(id) ?? id
+        disjoint.find(id) ?? id,
       );
     }
   }

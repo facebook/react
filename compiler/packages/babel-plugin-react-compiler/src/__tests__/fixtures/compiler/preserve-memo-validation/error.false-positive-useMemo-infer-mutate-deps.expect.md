@@ -3,8 +3,8 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
-import { identity } from "shared-runtime";
+import {useMemo} from 'react';
+import {identity} from 'shared-runtime';
 
 // This is a false positive as Forget's inferred memoization
 // invalidates strictly less than source. We currently do not

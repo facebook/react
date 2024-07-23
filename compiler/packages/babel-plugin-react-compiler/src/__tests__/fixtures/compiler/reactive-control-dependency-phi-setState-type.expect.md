@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import invariant from "invariant";
-import { useState } from "react";
+import invariant from 'invariant';
+import {useState} from 'react';
 
 function Component(props) {
   const [x, setX] = useState(false);
@@ -15,7 +15,7 @@ function Component(props) {
     setState = setY;
   }
   const setState2 = setState;
-  const stateObject = { setState: setState2 };
+  const stateObject = {setState: setState2};
   return (
     <Foo
       cond={props.cond}
@@ -26,27 +26,27 @@ function Component(props) {
   );
 }
 
-function Foo({ cond, setX, setY, setState }) {
+function Foo({cond, setX, setY, setState}) {
   if (cond) {
-    invariant(setState === setX, "Expected the correct setState function");
+    invariant(setState === setX, 'Expected the correct setState function');
   } else {
-    invariant(setState === setY, "Expected the correct setState function");
+    invariant(setState === setY, 'Expected the correct setState function');
   }
-  return "ok";
+  return 'ok';
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
   sequentialRenders: [
-    { cond: true },
-    { cond: true },
-    { cond: false },
-    { cond: false },
-    { cond: true },
-    { cond: false },
-    { cond: true },
-    { cond: false },
+    {cond: true},
+    {cond: true},
+    {cond: false},
+    {cond: false},
+    {cond: true},
+    {cond: false},
+    {cond: true},
+    {cond: false},
   ],
 };
 

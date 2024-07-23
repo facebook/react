@@ -23,7 +23,6 @@ export const {
   enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
-  enableFastJSX,
   enableInfiniteRenderLoopDetection,
   enableLazyContextPropagation,
   enableNoCloningMemoCache,

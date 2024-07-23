@@ -1,4 +1,4 @@
-import { c as useMemoCache } from "react/compiler-runtime";
+import {c as useMemoCache} from 'react/compiler-runtime';
 
 function Component(props) {
   const $ = useMemoCache();
@@ -14,5 +14,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };

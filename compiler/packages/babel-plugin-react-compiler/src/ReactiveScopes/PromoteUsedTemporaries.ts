@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
-import { GeneratedSource } from "../HIR";
+import {CompilerError} from '../CompilerError';
+import {GeneratedSource} from '../HIR';
 import {
   Identifier,
   IdentifierId,
@@ -19,14 +19,14 @@ import {
   ScopeId,
   promoteTemporary,
   promoteTemporaryJsxTag,
-} from "../HIR/HIR";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR/HIR';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 class Visitor extends ReactiveFunctionVisitor<State> {
   override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
     this.traverseScope(scopeBlock, state);
     for (const dep of scopeBlock.scope.dependencies) {
-      const { identifier } = dep;
+      const {identifier} = dep;
       if (identifier.name == null) {
         promoteIdentifier(identifier, state);
       }
@@ -47,7 +47,7 @@ class Visitor extends ReactiveFunctionVisitor<State> {
 
   override visitPrunedScope(
     scopeBlock: PrunedReactiveScopeBlock,
-    state: State
+    state: State,
   ): void {
     this.traversePrunedScope(scopeBlock, state);
     for (const [, declaration] of scopeBlock.scope.declarations) {
@@ -69,10 +69,10 @@ class Visitor extends ReactiveFunctionVisitor<State> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: State
+    state: State,
   ): void {
     this.traverseValue(id, value, state);
-    if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
+    if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
       this.visitHirFunction(value.loweredFunc.func, state);
     }
   }
@@ -81,10 +81,10 @@ class Visitor extends ReactiveFunctionVisitor<State> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     fn: ReactiveFunction,
-    state: State
+    state: State,
   ): void {
     for (const operand of fn.params) {
-      const place = operand.kind === "Identifier" ? operand : operand.place;
+      const place = operand.kind === 'Identifier' ? operand : operand.place;
       if (place.identifier.name === null) {
         promoteIdentifier(place.identifier, state);
       }
@@ -98,7 +98,7 @@ type State = {
   tags: JsxExpressionTags;
   pruned: Map<
     IdentifierId,
-    { activeScopes: Array<ScopeId>; usedOutsideScope: boolean }
+    {activeScopes: Array<ScopeId>; usedOutsideScope: boolean}
   >; // true if referenced within another scope, false if only accessed outside of scopes
 };
 
@@ -120,17 +120,17 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: State
+    state: State,
   ): void {
     this.traverseValue(id, value, state);
-    if (value.kind === "JsxExpression" && value.tag.kind === "Identifier") {
+    if (value.kind === 'JsxExpression' && value.tag.kind === 'Identifier') {
       state.tags.add(value.tag.identifier.id);
     }
   }
 
   override visitPrunedScope(
     scopeBlock: PrunedReactiveScopeBlock,
-    state: State
+    state: State,
   ): void {
     for (const [id] of scopeBlock.scope.declarations) {
       state.pruned.set(id, {
@@ -154,7 +154,7 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   };
   visitReactiveFunction(fn, new CollectPromotableTemporaries(), state);
   for (const operand of fn.params) {
-    const place = operand.kind === "Identifier" ? operand : operand.place;
+    const place = operand.kind === 'Identifier' ? operand : operand.place;
     if (place.identifier.name === null) {
       promoteIdentifier(place.identifier, state);
     }
@@ -165,7 +165,7 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
 function promoteIdentifier(identifier: Identifier, state: State): void {
   CompilerError.invariant(identifier.name === null, {
     reason:
-      "promoteTemporary: Expected to be called only for temporary variables",
+      'promoteTemporary: Expected to be called only for temporary variables',
     description: null,
     loc: GeneratedSource,
     suggestions: null,

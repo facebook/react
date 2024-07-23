@@ -1,6 +1,6 @@
-import { CompilerError } from "../CompilerError";
-import { getScopes, recursivelyTraverseItems } from "./AssertValidBlockNesting";
-import { Environment } from "./Environment";
+import {CompilerError} from '../CompilerError';
+import {getScopes, recursivelyTraverseItems} from './AssertValidBlockNesting';
+import {Environment} from './Environment';
 import {
   BasicBlock,
   BlockId,
@@ -12,7 +12,7 @@ import {
   ReactiveScope,
   ReactiveScopeTerminal,
   ScopeId,
-} from "./HIR";
+} from './HIR';
 
 /**
  * This pass assumes that all program blocks are properly nested with respect to fallthroughs
@@ -72,14 +72,14 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
   const queuedRewrites: Array<TerminalRewriteInfo> = [];
   recursivelyTraverseItems(
     [...getScopes(fn)],
-    (scope) => scope.range,
+    scope => scope.range,
     {
       fallthroughs: new Map(),
       rewrites: queuedRewrites,
       env: fn.env,
     },
     pushStartScopeTerminal,
-    pushEndScopeTerminal
+    pushEndScopeTerminal,
   );
 
   /**
@@ -166,14 +166,14 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
 
 type TerminalRewriteInfo =
   | {
-      kind: "StartScope";
+      kind: 'StartScope';
       blockId: BlockId;
       fallthroughId: BlockId;
       instrId: InstructionId;
       scope: ReactiveScope;
     }
   | {
-      kind: "EndScope";
+      kind: 'EndScope';
       instrId: InstructionId;
       fallthroughId: BlockId;
     };
@@ -190,12 +190,12 @@ type ScopeTraversalContext = {
 
 function pushStartScopeTerminal(
   scope: ReactiveScope,
-  context: ScopeTraversalContext
+  context: ScopeTraversalContext,
 ): void {
   const blockId = context.env.nextBlockId;
   const fallthroughId = context.env.nextBlockId;
   context.rewrites.push({
-    kind: "StartScope",
+    kind: 'StartScope',
     blockId,
     fallthroughId,
     instrId: scope.range.start,
@@ -206,15 +206,15 @@ function pushStartScopeTerminal(
 
 function pushEndScopeTerminal(
   scope: ReactiveScope,
-  context: ScopeTraversalContext
+  context: ScopeTraversalContext,
 ): void {
   const fallthroughId = context.fallthroughs.get(scope.id);
   CompilerError.invariant(fallthroughId != null, {
-    reason: "Expected scope to exist",
+    reason: 'Expected scope to exist',
     loc: GeneratedSource,
   });
   context.rewrites.push({
-    kind: "EndScope",
+    kind: 'EndScope',
     fallthroughId,
     instrId: scope.range.end,
   });
@@ -248,13 +248,13 @@ type RewriteContext = {
 function handleRewrite(
   terminalInfo: TerminalRewriteInfo,
   idx: number,
-  context: RewriteContext
+  context: RewriteContext,
 ): void {
   // TODO make consistent instruction IDs instead of reusing
   const terminal: ReactiveScopeTerminal | GotoTerminal =
-    terminalInfo.kind === "StartScope"
+    terminalInfo.kind === 'StartScope'
       ? {
-          kind: "scope",
+          kind: 'scope',
           fallthrough: terminalInfo.fallthroughId,
           block: terminalInfo.blockId,
           scope: terminalInfo.scope,
@@ -262,7 +262,7 @@ function handleRewrite(
           loc: GeneratedSource,
         }
       : {
-          kind: "goto",
+          kind: 'goto',
           variant: GotoVariant.Break,
           block: terminalInfo.fallthroughId,
           id: terminalInfo.instrId,
@@ -281,7 +281,7 @@ function handleRewrite(
   });
   context.nextPreds = new Set([currBlockId]);
   context.nextBlockId =
-    terminalInfo.kind === "StartScope"
+    terminalInfo.kind === 'StartScope'
       ? terminalInfo.blockId
       : terminalInfo.fallthroughId;
   context.instrSliceIdx = idx;

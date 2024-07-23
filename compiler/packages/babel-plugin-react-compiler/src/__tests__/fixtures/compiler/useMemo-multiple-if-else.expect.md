@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
 function Component(props) {
   const x = useMemo(() => {
@@ -21,7 +21,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 1, b: 2, cond2: false }],
+  params: [{a: 1, b: 2, cond2: false}],
 };
 
 ```

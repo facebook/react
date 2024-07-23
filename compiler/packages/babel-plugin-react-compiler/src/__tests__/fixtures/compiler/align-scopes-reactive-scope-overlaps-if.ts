@@ -1,4 +1,4 @@
-function useFoo({ cond }) {
+function useFoo({cond}) {
   let items: any = {};
   b0: {
     if (cond) {
@@ -15,12 +15,12 @@ function useFoo({ cond }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ cond: true }],
+  params: [{cond: true}],
   sequentialRenders: [
-    { cond: true },
-    { cond: true },
-    { cond: false },
-    { cond: false },
-    { cond: true },
+    {cond: true},
+    {cond: true},
+    {cond: false},
+    {cond: false},
+    {cond: true},
   ],
 };

@@ -1,10 +1,10 @@
-import { mutate } from "shared-runtime";
+import {mutate} from 'shared-runtime';
 
 function component(foo, bar) {
-  let x = { foo };
-  let y = { bar };
+  let x = {foo};
+  let y = {bar};
   (function () {
-    let a = { y };
+    let a = {y};
     let b = x;
     a.x = b;
   })();
@@ -14,5 +14,5 @@ function component(foo, bar) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["foo", "bar"],
+  params: ['foo', 'bar'],
 };

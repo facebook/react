@@ -165,17 +165,13 @@ export function getOwnerStackByFiberInDev(workInProgress: Fiber): string {
             info += '\n' + debugStack;
           }
         }
-      } else if (typeof owner.stack === 'string') {
+      } else if (owner.debugStack != null) {
         // Server Component
-        // The Server Component stack can come from a different VM that formats it different.
-        // Likely V8. Since Chrome based browsers support createTask which is going to use
-        // another code path anyway. I.e. this is likely NOT a V8 based browser.
-        // This will cause some of the stack to have different formatting.
-        // TODO: Normalize server component stacks to the client formatting.
-        const ownerStack: string = owner.stack;
+        const ownerStack: Error = owner.debugStack;
         owner = owner.owner;
-        if (owner && ownerStack !== '') {
-          info += '\n' + ownerStack;
+        if (owner && ownerStack) {
+          // TODO: Should we stash this somewhere for caching purposes?
+          info += '\n' + formatOwnerStack(ownerStack);
         }
       } else {
         break;

@@ -6,7 +6,7 @@
 // that Forget should memoize it.
 // Correctness:
 
-import { identity, mutate, setProperty } from "shared-runtime";
+import {identity, mutate, setProperty} from 'shared-runtime';
 
 //   - y depends on either bar(props.b) or bar(props.b) + 1
 function AllocatingPrimitiveAsDepNested(props) {
@@ -19,16 +19,16 @@ function AllocatingPrimitiveAsDepNested(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: AllocatingPrimitiveAsDepNested,
-  params: [{ a: 1, b: 2 }],
+  params: [{a: 1, b: 2}],
   sequentialRenders: [
     // change b
-    { a: 1, b: 3 },
+    {a: 1, b: 3},
     // change b
-    { a: 1, b: 4 },
+    {a: 1, b: 4},
     // change a
-    { a: 2, b: 4 },
+    {a: 2, b: 4},
     // change a
-    { a: 3, b: 4 },
+    {a: 3, b: 4},
   ],
 };
 

@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError, ErrorSeverity } from "../CompilerError";
-import { HIRFunction, IdentifierId, Place, isSetStateType } from "../HIR";
-import { computeUnconditionalBlocks } from "../HIR/ComputeUnconditionalBlocks";
-import { eachInstructionValueOperand } from "../HIR/visitors";
-import { Err, Ok, Result } from "../Utils/Result";
+import {CompilerError, ErrorSeverity} from '../CompilerError';
+import {HIRFunction, IdentifierId, Place, isSetStateType} from '../HIR';
+import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
+import {eachInstructionValueOperand} from '../HIR/visitors';
+import {Err, Ok, Result} from '../Utils/Result';
 
 /**
  * Validates that the given function does not have an infinite update loop
@@ -46,7 +46,7 @@ export function validateNoSetStateInRender(fn: HIRFunction): void {
 
 function validateNoSetStateInRenderImpl(
   fn: HIRFunction,
-  unconditionalSetStateFunctions: Set<IdentifierId>
+  unconditionalSetStateFunctions: Set<IdentifierId>,
 ): Result<void, CompilerError> {
   const unconditionalBlocks = computeUnconditionalBlocks(fn);
 
@@ -55,42 +55,42 @@ function validateNoSetStateInRenderImpl(
     if (unconditionalBlocks.has(block.id)) {
       for (const instr of block.instructions) {
         switch (instr.value.kind) {
-          case "LoadLocal": {
+          case 'LoadLocal': {
             if (
               unconditionalSetStateFunctions.has(
-                instr.value.place.identifier.id
+                instr.value.place.identifier.id,
               )
             ) {
               unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
             }
             break;
           }
-          case "StoreLocal": {
+          case 'StoreLocal': {
             if (
               unconditionalSetStateFunctions.has(
-                instr.value.value.identifier.id
+                instr.value.value.identifier.id,
               )
             ) {
               unconditionalSetStateFunctions.add(
-                instr.value.lvalue.place.identifier.id
+                instr.value.lvalue.place.identifier.id,
               );
               unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
             }
             break;
           }
-          case "ObjectMethod":
-          case "FunctionExpression": {
+          case 'ObjectMethod':
+          case 'FunctionExpression': {
             if (
               // faster-path to check if the function expression references a setState
               [...eachInstructionValueOperand(instr.value)].some(
-                (operand) =>
+                operand =>
                   isSetStateType(operand.identifier) ||
-                  unconditionalSetStateFunctions.has(operand.identifier.id)
+                  unconditionalSetStateFunctions.has(operand.identifier.id),
               ) &&
               // if yes, does it unconditonally call it?
               validateNoSetStateInRenderImpl(
                 instr.value.loweredFunc.func,
-                unconditionalSetStateFunctions
+                unconditionalSetStateFunctions,
               ).isErr()
             ) {
               // This function expression unconditionally calls a setState
@@ -98,11 +98,11 @@ function validateNoSetStateInRenderImpl(
             }
             break;
           }
-          case "CallExpression": {
+          case 'CallExpression': {
             validateNonSetState(
               errors,
               unconditionalSetStateFunctions,
-              instr.value.callee
+              instr.value.callee,
             );
             break;
           }
@@ -121,7 +121,7 @@ function validateNoSetStateInRenderImpl(
 function validateNonSetState(
   errors: CompilerError,
   unconditionalSetStateFunctions: Set<IdentifierId>,
-  operand: Place
+  operand: Place,
 ): void {
   if (
     isSetStateType(operand.identifier) ||
@@ -129,10 +129,10 @@ function validateNonSetState(
   ) {
     errors.push({
       reason:
-        "This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)",
+        'This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)',
       description: null,
       severity: ErrorSeverity.InvalidReact,
-      loc: typeof operand.loc !== "symbol" ? operand.loc : null,
+      loc: typeof operand.loc !== 'symbol' ? operand.loc : null,
       suggestions: null,
     });
   }

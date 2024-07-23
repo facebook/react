@@ -1,7 +1,7 @@
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo } from "react";
-import { makeArray } from "shared-runtime";
+import {useMemo} from 'react';
+import {makeArray} from 'shared-runtime';
 
 // We currently only recognize "hoistable" values (e.g. variable reads
 // and property loads from named variables) in the source depslist.
@@ -15,5 +15,5 @@ function Foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ val: 1 }],
+  params: [{val: 1}],
 };

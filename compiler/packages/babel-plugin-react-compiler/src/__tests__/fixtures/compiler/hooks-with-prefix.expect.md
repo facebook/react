@@ -4,8 +4,8 @@
 ```javascript
 // @hookPattern:".*\b(use[^$]+)$"
 
-import * as React from "react";
-import { makeArray, useHook } from "shared-runtime";
+import * as React from 'react';
+import {makeArray, useHook} from 'shared-runtime';
 
 const React$useState = React.useState;
 const React$useMemo = React.useMemo;
@@ -20,7 +20,7 @@ function Component() {
   }, [state]);
   return (
     <div>
-      {doubledArray.join("")}
+      {doubledArray.join('')}
       {json}
     </div>
   );

@@ -1,4 +1,4 @@
-import { makeObject_Primitives } from "shared-runtime";
+import {makeObject_Primitives} from 'shared-runtime';
 
 function Component(props) {
   let lastItem = {};
