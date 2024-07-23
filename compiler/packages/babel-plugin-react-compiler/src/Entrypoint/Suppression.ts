@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath } from "@babel/core";
-import * as t from "@babel/types";
+import {NodePath} from '@babel/core';
+import * as t from '@babel/types';
 import {
   CompilerError,
   CompilerErrorDetail,
   CompilerSuggestionOperation,
   ErrorSeverity,
-} from "../CompilerError";
-import { assertExhaustive } from "../Utils/utils";
+} from '../CompilerError';
+import {assertExhaustive} from '../Utils/utils';
 
 /**
  * Captures the start and end range of a pair of eslint-disable ... eslint-enable comments. In the
@@ -29,7 +29,7 @@ export type SuppressionRange = {
   source: SuppressionSource;
 };
 
-type SuppressionSource = "Eslint" | "Flow";
+type SuppressionSource = 'Eslint' | 'Flow';
 
 /**
  * An suppression affects a function if:
@@ -38,7 +38,7 @@ type SuppressionSource = "Eslint" | "Flow";
  */
 export function filterSuppressionsThatAffectFunction(
   suppressionRanges: Array<SuppressionRange>,
-  fn: NodePath<t.Function>
+  fn: NodePath<t.Function>,
 ): Array<SuppressionRange> {
   const suppressionsInScope: Array<SuppressionRange> = [];
   const fnNode = fn.node;
@@ -78,21 +78,21 @@ export function filterSuppressionsThatAffectFunction(
 export function findProgramSuppressions(
   programComments: Array<t.Comment>,
   ruleNames: Array<string>,
-  flowSuppressions: boolean
+  flowSuppressions: boolean,
 ): Array<SuppressionRange> {
   const suppressionRanges: Array<SuppressionRange> = [];
   let disableComment: t.Comment | null = null;
   let enableComment: t.Comment | null = null;
   let source: SuppressionSource | null = null;
 
-  const rulePattern = `(${ruleNames.join("|")})`;
+  const rulePattern = `(${ruleNames.join('|')})`;
   const disableNextLinePattern = new RegExp(
-    `eslint-disable-next-line ${rulePattern}`
+    `eslint-disable-next-line ${rulePattern}`,
   );
   const disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
   const enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
   const flowSuppressionPattern = new RegExp(
-    "\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule"
+    '\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule',
   );
 
   for (const comment of programComments) {
@@ -110,7 +110,7 @@ export function findProgramSuppressions(
     ) {
       disableComment = comment;
       enableComment = comment;
-      source = "Eslint";
+      source = 'Eslint';
     }
 
     if (
@@ -120,15 +120,15 @@ export function findProgramSuppressions(
     ) {
       disableComment = comment;
       enableComment = comment;
-      source = "Flow";
+      source = 'Flow';
     }
 
     if (disablePattern.test(comment.value)) {
       disableComment = comment;
-      source = "Eslint";
+      source = 'Eslint';
     }
 
-    if (enablePattern.test(comment.value) && source === "Eslint") {
+    if (enablePattern.test(comment.value) && source === 'Eslint') {
       enableComment = comment;
     }
 
@@ -147,7 +147,7 @@ export function findProgramSuppressions(
 }
 
 export function suppressionsToCompilerError(
-  suppressionRanges: Array<SuppressionRange>
+  suppressionRanges: Array<SuppressionRange>,
 ): CompilerError | null {
   if (suppressionRanges.length === 0) {
     return null;
@@ -162,21 +162,21 @@ export function suppressionsToCompilerError(
     }
     let reason, suggestion;
     switch (suppressionRange.source) {
-      case "Eslint":
+      case 'Eslint':
         reason =
-          "React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled";
+          'React Compiler has skipped optimizing this component because one or more React ESLint rules were disabled';
         suggestion =
-          "Remove the ESLint suppression and address the React error";
+          'Remove the ESLint suppression and address the React error';
         break;
-      case "Flow":
+      case 'Flow':
         reason =
-          "React Compiler has skipped optimizing this component because one or more React rule violations were reported by Flow";
-        suggestion = "Remove the Flow suppression and address the React error";
+          'React Compiler has skipped optimizing this component because one or more React rule violations were reported by Flow';
+        suggestion = 'Remove the Flow suppression and address the React error';
         break;
       default:
         assertExhaustive(
           suppressionRange.source,
-          "Unhandled suppression source"
+          'Unhandled suppression source',
         );
     }
     error.pushErrorDetail(
@@ -195,7 +195,7 @@ export function suppressionsToCompilerError(
             op: CompilerSuggestionOperation.Remove,
           },
         ],
-      })
+      }),
     );
   }
   return error;

@@ -1,7 +1,7 @@
 function makeObj() {
-  "use no forget";
+  'use no forget';
   const result = [];
-  result.a = { b: 2 };
+  result.a = {b: 2};
 
   return result;
 }

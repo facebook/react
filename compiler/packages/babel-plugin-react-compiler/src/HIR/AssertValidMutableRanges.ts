@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
-import { HIRFunction, Identifier, MutableRange } from "./HIR";
+import invariant from 'invariant';
+import {HIRFunction, Identifier, MutableRange} from './HIR';
 import {
   eachInstructionLValue,
   eachInstructionOperand,
   eachTerminalOperand,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Checks that all mutable ranges in the function are well-formed, with
@@ -49,8 +49,8 @@ function validateMutableRange(mutableRange: MutableRange): void {
   invariant(
     (mutableRange.start === 0 && mutableRange.end === 0) ||
       mutableRange.end > mutableRange.start,
-    "Identifier scope mutableRange was invalid: [%s:%s]",
+    'Identifier scope mutableRange was invalid: [%s:%s]',
     mutableRange.start,
-    mutableRange.end
+    mutableRange.end,
   );
 }

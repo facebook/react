@@ -3,9 +3,9 @@
 
 ```javascript
 function Component(props) {
-  const fbt = require("fbt");
+  const fbt = require('fbt');
 
-  return <fbt desc="Description">{"Text"}</fbt>;
+  return <fbt desc="Description">{'Text'}</fbt>;
 }
 
 ```
@@ -14,9 +14,9 @@ function Component(props) {
 ## Error
 
 ```
-  2 |   const fbt = require("fbt");
+  2 |   const fbt = require('fbt');
   3 |
-> 4 |   return <fbt desc="Description">{"Text"}</fbt>;
+> 4 |   return <fbt desc="Description">{'Text'}</fbt>;
     |           ^^^ Todo: Support <fbt> tags where 'fbt' is a local variable instead of a global (4:4)
   5 | }
   6 |

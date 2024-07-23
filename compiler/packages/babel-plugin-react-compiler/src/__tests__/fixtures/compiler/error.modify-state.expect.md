@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useState } from "react";
+import {useState} from 'react';
 
 function Foo() {
   let [state, setState] = useState({});

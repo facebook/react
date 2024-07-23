@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-"use strict";
+'use strict';
 
-const fs = require("fs");
-const glob = require("glob");
+const fs = require('fs');
+const glob = require('glob');
 
 const META_COPYRIGHT_COMMENT_BLOCK =
   `/**
@@ -16,20 +16,20 @@ const META_COPYRIGHT_COMMENT_BLOCK =
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- */`.trim() + "\n\n";
+ */`.trim() + '\n\n';
 
-const files = glob.sync("**/*.{js,ts,tsx,jsx,rs}", {
+const files = glob.sync('**/*.{js,ts,tsx,jsx,rs}', {
   ignore: [
-    "**/dist/**",
-    "**/node_modules/**",
-    "**/tests/fixtures/**",
-    "**/__tests__/fixtures/**",
+    '**/dist/**',
+    '**/node_modules/**',
+    '**/tests/fixtures/**',
+    '**/__tests__/fixtures/**',
   ],
 });
 
 const updatedFiles = new Map();
 let hasErrors = false;
-files.forEach((file) => {
+files.forEach(file => {
   try {
     const result = processFile(file);
     if (result != null) {
@@ -41,17 +41,17 @@ files.forEach((file) => {
   }
 });
 if (hasErrors) {
-  console.error("Update failed");
+  console.error('Update failed');
   process.exit(1);
 } else {
   for (const [file, source] of updatedFiles) {
-    fs.writeFileSync(file, source, "utf8");
+    fs.writeFileSync(file, source, 'utf8');
   }
-  console.log("Update complete");
+  console.log('Update complete');
 }
 
 function processFile(file) {
-  let source = fs.readFileSync(file, "utf8");
+  let source = fs.readFileSync(file, 'utf8');
 
   if (source.indexOf(META_COPYRIGHT_COMMENT_BLOCK) === 0) {
     return null;

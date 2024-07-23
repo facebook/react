@@ -1,4 +1,4 @@
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
 function Component(props) {
   let x = null;

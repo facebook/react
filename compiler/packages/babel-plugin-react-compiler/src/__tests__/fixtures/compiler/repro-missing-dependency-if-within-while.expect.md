@@ -4,7 +4,7 @@
 ```javascript
 const someGlobal = true;
 export default function Component(props) {
-  const { b } = props;
+  const {b} = props;
   const items = [];
   let i = 0;
   while (i < 10) {
@@ -18,16 +18,16 @@ export default function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ b: 42 }],
+  params: [{b: 42}],
   sequentialRenders: [
-    { b: 0 },
-    { b: 0 },
-    { b: 42 },
-    { b: 42 },
-    { b: 0 },
-    { b: 42 },
-    { b: 0 },
-    { b: 42 },
+    {b: 0},
+    {b: 0},
+    {b: 42},
+    {b: 42},
+    {b: 0},
+    {b: 42},
+    {b: 0},
+    {b: 42},
   ],
 };
 

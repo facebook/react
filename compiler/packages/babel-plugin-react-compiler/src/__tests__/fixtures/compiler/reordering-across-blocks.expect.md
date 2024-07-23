@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
-function Component({ config }) {
+function Component({config}) {
   /**
    * The original memoization is optimal in the sense that it has
    * one output (the object) and one dependency (`config`). Both
@@ -30,11 +30,11 @@ function Component({ config }) {
    * `config`, so they can be merged.
    */
   const object = useMemo(() => {
-    const a = (event) => {
+    const a = event => {
       config?.onA?.(event);
     };
 
-    const b = (event) => {
+    const b = event => {
       config?.onB?.(event);
     };
 

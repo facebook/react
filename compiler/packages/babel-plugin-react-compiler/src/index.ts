@@ -5,14 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export { runBabelPluginReactCompiler } from "./Babel/RunReactCompilerBabelPlugin";
+export {runBabelPluginReactCompiler} from './Babel/RunReactCompilerBabelPlugin';
 export {
   CompilerError,
   CompilerErrorDetail,
   CompilerSuggestionOperation,
   ErrorSeverity,
   type CompilerErrorDetailOptions,
-} from "./CompilerError";
+} from './CompilerError';
 export {
   compileFn as compile,
   compileProgram,
@@ -20,7 +20,7 @@ export {
   run,
   type CompilerPipelineValue,
   type PluginOptions,
-} from "./Entrypoint";
+} from './Entrypoint';
 export {
   Effect,
   ValueKind,
@@ -31,11 +31,11 @@ export {
   type ExternalFunction,
   type Hook,
   type SourceLocation,
-} from "./HIR";
-export { printReactiveFunction } from "./ReactiveScopes";
+} from './HIR';
+export {printReactiveFunction} from './ReactiveScopes';
 declare global {
   let __DEV__: boolean | null | undefined;
 }
 
-import BabelPluginReactCompiler from "./Babel/BabelPlugin";
+import BabelPluginReactCompiler from './Babel/BabelPlugin';
 export default BabelPluginReactCompiler;

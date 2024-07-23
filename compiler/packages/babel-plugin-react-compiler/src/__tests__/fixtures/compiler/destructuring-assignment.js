@@ -4,7 +4,7 @@ function foo(a, b, c) {
     d,
     [
       {
-        e: { f: g },
+        e: {f: g},
       },
     ],
   ] = a;
@@ -14,11 +14,11 @@ function foo(a, b, c) {
     },
     o,
   } = b);
-  return { d, g, n, o };
+  return {d, g, n, o};
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };

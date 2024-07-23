@@ -3,8 +3,8 @@
 
 ```javascript
 function Foo({}) {
-  const outer = (val) => {
-    const fact = (x) => {
+  const outer = val => {
+    const fact = x => {
       if (x <= 0) {
         return 1;
       }

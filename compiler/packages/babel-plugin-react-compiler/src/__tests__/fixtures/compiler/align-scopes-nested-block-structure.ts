@@ -1,4 +1,4 @@
-import { mutate } from "shared-runtime";
+import {mutate} from 'shared-runtime';
 /**
  * Fixture showing that it's not sufficient to only align direct scoped
  * accesses of a block-fallthrough pair.
@@ -38,7 +38,7 @@ import { mutate } from "shared-runtime";
  *  │return s;  │◄──┘
  *  └───────────┘
  */
-function useFoo({ cond1, cond2 }) {
+function useFoo({cond1, cond2}) {
   let s = null;
   if (cond1) {
     s = {};
@@ -55,12 +55,12 @@ function useFoo({ cond1, cond2 }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ cond1: true, cond2: false }],
+  params: [{cond1: true, cond2: false}],
   sequentialRenders: [
-    { cond1: true, cond2: false },
-    { cond1: true, cond2: false },
-    { cond1: true, cond2: true },
-    { cond1: true, cond2: true },
-    { cond1: false, cond2: true },
+    {cond1: true, cond2: false},
+    {cond1: true, cond2: false},
+    {cond1: true, cond2: true},
+    {cond1: true, cond2: true},
+    {cond1: false, cond2: true},
   ],
 };

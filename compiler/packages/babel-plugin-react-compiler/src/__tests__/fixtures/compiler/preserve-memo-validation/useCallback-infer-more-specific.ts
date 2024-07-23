@@ -1,6 +1,6 @@
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useCallback } from "react";
+import {useCallback} from 'react';
 
 // More specific memoization always results in fewer memo block
 // executions.
@@ -13,5 +13,5 @@ function useHook(x) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useHook,
-  params: [{ y: { z: 2 } }],
+  params: [{y: {z: 2}}],
 };

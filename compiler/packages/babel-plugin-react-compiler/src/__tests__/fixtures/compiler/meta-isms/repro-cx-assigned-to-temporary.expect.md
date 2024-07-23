@@ -3,17 +3,17 @@
 
 ```javascript
 // @compilationMode(infer) @enableAssumeHooksFollowRulesOfReact:false @customMacros(cx)
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-const DARK = "dark";
+const DARK = 'dark';
 
 function Component() {
   const theme = useTheme();
   return (
     <div
       className={cx({
-        "styles/light": true,
-        "styles/dark": theme.getTheme() === DARK,
+        'styles/light': true,
+        'styles/dark': theme.getTheme() === DARK,
       })}
     />
   );
@@ -26,7 +26,7 @@ function cx(obj) {
       classes.push(key);
     }
   }
-  return classes.join(" ");
+  return classes.join(' ');
 }
 
 function useTheme() {

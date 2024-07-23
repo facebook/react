@@ -3,8 +3,8 @@
 
 ```javascript
 function Component() {
-  "use foo";
-  "use bar";
+  'use foo';
+  'use bar';
   return <div>"foo"</div>;
 }
 
