@@ -72,8 +72,8 @@ describe('ReactDOMServerSuspense', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   it('should render the children when no promise is thrown', async () => {

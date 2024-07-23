@@ -195,7 +195,6 @@ export const enableInfiniteRenderLoopDetection = true;
 // during element creation.
 export const enableRefAsProp = true;
 export const disableStringRefs = true;
-export const enableFastJSX = true;
 
 // Warn on any usage of ReactTestRenderer
 export const enableReactTestRendererWarning = true;

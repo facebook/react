@@ -296,11 +296,15 @@ function createFiberImplObject(
   }
 
   if (__DEV__) {
+    // This isn't directly used but is handy for debugging internals:
     fiber._debugInfo = null;
     fiber._debugOwner = null;
+    if (enableOwnerStacks) {
+      fiber._debugStack = null;
+      fiber._debugTask = null;
+    }
     fiber._debugNeedsRemount = false;
     fiber._debugHookTypes = null;
-
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(fiber);
     }
@@ -584,8 +588,8 @@ export function createFiberFromTypeAndProps(
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
-        ? HostSingleton
-        : HostComponent;
+          ? HostSingleton
+          : HostComponent;
     } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)

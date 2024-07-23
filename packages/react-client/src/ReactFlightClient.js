@@ -12,6 +12,7 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   ReactAsyncInfo,
+  ReactStackTrace,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -624,7 +625,7 @@ function createElement(
   key: mixed,
   props: mixed,
   owner: null | ReactComponentInfo, // DEV-only
-  stack: null | string, // DEV-only
+  stack: null | ReactStackTrace, // DEV-only
   validated: number, // DEV-only
 ):
   | React$Element<any>
@@ -689,11 +690,21 @@ function createElement(
       value: null,
     });
     if (enableOwnerStacks) {
+      let normalizedStackTrace: null | Error = null;
+      if (stack !== null) {
+        // We create a fake stack and then create an Error object inside of it.
+        // This means that the stack trace is now normalized into the native format
+        // of the browser and the stack frames will have been registered with
+        // source mapping information.
+        // This can unfortunately happen within a user space callstack which will
+        // remain on the stack.
+        normalizedStackTrace = createFakeJSXCallStackInDEV(response, stack);
+      }
       Object.defineProperty(element, '_debugStack', {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: stack,
+        value: normalizedStackTrace,
       });
 
       let task: null | ConsoleTask = null;
@@ -724,6 +735,12 @@ function createElement(
         writable: true,
         value: task,
       });
+
+      // This owner should ideally have already been initialized to avoid getting
+      // user stack frames on the stack.
+      if (owner !== null) {
+        initializeFakeStack(response, owner);
+      }
     }
   }
 
@@ -752,9 +769,9 @@ function createElement(
         };
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.stack = element._debugStack;
+          erroredComponent.debugStack = element._debugStack;
           // $FlowFixMe[cannot-write]
-          erroredComponent.task = element._debugTask;
+          erroredComponent.debugTask = element._debugTask;
         }
         erroredChunk._debugInfo = [erroredComponent];
       }
@@ -915,9 +932,9 @@ function waitForReference<T>(
         };
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.stack = element._debugStack;
+          erroredComponent.debugStack = element._debugStack;
           // $FlowFixMe[cannot-write]
-          erroredComponent.task = element._debugTask;
+          erroredComponent.debugTask = element._debugTask;
         }
         const chunkDebugInfo: ReactDebugInfo =
           chunk._debugInfo || (chunk._debugInfo = []);
@@ -1722,6 +1739,27 @@ function stopStream(
   controller.close(row === '' ? '"$undefined"' : row);
 }
 
+function formatV8Stack(
+  errorName: string,
+  errorMessage: string,
+  stack: null | ReactStackTrace,
+): string {
+  let v8StyleStack = errorName + ': ' + errorMessage;
+  if (stack) {
+    for (let i = 0; i < stack.length; i++) {
+      const frame = stack[i];
+      const [name, filename, line, col] = frame;
+      if (!name) {
+        v8StyleStack += '\n    at ' + filename + ':' + line + ':' + col;
+      } else {
+        v8StyleStack +=
+          '\n    at ' + name + ' (' + filename + ':' + line + ':' + col + ')';
+      }
+    }
+  }
+  return v8StyleStack;
+}
+
 type ErrorWithDigest = Error & {digest?: string};
 function resolveErrorProd(
   response: Response,
@@ -1757,7 +1795,7 @@ function resolveErrorDev(
   id: number,
   digest: string,
   message: string,
-  stack: string,
+  stack: ReactStackTrace,
   env: string,
 ): void {
   if (!__DEV__) {
@@ -1777,7 +1815,8 @@ function resolveErrorDev(
       message ||
         'An error occurred in the Server Components render but no message was provided',
     );
-    error.stack = stack;
+    // For backwards compat we use the V8 formatting when the flag is off.
+    error.stack = formatV8Stack(error.name, error.message, stack);
   } else {
     const callStack = buildFakeCallStack(
       response,
@@ -1837,7 +1876,7 @@ function resolvePostponeDev(
   response: Response,
   id: number,
   reason: string,
-  stack: string,
+  stack: ReactStackTrace,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1846,11 +1885,34 @@ function resolvePostponeDev(
       'resolvePostponeDev should never be called in production mode. Use resolvePostponeProd instead. This is a bug in React.',
     );
   }
-  // eslint-disable-next-line react-internal/prod-error-codes
-  const error = new Error(reason || '');
-  const postponeInstance: Postpone = (error: any);
-  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
-  postponeInstance.stack = stack;
+  let postponeInstance: Postpone;
+  if (!enableOwnerStacks) {
+    // Executing Error within a native stack isn't really limited to owner stacks
+    // but we gate it behind the same flag for now while iterating.
+    // eslint-disable-next-line react-internal/prod-error-codes
+    postponeInstance = (Error(reason || ''): any);
+    postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
+    // For backwards compat we use the V8 formatting when the flag is off.
+    postponeInstance.stack = formatV8Stack(
+      postponeInstance.name,
+      postponeInstance.message,
+      stack,
+    );
+  } else {
+    const callStack = buildFakeCallStack(
+      response,
+      stack,
+      // $FlowFixMe[incompatible-use]
+      Error.bind(null, reason || ''),
+    );
+    const rootTask = response._debugRootTask;
+    if (rootTask != null) {
+      postponeInstance = rootTask.run(callStack);
+    } else {
+      postponeInstance = callStack();
+    }
+    postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
+  }
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
@@ -1957,40 +2019,25 @@ function createFakeFunction<T>(
   return fn;
 }
 
-// This matches either of these V8 formats.
-//     at name (filename:0:0)
-//     at filename:0:0
-//     at async filename:0:0
-const frameRegExp =
-  /^ {3} at (?:(.+) \(([^\)]+):(\d+):(\d+)\)|(?:async )?([^\)]+):(\d+):(\d+))$/;
-
 function buildFakeCallStack<T>(
   response: Response,
-  stack: string,
+  stack: ReactStackTrace,
   innerCall: () => T,
 ): () => T {
-  const frames = stack.split('\n');
   let callStack = innerCall;
-  for (let i = 0; i < frames.length; i++) {
-    const frame = frames[i];
-    let fn = fakeFunctionCache.get(frame);
+  for (let i = 0; i < stack.length; i++) {
+    const frame = stack[i];
+    const frameKey = frame.join('-');
+    let fn = fakeFunctionCache.get(frameKey);
     if (fn === undefined) {
-      const parsed = frameRegExp.exec(frame);
-      if (!parsed) {
-        // We assume the server returns a V8 compatible stack trace.
-        continue;
-      }
-      const name = parsed[1] || '';
-      const filename = parsed[2] || parsed[5] || '';
-      const line = +(parsed[3] || parsed[6]);
-      const col = +(parsed[4] || parsed[7]);
+      const [name, filename, line, col] = frame;
       const sourceMap = response._debugFindSourceMapURL
         ? response._debugFindSourceMapURL(filename)
         : null;
       fn = createFakeFunction(name, filename, sourceMap, line, col);
       // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
       // function is an input and can vary by response.
-      fakeFunctionCache.set(frame, fn);
+      fakeFunctionCache.set(frameKey, fn);
     }
     callStack = fn.bind(null, callStack);
   }
@@ -2001,15 +2048,22 @@ function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): null | ConsoleTask {
-  if (!supportsCreateTask || typeof debugInfo.stack !== 'string') {
+  if (!supportsCreateTask) {
     return null;
   }
   const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
-  const stack: string = debugInfo.stack;
-  const cachedEntry = componentInfo.task;
+  const cachedEntry = componentInfo.debugTask;
   if (cachedEntry !== undefined) {
     return cachedEntry;
   }
+
+  if (debugInfo.stack == null) {
+    // If this is an error, we should've really already initialized the task.
+    // If it's null, we can't initialize a task.
+    return null;
+  }
+
+  const stack = debugInfo.stack;
 
   const ownerTask =
     componentInfo.owner == null
@@ -2034,8 +2088,61 @@ function initializeFakeTask(
     componentTask = ownerTask.run(callStack);
   }
   // $FlowFixMe[cannot-write]: We consider this part of initialization.
-  componentInfo.task = componentTask;
+  componentInfo.debugTask = componentTask;
   return componentTask;
+}
+
+const createFakeJSXCallStack = {
+  'react-stack-bottom-frame': function (
+    response: Response,
+    stack: ReactStackTrace,
+  ): Error {
+    const callStackForError = buildFakeCallStack(
+      response,
+      stack,
+      fakeJSXCallSite,
+    );
+    return callStackForError();
+  },
+};
+
+const createFakeJSXCallStackInDEV: (
+  response: Response,
+  stack: ReactStackTrace,
+) => Error = __DEV__
+  ? // We use this technique to trick minifiers to preserve the function name.
+    (createFakeJSXCallStack['react-stack-bottom-frame'].bind(
+      createFakeJSXCallStack,
+    ): any)
+  : (null: any);
+
+/** @noinline */
+function fakeJSXCallSite() {
+  // This extra call frame represents the JSX creation function. We always pop this frame
+  // off before presenting so it needs to be part of the stack.
+  return new Error('react-stack-top-frame');
+}
+
+function initializeFakeStack(
+  response: Response,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): void {
+  const cachedEntry = debugInfo.debugStack;
+  if (cachedEntry !== undefined) {
+    return;
+  }
+  if (debugInfo.stack != null) {
+    // $FlowFixMe[cannot-write]
+    // $FlowFixMe[prop-missing]
+    debugInfo.debugStack = createFakeJSXCallStackInDEV(
+      response,
+      debugInfo.stack,
+    );
+  }
+  if (debugInfo.owner != null) {
+    // Initialize any owners not yet initialized.
+    initializeFakeStack(response, debugInfo.owner);
+  }
 }
 
 function resolveDebugInfo(
@@ -2054,6 +2161,8 @@ function resolveDebugInfo(
   // render phase so we're not inside a user space stack at this point. If we waited
   // to initialize it when we need it, we might be inside user code.
   initializeFakeTask(response, debugInfo);
+  initializeFakeStack(response, debugInfo);
+
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
@@ -2076,8 +2185,13 @@ function resolveConsoleEntry(
     return;
   }
 
-  const payload: [string, string, null | ReactComponentInfo, string, mixed] =
-    parseModel(response, value);
+  const payload: [
+    string,
+    ReactStackTrace,
+    null | ReactComponentInfo,
+    string,
+    mixed,
+  ] = parseModel(response, value);
   const methodName = payload[0];
   const stackTrace = payload[1];
   const owner = payload[2];
@@ -2096,6 +2210,7 @@ function resolveConsoleEntry(
   );
   if (owner != null) {
     const task = initializeFakeTask(response, owner);
+    initializeFakeStack(response, owner);
     if (task !== null) {
       task.run(callStack);
       return;

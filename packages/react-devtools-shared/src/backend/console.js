@@ -28,6 +28,8 @@ import {
 import {getInternalReactConstants, getDispatcherRef} from './renderer';
 import {
   getStackByFiberInDevAndProd,
+  getOwnerStackByFiberInDev,
+  supportsOwnerStacks,
   supportsNativeConsoleTasks,
 } from './DevToolsFiberComponentStack';
 import {castBool, castBrowserTheme} from '../utils';
@@ -250,11 +252,17 @@ export function patch({
                   consoleSettingsRef.appendComponentStack &&
                   !supportsNativeConsoleTasks(current)
                 ) {
-                  const componentStack = getStackByFiberInDevAndProd(
-                    workTagMap,
-                    current,
-                    (currentDispatcherRef: any),
-                  );
+                  const componentStack = supportsOwnerStacks(current)
+                    ? getOwnerStackByFiberInDev(
+                        workTagMap,
+                        current,
+                        (currentDispatcherRef: any),
+                      )
+                    : getStackByFiberInDevAndProd(
+                        workTagMap,
+                        current,
+                        (currentDispatcherRef: any),
+                      );
                   if (componentStack !== '') {
                     // Create a fake Error so that when we print it we get native source maps. Every
                     // browser will print the .stack property of the error and then parse it back for source
