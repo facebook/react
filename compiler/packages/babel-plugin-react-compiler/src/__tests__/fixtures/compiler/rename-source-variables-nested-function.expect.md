@@ -3,12 +3,12 @@
 
 ```javascript
 // @enableChangeVariableCodegen
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-const $ = "module_$";
-const t0 = "module_t0";
-const c_0 = "module_c_0";
-function useFoo(props: { value: number }): number {
+const $ = 'module_$';
+const t0 = 'module_t0';
+const c_0 = 'module_c_0';
+function useFoo(props: {value: number}): number {
   const a = () => {
     const b = () => {
       const c = () => {
@@ -26,7 +26,7 @@ function useFoo(props: { value: number }): number {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };
 
 ```

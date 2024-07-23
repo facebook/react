@@ -2,12 +2,12 @@
 ## Input
 
 ```javascript
-import { invoke } from "shared-runtime";
+import {invoke} from 'shared-runtime';
 
 function Component() {
   let x = 2;
   const fn = () => {
-    return { x: "value" };
+    return {x: 'value'};
   };
   invoke(fn);
   x = 3;

@@ -17,6 +17,7 @@ const {
 } = require('../../ReactVersions');
 const yargs = require('yargs');
 const {buildEverything} = require('./build-ghaction');
+const Bundles = require('./bundles');
 
 // Runs the build script for both stable and experimental release channels,
 // by configuring an environment variable.
@@ -78,6 +79,37 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
     requiresArg: false,
     type: 'choices',
     choices: ['circleci', 'github'],
+  },
+  bundle: {
+    describe: 'Build the given bundle type.',
+    requiresArg: false,
+    type: 'choices',
+    choices: [...Object.values(Bundles.bundleTypes)],
+  },
+  names: {
+    describe: 'Build for matched bundle names. Example: "react-test,index.js".',
+    requiresArg: false,
+    type: 'array',
+  },
+  pretty: {
+    describe: 'Force pretty output.',
+    requiresArg: false,
+    type: 'boolean',
+  },
+  'sync-fbsource': {
+    describe: 'Include to sync build to fbsource.',
+    requiresArg: false,
+    type: 'string',
+  },
+  'sync-www': {
+    describe: 'Include to sync build to www.',
+    requiresArg: false,
+    type: 'string',
+  },
+  'unsafe-partial': {
+    describe: 'Do not clean ./build first.',
+    requiresArg: false,
+    type: 'boolean',
   },
 }).argv;
 

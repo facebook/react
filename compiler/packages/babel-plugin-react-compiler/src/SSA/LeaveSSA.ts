@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   BasicBlock,
   BlockId,
@@ -16,8 +16,8 @@ import {
   LValuePattern,
   Phi,
   Place,
-} from "../HIR/HIR";
-import { printIdentifier, printPlace } from "../HIR/PrintHIR";
+} from '../HIR/HIR';
+import {printIdentifier, printPlace} from '../HIR/PrintHIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
@@ -25,7 +25,7 @@ import {
   eachTerminalOperand,
   eachTerminalSuccessor,
   terminalFallthrough,
-} from "../HIR/visitors";
+} from '../HIR/visitors';
 
 /*
  * Removes SSA form by converting all phis into explicit bindings and assignments. There are two main categories
@@ -93,11 +93,11 @@ export function leaveSSA(fn: HIRFunction): void {
   // Maps identifier names to their original declaration.
   const declarations: Map<
     string,
-    { lvalue: LValue | LValuePattern; place: Place }
+    {lvalue: LValue | LValuePattern; place: Place}
   > = new Map();
 
   for (const param of fn.params) {
-    let place: Place = param.kind === "Identifier" ? param : param.place;
+    let place: Place = param.kind === 'Identifier' ? param : param.place;
     if (place.identifier.name !== null) {
       declarations.set(place.identifier.name.value, {
         lvalue: {
@@ -141,8 +141,8 @@ export function leaveSSA(fn: HIRFunction): void {
        * Iterate the instructions and perform any rewrites as well as promoting SSA variables to
        * `let` or `reassign` where possible.
        */
-      const { lvalue, value } = instr;
-      if (value.kind === "DeclareLocal") {
+      const {lvalue, value} = instr;
+      if (value.kind === 'DeclareLocal') {
         const name = value.lvalue.place.identifier.name;
         if (name !== null) {
           CompilerError.invariant(!declarations.has(name.value), {
@@ -157,8 +157,8 @@ export function leaveSSA(fn: HIRFunction): void {
           });
         }
       } else if (
-        value.kind === "PrefixUpdate" ||
-        value.kind === "PostfixUpdate"
+        value.kind === 'PrefixUpdate' ||
+        value.kind === 'PostfixUpdate'
       ) {
         CompilerError.invariant(value.lvalue.identifier.name !== null, {
           reason: `Expected update expression to be applied to a named variable`,
@@ -167,7 +167,7 @@ export function leaveSSA(fn: HIRFunction): void {
           suggestions: null,
         });
         const originalLVal = declarations.get(
-          value.lvalue.identifier.name.value
+          value.lvalue.identifier.name.value,
         );
         CompilerError.invariant(originalLVal !== undefined, {
           reason: `Expected update expression to be applied to a previously defined variable`,
@@ -176,10 +176,10 @@ export function leaveSSA(fn: HIRFunction): void {
           suggestions: null,
         });
         originalLVal.lvalue.kind = InstructionKind.Let;
-      } else if (value.kind === "StoreLocal") {
+      } else if (value.kind === 'StoreLocal') {
         if (value.lvalue.place.identifier.name != null) {
           const originalLVal = declarations.get(
-            value.lvalue.place.identifier.name.value
+            value.lvalue.place.identifier.name.value,
           );
           if (
             originalLVal === undefined ||
@@ -187,14 +187,14 @@ export function leaveSSA(fn: HIRFunction): void {
           ) {
             CompilerError.invariant(
               originalLVal !== undefined ||
-                block.kind === "block" ||
-                block.kind === "catch",
+                block.kind === 'block' ||
+                block.kind === 'catch',
               {
                 reason: `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
                 description: null,
                 loc: value.lvalue.place.loc,
                 suggestions: null,
-              }
+              },
             );
             declarations.set(value.lvalue.place.identifier.name.value, {
               lvalue: value.lvalue,
@@ -212,7 +212,7 @@ export function leaveSSA(fn: HIRFunction): void {
         } else if (rewrites.has(value.lvalue.place.identifier)) {
           value.lvalue.kind = InstructionKind.Const;
         }
-      } else if (value.kind === "Destructure") {
+      } else if (value.kind === 'Destructure') {
         let kind: InstructionKind | null = null;
         for (const place of eachPatternOperand(value.lvalue.pattern)) {
           if (place.identifier.name == null) {
@@ -221,11 +221,11 @@ export function leaveSSA(fn: HIRFunction): void {
               {
                 reason: `Expected consistent kind for destructuring`,
                 description: `other places were \`${kind}\` but '${printPlace(
-                  place
+                  place,
                 )}' is const`,
                 loc: place.loc,
                 suggestions: null,
-              }
+              },
             );
             kind = InstructionKind.Const;
           } else {
@@ -235,13 +235,13 @@ export function leaveSSA(fn: HIRFunction): void {
               originalLVal.lvalue === value.lvalue
             ) {
               CompilerError.invariant(
-                originalLVal !== undefined || block.kind !== "value",
+                originalLVal !== undefined || block.kind !== 'value',
                 {
                   reason: `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
                   description: null,
                   loc: place.loc,
                   suggestions: null,
-                }
+                },
               );
               declarations.set(place.identifier.name.value, {
                 lvalue: value.lvalue,
@@ -252,11 +252,11 @@ export function leaveSSA(fn: HIRFunction): void {
                 {
                   reason: `Expected consistent kind for destructuring`,
                   description: `Other places were \`${kind}\` but '${printPlace(
-                    place
+                    place,
                   )}' is const`,
                   loc: place.loc,
                   suggestions: null,
-                }
+                },
               );
               kind = InstructionKind.Const;
             } else {
@@ -265,11 +265,11 @@ export function leaveSSA(fn: HIRFunction): void {
                 {
                   reason: `Expected consistent kind for destructuring`,
                   description: `Other places were \`${kind}\` but '${printPlace(
-                    place
+                    place,
                   )}' is reassigned`,
                   loc: place.loc,
                   suggestions: null,
-                }
+                },
               );
               kind = InstructionKind.Reassign;
               originalLVal.lvalue.kind = InstructionKind.Let;
@@ -277,7 +277,7 @@ export function leaveSSA(fn: HIRFunction): void {
           }
         }
         CompilerError.invariant(kind !== null, {
-          reason: "Expected at least one operand",
+          reason: 'Expected at least one operand',
           description: null,
           loc: null,
           suggestions: null,
@@ -308,9 +308,9 @@ export function leaveSSA(fn: HIRFunction): void {
     function pushPhis(phiBlock: BasicBlock): void {
       for (const phi of phiBlock.phis) {
         if (phi.id.name === null) {
-          rewritePhis.push({ phi, block: phiBlock });
+          rewritePhis.push({phi, block: phiBlock});
         } else {
-          reassignmentPhis.push({ phi, block: phiBlock });
+          reassignmentPhis.push({phi, block: phiBlock});
         }
       }
     }
@@ -319,7 +319,7 @@ export function leaveSSA(fn: HIRFunction): void {
       const fallthrough = fn.body.blocks.get(fallthroughId)!;
       pushPhis(fallthrough);
     }
-    if (terminal.kind === "while" || terminal.kind === "for") {
+    if (terminal.kind === 'while' || terminal.kind === 'for') {
       const test = fn.body.blocks.get(terminal.test)!;
       pushPhis(test);
 
@@ -327,16 +327,16 @@ export function leaveSSA(fn: HIRFunction): void {
       pushPhis(loop);
     }
     if (
-      terminal.kind === "for" ||
-      terminal.kind === "for-of" ||
-      terminal.kind === "for-in"
+      terminal.kind === 'for' ||
+      terminal.kind === 'for-of' ||
+      terminal.kind === 'for-in'
     ) {
       let init = fn.body.blocks.get(terminal.init)!;
       pushPhis(init);
 
       // The first block after the end of the init
       let initContinuation =
-        terminal.kind === "for" ? terminal.test : terminal.loop;
+        terminal.kind === 'for' ? terminal.test : terminal.loop;
       /*
        * To avoid generating a let binding for the initializer prior to the loop,
        * check to see if the for declares an iterator variable.
@@ -350,13 +350,13 @@ export function leaveSSA(fn: HIRFunction): void {
         const block = fn.body.blocks.get(blockId)!;
         for (const instr of block.instructions) {
           if (
-            instr.value.kind === "StoreLocal" &&
+            instr.value.kind === 'StoreLocal' &&
             instr.value.lvalue.kind !== InstructionKind.Reassign
           ) {
             const value = instr.value;
             if (value.lvalue.place.identifier.name !== null) {
               const originalLVal = declarations.get(
-                value.lvalue.place.identifier.name.value
+                value.lvalue.place.identifier.name.value,
               );
               if (originalLVal === undefined) {
                 declarations.set(value.lvalue.place.identifier.name.value, {
@@ -370,19 +370,19 @@ export function leaveSSA(fn: HIRFunction): void {
         }
 
         switch (block.terminal.kind) {
-          case "maybe-throw": {
+          case 'maybe-throw': {
             queue.push(block.terminal.continuation);
             break;
           }
-          case "goto": {
+          case 'goto': {
             queue.push(block.terminal.block);
             break;
           }
-          case "branch":
-          case "logical":
-          case "optional":
-          case "ternary":
-          case "label": {
+          case 'branch':
+          case 'logical':
+          case 'optional':
+          case 'ternary':
+          case 'label': {
             for (const successor of eachTerminalSuccessor(block.terminal)) {
               queue.push(successor);
             }
@@ -394,13 +394,13 @@ export function leaveSSA(fn: HIRFunction): void {
         }
       }
 
-      if (terminal.kind === "for" && terminal.update !== null) {
+      if (terminal.kind === 'for' && terminal.update !== null) {
         const update = fn.body.blocks.get(terminal.update)!;
         pushPhis(update);
       }
     }
 
-    for (const { phi, block: phiBlock } of reassignmentPhis) {
+    for (const {phi, block: phiBlock} of reassignmentPhis) {
       /*
        * In some cases one of the phi operands can be defined *before* the let binding
        * we will generate. For example, a variable that is only rebound in one branch of
@@ -429,7 +429,7 @@ export function leaveSSA(fn: HIRFunction): void {
        * a new Let binding
        */
       CompilerError.invariant(phi.id.name != null, {
-        reason: "Expected reassignment phis to have a name",
+        reason: 'Expected reassignment phis to have a name',
         description: null,
         loc: null,
         suggestions: null,
@@ -437,7 +437,7 @@ export function leaveSSA(fn: HIRFunction): void {
       const declaration = declarations.get(phi.id.name.value);
       CompilerError.invariant(declaration != null, {
         loc: null,
-        reason: "Expected a declaration for all variables",
+        reason: 'Expected a declaration for all variables',
         description: `${printIdentifier(phi.id)} in block bb${phiBlock.id}`,
         suggestions: null,
       });
@@ -461,7 +461,7 @@ export function leaveSSA(fn: HIRFunction): void {
      * we pick one of the operands as the canonical id, and rewrite all references to the other
      * operands and the phi to reference this canonical id.
      */
-    for (const { phi } of rewritePhis) {
+    for (const {phi} of rewritePhis) {
       let canonicalId = rewrites.get(phi.id);
       if (canonicalId === undefined) {
         canonicalId = phi.id;
@@ -497,7 +497,7 @@ export function leaveSSA(fn: HIRFunction): void {
 function rewritePlace(
   place: Place,
   rewrites: Map<Identifier, Identifier>,
-  declarations: Map<string, { lvalue: LValue | LValuePattern; place: Place }>
+  declarations: Map<string, {lvalue: LValue | LValuePattern; place: Place}>,
 ): void {
   const prevIdentifier = place.identifier;
   const nextIdentifier = rewrites.get(prevIdentifier);

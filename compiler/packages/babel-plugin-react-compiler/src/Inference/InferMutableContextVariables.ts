@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Effect, HIRFunction, Identifier, Place } from "../HIR";
+import {Effect, HIRFunction, Identifier, Place} from '../HIR';
 import {
   eachInstructionValueOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
-import { IdentifierState } from "./AnalyseFunctions";
+} from '../HIR/visitors';
+import {IdentifierState} from './AnalyseFunctions';
 
 /*
  * This pass infers which of the given function's context (free) variables
@@ -61,24 +61,24 @@ export function inferMutableContextVariables(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
-        case "PropertyLoad": {
+        case 'PropertyLoad': {
           state.declareProperty(
             instr.lvalue,
             instr.value.object,
-            instr.value.property
+            instr.value.property,
           );
           break;
         }
-        case "ComputedLoad": {
+        case 'ComputedLoad': {
           /*
            * The path is set to an empty string as the path doesn't really
            * matter for a computed load.
            */
-          state.declareProperty(instr.lvalue, instr.value.object, "");
+          state.declareProperty(instr.lvalue, instr.value.object, '');
           break;
         }
-        case "LoadLocal":
-        case "LoadContext": {
+        case 'LoadLocal':
+        case 'LoadContext': {
           if (instr.lvalue.identifier.name === null) {
             state.declareTemporary(instr.lvalue, instr.value.place);
           }
@@ -105,7 +105,7 @@ export function inferMutableContextVariables(fn: HIRFunction): void {
 function visitOperand(
   state: IdentifierState,
   knownMutatedIdentifiers: Set<Identifier>,
-  operand: Place
+  operand: Place,
 ): void {
   const resolved = state.resolve(operand.identifier);
   if (operand.effect === Effect.Mutate || operand.effect === Effect.Store) {

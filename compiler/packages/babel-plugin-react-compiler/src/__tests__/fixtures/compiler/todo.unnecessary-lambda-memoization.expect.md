@@ -13,7 +13,7 @@ function Component(props) {
   // that it is a plain, readonly javascript object, then we can infer that any `.map()`
   // calls *must* be Array.prototype.map (or else they are a runtime error), since no
   // other builtin has a .map() function.
-  const items = data.items.map((item) => <Item item={item} />);
+  const items = data.items.map(item => <Item item={item} />);
   return <div>{items}</div>;
 }
 

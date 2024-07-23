@@ -9,9 +9,9 @@
 function useHook() {
   if (a) return;
   if (b) {
-    console.log("true");
+    console.log('true');
   } else {
-    console.log("false");
+    console.log('false');
   }
   useState();
 }
@@ -22,7 +22,7 @@ function useHook() {
 ## Error
 
 ```
-  10 |     console.log("false");
+  10 |     console.log('false');
   11 |   }
 > 12 |   useState();
      |   ^^^^^^^^ InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (12:12)

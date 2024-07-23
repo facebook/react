@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { CONST_TRUE, makeObject_Primitives } from "shared-runtime";
+import {CONST_TRUE, makeObject_Primitives} from 'shared-runtime';
 
 function Foo() {
   try {

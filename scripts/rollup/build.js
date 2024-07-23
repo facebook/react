@@ -84,13 +84,13 @@ function parseRequestedNames(names, toCase) {
   }
   return result;
 }
+const argvType = Array.isArray(argv.bundle) ? argv.bundle : [argv.bundle];
+const requestedBundleTypes = argv.bundle ? argvType : [];
 
-const argvType = Array.isArray(argv.type) ? argv.type : [argv.type];
-const requestedBundleTypes = argv.type
-  ? parseRequestedNames(argvType, 'uppercase')
-  : [];
-
-const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
+const requestedBundleNames = parseRequestedNames(
+  argv.names ? argv.names : [],
+  'lowercase'
+);
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
@@ -459,8 +459,8 @@ function getPlugins(
             bundleType === NODE_ES2015
               ? 'ECMASCRIPT_2020'
               : bundleType === BROWSER_SCRIPT
-              ? 'ECMASCRIPT5'
-              : 'ECMASCRIPT5_STRICT',
+                ? 'ECMASCRIPT5'
+                : 'ECMASCRIPT5_STRICT',
           emit_use_strict:
             bundleType !== BROWSER_SCRIPT &&
             bundleType !== ESM_PROD &&

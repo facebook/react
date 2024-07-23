@@ -1,4 +1,4 @@
-import { mutate, useNoAlias } from "shared-runtime";
+import {mutate, useNoAlias} from 'shared-runtime';
 
 function Component(props) {
   // Here `x` cannot be memoized bc its mutable range spans a hook call:
@@ -13,5 +13,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };

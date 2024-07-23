@@ -3,10 +3,10 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
-import { ValidateMemoization, useHook } from "shared-runtime";
+import {useMemo} from 'react';
+import {ValidateMemoization, useHook} from 'shared-runtime';
 
-function UnmemoizedCallbackCapturedInContextVariable({ cond1, cond2 }) {
+function UnmemoizedCallbackCapturedInContextVariable({cond1, cond2}) {
   // The return value is captured by `x` which is a context variable, which
   // extends a's range to include the call instruction. This prevents the entire
   // range from being memoized
@@ -35,12 +35,12 @@ function UnmemoizedCallbackCapturedInContextVariable({ cond1, cond2 }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: UnmemoizedCallbackCapturedInContextVariable,
-  params: [{ cond1: true, cond2: false }],
+  params: [{cond1: true, cond2: false}],
   sequentialRenders: [
-    { cond1: true, cond2: true },
-    { cond1: false, cond2: true },
-    { cond1: false, cond2: true }, // fails sprout bc memoization is not preserved
-    { cond1: false, cond2: false },
+    {cond1: true, cond2: true},
+    {cond1: false, cond2: true},
+    {cond1: false, cond2: true}, // fails sprout bc memoization is not preserved
+    {cond1: false, cond2: false},
   ],
 };
 

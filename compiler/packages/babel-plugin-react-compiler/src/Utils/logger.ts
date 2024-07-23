@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import generate from "@babel/generator";
-import * as t from "@babel/types";
-import chalk from "chalk";
-import { HIR, HIRFunction, ReactiveFunction } from "../HIR/HIR";
-import { printFunctionWithOutlined, printHIR } from "../HIR/PrintHIR";
-import { CodegenFunction } from "../ReactiveScopes";
-import { printReactiveFunctionWithOutlined } from "../ReactiveScopes/PrintReactiveFunction";
+import generate from '@babel/generator';
+import * as t from '@babel/types';
+import chalk from 'chalk';
+import {HIR, HIRFunction, ReactiveFunction} from '../HIR/HIR';
+import {printFunctionWithOutlined, printHIR} from '../HIR/PrintHIR';
+import {CodegenFunction} from '../ReactiveScopes';
+import {printReactiveFunctionWithOutlined} from '../ReactiveScopes/PrintReactiveFunction';
 
 let ENABLED: boolean = false;
 
@@ -48,23 +48,23 @@ export function logCodegenFunction(step: string, fn: CodegenFunction): void {
         fn.params,
         fn.body,
         fn.generator,
-        fn.async
+        fn.async,
       );
       const ast = generate(node);
       printed = ast.code;
     } catch (e) {
       let errMsg: string;
       if (
-        typeof e === "object" &&
+        typeof e === 'object' &&
         e != null &&
-        "message" in e &&
-        typeof e.message === "string"
+        'message' in e &&
+        typeof e.message === 'string'
       ) {
         errMsg = e.message.toString();
       } else {
-        errMsg = "[empty]";
+        errMsg = '[empty]';
       }
-      console.log("Error formatting AST: " + errMsg);
+      console.log('Error formatting AST: ' + errMsg);
     }
     if (printed === null) {
       return;
@@ -105,6 +105,6 @@ export function logReactiveFunction(step: string, fn: ReactiveFunction): void {
 export function log(fn: () => string): void {
   if (ENABLED) {
     const message = fn();
-    process.stdout.write(message.trim() + "\n\n");
+    process.stdout.write(message.trim() + '\n\n');
   }
 }

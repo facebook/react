@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function Component({ a, b, c }) {
+function Component({a, b, c}) {
   const x = [a];
   const y = [null, b];
   const z = [[], [], [c]];
@@ -13,13 +13,13 @@ function Component({ a, b, c }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 1, b: 20, c: 300 }],
+  params: [{a: 1, b: 20, c: 300}],
   sequentialRenders: [
-    { a: 2, b: 20, c: 300 },
-    { a: 3, b: 20, c: 300 },
-    { a: 3, b: 21, c: 300 },
-    { a: 3, b: 22, c: 300 },
-    { a: 3, b: 22, c: 301 },
+    {a: 2, b: 20, c: 300},
+    {a: 3, b: 20, c: 300},
+    {a: 3, b: 21, c: 300},
+    {a: 3, b: 22, c: 300},
+    {a: 3, b: 22, c: 301},
   ],
 };
 

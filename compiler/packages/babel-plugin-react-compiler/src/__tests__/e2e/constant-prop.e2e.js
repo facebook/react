@@ -5,17 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as React from "react";
-import { render } from "@testing-library/react";
+import * as React from 'react';
+import {render} from '@testing-library/react';
 
-globalThis.constantValue = "global test value";
+globalThis.constantValue = 'global test value';
 
-test("literal-constant-propagation", () => {
+test('literal-constant-propagation', () => {
   function Component() {
-    const x = "test value 1";
+    const x = 'test value 1';
     return <div>{x}</div>;
   }
-  const { asFragment, rerender } = render(<Component />);
+  const {asFragment, rerender} = render(<Component />);
 
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>
@@ -36,13 +36,13 @@ test("literal-constant-propagation", () => {
   `);
 });
 
-test("global-constant-propagation", () => {
+test('global-constant-propagation', () => {
   function Component() {
     const x = constantValue;
 
     return <div>{x}</div>;
   }
-  const { asFragment, rerender } = render(<Component />);
+  const {asFragment, rerender} = render(<Component />);
 
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>
@@ -63,13 +63,13 @@ test("global-constant-propagation", () => {
   `);
 });
 
-test("lambda-constant-propagation", () => {
+test('lambda-constant-propagation', () => {
   function Component() {
-    const x = "test value 1";
+    const x = 'test value 1';
     const getDiv = () => <div>{x}</div>;
     return getDiv();
   }
-  const { asFragment, rerender } = render(<Component />);
+  const {asFragment, rerender} = render(<Component />);
 
   expect(asFragment()).toMatchInlineSnapshot(`
       <DocumentFragment>
@@ -90,9 +90,9 @@ test("lambda-constant-propagation", () => {
     `);
 });
 
-test("lambda-constant-propagation-of-phi-node", () => {
-  function Component({ noopCallback }) {
-    const x = "test value 1";
+test('lambda-constant-propagation-of-phi-node', () => {
+  function Component({noopCallback}) {
+    const x = 'test value 1';
     if (constantValue) {
       noopCallback();
     }
@@ -105,9 +105,7 @@ test("lambda-constant-propagation-of-phi-node", () => {
     return getDiv();
   }
 
-  const { asFragment, rerender } = render(
-    <Component noopCallback={() => {}} />
-  );
+  const {asFragment, rerender} = render(<Component noopCallback={() => {}} />);
 
   expect(asFragment()).toMatchInlineSnapshot(`
       <DocumentFragment>

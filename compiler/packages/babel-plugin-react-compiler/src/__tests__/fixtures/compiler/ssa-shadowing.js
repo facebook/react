@@ -1,12 +1,12 @@
 function log() {}
 
 function Foo(cond) {
-  let str = "";
+  let str = '';
   if (cond) {
-    let str = "other test";
+    let str = 'other test';
     log(str);
   } else {
-    str = "fallthrough test";
+    str = 'fallthrough test';
   }
   log(str);
 }

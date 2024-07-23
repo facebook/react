@@ -3,7 +3,7 @@
 
 ```javascript
 // @compilationMode(infer)
-React.forwardRef((props) => {
+React.forwardRef(props => {
   return <div />;
 });
 

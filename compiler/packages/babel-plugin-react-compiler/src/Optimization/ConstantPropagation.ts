@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { isValidIdentifier } from "@babel/types";
-import { CompilerError } from "../CompilerError";
+import {isValidIdentifier} from '@babel/types';
+import {CompilerError} from '../CompilerError';
 import {
   Environment,
   GotoVariant,
@@ -24,13 +24,13 @@ import {
   markPredecessors,
   mergeConsecutiveBlocks,
   reversePostorderBlocks,
-} from "../HIR";
+} from '../HIR';
 import {
   removeDeadDoWhileStatements,
   removeUnnecessaryTryCatch,
   removeUnreachableForUpdates,
-} from "../HIR/HIRBuilder";
-import { eliminateRedundantPhi } from "../SSA";
+} from '../HIR/HIRBuilder';
+import {eliminateRedundantPhi} from '../SSA';
 
 /*
  * Applies constant propagation/folding to the given function. The approach is
@@ -105,7 +105,7 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
 
 function applyConstantPropagation(
   fn: HIRFunction,
-  constants: Constants
+  constants: Constants,
 ): boolean {
   let hasChanges = false;
   for (const [, block] of fn.body.blocks) {
@@ -122,7 +122,7 @@ function applyConstantPropagation(
     }
 
     for (let i = 0; i < block.instructions.length; i++) {
-      if (block.kind === "sequence" && i === block.instructions.length - 1) {
+      if (block.kind === 'sequence' && i === block.instructions.length - 1) {
         /*
          * evaluating the last value of a value block can break order of evaluation,
          * skip these instructions
@@ -138,15 +138,15 @@ function applyConstantPropagation(
 
     const terminal = block.terminal;
     switch (terminal.kind) {
-      case "if": {
+      case 'if': {
         const testValue = read(constants, terminal.test);
-        if (testValue !== null && testValue.kind === "Primitive") {
+        if (testValue !== null && testValue.kind === 'Primitive') {
           hasChanges = true;
           const targetBlockId = testValue.value
             ? terminal.consequent
             : terminal.alternate;
           block.terminal = {
-            kind: "goto",
+            kind: 'goto',
             variant: GotoVariant.Break,
             block: targetBlockId,
             id: terminal.id,
@@ -188,9 +188,9 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
     }
 
     switch (operandValue.kind) {
-      case "Primitive": {
-        CompilerError.invariant(value.kind === "Primitive", {
-          reason: "value kind expected to be Primitive",
+      case 'Primitive': {
+        CompilerError.invariant(value.kind === 'Primitive', {
+          reason: 'value kind expected to be Primitive',
           loc: null,
           suggestions: null,
         });
@@ -201,9 +201,9 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
         }
         break;
       }
-      case "LoadGlobal": {
-        CompilerError.invariant(value.kind === "LoadGlobal", {
-          reason: "value kind expected to be LoadGlobal",
+      case 'LoadGlobal': {
+        CompilerError.invariant(value.kind === 'LoadGlobal', {
+          reason: 'value kind expected to be LoadGlobal',
           loc: null,
           suggestions: null,
         });
@@ -225,26 +225,26 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
 function evaluateInstruction(
   env: Environment,
   constants: Constants,
-  instr: Instruction
+  instr: Instruction,
 ): Constant | null {
   const value = instr.value;
   switch (value.kind) {
-    case "Primitive": {
+    case 'Primitive': {
       return value;
     }
-    case "LoadGlobal": {
+    case 'LoadGlobal': {
       return value;
     }
-    case "ComputedLoad": {
+    case 'ComputedLoad': {
       const property = read(constants, value.property);
       if (
         property !== null &&
-        property.kind === "Primitive" &&
-        typeof property.value === "string" &&
+        property.kind === 'Primitive' &&
+        typeof property.value === 'string' &&
         isValidIdentifier(property.value)
       ) {
         const nextValue: InstructionValue = {
-          kind: "PropertyLoad",
+          kind: 'PropertyLoad',
           loc: value.loc,
           property: property.value,
           object: value.object,
@@ -253,16 +253,16 @@ function evaluateInstruction(
       }
       return null;
     }
-    case "ComputedStore": {
+    case 'ComputedStore': {
       const property = read(constants, value.property);
       if (
         property !== null &&
-        property.kind === "Primitive" &&
-        typeof property.value === "string" &&
+        property.kind === 'Primitive' &&
+        typeof property.value === 'string' &&
         isValidIdentifier(property.value)
       ) {
         const nextValue: InstructionValue = {
-          kind: "PropertyStore",
+          kind: 'PropertyStore',
           loc: value.loc,
           property: property.value,
           object: value.object,
@@ -272,18 +272,18 @@ function evaluateInstruction(
       }
       return null;
     }
-    case "PostfixUpdate": {
+    case 'PostfixUpdate': {
       const previous = read(constants, value.value);
       if (
         previous !== null &&
-        previous.kind === "Primitive" &&
-        typeof previous.value === "number"
+        previous.kind === 'Primitive' &&
+        typeof previous.value === 'number'
       ) {
         const next =
-          value.operation === "++" ? previous.value + 1 : previous.value - 1;
+          value.operation === '++' ? previous.value + 1 : previous.value - 1;
         // Store the updated value
         constants.set(value.lvalue.identifier.id, {
-          kind: "Primitive",
+          kind: 'Primitive',
           value: next,
           loc: value.loc,
         });
@@ -292,17 +292,17 @@ function evaluateInstruction(
       }
       return null;
     }
-    case "PrefixUpdate": {
+    case 'PrefixUpdate': {
       const previous = read(constants, value.value);
       if (
         previous !== null &&
-        previous.kind === "Primitive" &&
-        typeof previous.value === "number"
+        previous.kind === 'Primitive' &&
+        typeof previous.value === 'number'
       ) {
         const next: Primitive = {
-          kind: "Primitive",
+          kind: 'Primitive',
           value:
-            value.operation === "++" ? previous.value + 1 : previous.value - 1,
+            value.operation === '++' ? previous.value + 1 : previous.value - 1,
           loc: value.loc,
         };
         // Store and return the updated value
@@ -311,13 +311,13 @@ function evaluateInstruction(
       }
       return null;
     }
-    case "UnaryExpression": {
+    case 'UnaryExpression': {
       switch (value.operator) {
-        case "!": {
+        case '!': {
           const operand = read(constants, value.value);
-          if (operand !== null && operand.kind === "Primitive") {
+          if (operand !== null && operand.kind === 'Primitive') {
             const result: Primitive = {
-              kind: "Primitive",
+              kind: 'Primitive',
               value: !operand.value,
               loc: value.loc,
             };
@@ -330,135 +330,135 @@ function evaluateInstruction(
           return null;
       }
     }
-    case "BinaryExpression": {
+    case 'BinaryExpression': {
       const lhsValue = read(constants, value.left);
       const rhsValue = read(constants, value.right);
       if (
         lhsValue !== null &&
         rhsValue !== null &&
-        lhsValue.kind === "Primitive" &&
-        rhsValue.kind === "Primitive"
+        lhsValue.kind === 'Primitive' &&
+        rhsValue.kind === 'Primitive'
       ) {
         const lhs = lhsValue.value;
         const rhs = rhsValue.value;
         let result: Primitive | null = null;
         switch (value.operator) {
-          case "+": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
-            } else if (typeof lhs === "string" && typeof rhs === "string") {
-              result = { kind: "Primitive", value: lhs + rhs, loc: value.loc };
+          case '+': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs + rhs, loc: value.loc};
+            } else if (typeof lhs === 'string' && typeof rhs === 'string') {
+              result = {kind: 'Primitive', value: lhs + rhs, loc: value.loc};
             }
             break;
           }
-          case "-": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs - rhs, loc: value.loc };
+          case '-': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs - rhs, loc: value.loc};
             }
             break;
           }
-          case "*": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs * rhs, loc: value.loc };
+          case '*': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs * rhs, loc: value.loc};
             }
             break;
           }
-          case "/": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs / rhs, loc: value.loc };
+          case '/': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs / rhs, loc: value.loc};
             }
             break;
           }
-          case "|": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs | rhs, loc: value.loc };
+          case '|': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs | rhs, loc: value.loc};
             }
             break;
           }
-          case "&": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs & rhs, loc: value.loc };
+          case '&': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs & rhs, loc: value.loc};
             }
             break;
           }
-          case "^": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs ^ rhs, loc: value.loc };
+          case '^': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs ^ rhs, loc: value.loc};
             }
             break;
           }
-          case "<<": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs << rhs, loc: value.loc };
+          case '<<': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs << rhs, loc: value.loc};
             }
             break;
           }
-          case ">>": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs >> rhs, loc: value.loc };
+          case '>>': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs >> rhs, loc: value.loc};
             }
             break;
           }
-          case ">>>": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
+          case '>>>': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
               result = {
-                kind: "Primitive",
+                kind: 'Primitive',
                 value: lhs >>> rhs,
                 loc: value.loc,
               };
             }
             break;
           }
-          case "%": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs % rhs, loc: value.loc };
+          case '%': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs % rhs, loc: value.loc};
             }
             break;
           }
-          case "**": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs ** rhs, loc: value.loc };
+          case '**': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs ** rhs, loc: value.loc};
             }
             break;
           }
-          case "<": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs < rhs, loc: value.loc };
+          case '<': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs < rhs, loc: value.loc};
             }
             break;
           }
-          case "<=": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs <= rhs, loc: value.loc };
+          case '<=': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs <= rhs, loc: value.loc};
             }
             break;
           }
-          case ">": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs > rhs, loc: value.loc };
+          case '>': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs > rhs, loc: value.loc};
             }
             break;
           }
-          case ">=": {
-            if (typeof lhs === "number" && typeof rhs === "number") {
-              result = { kind: "Primitive", value: lhs >= rhs, loc: value.loc };
+          case '>=': {
+            if (typeof lhs === 'number' && typeof rhs === 'number') {
+              result = {kind: 'Primitive', value: lhs >= rhs, loc: value.loc};
             }
             break;
           }
-          case "==": {
-            result = { kind: "Primitive", value: lhs == rhs, loc: value.loc };
+          case '==': {
+            result = {kind: 'Primitive', value: lhs == rhs, loc: value.loc};
             break;
           }
-          case "===": {
-            result = { kind: "Primitive", value: lhs === rhs, loc: value.loc };
+          case '===': {
+            result = {kind: 'Primitive', value: lhs === rhs, loc: value.loc};
             break;
           }
-          case "!=": {
-            result = { kind: "Primitive", value: lhs != rhs, loc: value.loc };
+          case '!=': {
+            result = {kind: 'Primitive', value: lhs != rhs, loc: value.loc};
             break;
           }
-          case "!==": {
-            result = { kind: "Primitive", value: lhs !== rhs, loc: value.loc };
+          case '!==': {
+            result = {kind: 'Primitive', value: lhs !== rhs, loc: value.loc};
             break;
           }
           default: {
@@ -472,16 +472,16 @@ function evaluateInstruction(
       }
       return null;
     }
-    case "PropertyLoad": {
+    case 'PropertyLoad': {
       const objectValue = read(constants, value.object);
       if (objectValue !== null) {
         if (
-          objectValue.kind === "Primitive" &&
-          typeof objectValue.value === "string" &&
-          value.property === "length"
+          objectValue.kind === 'Primitive' &&
+          typeof objectValue.value === 'string' &&
+          value.property === 'length'
         ) {
           const result: InstructionValue = {
-            kind: "Primitive",
+            kind: 'Primitive',
             value: objectValue.value.length,
             loc: value.loc,
           };
@@ -491,22 +491,22 @@ function evaluateInstruction(
       }
       return null;
     }
-    case "LoadLocal": {
+    case 'LoadLocal': {
       const placeValue = read(constants, value.place);
       if (placeValue !== null) {
         instr.value = placeValue;
       }
       return placeValue;
     }
-    case "StoreLocal": {
+    case 'StoreLocal': {
       const placeValue = read(constants, value.value);
       if (placeValue !== null) {
         constants.set(value.lvalue.place.identifier.id, placeValue);
       }
       return placeValue;
     }
-    case "ObjectMethod":
-    case "FunctionExpression": {
+    case 'ObjectMethod':
+    case 'FunctionExpression': {
       constantPropagationImpl(value.loweredFunc.func, constants);
       return null;
     }
