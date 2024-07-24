@@ -2115,7 +2115,9 @@ function lowerExpression(
       }
 
       const isFbt =
-        tag.kind === 'BuiltinTag' && (tag.name === 'fbt' || tag.name === 'fbs');
+        tag.kind === 'BuiltinTag' &&
+        true &&
+        (tag.name === 'fbt' || tag.name === 'fbs');
       if (isFbt) {
         const tagName = tag.name;
         const openingIdentifier = opening.get('name');
@@ -3143,10 +3145,13 @@ function lowerJsxElement(
     let text: string | null;
     if (builder.fbtDepth > 0) {
       /*
-       * FBT whitespace normalization differs from standard JSX:
+       * FBT whitespace normalization differs from standard JSX.
+       * Since the fbt transform runs after, let's just preserve
+       * whitespace as is.
        * https://github.com/facebook/fbt/blob/0b4e0d13c30bffd0daa2a75715d606e3587b4e40/packages/babel-plugin-fbt/src/FbtUtil.js#L76-L87
        */
-      text = exprPath.node.value.replace(/[^\S\u00A0]+/g, ' ');
+      // text = exprPath.node.value.replace(/[^\S\u00A0]+/g, ' ');
+      text = exprPath.node.value;
     } else {
       text = trimJsxText(exprPath.node.value);
     }

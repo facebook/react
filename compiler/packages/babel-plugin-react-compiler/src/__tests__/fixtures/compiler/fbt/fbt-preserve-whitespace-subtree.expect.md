@@ -13,16 +13,14 @@ import fbt from 'fbt';
 
 function Foo(props) {
   return (
-    <div>
-      <fbt desc={'Dialog to show to user'}>
-        <span>
-          <fbt:param name="user name really long description for prettier">
-            {props.name}
-          </fbt:param>
-          !
-        </span>
-      </fbt>
-    </div>
+    <fbt desc={'Dialog to show to user'}>
+      <span>
+        <fbt:param name="user name really long description for prettier">
+          {props.name}
+        </fbt:param>
+        !
+      </span>
+    </fbt>
   );
 }
 
@@ -50,31 +48,27 @@ function Foo(props) {
   const $ = _c(2);
   let t0;
   if ($[0] !== props.name) {
-    t0 = (
-      <div>
-        {fbt._(
-          "{=m0}",
-          [
-            fbt._implicitParam(
-              "=m0",
-              <span>
-                {fbt._(
-                  "{user name really long description for prettier} !",
-                  [
-                    fbt._param(
-                      "user name really long description for prettier",
+    t0 = fbt._(
+      "{=m0}",
+      [
+        fbt._implicitParam(
+          "=m0",
+          <span>
+            {fbt._(
+              "{user name really long description for prettier} !",
+              [
+                fbt._param(
+                  "user name really long description for prettier",
 
-                      props.name,
-                    ),
-                  ],
-                  { hk: "rdgIJ" },
-                )}
-              </span>,
-            ),
-          ],
-          { hk: "32Ufy5" },
-        )}
-      </div>
+                  props.name,
+                ),
+              ],
+              { hk: "rdgIJ" },
+            )}
+          </span>,
+        ),
+      ],
+      { hk: "32Ufy5" },
     );
     $[0] = props.name;
     $[1] = t0;
@@ -92,4 +86,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div><span>Jason !</span></div>
+(kind: ok) <span>Jason !</span>

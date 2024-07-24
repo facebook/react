@@ -9,16 +9,14 @@ import fbt from 'fbt';
 
 function Foo(props) {
   return (
-    <div>
-      <fbt desc={'Dialog to show to user'}>
-        <span>
-          <fbt:param name="user name really long description for prettier">
-            {props.name}
-          </fbt:param>
-          !
-        </span>
-      </fbt>
-    </div>
+    <fbt desc={'Dialog to show to user'}>
+      <span>
+        <fbt:param name="user name really long description for prettier">
+          {props.name}
+        </fbt:param>
+        !
+      </span>
+    </fbt>
   );
 }
 
