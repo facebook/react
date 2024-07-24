@@ -184,10 +184,10 @@ export function createNewFunctionNode(
       break;
     }
     default: {
-      // @ts-ignore
-      console.log(originalFn.node.type);
-      // @ts-ignore
-      throw new Error(originalFn.toString());
+      assertExhaustive(
+        originalFn.node,
+        `Creating unhandled function: ${originalFn.node}`,
+      );
     }
   }
   // Avoid visiting the new transformed version
