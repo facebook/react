@@ -223,19 +223,19 @@ function insertNewFunctionNode(
         {
           reason: 'Expected an (arrow) function expression to be created',
           description: `Got: ${funcExpr.type}`,
-          loc: null,
+          loc: funcExpr.loc ?? null,
         },
       );
       CompilerError.invariant(compiledFn.id != null, {
         reason: 'Expected compiled function to have an identifier',
-        loc: null,
+        loc: compiledFn.loc,
       });
       CompilerError.invariant(
         originalFn.parentPath.isVariableDeclarator() &&
           originalFn.parentPath.parentPath.isVariableDeclaration(),
         {
           reason: 'Expected a variable declarator parent',
-          loc: null,
+          loc: originalFn.node.loc ?? null,
         },
       );
       const varDecl = originalFn.parentPath.parentPath;
@@ -251,7 +251,7 @@ function insertNewFunctionNode(
         {
           reason: 'Expected inserted (arrow) function expression',
           description: `Got: ${insertedFuncExpr}`,
-          loc: null,
+          loc: insertedFuncExpr.node?.loc ?? null,
         },
       );
       return insertedFuncExpr;
