@@ -230,33 +230,21 @@ function insertNewFunctionNode(
         reason: 'Expected compiled function to have an identifier',
         loc: null,
       });
-      CompilerError.invariant(originalFn.parentPath.isVariableDeclarator(), {
-        reason: 'Expected a variable declarator parent',
-        loc: null,
-      });
+      CompilerError.invariant(
+        originalFn.parentPath.isVariableDeclarator() &&
+          originalFn.parentPath.parentPath.isVariableDeclaration(),
+        {
+          reason: 'Expected a variable declarator parent',
+          loc: null,
+        },
+      );
       const varDecl = originalFn.parentPath.parentPath;
       varDecl.insertAfter(
         t.variableDeclaration('const', [
           t.variableDeclarator(compiledFn.id, funcExpr),
         ]),
       );
-      CompilerError.invariant(typeof varDecl.key === 'number', {
-        reason:
-          'Just Babel things: expected the VariableDeclaration containing the compiled function expression to have a number key',
-        loc: null,
-      });
-      const insertedCompiledFnVarDecl = varDecl.getSibling(varDecl.key + 1);
-      CompilerError.invariant(
-        insertedCompiledFnVarDecl.isVariableDeclaration(),
-        {
-          reason: 'Expected inserted sibling to be a VariableDeclaration',
-          loc: null,
-        },
-      );
-      // safety: we synthesized it above, no need to check again
-      const insertedFuncExpr = insertedCompiledFnVarDecl
-        .get('declarations')[0]!
-        .get('init')!;
+      const insertedFuncExpr = varDecl.get('declarations')[0]!.get('init')!;
       CompilerError.invariant(
         insertedFuncExpr.isArrowFunctionExpression() ||
           insertedFuncExpr.isFunctionExpression(),

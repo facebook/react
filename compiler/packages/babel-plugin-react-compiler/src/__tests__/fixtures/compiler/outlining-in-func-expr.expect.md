@@ -12,6 +12,18 @@ const Component2 = props => {
   );
 };
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component2,
+  params: [
+    {
+      items: [
+        {id: 2, name: 'foo'},
+        {id: 3, name: 'bar'},
+      ],
+    },
+  ],
+};
+
 ```
 
 ## Code
@@ -42,7 +54,19 @@ const _temp = (item) => {
   return <li key={item.id}>{item.name}</li>;
 };
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component2,
+  params: [
+    {
+      items: [
+        { id: 2, name: "foo" },
+        { id: 3, name: "bar" },
+      ],
+    },
+  ],
+};
+
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: ok) <ul><li>foo</li><li>bar</li></ul>

@@ -7,3 +7,15 @@ const Component2 = props => {
     </ul>
   );
 };
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component2,
+  params: [
+    {
+      items: [
+        {id: 2, name: 'foo'},
+        {id: 3, name: 'bar'},
+      ],
+    },
+  ],
+};
