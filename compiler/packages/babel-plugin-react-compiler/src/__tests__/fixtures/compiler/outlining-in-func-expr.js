@@ -1,7 +1,4 @@
-
-## Input
-
-```javascript
+// @debug
 const Component2 = props => {
   return (
     <ul>
@@ -11,14 +8,3 @@ const Component2 = props => {
     </ul>
   );
 };
-
-```
-
-
-## Error
-
-```
-Invalid value used in weak set
-```
-          
-      
