@@ -239,7 +239,7 @@ function insertNewFunctionNode(
         t.variableDeclaration('const', [
           t.variableDeclarator(compiledFn.id, funcExpr),
         ]),
-      )[0]!;
+      );
       CompilerError.invariant(typeof varDecl.key === 'number', {
         reason:
           'Just Babel things: expected the VariableDeclaration containing the compiled function expression to have a number key',
@@ -253,6 +253,7 @@ function insertNewFunctionNode(
           loc: null,
         },
       );
+      // safety: we synthesized it above, no need to check again
       const insertedFuncExpr = insertedCompiledFnVarDecl
         .get('declarations')[0]!
         .get('init')!;
