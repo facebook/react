@@ -39,6 +39,7 @@ export function assertTerminalPredsExist(fn: HIRFunction): void {
         [...eachTerminalSuccessor(predBlock.terminal)].includes(block.id),
         {
           reason: 'Terminal successor does not reference correct predecessor',
+          description: `Block bb${block.id} has bb${predBlock.id} as a predecessor, but bb${predBlock.id}'s successors do not include bb${block.id}`,
           loc: GeneratedSource,
         },
       );
