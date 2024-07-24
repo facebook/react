@@ -10,10 +10,10 @@ import {
   GeneratedSource,
   Identifier,
   IdentifierId,
-  Instruction,
   InstructionValue,
   ManualMemoDependency,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
@@ -25,7 +25,6 @@ import {
 import {printManualMemoDependency} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
-import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
@@ -277,6 +276,7 @@ function validateInferredDep(
 
 class Visitor extends ReactiveFunctionVisitor<VisitorState> {
   scopes: Set<ScopeId> = new Set();
+  prunedScopes: Set<ScopeId> = new Set();
   scopeMapping = new Map();
   temporaries: Map<IdentifierId, ManualMemoDependency> = new Map();
 
@@ -414,6 +414,14 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     }
   }
 
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: VisitorState,
+  ): void {
+    this.traversePrunedScope(scopeBlock, state);
+    this.prunedScopes.add(scopeBlock.scope.id);
+  }
+
   override visitInstruction(
     instruction: ReactiveInstruction,
     state: VisitorState,
@@ -464,7 +472,10 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         instruction.value as InstructionValue,
       )) {
         if (
-          isMutable(instruction as Instruction, value) ||
+          (isDep &&
+            value.identifier.scope != null &&
+            !this.scopes.has(value.identifier.scope.id) &&
+            !this.prunedScopes.has(value.identifier.scope.id)) ||
           (isDecl && isUnmemoized(value.identifier, this.scopes))
         ) {
           state.errors.push({

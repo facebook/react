@@ -1540,39 +1540,21 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: (empty)" />);
 
         // Rendering again should flush the previous commit's effects
-        if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
+        React.startTransition(() => {
           ReactNoop.render(<Counter count={1} />, () =>
             Scheduler.log('Sync effect'),
           );
-        } else {
-          React.startTransition(() => {
-            ReactNoop.render(<Counter count={1} />, () =>
-              Scheduler.log('Sync effect'),
-            );
-          });
-        }
+        });
 
         await waitFor(['Schedule update [0]', 'Count: 0']);
 
-        if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
-          expect(ReactNoop).toMatchRenderedOutput(
-            <span prop="Count: (empty)" />,
-          );
-          await waitFor(['Sync effect']);
-          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-
-          ReactNoop.flushPassiveEffects();
-          assertLog(['Schedule update [1]']);
-          await waitForAll(['Count: 1']);
-        } else {
-          expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
-          await waitFor([
-            'Count: 0',
-            'Sync effect',
-            'Schedule update [1]',
-            'Count: 1',
-          ]);
-        }
+        expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 0" />);
+        await waitFor([
+          'Count: 0',
+          'Sync effect',
+          'Schedule update [1]',
+          'Count: 1',
+        ]);
 
         expect(ReactNoop).toMatchRenderedOutput(<span prop="Count: 1" />);
       });
