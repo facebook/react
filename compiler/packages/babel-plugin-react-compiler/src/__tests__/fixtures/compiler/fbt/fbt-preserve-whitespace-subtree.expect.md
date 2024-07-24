@@ -5,25 +5,21 @@
 import fbt from 'fbt';
 
 /**
- * Currently fails with the following:
- * Found differences in evaluator results
- *   Non-forget (expected):
- *   (kind: ok) <div><span>Jason !</span></div>
- *   Forget:
- *   (kind: ok) <div><span>Jason!</span></div>
-
+ * Note that fbt whitespace rules apply to the entire fbt subtree,
+ * not just direct children of fbt elements.
+ * (e.g. here, the JSXText children of the span element also use
+ * fbt whitespace rules)
  */
 
 function Foo(props) {
   return (
-    // prettier-ignore
     <div>
-      <fbt desc={"Dialog to show to user"}>
+      <fbt desc={'Dialog to show to user'}>
         <span>
-          <fbt:param name="user name">
+          <fbt:param name="user name really long description for prettier">
             {props.name}
           </fbt:param>
-        !
+          !
         </span>
       </fbt>
     </div>
@@ -44,13 +40,10 @@ import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
 
 /**
- * Currently fails with the following:
- * Found differences in evaluator results
- *   Non-forget (expected):
- *   (kind: ok) <div><span>Jason !</span></div>
- *   Forget:
- *   (kind: ok) <div><span>Jason!</span></div>
-
+ * Note that fbt whitespace rules apply to the entire fbt subtree,
+ * not just direct children of fbt elements.
+ * (e.g. here, the JSXText children of the span element also use
+ * fbt whitespace rules)
  */
 
 function Foo(props) {
@@ -66,20 +59,20 @@ function Foo(props) {
               "=m0",
               <span>
                 {fbt._(
-                  "{user name}!",
+                  "{user name really long description for prettier} !",
                   [
                     fbt._param(
-                      "user name",
+                      "user name really long description for prettier",
 
                       props.name,
                     ),
                   ],
-                  { hk: "mBBZ9" },
+                  { hk: "rdgIJ" },
                 )}
               </span>,
             ),
           ],
-          { hk: "3RVfuk" },
+          { hk: "32Ufy5" },
         )}
       </div>
     );
@@ -98,3 +91,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div><span>Jason !</span></div>

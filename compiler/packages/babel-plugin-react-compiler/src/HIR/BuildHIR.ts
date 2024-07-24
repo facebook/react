@@ -2113,90 +2113,24 @@ function lowerExpression(
         }
         props.push({kind: 'JsxAttribute', name: propName, place: value});
       }
-      if (
-        tag.kind === 'BuiltinTag' &&
-        (tag.name === 'fbt' || tag.name === 'fbs')
-      ) {
-        const tagName = tag.name;
-        const openingIdentifier = opening.get('name');
-        const tagIdentifier = openingIdentifier.isJSXIdentifier()
-          ? builder.resolveIdentifier(openingIdentifier)
-          : null;
-        if (tagIdentifier != null && tagIdentifier.kind === 'Identifier') {
-          CompilerError.throwTodo({
-            reason: `Support <${tagName}> tags where '${tagName}' is a local variable instead of a global`,
-            loc: openingIdentifier.node.loc ?? GeneratedSource,
-            description: null,
-            suggestions: null,
-          });
-        }
-        // see `error.todo-multiple-fbt-plural` fixture for explanation
-        const fbtLocations = {
-          enum: new Array<SourceLocation>(),
-          plural: new Array<SourceLocation>(),
-          pronoun: new Array<SourceLocation>(),
-        };
-        expr.traverse({
-          JSXClosingElement(path) {
-            path.skip();
-          },
-          JSXNamespacedName(path) {
-            if (path.node.namespace.name === tagName) {
-              switch (path.node.name.name) {
-                case 'enum':
-                  fbtLocations.enum.push(path.node.loc ?? GeneratedSource);
-                  break;
-                case 'plural':
-                  fbtLocations.plural.push(path.node.loc ?? GeneratedSource);
-                  break;
-                case 'pronoun':
-                  fbtLocations.pronoun.push(path.node.loc ?? GeneratedSource);
-                  break;
-              }
-            }
-          },
-        });
-        for (const [name, locations] of Object.entries(fbtLocations)) {
-          if (locations.length > 1) {
-            CompilerError.throwTodo({
-              reason: `Support <${tagName}> tags with multiple <${tagName}:${name}> values`,
-              loc: locations.at(-1) ?? GeneratedSource,
-              description: null,
-              suggestions: null,
-            });
-          }
-        }
+
+      const isFbt =
+        tag.kind === 'BuiltinTag' && (tag.name === 'fbt' || tag.name === 'fbs');
+      if (isFbt) {
+        checkFbtTodos(expr, tag, opening, builder);
       }
 
-      let children: Array<Place>;
-      if (
-        tag.kind === 'BuiltinTag' &&
-        (tag.name === 'fbt' || tag.name === 'fbs')
-      ) {
-        children = expr
-          .get('children')
-          .map(child => {
-            if (child.isJSXText()) {
-              /*
-               * FBT whitespace normalization differs from standard JSX:
-               * https://github.com/facebook/fbt/blob/0b4e0d13c30bffd0daa2a75715d606e3587b4e40/packages/babel-plugin-fbt/src/FbtUtil.js#L76-L87
-               */
-              const text = child.node.value.replace(/[^\S\u00A0]+/g, ' ');
-              return lowerValueToTemporary(builder, {
-                kind: 'JSXText',
-                value: text,
-                loc: child.node.loc ?? GeneratedSource,
-              });
-            }
-            return lowerJsxElement(builder, child);
-          })
-          .filter(notNull);
-      } else {
-        children = expr
-          .get('children')
-          .map(child => lowerJsxElement(builder, child))
-          .filter(notNull);
-      }
+      /**
+       * Increment fbt counter before traversing into children, as whitespace
+       * in jsx text is handled differently for fbt subtrees.
+       */
+      isFbt && builder.fbtDepth++;
+      const children: Array<Place> = expr
+        .get('children')
+        .map(child => lowerJsxElement(builder, child))
+        .filter(notNull);
+      isFbt && builder.fbtDepth--;
+
       return {
         kind: 'JsxExpression',
         tag,
@@ -3158,7 +3092,17 @@ function lowerJsxElement(
       return lowerExpressionToTemporary(builder, expression);
     }
   } else if (exprPath.isJSXText()) {
-    const text = trimJsxText(exprPath.node.value);
+    let text: string | null;
+    if (builder.fbtDepth > 0) {
+      /*
+       * FBT whitespace normalization differs from standard JSX:
+       * https://github.com/facebook/fbt/blob/0b4e0d13c30bffd0daa2a75715d606e3587b4e40/packages/babel-plugin-fbt/src/FbtUtil.js#L76-L87
+       */
+      text = exprPath.node.value.replace(/[^\S\u00A0]+/g, ' ');
+    } else {
+      text = trimJsxText(exprPath.node.value);
+    }
+
     if (text === null) {
       return null;
     }
@@ -4217,6 +4161,63 @@ function gatherCapturedDeps(
 
 function notNull<T>(value: T | null): value is T {
   return value !== null;
+}
+
+function checkFbtTodos(
+  expr: NodePath<t.JSXElement>,
+  tag: BuiltinTag,
+  opening: NodePath<t.JSXOpeningElement>,
+  builder: HIRBuilder,
+): void {
+  const tagName = tag.name;
+  const openingIdentifier = opening.get('name');
+  const tagIdentifier = openingIdentifier.isJSXIdentifier()
+    ? builder.resolveIdentifier(openingIdentifier)
+    : null;
+  if (tagIdentifier != null && tagIdentifier.kind === 'Identifier') {
+    CompilerError.throwTodo({
+      reason: `Support <${tagName}> tags where '${tagName}' is a local variable instead of a global`,
+      loc: openingIdentifier.node.loc ?? GeneratedSource,
+      description: null,
+      suggestions: null,
+    });
+  }
+  // see `error.todo-multiple-fbt-plural` fixture for explanation
+  const fbtLocations = {
+    enum: new Array<SourceLocation>(),
+    plural: new Array<SourceLocation>(),
+    pronoun: new Array<SourceLocation>(),
+  };
+  expr.traverse({
+    JSXClosingElement(path) {
+      path.skip();
+    },
+    JSXNamespacedName(path) {
+      if (path.node.namespace.name === tagName) {
+        switch (path.node.name.name) {
+          case 'enum':
+            fbtLocations.enum.push(path.node.loc ?? GeneratedSource);
+            break;
+          case 'plural':
+            fbtLocations.plural.push(path.node.loc ?? GeneratedSource);
+            break;
+          case 'pronoun':
+            fbtLocations.pronoun.push(path.node.loc ?? GeneratedSource);
+            break;
+        }
+      }
+    },
+  });
+  for (const [name, locations] of Object.entries(fbtLocations)) {
+    if (locations.length > 1) {
+      CompilerError.throwTodo({
+        reason: `Support <${tagName}> tags with multiple <${tagName}:${name}> values`,
+        loc: locations.at(-1) ?? GeneratedSource,
+        description: null,
+        suggestions: null,
+      });
+    }
+  }
 }
 
 export function lowerType(node: t.FlowType | t.TSType): Type {
