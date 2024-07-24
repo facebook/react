@@ -1285,8 +1285,8 @@ describe('ReactFlight', () => {
                   'Error: This is an error\n' +
                     '    at eval (eval at testFunction (eval at createFakeFunction (**), <anonymous>:1:35)\n' +
                     '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
-                    '    at (anonymous) (file:///testing.js:42:3)\n' +
-                    '    at (anonymous) (file:///testing.js:42:3)\n',
+                    '    at <anonymous> (file:///testing.js:42:3)\n' +
+                    '    at <anonymous> (file:///testing.js:42:3)\n',
                 )
               : expect.stringContaining(
                   'Error: This is an error\n' +
