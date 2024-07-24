@@ -1003,6 +1003,16 @@ function getOutlinedModel<T>(
       let value = chunk.value;
       for (let i = 1; i < path.length; i++) {
         value = value[path[i]];
+        if (value.$$typeof === REACT_LAZY_TYPE) {
+          return waitForReference(
+            value._payload,
+            parentObject,
+            key,
+            response,
+            map,
+            path.slice(i),
+          );
+        }
       }
       const chunkValue = map(response, value);
       if (__DEV__ && chunk._debugInfo) {
