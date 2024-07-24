@@ -668,11 +668,11 @@ function checkIfComparedContextValuesChanged(
   newComparedValue: mixed,
 ): boolean {
   if (isArray(oldComparedValue) && isArray(newComparedValue)) {
-    for (
-      let i = 0;
-      i < oldComparedValue.length && i < newComparedValue.length;
-      i++
-    ) {
+    if (oldComparedValue.length !== newComparedValue.length) {
+      return true;
+    }
+
+    for (let i = 0; i < oldComparedValue.length; i++) {
       if (!is(newComparedValue[i], oldComparedValue[i])) {
         return true;
       }
