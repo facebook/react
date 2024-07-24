@@ -183,11 +183,86 @@ export function createNewFunctionNode(
       transformedFn = fn;
       break;
     }
+    default: {
+      assertExhaustive(
+        originalFn.node,
+        `Creating unhandled function: ${originalFn.node}`,
+      );
+    }
   }
-
   // Avoid visiting the new transformed version
   ALREADY_COMPILED.add(transformedFn);
   return transformedFn;
+}
+
+function insertNewFunctionNode(
+  originalFn: BabelFn,
+  compiledFn: CodegenFunction,
+): NodePath<t.Function> {
+  switch (originalFn.type) {
+    case 'FunctionDeclaration': {
+      return originalFn.insertAfter(
+        createNewFunctionNode(originalFn, compiledFn),
+      )[0]!;
+    }
+    /**
+     * This is pretty gross but we can't just append an (Arrow)FunctionExpression as a sibling of
+     * the original function. If the original function was itself an (Arrow)FunctionExpression,
+     * this would cause its parent to become a SequenceExpression instead which breaks a bunch of
+     * assumptions elsewhere in the plugin.
+     *
+     * To get around this, we synthesize a new VariableDeclaration holding the compiled function
+     * expression and insert it as a true sibling (ie within the Program's block statements).
+     */
+    case 'ArrowFunctionExpression':
+    case 'FunctionExpression': {
+      const funcExpr = createNewFunctionNode(originalFn, compiledFn);
+      CompilerError.invariant(
+        t.isArrowFunctionExpression(funcExpr) ||
+          t.isFunctionExpression(funcExpr),
+        {
+          reason: 'Expected an (arrow) function expression to be created',
+          description: `Got: ${funcExpr.type}`,
+          loc: funcExpr.loc ?? null,
+        },
+      );
+      CompilerError.invariant(compiledFn.id != null, {
+        reason: 'Expected compiled function to have an identifier',
+        loc: compiledFn.loc,
+      });
+      CompilerError.invariant(
+        originalFn.parentPath.isVariableDeclarator() &&
+          originalFn.parentPath.parentPath.isVariableDeclaration(),
+        {
+          reason: 'Expected a variable declarator parent',
+          loc: originalFn.node.loc ?? null,
+        },
+      );
+      const varDecl = originalFn.parentPath.parentPath;
+      varDecl.insertAfter(
+        t.variableDeclaration('const', [
+          t.variableDeclarator(compiledFn.id, funcExpr),
+        ]),
+      );
+      const insertedFuncExpr = varDecl.get('declarations')[0]!.get('init')!;
+      CompilerError.invariant(
+        insertedFuncExpr.isArrowFunctionExpression() ||
+          insertedFuncExpr.isFunctionExpression(),
+        {
+          reason: 'Expected inserted (arrow) function expression',
+          description: `Got: ${insertedFuncExpr}`,
+          loc: insertedFuncExpr.node?.loc ?? null,
+        },
+      );
+      return insertedFuncExpr;
+    }
+    default: {
+      assertExhaustive(
+        originalFn,
+        `Inserting unhandled function: ${originalFn}`,
+      );
+    }
+  }
 }
 
 /*
@@ -407,9 +482,7 @@ export function compileProgram(
         reason: 'Unexpected nested outlined functions',
         loc: outlined.fn.loc,
       });
-      const fn = current.fn.insertAfter(
-        createNewFunctionNode(current.fn, outlined.fn),
-      )[0]!;
+      const fn = insertNewFunctionNode(current.fn, outlined.fn);
       fn.skip();
       ALREADY_COMPILED.add(fn.node);
       if (outlined.type !== null) {
