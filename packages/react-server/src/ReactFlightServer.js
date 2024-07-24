@@ -80,6 +80,8 @@ import {
   createHints,
   initAsyncDebugInfo,
   parseStackTrace,
+  supportsComponentStorage,
+  componentStorage,
 } from './ReactFlightServerConfig';
 
 import {
@@ -1035,12 +1037,38 @@ function renderFunctionComponent<Props>(
       }
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
-    result = callComponentInDEV(
-      Component,
-      props,
-      componentDebugInfo,
-      task.debugTask,
-    );
+    if (supportsComponentStorage) {
+      // Run the component in an Async Context that tracks the current owner.
+      if (enableOwnerStacks && task.debugTask) {
+        result = task.debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          componentStorage.run.bind(
+            componentStorage,
+            componentDebugInfo,
+            callComponentInDEV,
+            Component,
+            props,
+            componentDebugInfo,
+          ),
+        );
+      } else {
+        result = componentStorage.run(
+          componentDebugInfo,
+          callComponentInDEV,
+          Component,
+          props,
+          componentDebugInfo,
+        );
+      }
+    } else {
+      if (enableOwnerStacks && task.debugTask) {
+        result = task.debugTask.run(
+          callComponentInDEV.bind(null, Component, props, componentDebugInfo),
+        );
+      } else {
+        result = callComponentInDEV(Component, props, componentDebugInfo);
+      }
+    }
   } else {
     prepareToUseHooksForComponent(prevThenableState, null);
     // The secondArg is always undefined in Server Components since refs error early.
@@ -1222,19 +1250,47 @@ function warnForMissingKey(
 
     // Call with the server component as the currently rendering component
     // for context.
-    callComponentInDEV(
-      () => {
-        console.error(
-          'Each child in a list should have a unique "key" prop.' +
-            '%s%s See https://react.dev/link/warning-keys for more information.',
-          '',
-          '',
+    const logKeyError = () => {
+      console.error(
+        'Each child in a list should have a unique "key" prop.' +
+          '%s%s See https://react.dev/link/warning-keys for more information.',
+        '',
+        '',
+      );
+    };
+
+    if (supportsComponentStorage) {
+      // Run the component in an Async Context that tracks the current owner.
+      if (enableOwnerStacks && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          componentStorage.run.bind(
+            componentStorage,
+            componentDebugInfo,
+            callComponentInDEV,
+            logKeyError,
+            null,
+            componentDebugInfo,
+          ),
         );
-      },
-      null,
-      componentDebugInfo,
-      debugTask,
-    );
+      } else {
+        componentStorage.run(
+          componentDebugInfo,
+          callComponentInDEV,
+          logKeyError,
+          null,
+          componentDebugInfo,
+        );
+      }
+    } else {
+      if (enableOwnerStacks && debugTask) {
+        debugTask.run(
+          callComponentInDEV.bind(null, logKeyError, null, componentDebugInfo),
+        );
+      } else {
+        callComponentInDEV(logKeyError, null, componentDebugInfo);
+      }
+    }
   }
 }
 
