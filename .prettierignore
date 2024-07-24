@@ -18,7 +18,6 @@ packages/react-devtools-timeline/static
 # react compiler
 compiler/**/dist
 compiler/**/__tests__/fixtures/**/*.expect.md
-compiler/**/__tests__/fixtures/**/*.flow.js
 compiler/**/.next
 
 # contains invalid graphql`...` which results in a promise rejection error from `yarn prettier-all`.
