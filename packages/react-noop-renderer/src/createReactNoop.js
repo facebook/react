@@ -394,6 +394,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: HostContext,
       internalInstanceHandle: Object,
     ): Instance {
+      console.log('crateInstance');
+      debugger;
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
@@ -447,6 +449,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       parentInstance: Instance,
       child: Instance | TextInstance,
     ): void {
+      console.log('noop renderer appendInitialChild');
       const prevParent = child.parent;
       if (prevParent !== -1 && prevParent !== parentInstance.id) {
         throw new Error('Reparenting is not allowed');
@@ -471,6 +474,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
+      console.log('crate text instance', text);
       if (hostContext === UPPERCASE_CONTEXT) {
         text = text.toUpperCase();
       }

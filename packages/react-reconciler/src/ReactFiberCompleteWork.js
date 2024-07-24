@@ -216,10 +216,12 @@ function appendAllChildren(
   needsVisibilityToggle: boolean,
   isHidden: boolean,
 ) {
+  console.log('append all childrent');
   if (supportsMutation) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
+    console.log('append all children, appending', node);
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
@@ -911,6 +913,7 @@ function completeWork(
   renderLanes: Lanes,
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
+  console.log('complete work', workInProgress.tag, workInProgress.key);
   // Note: This intentionally doesn't check if we're hydrating because comparing
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
@@ -1184,6 +1187,7 @@ function completeWork(
       // Fall through
     }
     case HostComponent: {
+      console.log('HostComponent case');
       popHostContext(workInProgress);
       const type = workInProgress.type;
       if (current !== null && workInProgress.stateNode != null) {

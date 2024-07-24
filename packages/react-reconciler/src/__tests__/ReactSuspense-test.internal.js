@@ -1,5 +1,6 @@
 let React;
 let ReactDOMClient;
+let ReactNoop;
 let ReactDOM;
 let Scheduler;
 let Suspense;
@@ -16,8 +17,9 @@ describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMClient = require('react-dom/client');
+    // ReactDOM = require('react-dom');
+    // ReactDOMClient = require('react-dom/client');
+    ReactNoop = require('react-noop-renderer');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
     container = document.createElement('div');
@@ -95,7 +97,7 @@ describe('ReactSuspense', () => {
     return text;
   }
 
-  it('suspends rendering and continues later', async () => {
+  it('suspends rendering and continues later (ReactDOM)', async () => {
     function Bar(props) {
       Scheduler.log('Bar');
       return props.children;
@@ -145,6 +147,17 @@ describe('ReactSuspense', () => {
     resolveText('A');
     await waitForAll(['Foo', 'Bar', 'A', 'B']);
     expect(container.textContent).toEqual('AB');
+  });
+
+  it.only('suspends rendering and continues later (ReactNoop)', async () => {
+    const root = ReactNoop.createRoot();
+
+    await act(async () => {
+      root.render(<div id="zomg">blah</div>);
+    });
+
+    // console.log(root.getChildrenAsJSX());
+    console.log(root.getChildren());
   });
 
   it('suspends siblings and later recovers each independently', async () => {
