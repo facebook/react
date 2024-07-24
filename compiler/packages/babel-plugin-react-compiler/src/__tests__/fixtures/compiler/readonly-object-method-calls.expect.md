@@ -4,7 +4,11 @@
 ```javascript
 function Component(props) {
   const user = useFragment(
-    graphql`fragment Component_user on User { ... }`,
+    graphql`
+      fragment Component_user on User {
+        name
+      }
+    `,
     props.user
   );
   const posts = user.timeline.posts.edges.nodes.map(node => (
@@ -25,7 +29,11 @@ import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(5);
   const user = useFragment(
-    graphql`fragment Component_user on User { ... }`,
+    graphql`
+      fragment Component_user on User {
+        name
+      }
+    `,
     props.user,
   );
   let posts;

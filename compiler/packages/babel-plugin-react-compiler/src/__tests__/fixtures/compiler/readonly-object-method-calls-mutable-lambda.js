@@ -1,7 +1,11 @@
 function Component(props) {
   const x = makeObject();
   const user = useFragment(
-    graphql`fragment Component_user on User { ... }`,
+    graphql`
+      fragment Component_user on User {
+        name
+      }
+    `,
     props.user
   );
   const posts = user.timeline.posts.edges.nodes.map(node => {

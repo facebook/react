@@ -13,7 +13,14 @@ function useFragment(_arg1, _arg2) {
 }
 
 function Component(props) {
-  const post = useFragment(graphql`...`, props.post);
+  const post = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.post
+  );
   const allUrls = [];
   // `media` and `urls` are exported from the scope that will wrap this code,
   // but `comments` is not (it doesn't need to be memoized, bc the callback
@@ -59,7 +66,11 @@ function Component(props) {
   const $ = _c(9);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = graphql`...`;
+    t0 = graphql`
+      fragment F on T {
+        id
+      }
+    `;
     $[0] = t0;
   } else {
     t0 = $[0];

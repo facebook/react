@@ -3,7 +3,14 @@
 
 ```javascript
 function Component(props) {
-  const post = useFragment(graphql`...`, props.post);
+  const post = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.post
+  );
   const allUrls = [];
   // `media` and `urls` are exported from the scope that will wrap this code,
   // but `comments` is not (it doesn't need to be memoized, bc the callback
@@ -31,7 +38,14 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(4);
-  const post = useFragment(graphql`...`, props.post);
+  const post = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.post,
+  );
   let t0;
   if ($[0] !== post) {
     const allUrls = [];
