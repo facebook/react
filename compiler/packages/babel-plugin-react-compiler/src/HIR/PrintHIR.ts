@@ -276,27 +276,29 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
       break;
     }
     case 'unsupported': {
-      value = `Unsupported`;
+      value = `[${terminal.id}] Unsupported`;
       break;
     }
     case 'maybe-throw': {
-      value = `MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
+      value = `[${terminal.id}] MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
       break;
     }
     case 'scope': {
-      value = `Scope ${printReactiveScopeSummary(terminal.scope)} block=bb${
-        terminal.block
-      } fallthrough=bb${terminal.fallthrough}`;
+      value = `[${terminal.id}] Scope ${printReactiveScopeSummary(
+        terminal.scope,
+      )} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case 'pruned-scope': {
-      value = `<pruned> Scope ${printReactiveScopeSummary(
+      value = `[${terminal.id}] <pruned> Scope ${printReactiveScopeSummary(
         terminal.scope,
       )} block=bb${terminal.block} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case 'try': {
-      value = `Try block=bb${terminal.block} handler=bb${terminal.handler}${
+      value = `[${terminal.id}] Try block=bb${terminal.block} handler=bb${
+        terminal.handler
+      }${
         terminal.handlerBinding !== null
           ? ` handlerBinding=(${printPlace(terminal.handlerBinding)})`
           : ''

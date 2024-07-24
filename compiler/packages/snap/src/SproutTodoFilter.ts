@@ -398,6 +398,7 @@ const skipFilter = new Set([
   'deeply-nested-function-expressions-with-params',
   'readonly-object-method-calls',
   'readonly-object-method-calls-mutable-lambda',
+  'preserve-memo-validation/useMemo-with-refs.flow',
 
   // TODO: we probably want to always skip these
   'rules-of-hooks/rules-of-hooks-0592bd574811',

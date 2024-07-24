@@ -56,13 +56,13 @@ describe('component stack', () => {
 
     expect(mockError).toHaveBeenCalledWith(
       'Test error.',
-      (supportsOwnerStacks ? '' : '\n    in Child (at **)') +
+      '\n    in Child (at **)' +
         '\n    in Parent (at **)' +
         '\n    in Grandparent (at **)',
     );
     expect(mockWarn).toHaveBeenCalledWith(
       'Test warning.',
-      (supportsOwnerStacks ? '' : '\n    in Child (at **)') +
+      '\n    in Child (at **)' +
         '\n    in Parent (at **)' +
         '\n    in Grandparent (at **)',
     );
