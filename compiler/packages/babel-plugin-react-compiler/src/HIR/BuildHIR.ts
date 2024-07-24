@@ -2117,7 +2117,55 @@ function lowerExpression(
       const isFbt =
         tag.kind === 'BuiltinTag' && (tag.name === 'fbt' || tag.name === 'fbs');
       if (isFbt) {
-        checkFbtTodos(expr, tag, opening, builder);
+        const tagName = tag.name;
+        const openingIdentifier = opening.get('name');
+        const tagIdentifier = openingIdentifier.isJSXIdentifier()
+          ? builder.resolveIdentifier(openingIdentifier)
+          : null;
+        if (tagIdentifier != null && tagIdentifier.kind === 'Identifier') {
+          CompilerError.throwTodo({
+            reason: `Support <${tagName}> tags where '${tagName}' is a local variable instead of a global`,
+            loc: openingIdentifier.node.loc ?? GeneratedSource,
+            description: null,
+            suggestions: null,
+          });
+        }
+        // see `error.todo-multiple-fbt-plural` fixture for explanation
+        const fbtLocations = {
+          enum: new Array<SourceLocation>(),
+          plural: new Array<SourceLocation>(),
+          pronoun: new Array<SourceLocation>(),
+        };
+        expr.traverse({
+          JSXClosingElement(path) {
+            path.skip();
+          },
+          JSXNamespacedName(path) {
+            if (path.node.namespace.name === tagName) {
+              switch (path.node.name.name) {
+                case 'enum':
+                  fbtLocations.enum.push(path.node.loc ?? GeneratedSource);
+                  break;
+                case 'plural':
+                  fbtLocations.plural.push(path.node.loc ?? GeneratedSource);
+                  break;
+                case 'pronoun':
+                  fbtLocations.pronoun.push(path.node.loc ?? GeneratedSource);
+                  break;
+              }
+            }
+          },
+        });
+        for (const [name, locations] of Object.entries(fbtLocations)) {
+          if (locations.length > 1) {
+            CompilerError.throwTodo({
+              reason: `Support <${tagName}> tags with multiple <${tagName}:${name}> values`,
+              loc: locations.at(-1) ?? GeneratedSource,
+              description: null,
+              suggestions: null,
+            });
+          }
+        }
       }
 
       /**
@@ -4161,63 +4209,6 @@ function gatherCapturedDeps(
 
 function notNull<T>(value: T | null): value is T {
   return value !== null;
-}
-
-function checkFbtTodos(
-  expr: NodePath<t.JSXElement>,
-  tag: BuiltinTag,
-  opening: NodePath<t.JSXOpeningElement>,
-  builder: HIRBuilder,
-): void {
-  const tagName = tag.name;
-  const openingIdentifier = opening.get('name');
-  const tagIdentifier = openingIdentifier.isJSXIdentifier()
-    ? builder.resolveIdentifier(openingIdentifier)
-    : null;
-  if (tagIdentifier != null && tagIdentifier.kind === 'Identifier') {
-    CompilerError.throwTodo({
-      reason: `Support <${tagName}> tags where '${tagName}' is a local variable instead of a global`,
-      loc: openingIdentifier.node.loc ?? GeneratedSource,
-      description: null,
-      suggestions: null,
-    });
-  }
-  // see `error.todo-multiple-fbt-plural` fixture for explanation
-  const fbtLocations = {
-    enum: new Array<SourceLocation>(),
-    plural: new Array<SourceLocation>(),
-    pronoun: new Array<SourceLocation>(),
-  };
-  expr.traverse({
-    JSXClosingElement(path) {
-      path.skip();
-    },
-    JSXNamespacedName(path) {
-      if (path.node.namespace.name === tagName) {
-        switch (path.node.name.name) {
-          case 'enum':
-            fbtLocations.enum.push(path.node.loc ?? GeneratedSource);
-            break;
-          case 'plural':
-            fbtLocations.plural.push(path.node.loc ?? GeneratedSource);
-            break;
-          case 'pronoun':
-            fbtLocations.pronoun.push(path.node.loc ?? GeneratedSource);
-            break;
-        }
-      }
-    },
-  });
-  for (const [name, locations] of Object.entries(fbtLocations)) {
-    if (locations.length > 1) {
-      CompilerError.throwTodo({
-        reason: `Support <${tagName}> tags with multiple <${tagName}:${name}> values`,
-        loc: locations.at(-1) ?? GeneratedSource,
-        description: null,
-        suggestions: null,
-      });
-    }
-  }
 }
 
 export function lowerType(node: t.FlowType | t.TSType): Type {
