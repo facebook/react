@@ -827,7 +827,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 }
 
 function waitForReference<T>(
-  referencedChunk: PendingChunk<T> | BlockedChunk<T>,
+  referencedChunk: SomeChunk<T>,
   parentObject: Object,
   key: string,
   response: Response,
@@ -1007,10 +1007,7 @@ function getOutlinedModel<T>(
           const referencedChunk: SomeChunk<any> = value._payload;
           if (referencedChunk.status === INITIALIZED) {
             value = referencedChunk.value;
-          } else if (
-            referencedChunk.status === BLOCKED ||
-            referencedChunk.status === PENDING
-          ) {
+          } else {
             return waitForReference(
               referencedChunk,
               parentObject,
