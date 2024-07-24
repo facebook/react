@@ -1955,7 +1955,7 @@ function createFakeFunction<T>(
 
   if (!name) {
     // An eval:ed function with no name gets the name "eval". We give it something more descriptive.
-    name = '(anonymous)';
+    name = '<anonymous>';
   }
   const encodedName = JSON.stringify(name);
   // We generate code where the call is at the line and column of the server executed code.
