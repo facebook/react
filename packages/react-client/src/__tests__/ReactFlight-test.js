@@ -10,6 +10,8 @@
 
 'use strict';
 
+const path = require('path');
+
 if (typeof Blob === 'undefined') {
   global.Blob = require('buffer').Blob;
 }
@@ -39,6 +41,26 @@ function formatV8Stack(stack) {
     }
   }
   return v8StyleStack;
+}
+
+const repoRoot = path.resolve(__dirname, '../../../../');
+function normalizeReactCodeLocInfo(str) {
+  const repoRootForRegexp = repoRoot.replace(/\//g, '\\/');
+  const repoFileLocMatch = new RegExp(`${repoRootForRegexp}.+?:\\d+:\\d+`, 'g');
+  return str && str.replace(repoFileLocMatch, '**');
+}
+
+// If we just use the original Error prototype, Jest will only display the error message if assertions fail.
+// But we usually want to also assert on our expando properties or even the stack.
+// By hiding the fact from Jest that this is an error, it will show all enumerable properties on mismatch.
+
+function getErrorForJestMatcher(error) {
+  return {
+    ...error,
+    // non-enumerable properties that are still relevant for testing
+    message: error.message,
+    stack: normalizeReactCodeLocInfo(error.stack),
+  };
 }
 
 function normalizeComponentInfo(debugInfo) {
@@ -1175,6 +1197,135 @@ describe('ReactFlight', () => {
         ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
     });
+  });
+
+  it('should handle exotic stack frames', async () => {
+    function ServerComponent() {
+      const error = new Error('This is an error');
+      const originalStackLines = error.stack.split('\n');
+      // Fake a stack
+      error.stack = [
+        originalStackLines[0],
+        // original
+        // '    at ServerComponentError (file://~/react/packages/react-client/src/__tests__/ReactFlight-test.js:1166:19)',
+        // nested eval (https://github.com/ChromeDevTools/devtools-frontend/blob/831be28facb4e85de5ee8c1acc4d98dfeda7a73b/test/unittests/front_end/panels/console/ErrorStackParser_test.ts#L198)
+        '    at eval (eval at testFunction (inspected-page.html:29:11), <anonymous>:1:10)',
+        // parens may be added by Webpack when bundle layers are used. They're also valid in directory names.
+        '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)',
+        // anon function (https://github.com/ChromeDevTools/devtools-frontend/blob/831be28facb4e85de5ee8c1acc4d98dfeda7a73b/test/unittests/front_end/panels/console/ErrorStackParser_test.ts#L115C9-L115C35)
+        '    at file:///testing.js:42:3',
+        // async anon function (https://github.com/ChromeDevTools/devtools-frontend/blob/831be28facb4e85de5ee8c1acc4d98dfeda7a73b/test/unittests/front_end/panels/console/ErrorStackParser_test.ts#L130C9-L130C41)
+        '    at async file:///testing.js:42:3',
+        ...originalStackLines.slice(2),
+      ].join('\n');
+      throw error;
+    }
+
+    const findSourceMapURL = jest.fn(() => null);
+    const errors = [];
+    class MyErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      componentDidCatch(error, componentInfo) {
+        errors.push(error);
+      }
+      render() {
+        if (this.state.error) {
+          return null;
+        }
+        return this.props.children;
+      }
+    }
+    const ClientErrorBoundary = clientReference(MyErrorBoundary);
+
+    function App() {
+      return (
+        <ClientErrorBoundary>
+          <ServerComponent />
+        </ClientErrorBoundary>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(<App />, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        if (x instanceof Error) {
+          return `digest("${x.message}")`;
+        } else if (Array.isArray(x)) {
+          return `digest([])`;
+        } else if (typeof x === 'object' && x !== null) {
+          return `digest({})`;
+        }
+        return `digest(${String(x)})`;
+      },
+    });
+
+    await act(() => {
+      startTransition(() => {
+        ReactNoop.render(
+          ReactNoopFlightClient.read(transport, {findSourceMapURL}),
+        );
+      });
+    });
+
+    if (__DEV__) {
+      expect({
+        errors: errors.map(getErrorForJestMatcher),
+        findSourceMapURLCalls: findSourceMapURL.mock.calls,
+      }).toEqual({
+        errors: [
+          {
+            message: 'This is an error',
+            stack: gate(flags => flags.enableOwnerStacks)
+              ? expect.stringContaining(
+                  'Error: This is an error\n' +
+                    '    at eval (eval at testFunction (eval at createFakeFunction (**), <anonymous>:1:35)\n' +
+                    '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
+                    '    at (anonymous) (file:///testing.js:42:3)\n' +
+                    '    at (anonymous) (file:///testing.js:42:3)\n',
+                )
+              : expect.stringContaining(
+                  'Error: This is an error\n' +
+                    '    at eval (eval at testFunction (inspected-page.html:29:11), <anonymous>:1:10)\n' +
+                    '    at ServerComponentError (file://~/(some)(really)(exotic-directory)/ReactFlight-test.js:1166:19)\n' +
+                    '    at file:///testing.js:42:3\n' +
+                    '    at file:///testing.js:42:3',
+                ),
+            digest: 'a dev digest',
+            environmentName: 'Server',
+          },
+        ],
+        findSourceMapURLCalls: gate(flags => flags.enableOwnerStacks)
+          ? [
+              [__filename],
+              [__filename],
+              // TODO: What should we request here? The outer (<anonymous>) or the inner (inspected-page.html)?
+              ['inspected-page.html:29:11), <anonymous>'],
+              ['file://~/(some)(really)(exotic-directory)/ReactFlight-test.js'],
+              ['file:///testing.js'],
+              [__filename],
+            ]
+          : [],
+      });
+    } else {
+      expect(errors.map(getErrorForJestMatcher)).toEqual([
+        {
+          message:
+            'An error occurred in the Server Components render. The specific message is omitted in production' +
+            ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+            ' may provide additional details about the nature of the error.',
+          stack:
+            'Error: An error occurred in the Server Components render. The specific message is omitted in production' +
+            ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
+            ' may provide additional details about the nature of the error.',
+          digest: 'digest("This is an error")',
+        },
+      ]);
+    }
   });
 
   it('should include server components in warning stacks', async () => {
