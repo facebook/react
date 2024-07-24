@@ -55,5 +55,3 @@ function Component_withRef(t0, ref) {
 
 ```
       
-### Eval output
-(kind: exception) Fixture not implemented
