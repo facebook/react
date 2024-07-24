@@ -1,4 +1,3 @@
-// @debug
 const Component2 = props => {
   return (
     <ul>

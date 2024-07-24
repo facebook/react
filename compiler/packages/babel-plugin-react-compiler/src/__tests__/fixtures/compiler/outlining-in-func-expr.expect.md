@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @debug
 const Component2 = props => {
   return (
     <ul>
@@ -18,7 +17,7 @@ const Component2 = props => {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @debug
+import { c as _c } from "react/compiler-runtime";
 const Component2 = (props) => {
   const $ = _c(4);
   let t0;
