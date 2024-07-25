@@ -51,6 +51,7 @@ export type Options = {
   encodeFormAction?: EncodeFormActionCallback,
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
+  environmentName?: string,
 };
 
 function createFromNodeStream<T>(
@@ -70,6 +71,9 @@ function createFromNodeStream<T>(
       ? options.findSourceMapURL
       : undefined,
     __DEV__ && options ? options.replayConsoleLogs === true : false, // defaults to false
+    __DEV__ && options && options.environmentName
+      ? options.environmentName
+      : undefined,
   );
   stream.on('data', chunk => {
     processBinaryChunk(response, chunk);

@@ -13,7 +13,7 @@ import {describeBuiltInComponentFrame} from 'shared/ReactComponentStackFrame';
 
 import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
-import {formatOwnerStack} from '../ReactFlightOwnerStack';
+import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
 export function getOwnerStackByComponentInfoInDev(
   componentInfo: ReactComponentInfo,

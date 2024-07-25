@@ -15,13 +15,6 @@ import type {ReactClientValue} from './ReactFlightServer';
 
 import {setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
-import {
-  supportsComponentStorage,
-  componentStorage,
-} from './ReactFlightServerConfig';
-
-import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
-
 // These indirections exists so we can exclude its stack frame in DEV (and anything below it).
 // TODO: Consider marking the whole bundle instead of these boundaries.
 
@@ -30,38 +23,12 @@ const callComponent = {
     Component: (p: Props, arg: void) => R,
     props: Props,
     componentDebugInfo: ReactComponentInfo,
-    debugTask: null | ConsoleTask,
   ): R {
     // The secondArg is always undefined in Server Components since refs error early.
     const secondArg = undefined;
     setCurrentOwner(componentDebugInfo);
     try {
-      if (supportsComponentStorage) {
-        // Run the component in an Async Context that tracks the current owner.
-        if (enableOwnerStacks && debugTask) {
-          return debugTask.run(
-            // $FlowFixMe[method-unbinding]
-            componentStorage.run.bind(
-              componentStorage,
-              componentDebugInfo,
-              Component,
-              props,
-              secondArg,
-            ),
-          );
-        }
-        return componentStorage.run(
-          componentDebugInfo,
-          Component,
-          props,
-          secondArg,
-        );
-      } else {
-        if (enableOwnerStacks && debugTask) {
-          return debugTask.run(Component.bind(null, props, secondArg));
-        }
-        return Component(props, secondArg);
-      }
+      return Component(props, secondArg);
     } finally {
       setCurrentOwner(null);
     }
@@ -72,7 +39,6 @@ export const callComponentInDEV: <Props, R>(
   Component: (p: Props, arg: void) => R,
   props: Props,
   componentDebugInfo: ReactComponentInfo,
-  debugTask: null | ConsoleTask,
 ) => R = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
     (callComponent['react-stack-bottom-frame'].bind(callComponent): any)

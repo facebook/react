@@ -183,11 +183,64 @@ export function createNewFunctionNode(
       transformedFn = fn;
       break;
     }
+    default: {
+      assertExhaustive(
+        originalFn.node,
+        `Creating unhandled function: ${originalFn.node}`,
+      );
+    }
   }
-
   // Avoid visiting the new transformed version
   ALREADY_COMPILED.add(transformedFn);
   return transformedFn;
+}
+
+function insertNewOutlinedFunctionNode(
+  program: NodePath<t.Program>,
+  originalFn: BabelFn,
+  compiledFn: CodegenFunction,
+): NodePath<t.Function> {
+  switch (originalFn.type) {
+    case 'FunctionDeclaration': {
+      return originalFn.insertAfter(
+        createNewFunctionNode(originalFn, compiledFn),
+      )[0]!;
+    }
+    /**
+     * We can't just append the outlined function as a sibling of the original function if it is an
+     * (Arrow)FunctionExpression parented by a VariableDeclaration, as this would cause its parent
+     * to become a SequenceExpression instead which breaks a bunch of assumptions elsewhere in the
+     * plugin.
+     *
+     * To get around this, we always synthesize a new FunctionDeclaration for the outlined function
+     * and insert it as a true sibling to the original function.
+     */
+    case 'ArrowFunctionExpression':
+    case 'FunctionExpression': {
+      const fn: t.FunctionDeclaration = {
+        type: 'FunctionDeclaration',
+        id: compiledFn.id,
+        loc: originalFn.node.loc ?? null,
+        async: compiledFn.async,
+        generator: compiledFn.generator,
+        params: compiledFn.params,
+        body: compiledFn.body,
+      };
+      const insertedFuncDecl = program.pushContainer('body', [fn])[0]!;
+      CompilerError.invariant(insertedFuncDecl.isFunctionDeclaration(), {
+        reason: 'Expected inserted function declaration',
+        description: `Got: ${insertedFuncDecl}`,
+        loc: insertedFuncDecl.node?.loc ?? null,
+      });
+      return insertedFuncDecl;
+    }
+    default: {
+      assertExhaustive(
+        originalFn,
+        `Inserting unhandled function: ${originalFn}`,
+      );
+    }
+  }
 }
 
 /*
@@ -407,9 +460,11 @@ export function compileProgram(
         reason: 'Unexpected nested outlined functions',
         loc: outlined.fn.loc,
       });
-      const fn = current.fn.insertAfter(
-        createNewFunctionNode(current.fn, outlined.fn),
-      )[0]!;
+      const fn = insertNewOutlinedFunctionNode(
+        program,
+        current.fn,
+        outlined.fn,
+      );
       fn.skip();
       ALREADY_COMPILED.add(fn.node);
       if (outlined.type !== null) {
