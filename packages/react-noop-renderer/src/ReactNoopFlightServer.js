@@ -68,6 +68,7 @@ const ReactNoopFlightServer = ReactFlightServer({
 
 type Options = {
   environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
   identifierPrefix?: string,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
@@ -82,7 +83,9 @@ function render(model: ReactClientValue, options?: Options): Destination {
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
-    options ? options.environmentName : undefined,
+    undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
   );
   ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);
