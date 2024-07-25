@@ -61,26 +61,6 @@ jobs:
           paths:
             - build
 
-  download_build:
-    docker: *docker
-    environment: *environment
-    parameters:
-      revision:
-        type: string
-    steps:
-      - checkout
-      - setup_node_modules
-      - run:
-          name: Download artifacts for revision
-          command: |
-              git fetch origin main
-              cd ./scripts/release && yarn && cd ../../
-              scripts/release/download-experimental-build.js --commit=<< parameters.revision >> --allowBrokenCI
-      - persist_to_workspace:
-          root: .
-          paths:
-            - build
-
   process_artifacts_combined:
     docker: *docker
     environment: *environment
@@ -101,71 +81,6 @@ jobs:
           path: ./build2.tgz
       - store_artifacts:
           path: ./build.tgz
-
-  build_devtools_and_process_artifacts:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - run:
-          environment:
-            RELEASE_CHANNEL: experimental
-          command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
-      - store_artifacts:
-          path: ./build/devtools.tgz
-      # Simplifies getting the extension for local testing
-      - store_artifacts:
-          path: ./build/devtools/chrome-extension.zip
-          destination: react-devtools-chrome-extension.zip
-      - store_artifacts:
-          path: ./build/devtools/firefox-extension.zip
-          destination: react-devtools-firefox-extension.zip
-
-  run_devtools_tests_for_versions:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    parameters:
-      version:
-        type: string
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >> --replaceBuild
-      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion << parameters.version >> --ci=circleci
-
-  run_devtools_e2e_tests_for_versions:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    parameters:
-      version:
-        type: string
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - run:
-          name: Playwright install deps
-          command: |
-            npx playwright install
-            sudo npx playwright install-deps
-      - run: ./scripts/circleci/download_devtools_regression_build.js << parameters.version >>
-      - run:
-          environment:
-            RELEASE_CHANNEL: experimental
-          command: ./scripts/circleci/run_devtools_e2e_tests.js << parameters.version >>
-      - run:
-          name: Cleanup build regression folder
-          command: rm -r ./build-regression
-      - store_artifacts:
-          path: ./tmp/screenshots
 
   publish_prerelease:
     parameters:
@@ -202,45 +117,6 @@ workflows:
       - process_artifacts_combined:
           requires:
             - yarn_build
-
-  devtools_regression_tests:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    triggers:
-      - schedule:
-          # DevTools regression tests run once a day
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - download_build:
-          revision: << pipeline.git.revision >>
-      - build_devtools_and_process_artifacts:
-          requires:
-            - download_build
-      - run_devtools_tests_for_versions:
-          requires:
-            - build_devtools_and_process_artifacts
-          matrix:
-            parameters:
-              version:
-                - "16.0"
-                - "16.5" # schedule package
-                - "16.8" # hooks
-                - "17.0"
-                - "18.0"
-      - run_devtools_e2e_tests_for_versions:
-          requires:
-            - build_devtools_and_process_artifacts
-          matrix:
-            parameters:
-              version:
-                - "16.0"
-                - "16.5" # schedule package
-                - "16.8" # hooks
-                - "17.0"
-                - "18.0"
 
   # Used to publish a prerelease manually via the command line
   publish_preleases:
