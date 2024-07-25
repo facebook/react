@@ -1,10 +1,7 @@
 // @flow @validatePreserveExistingMemoizationGuarantees
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-component Component(
-  disableLocalRef,
-  ref,
-) {
+component Component(disableLocalRef, ref) {
   const localRef = useFooRef();
   const mergedRef = useMemo(() => {
     return disableLocalRef ? ref : identity(ref, localRef);

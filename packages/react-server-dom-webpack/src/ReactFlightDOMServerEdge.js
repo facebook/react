@@ -45,6 +45,7 @@ export type {TemporaryReferenceSet};
 
 type Options = {
   environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
   identifierPrefix?: string,
   signal?: AbortSignal,
   temporaryReferences?: TemporaryReferenceSet,
@@ -63,8 +64,9 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
-    options ? options.environmentName : undefined,
     options ? options.temporaryReferences : undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
