@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<15ace73fbf8db2d6b3d6e49b3900a967>>
+ * @generated SignedSource<<866410222c049479f0ced248f85b5afd>>
  */
 
 "use strict";
@@ -705,9 +705,6 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
   if (root.errorRecoveryDisabledLanes & originallyAttemptedLanes) return 0;
   root = root.pendingLanes & -536870913;
   return 0 !== root ? root : root & 536870912 ? 536870912 : 0;
-}
-function includesBlockingLane(root, lanes) {
-  return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
 }
 function claimNextTransitionLane() {
   var lane = nextTransitionLane;
@@ -2794,12 +2791,11 @@ function updateSyncExternalStore(subscribe, getSnapshot) {
       { destroy: void 0 },
       null
     );
-    subscribe = workInProgressRoot;
-    if (null === subscribe)
+    if (null === workInProgressRoot)
       throw Error(
         "Expected a work-in-progress root. This is a bug in React. Please file an issue."
       );
-    includesBlockingLane(subscribe, renderLanes) ||
+    0 !== (renderLanes & 60) ||
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
   }
   return nextSnapshot;
@@ -3466,23 +3462,22 @@ var HooksDispatcherOnMount = {
     var fiber = currentlyRenderingFiber$1,
       hook = mountWorkInProgressHook();
     var nextSnapshot = getSnapshot();
-    var root = workInProgressRoot;
-    if (null === root)
+    if (null === workInProgressRoot)
       throw Error(
         "Expected a work-in-progress root. This is a bug in React. Please file an issue."
       );
-    includesBlockingLane(root, workInProgressRootRenderLanes) ||
+    0 !== (workInProgressRootRenderLanes & 60) ||
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     hook.memoizedState = nextSnapshot;
-    root = { value: nextSnapshot, getSnapshot: getSnapshot };
-    hook.queue = root;
-    mountEffect(subscribeToStore.bind(null, fiber, root, subscribe), [
+    var inst = { value: nextSnapshot, getSnapshot: getSnapshot };
+    hook.queue = inst;
+    mountEffect(subscribeToStore.bind(null, fiber, inst, subscribe), [
       subscribe
     ]);
     fiber.flags |= 2048;
     pushEffect(
       9,
-      updateStoreInstance.bind(null, fiber, root, nextSnapshot, getSnapshot),
+      updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
       { destroy: void 0 },
       null
     );
@@ -8119,9 +8114,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   );
   if (0 === lanes) return null;
   var exitStatus = (didTimeout =
-    !includesBlockingLane(root, lanes) &&
-    0 === (lanes & root.expiredLanes) &&
-    !didTimeout)
+    0 === (lanes & 60) && 0 === (lanes & root.expiredLanes) && !didTimeout)
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
   if (0 !== exitStatus) {
@@ -8454,7 +8447,7 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  0 === (root.current.mode & 32) && 0 !== (lanes & 8) && (lanes |= lanes & 32);
+  0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
     for (
@@ -9579,24 +9572,16 @@ function createContainer(
     onRecoverableError,
     null
   );
-  1 === tag
-    ? ((tag = 1),
-      !0 === isStrictMode && (tag |= 24),
-      concurrentUpdatesByDefaultOverride && (tag |= 32))
-    : (tag = 0);
+  1 === tag ? ((tag = 1), !0 === isStrictMode && (tag |= 24)) : (tag = 0);
   isDevToolsPresent && (tag |= 2);
   isStrictMode = createFiberImplClass(3, null, null, tag);
   containerInfo.current = isStrictMode;
   isStrictMode.stateNode = containerInfo;
-  concurrentUpdatesByDefaultOverride = createCache();
-  concurrentUpdatesByDefaultOverride.refCount++;
-  containerInfo.pooledCache = concurrentUpdatesByDefaultOverride;
-  concurrentUpdatesByDefaultOverride.refCount++;
-  isStrictMode.memoizedState = {
-    element: null,
-    isDehydrated: !1,
-    cache: concurrentUpdatesByDefaultOverride
-  };
+  tag = createCache();
+  tag.refCount++;
+  containerInfo.pooledCache = tag;
+  tag.refCount++;
+  isStrictMode.memoizedState = { element: null, isDehydrated: !1, cache: tag };
   initializeUpdateQueue(isStrictMode);
   return containerInfo;
 }
@@ -9962,12 +9947,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1120 = {
+var devToolsConfig$jscomp$inline_1119 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-da4abf00-20240723",
+  version: "19.0.0-native-fb-14a4699f-20240725",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9984,10 +9969,10 @@ var devToolsConfig$jscomp$inline_1120 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1120.bundleType,
-  version: devToolsConfig$jscomp$inline_1120.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1120.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1120.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1119.bundleType,
+  version: devToolsConfig$jscomp$inline_1119.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1119.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1119.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10004,31 +9989,27 @@ var devToolsConfig$jscomp$inline_1120 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1120.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1119.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-da4abf00-20240723"
+  reconcilerVersion: "19.0.0-native-fb-14a4699f-20240725"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;
 exports.create = function (element, options) {
   var createNodeMock = defaultTestOptions.createNodeMock,
     isConcurrent = !1,
-    isStrictMode = !1,
-    concurrentUpdatesByDefault = null;
+    isStrictMode = !1;
   "object" === typeof options &&
     null !== options &&
     ("function" === typeof options.createNodeMock &&
       (createNodeMock = options.createNodeMock),
     (isConcurrent = options.unstable_isConcurrent),
-    !0 === options.unstable_strictMode && (isStrictMode = !0),
-    void 0 !== options.unstable_concurrentUpdatesByDefault &&
-      (concurrentUpdatesByDefault =
-        options.unstable_concurrentUpdatesByDefault));
+    !0 === options.unstable_strictMode && (isStrictMode = !0));
   var container = {
       children: [],
       createNodeMock: createNodeMock,
@@ -10039,7 +10020,7 @@ exports.create = function (element, options) {
       isConcurrent ? 1 : 0,
       null,
       isStrictMode,
-      concurrentUpdatesByDefault,
+      !1,
       "",
       defaultOnUncaughtError,
       defaultOnCaughtError,
