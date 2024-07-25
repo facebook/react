@@ -751,9 +751,6 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
   root = root.pendingLanes & -536870913;
   return 0 !== root ? root : root & 536870912 ? 536870912 : 0;
 }
-function includesBlockingLane(root, lanes) {
-  return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
-}
 function claimNextTransitionLane() {
   var lane = nextTransitionLane;
   nextTransitionLane <<= 1;
@@ -3657,10 +3654,9 @@ function updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
       { destroy: void 0 },
       null
     );
-    subscribe = workInProgressRoot;
-    if (null === subscribe) throw Error(formatProdErrorMessage(349));
+    if (null === workInProgressRoot) throw Error(formatProdErrorMessage(349));
     isHydrating$jscomp$0 ||
-      includesBlockingLane(subscribe, renderLanes) ||
+      0 !== (renderLanes & 60) ||
       pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
   }
   return getServerSnapshot;
@@ -4486,15 +4482,14 @@ var HooksDispatcherOnMount = {
       getServerSnapshot = getServerSnapshot();
     } else {
       getServerSnapshot = getSnapshot();
-      var root$74 = workInProgressRoot;
-      if (null === root$74) throw Error(formatProdErrorMessage(349));
-      includesBlockingLane(root$74, workInProgressRootRenderLanes) ||
+      if (null === workInProgressRoot) throw Error(formatProdErrorMessage(349));
+      0 !== (workInProgressRootRenderLanes & 60) ||
         pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
     }
     hook.memoizedState = getServerSnapshot;
-    root$74 = { value: getServerSnapshot, getSnapshot: getSnapshot };
-    hook.queue = root$74;
-    mountEffect(subscribeToStore.bind(null, fiber, root$74, subscribe), [
+    var inst = { value: getServerSnapshot, getSnapshot: getSnapshot };
+    hook.queue = inst;
+    mountEffect(subscribeToStore.bind(null, fiber, inst, subscribe), [
       subscribe
     ]);
     fiber.flags |= 2048;
@@ -4503,7 +4498,7 @@ var HooksDispatcherOnMount = {
       updateStoreInstance.bind(
         null,
         fiber,
-        root$74,
+        inst,
         getServerSnapshot,
         getSnapshot
       ),
@@ -11094,7 +11089,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   );
   if (0 === lanes) return null;
   var exitStatus = (didTimeout =
-    !includesBlockingLane(root, lanes) &&
+    0 === (lanes & 60) &&
     0 === (lanes & root.expiredLanes) &&
     (disableSchedulerTimeoutInWorkLoop || !didTimeout))
     ? renderRootConcurrent(root, lanes)
@@ -11434,7 +11429,7 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
   workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-  0 === (root.current.mode & 32) && 0 !== (lanes & 8) && (lanes |= lanes & 32);
+  0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
     for (
@@ -12703,7 +12698,6 @@ function createFiberRoot(
   initialChildren,
   hydrationCallbacks,
   isStrictMode,
-  concurrentUpdatesByDefaultOverride,
   identifierPrefix,
   onUncaughtError,
   onCaughtError,
@@ -12726,19 +12720,18 @@ function createFiberRoot(
     (containerInfo.transitionCallbacks = transitionCallbacks);
   hydrationCallbacks = 1;
   !0 === isStrictMode && (hydrationCallbacks |= 24);
-  concurrentUpdatesByDefaultOverride && (hydrationCallbacks |= 32);
   isDevToolsPresent && (hydrationCallbacks |= 2);
   isStrictMode = createFiber(3, null, null, hydrationCallbacks);
   containerInfo.current = isStrictMode;
   isStrictMode.stateNode = containerInfo;
-  concurrentUpdatesByDefaultOverride = createCache();
-  concurrentUpdatesByDefaultOverride.refCount++;
-  containerInfo.pooledCache = concurrentUpdatesByDefaultOverride;
-  concurrentUpdatesByDefaultOverride.refCount++;
+  hydrationCallbacks = createCache();
+  hydrationCallbacks.refCount++;
+  containerInfo.pooledCache = hydrationCallbacks;
+  hydrationCallbacks.refCount++;
   isStrictMode.memoizedState = {
     element: initialChildren,
     isDehydrated: hydrate,
-    cache: concurrentUpdatesByDefaultOverride
+    cache: hydrationCallbacks
   };
   initializeUpdateQueue(isStrictMode);
   return containerInfo;
@@ -13377,14 +13370,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$397;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1618 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1618) {
-      var element$jscomp$inline_1619 = document.createElement("div");
-      element$jscomp$inline_1619.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1618 =
-        "function" === typeof element$jscomp$inline_1619.oninput;
+    var isSupported$jscomp$inline_1617 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1617) {
+      var element$jscomp$inline_1618 = document.createElement("div");
+      element$jscomp$inline_1618.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1617 =
+        "function" === typeof element$jscomp$inline_1618.oninput;
     }
-    JSCompiler_inline_result$jscomp$397 = isSupported$jscomp$inline_1618;
+    JSCompiler_inline_result$jscomp$397 = isSupported$jscomp$inline_1617;
   } else JSCompiler_inline_result$jscomp$397 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$397 &&
@@ -13798,20 +13791,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1659 = 0;
-  i$jscomp$inline_1659 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1659++
+  var i$jscomp$inline_1658 = 0;
+  i$jscomp$inline_1658 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1658++
 ) {
-  var eventName$jscomp$inline_1660 =
-      simpleEventPluginEvents[i$jscomp$inline_1659],
-    domEventName$jscomp$inline_1661 =
-      eventName$jscomp$inline_1660.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1662 =
-      eventName$jscomp$inline_1660[0].toUpperCase() +
-      eventName$jscomp$inline_1660.slice(1);
+  var eventName$jscomp$inline_1659 =
+      simpleEventPluginEvents[i$jscomp$inline_1658],
+    domEventName$jscomp$inline_1660 =
+      eventName$jscomp$inline_1659.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1661 =
+      eventName$jscomp$inline_1659[0].toUpperCase() +
+      eventName$jscomp$inline_1659.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1661,
-    "on" + capitalizedEvent$jscomp$inline_1662
+    domEventName$jscomp$inline_1660,
+    "on" + capitalizedEvent$jscomp$inline_1661
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17361,16 +17354,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1832 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1831 = React.version;
 if (
-  "19.0.0-www-modern-da4abf00-20240723" !==
-  isomorphicReactPackageVersion$jscomp$inline_1832
+  "19.0.0-www-modern-14a4699f-20240725" !==
+  isomorphicReactPackageVersion$jscomp$inline_1831
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1832,
-      "19.0.0-www-modern-da4abf00-20240723"
+      isomorphicReactPackageVersion$jscomp$inline_1831,
+      "19.0.0-www-modern-14a4699f-20240725"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -17386,10 +17379,10 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1834 = {
+var devToolsConfig$jscomp$inline_1833 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-da4abf00-20240723",
+  version: "19.0.0-www-modern-14a4699f-20240725",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17407,10 +17400,10 @@ var devToolsConfig$jscomp$inline_1834 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1834.bundleType,
-  version: devToolsConfig$jscomp$inline_1834.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1834.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1834.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1833.bundleType,
+  version: devToolsConfig$jscomp$inline_1833.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1833.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1833.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17426,14 +17419,14 @@ var devToolsConfig$jscomp$inline_1834 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1834.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1833.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-da4abf00-20240723"
+  reconcilerVersion: "19.0.0-www-modern-14a4699f-20240725"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -17519,7 +17512,6 @@ exports.createRoot = function (container, options) {
   );
   if (!isValidContainer(container)) throw Error(formatProdErrorMessage(299));
   var isStrictMode = !1,
-    concurrentUpdatesByDefaultOverride = !1,
     identifierPrefix = "",
     onUncaughtError = defaultOnUncaughtError,
     onCaughtError = defaultOnCaughtError,
@@ -17528,8 +17520,6 @@ exports.createRoot = function (container, options) {
   null !== options &&
     void 0 !== options &&
     (!0 === options.unstable_strictMode && (isStrictMode = !0),
-    !0 === options.unstable_concurrentUpdatesByDefault &&
-      (concurrentUpdatesByDefaultOverride = !0),
     void 0 !== options.identifierPrefix &&
       (identifierPrefix = options.identifierPrefix),
     void 0 !== options.onUncaughtError &&
@@ -17546,7 +17536,6 @@ exports.createRoot = function (container, options) {
     null,
     null,
     isStrictMode,
-    concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onUncaughtError,
     onCaughtError,
@@ -17585,7 +17574,6 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   );
   if (!isValidContainer(container)) throw Error(formatProdErrorMessage(299));
   var isStrictMode = !1,
-    concurrentUpdatesByDefaultOverride = !1,
     identifierPrefix = "",
     onUncaughtError = defaultOnUncaughtError,
     onCaughtError = defaultOnCaughtError,
@@ -17595,8 +17583,6 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   null !== options &&
     void 0 !== options &&
     (!0 === options.unstable_strictMode && (isStrictMode = !0),
-    !0 === options.unstable_concurrentUpdatesByDefault &&
-      (concurrentUpdatesByDefaultOverride = !0),
     void 0 !== options.identifierPrefix &&
       (identifierPrefix = options.identifierPrefix),
     void 0 !== options.onUncaughtError &&
@@ -17614,7 +17600,6 @@ exports.hydrateRoot = function (container, initialChildren, options) {
     initialChildren,
     null != options ? options : null,
     isStrictMode,
-    concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onUncaughtError,
     onCaughtError,
@@ -17625,9 +17610,9 @@ exports.hydrateRoot = function (container, initialChildren, options) {
   initialChildren.context = emptyContextObject;
   options = initialChildren.current;
   isStrictMode = requestUpdateLane();
-  concurrentUpdatesByDefaultOverride = createUpdate(isStrictMode);
-  concurrentUpdatesByDefaultOverride.callback = null;
-  enqueueUpdate(options, concurrentUpdatesByDefaultOverride, isStrictMode);
+  identifierPrefix = createUpdate(isStrictMode);
+  identifierPrefix.callback = null;
+  enqueueUpdate(options, identifierPrefix, isStrictMode);
   initialChildren.current.lanes = isStrictMode;
   markRootUpdated(initialChildren, isStrictMode);
   ensureRootIsScheduled(initialChildren);
@@ -17791,7 +17776,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-da4abf00-20240723";
+exports.version = "19.0.0-www-modern-14a4699f-20240725";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -918,9 +918,6 @@ __DEV__ &&
       root = root.pendingLanes & -536870913;
       return 0 !== root ? root : root & 536870912 ? 536870912 : 0;
     }
-    function includesBlockingLane(root, lanes) {
-      return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
-    }
     function claimNextTransitionLane() {
       var lane = nextTransitionLane;
       nextTransitionLane <<= 1;
@@ -4034,7 +4031,7 @@ __DEV__ &&
             ? HooksDispatcherOnMountWithHookTypesInDEV
             : HooksDispatcherOnMountInDEV;
       shouldDoubleInvokeUserFnsInHooksDEV = nextRenderLanes =
-        0 !== (workInProgress.mode & 8);
+        (workInProgress.mode & 8) !== NoMode;
       var children = callComponentInDEV(Component, props, secondArg);
       shouldDoubleInvokeUserFnsInHooksDEV = !1;
       didScheduleRenderPhaseUpdateDuringThisPass &&
@@ -4146,7 +4143,7 @@ __DEV__ &&
     function bailoutHooks(current, workInProgress, lanes) {
       workInProgress.updateQueue = current.updateQueue;
       workInProgress.flags =
-        0 !== (workInProgress.mode & 16)
+        (workInProgress.mode & 16) !== NoMode
           ? workInProgress.flags & -201328645
           : workInProgress.flags & -2053;
       current.lanes &= ~lanes;
@@ -4485,15 +4482,12 @@ __DEV__ &&
               "The result of getSnapshot should be cached to avoid an infinite loop"
             ),
             (didWarnUncachedGetSnapshot = !0)));
-        getServerSnapshot = workInProgressRoot;
-        if (null === getServerSnapshot)
+        if (null === workInProgressRoot)
           throw Error(
             "Expected a work-in-progress root. This is a bug in React. Please file an issue."
           );
-        includesBlockingLane(
-          getServerSnapshot,
-          workInProgressRootRenderLanes
-        ) || pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
+        0 !== (workInProgressRootRenderLanes & 60) ||
+          pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       }
       hook.memoizedState = nextSnapshot;
       getServerSnapshot = { value: nextSnapshot, getSnapshot: getSnapshot };
@@ -4570,13 +4564,12 @@ __DEV__ &&
           { destroy: void 0 },
           null
         );
-        subscribe = workInProgressRoot;
-        if (null === subscribe)
+        if (null === workInProgressRoot)
           throw Error(
             "Expected a work-in-progress root. This is a bug in React. Please file an issue."
           );
         isHydrating$jscomp$0 ||
-          includesBlockingLane(subscribe, renderLanes) ||
+          0 !== (renderLanes & 60) ||
           pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
       }
       return getServerSnapshot;
@@ -4974,8 +4967,8 @@ __DEV__ &&
           )));
     }
     function mountEffect(create, deps) {
-      0 !== (currentlyRenderingFiber$1.mode & 16) &&
-      0 === (currentlyRenderingFiber$1.mode & 64)
+      (currentlyRenderingFiber$1.mode & 16) !== NoMode &&
+      (currentlyRenderingFiber$1.mode & 64) === NoMode
         ? mountEffectImpl(142608384, Passive, create, deps)
         : mountEffectImpl(8390656, Passive, create, deps);
     }
@@ -5018,7 +5011,8 @@ __DEV__ &&
     }
     function mountLayoutEffect(create, deps) {
       var fiberFlags = 4194308;
-      0 !== (currentlyRenderingFiber$1.mode & 16) && (fiberFlags |= 67108864);
+      (currentlyRenderingFiber$1.mode & 16) !== NoMode &&
+        (fiberFlags |= 67108864);
       return mountEffectImpl(fiberFlags, Layout, create, deps);
     }
     function imperativeHandleEffect(create, ref) {
@@ -5051,7 +5045,8 @@ __DEV__ &&
         );
       deps = null !== deps && void 0 !== deps ? deps.concat([ref]) : null;
       var fiberFlags = 4194308;
-      0 !== (currentlyRenderingFiber$1.mode & 16) && (fiberFlags |= 67108864);
+      (currentlyRenderingFiber$1.mode & 16) !== NoMode &&
+        (fiberFlags |= 67108864);
       mountEffectImpl(
         fiberFlags,
         Layout,
@@ -6818,7 +6813,8 @@ __DEV__ &&
           (_instance.state = workInProgress.memoizedState));
         "function" === typeof _instance.componentDidMount &&
           (workInProgress.flags |= 4194308);
-        0 !== (workInProgress.mode & 16) && (workInProgress.flags |= 67108864);
+        (workInProgress.mode & 16) !== NoMode &&
+          (workInProgress.flags |= 67108864);
         _instance = !0;
       } else if (null === current$jscomp$0) {
         _instance = workInProgress.stateNode;
@@ -6885,11 +6881,11 @@ __DEV__ &&
                     _instance.UNSAFE_componentWillMount()),
                 "function" === typeof _instance.componentDidMount &&
                   (workInProgress.flags |= 4194308),
-                0 !== (workInProgress.mode & 16) &&
+                (workInProgress.mode & 16) !== NoMode &&
                   (workInProgress.flags |= 67108864))
               : ("function" === typeof _instance.componentDidMount &&
                   (workInProgress.flags |= 4194308),
-                0 !== (workInProgress.mode & 16) &&
+                (workInProgress.mode & 16) !== NoMode &&
                   (workInProgress.flags |= 67108864),
                 (workInProgress.memoizedProps = nextProps),
                 (workInProgress.memoizedState = oldContext)),
@@ -6899,7 +6895,7 @@ __DEV__ &&
             (_instance = lane))
           : ("function" === typeof _instance.componentDidMount &&
               (workInProgress.flags |= 4194308),
-            0 !== (workInProgress.mode & 16) &&
+            (workInProgress.mode & 16) !== NoMode &&
               (workInProgress.flags |= 67108864),
             (_instance = !1));
       } else {
@@ -7166,7 +7162,7 @@ __DEV__ &&
                         : null,
                     retryLane: 536870912
                   }),
-                  (didSuspend = createFiber(18, null, null, 0)),
+                  (didSuspend = createFiber(18, null, null, NoMode)),
                   (didSuspend.stateNode = JSCompiler_temp$jscomp$0),
                   (didSuspend.return = workInProgress),
                   (workInProgress.child = didSuspend),
@@ -9560,7 +9556,7 @@ __DEV__ &&
         newChildLanes = 0,
         subtreeFlags = 0;
       if (didBailout)
-        if (0 !== (completedWork.mode & 2)) {
+        if ((completedWork.mode & 2) !== NoMode) {
           for (
             var _treeBaseDuration = completedWork.selfBaseDuration,
               _child2 = completedWork.child;
@@ -9585,7 +9581,7 @@ __DEV__ &&
               (subtreeFlags |= _treeBaseDuration.flags & 31457280),
               (_treeBaseDuration.return = completedWork),
               (_treeBaseDuration = _treeBaseDuration.sibling);
-      else if (0 !== (completedWork.mode & 2)) {
+      else if ((completedWork.mode & 2) !== NoMode) {
         _treeBaseDuration = completedWork.actualDuration;
         _child2 = completedWork.selfBaseDuration;
         for (var child = completedWork.child; null !== child; )
@@ -9903,7 +9899,7 @@ __DEV__ &&
                   );
                 hydrateSuspenseInstance(nextResource, workInProgress);
                 bubbleProperties(workInProgress);
-                0 !== (workInProgress.mode & 2) &&
+                (workInProgress.mode & 2) !== NoMode &&
                   null !== newProps &&
                   ((nextResource = workInProgress.child),
                   null !== nextResource &&
@@ -9916,7 +9912,7 @@ __DEV__ &&
                     (workInProgress.memoizedState = null),
                   (workInProgress.flags |= 4),
                   bubbleProperties(workInProgress),
-                  0 !== (workInProgress.mode & 2) &&
+                  (workInProgress.mode & 2) !== NoMode &&
                     null !== newProps &&
                     ((nextResource = workInProgress.child),
                     null !== nextResource &&
@@ -9939,7 +9935,7 @@ __DEV__ &&
           if (0 !== (workInProgress.flags & 128))
             return (
               (workInProgress.lanes = renderLanes),
-              0 !== (workInProgress.mode & 2) &&
+              (workInProgress.mode & 2) !== NoMode &&
                 transferActualDuration(workInProgress),
               workInProgress
             );
@@ -9965,7 +9961,7 @@ __DEV__ &&
             null != workInProgress.memoizedProps.suspenseCallback &&
             (workInProgress.flags |= 4);
           bubbleProperties(workInProgress);
-          0 !== (workInProgress.mode & 2) &&
+          (workInProgress.mode & 2) !== NoMode &&
             renderLanes &&
             ((current = workInProgress.child),
             null !== current &&
@@ -10176,7 +10172,7 @@ __DEV__ &&
             (current = workInProgress.flags),
             current & 65536
               ? ((workInProgress.flags = (current & -65537) | 128),
-                0 !== (workInProgress.mode & 2) &&
+                (workInProgress.mode & 2) !== NoMode &&
                   transferActualDuration(workInProgress),
                 workInProgress)
               : null
@@ -10212,7 +10208,7 @@ __DEV__ &&
           current = workInProgress.flags;
           return current & 65536
             ? ((workInProgress.flags = (current & -65537) | 128),
-              0 !== (workInProgress.mode & 2) &&
+              (workInProgress.mode & 2) !== NoMode &&
                 transferActualDuration(workInProgress),
               workInProgress)
             : null;
@@ -10239,7 +10235,7 @@ __DEV__ &&
             (current = workInProgress.flags),
             current & 65536
               ? ((workInProgress.flags = (current & -65537) | 128),
-                0 !== (workInProgress.mode & 2) &&
+                (workInProgress.mode & 2) !== NoMode &&
                   transferActualDuration(workInProgress),
                 workInProgress)
               : null
@@ -10309,7 +10305,7 @@ __DEV__ &&
     }
     function shouldProfile(current) {
       return (
-        0 !== (current.mode & 2) &&
+        (current.mode & 2) !== NoMode &&
         (executionContext & CommitContext) !== NoContext
       );
     }
@@ -13485,7 +13481,7 @@ __DEV__ &&
       );
       if (0 === lanes) return null;
       var shouldTimeSlice =
-        !includesBlockingLane(root, lanes) &&
+        0 === (lanes & 60) &&
         0 === (lanes & root.expiredLanes) &&
         (disableSchedulerTimeoutInWorkLoop || !didTimeout);
       didTimeout = shouldTimeSlice
@@ -13845,9 +13841,7 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
         null;
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-      0 === (root.current.mode & 32) &&
-        0 !== (lanes & 8) &&
-        (lanes |= lanes & 32);
+      0 !== (lanes & 8) && (lanes |= lanes & 32);
       var allEntangledLanes = root.entangledLanes;
       if (0 !== allEntangledLanes)
         for (
@@ -14191,7 +14185,7 @@ __DEV__ &&
     }
     function performUnitOfWork(unitOfWork) {
       var current = unitOfWork.alternate;
-      0 !== (unitOfWork.mode & 2)
+      (unitOfWork.mode & 2) !== NoMode
         ? (startProfilerTimer(unitOfWork),
           (current = runWithFiberInDEV(
             unitOfWork,
@@ -14222,7 +14216,7 @@ __DEV__ &&
     }
     function replayBeginWork(unitOfWork) {
       var current = unitOfWork.alternate,
-        isProfilingMode = 0 !== (unitOfWork.mode & 2);
+        isProfilingMode = (unitOfWork.mode & 2) !== NoMode;
       isProfilingMode && startProfilerTimer(unitOfWork);
       switch (unitOfWork.tag) {
         case 15:
@@ -14323,7 +14317,7 @@ __DEV__ &&
               workInProgress = unitOfWork;
               break a;
             }
-            if (0 !== (root.mode & 2)) {
+            if ((root.mode & 2) !== NoMode) {
               stopProfilerTimerIfRunningAndRecordDelta(root, !1);
               unitOfWork = root.actualDuration;
               for (thrownValue = root.child; null !== thrownValue; )
@@ -14352,7 +14346,7 @@ __DEV__ &&
           );
         var current = completedWork.alternate;
         unitOfWork = completedWork.return;
-        0 === (completedWork.mode & 2)
+        (completedWork.mode & 2) === NoMode
           ? (current = runWithFiberInDEV(
               completedWork,
               completeWork,
@@ -14890,7 +14884,7 @@ __DEV__ &&
                   doubleInvokeEffectsOnFiber,
                   root,
                   fiber,
-                  0 === (fiber.mode & 64)
+                  (fiber.mode & 64) === NoMode
                 )
               : recursivelyTraverseAndDoubleInvokeEffectsInDEV(
                   root,
@@ -15687,7 +15681,6 @@ __DEV__ &&
       initialChildren,
       hydrationCallbacks,
       isStrictMode,
-      concurrentUpdatesByDefaultOverride,
       identifierPrefix,
       onUncaughtError,
       onCaughtError,
@@ -15710,19 +15703,18 @@ __DEV__ &&
         (containerInfo.transitionCallbacks = transitionCallbacks);
       hydrationCallbacks = 1;
       !0 === isStrictMode && (hydrationCallbacks |= 24);
-      concurrentUpdatesByDefaultOverride && (hydrationCallbacks |= 32);
       isDevToolsPresent && (hydrationCallbacks |= 2);
       isStrictMode = createFiber(3, null, null, hydrationCallbacks);
       containerInfo.current = isStrictMode;
       isStrictMode.stateNode = containerInfo;
-      concurrentUpdatesByDefaultOverride = createCache();
-      retainCache(concurrentUpdatesByDefaultOverride);
-      containerInfo.pooledCache = concurrentUpdatesByDefaultOverride;
-      retainCache(concurrentUpdatesByDefaultOverride);
+      hydrationCallbacks = createCache();
+      retainCache(hydrationCallbacks);
+      containerInfo.pooledCache = hydrationCallbacks;
+      retainCache(hydrationCallbacks);
       isStrictMode.memoizedState = {
         element: initialChildren,
         isDehydrated: hydrate,
-        cache: concurrentUpdatesByDefaultOverride
+        cache: hydrationCallbacks
       };
       initializeUpdateQueue(isStrictMode);
       return containerInfo;
@@ -16099,6 +16091,7 @@ __DEV__ &&
       HydrationMismatchException = Error(
         "Hydration Mismatch Exception: This is not a real error, and should not leak into userspace. If you're seeing this, it's likely a bug in React."
       ),
+      NoMode = 0,
       concurrentQueues = [],
       concurrentQueuesIndex = 0,
       concurrentlyUpdatedLanes = 0,
@@ -18108,7 +18101,6 @@ __DEV__ &&
         null,
         hydrationCallbacks,
         isStrictMode,
-        concurrentUpdatesByDefaultOverride,
         identifierPrefix,
         onUncaughtError,
         onCaughtError,
@@ -18142,7 +18134,6 @@ __DEV__ &&
         initialChildren,
         hydrationCallbacks,
         isStrictMode,
-        concurrentUpdatesByDefaultOverride,
         identifierPrefix,
         onUncaughtError,
         onCaughtError,
@@ -18522,7 +18513,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-da4abf00-20240723"
+        reconcilerVersion: "19.0.0-www-modern-14a4699f-20240725"
       });
     };
     exports.isAlreadyRendering = function () {

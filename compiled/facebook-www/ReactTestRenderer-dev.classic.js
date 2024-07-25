@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1099() {
+    function JSCompiler_object_inline_createNodeMock_1098() {
       return null;
     }
     function findHook(fiber, id) {
@@ -907,9 +907,6 @@ __DEV__ &&
       if (root.errorRecoveryDisabledLanes & originallyAttemptedLanes) return 0;
       root = root.pendingLanes & -536870913;
       return 0 !== root ? root : root & 536870912 ? 536870912 : 0;
-    }
-    function includesBlockingLane(root, lanes) {
-      return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
     }
     function claimNextTransitionLane() {
       var lane = nextTransitionLane;
@@ -4052,12 +4049,11 @@ __DEV__ &&
           ),
           (didWarnUncachedGetSnapshot = !0));
       }
-      cachedSnapshot = workInProgressRoot;
-      if (null === cachedSnapshot)
+      if (null === workInProgressRoot)
         throw Error(
           "Expected a work-in-progress root. This is a bug in React. Please file an issue."
         );
-      includesBlockingLane(cachedSnapshot, workInProgressRootRenderLanes) ||
+      0 !== (workInProgressRootRenderLanes & 60) ||
         pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       hook.memoizedState = nextSnapshot;
       cachedSnapshot = { value: nextSnapshot, getSnapshot: getSnapshot };
@@ -4122,12 +4118,11 @@ __DEV__ &&
           { destroy: void 0 },
           null
         );
-        subscribe = workInProgressRoot;
-        if (null === subscribe)
+        if (null === workInProgressRoot)
           throw Error(
             "Expected a work-in-progress root. This is a bug in React. Please file an issue."
           );
-        includesBlockingLane(subscribe, renderLanes) ||
+        0 !== (renderLanes & 60) ||
           pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       }
       return nextSnapshot;
@@ -10539,9 +10534,7 @@ __DEV__ &&
       );
       if (0 === lanes) return null;
       var shouldTimeSlice =
-        !includesBlockingLane(root, lanes) &&
-        0 === (lanes & root.expiredLanes) &&
-        !didTimeout;
+        0 === (lanes & 60) && 0 === (lanes & root.expiredLanes) && !didTimeout;
       didTimeout = shouldTimeSlice
         ? renderRootConcurrent(root, lanes)
         : renderRootSync(root, lanes);
@@ -10886,9 +10879,7 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
         null;
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-      0 === (root.current.mode & 32) &&
-        0 !== (lanes & 8) &&
-        (lanes |= lanes & 32);
+      0 !== (lanes & 8) && (lanes |= lanes & 32);
       var allEntangledLanes = root.entangledLanes;
       if (0 !== allEntangledLanes)
         for (
@@ -12482,19 +12473,18 @@ __DEV__ &&
       containerInfo.hydrationCallbacks = hydrationCallbacks;
       hydrationCallbacks = 1;
       !0 === isStrictMode && (hydrationCallbacks |= 24);
-      concurrentUpdatesByDefaultOverride && (hydrationCallbacks |= 32);
       isDevToolsPresent && (hydrationCallbacks |= 2);
       isStrictMode = createFiber(3, null, null, hydrationCallbacks);
       containerInfo.current = isStrictMode;
       isStrictMode.stateNode = containerInfo;
-      concurrentUpdatesByDefaultOverride = createCache();
-      retainCache(concurrentUpdatesByDefaultOverride);
-      containerInfo.pooledCache = concurrentUpdatesByDefaultOverride;
-      retainCache(concurrentUpdatesByDefaultOverride);
+      hydrationCallbacks = createCache();
+      retainCache(hydrationCallbacks);
+      containerInfo.pooledCache = hydrationCallbacks;
+      retainCache(hydrationCallbacks);
       isStrictMode.memoizedState = {
         element: null,
         isDehydrated: !1,
-        cache: concurrentUpdatesByDefaultOverride
+        cache: hydrationCallbacks
       };
       initializeUpdateQueue(isStrictMode);
       return containerInfo;
@@ -14860,34 +14850,30 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-da4abf00-20240723"
+        reconcilerVersion: "19.0.0-www-classic-14a4699f-20240725"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-www-classic-da4abf00-20240723",
+      version: "19.0.0-www-classic-14a4699f-20240725",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1099,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1098,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
-        isStrictMode = !1,
-        concurrentUpdatesByDefault = null;
+        isStrictMode = !1;
       "object" === typeof options &&
         null !== options &&
         ("function" === typeof options.createNodeMock &&
           (createNodeMock = options.createNodeMock),
         !1 === isConcurrentOnly &&
           (isConcurrent = options.unstable_isConcurrent),
-        !0 === options.unstable_strictMode && (isStrictMode = !0),
-        void 0 !== options.unstable_concurrentUpdatesByDefault &&
-          (concurrentUpdatesByDefault =
-            options.unstable_concurrentUpdatesByDefault));
+        !0 === options.unstable_strictMode && (isStrictMode = !0));
       var container = {
           children: [],
           createNodeMock: createNodeMock,
@@ -14898,7 +14884,7 @@ __DEV__ &&
           isConcurrent ? 1 : 0,
           null,
           isStrictMode,
-          concurrentUpdatesByDefault,
+          !1,
           "",
           defaultOnUncaughtError,
           defaultOnCaughtError,

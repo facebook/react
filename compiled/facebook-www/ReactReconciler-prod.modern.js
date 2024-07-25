@@ -564,9 +564,6 @@ module.exports = function ($$$config) {
     root = root.pendingLanes & -536870913;
     return 0 !== root ? root : root & 536870912 ? 536870912 : 0;
   }
-  function includesBlockingLane(root, lanes) {
-    return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
-  }
   function claimNextTransitionLane() {
     var lane = nextTransitionLane;
     nextTransitionLane <<= 1;
@@ -2671,10 +2668,9 @@ module.exports = function ($$$config) {
         { destroy: void 0 },
         null
       );
-      subscribe = workInProgressRoot;
-      if (null === subscribe) throw Error(formatProdErrorMessage(349));
+      if (null === workInProgressRoot) throw Error(formatProdErrorMessage(349));
       isHydrating$jscomp$0 ||
-        includesBlockingLane(subscribe, renderLanes) ||
+        0 !== (renderLanes & 60) ||
         pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
     }
     return getServerSnapshot;
@@ -9497,7 +9493,7 @@ module.exports = function ($$$config) {
     );
     if (0 === lanes) return null;
     var exitStatus = (didTimeout =
-      !includesBlockingLane(root, lanes) &&
+      0 === (lanes & 60) &&
       0 === (lanes & root.expiredLanes) &&
       (disableSchedulerTimeoutInWorkLoop || !didTimeout))
       ? renderRootConcurrent(root, lanes)
@@ -9838,9 +9834,7 @@ module.exports = function ($$$config) {
     workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
       null;
     workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-    0 === (root.current.mode & 32) &&
-      0 !== (lanes & 8) &&
-      (lanes |= lanes & 32);
+    0 !== (lanes & 8) && (lanes |= lanes & 32);
     var allEntangledLanes = root.entangledLanes;
     if (0 !== allEntangledLanes)
       for (
@@ -10973,7 +10967,6 @@ module.exports = function ($$$config) {
     initialChildren,
     hydrationCallbacks,
     isStrictMode,
-    concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onUncaughtError,
     onCaughtError,
@@ -10996,18 +10989,17 @@ module.exports = function ($$$config) {
       (containerInfo.transitionCallbacks = transitionCallbacks);
     hydrationCallbacks = 1;
     !0 === isStrictMode && (hydrationCallbacks |= 24);
-    concurrentUpdatesByDefaultOverride && (hydrationCallbacks |= 32);
     isStrictMode = createFiber(3, null, null, hydrationCallbacks);
     containerInfo.current = isStrictMode;
     isStrictMode.stateNode = containerInfo;
-    concurrentUpdatesByDefaultOverride = createCache();
-    concurrentUpdatesByDefaultOverride.refCount++;
-    containerInfo.pooledCache = concurrentUpdatesByDefaultOverride;
-    concurrentUpdatesByDefaultOverride.refCount++;
+    hydrationCallbacks = createCache();
+    hydrationCallbacks.refCount++;
+    containerInfo.pooledCache = hydrationCallbacks;
+    hydrationCallbacks.refCount++;
     isStrictMode.memoizedState = {
       element: initialChildren,
       isDehydrated: hydrate,
-      cache: concurrentUpdatesByDefaultOverride
+      cache: hydrationCallbacks
     };
     initializeUpdateQueue(isStrictMode);
     return containerInfo;
@@ -11478,15 +11470,15 @@ module.exports = function ($$$config) {
         getServerSnapshot = getServerSnapshot();
       } else {
         getServerSnapshot = getSnapshot();
-        var root = workInProgressRoot;
-        if (null === root) throw Error(formatProdErrorMessage(349));
-        includesBlockingLane(root, workInProgressRootRenderLanes) ||
+        if (null === workInProgressRoot)
+          throw Error(formatProdErrorMessage(349));
+        0 !== (workInProgressRootRenderLanes & 60) ||
           pushStoreConsistencyCheck(fiber, getSnapshot, getServerSnapshot);
       }
       hook.memoizedState = getServerSnapshot;
-      root = { value: getServerSnapshot, getSnapshot: getSnapshot };
-      hook.queue = root;
-      mountEffect(subscribeToStore.bind(null, fiber, root, subscribe), [
+      var inst = { value: getServerSnapshot, getSnapshot: getSnapshot };
+      hook.queue = inst;
+      mountEffect(subscribeToStore.bind(null, fiber, inst, subscribe), [
         subscribe
       ]);
       fiber.flags |= 2048;
@@ -11495,7 +11487,7 @@ module.exports = function ($$$config) {
         updateStoreInstance.bind(
           null,
           fiber,
-          root,
+          inst,
           getServerSnapshot,
           getSnapshot
         ),
@@ -11937,7 +11929,6 @@ module.exports = function ($$$config) {
       null,
       hydrationCallbacks,
       isStrictMode,
-      concurrentUpdatesByDefaultOverride,
       identifierPrefix,
       onUncaughtError,
       onCaughtError,
@@ -11971,7 +11962,6 @@ module.exports = function ($$$config) {
       initialChildren,
       hydrationCallbacks,
       isStrictMode,
-      concurrentUpdatesByDefaultOverride,
       identifierPrefix,
       onUncaughtError,
       onCaughtError,
@@ -12235,7 +12225,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-da4abf00-20240723"
+      reconcilerVersion: "19.0.0-www-modern-14a4699f-20240725"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

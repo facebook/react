@@ -1067,16 +1067,6 @@ __DEV__ &&
       root = root.pendingLanes & ~OffscreenLane;
       return 0 !== root ? root : root & OffscreenLane ? OffscreenLane : 0;
     }
-    function includesBlockingLane(root, lanes) {
-      return 0 !== (root.current.mode & 32)
-        ? !1
-        : 0 !==
-            (lanes &
-              (InputContinuousHydrationLane |
-                InputContinuousLane |
-                DefaultHydrationLane |
-                DefaultLane));
-    }
     function claimNextTransitionLane() {
       var lane = nextTransitionLane;
       nextTransitionLane <<= 1;
@@ -4524,12 +4514,16 @@ __DEV__ &&
           ),
           (didWarnUncachedGetSnapshot = !0));
       }
-      cachedSnapshot = workInProgressRoot;
-      if (null === cachedSnapshot)
+      if (null === workInProgressRoot)
         throw Error(
           "Expected a work-in-progress root. This is a bug in React. Please file an issue."
         );
-      includesBlockingLane(cachedSnapshot, workInProgressRootRenderLanes) ||
+      0 !==
+        (workInProgressRootRenderLanes &
+          (InputContinuousHydrationLane |
+            InputContinuousLane |
+            DefaultHydrationLane |
+            DefaultLane)) ||
         pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       hook.memoizedState = nextSnapshot;
       cachedSnapshot = { value: nextSnapshot, getSnapshot: getSnapshot };
@@ -4594,12 +4588,16 @@ __DEV__ &&
           { destroy: void 0 },
           null
         );
-        subscribe = workInProgressRoot;
-        if (null === subscribe)
+        if (null === workInProgressRoot)
           throw Error(
             "Expected a work-in-progress root. This is a bug in React. Please file an issue."
           );
-        includesBlockingLane(subscribe, renderLanes) ||
+        0 !==
+          (renderLanes &
+            (InputContinuousHydrationLane |
+              InputContinuousLane |
+              DefaultHydrationLane |
+              DefaultLane)) ||
           pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
       }
       return nextSnapshot;
@@ -12548,7 +12546,12 @@ __DEV__ &&
       );
       if (0 === lanes) return null;
       var shouldTimeSlice =
-        !includesBlockingLane(root, lanes) &&
+        0 ===
+          (lanes &
+            (InputContinuousHydrationLane |
+              InputContinuousLane |
+              DefaultHydrationLane |
+              DefaultLane)) &&
         0 === (lanes & root.expiredLanes) &&
         (disableSchedulerTimeoutInWorkLoop || !didTimeout);
       didTimeout = shouldTimeSlice
@@ -12887,9 +12890,7 @@ __DEV__ &&
       workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
         null;
       workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
-      0 === (root.current.mode & 32) &&
-        0 !== (lanes & InputContinuousLane) &&
-        (lanes |= lanes & DefaultLane);
+      0 !== (lanes & InputContinuousLane) && (lanes |= lanes & DefaultLane);
       var allEntangledLanes = root.entangledLanes;
       if (0 !== allEntangledLanes)
         for (
@@ -17072,14 +17073,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-da4abf00-20240723"
+        reconcilerVersion: "19.0.0-www-classic-14a4699f-20240725"
       });
     })({
       findFiberByHostInstance: function () {
         return null;
       },
       bundleType: 1,
-      version: "19.0.0-www-classic-da4abf00-20240723",
+      version: "19.0.0-www-classic-14a4699f-20240725",
       rendererPackageName: "react-art"
     });
     var ClippingRectangle = TYPES.CLIPPING_RECTANGLE,
