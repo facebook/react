@@ -45,9 +45,12 @@ const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
   parseModel(response: Response, json) {
     return JSON.parse(json, response._fromJSON);
   },
-  printToConsole(methodName, args, badgeName) {
-    // eslint-disable-next-line react-internal/no-production-logging
-    console[methodName].apply(console, args);
+  bindToConsole(methodName, args, badgeName) {
+    return Function.prototype.bind.apply(
+      // eslint-disable-next-line react-internal/no-production-logging
+      console[methodName],
+      [console].concat(args),
+    );
   },
 });
 

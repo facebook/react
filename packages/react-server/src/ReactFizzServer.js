@@ -80,7 +80,7 @@ import {
   resetResumableState,
   completeResumableState,
   emitEarlyPreloads,
-  printToConsole,
+  bindToConsole,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -386,7 +386,7 @@ function defaultErrorHandler(error: mixed) {
   ) {
     // This was a Server error. We print the environment name in a badge just like we do with
     // replays of console logs to indicate that the source of this throw as actually the Server.
-    printToConsole('error', [error], error.environmentName);
+    bindToConsole('error', [error], error.environmentName)();
   } else {
     console['error'](error); // Don't transform to our wrapper
   }
