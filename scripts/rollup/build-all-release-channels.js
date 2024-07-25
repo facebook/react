@@ -80,16 +80,12 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
     type: 'choices',
     choices: ['circleci', 'github'],
   },
-  bundle: {
-    describe: 'Build the given bundle type.',
+  type: {
+    describe: `Build the given bundle type. (${Object.values(
+      Bundles.bundleTypes
+    )})`,
     requiresArg: false,
-    type: 'choices',
-    choices: [...Object.values(Bundles.bundleTypes)],
-  },
-  names: {
-    describe: 'Build for matched bundle names. Example: "react-test,index.js".',
-    requiresArg: false,
-    type: 'array',
+    type: 'string',
   },
   pretty: {
     describe: 'Force pretty output.',

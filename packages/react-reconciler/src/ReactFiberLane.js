@@ -19,7 +19,6 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import {
-  allowConcurrentByDefault,
   enableRetryLaneExpiration,
   enableSchedulingProfiler,
   enableTransitionTracing,
@@ -29,7 +28,6 @@ import {
   retryLaneExpirationMs,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
-import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 import {clz32} from './clz32';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
@@ -287,12 +285,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
 export function getEntangledLanes(root: FiberRoot, renderLanes: Lanes): Lanes {
   let entangledLanes = renderLanes;
 
-  if (
-    allowConcurrentByDefault &&
-    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
-  ) {
-    // Do nothing, use the lanes as they were assigned.
-  } else if ((entangledLanes & InputContinuousLane) !== NoLanes) {
+  if ((entangledLanes & InputContinuousLane) !== NoLanes) {
     // When updates are sync by default, we entangle continuous priority updates
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
@@ -498,13 +491,6 @@ export function includesOnlyTransitions(lanes: Lanes): boolean {
 }
 
 export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
-  if (
-    allowConcurrentByDefault &&
-    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
-  ) {
-    // Concurrent updates by default always use time slicing.
-    return false;
-  }
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
     InputContinuousLane |

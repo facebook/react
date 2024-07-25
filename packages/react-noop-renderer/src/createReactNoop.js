@@ -636,9 +636,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     resetFormInstance(form: Instance) {},
 
-    printToConsole(methodName, args, badgeName) {
-      // eslint-disable-next-line react-internal/no-production-logging
-      console[methodName].apply(console, args);
+    bindToConsole(methodName, args, badgeName) {
+      return Function.prototype.bind.apply(
+        // eslint-disable-next-line react-internal/no-production-logging
+        console[methodName],
+        [console].concat(args),
+      );
     },
   };
 

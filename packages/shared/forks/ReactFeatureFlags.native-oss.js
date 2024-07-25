@@ -19,7 +19,6 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 // -----------------------------------------------------------------------------
 // All other flags
 // -----------------------------------------------------------------------------
-export const allowConcurrentByDefault = false;
 export const alwaysThrottleRetries = false;
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const disableClientCache = true;
