@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { BindingKind } from "@babel/traverse";
-import * as t from "@babel/types";
-import { CompilerError, CompilerErrorDetailOptions } from "../CompilerError";
-import { assertExhaustive } from "../Utils/utils";
-import { Environment, ReactFunctionType } from "./Environment";
-import { HookKind } from "./ObjectShape";
-import { Type } from "./Types";
+import {BindingKind} from '@babel/traverse';
+import * as t from '@babel/types';
+import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {assertExhaustive} from '../Utils/utils';
+import {Environment, ReactFunctionType} from './Environment';
+import {HookKind} from './ObjectShape';
+import {Type} from './Types';
 
 /*
  * *******************************************************************************************
@@ -60,13 +60,13 @@ export type ReactiveFunction = {
 };
 
 export type ReactiveScopeBlock = {
-  kind: "scope";
+  kind: 'scope';
   scope: ReactiveScope;
   instructions: ReactiveBlock;
 };
 
 export type PrunedReactiveScopeBlock = {
-  kind: "pruned-scope";
+  kind: 'pruned-scope';
   scope: ReactiveScope;
   instructions: ReactiveBlock;
 };
@@ -80,14 +80,14 @@ export type ReactiveStatement =
   | PrunedReactiveScopeBlock;
 
 export type ReactiveInstructionStatement = {
-  kind: "instruction";
+  kind: 'instruction';
   instruction: ReactiveInstruction;
 };
 
 export type ReactiveTerminalStatement<
   Tterminal extends ReactiveTerminal = ReactiveTerminal,
 > = {
-  kind: "terminal";
+  kind: 'terminal';
   terminal: Tterminal;
   label: {
     id: BlockId;
@@ -111,7 +111,7 @@ export type ReactiveValue =
   | ReactiveFunctionValue;
 
 export type ReactiveFunctionValue = {
-  kind: "ReactiveFunctionValue";
+  kind: 'ReactiveFunctionValue';
   fn: ReactiveFunction;
   dependencies: Array<Place>;
   returnType: t.FlowType | t.TSType | null;
@@ -119,15 +119,15 @@ export type ReactiveFunctionValue = {
 };
 
 export type ReactiveLogicalValue = {
-  kind: "LogicalExpression";
-  operator: t.LogicalExpression["operator"];
+  kind: 'LogicalExpression';
+  operator: t.LogicalExpression['operator'];
   left: ReactiveValue;
   right: ReactiveValue;
   loc: SourceLocation;
 };
 
 export type ReactiveTernaryValue = {
-  kind: "ConditionalExpression";
+  kind: 'ConditionalExpression';
   test: ReactiveValue;
   consequent: ReactiveValue;
   alternate: ReactiveValue;
@@ -135,7 +135,7 @@ export type ReactiveTernaryValue = {
 };
 
 export type ReactiveSequenceValue = {
-  kind: "SequenceExpression";
+  kind: 'SequenceExpression';
   instructions: Array<ReactiveInstruction>;
   id: InstructionId;
   value: ReactiveValue;
@@ -143,7 +143,7 @@ export type ReactiveSequenceValue = {
 };
 
 export type ReactiveOptionalCallValue = {
-  kind: "OptionalExpression";
+  kind: 'OptionalExpression';
   id: InstructionId;
   value: ReactiveValue;
   optional: boolean;
@@ -166,48 +166,48 @@ export type ReactiveTerminal =
   | ReactiveTryTerminal;
 
 function _staticInvariantReactiveTerminalHasLocation(
-  terminal: ReactiveTerminal
+  terminal: ReactiveTerminal,
 ): SourceLocation {
   // If this fails, it is because a variant of ReactiveTerminal is missing a .loc - add it!
   return terminal.loc;
 }
 
 function _staticInvariantReactiveTerminalHasInstructionId(
-  terminal: ReactiveTerminal
+  terminal: ReactiveTerminal,
 ): InstructionId {
   // If this fails, it is because a variant of ReactiveTerminal is missing a .id - add it!
   return terminal.id;
 }
 
-export type ReactiveTerminalTargetKind = "implicit" | "labeled" | "unlabeled";
+export type ReactiveTerminalTargetKind = 'implicit' | 'labeled' | 'unlabeled';
 export type ReactiveBreakTerminal = {
-  kind: "break";
+  kind: 'break';
   target: BlockId;
   id: InstructionId;
   targetKind: ReactiveTerminalTargetKind;
   loc: SourceLocation;
 };
 export type ReactiveContinueTerminal = {
-  kind: "continue";
+  kind: 'continue';
   target: BlockId;
   id: InstructionId;
   targetKind: ReactiveTerminalTargetKind;
   loc: SourceLocation;
 };
 export type ReactiveReturnTerminal = {
-  kind: "return";
+  kind: 'return';
   value: Place;
   id: InstructionId;
   loc: SourceLocation;
 };
 export type ReactiveThrowTerminal = {
-  kind: "throw";
+  kind: 'throw';
   value: Place;
   id: InstructionId;
   loc: SourceLocation;
 };
 export type ReactiveSwitchTerminal = {
-  kind: "switch";
+  kind: 'switch';
   test: Place;
   cases: Array<{
     test: Place | null;
@@ -217,21 +217,21 @@ export type ReactiveSwitchTerminal = {
   loc: SourceLocation;
 };
 export type ReactiveDoWhileTerminal = {
-  kind: "do-while";
+  kind: 'do-while';
   loop: ReactiveBlock;
   test: ReactiveValue;
   id: InstructionId;
   loc: SourceLocation;
 };
 export type ReactiveWhileTerminal = {
-  kind: "while";
+  kind: 'while';
   test: ReactiveValue;
   loop: ReactiveBlock;
   id: InstructionId;
   loc: SourceLocation;
 };
 export type ReactiveForTerminal = {
-  kind: "for";
+  kind: 'for';
   init: ReactiveValue;
   test: ReactiveValue;
   update: ReactiveValue | null;
@@ -240,7 +240,7 @@ export type ReactiveForTerminal = {
   loc: SourceLocation;
 };
 export type ReactiveForOfTerminal = {
-  kind: "for-of";
+  kind: 'for-of';
   init: ReactiveValue;
   test: ReactiveValue;
   loop: ReactiveBlock;
@@ -248,14 +248,14 @@ export type ReactiveForOfTerminal = {
   loc: SourceLocation;
 };
 export type ReactiveForInTerminal = {
-  kind: "for-in";
+  kind: 'for-in';
   init: ReactiveValue;
   loop: ReactiveBlock;
   id: InstructionId;
   loc: SourceLocation;
 };
 export type ReactiveIfTerminal = {
-  kind: "if";
+  kind: 'if';
   test: Place;
   consequent: ReactiveBlock;
   alternate: ReactiveBlock | null;
@@ -263,13 +263,13 @@ export type ReactiveIfTerminal = {
   loc: SourceLocation;
 };
 export type ReactiveLabelTerminal = {
-  kind: "label";
+  kind: 'label';
   block: ReactiveBlock;
   id: InstructionId;
   loc: SourceLocation;
 };
 export type ReactiveTryTerminal = {
-  kind: "try";
+  kind: 'try';
   block: ReactiveBlock;
   handlerBinding: Place | null;
   handler: ReactiveBlock;
@@ -295,15 +295,15 @@ export type HIRFunction = {
 
 export type FunctionEffect =
   | {
-      kind: "GlobalMutation";
+      kind: 'GlobalMutation';
       error: CompilerErrorDetailOptions;
     }
   | {
-      kind: "ReactMutation";
+      kind: 'ReactMutation';
       error: CompilerErrorDetailOptions;
     }
   | {
-      kind: "ContextMutation";
+      kind: 'ContextMutation';
       places: ReadonlySet<Place>;
       effect: Effect;
       loc: SourceLocation;
@@ -334,7 +334,7 @@ export type HIR = {
  * an exception occurs, therefore the block model only represents explicit throw
  * statements and not implicit exceptions which may occur.
  */
-export type BlockKind = "block" | "value" | "loop" | "sequence" | "catch";
+export type BlockKind = 'block' | 'value' | 'loop' | 'sequence' | 'catch';
 
 /**
  * Returns true for "block" and "catch" block kinds which correspond to statements
@@ -343,7 +343,7 @@ export type BlockKind = "block" | "value" | "loop" | "sequence" | "catch";
  * Inverse of isExpressionBlockKind()
  */
 export function isStatementBlockKind(kind: BlockKind): boolean {
-  return kind === "block" || kind === "catch";
+  return kind === 'block' || kind === 'catch';
 }
 
 /**
@@ -394,24 +394,24 @@ export type Terminal =
   | ReactiveScopeTerminal
   | PrunedScopeTerminal;
 
-export type TerminalWithFallthrough = Terminal & { fallthrough: BlockId };
+export type TerminalWithFallthrough = Terminal & {fallthrough: BlockId};
 
 function _staticInvariantTerminalHasLocation(
-  terminal: Terminal
+  terminal: Terminal,
 ): SourceLocation {
   // If this fails, it is because a variant of Terminal is missing a .loc - add it!
   return terminal.loc;
 }
 
 function _staticInvariantTerminalHasInstructionId(
-  terminal: Terminal
+  terminal: Terminal,
 ): InstructionId {
   // If this fails, it is because a variant of Terminal is missing a .id - add it!
   return terminal.id;
 }
 
 function _staticInvariantTerminalHasFallthrough(
-  terminal: Terminal
+  terminal: Terminal,
 ): BlockId | never | undefined {
   // If this fails, it is because a variant of Terminal is missing a fallthrough annotation
   return terminal.fallthrough;
@@ -422,7 +422,7 @@ function _staticInvariantTerminalHasFallthrough(
  * A terminal that couldn't be lowered correctly.
  */
 export type UnsupportedTerminal = {
-  kind: "unsupported";
+  kind: 'unsupported';
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;
@@ -434,23 +434,23 @@ export type UnsupportedTerminal = {
  * before reaching the fallthrough.
  */
 export type UnreachableTerminal = {
-  kind: "unreachable";
+  kind: 'unreachable';
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;
 };
 
 export type ThrowTerminal = {
-  kind: "throw";
+  kind: 'throw';
   value: Place;
   id: InstructionId;
   loc: SourceLocation;
   fallthrough?: never;
 };
-export type Case = { test: Place | null; block: BlockId };
+export type Case = {test: Place | null; block: BlockId};
 
 export type ReturnTerminal = {
-  kind: "return";
+  kind: 'return';
   loc: SourceLocation;
   value: Place;
   id: InstructionId;
@@ -458,7 +458,7 @@ export type ReturnTerminal = {
 };
 
 export type GotoTerminal = {
-  kind: "goto";
+  kind: 'goto';
   block: BlockId;
   variant: GotoVariant;
   id: InstructionId;
@@ -467,13 +467,13 @@ export type GotoTerminal = {
 };
 
 export enum GotoVariant {
-  Break = "Break",
-  Continue = "Continue",
-  Try = "Try",
+  Break = 'Break',
+  Continue = 'Continue',
+  Try = 'Try',
 }
 
 export type IfTerminal = {
-  kind: "if";
+  kind: 'if';
   test: Place;
   consequent: BlockId;
   alternate: BlockId;
@@ -483,7 +483,7 @@ export type IfTerminal = {
 };
 
 export type BranchTerminal = {
-  kind: "branch";
+  kind: 'branch';
   test: Place;
   consequent: BlockId;
   alternate: BlockId;
@@ -493,7 +493,7 @@ export type BranchTerminal = {
 };
 
 export type SwitchTerminal = {
-  kind: "switch";
+  kind: 'switch';
   test: Place;
   cases: Array<Case>;
   fallthrough: BlockId;
@@ -502,7 +502,7 @@ export type SwitchTerminal = {
 };
 
 export type DoWhileTerminal = {
-  kind: "do-while";
+  kind: 'do-while';
   loop: BlockId;
   test: BlockId;
   fallthrough: BlockId;
@@ -511,7 +511,7 @@ export type DoWhileTerminal = {
 };
 
 export type WhileTerminal = {
-  kind: "while";
+  kind: 'while';
   loc: SourceLocation;
   test: BlockId;
   loop: BlockId;
@@ -520,7 +520,7 @@ export type WhileTerminal = {
 };
 
 export type ForTerminal = {
-  kind: "for";
+  kind: 'for';
   loc: SourceLocation;
   init: BlockId;
   test: BlockId;
@@ -531,7 +531,7 @@ export type ForTerminal = {
 };
 
 export type ForOfTerminal = {
-  kind: "for-of";
+  kind: 'for-of';
   loc: SourceLocation;
   init: BlockId;
   test: BlockId;
@@ -541,7 +541,7 @@ export type ForOfTerminal = {
 };
 
 export type ForInTerminal = {
-  kind: "for-in";
+  kind: 'for-in';
   loc: SourceLocation;
   init: BlockId;
   loop: BlockId;
@@ -550,8 +550,8 @@ export type ForInTerminal = {
 };
 
 export type LogicalTerminal = {
-  kind: "logical";
-  operator: t.LogicalExpression["operator"];
+  kind: 'logical';
+  operator: t.LogicalExpression['operator'];
   test: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
@@ -559,7 +559,7 @@ export type LogicalTerminal = {
 };
 
 export type TernaryTerminal = {
-  kind: "ternary";
+  kind: 'ternary';
   test: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
@@ -567,7 +567,7 @@ export type TernaryTerminal = {
 };
 
 export type LabelTerminal = {
-  kind: "label";
+  kind: 'label';
   block: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
@@ -575,7 +575,7 @@ export type LabelTerminal = {
 };
 
 export type OptionalTerminal = {
-  kind: "optional";
+  kind: 'optional';
   /*
    * Specifies whether this node was optional. If false, it means that the original
    * node was part of an optional chain but this specific item was non-optional.
@@ -590,7 +590,7 @@ export type OptionalTerminal = {
 };
 
 export type SequenceTerminal = {
-  kind: "sequence";
+  kind: 'sequence';
   block: BlockId;
   fallthrough: BlockId;
   id: InstructionId;
@@ -598,7 +598,7 @@ export type SequenceTerminal = {
 };
 
 export type TryTerminal = {
-  kind: "try";
+  kind: 'try';
   block: BlockId;
   handlerBinding: Place | null;
   handler: BlockId;
@@ -609,7 +609,7 @@ export type TryTerminal = {
 };
 
 export type MaybeThrowTerminal = {
-  kind: "maybe-throw";
+  kind: 'maybe-throw';
   continuation: BlockId;
   handler: BlockId;
   id: InstructionId;
@@ -618,7 +618,7 @@ export type MaybeThrowTerminal = {
 };
 
 export type ReactiveScopeTerminal = {
-  kind: "scope";
+  kind: 'scope';
   fallthrough: BlockId;
   block: BlockId;
   scope: ReactiveScope;
@@ -627,7 +627,7 @@ export type ReactiveScopeTerminal = {
 };
 
 export type PrunedScopeTerminal = {
-  kind: "pruned-scope";
+  kind: 'pruned-scope';
   fallthrough: BlockId;
   block: BlockId;
   scope: ReactiveScope;
@@ -671,7 +671,7 @@ export type LValuePattern = {
 };
 
 export type ArrayExpression = {
-  kind: "ArrayExpression";
+  kind: 'ArrayExpression';
   elements: Array<Place | SpreadPattern | Hole>;
   loc: SourceLocation;
 };
@@ -679,42 +679,42 @@ export type ArrayExpression = {
 export type Pattern = ArrayPattern | ObjectPattern;
 
 export type Hole = {
-  kind: "Hole";
+  kind: 'Hole';
 };
 
 export type SpreadPattern = {
-  kind: "Spread";
+  kind: 'Spread';
   place: Place;
 };
 
 export type ArrayPattern = {
-  kind: "ArrayPattern";
+  kind: 'ArrayPattern';
   items: Array<Place | SpreadPattern | Hole>;
 };
 
 export type ObjectPattern = {
-  kind: "ObjectPattern";
+  kind: 'ObjectPattern';
   properties: Array<ObjectProperty | SpreadPattern>;
 };
 
 export type ObjectPropertyKey =
   | {
-      kind: "string";
+      kind: 'string';
       name: string;
     }
   | {
-      kind: "identifier";
+      kind: 'identifier';
       name: string;
     }
   | {
-      kind: "computed";
+      kind: 'computed';
       name: Place;
     };
 
 export type ObjectProperty = {
-  kind: "ObjectProperty";
+  kind: 'ObjectProperty';
   key: ObjectPropertyKey;
-  type: "property" | "method";
+  type: 'property' | 'method';
   place: Place;
 };
 
@@ -724,34 +724,34 @@ export type LoweredFunction = {
 };
 
 export type ObjectMethod = {
-  kind: "ObjectMethod";
+  kind: 'ObjectMethod';
   loc: SourceLocation;
   loweredFunc: LoweredFunction;
 };
 
 export enum InstructionKind {
   // const declaration
-  Const = "Const",
+  Const = 'Const',
   // let declaration
-  Let = "Let",
+  Let = 'Let',
   // assing a new value to a let binding
-  Reassign = "Reassign",
+  Reassign = 'Reassign',
   // catch clause binding
-  Catch = "Catch",
+  Catch = 'Catch',
 
   // hoisted const declarations
-  HoistedConst = "HoistedConst",
+  HoistedConst = 'HoistedConst',
 }
 
 function _staticInvariantInstructionValueHasLocation(
-  value: InstructionValue
+  value: InstructionValue,
 ): SourceLocation {
   // If this fails, it is because a variant of InstructionValue is missing a .loc - add it!
   return value.loc;
 }
 
 export type Phi = {
-  kind: "Phi";
+  kind: 'Phi';
   id: Identifier;
   operands: Map<BlockId, Identifier>;
   type: Type;
@@ -768,15 +768,15 @@ export type Phi = {
 export type ManualMemoDependency = {
   root:
     | {
-        kind: "NamedLocal";
+        kind: 'NamedLocal';
         value: Place;
       }
-    | { kind: "Global"; identifierName: string };
+    | {kind: 'Global'; identifierName: string};
   path: Array<string>;
 };
 
 export type StartMemoize = {
-  kind: "StartMemoize";
+  kind: 'StartMemoize';
   // Start/FinishMemoize markers should have matching ids
   manualMemoId: number;
   /**
@@ -787,7 +787,7 @@ export type StartMemoize = {
   loc: SourceLocation;
 };
 export type FinishMemoize = {
-  kind: "FinishMemoize";
+  kind: 'FinishMemoize';
   // Start/FinishMemoize markers should have matching ids
   manualMemoId: number;
   decl: Place;
@@ -812,7 +812,7 @@ export type FinishMemoize = {
  * is a FunctionType.
  */
 export type MethodCall = {
-  kind: "MethodCall";
+  kind: 'MethodCall';
   receiver: Place;
   property: Place;
   args: Array<Place | SpreadPattern>;
@@ -820,7 +820,7 @@ export type MethodCall = {
 };
 
 export type CallExpression = {
-  kind: "CallExpression";
+  kind: 'CallExpression';
   callee: Place;
   args: Array<Place | SpreadPattern>;
   loc: SourceLocation;
@@ -828,7 +828,7 @@ export type CallExpression = {
 };
 
 export type LoadLocal = {
-  kind: "LoadLocal";
+  kind: 'LoadLocal';
   place: Place;
   loc: SourceLocation;
 };
@@ -845,18 +845,18 @@ export type LoadLocal = {
 export type InstructionValue =
   | LoadLocal
   | {
-      kind: "LoadContext";
+      kind: 'LoadContext';
       place: Place;
       loc: SourceLocation;
     }
   | {
-      kind: "DeclareLocal";
+      kind: 'DeclareLocal';
       lvalue: LValue;
       type: t.FlowType | t.TSType | null;
       loc: SourceLocation;
     }
   | {
-      kind: "DeclareContext";
+      kind: 'DeclareContext';
       lvalue: {
         kind: InstructionKind.Let | InstructionKind.HoistedConst;
         place: Place;
@@ -864,14 +864,14 @@ export type InstructionValue =
       loc: SourceLocation;
     }
   | {
-      kind: "StoreLocal";
+      kind: 'StoreLocal';
       lvalue: LValue;
       value: Place;
       type: t.FlowType | t.TSType | null;
       loc: SourceLocation;
     }
   | {
-      kind: "StoreContext";
+      kind: 'StoreContext';
       lvalue: {
         kind: InstructionKind.Reassign;
         place: Place;
@@ -881,20 +881,20 @@ export type InstructionValue =
     }
   | Destructure
   | {
-      kind: "Primitive";
+      kind: 'Primitive';
       value: number | boolean | string | null | undefined;
       loc: SourceLocation;
     }
   | JSXText
   | {
-      kind: "BinaryExpression";
-      operator: Exclude<t.BinaryExpression["operator"], "|>">;
+      kind: 'BinaryExpression';
+      operator: Exclude<t.BinaryExpression['operator'], '|>'>;
       left: Place;
       right: Place;
       loc: SourceLocation;
     }
   | {
-      kind: "NewExpression";
+      kind: 'NewExpression';
       callee: Place;
       args: Array<Place | SpreadPattern>;
       loc: SourceLocation;
@@ -902,20 +902,20 @@ export type InstructionValue =
   | CallExpression
   | MethodCall
   | {
-      kind: "UnaryExpression";
-      operator: Exclude<t.UnaryExpression["operator"], "throw" | "delete">;
+      kind: 'UnaryExpression';
+      operator: Exclude<t.UnaryExpression['operator'], 'throw' | 'delete'>;
       value: Place;
       loc: SourceLocation;
     }
   | {
-      kind: "TypeCastExpression";
+      kind: 'TypeCastExpression';
       value: Place;
       typeAnnotation: t.FlowType | t.TSType;
       type: Type;
       loc: SourceLocation;
     }
   | {
-      kind: "JsxExpression";
+      kind: 'JsxExpression';
       tag: Place | BuiltinTag;
       props: Array<JsxAttribute>;
       children: Array<Place> | null; // null === no children
@@ -924,21 +924,21 @@ export type InstructionValue =
       closingLoc: SourceLocation;
     }
   | {
-      kind: "ObjectExpression";
+      kind: 'ObjectExpression';
       properties: Array<ObjectProperty | SpreadPattern>;
       loc: SourceLocation;
     }
   | ObjectMethod
   | ArrayExpression
-  | { kind: "JsxFragment"; children: Array<Place>; loc: SourceLocation }
+  | {kind: 'JsxFragment'; children: Array<Place>; loc: SourceLocation}
   | {
-      kind: "RegExpLiteral";
+      kind: 'RegExpLiteral';
       pattern: string;
       flags: string;
       loc: SourceLocation;
     }
   | {
-      kind: "MetaProperty";
+      kind: 'MetaProperty';
       meta: string;
       property: string;
       loc: SourceLocation;
@@ -946,7 +946,7 @@ export type InstructionValue =
 
   // store `object.property = value`
   | {
-      kind: "PropertyStore";
+      kind: 'PropertyStore';
       object: Place;
       property: string;
       value: Place;
@@ -956,7 +956,7 @@ export type InstructionValue =
   | PropertyLoad
   // `delete object.property`
   | {
-      kind: "PropertyDelete";
+      kind: 'PropertyDelete';
       object: Place;
       property: string;
       loc: SourceLocation;
@@ -964,7 +964,7 @@ export type InstructionValue =
 
   // store `object[index] = value` - like PropertyStore but with a dynamic property
   | {
-      kind: "ComputedStore";
+      kind: 'ComputedStore';
       object: Place;
       property: Place;
       value: Place;
@@ -972,14 +972,14 @@ export type InstructionValue =
     }
   // load `object[index]` - like PropertyLoad but with a dynamic property
   | {
-      kind: "ComputedLoad";
+      kind: 'ComputedLoad';
       object: Place;
       property: Place;
       loc: SourceLocation;
     }
   // `delete object[property]`
   | {
-      kind: "ComputedDelete";
+      kind: 'ComputedDelete';
       object: Place;
       property: Place;
       loc: SourceLocation;
@@ -988,35 +988,35 @@ export type InstructionValue =
   | StoreGlobal
   | FunctionExpression
   | {
-      kind: "TaggedTemplateExpression";
+      kind: 'TaggedTemplateExpression';
       tag: Place;
-      value: { raw: string; cooked?: string };
+      value: {raw: string; cooked?: string};
       loc: SourceLocation;
     }
   | {
-      kind: "TemplateLiteral";
+      kind: 'TemplateLiteral';
       subexprs: Array<Place>;
-      quasis: Array<{ raw: string; cooked?: string }>;
+      quasis: Array<{raw: string; cooked?: string}>;
       loc: SourceLocation;
     }
   | {
-      kind: "Await";
+      kind: 'Await';
       value: Place;
       loc: SourceLocation;
     }
   | {
-      kind: "GetIterator";
+      kind: 'GetIterator';
       collection: Place; // the collection
       loc: SourceLocation;
     }
   | {
-      kind: "IteratorNext";
+      kind: 'IteratorNext';
       iterator: Place; // the iterator created with GetIterator
       collection: Place; // the collection being iterated over (which may be an iterable or iterator)
       loc: SourceLocation;
     }
   | {
-      kind: "NextPropertyOf";
+      kind: 'NextPropertyOf';
       value: Place; // the collection
       loc: SourceLocation;
     }
@@ -1026,9 +1026,9 @@ export type InstructionValue =
    * but evaluates to the value of <value> prior to the update.
    */
   | {
-      kind: "PrefixUpdate";
+      kind: 'PrefixUpdate';
       lvalue: Place;
-      operation: t.UpdateExpression["operator"];
+      operation: t.UpdateExpression['operator'];
       value: Place;
       loc: SourceLocation;
     }
@@ -1038,14 +1038,14 @@ export type InstructionValue =
    * and evaluates to the value after the update
    */
   | {
-      kind: "PostfixUpdate";
+      kind: 'PostfixUpdate';
       lvalue: Place;
-      operation: t.UpdateExpression["operator"];
+      operation: t.UpdateExpression['operator'];
       value: Place;
       loc: SourceLocation;
     }
   // `debugger` statement
-  | { kind: "Debugger"; loc: SourceLocation }
+  | {kind: 'Debugger'; loc: SourceLocation}
   /*
    * Represents semantic information from useMemo/useCallback that the developer
    * has indicated a particular value should be memoized. This value is ignored
@@ -1063,17 +1063,17 @@ export type InstructionValue =
    * passing through in codegen.
    */
   | {
-      kind: "UnsupportedNode";
+      kind: 'UnsupportedNode';
       node: t.Node;
       loc: SourceLocation;
     };
 
 export type JsxAttribute =
-  | { kind: "JsxSpreadAttribute"; argument: Place }
-  | { kind: "JsxAttribute"; name: string; place: Place };
+  | {kind: 'JsxSpreadAttribute'; argument: Place}
+  | {kind: 'JsxAttribute'; name: string; place: Place};
 
 export type FunctionExpression = {
-  kind: "FunctionExpression";
+  kind: 'FunctionExpression';
   name: string | null;
   loweredFunc: LoweredFunction;
   expr:
@@ -1084,7 +1084,7 @@ export type FunctionExpression = {
 };
 
 export type Destructure = {
-  kind: "Destructure";
+  kind: 'Destructure';
   lvalue: LValuePattern;
   value: Place;
   loc: SourceLocation;
@@ -1096,7 +1096,7 @@ export type Destructure = {
  * - a path into an identifier
  */
 export type Place = {
-  kind: "Identifier";
+  kind: 'Identifier';
   identifier: Identifier;
   effect: Effect;
   reactive: boolean;
@@ -1105,35 +1105,35 @@ export type Place = {
 
 // A primitive value with a specific (constant) value.
 export type Primitive = {
-  kind: "Primitive";
+  kind: 'Primitive';
   value: number | boolean | string | null | undefined;
   loc: SourceLocation;
 };
 
-export type JSXText = { kind: "JSXText"; value: string; loc: SourceLocation };
+export type JSXText = {kind: 'JSXText'; value: string; loc: SourceLocation};
 
 export type PropertyLoad = {
-  kind: "PropertyLoad";
+  kind: 'PropertyLoad';
   object: Place;
   property: string;
   loc: SourceLocation;
 };
 
 export type LoadGlobal = {
-  kind: "LoadGlobal";
+  kind: 'LoadGlobal';
   binding: NonLocalBinding;
   loc: SourceLocation;
 };
 
 export type StoreGlobal = {
-  kind: "StoreGlobal";
+  kind: 'StoreGlobal';
   name: string;
   value: Place;
   loc: SourceLocation;
 };
 
 export type BuiltinTag = {
-  kind: "BuiltinTag";
+  kind: 'BuiltinTag';
   name: string;
   loc: SourceLocation;
 };
@@ -1151,26 +1151,26 @@ export type MutableRange = {
 
 export type VariableBinding =
   // let, const, etc declared within the current component/hook
-  | { kind: "Identifier"; identifier: Identifier; bindingKind: BindingKind }
+  | {kind: 'Identifier'; identifier: Identifier; bindingKind: BindingKind}
   // bindings declard outside the current component/hook
   | NonLocalBinding;
 
 export type NonLocalBinding =
   // `import Foo from 'foo'`: name=Foo, module=foo
-  | { kind: "ImportDefault"; name: string; module: string }
+  | {kind: 'ImportDefault'; name: string; module: string}
   // `import * as Foo from 'foo'`: name=Foo, module=foo
-  | { kind: "ImportNamespace"; name: string; module: string }
+  | {kind: 'ImportNamespace'; name: string; module: string}
   // `import {bar as baz} from 'foo'`: name=baz, module=foo, imported=bar
   | {
-      kind: "ImportSpecifier";
+      kind: 'ImportSpecifier';
       name: string;
       module: string;
       imported: string;
     }
   // let, const, function, etc declared in the module but outside the current component/hook
-  | { kind: "ModuleLocal"; name: string }
+  | {kind: 'ModuleLocal'; name: string}
   // an unresolved binding
-  | { kind: "Global"; name: string };
+  | {kind: 'Global'; name: string};
 
 // Represents a user-defined variable (has a name) or a temporary variable (no name).
 export type Identifier = {
@@ -1193,8 +1193,8 @@ export type Identifier = {
 };
 
 export type IdentifierName = ValidatedIdentifier | PromotedIdentifier;
-export type ValidatedIdentifier = { kind: "named"; value: ValidIdentifierName };
-export type PromotedIdentifier = { kind: "promoted"; value: string };
+export type ValidatedIdentifier = {kind: 'named'; value: ValidIdentifierName};
+export type PromotedIdentifier = {kind: 'promoted'; value: string};
 
 /**
  * Simulated opaque type for identifier names to ensure values can only be created
@@ -1202,7 +1202,7 @@ export type PromotedIdentifier = { kind: "promoted"; value: string };
  */
 const opaqueValidIdentifierName = Symbol();
 export type ValidIdentifierName = string & {
-  [opaqueValidIdentifierName]: "ValidIdentifierName";
+  [opaqueValidIdentifierName]: 'ValidIdentifierName';
 };
 
 /**
@@ -1218,7 +1218,7 @@ export function makeIdentifierName(name: string): ValidatedIdentifier {
     suggestions: null,
   });
   return {
-    kind: "named",
+    kind: 'named',
     value: name as ValidIdentifierName,
   };
 }
@@ -1234,13 +1234,13 @@ export function promoteTemporary(identifier: Identifier): void {
     suggestions: null,
   });
   identifier.name = {
-    kind: "promoted",
+    kind: 'promoted',
     value: `#t${identifier.id}`,
   };
 }
 
 export function isPromotedTemporary(name: string): boolean {
-  return name.startsWith("#t");
+  return name.startsWith('#t');
 }
 
 /**
@@ -1255,13 +1255,13 @@ export function promoteTemporaryJsxTag(identifier: Identifier): void {
     suggestions: null,
   });
   identifier.name = {
-    kind: "promoted",
+    kind: 'promoted',
     value: `#T${identifier.id}`,
   };
 }
 
 export function isPromotedJsxTemporary(name: string): boolean {
-  return name.startsWith("#T");
+  return name.startsWith('#T');
 }
 
 export type AbstractValue = {
@@ -1277,39 +1277,39 @@ export enum ValueReason {
   /**
    * Defined outside the React function.
    */
-  Global = "global",
+  Global = 'global',
 
   /**
    * Used in a JSX expression.
    */
-  JsxCaptured = "jsx-captured",
+  JsxCaptured = 'jsx-captured',
 
   /**
    * Return value of a function with known frozen return value, e.g. `useState`.
    */
-  KnownReturnSignature = "known-return-signature",
+  KnownReturnSignature = 'known-return-signature',
 
   /**
    * A value returned from `useContext`
    */
-  Context = "context",
+  Context = 'context',
 
   /**
    * A value returned from `useState`
    */
-  State = "state",
+  State = 'state',
 
   /**
    * A value returned from `useReducer`
    */
-  ReducerState = "reducer-state",
+  ReducerState = 'reducer-state',
 
   /**
    * Props of a component or arguments of a hook.
    */
-  ReactiveFunctionArgument = "reactive-function-argument",
+  ReactiveFunctionArgument = 'reactive-function-argument',
 
-  Other = "other",
+  Other = 'other',
 }
 
 /*
@@ -1317,24 +1317,24 @@ export enum ValueReason {
  * see the main docblock for the module for details.
  */
 export enum ValueKind {
-  MaybeFrozen = "maybefrozen",
-  Frozen = "frozen",
-  Primitive = "primitive",
-  Global = "global",
-  Mutable = "mutable",
-  Context = "context",
+  MaybeFrozen = 'maybefrozen',
+  Frozen = 'frozen',
+  Primitive = 'primitive',
+  Global = 'global',
+  Mutable = 'mutable',
+  Context = 'context',
 }
 
 // The effect with which a value is modified.
 export enum Effect {
   // Default value: not allowed after lifetime inference
-  Unknown = "<unknown>",
+  Unknown = '<unknown>',
   // This reference freezes the value (corresponds to a place where codegen should emit a freeze instruction)
-  Freeze = "freeze",
+  Freeze = 'freeze',
   // This reference reads the value
-  Read = "read",
+  Read = 'read',
   // This reference reads and stores the value
-  Capture = "capture",
+  Capture = 'capture',
   /*
    * This reference *may* write to (mutate) the value. This covers two similar cases:
    * - The compiler is being conservative and assuming that a value *may* be mutated
@@ -1343,20 +1343,20 @@ export enum Effect {
    * In both cases, we conservatively assume that mutable values will be mutated.
    * But we do not error if the value is known to be immutable.
    */
-  ConditionallyMutate = "mutate?",
+  ConditionallyMutate = 'mutate?',
 
   /*
    * This reference *does* write to (mutate) the value. It is an error (invalid input)
    * if an immutable value flows into a location with this effect.
    */
-  Mutate = "mutate",
+  Mutate = 'mutate',
   // This reference may alias to (mutate) the value
-  Store = "store",
+  Store = 'store',
 }
 
 export function isMutableEffect(
   effect: Effect,
-  location: SourceLocation
+  location: SourceLocation,
 ): boolean {
   switch (effect) {
     case Effect.Capture:
@@ -1368,7 +1368,7 @@ export function isMutableEffect(
 
     case Effect.Unknown: {
       CompilerError.invariant(false, {
-        reason: "Unexpected unknown effect",
+        reason: 'Unexpected unknown effect',
         description: null,
         loc: location,
         suggestions: null,
@@ -1448,11 +1448,11 @@ export type ReactiveScopeDependency = {
  * accidentally.
  */
 const opaqueBlockId = Symbol();
-export type BlockId = number & { [opaqueBlockId]: "BlockId" };
+export type BlockId = number & {[opaqueBlockId]: 'BlockId'};
 
 export function makeBlockId(id: number): BlockId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
-    reason: "Expected block id to be a non-negative integer",
+    reason: 'Expected block id to be a non-negative integer',
     description: null,
     loc: null,
     suggestions: null,
@@ -1465,11 +1465,11 @@ export function makeBlockId(id: number): BlockId {
  * accidentally.
  */
 const opaqueScopeId = Symbol();
-export type ScopeId = number & { [opaqueScopeId]: "ScopeId" };
+export type ScopeId = number & {[opaqueScopeId]: 'ScopeId'};
 
 export function makeScopeId(id: number): ScopeId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
-    reason: "Expected block id to be a non-negative integer",
+    reason: 'Expected block id to be a non-negative integer',
     description: null,
     loc: null,
     suggestions: null,
@@ -1482,11 +1482,11 @@ export function makeScopeId(id: number): ScopeId {
  * accidentally.
  */
 const opaqueIdentifierId = Symbol();
-export type IdentifierId = number & { [opaqueIdentifierId]: "IdentifierId" };
+export type IdentifierId = number & {[opaqueIdentifierId]: 'IdentifierId'};
 
 export function makeIdentifierId(id: number): IdentifierId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
-    reason: "Expected identifier id to be a non-negative integer",
+    reason: 'Expected identifier id to be a non-negative integer',
     description: null,
     loc: null,
     suggestions: null,
@@ -1499,11 +1499,11 @@ export function makeIdentifierId(id: number): IdentifierId {
  * accidentally.
  */
 const opaqueInstructionId = Symbol();
-export type InstructionId = number & { [opaqueInstructionId]: "IdentifierId" };
+export type InstructionId = number & {[opaqueInstructionId]: 'IdentifierId'};
 
 export function makeInstructionId(id: number): InstructionId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
-    reason: "Expected instruction id to be a non-negative integer",
+    reason: 'Expected instruction id to be a non-negative integer',
     description: null,
     loc: null,
     suggestions: null,
@@ -1512,55 +1512,55 @@ export function makeInstructionId(id: number): InstructionId {
 }
 
 export function isObjectMethodType(id: Identifier): boolean {
-  return id.type.kind == "ObjectMethod";
+  return id.type.kind == 'ObjectMethod';
 }
 
 export function isObjectType(id: Identifier): boolean {
-  return id.type.kind === "Object";
+  return id.type.kind === 'Object';
 }
 
 export function isPrimitiveType(id: Identifier): boolean {
-  return id.type.kind === "Primitive";
+  return id.type.kind === 'Primitive';
 }
 
 export function isArrayType(id: Identifier): boolean {
-  return id.type.kind === "Object" && id.type.shapeId === "BuiltInArray";
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInArray';
 }
 
 export function isRefValueType(id: Identifier): boolean {
-  return id.type.kind === "Object" && id.type.shapeId === "BuiltInRefValue";
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInRefValue';
 }
 
 export function isUseRefType(id: Identifier): boolean {
-  return id.type.kind === "Object" && id.type.shapeId === "BuiltInUseRefId";
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseRefId';
 }
 
 export function isUseStateType(id: Identifier): boolean {
-  return id.type.kind === "Object" && id.type.shapeId === "BuiltInUseState";
+  return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseState';
 }
 
 export function isSetStateType(id: Identifier): boolean {
-  return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
+  return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetState';
 }
 
 export function isUseActionStateType(id: Identifier): boolean {
   return (
-    id.type.kind === "Object" && id.type.shapeId === "BuiltInUseActionState"
+    id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseActionState'
   );
 }
 
 export function isSetActionStateType(id: Identifier): boolean {
   return (
-    id.type.kind === "Function" && id.type.shapeId === "BuiltInSetActionState"
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState'
   );
 }
 
 export function isUseReducerType(id: Identifier): boolean {
-  return id.type.kind === "Function" && id.type.shapeId === "BuiltInUseReducer";
+  return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseReducer';
 }
 
 export function isDispatcherType(id: Identifier): boolean {
-  return id.type.kind === "Function" && id.type.shapeId === "BuiltInDispatch";
+  return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInDispatch';
 }
 
 export function isStableType(id: Identifier): boolean {
@@ -1569,19 +1569,19 @@ export function isStableType(id: Identifier): boolean {
 
 export function isUseEffectHookType(id: Identifier): boolean {
   return (
-    id.type.kind === "Function" && id.type.shapeId === "BuiltInUseEffectHook"
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseEffectHook'
   );
 }
 export function isUseLayoutEffectHookType(id: Identifier): boolean {
   return (
-    id.type.kind === "Function" &&
-    id.type.shapeId === "BuiltInUseLayoutEffectHook"
+    id.type.kind === 'Function' &&
+    id.type.shapeId === 'BuiltInUseLayoutEffectHook'
   );
 }
 export function isUseInsertionEffectHookType(id: Identifier): boolean {
   return (
-    id.type.kind === "Function" &&
-    id.type.shapeId === "BuiltInUseInsertionEffectHook"
+    id.type.kind === 'Function' &&
+    id.type.shapeId === 'BuiltInUseInsertionEffectHook'
   );
 }
 
@@ -1591,19 +1591,19 @@ export function getHookKind(env: Environment, id: Identifier): HookKind | null {
 
 export function isUseOperator(id: Identifier): boolean {
   return (
-    id.type.kind === "Function" && id.type.shapeId === "BuiltInUseOperator"
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseOperator'
   );
 }
 
 export function getHookKindForType(
   env: Environment,
-  type: Type
+  type: Type,
 ): HookKind | null {
-  if (type.kind === "Function") {
+  if (type.kind === 'Function') {
     const signature = env.getFunctionSignature(type);
     return signature?.hookKind ?? null;
   }
   return null;
 }
 
-export * from "./Types";
+export * from './Types';
