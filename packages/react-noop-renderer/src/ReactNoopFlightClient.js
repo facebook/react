@@ -65,6 +65,7 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
     undefined,
     options !== undefined ? options.findSourceMapURL : undefined,
     true,
+    undefined,
   );
   for (let i = 0; i < source.length; i++) {
     processBinaryChunk(response, source[i], 0);
