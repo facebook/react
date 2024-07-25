@@ -163,10 +163,12 @@ function filterStackTrace(
     if (url.startsWith('rsc://React/')) {
       // This callsite is a virtual fake callsite that came from another Flight client.
       // We need to reverse it back into the original location by stripping its prefix
-      // and suffix.
+      // and suffix. We don't need the environment name because it's available on the
+      // parent object that will contain the stack.
+      const envIdx = url.indexOf('/', 12);
       const suffixIdx = url.lastIndexOf('?');
-      if (suffixIdx > -1) {
-        url = callsite[1] = url.slice(12, suffixIdx);
+      if (envIdx > -1 && suffixIdx > -1) {
+        url = callsite[1] = url.slice(envIdx + 1, suffixIdx);
       }
     }
     if (!filterStackFrame(url, functionName)) {
@@ -2887,6 +2889,7 @@ function emitPostponeChunk(
   if (__DEV__) {
     let reason = '';
     let stack: ReactStackTrace;
+    const env = request.environmentName();
     try {
       // eslint-disable-next-line react-internal/safe-string-coercion
       reason = String(postponeInstance.message);
@@ -2894,7 +2897,7 @@ function emitPostponeChunk(
     } catch (x) {
       stack = [];
     }
-    row = serializeRowHeader('P', id) + stringify({reason, stack}) + '\n';
+    row = serializeRowHeader('P', id) + stringify({reason, stack, env}) + '\n';
   } else {
     // No reason included in prod.
     row = serializeRowHeader('P', id) + '\n';

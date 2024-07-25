@@ -232,7 +232,10 @@ Chunk.prototype.then = function <T>(
   }
 };
 
-export type FindSourceMapURLCallback = (fileName: string) => null | string;
+export type FindSourceMapURLCallback = (
+  fileName: string,
+  environmentName: string,
+) => null | string;
 
 export type Response = {
   _bundlerConfig: SSRModuleMap,
@@ -689,7 +692,15 @@ function createElement(
       writable: true,
       value: null,
     });
+    let env = '';
     if (enableOwnerStacks) {
+      if (owner !== null && owner.env != null) {
+        // Interestingly we don't actually have the environment name of where
+        // this JSX was created if it doesn't have an owner but if it does
+        // it must be the same environment as the owner. We could send it separately
+        // but it seems a bit unnecessary for this edge case.
+        env = owner.env;
+      }
       let normalizedStackTrace: null | Error = null;
       if (stack !== null) {
         // We create a fake stack and then create an Error object inside of it.
@@ -698,7 +709,11 @@ function createElement(
         // source mapping information.
         // This can unfortunately happen within a user space callstack which will
         // remain on the stack.
-        normalizedStackTrace = createFakeJSXCallStackInDEV(response, stack);
+        normalizedStackTrace = createFakeJSXCallStackInDEV(
+          response,
+          stack,
+          env,
+        );
       }
       Object.defineProperty(element, '_debugStack', {
         configurable: false,
@@ -713,7 +728,12 @@ function createElement(
           console,
           getTaskName(type),
         );
-        const callStack = buildFakeCallStack(response, stack, createTaskFn);
+        const callStack = buildFakeCallStack(
+          response,
+          stack,
+          env,
+          createTaskFn,
+        );
         // This owner should ideally have already been initialized to avoid getting
         // user stack frames on the stack.
         const ownerTask =
@@ -1836,6 +1856,7 @@ function resolveErrorDev(
     const callStack = buildFakeCallStack(
       response,
       stack,
+      env,
       // $FlowFixMe[incompatible-use]
       Error.bind(
         null,
@@ -1892,6 +1913,7 @@ function resolvePostponeDev(
   id: number,
   reason: string,
   stack: ReactStackTrace,
+  env: string,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1917,6 +1939,7 @@ function resolvePostponeDev(
     const callStack = buildFakeCallStack(
       response,
       stack,
+      env,
       // $FlowFixMe[incompatible-use]
       Error.bind(null, reason || ''),
     );
@@ -1961,6 +1984,7 @@ function createFakeFunction<T>(
   sourceMap: null | string,
   line: number,
   col: number,
+  environmentName: string,
 ): FakeFunction<T> {
   // This creates a fake copy of a Server Module. It represents a module that has already
   // executed on the server but we re-execute a blank copy for its stack frames on the client.
@@ -2013,7 +2037,13 @@ function createFakeFunction<T>(
     // 1) A printed stack trace string needs a unique URL to be able to source map it.
     // 2) If source maps are disabled or fails, you should at least be able to tell
     //    which file it was.
-    code += '\n//# sourceURL=rsc://React/' + filename + '?' + fakeFunctionIdx++;
+    code +=
+      '\n//# sourceURL=rsc://React/' +
+      encodeURIComponent(environmentName) +
+      '/' +
+      filename +
+      '?' +
+      fakeFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
     code += '\n//# sourceURL=' + filename;
@@ -2037,19 +2067,28 @@ function createFakeFunction<T>(
 function buildFakeCallStack<T>(
   response: Response,
   stack: ReactStackTrace,
+  environmentName: string,
   innerCall: () => T,
 ): () => T {
   let callStack = innerCall;
   for (let i = 0; i < stack.length; i++) {
     const frame = stack[i];
-    const frameKey = frame.join('-');
+    const frameKey = frame.join('-') + '-' + environmentName;
     let fn = fakeFunctionCache.get(frameKey);
     if (fn === undefined) {
       const [name, filename, line, col] = frame;
-      const sourceMap = response._debugFindSourceMapURL
-        ? response._debugFindSourceMapURL(filename)
+      const findSourceMapURL = response._debugFindSourceMapURL;
+      const sourceMap = findSourceMapURL
+        ? findSourceMapURL(filename, environmentName)
         : null;
-      fn = createFakeFunction(name, filename, sourceMap, line, col);
+      fn = createFakeFunction(
+        name,
+        filename,
+        sourceMap,
+        line,
+        col,
+        environmentName,
+      );
       // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
       // function is an input and can vary by response.
       fakeFunctionCache.set(frameKey, fn);
@@ -2079,7 +2118,7 @@ function initializeFakeTask(
   }
 
   const stack = debugInfo.stack;
-
+  const env = componentInfo.env == null ? '' : componentInfo.env;
   const ownerTask =
     componentInfo.owner == null
       ? null
@@ -2089,7 +2128,7 @@ function initializeFakeTask(
     console,
     getServerComponentTaskName(componentInfo),
   );
-  const callStack = buildFakeCallStack(response, stack, createTaskFn);
+  const callStack = buildFakeCallStack(response, stack, env, createTaskFn);
 
   let componentTask;
   if (ownerTask === null) {
@@ -2111,10 +2150,12 @@ const createFakeJSXCallStack = {
   'react-stack-bottom-frame': function (
     response: Response,
     stack: ReactStackTrace,
+    environmentName: string,
   ): Error {
     const callStackForError = buildFakeCallStack(
       response,
       stack,
+      environmentName,
       fakeJSXCallSite,
     );
     return callStackForError();
@@ -2124,6 +2165,7 @@ const createFakeJSXCallStack = {
 const createFakeJSXCallStackInDEV: (
   response: Response,
   stack: ReactStackTrace,
+  environmentName: string,
 ) => Error = __DEV__
   ? // We use this technique to trick minifiers to preserve the function name.
     (createFakeJSXCallStack['react-stack-bottom-frame'].bind(
@@ -2147,12 +2189,11 @@ function initializeFakeStack(
     return;
   }
   if (debugInfo.stack != null) {
+    const stack = debugInfo.stack;
+    const env = debugInfo.env == null ? '' : debugInfo.env;
     // $FlowFixMe[cannot-write]
     // $FlowFixMe[prop-missing]
-    debugInfo.debugStack = createFakeJSXCallStackInDEV(
-      response,
-      debugInfo.stack,
-    );
+    debugInfo.debugStack = createFakeJSXCallStackInDEV(response, stack, env);
   }
   if (debugInfo.owner != null) {
     // Initialize any owners not yet initialized.
@@ -2221,6 +2262,7 @@ function resolveConsoleEntry(
   const callStack = buildFakeCallStack(
     response,
     stackTrace,
+    env,
     printToConsole.bind(null, methodName, args, env),
   );
   if (owner != null) {
@@ -2460,6 +2502,7 @@ function processFullStringRow(
             id,
             postponeInfo.reason,
             postponeInfo.stack,
+            postponeInfo.env,
           );
         } else {
           resolvePostponeProd(response, id);
