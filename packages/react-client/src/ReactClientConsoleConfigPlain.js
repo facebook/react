@@ -10,11 +10,13 @@
 const badgeFormat = '[%s] ';
 const pad = ' ';
 
-export function printToConsole(
+const bind = Function.prototype.bind;
+
+export function bindToConsole(
   methodName: string,
   args: Array<any>,
   badgeName: string,
-): void {
+): () => any {
   let offset = 0;
   switch (methodName) {
     case 'dir':
@@ -22,9 +24,8 @@ export function printToConsole(
     case 'groupEnd':
     case 'table': {
       // These methods cannot be colorized because they don't take a formatting string.
-      // eslint-disable-next-line react-internal/no-production-logging
-      console[methodName].apply(console, args);
-      return;
+      // $FlowFixMe
+      return bind.apply(console[methodName], [console].concat(args)); // eslint-disable-line react-internal/no-production-logging
     }
     case 'assert': {
       // assert takes formatting options as the second argument.
@@ -44,6 +45,9 @@ export function printToConsole(
     newArgs.splice(offset, 0, badgeFormat, pad + badgeName + pad);
   }
 
-  // $FlowFixMe[invalid-computed-prop]
-  console[methodName].apply(console, newArgs); // eslint-disable-line react-internal/no-production-logging
+  // The "this" binding in the "bind";
+  newArgs.unshift(console);
+
+  // $FlowFixMe
+  return bind.apply(console[methodName], newArgs); // eslint-disable-line react-internal/no-production-logging
 }

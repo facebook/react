@@ -11,7 +11,6 @@ import {
   HIRFunction,
   LabelTerminal,
   PrunedScopeTerminal,
-  ReactiveScope,
   getHookKind,
   isUseOperator,
 } from '../HIR';
@@ -39,12 +38,11 @@ import {retainWhere} from '../Utils/utils';
  * to ensure the hook call does not inadvertently become conditional.
  */
 export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
-  const activeScopes: Array<{block: BlockId; scope: ReactiveScope}> = [];
+  const activeScopes: Array<{block: BlockId; fallthrough: BlockId}> = [];
   const prune: Array<BlockId> = [];
 
   for (const [, block] of fn.body.blocks) {
-    const firstId = block.instructions[0]?.id ?? block.terminal.id;
-    retainWhere(activeScopes, current => current.scope.range.end > firstId);
+    retainWhere(activeScopes, current => current.fallthrough !== block.id);
 
     for (const instr of block.instructions) {
       const {value} = instr;
@@ -66,7 +64,7 @@ export function flattenScopesWithHooksOrUseHIR(fn: HIRFunction): void {
     if (block.terminal.kind === 'scope') {
       activeScopes.push({
         block: block.id,
-        scope: block.terminal.scope,
+        fallthrough: block.terminal.fallthrough,
       });
     }
   }

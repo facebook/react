@@ -2234,27 +2234,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await waitForAll(['Foo', 'A']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop="A" />);
 
-    if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
+    React.startTransition(() => {
       ReactNoop.render(<Foo showB={true} />);
-    } else {
-      React.startTransition(() => {
-        ReactNoop.render(<Foo showB={true} />);
-      });
-    }
+    });
 
     await waitForAll(['Foo', 'A', 'Suspend! [B]', 'Loading B...']);
 
-    if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span prop="A" />
-          <span prop="Loading B..." />
-        </>,
-      );
-    } else {
-      // Transitions never fall back.
-      expect(ReactNoop).toMatchRenderedOutput(<span prop="A" />);
-    }
+    // Transitions never fall back.
+    expect(ReactNoop).toMatchRenderedOutput(<span prop="A" />);
   });
 
   // @gate enableLegacyCache

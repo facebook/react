@@ -27,7 +27,6 @@ export const {
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const allowConcurrentByDefault = false;
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const disableClientCache = true;
@@ -85,7 +84,6 @@ export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
 export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
-export const forceConcurrentByDefaultForTesting = false;
 export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;

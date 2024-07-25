@@ -99,6 +99,10 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
       const deps = instruction.value.args[1]!;
       if (
         deps.kind === 'Identifier' &&
+        /*
+         * TODO: isMutable is not safe to call here as it relies on identifier mutableRange which is no longer valid at this point
+         * in the pipeline
+         */
         (isMutable(instruction as Instruction, deps) ||
           isUnmemoized(deps.identifier, this.scopes))
       ) {
