@@ -196,6 +196,7 @@ export function createNewFunctionNode(
 }
 
 function insertNewOutlinedFunctionNode(
+  program: NodePath<t.Program>,
   originalFn: BabelFn,
   compiledFn: CodegenFunction,
 ): NodePath<t.Function> {
@@ -216,14 +217,6 @@ function insertNewOutlinedFunctionNode(
      */
     case 'ArrowFunctionExpression':
     case 'FunctionExpression': {
-      CompilerError.invariant(
-        originalFn.parentPath.isVariableDeclarator() &&
-          originalFn.parentPath.parentPath.isVariableDeclaration(),
-        {
-          reason: 'Expected a variable declarator parent',
-          loc: originalFn.node.loc ?? null,
-        },
-      );
       const fn: t.FunctionDeclaration = {
         type: 'FunctionDeclaration',
         id: compiledFn.id,
@@ -233,8 +226,7 @@ function insertNewOutlinedFunctionNode(
         params: compiledFn.params,
         body: compiledFn.body,
       };
-      const varDecl = originalFn.parentPath.parentPath;
-      const insertedFuncDecl = varDecl.insertAfter(fn)[0]!;
+      const insertedFuncDecl = program.pushContainer('body', [fn])[0]!;
       CompilerError.invariant(insertedFuncDecl.isFunctionDeclaration(), {
         reason: 'Expected inserted function declaration',
         description: `Got: ${insertedFuncDecl}`,
@@ -468,7 +460,11 @@ export function compileProgram(
         reason: 'Unexpected nested outlined functions',
         loc: outlined.fn.loc,
       });
-      const fn = insertNewOutlinedFunctionNode(current.fn, outlined.fn);
+      const fn = insertNewOutlinedFunctionNode(
+        program,
+        current.fn,
+        outlined.fn,
+      );
       fn.skip();
       ALREADY_COMPILED.add(fn.node);
       if (outlined.type !== null) {
