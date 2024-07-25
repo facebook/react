@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-react-compiler",
-  "version": "0.0.0-experimental-47e15aa-20240725",
+  "version": "0.0.0-experimental-9ed098e-20240725",
   "description": "ESLint plugin to display errors found by the React compiler.",
   "main": "dist/index.js",
   "scripts": {
