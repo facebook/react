@@ -50,9 +50,6 @@ const Component2 = (props) => {
   }
   return t1;
 };
-function _temp(item) {
-  return <li key={item.id}>{item.name}</li>;
-}
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component2,
@@ -65,6 +62,9 @@ export const FIXTURE_ENTRYPOINT = {
     },
   ],
 };
+function _temp(item) {
+  return <li key={item.id}>{item.name}</li>;
+}
 
 ```
       
