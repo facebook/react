@@ -4300,12 +4300,19 @@ __DEV__ &&
         null !== error &&
         "string" === typeof error.environmentName
       ) {
-        var badgeName = error.environmentName;
+        var JSCompiler_inline_result = error.environmentName;
         error = [error].slice(0);
         "string" === typeof error[0]
-          ? error.splice(0, 1, "[%s] " + error[0], " " + badgeName + " ")
-          : error.splice(0, 0, "[%s] ", " " + badgeName + " ");
-        console.error.apply(console, error);
+          ? error.splice(
+              0,
+              1,
+              "[%s] " + error[0],
+              " " + JSCompiler_inline_result + " "
+            )
+          : error.splice(0, 0, "[%s] ", " " + JSCompiler_inline_result + " ");
+        error.unshift(console);
+        JSCompiler_inline_result = bind.apply(console.error, error);
+        JSCompiler_inline_result();
       } else console.error(error);
       return null;
     }
@@ -8436,6 +8443,7 @@ __DEV__ &&
       regexForHrefInLinkHeaderURLContext = /[<>\r\n]/g,
       regexForLinkHeaderQuotedParamValueContext = /["';,\r\n]/g,
       doctypeChunk = "",
+      bind = Function.prototype.bind,
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       emptyContextObject = {};
     Object.freeze(emptyContextObject);
@@ -8690,5 +8698,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-14a4699f-20240725";
+    exports.version = "19.0.0-www-modern-e8df0cf9-20240725";
   })();

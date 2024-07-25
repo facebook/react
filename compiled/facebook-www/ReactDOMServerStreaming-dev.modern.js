@@ -4095,7 +4095,7 @@ __DEV__ &&
         null !== error &&
         "string" === typeof error.environmentName
       ) {
-        var badgeName = error.environmentName;
+        var JSCompiler_inline_result = error.environmentName;
         error = [error].slice(0);
         "string" === typeof error[0]
           ? error.splice(
@@ -4103,7 +4103,7 @@ __DEV__ &&
               1,
               "%c%s%c " + error[0],
               "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
-              " " + badgeName + " ",
+              " " + JSCompiler_inline_result + " ",
               ""
             )
           : error.splice(
@@ -4111,10 +4111,12 @@ __DEV__ &&
               0,
               "%c%s%c ",
               "background: #e6e6e6;background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));color: #000000;color: light-dark(#000000, #ffffff);border-radius: 2px",
-              " " + badgeName + " ",
+              " " + JSCompiler_inline_result + " ",
               ""
             );
-        console.error.apply(console, error);
+        error.unshift(console);
+        JSCompiler_inline_result = bind.apply(console.error, error);
+        JSCompiler_inline_result();
       } else console.error(error);
       return null;
     }
@@ -7832,6 +7834,7 @@ __DEV__ &&
       LATE = 3,
       regexForHrefInLinkHeaderURLContext = /[<>\r\n]/g,
       regexForLinkHeaderQuotedParamValueContext = /["';,\r\n]/g,
+      bind = Function.prototype.bind,
       REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"),
       emptyContextObject = {};
     Object.freeze(emptyContextObject);

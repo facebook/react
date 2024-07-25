@@ -11655,7 +11655,7 @@ module.exports = function ($$$config) {
     waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
     NotPendingTransition = $$$config.NotPendingTransition,
     resetFormInstance = $$$config.resetFormInstance;
-  $$$config.printToConsole;
+  $$$config.bindToConsole;
   var supportsMicrotasks = $$$config.supportsMicrotasks,
     scheduleMicrotask = $$$config.scheduleMicrotask,
     supportsTestSelectors = $$$config.supportsTestSelectors,
@@ -12736,7 +12736,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-14a4699f-20240725"
+      reconcilerVersion: "19.0.0-www-classic-e8df0cf9-20240725"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

@@ -15937,7 +15937,7 @@ __DEV__ &&
       waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
       NotPendingTransition = $$$config.NotPendingTransition,
       resetFormInstance = $$$config.resetFormInstance,
-      printToConsole = $$$config.printToConsole,
+      bindToConsole = $$$config.bindToConsole,
       supportsMicrotasks = $$$config.supportsMicrotasks,
       scheduleMicrotask = $$$config.scheduleMicrotask,
       supportsTestSelectors = $$$config.supportsTestSelectors,
@@ -18206,7 +18206,7 @@ __DEV__ &&
         "object" === typeof error$1 &&
         null !== error$1 &&
         "string" === typeof error$1.environmentName
-          ? printToConsole(
+          ? bindToConsole(
               "error",
               [
                 "%o\n\n%s\n\n%s\n",
@@ -18215,7 +18215,7 @@ __DEV__ &&
                 recreateMessage
               ],
               error$1.environmentName
-            )
+            )()
           : error$jscomp$0(
               "%o\n\n%s\n\n%s\n",
               error$1,
@@ -18513,7 +18513,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-14a4699f-20240725"
+        reconcilerVersion: "19.0.0-www-modern-e8df0cf9-20240725"
       });
     };
     exports.isAlreadyRendering = function () {
