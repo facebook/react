@@ -3157,4 +3157,58 @@ describe('ReactFlight', () => {
       {withoutStack: true},
     );
   });
+
+  it('can filter out stack frames of a serialized error in dev', async () => {
+    async function bar() {
+      throw new Error('my-error');
+    }
+
+    async function intermediate() {
+      await bar();
+    }
+
+    async function foo() {
+      await intermediate();
+    }
+
+    const rejectedPromise = foo();
+    const transport = ReactNoopFlightServer.render(
+      {model: rejectedPromise},
+      {
+        onError(x) {
+          return `digest("${x.message}")`;
+        },
+        filterStackFrame(url, functionName) {
+          return functionName !== 'intermediate';
+        },
+      },
+    );
+
+    let originalError;
+    try {
+      await rejectedPromise;
+    } catch (x) {
+      originalError = x;
+    }
+
+    const root = await ReactNoopFlightClient.read(transport);
+    let caughtError;
+    try {
+      await root.model;
+    } catch (x) {
+      caughtError = x;
+    }
+    if (__DEV__) {
+      expect(caughtError.message).toBe(originalError.message);
+      expect(normalizeCodeLocInfo(caughtError.stack)).toContain(
+        '\n    in bar (at **)' + '\n    in foo (at **)',
+      );
+    }
+    expect(normalizeCodeLocInfo(originalError.stack)).toContain(
+      '\n    in bar (at **)' +
+        '\n    in intermediate (at **)' +
+        '\n    in foo (at **)',
+    );
+    expect(caughtError.digest).toBe('digest("my-error")');
+  });
 });
