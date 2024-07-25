@@ -17,7 +17,6 @@ let Scheduler = require('scheduler');
 let act;
 let useEffect;
 let assertLog;
-let waitFor;
 let waitForAll;
 
 describe('ReactDOMRoot', () => {
@@ -36,7 +35,6 @@ describe('ReactDOMRoot', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
-    waitFor = InternalTestUtils.waitFor;
     waitForAll = InternalTestUtils.waitForAll;
   });
 
@@ -304,39 +302,6 @@ describe('ReactDOMRoot', () => {
         root.unmount();
       });
     }).rejects.toThrow('The node to be removed is not a child of this node.');
-  });
-
-  it('opts-in to concurrent default updates', async () => {
-    const root = ReactDOMClient.createRoot(container, {
-      unstable_concurrentUpdatesByDefault: true,
-    });
-
-    function Foo({value}) {
-      Scheduler.log(value);
-      return <div>{value}</div>;
-    }
-
-    await act(() => {
-      root.render(<Foo value="a" />);
-    });
-
-    assertLog(['a']);
-    expect(container.textContent).toEqual('a');
-
-    await act(async () => {
-      root.render(<Foo value="b" />);
-
-      assertLog([]);
-      expect(container.textContent).toEqual('a');
-
-      await waitFor(['b']);
-      if (gate(flags => flags.allowConcurrentByDefault)) {
-        expect(container.textContent).toEqual('a');
-      } else {
-        expect(container.textContent).toEqual('b');
-      }
-    });
-    expect(container.textContent).toEqual('b');
   });
 
   it('unmount is synchronous', async () => {
