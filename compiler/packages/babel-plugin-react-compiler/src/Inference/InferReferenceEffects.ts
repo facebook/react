@@ -217,7 +217,7 @@ export default function inferReferenceEffects(
   }
   queue(fn.body.entry, initialState);
 
-  const functionEffects: Array<FunctionEffect> = fn.effects ?? [];
+  const functionEffects: Set<FunctionEffect> = fn.effects ?? new Set();
 
   while (queuedStates.size !== 0) {
     for (const [blockId, block] of fn.body.blocks) {
@@ -382,7 +382,7 @@ class InferenceState {
     place: Place,
     effectKind: Effect,
     reason: ValueReason,
-    functionEffects: Array<FunctionEffect>,
+    functionEffects: Set<FunctionEffect>,
   ): void {
     const values = this.#variables.get(place.identifier.id);
     if (values === undefined) {
@@ -422,13 +422,13 @@ class InferenceState {
 
     const functionEffect = this.reference(place, effectKind, reason);
     if (functionEffect !== null) {
-      functionEffects.push(functionEffect);
+      functionEffects.add(functionEffect);
     }
   }
 
   propogateEffect(
     value: InstructionValue,
-    functionEffects: Array<FunctionEffect>,
+    functionEffects: Set<FunctionEffect>,
     reason: ValueReason,
   ): void {
     if (value.kind !== 'FunctionExpression' && value.kind !== 'ObjectMethod') {
@@ -443,7 +443,7 @@ class InferenceState {
     for (const effect of effects) {
       if (effect.kind === 'GlobalMutation' || effect.kind === 'ReactMutation') {
         // Known effects are always propagated upwards
-        functionEffects.push(effect);
+        functionEffects.add(effect);
       } else {
         /**
          * Contextual effects need to be replayed against the current inference
@@ -467,10 +467,10 @@ class InferenceState {
             if (replayedEffect != null) {
               if (replayedEffect.kind === 'ContextMutation') {
                 // Case 1, still a context value so propagate the original effect
-                functionEffects.push(effect);
+                functionEffects.add(effect);
               } else {
                 // Case 3, immutable value so propagate the more precise effect
-                functionEffects.push(replayedEffect);
+                functionEffects.add(replayedEffect);
               }
             } // else case 2, local mutable value so this effect was fine
           }
@@ -525,7 +525,7 @@ class InferenceState {
                     operand,
                     Effect.Freeze,
                     ValueReason.Other,
-                    [],
+                    new Set(),
                   );
                 }
               }
@@ -981,7 +981,7 @@ function mergeAbstractValues(
  */
 function inferBlock(
   env: Environment,
-  functionEffects: Array<FunctionEffect>,
+  functionEffects: Set<FunctionEffect>,
   state: InferenceState,
   block: BasicBlock,
 ): void {
@@ -1167,18 +1167,21 @@ function inferBlock(
               functionEffects,
             );
           } else {
-            const propEffects: Array<FunctionEffect> = [];
+            const propEffects: Set<FunctionEffect> = new Set();
             state.referenceAndRecordEffects(
               attr.place,
               Effect.Freeze,
               ValueReason.JsxCaptured,
               propEffects,
             );
-            functionEffects.push(
-              ...propEffects.filter(
-                propEffect => propEffect.kind !== 'GlobalMutation',
-              ),
-            );
+
+            for (const effect of propEffects) {
+              if (effect.kind === 'GlobalMutation') {
+                functionEffects.delete(effect);
+              } else {
+                functionEffects.add(effect);
+              }
+            }
           }
         }
 
@@ -1278,7 +1281,7 @@ function inferBlock(
             operand,
             operand.effect === Effect.Unknown ? Effect.Read : operand.effect,
             ValueReason.Other,
-            [],
+            new Set(),
           );
           hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
 
@@ -1311,9 +1314,9 @@ function inferBlock(
                 value.kind === 'FunctionExpression') &&
               value.loweredFunc.func.effects !== null
             ) {
-              instrValue.loweredFunc.func.effects ??= [];
-              instrValue.loweredFunc.func.effects.push(
-                ...value.loweredFunc.func.effects,
+              instrValue.loweredFunc.func.effects ??= new Set();
+              value.loweredFunc.func.effects.forEach(e =>
+                instrValue.loweredFunc.func.effects!.add(e),
               );
             }
           }
@@ -1357,7 +1360,7 @@ function inferBlock(
         let hasCaptureArgument = false;
         let isUseEffect = isEffectHook(instrValue.callee.identifier);
         for (let i = 0; i < instrValue.args.length; i++) {
-          const argumentEffects: Array<FunctionEffect> = [];
+          const argumentEffects: Set<FunctionEffect> = new Set();
           const arg = instrValue.args[i];
           const place = arg.kind === 'Identifier' ? arg : arg.place;
           if (effects !== null) {
@@ -1379,12 +1382,11 @@ function inferBlock(
            * Join the effects of the argument with the effects of the enclosing function,
            * unless the we're detecting a global mutation inside a useEffect hook
            */
-          functionEffects.push(
-            ...argumentEffects.filter(
-              argEffect =>
-                !isUseEffect || i !== 0 || argEffect.kind !== 'GlobalMutation',
-            ),
-          );
+          for (const effect of argumentEffects) {
+            if (!isUseEffect || i !== 0 || effect.kind !== 'GlobalMutation') {
+              functionEffects.add(effect);
+            }
+          }
           hasCaptureArgument ||= place.effect === Effect.Capture;
         }
         if (signature !== null) {
@@ -1482,7 +1484,7 @@ function inferBlock(
         let hasCaptureArgument = false;
         let isUseEffect = isEffectHook(instrValue.property.identifier);
         for (let i = 0; i < instrValue.args.length; i++) {
-          const argumentEffects: Array<FunctionEffect> = [];
+          const argumentEffects: Set<FunctionEffect> = new Set();
           const arg = instrValue.args[i];
           const place = arg.kind === 'Identifier' ? arg : arg.place;
           if (effects !== null) {
@@ -1508,12 +1510,11 @@ function inferBlock(
            * Join the effects of the argument with the effects of the enclosing function,
            * unless the we're detecting a global mutation inside a useEffect hook
            */
-          functionEffects.push(
-            ...argumentEffects.filter(
-              argEffect =>
-                !isUseEffect || i !== 0 || argEffect.kind !== 'GlobalMutation',
-            ),
-          );
+          for (const effect of argumentEffects) {
+            if (!isUseEffect || i !== 0 || effect.kind !== 'GlobalMutation') {
+              functionEffects.add(effect);
+            }
+          }
           hasCaptureArgument ||= place.effect === Effect.Capture;
         }
         if (signature !== null) {
@@ -1703,14 +1704,14 @@ function inferBlock(
               val,
               Effect.Freeze,
               ValueReason.Other,
-              [],
+              new Set(),
             );
           } else {
             state.referenceAndRecordEffects(
               val,
               Effect.Read,
               ValueReason.Other,
-              [],
+              new Set(),
             );
           }
         }
@@ -1735,7 +1736,7 @@ function inferBlock(
           instrValue.place,
           effect,
           ValueReason.Other,
-          [],
+          new Set(),
         );
         lvalue.effect = Effect.ConditionallyMutate;
         // direct aliasing: `a = b`;
@@ -1822,7 +1823,7 @@ function inferBlock(
           instrValue.value,
           effect,
           ValueReason.Other,
-          [],
+          new Set(),
         );
 
         const lvalue = instr.lvalue;
@@ -1867,7 +1868,7 @@ function inferBlock(
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.Store;
 
-        functionEffects.push({
+        functionEffects.add({
           kind: 'GlobalMutation',
           error: {
             reason:
