@@ -4,9 +4,9 @@
 ```javascript
 function Foo() {
   const x = () => {
-    window.href = "foo";
+    window.href = 'foo';
   };
-  const y = { x };
+  const y = {x};
   return <Bar y={y} />;
 }
 
