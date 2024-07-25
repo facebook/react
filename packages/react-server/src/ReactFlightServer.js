@@ -63,7 +63,6 @@ import type {
   ReactComponentInfo,
   ReactAsyncInfo,
   ReactStackTrace,
-  ReactCallSite,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -80,6 +79,8 @@ import {
   createHints,
   initAsyncDebugInfo,
   parseStackTrace,
+  supportsComponentStorage,
+  componentStorage,
 } from './ReactFlightServerConfig';
 
 import {
@@ -133,20 +134,49 @@ import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
-// TODO: Make this configurable on the Request.
-const externalRegExp = /\/node\_modules\/|^node\:|^$/;
-
-function isNotExternal(stackFrame: ReactCallSite): boolean {
-  const filename = stackFrame[1];
-  return !externalRegExp.test(filename);
+function defaultFilterStackFrame(
+  filename: string,
+  functionName: string,
+): boolean {
+  return (
+    filename !== '' &&
+    !filename.startsWith('node:') &&
+    !filename.includes('node_modules')
+  );
 }
 
-function filterStackTrace(error: Error, skipFrames: number): ReactStackTrace {
+function filterStackTrace(
+  request: Request,
+  error: Error,
+  skipFrames: number,
+): ReactStackTrace {
   // Since stacks can be quite large and we pass a lot of them, we filter them out eagerly
   // to save bandwidth even in DEV. We'll also replay these stacks on the client so by
   // stripping them early we avoid that overhead. Otherwise we'd normally just rely on
   // the DevTools or framework's ignore lists to filter them out.
-  return parseStackTrace(error, skipFrames).filter(isNotExternal);
+  const filterStackFrame = request.filterStackFrame;
+  const stack = parseStackTrace(error, skipFrames);
+  for (let i = 0; i < stack.length; i++) {
+    const callsite = stack[i];
+    const functionName = callsite[0];
+    let url = callsite[1];
+    if (url.startsWith('rsc://React/')) {
+      // This callsite is a virtual fake callsite that came from another Flight client.
+      // We need to reverse it back into the original location by stripping its prefix
+      // and suffix. We don't need the environment name because it's available on the
+      // parent object that will contain the stack.
+      const envIdx = url.indexOf('/', 12);
+      const suffixIdx = url.lastIndexOf('?');
+      if (envIdx > -1 && suffixIdx > -1) {
+        url = callsite[1] = url.slice(envIdx + 1, suffixIdx);
+      }
+    }
+    if (!filterStackFrame(url, functionName)) {
+      stack.splice(i, 1);
+      i--;
+    }
+  }
+  return stack;
 }
 
 initAsyncDebugInfo();
@@ -172,7 +202,11 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
         // Extract the stack. Not all console logs print the full stack but they have at
         // least the line it was called from. We could optimize transfer by keeping just
         // one stack frame but keeping it simple for now and include all frames.
-        const stack = filterStackTrace(new Error('react-stack-top-frame'), 1);
+        const stack = filterStackTrace(
+          request,
+          new Error('react-stack-top-frame'),
+          1,
+        );
         request.pendingChunks++;
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
@@ -344,6 +378,7 @@ export type Request = {
   onPostpone: (reason: string) => void,
   // DEV-only
   environmentName: () => string,
+  filterStackFrame: (url: string, functionName: string) => boolean,
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
 };
 
@@ -399,8 +434,9 @@ function RequestInstance(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix?: string,
   onPostpone: void | ((reason: string) => void),
-  environmentName: void | string | (() => string),
   temporaryReferences: void | TemporaryReferenceSet,
+  environmentName: void | string | (() => string), // DEV-only
+  filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
 ) {
   if (
     ReactSharedInternals.A !== null &&
@@ -458,8 +494,12 @@ function RequestInstance(
       environmentName === undefined
         ? () => 'Server'
         : typeof environmentName !== 'function'
-        ? () => environmentName
-        : environmentName;
+          ? () => environmentName
+          : environmentName;
+    this.filterStackFrame =
+      filterStackFrame === undefined
+        ? defaultFilterStackFrame
+        : filterStackFrame;
     this.didWarnForKey = null;
   }
   const rootTask = createTask(
@@ -481,8 +521,9 @@ export function createRequest(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix?: string,
   onPostpone: void | ((reason: string) => void),
-  environmentName: void | string | (() => string),
   temporaryReferences: void | TemporaryReferenceSet,
+  environmentName: void | string | (() => string), // DEV-only
+  filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
 ): Request {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new RequestInstance(
@@ -491,8 +532,9 @@ export function createRequest(
     onError,
     identifierPrefix,
     onPostpone,
-    environmentName,
     temporaryReferences,
+    environmentName,
+    filterStackFrame,
   );
 }
 
@@ -916,6 +958,7 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
 }
 
 function callWithDebugContextInDEV<A, T>(
+  request: Request,
   task: Task,
   callback: A => T,
   arg: A,
@@ -931,7 +974,9 @@ function callWithDebugContextInDEV<A, T>(
   if (enableOwnerStacks) {
     // $FlowFixMe[cannot-write]
     componentDebugInfo.stack =
-      task.debugStack === null ? null : filterStackTrace(task.debugStack, 1);
+      task.debugStack === null
+        ? null
+        : filterStackTrace(request, task.debugStack, 1);
     // $FlowFixMe[cannot-write]
     componentDebugInfo.debugStack = task.debugStack;
     // $FlowFixMe[cannot-write]
@@ -995,7 +1040,7 @@ function renderFunctionComponent<Props>(
         componentDebugInfo.stack =
           task.debugStack === null
             ? null
-            : filterStackTrace(task.debugStack, 1);
+            : filterStackTrace(request, task.debugStack, 1);
         // $FlowFixMe[cannot-write]
         componentDebugInfo.debugStack = task.debugStack;
         // $FlowFixMe[cannot-write]
@@ -1021,12 +1066,38 @@ function renderFunctionComponent<Props>(
       }
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
-    result = callComponentInDEV(
-      Component,
-      props,
-      componentDebugInfo,
-      task.debugTask,
-    );
+    if (supportsComponentStorage) {
+      // Run the component in an Async Context that tracks the current owner.
+      if (enableOwnerStacks && task.debugTask) {
+        result = task.debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          componentStorage.run.bind(
+            componentStorage,
+            componentDebugInfo,
+            callComponentInDEV,
+            Component,
+            props,
+            componentDebugInfo,
+          ),
+        );
+      } else {
+        result = componentStorage.run(
+          componentDebugInfo,
+          callComponentInDEV,
+          Component,
+          props,
+          componentDebugInfo,
+        );
+      }
+    } else {
+      if (enableOwnerStacks && task.debugTask) {
+        result = task.debugTask.run(
+          callComponentInDEV.bind(null, Component, props, componentDebugInfo),
+        );
+      } else {
+        result = callComponentInDEV(Component, props, componentDebugInfo);
+      }
+    }
   } else {
     prepareToUseHooksForComponent(prevThenableState, null);
     // The secondArg is always undefined in Server Components since refs error early.
@@ -1100,7 +1171,7 @@ function renderFunctionComponent<Props>(
                 Object.prototype.toString.call(iterableChild) ===
                   '[object Generator]';
               if (!isGeneratorComponent) {
-                callWithDebugContextInDEV(task, () => {
+                callWithDebugContextInDEV(request, task, () => {
                   console.error(
                     'Returning an Iterator from a Server Component is not supported ' +
                       'since it cannot be looped over more than once. ',
@@ -1139,7 +1210,7 @@ function renderFunctionComponent<Props>(
                 Object.prototype.toString.call(iterableChild) ===
                   '[object AsyncGenerator]';
               if (!isGeneratorComponent) {
-                callWithDebugContextInDEV(task, () => {
+                callWithDebugContextInDEV(request, task, () => {
                   console.error(
                     'Returning an AsyncIterator from a Server Component is not supported ' +
                       'since it cannot be looped over more than once. ',
@@ -1208,19 +1279,47 @@ function warnForMissingKey(
 
     // Call with the server component as the currently rendering component
     // for context.
-    callComponentInDEV(
-      () => {
-        console.error(
-          'Each child in a list should have a unique "key" prop.' +
-            '%s%s See https://react.dev/link/warning-keys for more information.',
-          '',
-          '',
+    const logKeyError = () => {
+      console.error(
+        'Each child in a list should have a unique "key" prop.' +
+          '%s%s See https://react.dev/link/warning-keys for more information.',
+        '',
+        '',
+      );
+    };
+
+    if (supportsComponentStorage) {
+      // Run the component in an Async Context that tracks the current owner.
+      if (enableOwnerStacks && debugTask) {
+        debugTask.run(
+          // $FlowFixMe[method-unbinding]
+          componentStorage.run.bind(
+            componentStorage,
+            componentDebugInfo,
+            callComponentInDEV,
+            logKeyError,
+            null,
+            componentDebugInfo,
+          ),
         );
-      },
-      null,
-      componentDebugInfo,
-      debugTask,
-    );
+      } else {
+        componentStorage.run(
+          componentDebugInfo,
+          callComponentInDEV,
+          logKeyError,
+          null,
+          componentDebugInfo,
+        );
+      }
+    } else {
+      if (enableOwnerStacks && debugTask) {
+        debugTask.run(
+          callComponentInDEV.bind(null, logKeyError, null, componentDebugInfo),
+        );
+      } else {
+        callComponentInDEV(logKeyError, null, componentDebugInfo);
+      }
+    }
   }
 }
 
@@ -1367,6 +1466,7 @@ function renderAsyncFragment(
 }
 
 function renderClientElement(
+  request: Request,
   task: Task,
   type: any,
   key: null | string,
@@ -1391,7 +1491,7 @@ function renderClientElement(
           task.debugOwner,
           task.debugStack === null
             ? null
-            : filterStackTrace(task.debugStack, 1),
+            : filterStackTrace(request, task.debugStack, 1),
           validated,
         ]
       : [REACT_ELEMENT_TYPE, type, key, props, task.debugOwner]
@@ -1551,7 +1651,7 @@ function renderElement(
   // We don't know if the client will support it or not. This might error on the
   // client or error during serialization but the stack will point back to the
   // server.
-  return renderClientElement(task, type, key, props, validated);
+  return renderClientElement(request, task, type, key, props, validated);
 }
 
 function pingTask(request: Request, task: Task): void {
@@ -1611,7 +1711,7 @@ function createTask(
         ) {
           // Call with the server component as the currently rendering component
           // for context.
-          callWithDebugContextInDEV(task, () => {
+          callWithDebugContextInDEV(request, task, () => {
             if (objectName(originalValue) !== 'Object') {
               const jsxParentType = jsxChildrenParents.get(parent);
               if (typeof jsxParentType === 'string') {
@@ -2506,7 +2606,7 @@ function renderModelDestructive(
       }
 
       if (objectName(value) !== 'Object') {
-        callWithDebugContextInDEV(task, () => {
+        callWithDebugContextInDEV(request, task, () => {
           console.error(
             'Only plain objects can be passed to Client Components from Server Components. ' +
               '%s objects are not supported.%s',
@@ -2515,7 +2615,7 @@ function renderModelDestructive(
           );
         });
       } else if (!isSimpleObject(value)) {
-        callWithDebugContextInDEV(task, () => {
+        callWithDebugContextInDEV(request, task, () => {
           console.error(
             'Only plain objects can be passed to Client Components from Server Components. ' +
               'Classes or other objects with methods are not supported.%s',
@@ -2525,7 +2625,7 @@ function renderModelDestructive(
       } else if (Object.getOwnPropertySymbols) {
         const symbols = Object.getOwnPropertySymbols(value);
         if (symbols.length > 0) {
-          callWithDebugContextInDEV(task, () => {
+          callWithDebugContextInDEV(request, task, () => {
             console.error(
               'Only plain objects can be passed to Client Components from Server Components. ' +
                 'Objects with symbol properties like %s are not supported.%s',
@@ -2704,12 +2804,13 @@ function logPostpone(
         requestStorage.run(
           undefined,
           callWithDebugContextInDEV,
+          request,
           task,
           onPostpone,
           reason,
         );
       } else {
-        callWithDebugContextInDEV(task, onPostpone, reason);
+        callWithDebugContextInDEV(request, task, onPostpone, reason);
       }
     } else if (supportsRequestStorage) {
       // Exit the request context while running callbacks.
@@ -2739,12 +2840,13 @@ function logRecoverableError(
         errorDigest = requestStorage.run(
           undefined,
           callWithDebugContextInDEV,
+          request,
           task,
           onError,
           error,
         );
       } else {
-        errorDigest = callWithDebugContextInDEV(task, onError, error);
+        errorDigest = callWithDebugContextInDEV(request, task, onError, error);
       }
     } else if (supportsRequestStorage) {
       // Exit the request context while running callbacks.
@@ -2787,14 +2889,15 @@ function emitPostponeChunk(
   if (__DEV__) {
     let reason = '';
     let stack: ReactStackTrace;
+    const env = request.environmentName();
     try {
       // eslint-disable-next-line react-internal/safe-string-coercion
       reason = String(postponeInstance.message);
-      stack = filterStackTrace(postponeInstance, 0);
+      stack = filterStackTrace(request, postponeInstance, 0);
     } catch (x) {
       stack = [];
     }
-    row = serializeRowHeader('P', id) + stringify({reason, stack}) + '\n';
+    row = serializeRowHeader('P', id) + stringify({reason, stack, env}) + '\n';
   } else {
     // No reason included in prod.
     row = serializeRowHeader('P', id) + '\n';
@@ -2818,7 +2921,7 @@ function emitErrorChunk(
       if (error instanceof Error) {
         // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
-        stack = filterStackTrace(error, 0);
+        stack = filterStackTrace(request, error, 0);
         const errorEnv = (error: any).environmentName;
         if (typeof errorEnv === 'string') {
           // This probably came from another FlightClient as a pass through.
@@ -2835,6 +2938,7 @@ function emitErrorChunk(
       }
     } catch (x) {
       message = 'An error occurred but serializing the error message failed.';
+      stack = [];
     }
     errorInfo = {digest, message, stack, env};
   } else {
@@ -3795,10 +3899,12 @@ export function abort(request: Request, reason: mixed): void {
                 'The render was aborted by the server without a reason.',
               )
             : typeof reason === 'object' &&
-              reason !== null &&
-              typeof reason.then === 'function'
-            ? new Error('The render was aborted by the server with a promise.')
-            : reason;
+                reason !== null &&
+                typeof reason.then === 'function'
+              ? new Error(
+                  'The render was aborted by the server with a promise.',
+                )
+              : reason;
         const digest = logRecoverableError(request, error, null);
         emitErrorChunk(request, errorId, digest, error);
       }
@@ -3825,10 +3931,12 @@ export function abort(request: Request, reason: mixed): void {
                 'The render was aborted by the server without a reason.',
               )
             : typeof reason === 'object' &&
-              reason !== null &&
-              typeof reason.then === 'function'
-            ? new Error('The render was aborted by the server with a promise.')
-            : reason;
+                reason !== null &&
+                typeof reason.then === 'function'
+              ? new Error(
+                  'The render was aborted by the server with a promise.',
+                )
+              : reason;
       }
       abortListeners.forEach(callback => callback(error));
       abortListeners.clear();

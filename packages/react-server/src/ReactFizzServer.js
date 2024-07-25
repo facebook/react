@@ -80,7 +80,7 @@ import {
   resetResumableState,
   completeResumableState,
   emitEarlyPreloads,
-  printToConsole,
+  bindToConsole,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -386,7 +386,7 @@ function defaultErrorHandler(error: mixed) {
   ) {
     // This was a Server error. We print the environment name in a badge just like we do with
     // replays of console logs to indicate that the source of this throw as actually the Server.
-    printToConsole('error', [error], error.environmentName);
+    bindToConsole('error', [error], error.environmentName)();
   } else {
     console['error'](error); // Don't transform to our wrapper
   }
@@ -4763,9 +4763,9 @@ export function prepareForStartFlowingIfBeforeAllReady(request: Request) {
       ? // Render Request, we define shell complete by the pending root tasks
         request.pendingRootTasks === 0
       : // Prerender Request, we define shell complete by completedRootSegemtn
-      request.completedRootSegment === null
-      ? request.pendingRootTasks === 0
-      : request.completedRootSegment.status !== POSTPONED;
+        request.completedRootSegment === null
+        ? request.pendingRootTasks === 0
+        : request.completedRootSegment.status !== POSTPONED;
   safelyEmitEarlyPreloads(request, shellComplete);
 }
 

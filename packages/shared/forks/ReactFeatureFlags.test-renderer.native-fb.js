@@ -10,7 +10,6 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
-export const allowConcurrentByDefault = true;
 export const alwaysThrottleRetries = false;
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
@@ -72,7 +71,6 @@ export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
 export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
-export const forceConcurrentByDefaultForTesting = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;

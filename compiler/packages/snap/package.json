@@ -24,6 +24,7 @@
     "@babel/preset-typescript": "^7.18.6",
     "@parcel/watcher": "^2.1.0",
     "@testing-library/react": "^13.4.0",
+    "babel-plugin-idx": "^3.0.3",
     "babel-plugin-syntax-hermes-parser": "^0.15.1",
     "chalk": "4",
     "fbt": "^1.0.0",
