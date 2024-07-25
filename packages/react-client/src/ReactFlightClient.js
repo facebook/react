@@ -56,7 +56,7 @@ import {
   readFinalStringChunk,
   createStringDecoder,
   prepareDestinationForModule,
-  printToConsole,
+  bindToConsole,
 } from './ReactFlightClientConfig';
 
 import {registerServerReference} from './ReactFlightReplyClient';
@@ -2313,14 +2313,14 @@ function resolveConsoleEntry(
   if (!enableOwnerStacks) {
     // Printing with stack isn't really limited to owner stacks but
     // we gate it behind the same flag for now while iterating.
-    printToConsole(methodName, args, env);
+    bindToConsole(methodName, args, env)();
     return;
   }
   const callStack = buildFakeCallStack(
     response,
     stackTrace,
     env,
-    printToConsole.bind(null, methodName, args, env),
+    bindToConsole(methodName, args, env),
   );
   if (owner != null) {
     const task = initializeFakeTask(response, owner, env);
