@@ -2,6 +2,10 @@
 ## Input
 
 ```javascript
+function Component(props) {
+  return <View {...props} />;
+}
+
 const View = React.memo(({items}) => {
   return (
     <ul>
@@ -12,12 +16,37 @@ const View = React.memo(({items}) => {
   );
 });
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [
+    {
+      items: [
+        {id: 2, name: 'foo'},
+        {id: 3, name: 'bar'},
+      ],
+    },
+  ],
+};
+
 ```
 
 ## Code
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
+function Component(props) {
+  const $ = _c(2);
+  let t0;
+  if ($[0] !== props) {
+    t0 = <View {...props} />;
+    $[0] = props;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  return t0;
+}
+
 const View = React.memo((t0) => {
   const $ = _c(4);
   const { items } = t0;
@@ -39,6 +68,18 @@ const View = React.memo((t0) => {
   }
   return t2;
 });
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [
+    {
+      items: [
+        { id: 2, name: "foo" },
+        { id: 3, name: "bar" },
+      ],
+    },
+  ],
+};
 function _temp(item) {
   return <li key={item.id}>{item.name}</li>;
 }
@@ -46,4 +87,4 @@ function _temp(item) {
 ```
       
 ### Eval output
-(kind: exception) Fixture not implemented
+(kind: ok) <ul><li>foo</li><li>bar</li></ul>
