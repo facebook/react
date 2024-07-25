@@ -14851,14 +14851,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-e8df0cf9-20240725"
+        reconcilerVersion: "19.0.0-www-classic-7f217d1d-20240725"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-www-classic-e8df0cf9-20240725",
+      version: "19.0.0-www-classic-7f217d1d-20240725",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;

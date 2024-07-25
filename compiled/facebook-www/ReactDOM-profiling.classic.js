@@ -9222,7 +9222,9 @@ function commitHostComponentMount(finishedWork) {
         props.autoFocus && instance.focus();
         break a;
       case "img":
-        props.src && (instance.src = props.src);
+        props.src
+          ? (instance.src = props.src)
+          : props.srcSet && (instance.srcset = props.srcSet);
     }
   } catch (error) {
     captureCommitPhaseError(finishedWork, finishedWork.return, error);
@@ -18008,14 +18010,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1860 = React.version;
 if (
-  "19.0.0-www-classic-e8df0cf9-20240725" !==
+  "19.0.0-www-classic-7f217d1d-20240725" !==
   isomorphicReactPackageVersion$jscomp$inline_1860
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1860,
-      "19.0.0-www-classic-e8df0cf9-20240725"
+      "19.0.0-www-classic-7f217d1d-20240725"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -18061,7 +18063,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1867 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-classic-e8df0cf9-20240725",
+  version: "19.0.0-www-classic-7f217d1d-20240725",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -18105,7 +18107,7 @@ var devToolsConfig$jscomp$inline_1867 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-e8df0cf9-20240725"
+  reconcilerVersion: "19.0.0-www-classic-7f217d1d-20240725"
 });
 function ReactDOMRoot(internalRoot) {
   this._internalRoot = internalRoot;
@@ -18548,7 +18550,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-e8df0cf9-20240725";
+exports.version = "19.0.0-www-classic-7f217d1d-20240725";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
