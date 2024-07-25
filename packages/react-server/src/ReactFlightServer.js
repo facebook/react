@@ -99,7 +99,7 @@ import {DefaultAsyncDispatcher} from './flight/ReactFlightAsyncDispatcher';
 
 import {resolveOwner, setCurrentOwner} from './flight/ReactFlightCurrentOwner';
 
-import {getOwnerStackByComponentInfoInDev} from './flight/ReactFlightComponentStack';
+import {getOwnerStackByComponentInfoInDev} from 'shared/ReactComponentInfoStack';
 
 import {
   callComponentInDEV,
@@ -968,6 +968,7 @@ function callWithDebugContextInDEV<A, T>(
   // a fake owner during this callback so we can get the stack trace from it.
   // This also gets sent to the client as the owner for the replaying log.
   const componentDebugInfo: ReactComponentInfo = {
+    name: '',
     env: task.environmentName,
     owner: task.debugOwner,
   };
@@ -2063,6 +2064,23 @@ function escapeStringValue(value: string): string {
   }
 }
 
+function isReactComponentInfo(value: any): boolean {
+  // TODO: We don't currently have a brand check on ReactComponentInfo. Reconsider.
+  return (
+    ((typeof value.debugTask === 'object' &&
+      value.debugTask !== null &&
+      // $FlowFixMe[method-unbinding]
+      typeof value.debugTask.run === 'function') ||
+      value.debugStack instanceof Error) &&
+    (enableOwnerStacks
+      ? isArray((value: any).stack)
+      : typeof (value: any).stack === 'undefined') &&
+    typeof value.name === 'string' &&
+    typeof value.env === 'string' &&
+    value.owner !== undefined
+  );
+}
+
 let modelRoot: null | ReactClientValue = false;
 
 function renderModel(
@@ -2574,28 +2592,15 @@ function renderModelDestructive(
       );
     }
     if (__DEV__) {
-      if (
-        // TODO: We don't currently have a brand check on ReactComponentInfo. Reconsider.
-        ((typeof value.debugTask === 'object' &&
-          value.debugTask !== null &&
-          // $FlowFixMe[method-unbinding]
-          typeof value.debugTask.run === 'function') ||
-          value.debugStack instanceof Error) &&
-        (enableOwnerStacks
-          ? isArray((value: any).stack)
-          : typeof (value: any).stack === 'undefined') &&
-        typeof value.name === 'string' &&
-        typeof value.env === 'string' &&
-        value.owner !== undefined
-      ) {
+      if (isReactComponentInfo(value)) {
         // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
         // need to omit it before serializing.
         const componentDebugInfo: Omit<
           ReactComponentInfo,
           'debugTask' | 'debugStack',
         > = {
-          name: value.name,
-          env: value.env,
+          name: (value: any).name,
+          env: (value: any).env,
           owner: (value: any).owner,
         };
         if (enableOwnerStacks) {
@@ -3257,6 +3262,24 @@ function renderConsoleValue(
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
       return Array.from((value: any));
+    }
+
+    if (isReactComponentInfo(value)) {
+      // This looks like a ReactComponentInfo. We can't serialize the ConsoleTask object so we
+      // need to omit it before serializing.
+      const componentDebugInfo: Omit<
+        ReactComponentInfo,
+        'debugTask' | 'debugStack',
+      > = {
+        name: (value: any).name,
+        env: (value: any).env,
+        owner: (value: any).owner,
+      };
+      if (enableOwnerStacks) {
+        // $FlowFixMe[cannot-write]
+        componentDebugInfo.stack = (value: any).stack;
+      }
+      return componentDebugInfo;
     }
 
     // $FlowFixMe[incompatible-return]
