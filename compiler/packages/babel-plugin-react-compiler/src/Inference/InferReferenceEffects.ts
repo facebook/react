@@ -401,56 +401,81 @@ class InferenceState {
 
     // Propagate effects of function expressions to the outer (ie current) effect context
     for (const value of values) {
-      if (
-        (value.kind === 'FunctionExpression' ||
-          value.kind === 'ObjectMethod') &&
-        value.loweredFunc.func.effects != null
-      ) {
-        for (const effect of value.loweredFunc.func.effects) {
-          if (
-            effect.kind === 'GlobalMutation' ||
-            effect.kind === 'ReactMutation'
-          ) {
-            // Known effects are always propagated upwards
-            functionEffects.push(effect);
-          } else {
-            /**
-             * Contextual effects need to be replayed against the current inference
-             * state, which may know more about the value to which the effect applied.
-             * The main cases are:
-             * 1. The mutated context value is _still_ a context value in the current scope,
-             *    so we have to continue propagating the original context mutation.
-             * 2. The mutated context value is a mutable value in the current scope,
-             *    so the context mutation was fine and we can skip propagating the effect.
-             * 3. The mutated context value  is an immutable value in the current scope,
-             *    resulting in a non-ContextMutation FunctionEffect. We propagate that new,
-             *    more detailed effect to the current function context.
-             */
-            for (const place of effect.places) {
-              if (this.isDefined(place)) {
-                const replayedEffect = this.reference(
-                  {...place, loc: effect.loc},
-                  effect.effect,
-                  reason,
-                );
-                if (replayedEffect != null) {
-                  if (replayedEffect.kind === 'ContextMutation') {
-                    // Case 1, still a context value so propagate the original effect
-                    functionEffects.push(effect);
-                  } else {
-                    // Case 3, immutable value so propagate the more precise effect
-                    functionEffects.push(replayedEffect);
-                  }
-                } // else case 2, local mutable value so this effect was fine
-              }
-            }
+      if (value.kind === 'ObjectExpression') {
+        for (const prop of value.properties) {
+          const propValues = this.#variables.get(prop.place.identifier.id);
+          CompilerError.invariant(propValues !== undefined, {
+            reason:
+              '[InferReferenceEffects] Every object property must have been initialised',
+            description: null,
+            loc: place.loc,
+            suggestions: null,
+          });
+          for (const propValue of propValues) {
+            this.propogateEffect(propValue, functionEffects, reason);
           }
         }
+      } else {
+        this.propogateEffect(value, functionEffects, reason);
       }
     }
+
     const functionEffect = this.reference(place, effectKind, reason);
     if (functionEffect !== null) {
       functionEffects.push(functionEffect);
+    }
+  }
+
+  propogateEffect(
+    value: InstructionValue,
+    functionEffects: Array<FunctionEffect>,
+    reason: ValueReason,
+  ): void {
+    if (value.kind !== 'FunctionExpression' && value.kind !== 'ObjectMethod') {
+      return;
+    }
+
+    const effects = value.loweredFunc.func.effects;
+    if (!effects) {
+      return;
+    }
+
+    for (const effect of effects) {
+      if (effect.kind === 'GlobalMutation' || effect.kind === 'ReactMutation') {
+        // Known effects are always propagated upwards
+        functionEffects.push(effect);
+      } else {
+        /**
+         * Contextual effects need to be replayed against the current inference
+         * state, which may know more about the value to which the effect applied.
+         * The main cases are:
+         * 1. The mutated context value is _still_ a context value in the current scope,
+         *    so we have to continue propagating the original context mutation.
+         * 2. The mutated context value is a mutable value in the current scope,
+         *    so the context mutation was fine and we can skip propagating the effect.
+         * 3. The mutated context value  is an immutable value in the current scope,
+         *    resulting in a non-ContextMutation FunctionEffect. We propagate that new,
+         *    more detailed effect to the current function context.
+         */
+        for (const place of effect.places) {
+          if (this.isDefined(place)) {
+            const replayedEffect = this.reference(
+              {...place, loc: effect.loc},
+              effect.effect,
+              reason,
+            );
+            if (replayedEffect != null) {
+              if (replayedEffect.kind === 'ContextMutation') {
+                // Case 1, still a context value so propagate the original effect
+                functionEffects.push(effect);
+              } else {
+                // Case 3, immutable value so propagate the more precise effect
+                functionEffects.push(replayedEffect);
+              }
+            } // else case 2, local mutable value so this effect was fine
+          }
+        }
+      }
     }
   }
 
