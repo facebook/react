@@ -217,9 +217,6 @@ export const enableUseDeferredValueInitialArg = true;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
-// Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
-export const allowConcurrentByDefault = false;
-
 // -----------------------------------------------------------------------------
 // React DOM Chopping Block
 //
