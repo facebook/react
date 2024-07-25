@@ -2,6 +2,10 @@
 ## Input
 
 ```javascript
+function Component(props) {
+  return <View {...props} />;
+}
+
 const View = React.memo(({items}) => {
   return (
     <ul>
@@ -12,31 +16,47 @@ const View = React.memo(({items}) => {
   );
 });
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [
+    {
+      items: [
+        {id: 2, name: 'foo'},
+        {id: 3, name: 'bar'},
+      ],
+    },
+  ],
+};
+
 ```
 
 
 ## Error
 
 ```
->  1 | const View = React.memo(({items}) => {
+   3 | }
+   4 |
+>  5 | const View = React.memo(({items}) => {
      |                         ^^^^^^^^^^^^^^
->  2 |   return (
+>  6 |   return (
      | ^^^^^^^^^^
->  3 |     <ul>
+>  7 |     <ul>
      | ^^^^^^^^^^
->  4 |       {items.map(item => (
+>  8 |       {items.map(item => (
      | ^^^^^^^^^^
->  5 |         <li key={item.id}>{item.name}</li>
+>  9 |         <li key={item.id}>{item.name}</li>
      | ^^^^^^^^^^
->  6 |       ))}
+> 10 |       ))}
      | ^^^^^^^^^^
->  7 |     </ul>
+> 11 |     </ul>
      | ^^^^^^^^^^
->  8 |   );
+> 12 |   );
      | ^^^^^^^^^^
->  9 | });
-     | ^^ Invariant: Expected a variable declarator parent (1:9)
-  10 |
+> 13 | });
+     | ^^ Invariant: Expected a variable declarator parent (5:13)
+  14 |
+  15 | export const FIXTURE_ENTRYPOINT = {
+  16 |   fn: Component,
 ```
           
       
