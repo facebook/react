@@ -30,7 +30,7 @@ import {
   describeClassComponentFrame,
   describeDebugInfoFrame,
 } from 'shared/ReactComponentStackFrame';
-import {formatOwnerStack} from './ReactFiberOwnerStack';
+import {formatOwnerStack} from 'shared/ReactOwnerStackFrames';
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {

@@ -31,7 +31,6 @@ import {
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
-  allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
   enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -85,7 +84,6 @@ import {
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  ConcurrentUpdatesByDefaultMode,
   NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
@@ -524,20 +522,12 @@ export function resetWorkInProgress(
 export function createHostRootFiber(
   tag: RootTag,
   isStrictMode: boolean,
-  concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
   if (disableLegacyMode || tag === ConcurrentRoot) {
     mode = ConcurrentMode;
     if (isStrictMode === true) {
       mode |= StrictLegacyMode | StrictEffectsMode;
-    }
-    if (
-      // Only for internal experiments.
-      allowConcurrentByDefault &&
-      concurrentUpdatesByDefaultOverride
-    ) {
-      mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
     mode = NoMode;
