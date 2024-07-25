@@ -45,9 +45,12 @@ const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
   parseModel(response: Response, json) {
     return JSON.parse(json, response._fromJSON);
   },
-  printToConsole(methodName, args, badgeName) {
-    // eslint-disable-next-line react-internal/no-production-logging
-    console[methodName].apply(console, args);
+  bindToConsole(methodName, args, badgeName) {
+    return Function.prototype.bind.apply(
+      // eslint-disable-next-line react-internal/no-production-logging
+      console[methodName],
+      [console].concat(args),
+    );
   },
 });
 
@@ -65,6 +68,7 @@ function read<T>(source: Source, options: ReadOptions): Thenable<T> {
     undefined,
     options !== undefined ? options.findSourceMapURL : undefined,
     true,
+    undefined,
   );
   for (let i = 0; i < source.length; i++) {
     processBinaryChunk(response, source[i], 0);

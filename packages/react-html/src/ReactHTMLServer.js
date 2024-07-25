@@ -168,6 +168,7 @@ export function renderToMarkup(
       handleFlightError,
       options ? options.identifierPrefix : undefined,
       undefined,
+      undefined,
       'Markup',
       undefined,
     );
