@@ -84,11 +84,15 @@ function parseRequestedNames(names, toCase) {
   }
   return result;
 }
-const argvType = Array.isArray(argv.bundle) ? argv.bundle : [argv.bundle];
-const requestedBundleTypes = argv.bundle ? argvType : [];
+const argvType = Array.isArray(argv.type) ? argv.type : [argv.type];
+const requestedBundleTypes = parseRequestedNames(
+  argv.type ? argvType : [],
+  'uppercase'
+);
 
+const names = argv._;
 const requestedBundleNames = parseRequestedNames(
-  argv.names ? argv.names : [],
+  names ? names : [],
   'lowercase'
 );
 const forcePrettyOutput = argv.pretty;
