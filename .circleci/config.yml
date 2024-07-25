@@ -124,24 +124,6 @@ jobs:
           path: ./build/devtools/firefox-extension.zip
           destination: react-devtools-firefox-extension.zip
 
-  run_devtools_e2e_tests:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - run:
-          name: Playwright install deps
-          command: |
-            npx playwright install
-            sudo npx playwright install-deps
-      - run:
-          environment:
-            RELEASE_CHANNEL: experimental
-          command: ./scripts/circleci/run_devtools_e2e_tests.js
-
   run_devtools_tests_for_versions:
     docker: *docker
     environment: *environment
