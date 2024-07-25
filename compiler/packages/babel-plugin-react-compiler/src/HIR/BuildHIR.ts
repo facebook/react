@@ -1934,7 +1934,6 @@ function lowerExpression(
       switch (leftNode.type) {
         case 'Identifier': {
           const leftExpr = left as NodePath<t.Identifier>;
-          const identifier = lowerIdentifier(builder, leftExpr);
           const leftPlace = lowerExpressionToTemporary(builder, leftExpr);
           const right = lowerExpressionToTemporary(builder, expr.get('right'));
           const binaryPlace = lowerValueToTemporary(builder, {
@@ -1944,30 +1943,42 @@ function lowerExpression(
             right,
             loc: exprLoc,
           });
-          const kind = getStoreKind(builder, leftExpr);
-          if (kind === 'StoreLocal') {
-            lowerValueToTemporary(builder, {
-              kind: 'StoreLocal',
-              lvalue: {
-                place: {...identifier},
-                kind: InstructionKind.Reassign,
-              },
-              value: {...binaryPlace},
-              type: null,
-              loc: exprLoc,
-            });
-            return {kind: 'LoadLocal', place: identifier, loc: exprLoc};
+          const binding = builder.resolveIdentifier(leftExpr);
+          if (binding.kind === 'Identifier') {
+            const identifier = lowerIdentifier(builder, leftExpr);
+            const kind = getStoreKind(builder, leftExpr);
+            if (kind === 'StoreLocal') {
+              lowerValueToTemporary(builder, {
+                kind: 'StoreLocal',
+                lvalue: {
+                  place: {...identifier},
+                  kind: InstructionKind.Reassign,
+                },
+                value: {...binaryPlace},
+                type: null,
+                loc: exprLoc,
+              });
+              return {kind: 'LoadLocal', place: identifier, loc: exprLoc};
+            } else {
+              lowerValueToTemporary(builder, {
+                kind: 'StoreContext',
+                lvalue: {
+                  place: {...identifier},
+                  kind: InstructionKind.Reassign,
+                },
+                value: {...binaryPlace},
+                loc: exprLoc,
+              });
+              return {kind: 'LoadContext', place: identifier, loc: exprLoc};
+            }
           } else {
-            lowerValueToTemporary(builder, {
-              kind: 'StoreContext',
-              lvalue: {
-                place: {...identifier},
-                kind: InstructionKind.Reassign,
-              },
+            const temporary = lowerValueToTemporary(builder, {
+              kind: 'StoreGlobal',
+              name: leftExpr.node.name,
               value: {...binaryPlace},
               loc: exprLoc,
             });
-            return {kind: 'LoadContext', place: identifier, loc: exprLoc};
+            return {kind: 'LoadLocal', place: temporary, loc: temporary.loc};
           }
         }
         case 'MemberExpression': {
