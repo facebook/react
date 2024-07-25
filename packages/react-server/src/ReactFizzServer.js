@@ -294,11 +294,12 @@ const FLUSHED = 2;
 const ABORTED = 3;
 const ERRORED = 4;
 const POSTPONED = 5;
+const RENDERING = 6;
 
 type Root = null;
 
 type Segment = {
-  status: 0 | 1 | 2 | 3 | 4 | 5,
+  status: 0 | 1 | 2 | 3 | 4 | 5 | 6,
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
   +index: number, // the index within the parent's chunks or 0 at the root
@@ -314,8 +315,9 @@ type Segment = {
 };
 
 const OPEN = 0;
-const CLOSING = 1;
-const CLOSED = 2;
+const ABORTING = 1;
+const CLOSING = 2;
+const CLOSED = 3;
 
 export opaque type Request = {
   destination: null | Destination,
@@ -324,7 +326,7 @@ export opaque type Request = {
   +renderState: RenderState,
   +rootFormatContext: FormatContext,
   +progressiveChunkSize: number,
-  status: 0 | 1 | 2,
+  status: 0 | 1 | 2 | 3,
   fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
@@ -649,6 +651,8 @@ export function resumeRequest(
   pingedTasks.push(rootTask);
   return request;
 }
+
+const AbortSigil = {};
 
 let currentRequest: null | Request = null;
 
@@ -1158,6 +1162,7 @@ function renderSuspenseBoundary(
 
     task.blockedSegment = boundarySegment;
     task.keyPath = fallbackKeyPath;
+    boundarySegment.status = RENDERING;
     try {
       renderNode(request, task, fallback, -1);
       pushSegmentFinale(
@@ -1167,6 +1172,13 @@ function renderSuspenseBoundary(
         boundarySegment.textEmbedded,
       );
       boundarySegment.status = COMPLETED;
+    } catch (thrownValue: mixed) {
+      if (thrownValue === AbortSigil) {
+        boundarySegment.status = ABORTED;
+      } else {
+        boundarySegment.status = ERRORED;
+      }
+      throw thrownValue;
     } finally {
       task.blockedSegment = parentSegment;
       task.keyPath = prevKeyPath;
@@ -1211,6 +1223,7 @@ function renderSuspenseBoundary(
     task.hoistableState = newBoundary.contentState;
     task.blockedSegment = contentRootSegment;
     task.keyPath = keyPath;
+    contentRootSegment.status = RENDERING;
 
     try {
       // We use the safe form because we don't handle suspending here. Only error handling.
@@ -1230,9 +1243,17 @@ function renderSuspenseBoundary(
         newBoundary.status = COMPLETED;
         return;
       }
-    } catch (error: mixed) {
-      contentRootSegment.status = ERRORED;
+    } catch (thrownValue: mixed) {
       newBoundary.status = CLIENT_RENDERED;
+      let error: mixed;
+      if (thrownValue === AbortSigil) {
+        contentRootSegment.status = ABORTED;
+        error = request.fatalError;
+      } else {
+        contentRootSegment.status = ERRORED;
+        error = thrownValue;
+      }
+
       const thrownInfo = getThrownInfo(task.componentStack);
       let errorDigest;
       if (
@@ -1579,6 +1600,9 @@ function finishClassComponent(
   } else {
     nextChildren = instance.render();
   }
+  if (request.status === ABORTING) {
+    throw AbortSigil;
+  }
 
   if (__DEV__) {
     if (instance.props !== props) {
@@ -1732,6 +1756,10 @@ function renderFunctionComponent(
     props,
     legacyContext,
   );
+  if (request.status === ABORTING) {
+    throw AbortSigil;
+  }
+
   const hasId = checkDidRenderIdHook();
   const actionStateCount = getActionStateCount();
   const actionStateMatchingIndex = getActionStateMatchingIndex();
@@ -2046,6 +2074,9 @@ function renderLazyComponent(
     const payload = lazyComponent._payload;
     const init = lazyComponent._init;
     Component = init(payload);
+  }
+  if (request.status === ABORTING) {
+    throw AbortSigil;
   }
   const resolvedProps = resolveDefaultPropsOnNonClassComponent(
     Component,
@@ -2622,6 +2653,9 @@ function retryNode(request: Request, task: Task): void {
           const payload = lazyNode._payload;
           const init = lazyNode._init;
           resolvedNode = init(payload);
+        }
+        if (request.status === ABORTING) {
+          throw AbortSigil;
         }
         // Now we render the resolved node
         renderNodeDestructive(request, task, resolvedNode, childIndex);
@@ -3738,6 +3772,11 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   const boundary = task.blockedBoundary;
   const segment = task.blockedSegment;
   if (segment !== null) {
+    if (segment.status === RENDERING) {
+      // This is the a currently rendering Segment. The render itself will
+      // abort the task.
+      return;
+    }
     segment.status = ABORTED;
   }
 
@@ -4032,6 +4071,10 @@ function retryRenderTask(
     // We completed this by other means before we had a chance to retry it.
     return;
   }
+
+  // We track when a Segment is rendering so we can handle aborts while rendering
+  segment.status = RENDERING;
+
   // We restore the context to what it was when we suspended.
   // We don't restore it after we leave because it's likely that we'll end up
   // needing a very similar context soon again.
@@ -4080,9 +4123,10 @@ function retryRenderTask(
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
         // Something suspended again, let's pick it back up later.
+        segment.status = PENDING;
+        task.thenableState = getThenableStateAfterSuspending();
         const ping = task.ping;
         x.then(ping, ping);
-        task.thenableState = getThenableStateAfterSuspending();
         return;
       } else if (
         enablePostpone &&
@@ -4111,14 +4155,26 @@ function retryRenderTask(
 
     const errorInfo = getThrownInfo(task.componentStack);
     task.abortSet.delete(task);
-    segment.status = ERRORED;
-    erroredTask(
-      request,
-      task.blockedBoundary,
-      x,
-      errorInfo,
-      __DEV__ && enableOwnerStacks ? task.debugTask : null,
-    );
+
+    if (x === AbortSigil) {
+      segment.status = ABORTED;
+      erroredTask(
+        request,
+        task.blockedBoundary,
+        request.fatalError,
+        errorInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
+    } else {
+      segment.status = ERRORED;
+      erroredTask(
+        request,
+        task.blockedBoundary,
+        x,
+        errorInfo,
+        __DEV__ && enableOwnerStacks ? task.debugTask : null,
+      );
+    }
     return;
   } finally {
     if (__DEV__) {
@@ -4192,7 +4248,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     erroredReplay(
       request,
       task.blockedBoundary,
-      x,
+      x === AbortSigil ? request.fatalError : x,
       errorInfo,
       task.replay.nodes,
       task.replay.slots,
@@ -4725,6 +4781,7 @@ function flushCompletedQueues(
         }
       }
       // We're done.
+      request.status = CLOSED;
       close(destination);
       // We need to stop flowing now because we do not want any async contexts which might call
       // float methods to initiate any flushes after this point
@@ -4846,13 +4903,23 @@ export function stopFlowing(request: Request): void {
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request, reason: mixed): void {
+  if (request.status === OPEN) {
+    request.status = ABORTING;
+  }
   try {
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
       const error =
         reason === undefined
           ? new Error('The render was aborted by the server without a reason.')
-          : reason;
+          : typeof reason === 'object' &&
+              reason !== null &&
+              typeof reason.then === 'function'
+            ? new Error('The render was aborted by the server with a promise.')
+            : reason;
+      // This error isn't necessarily fatal in this case but we need to stash it
+      // so we can use it to abort any pending work
+      request.fatalError = error;
       abortableTasks.forEach(task => abortTask(task, request, error));
       abortableTasks.clear();
     }
