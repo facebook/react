@@ -99,11 +99,11 @@ jobs:
     strategy:
       matrix:
         version:
-          - 16.0
-          - 16.5 # schedule package
-          - 16.8 # hooks
-          - 17.0
-          - 18.0
+          - "16.0"
+          - "16.5" # schedule package
+          - "16.8" # hooks
+          - "17.0"
+          - "18.0"
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
@@ -133,11 +133,11 @@ jobs:
     strategy:
       matrix:
         version:
-          - 16.0
-          - 16.5 # schedule package
-          - 16.8 # hooks
-          - 17.0
-          - 18.0
+          - "16.0"
+          - "16.5" # schedule package
+          - "16.8" # hooks
+          - "17.0"
+          - "18.0"
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
