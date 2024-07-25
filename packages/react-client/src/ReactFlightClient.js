@@ -255,6 +255,7 @@ export type Response = {
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
   _replayConsole: boolean, // DEV-only
+  _rootEnvironmentName: string, // DEV-only, the requested environment name.
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -692,7 +693,7 @@ function createElement(
       writable: true,
       value: null,
     });
-    let env = '';
+    let env = response._rootEnvironmentName;
     if (enableOwnerStacks) {
       if (owner !== null && owner.env != null) {
         // Interestingly we don't actually have the environment name of where
@@ -737,7 +738,7 @@ function createElement(
         // This owner should ideally have already been initialized to avoid getting
         // user stack frames on the stack.
         const ownerTask =
-          owner === null ? null : initializeFakeTask(response, owner);
+          owner === null ? null : initializeFakeTask(response, owner, env);
         if (ownerTask === null) {
           const rootTask = response._debugRootTask;
           if (rootTask != null) {
@@ -1355,6 +1356,7 @@ function ResponseInstance(
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
   replayConsole: boolean,
+  environmentName: void | string,
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   this._bundlerConfig = bundlerConfig;
@@ -1371,17 +1373,21 @@ function ResponseInstance(
   this._rowLength = 0;
   this._buffer = [];
   this._tempRefs = temporaryReferences;
-  if (supportsCreateTask) {
-    // Any stacks that appear on the server need to be rooted somehow on the client
-    // so we create a root Task for this response which will be the root owner for any
-    // elements created by the server. We use the "use server" string to indicate that
-    // this is where we enter the server from the client.
-    // TODO: Make this string configurable.
-    this._debugRootTask = (console: any).createTask('"use server"');
-  }
   if (__DEV__) {
+    const rootEnv = environmentName === undefined ? 'Server' : environmentName;
+    if (supportsCreateTask) {
+      // Any stacks that appear on the server need to be rooted somehow on the client
+      // so we create a root Task for this response which will be the root owner for any
+      // elements created by the server. We use the "use server" string to indicate that
+      // this is where we enter the server from the client.
+      // TODO: Make this string configurable.
+      this._debugRootTask = (console: any).createTask(
+        '"use ' + rootEnv.toLowerCase() + '"',
+      );
+    }
     this._debugFindSourceMapURL = findSourceMapURL;
     this._replayConsole = replayConsole;
+    this._rootEnvironmentName = rootEnv;
   }
   // Don't inline this call because it causes closure to outline the call above.
   this._fromJSON = createFromJSONCallback(this);
@@ -1396,6 +1402,7 @@ export function createResponse(
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
   replayConsole: boolean,
+  environmentName: void | string,
 ): Response {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new ResponseInstance(
@@ -1407,6 +1414,7 @@ export function createResponse(
     temporaryReferences,
     findSourceMapURL,
     replayConsole,
+    environmentName,
   );
 }
 
@@ -1864,7 +1872,7 @@ function resolveErrorDev(
           'An error occurred in the Server Components render but no message was provided',
       ),
     );
-    const rootTask = response._debugRootTask;
+    const rootTask = getRootTask(response, env);
     if (rootTask != null) {
       error = rootTask.run(callStack);
     } else {
@@ -2098,52 +2106,99 @@ function buildFakeCallStack<T>(
   return callStack;
 }
 
+function getRootTask(
+  response: Response,
+  childEnvironmentName: string,
+): null | ConsoleTask {
+  const rootTask = response._debugRootTask;
+  if (!rootTask) {
+    return null;
+  }
+  if (response._rootEnvironmentName !== childEnvironmentName) {
+    // If the root most owner component is itself in a different environment than the requested
+    // environment then we create an extra task to indicate that we're transitioning into it.
+    // Like if one environment just requests another environment.
+    const createTaskFn = (console: any).createTask.bind(
+      console,
+      '"use ' + childEnvironmentName.toLowerCase() + '"',
+    );
+    return rootTask.run(createTaskFn);
+  }
+  return rootTask;
+}
+
 function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
+  childEnvironmentName: string,
 ): null | ConsoleTask {
   if (!supportsCreateTask) {
     return null;
   }
   const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
-  const cachedEntry = componentInfo.debugTask;
-  if (cachedEntry !== undefined) {
-    return cachedEntry;
-  }
-
   if (debugInfo.stack == null) {
     // If this is an error, we should've really already initialized the task.
     // If it's null, we can't initialize a task.
     return null;
   }
-
   const stack = debugInfo.stack;
-  const env = componentInfo.env == null ? '' : componentInfo.env;
-  const ownerTask =
-    componentInfo.owner == null
-      ? null
-      : initializeFakeTask(response, componentInfo.owner);
+  const env: string =
+    componentInfo.env == null
+      ? response._rootEnvironmentName
+      : componentInfo.env;
+  if (env !== childEnvironmentName) {
+    // This is the boundary between two environments so we'll annotate the task name.
+    // That is unusual so we don't cache it.
+    const ownerTask =
+      componentInfo.owner == null
+        ? null
+        : initializeFakeTask(response, componentInfo.owner, env);
+    return buildFakeTask(
+      response,
+      ownerTask,
+      stack,
+      '"use ' + childEnvironmentName.toLowerCase() + '"',
+      env,
+    );
+  } else {
+    const cachedEntry = componentInfo.debugTask;
+    if (cachedEntry !== undefined) {
+      return cachedEntry;
+    }
+    const ownerTask =
+      componentInfo.owner == null
+        ? null
+        : initializeFakeTask(response, componentInfo.owner, env);
+    // $FlowFixMe[cannot-write]: We consider this part of initialization.
+    return (componentInfo.debugTask = buildFakeTask(
+      response,
+      ownerTask,
+      stack,
+      getServerComponentTaskName(componentInfo),
+      env,
+    ));
+  }
+}
 
-  const createTaskFn = (console: any).createTask.bind(
-    console,
-    getServerComponentTaskName(componentInfo),
-  );
+function buildFakeTask(
+  response: Response,
+  ownerTask: null | ConsoleTask,
+  stack: ReactStackTrace,
+  taskName: string,
+  env: string,
+): ConsoleTask {
+  const createTaskFn = (console: any).createTask.bind(console, taskName);
   const callStack = buildFakeCallStack(response, stack, env, createTaskFn);
-
-  let componentTask;
   if (ownerTask === null) {
-    const rootTask = response._debugRootTask;
+    const rootTask = getRootTask(response, env);
     if (rootTask != null) {
-      componentTask = rootTask.run(callStack);
+      return rootTask.run(callStack);
     } else {
-      componentTask = callStack();
+      return callStack();
     }
   } else {
-    componentTask = ownerTask.run(callStack);
+    return ownerTask.run(callStack);
   }
-  // $FlowFixMe[cannot-write]: We consider this part of initialization.
-  componentInfo.debugTask = componentTask;
-  return componentTask;
 }
 
 const createFakeJSXCallStack = {
@@ -2216,7 +2271,9 @@ function resolveDebugInfo(
   // We eagerly initialize the fake task because this resolving happens outside any
   // render phase so we're not inside a user space stack at this point. If we waited
   // to initialize it when we need it, we might be inside user code.
-  initializeFakeTask(response, debugInfo);
+  const env =
+    debugInfo.env === undefined ? response._rootEnvironmentName : debugInfo.env;
+  initializeFakeTask(response, debugInfo, env);
   initializeFakeStack(response, debugInfo);
 
   const chunk = getChunk(response, id);
@@ -2266,7 +2323,7 @@ function resolveConsoleEntry(
     printToConsole.bind(null, methodName, args, env),
   );
   if (owner != null) {
-    const task = initializeFakeTask(response, owner);
+    const task = initializeFakeTask(response, owner, env);
     initializeFakeStack(response, owner);
     if (task !== null) {
       task.run(callStack);
@@ -2275,7 +2332,7 @@ function resolveConsoleEntry(
     // TODO: Set the current owner so that captureOwnerStack() adds the component
     // stack during the replay - if needed.
   }
-  const rootTask = response._debugRootTask;
+  const rootTask = getRootTask(response, env);
   if (rootTask != null) {
     rootTask.run(callStack);
     return;
