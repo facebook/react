@@ -1,8 +1,11 @@
-name: (Runtime) Commit Artifacts for Meta WWW and fbsource
+name: (Runtime) Commit Artifacts for Meta WWW and fbsource V2
 
 on:
-  push:
-    branches: [main, meta-www, meta-fbsource]
+  workflow_run:
+    workflows: ["(Runtime) Build and Test"]
+    types: [completed]
+    branches:
+      - main
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -49,102 +52,27 @@ jobs:
         run: |
           echo "www_branch_count=$(git ls-remote --heads origin "refs/heads/meta-www" | wc -l)" >> "$GITHUB_OUTPUT"
           echo "fbsource_branch_count=$(git ls-remote --heads origin "refs/heads/meta-fbsource" | wc -l)" >> "$GITHUB_OUTPUT"
-      - name: Download and unzip artifacts
-        uses: actions/github-script@v6
-        env:
-          CIRCLECI_TOKEN: ${{secrets.CIRCLECI_TOKEN_DIFFTRAIN}}
+      - uses: actions/setup-node@v4
         with:
-          script: |
-            // TODO: Move this to a script file.
-            const cp = require('child_process');
-
-            function sleep(ms) {
-              return new Promise(resolve => setTimeout(resolve, ms));
-            }
-
-            function execHelper(command, options, streamStdout = false) {
-              return new Promise((resolve, reject) => {
-                const proc = cp.exec(
-                  command,
-                  options,
-                  (error, stdout) => (error ? reject(error) : resolve(stdout.trim())),
-                );
-                if (streamStdout) {
-                  proc.stdout.pipe(process.stdout);
-                }
-              });
-            }
-
-            let artifactsUrl = null;
-            // This is a temporary, dirty hack to avoid needing a GitHub auth token in the circleci
-            // workflow to notify this GitHub action. Sorry!
-            let iter = 0;
-            spinloop: while (iter < 15) {
-              const res = await github.rest.repos.listCommitStatusesForRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: context.sha
-              });
-              for (const status of res.data) {
-                if (/process_artifacts_combined/.test(status.context)) {
-                  switch (status.state) {
-                    case 'pending': {
-                      console.log(`${status.context} is still pending`);
-                      break;
-                    }
-                    case 'failure':
-                    case 'error': {
-                      throw new Error(`${status.context} has failed or errored`);
-                    }
-                    case 'success': {
-                      // The status does not include a build ID, but we can extract it
-                      // from the URL. I couldn't find a better way to do this.
-                      const ciBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-                        status.target_url,
-                      )[1];
-                      if (Number.parseInt(ciBuildId, 10) + '' === ciBuildId) {
-                        artifactsUrl =
-                          `https://circleci.com/api/v1.1/project/github/facebook/react/${ciBuildId}/artifacts`;
-                        console.log(`Found artifactsUrl: ${artifactsUrl}`);
-                        break spinloop;
-                      } else {
-                        throw new Error(`${ciBuildId} isn't a number`);
-                      }
-                      break;
-                    }
-                    default: {
-                      throw new Error(`Unhandled status state: ${status.state}`);
-                      break;
-                    }
-                  }
-                }
-              }
-              iter++;
-              console.log("Sleeping for 60s...");
-              await sleep(60_000);
-            }
-            if (artifactsUrl != null) {
-              const {CIRCLECI_TOKEN} = process.env;
-              const res = await fetch(artifactsUrl, {
-                headers: {
-                  'Circle-Token': CIRCLECI_TOKEN
-                }
-              });
-              const data = await res.json();
-              if (!Array.isArray(data) && data.message != null) {
-                throw `CircleCI returned: ${data.message}`;
-              }
-              for (const artifact of data) {
-                if (artifact.path === 'build.tgz') {
-                  console.log(`Downloading and unzipping ${artifact.url}`);
-                  await execHelper(
-                    `curl -L ${artifact.url} -H "Circle-Token: ${CIRCLECI_TOKEN}" | tar -xvz`
-                  );
-                }
-              }
-            } else {
-              process.exitCode = 1;
-            }
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+        name: yarn install (react)
+      - run: yarn install --frozen-lockfile
+        name: yarn install (scripts/release)
+        working-directory: scripts/release
+      - name: Download artifacts for base revision
+        run: |
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build-ghaction.js --commit=${{ github.event.workflow_run.head_sha }}
+      - name: Display structure of build
+        run: ls -R build
       - name: Strip @license from eslint plugin and react-refresh
         run: |
           sed -i -e 's/ @license React*//' \
@@ -199,9 +127,9 @@ jobs:
           ls -R ./compiled-rn
       - name: Add REVISION files
         run: |
-          echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
+          echo ${{ github.event.workflow_run.head_sha }} >> ./compiled/facebook-www/REVISION
           cp ./compiled/facebook-www/REVISION ./compiled/facebook-www/REVISION_TRANSFORMS
-          echo ${{ github.sha }} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
+          echo ${{ github.event.workflow_run.head_sha}} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
       - name: "Get current version string"
         id: get_current_version
         run: |
@@ -298,12 +226,12 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
-            ${{ github.event.head_commit.message }}
+            ${{ github.event.workflow_run.head_commit.message }}
 
-            DiffTrain build for [${{ github.sha }}](https://github.com/facebook/react/commit/${{ github.sha }})
+            DiffTrain build for [${{ github.event.workflow_run.head_sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha }})
           branch: builds/facebook-www
-          commit_user_name: ${{ github.actor }}
-          commit_user_email: ${{ github.actor }}@users.noreply.github.com
+          commit_user_name: ${{ github.event.workflow_run.actor.name }}
+          commit_user_email: ${{ github.event.workflow_run.actor.email || format('{0}@users.noreply.github.com', github.event.workflow_run.actor.name) }}
           create_branch: true
 
   commit_fbsource_artifacts:
@@ -456,10 +384,10 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: |
-            ${{ github.event.head_commit.message }}
+            ${{ github.event.workflow_run.head_commit.message }}
 
-            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.sha }}.
+            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha }}.
           branch: builds/facebook-fbsource
-          commit_user_name: ${{ github.actor }}
-          commit_user_email: ${{ github.actor }}@users.noreply.github.com
+          commit_user_name: ${{ github.event.workflow_run.actor.name }}
+          commit_user_email: ${{ github.event.workflow_run.actor.email || format('{0}@users.noreply.github.com', github.event.workflow_run.actor.name) }}
           create_branch: true
