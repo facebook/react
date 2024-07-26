@@ -142,11 +142,11 @@ jobs:
           echo "current_version_classic=$VERSION_CLASSIC" >> "$GITHUB_OUTPUT"
           echo "current_version_modern=$VERSION_MODERN" >> "$GITHUB_OUTPUT"
           echo "current_version_rn=$VERSION_NATIVE_FB" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: compiled
           path: compiled/
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: compiled-rn
           path: compiled-rn/
@@ -161,7 +161,7 @@ jobs:
           ref: builds/facebook-www
       - name: Ensure clean directory
         run: rm -rf compiled
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: compiled
           path: compiled/
@@ -244,7 +244,7 @@ jobs:
           ref: builds/facebook-fbsource
       - name: Ensure clean directory
         run: rm -rf compiled-rn
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: compiled-rn
           path: compiled-rn/
@@ -293,7 +293,7 @@ jobs:
           git add .
       - name: Signing files
         if: steps.check_should_commit.outputs.should_commit == 'true'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             // TODO: Move this to a script file.
