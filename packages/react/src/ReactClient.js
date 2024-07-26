@@ -38,6 +38,7 @@ import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
   useCallback,
+  unstable_useContextWithBailout,
   useContext,
   useEffect,
   useEffectEvent,
@@ -83,6 +84,7 @@ export {
   cache,
   postpone as unstable_postpone,
   useCallback,
+  unstable_useContextWithBailout,
   useContext,
   useEffect,
   useEffectEvent as experimental_useEffectEvent,

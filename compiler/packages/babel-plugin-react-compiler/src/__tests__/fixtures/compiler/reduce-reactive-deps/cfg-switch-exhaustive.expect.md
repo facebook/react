@@ -6,7 +6,7 @@
 // scope that produces x, since it is accessed unconditionally in all cfg
 // paths
 
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function useCondDepInSwitch(props, other) {
   const x = {};
@@ -25,7 +25,7 @@ function useCondDepInSwitch(props, other) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useCondDepInSwitch,
-  params: [{ a: { b: 2 } }, 2],
+  params: [{a: {b: 2}}, 2],
 };
 
 ```

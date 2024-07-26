@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(props) {
   let x;
@@ -11,12 +11,12 @@ function Component(props) {
     x = identity(props.value[0]);
   };
   foo();
-  return { x };
+  return {x};
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: [42] }],
+  params: [{value: [42]}],
 };
 
 ```

@@ -1656,7 +1656,6 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('C');
   });
 
-  // @gate !forceConcurrentByDefaultForTesting
   it('an async component outside of a Suspense boundary crashes with an error (resolves in microtask)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1708,7 +1707,6 @@ describe('ReactUse', () => {
     );
   });
 
-  // @gate !forceConcurrentByDefaultForTesting
   it('an async component outside of a Suspense boundary crashes with an error (resolves in macrotask)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};

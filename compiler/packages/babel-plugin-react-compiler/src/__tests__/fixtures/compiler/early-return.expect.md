@@ -13,8 +13,8 @@ function MyApp(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: MyApp,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

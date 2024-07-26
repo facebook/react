@@ -9,7 +9,7 @@ function useFoo(setOne: boolean) {
     y = 3;
     z = 5;
   }
-  return { x, y, z };
+  return {x, y, z};
 }
 
 export const FIXTURE_ENTRYPOINT = {

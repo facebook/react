@@ -1,12 +1,12 @@
 function Component() {
   let local;
 
-  const reassignLocal = (newValue) => {
+  const reassignLocal = newValue => {
     local = newValue;
   };
 
-  const onClick = (newValue) => {
-    reassignLocal("hello");
+  const onClick = newValue => {
+    reassignLocal('hello');
 
     if (local === newValue) {
       // Without React Compiler, `reassignLocal` is freshly created
@@ -14,7 +14,7 @@ function Component() {
       // such that invoking reassignLocal will reassign the same
       // binding that we are observing in the if condition, and
       // we reach this branch
-      console.log("`local` was updated!");
+      console.log('`local` was updated!');
     } else {
       // With React Compiler enabled, `reassignLocal` is only created
       // once, capturing a binding to `local` in that render pass.
@@ -24,7 +24,7 @@ function Component() {
       //
       // To protect against this, we disallow reassigning locals from
       // functions that escape
-      throw new Error("`local` not updated!");
+      throw new Error('`local` not updated!');
     }
   };
 

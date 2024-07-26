@@ -16,13 +16,13 @@ import {
   ReactiveScopeBlock,
   ReactiveStatement,
   promoteTemporary,
-} from "../HIR";
-import { eachPatternOperand, mapPatternOperands } from "../HIR/visitors";
+} from '../HIR';
+import {eachPatternOperand, mapPatternOperands} from '../HIR/visitors';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Destructuring statements may sometimes define some variables which are declared by the scope,
@@ -74,7 +74,7 @@ import {
  *
  */
 export function extractScopeDeclarationsFromDestructuring(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): void {
   const state = new State(fn.env);
   visitReactiveFunction(fn, new Visitor(), state);
@@ -99,34 +99,34 @@ class Visitor extends ReactiveFunctionTransform<State> {
 
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: State
+    state: State,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
 
-    if (instruction.value.kind === "Destructure") {
+    if (instruction.value.kind === 'Destructure') {
       const transformed = transformDestructuring(
         state,
         instruction,
-        instruction.value
+        instruction.value,
       );
       if (transformed) {
         return {
-          kind: "replace-many",
-          value: transformed.map((instruction) => ({
-            kind: "instruction",
+          kind: 'replace-many',
+          value: transformed.map(instruction => ({
+            kind: 'instruction',
             instruction,
           })),
         };
       }
     }
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 }
 
 function transformDestructuring(
   state: State,
   instr: ReactiveInstruction,
-  destructure: Destructure
+  destructure: Destructure,
 ): null | Array<ReactiveInstruction> {
   let reassigned: Set<IdentifierId> = new Set();
   let hasDeclaration = false;
@@ -146,7 +146,7 @@ function transformDestructuring(
    */
   const instructions: Array<ReactiveInstruction> = [];
   const renamed: Map<Place, Place> = new Map();
-  mapPatternOperands(destructure.lvalue.pattern, (place) => {
+  mapPatternOperands(destructure.lvalue.pattern, place => {
     if (!reassigned.has(place.identifier.id)) {
       return place;
     }
@@ -169,7 +169,7 @@ function transformDestructuring(
       id: instr.id,
       lvalue: null,
       value: {
-        kind: "StoreLocal",
+        kind: 'StoreLocal',
         lvalue: {
           kind: InstructionKind.Reassign,
           place: original,

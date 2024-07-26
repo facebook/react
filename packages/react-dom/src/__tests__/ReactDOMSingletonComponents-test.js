@@ -128,8 +128,8 @@ describe('ReactDOM HostSingleton', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   it('warns if you render the same singleton twice at the same time', async () => {

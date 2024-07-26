@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { conditionalInvoke } from "shared-runtime";
+import {conditionalInvoke} from 'shared-runtime';
 
-function Component({ doReassign1, doReassign2 }) {
+function Component({doReassign1, doReassign2}) {
   let x = {};
   const reassign1 = () => {
     x = 2;
@@ -19,11 +19,11 @@ function Component({ doReassign1, doReassign2 }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ doReassign1: true, doReassign2: true }],
+  params: [{doReassign1: true, doReassign2: true}],
   sequentialRenders: [
-    { doReassign1: true, doReassign2: true },
-    { doReassign1: true, doReassign2: false },
-    { doReassign1: false, doReassign2: false },
+    {doReassign1: true, doReassign2: true},
+    {doReassign1: true, doReassign2: false},
+    {doReassign1: false, doReassign2: false},
   ],
 };
 

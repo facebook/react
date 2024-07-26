@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
-import { BlockId, HIRFunction, Identifier, Place } from "../HIR/HIR";
+import {CompilerError} from '../CompilerError';
+import {BlockId, HIRFunction, Identifier, Place} from '../HIR/HIR';
 import {
   eachInstructionLValue,
   eachInstructionOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
+} from '../HIR/visitors';
 
 /*
  * Pass to eliminate redundant phi nodes:
@@ -29,7 +29,7 @@ import {
  */
 export function eliminateRedundantPhi(
   fn: HIRFunction,
-  sharedRewrites?: Map<Identifier, Identifier>
+  sharedRewrites?: Map<Identifier, Identifier>,
 ): void {
   const ir = fn.body;
   const rewrites: Map<Identifier, Identifier> =
@@ -72,7 +72,7 @@ export function eliminateRedundantPhi(
           Array.from(phi.operands).map(([block, id]) => [
             block,
             rewrites.get(id) ?? id,
-          ])
+          ]),
         );
         // Find if the phi can be eliminated
         let same: Identifier | null = null;
@@ -98,7 +98,7 @@ export function eliminateRedundantPhi(
           }
         }
         CompilerError.invariant(same !== null, {
-          reason: "Expected phis to be non-empty",
+          reason: 'Expected phis to be non-empty',
           description: null,
           loc: null,
           suggestions: null,
@@ -117,10 +117,10 @@ export function eliminateRedundantPhi(
         }
 
         if (
-          instr.value.kind === "FunctionExpression" ||
-          instr.value.kind === "ObjectMethod"
+          instr.value.kind === 'FunctionExpression' ||
+          instr.value.kind === 'ObjectMethod'
         ) {
-          const { context } = instr.value.loweredFunc.func;
+          const {context} = instr.value.loweredFunc.func;
           for (const place of context) {
             rewritePlace(place, rewrites);
           }
@@ -135,7 +135,7 @@ export function eliminateRedundantPhi(
       }
 
       // Rewrite all terminal operands
-      const { terminal } = block;
+      const {terminal} = block;
       for (const place of eachTerminalOperand(terminal)) {
         rewritePlace(place, rewrites);
       }
@@ -150,7 +150,7 @@ export function eliminateRedundantPhi(
 
 function rewritePlace(
   place: Place,
-  rewrites: Map<Identifier, Identifier>
+  rewrites: Map<Identifier, Identifier>,
 ): void {
   const rewrite = rewrites.get(place.identifier);
   if (rewrite != null) {

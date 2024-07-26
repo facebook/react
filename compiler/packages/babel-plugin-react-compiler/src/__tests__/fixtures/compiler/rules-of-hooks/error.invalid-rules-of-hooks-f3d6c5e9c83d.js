@@ -4,9 +4,9 @@
 // This *must* be invalid.
 function useHook() {
   if (b) {
-    console.log("true");
+    console.log('true');
   } else {
-    console.log("false");
+    console.log('false');
   }
   if (a) return;
   useState();

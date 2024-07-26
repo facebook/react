@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useFragment as readFragment } from "shared-runtime";
+import {useFragment as readFragment} from 'shared-runtime';
 
 function Component(props) {
   let data;

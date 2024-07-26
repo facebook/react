@@ -3,7 +3,7 @@
 
 ```javascript
 // @flow
-function Component({ items }) {
+function Component({items}) {
   // Per the spec, <Foo value=<>{...}</> /> is valid.
   // But many tools don't allow fragments as jsx attribute values,
   // so we ensure not to emit them wrapped in an expression container
@@ -11,30 +11,29 @@ function Component({ items }) {
     <Foo
       value={
         <Bar>
-          {items.map((item) => (
+          {items.map(item => (
             <Item key={item.id} item={item} />
           ))}
         </Bar>
-      }
-    ></Foo>
+      }></Foo>
   ) : null;
 }
 
-function Foo({ value }) {
+function Foo({value}) {
   return value;
 }
 
-function Bar({ children }) {
+function Bar({children}) {
   return <div>{children}</div>;
 }
 
-function Item({ item }) {
+function Item({item}) {
   return <div>{item.name}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ items: [{ id: 1, name: "One!" }] }],
+  params: [{items: [{id: 1, name: 'One!'}]}],
 };
 
 ```

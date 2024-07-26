@@ -4,8 +4,8 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useCallback } from "react";
-import { makeArray } from "shared-runtime";
+import {useCallback} from 'react';
+import {makeArray} from 'shared-runtime';
 
 // This case is already unsound in source, so we can safely bailout
 function Foo(props) {

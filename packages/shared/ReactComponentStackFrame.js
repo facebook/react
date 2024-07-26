@@ -39,10 +39,10 @@ export function describeBuiltInComponentFrame(name: string): string {
             ? // V8
               ' (<anonymous>)'
             : // JSC/Spidermonkey
-            x.stack.indexOf('@') > -1
-            ? '@unknown:0:0'
-            : // Other
-              '';
+              x.stack.indexOf('@') > -1
+              ? '@unknown:0:0'
+              : // Other
+                '';
       }
     }
     // We use the prefix to ensure our stacks line up with native stack frames.

@@ -3,7 +3,7 @@
 
 ```javascript
 function component(a) {
-  let z = { a };
+  let z = {a};
   (function () {
     (function () {
       z.b = 1;

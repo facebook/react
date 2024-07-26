@@ -3,7 +3,7 @@
 
 ```javascript
 // @panicThreshold(none)
-import { useNoAlias } from "shared-runtime";
+import {useNoAlias} from 'shared-runtime';
 
 const cond = true;
 function useFoo(props) {
@@ -12,7 +12,7 @@ function useFoo(props) {
   return useNoAlias({});
 
   function bar() {
-    console.log("bar called");
+    console.log('bar called');
     return 5;
   }
 }

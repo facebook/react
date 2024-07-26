@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
-const path = require("path");
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const path = require('path');
 
 const nextConfig = {
   reactStrictMode: true,
@@ -14,24 +14,24 @@ const nextConfig = {
     // Load *.d.ts files as strings using https://webpack.js.org/guides/asset-modules/#source-assets.
     config.module.rules.push({
       test: /\.d\.ts/,
-      type: "asset/source",
+      type: 'asset/source',
     });
 
     // Monaco Editor
     if (!options.isServer) {
       config.plugins.push(
         new MonacoWebpackPlugin({
-          languages: ["typescript", "javascript"],
-          filename: "static/[name].worker.js",
+          languages: ['typescript', 'javascript'],
+          filename: 'static/[name].worker.js',
         })
       );
     }
 
     config.resolve.alias = {
       ...config.resolve.alias,
-      "react-compiler-runtime": path.resolve(
+      'react-compiler-runtime': path.resolve(
         __dirname,
-        "../../packages/react-compiler-runtime"
+        '../../packages/react-compiler-runtime'
       ),
     };
     config.resolve.fallback = {
@@ -43,7 +43,7 @@ const nextConfig = {
     return config;
   },
 
-  transpilePackages: ["monaco-editor"],
+  transpilePackages: ['monaco-editor'],
 };
 
 module.exports = nextConfig;

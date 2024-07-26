@@ -5,18 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  ReactiveFunctionTransform,
-  Transformed,
-  visitReactiveFunction,
-} from ".";
+import {ReactiveFunctionTransform, Transformed, visitReactiveFunction} from '.';
 import {
   Identifier,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
   ReactiveStatement,
-} from "../HIR";
+} from '../HIR';
 
 /**
  * Some instructions will *always* produce a new value, and unless memoized will *always*
@@ -38,17 +34,17 @@ class Transform extends ReactiveFunctionTransform<boolean> {
 
   override transformInstruction(
     instruction: ReactiveInstruction,
-    withinScope: boolean
+    withinScope: boolean,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, withinScope);
 
-    const { lvalue, value } = instruction;
+    const {lvalue, value} = instruction;
     switch (value.kind) {
-      case "ArrayExpression":
-      case "ObjectExpression":
-      case "JsxExpression":
-      case "JsxFragment":
-      case "NewExpression": {
+      case 'ArrayExpression':
+      case 'ObjectExpression':
+      case 'JsxExpression':
+      case 'JsxFragment':
+      case 'NewExpression': {
         if (lvalue !== null) {
           this.alwaysInvalidatingValues.add(lvalue.identifier);
           if (!withinScope) {
@@ -57,7 +53,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
         }
         break;
       }
-      case "StoreLocal": {
+      case 'StoreLocal': {
         if (this.alwaysInvalidatingValues.has(value.value.identifier)) {
           this.alwaysInvalidatingValues.add(value.lvalue.place.identifier);
         }
@@ -66,7 +62,7 @@ class Transform extends ReactiveFunctionTransform<boolean> {
         }
         break;
       }
-      case "LoadLocal": {
+      case 'LoadLocal': {
         if (
           lvalue !== null &&
           this.alwaysInvalidatingValues.has(value.place.identifier)
@@ -82,12 +78,12 @@ class Transform extends ReactiveFunctionTransform<boolean> {
         break;
       }
     }
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    _withinScope: boolean
+    _withinScope: boolean,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, true);
 
@@ -108,15 +104,15 @@ class Transform extends ReactiveFunctionTransform<boolean> {
           }
         }
         return {
-          kind: "replace",
+          kind: 'replace',
           value: {
-            kind: "pruned-scope",
+            kind: 'pruned-scope',
             scope: scopeBlock.scope,
             instructions: scopeBlock.instructions,
           },
         };
       }
     }
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 }
