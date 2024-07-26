@@ -37,6 +37,7 @@ import {
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import type {ContextDependencyWithSelect} from '../../react-reconciler/src/ReactInternalTypes';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals;
 
@@ -155,7 +156,10 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
-let currentContextDependency: null | ContextDependency<mixed> = null;
+let currentContextDependency:
+  | null
+  | ContextDependency<mixed>
+  | ContextDependencyWithSelect<mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;

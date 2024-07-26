@@ -48,40 +48,6 @@ parameters:
     default: ''
 
 jobs:
-  yarn_build:
-    docker: *docker
-    environment: *environment
-    parallelism: 40
-    steps:
-      - checkout
-      - setup_node_modules
-      - run: yarn build --ci=circleci
-      - persist_to_workspace:
-          root: .
-          paths:
-            - build
-
-  process_artifacts_combined:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - setup_node_modules
-      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
-      - run: |
-          mkdir -p ./build/__test_utils__
-          node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
-      # Compress build directory into a single tarball for easy download
-      - run: tar -zcvf ./build.tgz ./build
-        # TODO: Migrate scripts to use `build` directory instead of `build2`
-      - run: cp ./build.tgz ./build2.tgz
-      - store_artifacts:
-          path: ./build2.tgz
-      - store_artifacts:
-          path: ./build.tgz
-
   publish_prerelease:
     parameters:
       commit_sha:
@@ -105,19 +71,6 @@ jobs:
             scripts/release/publish.js --ci --tags << parameters.dist_tag >>
 
 workflows:
-
-  build_and_test:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    jobs:
-      - yarn_build:
-          filters:
-            branches:
-              ignore:
-                - builds/facebook-www
-      - process_artifacts_combined:
-          requires:
-            - yarn_build
-
   # Used to publish a prerelease manually via the command line
   publish_preleases:
     when: << pipeline.parameters.prerelease_commit_sha >>
