@@ -77,8 +77,8 @@ export type ContextDependencyWithCompare<C, S> = {
     | ContextDependencyWithCompare<mixed, mixed>
     | null,
   memoizedValue: C,
-  compare: (C => S) | null,
-  lastComparedValue?: S | null,
+  compare: C => Array<mixed>,
+  lastComparedValue: ?Array<mixed>,
 };
 
 export type Dependencies = {
@@ -402,7 +402,7 @@ export type Dispatcher = {
   ): [S, Dispatch<A>],
   unstable_useContextWithBailout?: <T>(
     context: ReactContext<T>,
-    compare: (T => mixed) | null,
+    compare: (T => Array<mixed>) | null,
   ) => T,
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},

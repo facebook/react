@@ -53,17 +53,23 @@ describe('ReactContextWithBailout', () => {
     });
 
     function A() {
-      const {a} = unstable_useContextWithBailout(Context, context => context.a);
+      const {a} = unstable_useContextWithBailout(Context, context => [
+        context.a,
+      ]);
       return <Text text={a} />;
     }
 
     function B() {
-      const {b} = unstable_useContextWithBailout(Context, context => context.b);
+      const {b} = unstable_useContextWithBailout(Context, context => [
+        context.b,
+      ]);
       return <Text text={b} />;
     }
 
     function C() {
-      const {c} = unstable_useContextWithBailout(Context, context => context.c);
+      const {c} = unstable_useContextWithBailout(Context, context => [
+        context.c,
+      ]);
       return <Text text={c} />;
     }
 
@@ -126,7 +132,9 @@ describe('ReactContextWithBailout', () => {
     });
 
     function Child() {
-      const {a} = unstable_useContextWithBailout(Context, context => context.a);
+      const {a} = unstable_useContextWithBailout(Context, context => [
+        context.a,
+      ]);
       const context = useContext(Context);
       return <Text text={`A: ${a}, B: ${context.b}`} />;
     }
@@ -175,10 +183,9 @@ describe('ReactContextWithBailout', () => {
     });
 
     function Child() {
-      const {a} = unstable_useContextWithBailout(
-        ContextA,
-        context => context.a,
-      );
+      const {a} = unstable_useContextWithBailout(ContextA, context => [
+        context.a,
+      ]);
       const b = useContext(ContextB);
       return <Text text={`A: ${a}, B: ${b}`} />;
     }

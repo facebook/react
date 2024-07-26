@@ -409,7 +409,7 @@ function propagateContextChanges<T>(
           if (dependency.context === context) {
             if (enableContextProfiling) {
               const compare = dependency.compare;
-              if (compare != null) {
+              if (compare != null && dependency.lastComparedValue != null) {
                 const newValue = isPrimaryRenderer
                   ? dependency.context._currentValue
                   : dependency.context._currentValue2;
@@ -664,9 +664,12 @@ function propagateParentContextChanges(
 }
 
 function checkIfComparedContextValuesChanged(
-  oldComparedValue: mixed,
-  newComparedValue: mixed,
+  oldComparedValue: Array<mixed>,
+  newComparedValue: Array<mixed>,
 ): boolean {
+  // We have an implicit contract that compare functions must return arrays.
+  // This allows us to compare multiple values in the same context access
+  // since compiling to additional hook calls regresses perf.
   if (isArray(oldComparedValue) && isArray(newComparedValue)) {
     if (oldComparedValue.length !== newComparedValue.length) {
       return true;
@@ -678,9 +681,7 @@ function checkIfComparedContextValuesChanged(
       }
     }
   } else {
-    if (!is(newComparedValue, oldComparedValue)) {
-      return true;
-    }
+    throw new Error('Compared context values must be arrays');
   }
   return false;
 }
@@ -703,7 +704,11 @@ export function checkIfContextChanged(
       ? context._currentValue
       : context._currentValue2;
     const oldValue = dependency.memoizedValue;
-    if (enableContextProfiling && dependency.compare != null) {
+    if (
+      enableContextProfiling &&
+      dependency.compare != null &&
+      dependency.lastComparedValue != null
+    ) {
       if (
         checkIfComparedContextValuesChanged(
           dependency.lastComparedValue,
@@ -751,10 +756,10 @@ export function prepareToReadContext(
 
 export function readContextAndCompare<C>(
   context: ReactContext<C>,
-  compare: (C => mixed) | null,
+  compare: C => Array<mixed>,
 ): C {
-  if (!enableLazyContextPropagation) {
-    return readContext(context);
+  if (!(enableLazyContextPropagation && enableContextProfiling)) {
+    throw new Error('Not implemented.');
   }
 
   return readContextForConsumer_withCompare(
@@ -791,12 +796,10 @@ export function readContextDuringReconciliation<T>(
   return readContextForConsumer(consumer, context);
 }
 
-type ContextCompare<C, V> = C => V | null;
-
 function readContextForConsumer_withCompare<C, S>(
   consumer: Fiber | null,
   context: ReactContext<C>,
-  compare: (C => S) | null,
+  compare: C => Array<mixed>,
 ): C {
   const value = isPrimaryRenderer
     ? context._currentValue
@@ -809,8 +812,8 @@ function readContextForConsumer_withCompare<C, S>(
       context: ((context: any): ReactContext<mixed>),
       memoizedValue: value,
       next: null,
-      compare: compare ? ((compare: any): ContextCompare<mixed, mixed>) : null,
-      lastComparedValue: compare != null ? compare(value) : null,
+      compare: ((compare: any): (context: mixed) => Array<mixed>),
+      lastComparedValue: compare(value),
     };
 
     if (lastContextDependency === null) {
