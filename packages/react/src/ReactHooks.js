@@ -71,7 +71,7 @@ export function useContext<T>(Context: ReactContext<T>): T {
 
 export function unstable_useContextWithBailout<T>(
   context: ReactContext<T>,
-  compare: (T => Array<mixed>) | null,
+  select: (T => Array<mixed>) | null,
 ): T {
   if (!(enableLazyContextPropagation && enableContextProfiling)) {
     throw new Error('Not implemented.');
@@ -87,7 +87,7 @@ export function unstable_useContextWithBailout<T>(
     }
   }
   // $FlowFixMe[not-a-function] This is unstable, thus optional
-  return dispatcher.unstable_useContextWithBailout(context, compare);
+  return dispatcher.unstable_useContextWithBailout(context, select);
 }
 
 export function useState<S>(

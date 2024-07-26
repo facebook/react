@@ -1060,12 +1060,12 @@ function updateWorkInProgressHook(): Hook {
 
 function unstable_useContextWithBailout<T>(
   context: ReactContext<T>,
-  compare: (T => Array<mixed>) | null,
+  select: (T => Array<mixed>) | null,
 ): T {
-  if (compare === null) {
+  if (select === null) {
     return readContext(context);
   }
-  return readContextAndCompare(context, compare);
+  return readContextAndCompare(context, select);
 }
 
 // NOTE: defining two versions of this function to avoid size impact when this feature is disabled.
@@ -4054,11 +4054,11 @@ if (__DEV__) {
     (HooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
-        compare: (T => Array<mixed>) | null,
+        select: (T => Array<mixed>) | null,
       ): T {
         currentHookNameInDev = 'useContext';
         mountHookTypesDev();
-        return unstable_useContextWithBailout(context, compare);
+        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -4246,11 +4246,11 @@ if (__DEV__) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
-        compare: (T => Array<mixed>) | null,
+        select: (T => Array<mixed>) | null,
       ): T {
         currentHookNameInDev = 'useContext';
         updateHookTypesDev();
-        return unstable_useContextWithBailout(context, compare);
+        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -4437,11 +4437,11 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
-        compare: (T => Array<mixed>) | null,
+        select: (T => Array<mixed>) | null,
       ): T {
         currentHookNameInDev = 'useContext';
         updateHookTypesDev();
-        return unstable_useContextWithBailout(context, compare);
+        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -4628,11 +4628,11 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
-        compare: (T => Array<mixed>) | null,
+        select: (T => Array<mixed>) | null,
       ): T {
         currentHookNameInDev = 'useContext';
         updateHookTypesDev();
-        return unstable_useContextWithBailout(context, compare);
+        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -4845,12 +4845,12 @@ if (__DEV__) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
-        compare: (T => Array<mixed>) | null,
+        select: (T => Array<mixed>) | null,
       ): T {
         currentHookNameInDev = 'useContext';
         warnInvalidHookAccess();
         mountHookTypesDev();
-        return unstable_useContextWithBailout(context, compare);
+        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -5063,12 +5063,12 @@ if (__DEV__) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
-        compare: (T => Array<mixed>) | null,
+        select: (T => Array<mixed>) | null,
       ): T {
         currentHookNameInDev = 'useContext';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return unstable_useContextWithBailout(context, compare);
+        return unstable_useContextWithBailout(context, select);
       };
   }
 
@@ -5281,12 +5281,12 @@ if (__DEV__) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
-        compare: (T => Array<mixed>) | null,
+        select: (T => Array<mixed>) | null,
       ): T {
         currentHookNameInDev = 'useContext';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return unstable_useContextWithBailout(context, compare);
+        return unstable_useContextWithBailout(context, select);
       };
   }
 }

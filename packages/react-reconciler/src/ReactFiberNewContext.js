@@ -756,7 +756,7 @@ export function prepareToReadContext(
 
 export function readContextAndCompare<C>(
   context: ReactContext<C>,
-  compare: C => Array<mixed>,
+  select: C => Array<mixed>,
 ): C {
   if (!(enableLazyContextPropagation && enableContextProfiling)) {
     throw new Error('Not implemented.');
@@ -765,7 +765,7 @@ export function readContextAndCompare<C>(
   return readContextForConsumer_withSelect(
     currentlyRenderingFiber,
     context,
-    compare,
+    select,
   );
 }
 
