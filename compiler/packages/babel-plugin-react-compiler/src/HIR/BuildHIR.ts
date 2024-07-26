@@ -2130,24 +2130,41 @@ function lowerExpression(
             suggestions: null,
           });
         }
-        const fbtEnumLocations: Array<SourceLocation> = [];
+        // see `error.todo-multiple-fbt-plural` fixture for explanation
+        const fbtLocations = {
+          enum: new Array<SourceLocation>(),
+          plural: new Array<SourceLocation>(),
+          pronoun: new Array<SourceLocation>(),
+        };
         expr.traverse({
+          JSXClosingElement(path) {
+            path.skip();
+          },
           JSXNamespacedName(path) {
-            if (
-              path.node.namespace.name === tagName &&
-              path.node.name.name === 'enum'
-            ) {
-              fbtEnumLocations.push(path.node.loc ?? GeneratedSource);
+            if (path.node.namespace.name === tagName) {
+              switch (path.node.name.name) {
+                case 'enum':
+                  fbtLocations.enum.push(path.node.loc ?? GeneratedSource);
+                  break;
+                case 'plural':
+                  fbtLocations.plural.push(path.node.loc ?? GeneratedSource);
+                  break;
+                case 'pronoun':
+                  fbtLocations.pronoun.push(path.node.loc ?? GeneratedSource);
+                  break;
+              }
             }
           },
         });
-        if (fbtEnumLocations.length > 1) {
-          CompilerError.throwTodo({
-            reason: `Support <${tagName}> tags with multiple <${tagName}:enum> values`,
-            loc: fbtEnumLocations.at(-1) ?? GeneratedSource,
-            description: null,
-            suggestions: null,
-          });
+        for (const [name, locations] of Object.entries(fbtLocations)) {
+          if (locations.length > 1) {
+            CompilerError.throwTodo({
+              reason: `Support <${tagName}> tags with multiple <${tagName}:${name}> values`,
+              loc: locations.at(-1) ?? GeneratedSource,
+              description: null,
+              suggestions: null,
+            });
+          }
         }
       }
 

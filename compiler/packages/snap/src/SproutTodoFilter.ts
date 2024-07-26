@@ -440,7 +440,6 @@ const skipFilter = new Set([
   'fbt/fbtparam-with-jsx-element-content',
   'fbt/fbtparam-text-must-use-expression-container',
   'fbt/fbtparam-with-jsx-fragment-value',
-  'fbt/fbt-preserve-jsxtext',
   'todo.useContext-mutate-context-in-callback',
   'loop-unused-let',
   'reanimated-no-memo-arg',
@@ -485,7 +484,6 @@ const skipFilter = new Set([
   'rules-of-hooks/rules-of-hooks-69521d94fa03',
 
   // bugs
-  'fbt/bug-multiple-fbt-plural',
   'fbt/bug-fbt-preserve-whitespace-param',
   'bug-invalid-hoisting-functionexpr',
   'original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block',
