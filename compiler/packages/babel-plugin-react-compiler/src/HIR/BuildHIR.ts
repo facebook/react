@@ -2113,10 +2113,10 @@ function lowerExpression(
         }
         props.push({kind: 'JsxAttribute', name: propName, place: value});
       }
-      if (
-        tag.kind === 'BuiltinTag' &&
-        (tag.name === 'fbt' || tag.name === 'fbs')
-      ) {
+
+      const isFbt =
+        tag.kind === 'BuiltinTag' && (tag.name === 'fbt' || tag.name === 'fbs');
+      if (isFbt) {
         const tagName = tag.name;
         const openingIdentifier = opening.get('name');
         const tagIdentifier = openingIdentifier.isJSXIdentifier()
@@ -2168,35 +2168,17 @@ function lowerExpression(
         }
       }
 
-      let children: Array<Place>;
-      if (
-        tag.kind === 'BuiltinTag' &&
-        (tag.name === 'fbt' || tag.name === 'fbs')
-      ) {
-        children = expr
-          .get('children')
-          .map(child => {
-            if (child.isJSXText()) {
-              /*
-               * FBT whitespace normalization differs from standard JSX:
-               * https://github.com/facebook/fbt/blob/0b4e0d13c30bffd0daa2a75715d606e3587b4e40/packages/babel-plugin-fbt/src/FbtUtil.js#L76-L87
-               */
-              const text = child.node.value.replace(/[^\S\u00A0]+/g, ' ');
-              return lowerValueToTemporary(builder, {
-                kind: 'JSXText',
-                value: text,
-                loc: child.node.loc ?? GeneratedSource,
-              });
-            }
-            return lowerJsxElement(builder, child);
-          })
-          .filter(notNull);
-      } else {
-        children = expr
-          .get('children')
-          .map(child => lowerJsxElement(builder, child))
-          .filter(notNull);
-      }
+      /**
+       * Increment fbt counter before traversing into children, as whitespace
+       * in jsx text is handled differently for fbt subtrees.
+       */
+      isFbt && builder.fbtDepth++;
+      const children: Array<Place> = expr
+        .get('children')
+        .map(child => lowerJsxElement(builder, child))
+        .filter(notNull);
+      isFbt && builder.fbtDepth--;
+
       return {
         kind: 'JsxExpression',
         tag,
@@ -3158,7 +3140,19 @@ function lowerJsxElement(
       return lowerExpressionToTemporary(builder, expression);
     }
   } else if (exprPath.isJSXText()) {
-    const text = trimJsxText(exprPath.node.value);
+    let text: string | null;
+    if (builder.fbtDepth > 0) {
+      /*
+       * FBT whitespace normalization differs from standard JSX.
+       * https://github.com/facebook/fbt/blob/0b4e0d13c30bffd0daa2a75715d606e3587b4e40/packages/babel-plugin-fbt/src/FbtUtil.js#L76-L87
+       * Since the fbt transform runs after, let's just preserve all
+       * whitespace in FBT subtrees as is.
+       */
+      text = exprPath.node.value;
+    } else {
+      text = trimJsxText(exprPath.node.value);
+    }
+
     if (text === null) {
       return null;
     }

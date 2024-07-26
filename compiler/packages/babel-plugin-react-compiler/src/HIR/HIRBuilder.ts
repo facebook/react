@@ -110,6 +110,11 @@ export default class HIRBuilder {
   #exceptionHandlerStack: Array<BlockId> = [];
   parentFunction: NodePath<t.Function>;
   errors: CompilerError = new CompilerError();
+  /**
+   * Traversal context: counts the number of `fbt` tag parents
+   * of the current babel node.
+   */
+  fbtDepth: number = 0;
 
   get nextIdentifierId(): IdentifierId {
     return this.#env.nextIdentifierId;
