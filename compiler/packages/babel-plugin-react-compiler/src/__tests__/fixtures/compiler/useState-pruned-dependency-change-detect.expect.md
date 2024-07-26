@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableChangeDetectionForDebugging
+// @enableChangeDetection
 import {useState} from 'react';
 
 function Component(props) {
@@ -16,7 +16,7 @@ function Component(props) {
 
 ```javascript
 import { $structuralCheck } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableChangeDetectionForDebugging
+import { c as _c } from "react/compiler-runtime"; // @enableChangeDetection
 import { useState } from "react";
 
 function Component(props) {

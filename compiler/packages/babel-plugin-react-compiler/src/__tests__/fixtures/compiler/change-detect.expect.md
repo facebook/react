@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableChangeDetectionForDebugging
+// @enableChangeDetection
 let glob = 1;
 
 function Component(props) {
@@ -25,7 +25,7 @@ function Component(props) {
 
 ```javascript
 import { $structuralCheck } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableChangeDetectionForDebugging
+import { c as _c } from "react/compiler-runtime"; // @enableChangeDetection
 let glob = 1;
 
 function Component(props) {

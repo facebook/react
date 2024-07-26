@@ -1,4 +1,4 @@
-// @enableChangeDetectionForDebugging
+// @enableChangeDetection
 let glob = 1;
 
 function Component(props) {

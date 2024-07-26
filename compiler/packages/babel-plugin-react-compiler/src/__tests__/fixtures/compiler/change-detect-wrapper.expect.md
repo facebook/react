@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableChangeDetection
+// @enableChangeDetectionWrappers
 function Component(props) {
   let x = null;
   if (props.cond) {
@@ -17,8 +17,8 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { $structuralCheck } from "react-compiler-runtime";
-import { c as _c } from "react/compiler-runtime"; // @enableChangeDetection
+import { $structuralCheck, $store, $restore } from "react-compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @enableChangeDetectionWrappers
 function Component(props) {
   const $ = _c(2);
   let x = null;
@@ -32,7 +32,7 @@ function Component(props) {
         $structuralCheck(old$x, x, "x", "Component", "cached", "(3:6)");
       }
       $[0] = props.value;
-      $[1] = x;
+      $[1] = $store(x);
       if (condition) {
         x = [];
         x.push(props.value);

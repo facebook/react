@@ -670,14 +670,6 @@ function codegenReactiveScope(
   }
 
   if (cx.env.config.disableMemoizationForDebugging) {
-    CompilerError.invariant(
-      cx.env.config.enableChangeDetectionForDebugging == null,
-      {
-        reason: `Expected to not have both change detection enabled and memoization disabled`,
-        description: `Incompatible config options`,
-        loc: null,
-      },
-    );
     testCondition = t.logicalExpression(
       '||',
       testCondition,
@@ -687,38 +679,76 @@ function codegenReactiveScope(
   let computationBlock = codegenBlock(cx, block);
 
   let memoStatement;
-  if (cx.env.config.enableChangeDetectionForDebugging != null) {
+  if (cx.env.config.enableChangeDetection != null) {
     const loc =
       typeof scope.loc === 'symbol'
         ? 'unknown location'
         : `(${scope.loc.start.line}:${scope.loc.end.line})`;
     const detectionFunction =
-      cx.env.config.enableChangeDetectionForDebugging.importSpecifierName;
+      cx.env.config.enableChangeDetection.structuralCheck;
     const cacheLoadOldValueStatements: Array<t.Statement> = [];
+    const restoreOldValueStatements: Array<t.Statement> = [];
     const changeDetectionStatements: Array<t.Statement> = [];
     const idempotenceDetectionStatements: Array<t.Statement> = [];
 
-    for (const {name, index, value} of cacheLoads) {
-      const loadName = cx.synthesizeName(`old$${name.name}`);
-      const slot = t.memberExpression(
-        t.identifier(cx.synthesizeName('$')),
+    for (const {
+      name: { name: nameStr },
+      index,
+      value,
+    } of cacheLoads) {
+      const baseSlot = t.memberExpression(
+        t.identifier(cx.synthesizeName("$")),
         t.numericLiteral(index),
         true,
       );
+
+      const genSlot = (): t.MemberExpression => t.cloneNode(baseSlot, true);
+
+      const loadNameStr = cx.synthesizeName(`old$${nameStr}`);
+
+      let storedValue, restoredValue, restoredRecomputed;
+      if (cx.env.config.enableChangeDetection.wrappers != null) {
+        storedValue = t.callExpression(
+          t.identifier(cx.env.config.enableChangeDetection.wrappers.store),
+          [value]
+        );
+        restoredValue = t.callExpression(
+          t.identifier(cx.env.config.enableChangeDetection.wrappers.restore),
+          [t.identifier(loadNameStr)]
+        );
+        restoredRecomputed = t.callExpression(
+          t.identifier(cx.env.config.enableChangeDetection.wrappers.restore),
+          [genSlot()]
+        );
+      } else {
+        storedValue = value;
+        restoredValue = t.identifier(loadNameStr);
+        restoredRecomputed = genSlot();
+      }
+
       cacheStoreStatements.push(
-        t.expressionStatement(t.assignmentExpression('=', slot, value)),
+        t.expressionStatement(
+          t.assignmentExpression("=", genSlot(), storedValue)
+        )
       );
       cacheLoadOldValueStatements.push(
         t.variableDeclaration('let', [
-          t.variableDeclarator(t.identifier(loadName), slot),
+          t.variableDeclarator(t.identifier(loadNameStr), genSlot()),
         ]),
       );
+      if (!cx.env.config.disableMemoizationForDebugging) {
+        restoreOldValueStatements.push(
+          t.expressionStatement(
+            t.assignmentExpression("=", t.identifier(nameStr), restoredValue)
+          )
+        );
+      }
       changeDetectionStatements.push(
         t.expressionStatement(
           t.callExpression(t.identifier(detectionFunction), [
-            t.identifier(loadName),
-            t.cloneNode(name, true),
-            t.stringLiteral(name.name),
+            t.identifier(loadNameStr),
+            t.identifier(nameStr),
+            t.stringLiteral(nameStr),
             t.stringLiteral(cx.fnName),
             t.stringLiteral('cached'),
             t.stringLiteral(loc),
@@ -728,9 +758,9 @@ function codegenReactiveScope(
       idempotenceDetectionStatements.push(
         t.expressionStatement(
           t.callExpression(t.identifier(detectionFunction), [
-            t.cloneNode(slot, true),
-            t.cloneNode(name, true),
-            t.stringLiteral(name.name),
+            genSlot(),
+            t.identifier(nameStr),
+            t.stringLiteral(nameStr),
             t.stringLiteral(cx.fnName),
             t.stringLiteral('recomputed'),
             t.stringLiteral(loc),
@@ -738,7 +768,9 @@ function codegenReactiveScope(
         ),
       );
       idempotenceDetectionStatements.push(
-        t.expressionStatement(t.assignmentExpression('=', name, slot)),
+        t.expressionStatement(
+          t.assignmentExpression("=", t.identifier(nameStr), restoredRecomputed)
+        )
       );
     }
     const condition = cx.synthesizeName('condition');

@@ -264,7 +264,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
  * mutated elsewhere.
  */
 function mayHaveChanged(env: Environment, instruction: Instruction): boolean {
-  if (env.config.enableChangeDetectionForDebugging == null) {
+  if (env.config.enableChangeDetection == null) {
     return false;
   }
   switch (instruction.value.kind) {
