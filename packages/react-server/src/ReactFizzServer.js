@@ -1138,83 +1138,13 @@ function renderSuspenseBoundary(
   // no parent segment so there's nothing to wait on.
   contentRootSegment.parentFlushed = true;
 
-  // Currently this is running synchronously. We could instead schedule this to pingedTasks.
-  // I suspect that there might be some efficiency benefits from not creating the suspended task
-  // and instead just using the stack if possible.
-  // TODO: Call this directly instead of messing with saving and restoring contexts.
+  if (request.trackedPostpones !== null) {
+    // This is a prerender. In this mode we want to render the fallback synchronously and schedule
+    // the content to render later. This is the opposite of what we do during a normal render
+    // where we try to skip rendering the fallback if the content itself can render synchronously
+    const trackedPostpones = request.trackedPostpones;
 
-  // We can reuse the current context and task to render the content immediately without
-  // context switching. We just need to temporarily switch which boundary and which segment
-  // we're writing to. If something suspends, it'll spawn new suspended task with that context.
-  task.blockedBoundary = newBoundary;
-  task.hoistableState = newBoundary.contentState;
-  task.blockedSegment = contentRootSegment;
-  task.keyPath = keyPath;
-
-  try {
-    // We use the safe form because we don't handle suspending here. Only error handling.
-    renderNode(request, task, content, -1);
-    pushSegmentFinale(
-      contentRootSegment.chunks,
-      request.renderState,
-      contentRootSegment.lastPushedText,
-      contentRootSegment.textEmbedded,
-    );
-    contentRootSegment.status = COMPLETED;
-    queueCompletedSegment(newBoundary, contentRootSegment);
-    if (newBoundary.pendingTasks === 0 && newBoundary.status === PENDING) {
-      // This must have been the last segment we were waiting on. This boundary is now complete.
-      // Therefore we won't need the fallback. We early return so that we don't have to create
-      // the fallback.
-      newBoundary.status = COMPLETED;
-      return;
-    }
-  } catch (error: mixed) {
-    contentRootSegment.status = ERRORED;
-    newBoundary.status = CLIENT_RENDERED;
-    const thrownInfo = getThrownInfo(task.componentStack);
-    let errorDigest;
-    if (
-      enablePostpone &&
-      typeof error === 'object' &&
-      error !== null &&
-      error.$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (error: any);
-      logPostpone(
-        request,
-        postponeInstance.message,
-        thrownInfo,
-        __DEV__ && enableOwnerStacks ? task.debugTask : null,
-      );
-      // TODO: Figure out a better signal than a magic digest value.
-      errorDigest = 'POSTPONE';
-    } else {
-      errorDigest = logRecoverableError(
-        request,
-        error,
-        thrownInfo,
-        __DEV__ && enableOwnerStacks ? task.debugTask : null,
-      );
-    }
-    encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo, false);
-
-    untrackBoundary(request, newBoundary);
-
-    // We don't need to decrement any task numbers because we didn't spawn any new task.
-    // We don't need to schedule any task because we know the parent has written yet.
-    // We do need to fallthrough to create the fallback though.
-  } finally {
-    task.blockedBoundary = parentBoundary;
-    task.hoistableState = parentHoistableState;
-    task.blockedSegment = parentSegment;
-    task.keyPath = prevKeyPath;
-  }
-
-  const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
-  const trackedPostpones = request.trackedPostpones;
-  if (trackedPostpones !== null) {
-    // We create a detached replay node to track any postpones inside the fallback.
+    const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
     const fallbackReplayNode: ReplayNode = [
       fallbackKeyPath[1],
       fallbackKeyPath[2],
@@ -1222,41 +1152,158 @@ function renderSuspenseBoundary(
       null,
     ];
     trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
-    if (newBoundary.status === POSTPONED) {
-      // This must exist now.
-      const boundaryReplayNode: ReplaySuspenseBoundary =
-        (trackedPostpones.workingMap.get(keyPath): any);
-      boundaryReplayNode[4] = fallbackReplayNode;
-    } else {
-      // We might not inject it into the postponed tree, unless the content actually
-      // postpones too. We need to keep track of it until that happpens.
-      newBoundary.trackedFallbackNode = fallbackReplayNode;
+    // We are rendering the fallback before the boundary content so we keep track of
+    // the fallback replay node until we determine if the primary content suspends
+    newBoundary.trackedFallbackNode = fallbackReplayNode;
+
+    task.blockedSegment = boundarySegment;
+    task.keyPath = fallbackKeyPath;
+    try {
+      renderNode(request, task, fallback, -1);
+      pushSegmentFinale(
+        boundarySegment.chunks,
+        request.renderState,
+        boundarySegment.lastPushedText,
+        boundarySegment.textEmbedded,
+      );
+      boundarySegment.status = COMPLETED;
+    } finally {
+      task.blockedSegment = parentSegment;
+      task.keyPath = prevKeyPath;
     }
+
+    // We create a suspended task for the primary content because we want to allow
+    // sibling fallbacks to be rendered first.
+    const suspendedPrimaryTask = createRenderTask(
+      request,
+      null,
+      content,
+      -1,
+      newBoundary,
+      contentRootSegment,
+      newBoundary.contentState,
+      task.abortSet,
+      keyPath,
+      task.formatContext,
+      task.context,
+      task.treeContext,
+      task.componentStack,
+      task.isFallback,
+      !disableLegacyContext ? task.legacyContext : emptyContextObject,
+      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    );
+    pushComponentStack(suspendedPrimaryTask);
+    request.pingedTasks.push(suspendedPrimaryTask);
+  } else {
+    // This is a normal render. We will attempt to synchronously render the boundary content
+    // If it is successful we will elide the fallback task but if it suspends or errors we schedule
+    // the fallback to render. Unlike with prerenders we attempt to deprioritize the fallback render
+
+    // Currently this is running synchronously. We could instead schedule this to pingedTasks.
+    // I suspect that there might be some efficiency benefits from not creating the suspended task
+    // and instead just using the stack if possible.
+    // TODO: Call this directly instead of messing with saving and restoring contexts.
+
+    // We can reuse the current context and task to render the content immediately without
+    // context switching. We just need to temporarily switch which boundary and which segment
+    // we're writing to. If something suspends, it'll spawn new suspended task with that context.
+    task.blockedBoundary = newBoundary;
+    task.hoistableState = newBoundary.contentState;
+    task.blockedSegment = contentRootSegment;
+    task.keyPath = keyPath;
+
+    try {
+      // We use the safe form because we don't handle suspending here. Only error handling.
+      renderNode(request, task, content, -1);
+      pushSegmentFinale(
+        contentRootSegment.chunks,
+        request.renderState,
+        contentRootSegment.lastPushedText,
+        contentRootSegment.textEmbedded,
+      );
+      contentRootSegment.status = COMPLETED;
+      queueCompletedSegment(newBoundary, contentRootSegment);
+      if (newBoundary.pendingTasks === 0 && newBoundary.status === PENDING) {
+        // This must have been the last segment we were waiting on. This boundary is now complete.
+        // Therefore we won't need the fallback. We early return so that we don't have to create
+        // the fallback.
+        newBoundary.status = COMPLETED;
+        return;
+      }
+    } catch (error: mixed) {
+      contentRootSegment.status = ERRORED;
+      newBoundary.status = CLIENT_RENDERED;
+      const thrownInfo = getThrownInfo(task.componentStack);
+      let errorDigest;
+      if (
+        enablePostpone &&
+        typeof error === 'object' &&
+        error !== null &&
+        error.$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (error: any);
+        logPostpone(
+          request,
+          postponeInstance.message,
+          thrownInfo,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        );
+        // TODO: Figure out a better signal than a magic digest value.
+        errorDigest = 'POSTPONE';
+      } else {
+        errorDigest = logRecoverableError(
+          request,
+          error,
+          thrownInfo,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        );
+      }
+      encodeErrorForBoundary(
+        newBoundary,
+        errorDigest,
+        error,
+        thrownInfo,
+        false,
+      );
+
+      untrackBoundary(request, newBoundary);
+
+      // We don't need to decrement any task numbers because we didn't spawn any new task.
+      // We don't need to schedule any task because we know the parent has written yet.
+      // We do need to fallthrough to create the fallback though.
+    } finally {
+      task.blockedBoundary = parentBoundary;
+      task.hoistableState = parentHoistableState;
+      task.blockedSegment = parentSegment;
+      task.keyPath = prevKeyPath;
+    }
+
+    const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
+    // We create suspended task for the fallback because we don't want to actually work
+    // on it yet in case we finish the main content, so we queue for later.
+    const suspendedFallbackTask = createRenderTask(
+      request,
+      null,
+      fallback,
+      -1,
+      parentBoundary,
+      boundarySegment,
+      newBoundary.fallbackState,
+      fallbackAbortSet,
+      fallbackKeyPath,
+      task.formatContext,
+      task.context,
+      task.treeContext,
+      task.componentStack,
+      true,
+      !disableLegacyContext ? task.legacyContext : emptyContextObject,
+      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    );
+    pushComponentStack(suspendedFallbackTask);
+    // TODO: This should be queued at a separate lower priority queue so that we only work
+    // on preparing fallbacks if we don't have any more main content to task on.
+    request.pingedTasks.push(suspendedFallbackTask);
   }
-  // We create suspended task for the fallback because we don't want to actually work
-  // on it yet in case we finish the main content, so we queue for later.
-  const suspendedFallbackTask = createRenderTask(
-    request,
-    null,
-    fallback,
-    -1,
-    parentBoundary,
-    boundarySegment,
-    newBoundary.fallbackState,
-    fallbackAbortSet,
-    fallbackKeyPath,
-    task.formatContext,
-    task.context,
-    task.treeContext,
-    task.componentStack,
-    true,
-    !disableLegacyContext ? task.legacyContext : emptyContextObject,
-    __DEV__ && enableOwnerStacks ? task.debugTask : null,
-  );
-  pushComponentStack(suspendedFallbackTask);
-  // TODO: This should be queued at a separate lower priority queue so that we only work
-  // on preparing fallbacks if we don't have any more main content to task on.
-  request.pingedTasks.push(suspendedFallbackTask);
 }
 
 function replaySuspenseBoundary(
