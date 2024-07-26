@@ -706,7 +706,7 @@ function codegenReactiveScope(
 
       const loadNameStr = cx.synthesizeName(`old$${nameStr}`);
 
-      let storedValue, restoredValue;
+      let storedValue, restoredValue, restoredRecomputed;
       if (cx.env.config.enableChangeDetection.wrappers != null) {
         storedValue = t.callExpression(
           t.identifier(cx.env.config.enableChangeDetection.wrappers.store),
@@ -716,9 +716,14 @@ function codegenReactiveScope(
           t.identifier(cx.env.config.enableChangeDetection.wrappers.restore),
           [t.identifier(loadNameStr)]
         );
+        restoredRecomputed = t.callExpression(
+          t.identifier(cx.env.config.enableChangeDetection.wrappers.restore),
+          [genSlot()]
+        );
       } else {
         storedValue = value;
         restoredValue = t.identifier(loadNameStr);
+        restoredRecomputed = genSlot();
       }
 
       cacheStoreStatements.push(
@@ -764,7 +769,7 @@ function codegenReactiveScope(
       );
       idempotenceDetectionStatements.push(
         t.expressionStatement(
-          t.assignmentExpression("=", t.identifier(nameStr), genSlot())
+          t.assignmentExpression("=", t.identifier(nameStr), restoredRecomputed)
         )
       );
     }
