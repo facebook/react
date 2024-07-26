@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(props) {
   const key = 42;
@@ -14,7 +14,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: "hello!" }],
+  params: [{value: 'hello!'}],
 };
 
 ```

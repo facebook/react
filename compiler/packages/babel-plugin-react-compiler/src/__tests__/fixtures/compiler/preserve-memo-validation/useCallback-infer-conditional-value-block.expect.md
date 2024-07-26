@@ -3,8 +3,8 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
-import { identity, mutate } from "shared-runtime";
+import {useCallback} from 'react';
+import {identity, mutate} from 'shared-runtime';
 
 function useHook(propA, propB) {
   return useCallback(() => {
@@ -20,7 +20,7 @@ function useHook(propA, propB) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useHook,
-  params: [{ a: 1 }, { x: { y: 3 } }],
+  params: [{a: 1}, {x: {y: 3}}],
 };
 
 ```

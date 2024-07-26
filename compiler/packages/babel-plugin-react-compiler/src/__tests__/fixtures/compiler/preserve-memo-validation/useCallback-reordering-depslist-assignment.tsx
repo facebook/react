@@ -1,5 +1,5 @@
-import { useCallback } from "react";
-import { Stringify } from "shared-runtime";
+import {useCallback} from 'react';
+import {Stringify} from 'shared-runtime';
 
 // We currently produce invalid output (incorrect scoping for `y` declaration)
 function useFoo(arr1, arr2) {
@@ -7,7 +7,7 @@ function useFoo(arr1, arr2) {
 
   let y;
   const getVal = useCallback(() => {
-    return { y };
+    return {y};
   }, [((y = x.concat(arr2)), y)]);
 
   return <Stringify getVal={getVal} shouldInvokeFns={true} />;

@@ -5,17 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { RuleTester } from "eslint";
-import ReactCompilerRule from "../src/rules/ReactCompilerRule";
+import {RuleTester} from 'eslint';
+import ReactCompilerRule from '../src/rules/ReactCompilerRule';
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
  * @param {Array} strings array of code strings (only one expected)
  */
 function normalizeIndent(strings: TemplateStringsArray): string {
-  const codeLines = strings[0].split("\n");
+  const codeLines = strings[0].split('\n');
   const leftPadding = codeLines[1].match(/\s+/)[0];
-  return codeLines.map((line) => line.slice(leftPadding.length)).join("\n");
+  return codeLines.map(line => line.slice(leftPadding.length)).join('\n');
 }
 
 type CompilerTestCases = {
@@ -26,8 +26,8 @@ type CompilerTestCases = {
 const tests: CompilerTestCases = {
   valid: [
     {
-      name: "Basic example",
-      filename: "test.tsx",
+      name: 'Basic example',
+      filename: 'test.tsx',
       code: normalizeIndent`
         function Button(props) {
           return null;
@@ -35,8 +35,8 @@ const tests: CompilerTestCases = {
       `,
     },
     {
-      name: "Repro for hooks as normal values",
-      filename: "test.tsx",
+      name: 'Repro for hooks as normal values',
+      filename: 'test.tsx',
       code: normalizeIndent`
         function Button(props) {
           const scrollview = React.useRef<ScrollView>(null);
@@ -47,8 +47,8 @@ const tests: CompilerTestCases = {
   ],
   invalid: [
     {
-      name: "Mutating useState value",
-      filename: "test.tsx",
+      name: 'Mutating useState value',
+      filename: 'test.tsx',
       code: `
         import { useState } from 'react';
         function Component(props) {
@@ -71,6 +71,6 @@ const tests: CompilerTestCases = {
 };
 
 const eslintTester = new RuleTester({
-  parser: require.resolve("@typescript-eslint/parser"),
+  parser: require.resolve('@typescript-eslint/parser'),
 });
-eslintTester.run("react-compiler", ReactCompilerRule, tests);
+eslintTester.run('react-compiler', ReactCompilerRule, tests);

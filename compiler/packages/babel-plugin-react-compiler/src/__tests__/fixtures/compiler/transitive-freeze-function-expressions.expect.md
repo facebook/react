@@ -4,7 +4,7 @@
 ```javascript
 // @enableTransitivelyFreezeFunctionExpressions
 function Component(props) {
-  const { data, loadNext, isLoadingNext } =
+  const {data, loadNext, isLoadingNext} =
     usePaginationFragment(props.key).items ?? [];
 
   const loadMoreWithTiming = () => {
@@ -21,7 +21,7 @@ function Component(props) {
     loadMoreWithTiming();
   }, [isLoadingNext, loadMoreWithTiming]);
 
-  const items = data.map((x) => x);
+  const items = data.map(x => x);
 
   return items;
 }

@@ -1,4 +1,4 @@
-import { Stringify, identity, mutate, CONST_TRUE } from "shared-runtime";
+import {Stringify, identity, mutate, CONST_TRUE} from 'shared-runtime';
 
 function Foo(props, ref) {
   const value = {};
@@ -15,5 +15,5 @@ function Foo(props, ref) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{}, { current: "fake-ref-object" }],
+  params: [{}, {current: 'fake-ref-object'}],
 };

@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError, Effect } from "..";
-import { HIRFunction, IdentifierId, Place } from "../HIR";
+import {CompilerError, Effect} from '..';
+import {HIRFunction, IdentifierId, Place} from '../HIR';
 import {
   eachInstructionValueOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
+} from '../HIR/visitors';
 
 /**
  * Validates that local variables cannot be reassigned after render.
@@ -23,17 +23,17 @@ export function validateLocalsNotReassignedAfterRender(fn: HIRFunction): void {
     fn,
     contextVariables,
     false,
-    false
+    false,
   );
   if (reassignment !== null) {
     CompilerError.throwInvalidReact({
       reason:
-        "Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead",
+        'Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead',
       description:
         reassignment.identifier.name !== null &&
-        reassignment.identifier.name.kind === "named"
+        reassignment.identifier.name.kind === 'named'
           ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-          : "",
+          : '',
       loc: reassignment.loc,
     });
   }
@@ -43,26 +43,26 @@ function getContextReassignment(
   fn: HIRFunction,
   contextVariables: Set<IdentifierId>,
   isFunctionExpression: boolean,
-  isAsync: boolean
+  isAsync: boolean,
 ): Place | null {
   const reassigningFunctions = new Map<IdentifierId, Place>();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      const { lvalue, value } = instr;
+      const {lvalue, value} = instr;
       switch (value.kind) {
-        case "FunctionExpression":
-        case "ObjectMethod": {
+        case 'FunctionExpression':
+        case 'ObjectMethod': {
           let reassignment = getContextReassignment(
             value.loweredFunc.func,
             contextVariables,
             true,
-            isAsync || value.loweredFunc.func.async
+            isAsync || value.loweredFunc.func.async,
           );
           if (reassignment === null) {
             // If the function itself doesn't reassign, does one of its dependencies?
             for (const operand of eachInstructionValueOperand(value)) {
               const reassignmentFromOperand = reassigningFunctions.get(
-                operand.identifier.id
+                operand.identifier.id,
               );
               if (reassignmentFromOperand !== undefined) {
                 reassignment = reassignmentFromOperand;
@@ -75,12 +75,12 @@ function getContextReassignment(
             if (isAsync || value.loweredFunc.func.async) {
               CompilerError.throwInvalidReact({
                 reason:
-                  "Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead",
+                  'Reassigning a variable in an async function can cause inconsistent behavior on subsequent renders. Consider using state instead',
                 description:
                   reassignment.identifier.name !== null &&
-                  reassignment.identifier.name.kind === "named"
+                  reassignment.identifier.name.kind === 'named'
                     ? `Variable \`${reassignment.identifier.name.value}\` cannot be reassigned after render`
-                    : "",
+                    : '',
                 loc: reassignment.loc,
               });
             }
@@ -88,35 +88,35 @@ function getContextReassignment(
           }
           break;
         }
-        case "StoreLocal": {
+        case 'StoreLocal': {
           const reassignment = reassigningFunctions.get(
-            value.value.identifier.id
+            value.value.identifier.id,
           );
           if (reassignment !== undefined) {
             reassigningFunctions.set(
               value.lvalue.place.identifier.id,
-              reassignment
+              reassignment,
             );
             reassigningFunctions.set(lvalue.identifier.id, reassignment);
           }
           break;
         }
-        case "LoadLocal": {
+        case 'LoadLocal': {
           const reassignment = reassigningFunctions.get(
-            value.place.identifier.id
+            value.place.identifier.id,
           );
           if (reassignment !== undefined) {
             reassigningFunctions.set(lvalue.identifier.id, reassignment);
           }
           break;
         }
-        case "DeclareContext": {
+        case 'DeclareContext': {
           if (!isFunctionExpression) {
             contextVariables.add(value.lvalue.place.identifier.id);
           }
           break;
         }
-        case "StoreContext": {
+        case 'StoreContext': {
           if (isFunctionExpression) {
             if (contextVariables.has(value.lvalue.place.identifier.id)) {
               return value.lvalue.place;
@@ -137,7 +137,7 @@ function getContextReassignment(
               loc: operand.loc,
             });
             const reassignment = reassigningFunctions.get(
-              operand.identifier.id
+              operand.identifier.id,
             );
             if (
               reassignment !== undefined &&

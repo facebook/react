@@ -1,5 +1,5 @@
 function component() {
-  let x = { u: makeSomePrimitive(), v: makeSomePrimitive() };
+  let x = {u: makeSomePrimitive(), v: makeSomePrimitive()};
   let u = x.u;
   let v = x.v;
   if (u > v) {

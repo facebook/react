@@ -2015,7 +2015,7 @@ function createChildReconciler(
             if (typeof debugInfo[i].stack === 'string') {
               throwFiber._debugOwner = (debugInfo[i]: any);
               if (enableOwnerStacks) {
-                throwFiber._debugTask = debugInfo[i].task;
+                throwFiber._debugTask = debugInfo[i].debugTask;
               }
               break;
             }

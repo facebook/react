@@ -1,4 +1,4 @@
 function useFoo(props) {
   [x] = props;
-  return { x };
+  return {x};
 }

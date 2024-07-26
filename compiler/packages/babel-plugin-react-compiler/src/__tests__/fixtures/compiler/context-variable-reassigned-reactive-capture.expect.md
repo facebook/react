@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { invoke } from "shared-runtime";
+import {invoke} from 'shared-runtime';
 
-function Component({ value }) {
+function Component({value}) {
   let x = null;
   const reassign = () => {
     x = value;
@@ -15,8 +15,8 @@ function Component({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 2 }],
-  sequentialRenders: [{ value: 2 }, { value: 4 }],
+  params: [{value: 2}],
+  sequentialRenders: [{value: 2}, {value: 4}],
 };
 
 ```

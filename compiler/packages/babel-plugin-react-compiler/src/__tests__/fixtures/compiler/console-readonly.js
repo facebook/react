@@ -1,4 +1,4 @@
-import { shallowCopy } from "shared-runtime";
+import {shallowCopy} from 'shared-runtime';
 
 function Component(props) {
   const x = shallowCopy(props);
@@ -14,6 +14,6 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 1, b: 2 }],
+  params: [{a: 1, b: 2}],
   isComponent: false,
 };

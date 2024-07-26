@@ -23,14 +23,14 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [],
   sequentialRenders: [
-    { values: { "12": true } },
-    { values: { "12": true } },
-    { values: { "1": true } },
-    { values: { "1": true } },
-    { values: { "12": true } },
-    { values: { "1": true } },
-    { values: { "12": true } },
-    { values: { "1": true } },
+    {values: {'12': true}},
+    {values: {'12': true}},
+    {values: {'1': true}},
+    {values: {'1': true}},
+    {values: {'12': true}},
+    {values: {'1': true}},
+    {values: {'12': true}},
+    {values: {'1': true}},
   ],
 };
 

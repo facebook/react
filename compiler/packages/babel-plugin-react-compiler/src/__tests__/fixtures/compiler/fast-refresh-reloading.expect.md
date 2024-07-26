@@ -3,8 +3,8 @@
 
 ```javascript
 // @enableResetCacheOnSourceFileChanges
-import { useMemo, useState } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useMemo, useState} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 function Component(props) {
   const [state, setState] = useState(0);
@@ -30,12 +30,12 @@ import { ValidateMemoization } from "shared-runtime";
 function Component(props) {
   const $ = _c(8);
   if (
-    $[0] !== "bb6936608c0afe8e313aa547ca09fbc8451f24664284368812127c7e9bc2bca9"
+    $[0] !== "20945b0193e529df490847c66111b38d7b02485d5b53d0829ff3b23af87b105c"
   ) {
     for (let $i = 0; $i < 8; $i += 1) {
       $[$i] = Symbol.for("react.memo_cache_sentinel");
     }
-    $[0] = "bb6936608c0afe8e313aa547ca09fbc8451f24664284368812127c7e9bc2bca9";
+    $[0] = "20945b0193e529df490847c66111b38d7b02485d5b53d0829ff3b23af87b105c";
   }
   const [state] = useState(0);
   let t0;

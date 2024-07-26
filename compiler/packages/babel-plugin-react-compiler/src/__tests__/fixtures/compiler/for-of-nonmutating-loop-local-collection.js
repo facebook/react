@@ -1,7 +1,7 @@
-import { useMemo } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useMemo} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
-function Component({ a, b }) {
+function Component({a, b}) {
   const x = useMemo(() => {
     return [a];
   }, [a]);
@@ -22,10 +22,10 @@ function Component({ a, b }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: 0, b: 0 }],
+  params: [{a: 0, b: 0}],
   sequentialRenders: [
-    { a: 1, b: 0 },
-    { a: 1, b: 1 },
-    { a: 0, b: 1 },
+    {a: 1, b: 0},
+    {a: 1, b: 1},
+    {a: 0, b: 1},
   ],
 };

@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { BlockId, HIRFunction, computePostDominatorTree } from ".";
-import { CompilerError } from "..";
+import {BlockId, HIRFunction, computePostDominatorTree} from '.';
+import {CompilerError} from '..';
 
 export function computeUnconditionalBlocks(fn: HIRFunction): Set<BlockId> {
   // Construct the set of blocks that is always reachable from the entry block.
@@ -23,7 +23,7 @@ export function computeUnconditionalBlocks(fn: HIRFunction): Set<BlockId> {
   while (current !== null && current !== exit) {
     CompilerError.invariant(!unconditionalBlocks.has(current), {
       reason:
-        "Internal error: non-terminating loop in ComputeUnconditionalBlocks",
+        'Internal error: non-terminating loop in ComputeUnconditionalBlocks',
       loc: null,
       suggestions: null,
     });

@@ -7,7 +7,7 @@ function Component(props) {
     graphql`fragment Component_user on User { ... }`,
     props.user
   );
-  const posts = user.timeline.posts.edges.nodes.map((node) => (
+  const posts = user.timeline.posts.edges.nodes.map(node => (
     <Post post={node} />
   ));
   posts.push({});

@@ -5,6 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export { eliminateRedundantPhi } from "./EliminateRedundantPhi";
-export { default as enterSSA } from "./EnterSSA";
-export { leaveSSA } from "./LeaveSSA";
+export {eliminateRedundantPhi} from './EliminateRedundantPhi';
+export {default as enterSSA} from './EnterSSA';
+export {leaveSSA} from './LeaveSSA';

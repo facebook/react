@@ -1,7 +1,7 @@
-const { mutate } = require("shared-runtime");
+const {mutate} = require('shared-runtime');
 
 function component(a) {
-  let x = { a };
+  let x = {a};
   let y = {};
   (function () {
     let a = y;
@@ -13,5 +13,5 @@ function component(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["foo"],
+  params: ['foo'],
 };

@@ -4,7 +4,7 @@
 ```javascript
 // @enableReactiveScopesInHIR:false
 
-import { Stringify, identity, makeArray, mutate } from "shared-runtime";
+import {Stringify, identity, makeArray, mutate} from 'shared-runtime';
 
 /**
  * Here, identity('foo') is an immutable allocating instruction.
@@ -16,12 +16,12 @@ import { Stringify, identity, makeArray, mutate } from "shared-runtime";
  * (e.g. `cond1 ? <>: null`). The HIR version of alignScopesToBlocks
  * handles this correctly.
  */
-function Foo({ cond1, cond2 }) {
-  const arr = makeArray<any>({ a: 2 }, 2, []);
+function Foo({cond1, cond2}) {
+  const arr = makeArray<any>({a: 2}, 2, []);
 
   return cond1 ? (
     <>
-      <div>{identity("foo")}</div>
+      <div>{identity('foo')}</div>
       <Stringify value={cond2 ? arr.map(mutate) : null} />
     </>
   ) : null;
@@ -29,7 +29,7 @@ function Foo({ cond1, cond2 }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ cond1: true, cond2: true }],
+  params: [{cond1: true, cond2: true}],
 };
 
 ```

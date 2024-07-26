@@ -8,7 +8,7 @@ function component(a) {
     m(x);
   };
 
-  let x = { a };
+  let x = {a};
   m(x);
   return y;
 }
@@ -25,7 +25,7 @@ function component(a) {
     |     ^^^^ Todo: Handle non-const declarations for hoisting. variable "x" declared with let (4:4)
   5 |   };
   6 |
-  7 |   let x = { a };
+  7 |   let x = {a};
 ```
           
       

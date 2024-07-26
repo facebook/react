@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function useFoo({ input, max }) {
+function useFoo({input, max}) {
   const x = [];
   let i = 0;
   while (true) {
@@ -18,15 +18,15 @@ function useFoo({ input, max }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ input: { a: { b: 2 } }, max: 8 }],
+  params: [{input: {a: {b: 2}}, max: 8}],
   sequentialRenders: [
-    { input: { a: { b: 2 } }, max: 8 },
+    {input: {a: {b: 2}}, max: 8},
     // preserve nullthrows
-    { input: null, max: 8 },
-    { input: {}, max: 8 },
-    { input: { a: { b: null } }, max: 8 },
-    { input: { a: null }, max: 8 },
-    { input: { a: { b: 3 } }, max: 8 },
+    {input: null, max: 8},
+    {input: {}, max: 8},
+    {input: {a: {b: null}}, max: 8},
+    {input: {a: null}, max: 8},
+    {input: {a: {b: 3}}, max: 8},
   ],
 };
 
