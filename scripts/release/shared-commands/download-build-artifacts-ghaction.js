@@ -22,7 +22,9 @@ const GITHUB_HEADERS = `
   -H "X-GitHub-Api-Version: 2022-11-28"`.trim();
 
 function getWorkflowId() {
-  if (existsSync(join(__dirname, `../../.github/workflows/${WORKFLOW_ID}`))) {
+  if (
+    existsSync(join(__dirname, `../../../.github/workflows/${WORKFLOW_ID}`))
+  ) {
     return WORKFLOW_ID;
   } else {
     throw new Error(
@@ -86,7 +88,7 @@ async function downloadArtifactsFromGitHub(commit, releaseChannel) {
   const artifact = await getArtifact(workflowRunId, 'artifacts_combined');
 
   // Download and extract artifact
-  const cwd = join(__dirname, '..', '..');
+  const cwd = join(__dirname, '..', '..', '..');
   await exec(`rm -rf ./build`, {cwd});
   await exec(
     `curl -L ${GITHUB_HEADERS} ${artifact.archive_download_url} \
