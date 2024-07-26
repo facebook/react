@@ -15,13 +15,13 @@ import {
   InstructionKind,
   InstructionValue,
   ObjectPattern,
-} from "../HIR";
+} from '../HIR';
 import {
   eachInstructionValueOperand,
   eachPatternOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
-import { assertExhaustive, retainWhere } from "../Utils/utils";
+} from '../HIR/visitors';
+import {assertExhaustive, retainWhere} from '../Utils/utils';
 
 /*
  * Implements dead-code elimination, eliminating instructions whose values are unused.
@@ -46,13 +46,13 @@ export function deadCodeElimination(fn: HIRFunction): void {
         block.phis.delete(phi);
       }
     }
-    retainWhere(block.instructions, (instr) =>
-      state.isIdOrNameUsed(instr.lvalue.identifier)
+    retainWhere(block.instructions, instr =>
+      state.isIdOrNameUsed(instr.lvalue.identifier),
     );
     // Rewrite retained instructions
     for (let i = 0; i < block.instructions.length; i++) {
       const isBlockValue =
-        block.kind !== "block" && i === block.instructions.length - 1;
+        block.kind !== 'block' && i === block.instructions.length - 1;
       if (!isBlockValue) {
         rewriteInstruction(block.instructions[i], state);
       }
@@ -122,7 +122,7 @@ function findReferencedIdentifiers(fn: HIRFunction): State {
       for (let i = block.instructions.length - 1; i >= 0; i--) {
         const instr = block.instructions[i]!;
         const isBlockValue =
-          block.kind !== "block" && i === block.instructions.length - 1;
+          block.kind !== 'block' && i === block.instructions.length - 1;
 
         if (isBlockValue) {
           /**
@@ -140,7 +140,7 @@ function findReferencedIdentifiers(fn: HIRFunction): State {
         ) {
           state.reference(instr.lvalue.identifier);
 
-          if (instr.value.kind === "StoreLocal") {
+          if (instr.value.kind === 'StoreLocal') {
             /*
              * If this is a Let/Const declaration, mark the initializer as referenced
              * only if the ssa'ed lval is also referenced
@@ -171,25 +171,25 @@ function findReferencedIdentifiers(fn: HIRFunction): State {
 }
 
 function rewriteInstruction(instr: Instruction, state: State): void {
-  if (instr.value.kind === "Destructure") {
+  if (instr.value.kind === 'Destructure') {
     // Remove unused lvalues
     switch (instr.value.lvalue.pattern.kind) {
-      case "ArrayPattern": {
+      case 'ArrayPattern': {
         /*
          * For arrays, we can only eliminate unused items from the end of the array,
          * so we iterate from the end and break once we find a used item. Note that
          * we already know at least one item is used, from the pruneableValue check.
          */
-        let nextItems: ArrayPattern["items"] | null = null;
+        let nextItems: ArrayPattern['items'] | null = null;
         const originalItems = instr.value.lvalue.pattern.items;
         for (let i = originalItems.length - 1; i >= 0; i--) {
           const item = originalItems[i];
-          if (item.kind === "Identifier") {
+          if (item.kind === 'Identifier') {
             if (state.isIdOrNameUsed(item.identifier)) {
               nextItems = originalItems.slice(0, i + 1);
               break;
             }
-          } else if (item.kind === "Spread") {
+          } else if (item.kind === 'Spread') {
             if (state.isIdOrNameUsed(item.place.identifier)) {
               nextItems = originalItems.slice(0, i + 1);
               break;
@@ -201,7 +201,7 @@ function rewriteInstruction(instr: Instruction, state: State): void {
         }
         break;
       }
-      case "ObjectPattern": {
+      case 'ObjectPattern': {
         /*
          * For objects we can prune any unused properties so long as there is no used rest element
          * (`const {x, ...y} = z`). If a rest element exists and is used, then nothing can be pruned
@@ -209,9 +209,9 @@ function rewriteInstruction(instr: Instruction, state: State): void {
          * In the `const {x, ...y} = z` example, removing the `x` property would mean that `y` now
          * has an `x` property, changing the semantics.
          */
-        let nextProperties: ObjectPattern["properties"] | null = null;
+        let nextProperties: ObjectPattern['properties'] | null = null;
         for (const property of instr.value.lvalue.pattern.properties) {
-          if (property.kind === "ObjectProperty") {
+          if (property.kind === 'ObjectProperty') {
             if (state.isIdOrNameUsed(property.place.identifier)) {
               nextProperties ??= [];
               nextProperties.push(property);
@@ -233,11 +233,11 @@ function rewriteInstruction(instr: Instruction, state: State): void {
           instr.value.lvalue.pattern,
           `Unexpected pattern kind '${
             (instr.value.lvalue.pattern as any).kind
-          }'`
+          }'`,
         );
       }
     }
-  } else if (instr.value.kind === "StoreLocal") {
+  } else if (instr.value.kind === 'StoreLocal') {
     if (
       instr.value.lvalue.kind !== InstructionKind.Reassign &&
       !state.isIdUsed(instr.value.lvalue.place.identifier)
@@ -249,7 +249,7 @@ function rewriteInstruction(instr: Instruction, state: State): void {
        * that the initializer value can be DCE'd
        */
       instr.value = {
-        kind: "DeclareLocal",
+        kind: 'DeclareLocal',
         lvalue: instr.value.lvalue,
         type: instr.value.type,
         loc: instr.value.loc,
@@ -264,11 +264,11 @@ function rewriteInstruction(instr: Instruction, state: State): void {
  */
 function pruneableValue(value: InstructionValue, state: State): boolean {
   switch (value.kind) {
-    case "DeclareLocal": {
+    case 'DeclareLocal': {
       // Declarations are pruneable only if the named variable is never read later
       return !state.isIdOrNameUsed(value.lvalue.place.identifier);
     }
-    case "StoreLocal": {
+    case 'StoreLocal': {
       if (value.lvalue.kind === InstructionKind.Reassign) {
         // Reassignments can be pruned if the specific instance being assigned is never read
         return !state.isIdUsed(value.lvalue.place.identifier);
@@ -276,7 +276,7 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       // Declarations are pruneable only if the named variable is never read later
       return !state.isIdOrNameUsed(value.lvalue.place.identifier);
     }
-    case "Destructure": {
+    case 'Destructure': {
       let isIdOrNameUsed = false;
       let isIdUsed = false;
       for (const place of eachPatternOperand(value.lvalue.pattern)) {
@@ -295,23 +295,23 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
         return !isIdOrNameUsed;
       }
     }
-    case "PostfixUpdate":
-    case "PrefixUpdate": {
+    case 'PostfixUpdate':
+    case 'PrefixUpdate': {
       // Updates are pruneable if the specific instance instance being assigned is never read
       return !state.isIdUsed(value.lvalue.identifier);
     }
-    case "Debugger": {
+    case 'Debugger': {
       // explicitly retain debugger statements to not break debugging workflows
       return false;
     }
-    case "Await":
-    case "CallExpression":
-    case "ComputedDelete":
-    case "ComputedStore":
-    case "PropertyDelete":
-    case "MethodCall":
-    case "PropertyStore":
-    case "StoreGlobal": {
+    case 'Await':
+    case 'CallExpression':
+    case 'ComputedDelete':
+    case 'ComputedStore':
+    case 'PropertyDelete':
+    case 'MethodCall':
+    case 'PropertyStore':
+    case 'StoreGlobal': {
       /*
        * Mutating instructions are not safe to prune.
        * TODO: we could be more precise and make this conditional on whether
@@ -319,15 +319,15 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
        */
       return false;
     }
-    case "NewExpression":
-    case "UnsupportedNode":
-    case "TaggedTemplateExpression": {
+    case 'NewExpression':
+    case 'UnsupportedNode':
+    case 'TaggedTemplateExpression': {
       // Potentially safe to prune, since they should just be creating new values
       return false;
     }
-    case "GetIterator":
-    case "NextPropertyOf":
-    case "IteratorNext": {
+    case 'GetIterator':
+    case 'NextPropertyOf':
+    case 'IteratorNext': {
       /*
        * Technically a IteratorNext/NextPropertyOf will never be unused because it's
        * always used later by another StoreLocal or Destructure instruction, but conceptually
@@ -335,13 +335,13 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
        */
       return false;
     }
-    case "LoadContext":
-    case "DeclareContext":
-    case "StoreContext": {
+    case 'LoadContext':
+    case 'DeclareContext':
+    case 'StoreContext': {
       return false;
     }
-    case "StartMemoize":
-    case "FinishMemoize": {
+    case 'StartMemoize':
+    case 'FinishMemoize': {
       /**
        * This instruction is used by the @enablePreserveExistingMemoizationGuarantees feature
        * to preserve information about memoization semantics in the original code. We can't
@@ -349,31 +349,31 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
        */
       return false;
     }
-    case "RegExpLiteral":
-    case "MetaProperty":
-    case "LoadGlobal":
-    case "ArrayExpression":
-    case "BinaryExpression":
-    case "ComputedLoad":
-    case "ObjectMethod":
-    case "FunctionExpression":
-    case "LoadLocal":
-    case "JsxExpression":
-    case "JsxFragment":
-    case "JSXText":
-    case "ObjectExpression":
-    case "Primitive":
-    case "PropertyLoad":
-    case "TemplateLiteral":
-    case "TypeCastExpression":
-    case "UnaryExpression": {
+    case 'RegExpLiteral':
+    case 'MetaProperty':
+    case 'LoadGlobal':
+    case 'ArrayExpression':
+    case 'BinaryExpression':
+    case 'ComputedLoad':
+    case 'ObjectMethod':
+    case 'FunctionExpression':
+    case 'LoadLocal':
+    case 'JsxExpression':
+    case 'JsxFragment':
+    case 'JSXText':
+    case 'ObjectExpression':
+    case 'Primitive':
+    case 'PropertyLoad':
+    case 'TemplateLiteral':
+    case 'TypeCastExpression':
+    case 'UnaryExpression': {
       // Definitely safe to prune since they are read-only
       return true;
     }
     default: {
       assertExhaustive(
         value,
-        `Unexepcted value kind \`${(value as any).kind}\``
+        `Unexepcted value kind \`${(value as any).kind}\``,
       );
     }
   }

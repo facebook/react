@@ -3,7 +3,7 @@
 
 ```javascript
 function component(a) {
-  let z = { a: { a } };
+  let z = {a: {a}};
   let x = function () {
     (function () {
       console.log(z.a.a);
@@ -14,8 +14,8 @@ function component(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

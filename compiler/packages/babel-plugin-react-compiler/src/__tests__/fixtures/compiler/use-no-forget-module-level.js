@@ -1,4 +1,4 @@
-"use no forget";
+'use no forget';
 
 export default function foo(x, y) {
   if (x) {

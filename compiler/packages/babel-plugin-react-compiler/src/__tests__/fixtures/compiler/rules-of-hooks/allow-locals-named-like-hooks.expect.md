@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { makeObject_Primitives } from "shared-runtime";
+import {makeObject_Primitives} from 'shared-runtime';
 
 function Component(props) {
   let useFeature = makeObject_Primitives();

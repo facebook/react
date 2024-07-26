@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { EditorProps } from "@monaco-editor/react";
+import type {EditorProps} from '@monaco-editor/react';
 
-export const monacoOptions: Partial<EditorProps["options"]> = {
+export const monacoOptions: Partial<EditorProps['options']> = {
   fontSize: 14,
-  padding: { top: 8 },
+  padding: {top: 8},
   scrollbar: {
     verticalScrollbarSize: 10,
     alwaysConsumeMouseWheel: false,
@@ -22,11 +22,11 @@ export const monacoOptions: Partial<EditorProps["options"]> = {
   fontFamily: '"Source Code Pro", monospace',
   glyphMargin: true,
 
-  autoClosingBrackets: "languageDefined",
-  autoClosingDelete: "always",
-  autoClosingOvertype: "always",
+  autoClosingBrackets: 'languageDefined',
+  autoClosingDelete: 'always',
+  autoClosingOvertype: 'always',
 
   automaticLayout: true,
-  wordWrap: "on",
-  wrappingIndent: "deepIndent",
+  wordWrap: 'on',
+  wrappingIndent: 'deepIndent',
 };

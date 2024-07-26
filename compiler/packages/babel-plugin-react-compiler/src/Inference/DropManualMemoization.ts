@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError, SourceLocation } from "..";
+import {CompilerError, SourceLocation} from '..';
 import {
   CallExpression,
   Effect,
@@ -28,11 +28,11 @@ import {
   TInstruction,
   getHookKindForType,
   makeInstructionId,
-} from "../HIR";
-import { createTemporaryPlace, markInstructionIds } from "../HIR/HIRBuilder";
+} from '../HIR';
+import {createTemporaryPlace, markInstructionIds} from '../HIR/HIRBuilder';
 
 type ManualMemoCallee = {
-  kind: "useMemo" | "useCallback";
+  kind: 'useMemo' | 'useCallback';
   loadInstr: TInstruction<LoadGlobal> | TInstruction<PropertyLoad>;
 };
 
@@ -51,19 +51,19 @@ type IdentifierSidemap = {
  */
 export function collectMaybeMemoDependencies(
   value: InstructionValue,
-  maybeDeps: Map<IdentifierId, ManualMemoDependency>
+  maybeDeps: Map<IdentifierId, ManualMemoDependency>,
 ): ManualMemoDependency | null {
   switch (value.kind) {
-    case "LoadGlobal": {
+    case 'LoadGlobal': {
       return {
         root: {
-          kind: "Global",
+          kind: 'Global',
           identifierName: value.binding.name,
         },
         path: [],
       };
     }
-    case "PropertyLoad": {
+    case 'PropertyLoad': {
       const object = maybeDeps.get(value.object.identifier.id);
       if (object != null) {
         return {
@@ -74,26 +74,26 @@ export function collectMaybeMemoDependencies(
       break;
     }
 
-    case "LoadLocal":
-    case "LoadContext": {
+    case 'LoadLocal':
+    case 'LoadContext': {
       const source = maybeDeps.get(value.place.identifier.id);
       if (source != null) {
         return source;
       } else if (
         value.place.identifier.name != null &&
-        value.place.identifier.name.kind === "named"
+        value.place.identifier.name.kind === 'named'
       ) {
         return {
           root: {
-            kind: "NamedLocal",
-            value: { ...value.place },
+            kind: 'NamedLocal',
+            value: {...value.place},
           },
           path: [],
         };
       }
       break;
     }
-    case "StoreLocal": {
+    case 'StoreLocal': {
       /*
        * Value blocks rely on StoreLocal to populate their return value.
        * We need to track these as optional property chains are valid in
@@ -102,7 +102,7 @@ export function collectMaybeMemoDependencies(
       const lvalue = value.lvalue.place.identifier;
       const rvalue = value.value.identifier.id;
       const aliased = maybeDeps.get(rvalue);
-      if (aliased != null && lvalue.name?.kind !== "named") {
+      if (aliased != null && lvalue.name?.kind !== 'named') {
         maybeDeps.set(lvalue.id, aliased);
         return aliased;
       }
@@ -115,34 +115,34 @@ export function collectMaybeMemoDependencies(
 function collectTemporaries(
   instr: Instruction,
   env: Environment,
-  sidemap: IdentifierSidemap
+  sidemap: IdentifierSidemap,
 ): void {
-  const { value, lvalue } = instr;
+  const {value, lvalue} = instr;
   switch (value.kind) {
-    case "FunctionExpression": {
+    case 'FunctionExpression': {
       sidemap.functions.set(
         instr.lvalue.identifier.id,
-        instr as TInstruction<FunctionExpression>
+        instr as TInstruction<FunctionExpression>,
       );
       break;
     }
-    case "LoadGlobal": {
+    case 'LoadGlobal': {
       const global = env.getGlobalDeclaration(value.binding);
       const hookKind = global !== null ? getHookKindForType(env, global) : null;
       const lvalId = instr.lvalue.identifier.id;
-      if (hookKind === "useMemo" || hookKind === "useCallback") {
+      if (hookKind === 'useMemo' || hookKind === 'useCallback') {
         sidemap.manualMemos.set(lvalId, {
           kind: hookKind,
           loadInstr: instr as TInstruction<LoadGlobal>,
         });
-      } else if (value.binding.name === "React") {
+      } else if (value.binding.name === 'React') {
         sidemap.react.add(lvalId);
       }
       break;
     }
-    case "PropertyLoad": {
+    case 'PropertyLoad': {
       if (sidemap.react.has(value.object.identifier.id)) {
-        if (value.property === "useMemo" || value.property === "useCallback") {
+        if (value.property === 'useMemo' || value.property === 'useCallback') {
           sidemap.manualMemos.set(instr.lvalue.identifier.id, {
             kind: value.property,
             loadInstr: instr as TInstruction<PropertyLoad>,
@@ -151,11 +151,11 @@ function collectTemporaries(
       }
       break;
     }
-    case "ArrayExpression": {
-      if (value.elements.every((e) => e.kind === "Identifier")) {
+    case 'ArrayExpression': {
+      if (value.elements.every(e => e.kind === 'Identifier')) {
         sidemap.maybeDepsLists.set(
           instr.lvalue.identifier.id,
-          value.elements as Array<Place>
+          value.elements as Array<Place>,
         );
       }
       break;
@@ -173,14 +173,14 @@ function makeManualMemoizationMarkers(
   env: Environment,
   depsList: Array<ManualMemoDependency> | null,
   memoDecl: Place,
-  manualMemoId: number
+  manualMemoId: number,
 ): [TInstruction<StartMemoize>, TInstruction<FinishMemoize>] {
   return [
     {
       id: makeInstructionId(0),
       lvalue: createTemporaryPlace(env, fnExpr.loc),
       value: {
-        kind: "StartMemoize",
+        kind: 'StartMemoize',
         manualMemoId,
         /*
          * Use deps list from source instead of inferred deps
@@ -195,9 +195,9 @@ function makeManualMemoizationMarkers(
       id: makeInstructionId(0),
       lvalue: createTemporaryPlace(env, fnExpr.loc),
       value: {
-        kind: "FinishMemoize",
+        kind: 'FinishMemoize',
         manualMemoId,
-        decl: { ...memoDecl },
+        decl: {...memoDecl},
         loc: fnExpr.loc,
       },
       loc: fnExpr.loc,
@@ -208,9 +208,9 @@ function makeManualMemoizationMarkers(
 function getManualMemoizationReplacement(
   fn: Place,
   loc: SourceLocation,
-  kind: "useMemo" | "useCallback"
+  kind: 'useMemo' | 'useCallback',
 ): LoadLocal | CallExpression {
-  if (kind === "useMemo") {
+  if (kind === 'useMemo') {
     /*
      * Replace the hook callee with the fn arg.
      *
@@ -230,7 +230,7 @@ function getManualMemoizationReplacement(
      * inline the useMemo callback along with any other immediately invoked IIFEs.
      */
     return {
-      kind: "CallExpression",
+      kind: 'CallExpression',
       callee: fn,
       /*
        * Drop the args, including the deps array which DCE will remove
@@ -256,9 +256,9 @@ function getManualMemoizationReplacement(
      *   $4 = LoadLocal $2             // reference the function
      */
     return {
-      kind: "LoadLocal",
+      kind: 'LoadLocal',
       place: {
-        kind: "Identifier",
+        kind: 'Identifier',
         identifier: fn.identifier,
         effect: Effect.Unknown,
         reactive: false,
@@ -271,8 +271,8 @@ function getManualMemoizationReplacement(
 
 function extractManualMemoizationArgs(
   instr: TInstruction<CallExpression> | TInstruction<MethodCall>,
-  kind: "useCallback" | "useMemo",
-  sidemap: IdentifierSidemap
+  kind: 'useCallback' | 'useMemo',
+  sidemap: IdentifierSidemap,
 ): {
   fnPlace: Place;
   depsList: Array<ManualMemoDependency> | null;
@@ -287,7 +287,7 @@ function extractManualMemoizationArgs(
       suggestions: null,
     });
   }
-  if (fnPlace.kind === "Spread" || depsListPlace?.kind === "Spread") {
+  if (fnPlace.kind === 'Spread' || depsListPlace?.kind === 'Spread') {
     CompilerError.throwInvalidReact({
       reason: `Unexpected spread argument to ${kind}`,
       loc: instr.value.loc,
@@ -297,7 +297,7 @@ function extractManualMemoizationArgs(
   let depsList: Array<ManualMemoDependency> | null = null;
   if (depsListPlace != null) {
     const maybeDepsList = sidemap.maybeDepsLists.get(
-      depsListPlace.identifier.id
+      depsListPlace.identifier.id,
     );
     if (maybeDepsList == null) {
       CompilerError.throwInvalidReact({
@@ -306,7 +306,7 @@ function extractManualMemoizationArgs(
         loc: depsListPlace.loc,
       });
     }
-    depsList = maybeDepsList.map((dep) => {
+    depsList = maybeDepsList.map(dep => {
       const maybeDep = sidemap.maybeDeps.get(dep.identifier.id);
       if (maybeDep == null) {
         CompilerError.throwInvalidReact({
@@ -362,25 +362,25 @@ export function dropManualMemoization(func: HIRFunction): void {
     for (let i = 0; i < block.instructions.length; i++) {
       const instr = block.instructions[i]!;
       if (
-        instr.value.kind === "CallExpression" ||
-        instr.value.kind === "MethodCall"
+        instr.value.kind === 'CallExpression' ||
+        instr.value.kind === 'MethodCall'
       ) {
         const id =
-          instr.value.kind === "CallExpression"
+          instr.value.kind === 'CallExpression'
             ? instr.value.callee.identifier.id
             : instr.value.property.identifier.id;
 
         const manualMemo = sidemap.manualMemos.get(id);
         if (manualMemo != null) {
-          const { fnPlace, depsList } = extractManualMemoizationArgs(
+          const {fnPlace, depsList} = extractManualMemoizationArgs(
             instr as TInstruction<CallExpression> | TInstruction<MethodCall>,
             manualMemo.kind,
-            sidemap
+            sidemap,
           );
           instr.value = getManualMemoizationReplacement(
             fnPlace,
             instr.value.loc,
-            manualMemo.kind
+            manualMemo.kind,
           );
           if (isValidationEnabled) {
             /**
@@ -404,10 +404,10 @@ export function dropManualMemoization(func: HIRFunction): void {
               });
             }
             const memoDecl: Place =
-              manualMemo.kind === "useMemo"
+              manualMemo.kind === 'useMemo'
                 ? instr.lvalue
                 : {
-                    kind: "Identifier",
+                    kind: 'Identifier',
                     identifier: fnPlace.identifier,
                     effect: Effect.Unknown,
                     reactive: false,
@@ -419,7 +419,7 @@ export function dropManualMemoization(func: HIRFunction): void {
               func.env,
               depsList,
               memoDecl,
-              nextManualMemoId++
+              nextManualMemoId++,
             );
 
             /**

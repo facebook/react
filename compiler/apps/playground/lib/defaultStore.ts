@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Store } from "./stores";
+import type {Store} from './stores';
 
 const index = `\
 export default function MyApp() {
@@ -18,5 +18,5 @@ export const defaultStore: Store = {
 };
 
 export const emptyStore: Store = {
-  source: "",
+  source: '',
 };

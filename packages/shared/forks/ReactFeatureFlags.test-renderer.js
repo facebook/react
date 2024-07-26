@@ -52,9 +52,8 @@ export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
+export const enableContextProfiling = false;
 export const enableLegacyHidden = false;
-export const forceConcurrentByDefaultForTesting = false;
-export const allowConcurrentByDefault = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
@@ -89,7 +88,6 @@ export const enableShallowPropDiffing = false;
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const enableRefAsProp = true;
 export const disableStringRefs = true;
-export const enableFastJSX = true;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
 export const disableLegacyContextForFunctionComponents = true;

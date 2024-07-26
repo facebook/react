@@ -1,12 +1,12 @@
 // @validateRefAccessDuringRender
-import { useRef } from "react";
+import {useRef} from 'react';
 
 function Component() {
   const ref = useRef(null);
 
   const setRef = () => {
     if (ref.current !== null) {
-      ref.current.value = "";
+      ref.current.value = '';
     }
   };
 

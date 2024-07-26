@@ -1,7 +1,7 @@
 function component(a, b) {
-  let z = { a };
+  let z = {a};
   {
-    let z = { b };
+    let z = {b};
     (function () {
       mutate(z);
     })();

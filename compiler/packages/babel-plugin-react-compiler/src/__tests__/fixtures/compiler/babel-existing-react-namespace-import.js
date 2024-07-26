@@ -1,5 +1,5 @@
-import * as React from "react";
-import { calculateExpensiveNumber } from "shared-runtime";
+import * as React from 'react';
+import {calculateExpensiveNumber} from 'shared-runtime';
 
 function Component(props) {
   const [x] = React.useState(0);

@@ -2,12 +2,12 @@
 ## Input
 
 ```javascript
-import React from "react";
-import { shallowCopy } from "shared-runtime";
+import React from 'react';
+import {shallowCopy} from 'shared-runtime';
 
 function Component(props) {
-  const childProps = { style: { width: props.width } };
-  const element = React.createElement("div", childProps, ["hello world"]);
+  const childProps = {style: {width: props.width}};
+  const element = React.createElement('div', childProps, ['hello world']);
   shallowCopy(childProps); // function that in theory could mutate, we assume not bc createElement freezes
   return element;
 }

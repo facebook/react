@@ -5,27 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-"use strict";
+'use strict';
 
-const { tests } = require("./eslint-plugin-react-hooks-test-cases");
+const {tests} = require('./eslint-plugin-react-hooks-test-cases');
 const {
   runBabelPluginReactCompiler,
-} = require("../dist/Babel/RunReactCompilerBabelPlugin");
-const fs = require("fs");
-const path = require("path");
-const prettier = require("prettier");
-const prettierConfigPath = require.resolve("../.prettierrc");
-const process = require("process");
-const { createHash } = require("crypto");
-const { create } = require("domain");
+} = require('../dist/Babel/RunReactCompilerBabelPlugin');
+const fs = require('fs');
+const path = require('path');
+const prettier = require('prettier');
+const prettierConfigPath = require.resolve('../.prettierrc');
+const process = require('process');
+const {createHash} = require('crypto');
+const {create} = require('domain');
 
 const FIXTURES_DIR = path.join(
   process.cwd(),
-  "src",
-  "__tests__",
-  "fixtures",
-  "compiler",
-  "rules-of-hooks"
+  'src',
+  '__tests__',
+  'fixtures',
+  'compiler',
+  'rules-of-hooks'
 );
 
 const PRETTIER_OPTIONS = prettier.resolveConfig.sync(FIXTURES_DIR, {
@@ -34,10 +34,10 @@ const PRETTIER_OPTIONS = prettier.resolveConfig.sync(FIXTURES_DIR, {
 
 const fixtures = [];
 for (const test of tests.valid) {
-  fixtures.push({ code: test.code, valid: true });
+  fixtures.push({code: test.code, valid: true});
 }
 for (const test of tests.invalid) {
-  fixtures.push({ code: test.code, valid: false });
+  fixtures.push({code: test.code, valid: false});
 }
 
 for (const fixture of fixtures) {
@@ -47,8 +47,8 @@ for (const fixture of fixtures) {
     // Does the fixture pass with hooks validation disabled? if not skip it
     runBabelPluginReactCompiler(
       fixture.code,
-      "rules-of-hooks.js",
-      "typescript",
+      'rules-of-hooks.js',
+      'typescript',
       {
         environment: {
           validateHooksUsage: false,
@@ -59,8 +59,8 @@ for (const fixture of fixtures) {
     try {
       runBabelPluginReactCompiler(
         fixture.code,
-        "rules-of-hooks.js",
-        "typescript",
+        'rules-of-hooks.js',
+        'typescript',
         {
           environment: {
             validateHooksUsage: true,
@@ -74,7 +74,7 @@ for (const fixture of fixtures) {
     error = e;
   }
   let code = fixture.code;
-  let prefix = "";
+  let prefix = '';
   if (error !== null) {
     prefix = `todo.bail.`;
     code = `// @skip\n// Unsupported input\n${code}`;
@@ -92,11 +92,11 @@ for (const fixture of fixtures) {
     code = `// @skip\n// Failed but should have passed\n${code}`;
   }
   const formatted = prettier.format(code, PRETTIER_OPTIONS);
-  const hmac = createHash("sha256");
-  hmac.update(formatted, "utf8");
+  const hmac = createHash('sha256');
+  hmac.update(formatted, 'utf8');
   let name = `${prefix}rules-of-hooks-${hmac
-    .digest("hex")
+    .digest('hex')
     .substring(0, 12)}.js`;
   const fixturePath = path.join(FIXTURES_DIR, name);
-  fs.writeFileSync(fixturePath, formatted, "utf8");
+  fs.writeFileSync(fixturePath, formatted, 'utf8');
 }

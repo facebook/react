@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import prettyFormat from "pretty-format";
-import { CompilerError } from "../CompilerError";
-import { BlockId, HIRFunction } from "./HIR";
-import { eachTerminalSuccessor } from "./visitors";
+import prettyFormat from 'pretty-format';
+import {CompilerError} from '../CompilerError';
+import {BlockId, HIRFunction} from './HIR';
+import {eachTerminalSuccessor} from './visitors';
 
 /*
  * Computes the dominator tree of the given function. The returned `Dominator` stores the immediate
@@ -34,7 +34,7 @@ export function computeDominatorTree(fn: HIRFunction): Dominator<BlockId> {
  */
 export function computePostDominatorTree(
   fn: HIRFunction,
-  options: { includeThrowsAsExitNode: boolean }
+  options: {includeThrowsAsExitNode: boolean},
 ): PostDominator<BlockId> {
   const graph = buildReverseGraph(fn, options.includeThrowsAsExitNode);
   const nodes = computeImmediateDominators(graph);
@@ -87,7 +87,7 @@ export class Dominator<T> {
   get(id: T): T | null {
     const dominator = this.#nodes.get(id);
     CompilerError.invariant(dominator !== undefined, {
-      reason: "Unknown node",
+      reason: 'Unknown node',
       description: null,
       loc: null,
       suggestions: null,
@@ -128,7 +128,7 @@ export class PostDominator<T> {
   get(id: T): T | null {
     const dominator = this.#nodes.get(id);
     CompilerError.invariant(dominator !== undefined, {
-      reason: "Unknown node",
+      reason: 'Unknown node',
       description: null,
       loc: null,
       suggestions: null,
@@ -217,7 +217,7 @@ function intersect<T>(a: T, b: T, graph: Graph<T>, nodes: Map<T, T>): T {
 
 // Turns the HIRFunction into a simplified internal form that is shared for dominator/post-dominator computation
 function buildGraph(fn: HIRFunction): Graph<BlockId> {
-  const graph: Graph<BlockId> = { entry: fn.body.entry, nodes: new Map() };
+  const graph: Graph<BlockId> = {entry: fn.body.entry, nodes: new Map()};
   let index = 0;
   for (const [id, block] of fn.body.blocks) {
     graph.nodes.set(id, {
@@ -237,7 +237,7 @@ function buildGraph(fn: HIRFunction): Graph<BlockId> {
  */
 function buildReverseGraph(
   fn: HIRFunction,
-  includeThrowsAsExitNode: boolean
+  includeThrowsAsExitNode: boolean,
 ): Graph<BlockId> {
   const nodes: Map<BlockId, Node<BlockId>> = new Map();
   const exitId = fn.env.nextBlockId;
@@ -256,10 +256,10 @@ function buildReverseGraph(
       preds: new Set(eachTerminalSuccessor(block.terminal)),
       succs: new Set(block.preds),
     };
-    if (block.terminal.kind === "return") {
+    if (block.terminal.kind === 'return') {
       node.preds.add(exitId);
       exit.succs.add(id);
-    } else if (block.terminal.kind === "throw" && includeThrowsAsExitNode) {
+    } else if (block.terminal.kind === 'throw' && includeThrowsAsExitNode) {
       node.preds.add(exitId);
       exit.succs.add(id);
     }
@@ -282,7 +282,7 @@ function buildReverseGraph(
   }
   visit(exitId);
 
-  const rpo: Graph<BlockId> = { entry: exitId, nodes: new Map() };
+  const rpo: Graph<BlockId> = {entry: exitId, nodes: new Map()};
   let index = 0;
   for (const id of postorder.reverse()) {
     const node = nodes.get(id)!;

@@ -20,7 +20,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {enableOwnerStacks} from 'shared/ReactFeatureFlags';
 
-import {printToConsole} from './ReactFiberConfig';
+import {bindToConsole} from './ReactFiberConfig';
 
 // Side-channel since I'm not sure we want to make this part of the public API
 let componentName: null | string = null;
@@ -117,7 +117,7 @@ export function defaultOnCaughtError(
       ) {
         // This was a Server error. We print the environment name in a badge just like we do with
         // replays of console logs to indicate that the source of this throw as actually the Server.
-        printToConsole(
+        bindToConsole(
           'error',
           [
             '%o\n\n%s\n\n%s\n',
@@ -127,7 +127,7 @@ export function defaultOnCaughtError(
             // We let DevTools or console.createTask add the component stack to the end.
           ],
           error.environmentName,
-        );
+        )();
       } else {
         console.error(
           '%o\n\n%s\n\n%s\n',

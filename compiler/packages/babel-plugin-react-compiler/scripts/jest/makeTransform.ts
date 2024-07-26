@@ -5,19 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { jsx } from "@babel/plugin-syntax-jsx";
-import babelJest from "babel-jest";
-import { compile } from "babel-plugin-react-compiler";
-import { execSync } from "child_process";
+import {jsx} from '@babel/plugin-syntax-jsx';
+import babelJest from 'babel-jest';
+import {compile} from 'babel-plugin-react-compiler';
+import {execSync} from 'child_process';
 
-import type { NodePath, Visitor } from "@babel/traverse";
-import type { CallExpression, FunctionDeclaration } from "@babel/types";
-import * as t from "@babel/types";
+import type {NodePath, Visitor} from '@babel/traverse';
+import type {CallExpression, FunctionDeclaration} from '@babel/types';
+import * as t from '@babel/types';
 import {
   EnvironmentConfig,
   validateEnvironmentConfig,
-} from "babel-plugin-react-compiler";
-import { basename } from "path";
+} from 'babel-plugin-react-compiler';
+import {basename} from 'path';
 
 /**
  * -- IMPORTANT --
@@ -30,14 +30,14 @@ const forgetOptions: EnvironmentConfig = validateEnvironmentConfig({
   enableAssumeHooksFollowRulesOfReact: true,
   enableFunctionOutlining: false,
 });
-const debugMode = process.env["DEBUG_FORGET_COMPILER"] != null;
+const debugMode = process.env['DEBUG_FORGET_COMPILER'] != null;
 
 module.exports = (useForget: boolean) => {
   function createTransformer() {
     return babelJest.createTransformer({
       passPerPreset: true,
       presets: [
-        "@babel/preset-typescript",
+        '@babel/preset-typescript',
         {
           plugins: [
             useForget
@@ -49,36 +49,36 @@ module.exports = (useForget: boolean) => {
                      * (see https://github.com/jestjs/jest/blob/v29.6.2/packages/babel-jest/src/index.ts#L84)
                      */
                     compilerCacheKey: execSync(
-                      "yarn --silent --cwd ../.. hash packages/babel-plugin-react-compiler/dist"
+                      'yarn --silent --cwd ../.. hash packages/babel-plugin-react-compiler/dist',
                     ).toString(),
                     transformOptionsCacheKey: forgetOptions,
                     e2eTransformerCacheKey,
                   },
                 ]
-              : "@babel/plugin-syntax-jsx",
+              : '@babel/plugin-syntax-jsx',
           ],
         },
-        "@babel/preset-react",
+        '@babel/preset-react',
         {
           plugins: [
             [
-              function BabelPluginRewriteRequirePath(): { visitor: Visitor } {
+              function BabelPluginRewriteRequirePath(): {visitor: Visitor} {
                 return {
                   visitor: {
                     CallExpression(path: NodePath<CallExpression>): void {
-                      const { callee } = path.node;
+                      const {callee} = path.node;
                       if (
-                        callee.type === "Identifier" &&
-                        callee.name === "require"
+                        callee.type === 'Identifier' &&
+                        callee.name === 'require'
                       ) {
                         const arg = path.node.arguments[0];
-                        if (arg.type === "StringLiteral") {
+                        if (arg.type === 'StringLiteral') {
                           /*
                            * The compiler adds requires of "React", which is expected to be a wrapper
                            * around the "react" package. For tests, we just rewrite the require.
                            */
-                          if (arg.value === "React") {
-                            arg.value = "react";
+                          if (arg.value === 'React') {
+                            arg.value = 'react';
                           }
                         }
                       }
@@ -87,7 +87,7 @@ module.exports = (useForget: boolean) => {
                 };
               },
             ],
-            "@babel/plugin-transform-modules-commonjs",
+            '@babel/plugin-transform-modules-commonjs',
           ],
         },
       ],
@@ -125,7 +125,7 @@ function isReactComponentLike(fn: NodePath<FunctionDeclaration>): boolean {
 
   fn.traverse({
     DirectiveLiteral(path) {
-      if (path.node.value === "use no forget") {
+      if (path.node.value === 'use no forget') {
         hasNoUseForgetDirective = true;
       }
     },
@@ -140,7 +140,7 @@ function isReactComponentLike(fn: NodePath<FunctionDeclaration>): boolean {
     CallExpression(path) {
       // Is there hook usage?
       if (
-        path.node.callee.type === "Identifier" &&
+        path.node.callee.type === 'Identifier' &&
         !/^use[A-Z0-9]/.test(path.node.callee.name)
       ) {
         isReactComponent = true;
@@ -170,7 +170,7 @@ function ReactForgetFunctionTransform() {
         const filename = basename(state.file.opts.filename);
         if (fn.node.loc && fn.node.id) {
           console.log(
-            ` Compiling ${filename}:${fn.node.loc.start.line}:${fn.node.loc.start.column}  ${fn.node.id.name}`
+            ` Compiling ${filename}:${fn.node.loc.start.line}:${fn.node.loc.start.column}  ${fn.node.id.name}`,
           );
         } else {
           console.log(` Compiling ${filename} ${fn.node.id?.name}`);
@@ -180,11 +180,11 @@ function ReactForgetFunctionTransform() {
       const compiled = compile(
         fn,
         forgetOptions,
-        "Other",
-        "_c",
+        'Other',
+        '_c',
         null,
         null,
-        null
+        null,
       );
       compiledFns.add(compiled);
 
@@ -193,14 +193,14 @@ function ReactForgetFunctionTransform() {
         compiled.params,
         compiled.body,
         compiled.generator,
-        compiled.async
+        compiled.async,
       );
       fn.replaceWith(fun);
       fn.skip();
     },
   };
   return {
-    name: "react-forget-e2e",
+    name: 'react-forget-e2e',
     inherits: jsx,
     visitor,
   };

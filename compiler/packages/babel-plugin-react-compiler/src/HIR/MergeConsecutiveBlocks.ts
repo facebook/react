@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   BlockId,
   Effect,
   GeneratedSource,
   HIRFunction,
   Instruction,
-} from "./HIR";
-import { markPredecessors } from "./HIRBuilder";
-import { terminalFallthrough, terminalHasFallthrough } from "./visitors";
+} from './HIR';
+import {markPredecessors} from './HIRBuilder';
+import {terminalFallthrough, terminalHasFallthrough} from './visitors';
 
 /*
  * Merges sequences of blocks that will always execute consecutively —
@@ -39,8 +39,8 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
 
     for (const instr of block.instructions) {
       if (
-        instr.value.kind === "FunctionExpression" ||
-        instr.value.kind === "ObjectMethod"
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
       ) {
         mergeConsecutiveBlocks(instr.value.loweredFunc.func);
       }
@@ -50,7 +50,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       // Can only merge blocks with a single predecessor
       block.preds.size !== 1 ||
       // Value blocks cannot merge
-      block.kind !== "block" ||
+      block.kind !== 'block' ||
       // Merging across fallthroughs could move the predecessor out of its block scope
       fallthroughBlocks.has(block.id)
     ) {
@@ -65,7 +65,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       loc: null,
       suggestions: null,
     });
-    if (predecessor.terminal.kind !== "goto" || predecessor.kind !== "block") {
+    if (predecessor.terminal.kind !== 'goto' || predecessor.kind !== 'block') {
       /*
        * The predecessor is not guaranteed to transfer control to this block,
        * they aren't consecutive.
@@ -85,16 +85,16 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       const instr: Instruction = {
         id: predecessor.terminal.id,
         lvalue: {
-          kind: "Identifier",
+          kind: 'Identifier',
           identifier: phi.id,
           effect: Effect.ConditionallyMutate,
           reactive: false,
           loc: GeneratedSource,
         },
         value: {
-          kind: "LoadLocal",
+          kind: 'LoadLocal',
           place: {
-            kind: "Identifier",
+            kind: 'Identifier',
             identifier: operand,
             effect: Effect.Read,
             reactive: false,
@@ -113,7 +113,7 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
     fn.body.blocks.delete(block.id);
   }
   markPredecessors(fn.body);
-  for (const [, { terminal }] of fn.body.blocks) {
+  for (const [, {terminal}] of fn.body.blocks) {
     if (terminalHasFallthrough(terminal)) {
       terminal.fallthrough = merged.get(terminal.fallthrough);
     }

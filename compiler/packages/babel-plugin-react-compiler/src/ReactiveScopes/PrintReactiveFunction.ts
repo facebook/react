@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   PrunedReactiveScopeBlock,
   ReactiveFunction,
@@ -15,23 +15,23 @@ import {
   ReactiveStatement,
   ReactiveTerminal,
   ReactiveValue,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   printFunction,
   printIdentifier,
   printInstructionValue,
   printPlace,
   printType,
-} from "../HIR/PrintHIR";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/PrintHIR';
+import {assertExhaustive} from '../Utils/utils';
 
 export function printReactiveFunctionWithOutlined(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): string {
   const writer = new Writer();
   writeReactiveFunction(fn, writer);
   for (const outlined of fn.env.getOutlinedFunctions()) {
-    writer.writeLine("\nfunction " + printFunction(outlined.fn));
+    writer.writeLine('\nfunction ' + printFunction(outlined.fn));
   }
   return writer.complete();
 }
@@ -43,81 +43,81 @@ export function printReactiveFunction(fn: ReactiveFunction): string {
 }
 
 function writeReactiveFunction(fn: ReactiveFunction, writer: Writer): void {
-  writer.writeLine(`function ${fn.id !== null ? fn.id : "<unknown>"}(`);
+  writer.writeLine(`function ${fn.id !== null ? fn.id : '<unknown>'}(`);
   writer.indented(() => {
     for (const param of fn.params) {
-      if (param.kind === "Identifier") {
+      if (param.kind === 'Identifier') {
         writer.writeLine(`${printPlace(param)},`);
       } else {
         writer.writeLine(`...${printPlace(param.place)},`);
       }
     }
   });
-  writer.writeLine(") {");
+  writer.writeLine(') {');
   writeReactiveInstructions(writer, fn.body);
-  writer.writeLine("}");
+  writer.writeLine('}');
 }
 
 export function printReactiveScopeSummary(scope: ReactiveScope): string {
   const items = [];
   // If the scope has a return value it needs a label
-  items.push("scope");
+  items.push('scope');
   items.push(`@${scope.id}`);
   items.push(`[${scope.range.start}:${scope.range.end}]`);
   items.push(
     `dependencies=[${Array.from(scope.dependencies)
-      .map((dep) => printDependency(dep))
-      .join(", ")}]`
+      .map(dep => printDependency(dep))
+      .join(', ')}]`,
   );
   items.push(
     `declarations=[${Array.from(scope.declarations)
       .map(([, decl]) =>
-        printIdentifier({ ...decl.identifier, scope: decl.scope })
+        printIdentifier({...decl.identifier, scope: decl.scope}),
       )
-      .join(", ")}]`
+      .join(', ')}]`,
   );
   items.push(
-    `reassignments=[${Array.from(scope.reassignments).map((reassign) =>
-      printIdentifier(reassign)
-    )}]`
+    `reassignments=[${Array.from(scope.reassignments).map(reassign =>
+      printIdentifier(reassign),
+    )}]`,
   );
   if (scope.earlyReturnValue !== null) {
     items.push(
       `earlyReturn={id: ${printIdentifier(
-        scope.earlyReturnValue.value
-      )}, label: ${scope.earlyReturnValue.label}}}`
+        scope.earlyReturnValue.value,
+      )}, label: ${scope.earlyReturnValue.label}}}`,
     );
   }
-  return items.join(" ");
+  return items.join(' ');
 }
 
 export function writeReactiveBlock(
   writer: Writer,
-  block: ReactiveScopeBlock
+  block: ReactiveScopeBlock,
 ): void {
   writer.writeLine(`${printReactiveScopeSummary(block.scope)} {`);
   writeReactiveInstructions(writer, block.instructions);
-  writer.writeLine("}");
+  writer.writeLine('}');
 }
 
 export function writePrunedScope(
   writer: Writer,
-  block: PrunedReactiveScopeBlock
+  block: PrunedReactiveScopeBlock,
 ): void {
   writer.writeLine(`<pruned> ${printReactiveScopeSummary(block.scope)} {`);
   writeReactiveInstructions(writer, block.instructions);
-  writer.writeLine("}");
+  writer.writeLine('}');
 }
 
 export function printDependency(dependency: ReactiveScopeDependency): string {
   const identifier =
     printIdentifier(dependency.identifier) +
     printType(dependency.identifier.type);
-  return `${identifier}${dependency.path.map((prop) => `.${prop}`).join("")}`;
+  return `${identifier}${dependency.path.map(prop => `.${prop}`).join('')}`;
 }
 
 export function printReactiveInstructions(
-  instructions: Array<ReactiveStatement>
+  instructions: Array<ReactiveStatement>,
 ): string {
   const writer = new Writer();
   writeReactiveInstructions(writer, instructions);
@@ -126,7 +126,7 @@ export function printReactiveInstructions(
 
 export function writeReactiveInstructions(
   writer: Writer,
-  instructions: Array<ReactiveStatement>
+  instructions: Array<ReactiveStatement>,
 ): void {
   writer.indented(() => {
     for (const instr of instructions) {
@@ -137,11 +137,11 @@ export function writeReactiveInstructions(
 
 function writeReactiveInstruction(
   writer: Writer,
-  instr: ReactiveStatement
+  instr: ReactiveStatement,
 ): void {
   switch (instr.kind) {
-    case "instruction": {
-      const { instruction } = instr;
+    case 'instruction': {
+      const {instruction} = instr;
       const id = `[${instruction.id}]`;
 
       if (instruction.lvalue !== null) {
@@ -155,15 +155,15 @@ function writeReactiveInstruction(
       }
       break;
     }
-    case "scope": {
+    case 'scope': {
       writeReactiveBlock(writer, instr);
       break;
     }
-    case "pruned-scope": {
+    case 'pruned-scope': {
       writePrunedScope(writer, instr);
       break;
     }
-    case "terminal": {
+    case 'terminal': {
       if (instr.label !== null) {
         writer.write(`bb${instr.label.id}: `);
       }
@@ -173,7 +173,7 @@ function writeReactiveInstruction(
     default: {
       assertExhaustive(
         instr,
-        `Unexpected terminal kind \`${(instr as any).kind}\``
+        `Unexpected terminal kind \`${(instr as any).kind}\``,
       );
     }
   }
@@ -187,7 +187,7 @@ export function printReactiveValue(value: ReactiveValue): string {
 
 function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
   switch (value.kind) {
-    case "ConditionalExpression": {
+    case 'ConditionalExpression': {
       writer.writeLine(`Ternary `);
       writer.indented(() => {
         writeReactiveValue(writer, value.test);
@@ -203,7 +203,7 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
       writer.newline();
       break;
     }
-    case "LogicalExpression": {
+    case 'LogicalExpression': {
       writer.writeLine(`Logical`);
       writer.indented(() => {
         writeReactiveValue(writer, value.left);
@@ -213,15 +213,15 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
       writer.newline();
       break;
     }
-    case "SequenceExpression": {
+    case 'SequenceExpression': {
       writer.writeLine(`Sequence`);
       writer.indented(() => {
         writer.indented(() => {
-          value.instructions.forEach((instr) =>
+          value.instructions.forEach(instr =>
             writeReactiveInstruction(writer, {
-              kind: "instruction",
+              kind: 'instruction',
               instruction: instr,
-            })
+            }),
           );
           writer.write(`[${value.id}] `);
           writeReactiveValue(writer, value.value);
@@ -230,7 +230,7 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
       writer.newline();
       break;
     }
-    case "OptionalExpression": {
+    case 'OptionalExpression': {
       writer.append(`OptionalExpression optional=${value.optional}`);
       writer.newline();
       writer.indented(() => {
@@ -241,7 +241,7 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
     }
     default: {
       const printed = printInstructionValue(value);
-      const lines = printed.split("\n");
+      const lines = printed.split('\n');
       if (lines.length === 1) {
         writer.writeLine(printed);
       } else {
@@ -257,130 +257,130 @@ function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
 
 function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
   switch (terminal.kind) {
-    case "break": {
+    case 'break': {
       const id = terminal.id !== null ? `[${terminal.id}]` : [];
       writer.writeLine(
-        `${id} break bb${terminal.target} (${terminal.targetKind})`
+        `${id} break bb${terminal.target} (${terminal.targetKind})`,
       );
 
       break;
     }
-    case "continue": {
+    case 'continue': {
       const id = `[${terminal.id}]`;
       writer.writeLine(
-        `${id} continue bb${terminal.target} (${terminal.targetKind})`
+        `${id} continue bb${terminal.target} (${terminal.targetKind})`,
       );
       break;
     }
-    case "do-while": {
+    case 'do-while': {
       writer.writeLine(`[${terminal.id}] do-while {`);
       writeReactiveInstructions(writer, terminal.loop);
-      writer.writeLine("} (");
+      writer.writeLine('} (');
       writer.indented(() => {
         writeReactiveValue(writer, terminal.test);
       });
-      writer.writeLine(")");
+      writer.writeLine(')');
       break;
     }
-    case "while": {
+    case 'while': {
       writer.writeLine(`[${terminal.id}] while (`);
       writer.indented(() => {
         writeReactiveValue(writer, terminal.test);
       });
-      writer.writeLine(") {");
+      writer.writeLine(') {');
       writeReactiveInstructions(writer, terminal.loop);
-      writer.writeLine("}");
+      writer.writeLine('}');
       break;
     }
-    case "if": {
-      const { test, consequent, alternate } = terminal;
+    case 'if': {
+      const {test, consequent, alternate} = terminal;
       writer.writeLine(`[${terminal.id}] if (${printPlace(test)}) {`);
       writeReactiveInstructions(writer, consequent);
       if (alternate !== null) {
-        writer.writeLine("} else {");
+        writer.writeLine('} else {');
         writeReactiveInstructions(writer, alternate);
       }
-      writer.writeLine("}");
+      writer.writeLine('}');
       break;
     }
-    case "switch": {
+    case 'switch': {
       writer.writeLine(
-        `[${terminal.id}] switch (${printPlace(terminal.test)}) {`
+        `[${terminal.id}] switch (${printPlace(terminal.test)}) {`,
       );
       writer.indented(() => {
         for (const case_ of terminal.cases) {
           let prefix =
-            case_.test !== null ? `case ${printPlace(case_.test)}` : "default";
+            case_.test !== null ? `case ${printPlace(case_.test)}` : 'default';
           writer.writeLine(`${prefix}: {`);
           writer.indented(() => {
             const block = case_.block;
             CompilerError.invariant(block != null, {
-              reason: "Expected case to have a block",
+              reason: 'Expected case to have a block',
               description: null,
               loc: case_.test?.loc ?? null,
               suggestions: null,
             });
             writeReactiveInstructions(writer, block);
           });
-          writer.writeLine("}");
+          writer.writeLine('}');
         }
       });
-      writer.writeLine("}");
+      writer.writeLine('}');
       break;
     }
-    case "for": {
+    case 'for': {
       writer.writeLine(`[${terminal.id}] for (`);
       writer.indented(() => {
         writeReactiveValue(writer, terminal.init);
-        writer.writeLine(";");
+        writer.writeLine(';');
         writeReactiveValue(writer, terminal.test);
-        writer.writeLine(";");
+        writer.writeLine(';');
         if (terminal.update !== null) {
           writeReactiveValue(writer, terminal.update);
         }
       });
-      writer.writeLine(") {");
+      writer.writeLine(') {');
       writeReactiveInstructions(writer, terminal.loop);
-      writer.writeLine("}");
+      writer.writeLine('}');
       break;
     }
-    case "for-of": {
+    case 'for-of': {
       writer.writeLine(`[${terminal.id}] for-of (`);
       writer.indented(() => {
         writeReactiveValue(writer, terminal.init);
-        writer.writeLine(";");
+        writer.writeLine(';');
         writeReactiveValue(writer, terminal.test);
       });
-      writer.writeLine(") {");
+      writer.writeLine(') {');
       writeReactiveInstructions(writer, terminal.loop);
-      writer.writeLine("}");
+      writer.writeLine('}');
       break;
     }
-    case "for-in": {
+    case 'for-in': {
       writer.writeLine(`[${terminal.id}] for-in (`);
       writer.indented(() => {
         writeReactiveValue(writer, terminal.init);
       });
-      writer.writeLine(") {");
+      writer.writeLine(') {');
       writeReactiveInstructions(writer, terminal.loop);
-      writer.writeLine("}");
+      writer.writeLine('}');
       break;
     }
-    case "throw": {
+    case 'throw': {
       writer.writeLine(`[${terminal.id}] throw ${printPlace(terminal.value)}`);
       break;
     }
-    case "return": {
+    case 'return': {
       writer.writeLine(`[${terminal.id}] return ${printPlace(terminal.value)}`);
       break;
     }
-    case "label": {
-      writer.writeLine("{");
+    case 'label': {
+      writer.writeLine('{');
       writeReactiveInstructions(writer, terminal.block);
-      writer.writeLine("}");
+      writer.writeLine('}');
       break;
     }
-    case "try": {
+    case 'try': {
       writer.writeLine(`[${terminal.id}] try {`);
       writeReactiveInstructions(writer, terminal.block);
       writer.write(`} catch `);
@@ -390,7 +390,7 @@ function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
         writer.writeLine(`{`);
       }
       writeReactiveInstructions(writer, terminal.handler);
-      writer.writeLine("}");
+      writer.writeLine('}');
       break;
     }
     default:
@@ -403,9 +403,9 @@ export class Writer {
   #line: string;
   #depth: number;
 
-  constructor({ depth }: { depth: number } = { depth: 0 }) {
+  constructor({depth}: {depth: number} = {depth: 0}) {
     this.#depth = Math.max(depth, 0);
-    this.#line = "";
+    this.#line = '';
   }
 
   complete(): string {
@@ -413,7 +413,7 @@ export class Writer {
     if (line.length > 0) {
       this.#out.push(line);
     }
-    return this.#out.join("\n");
+    return this.#out.join('\n');
   }
 
   append(s: string): void {
@@ -425,13 +425,13 @@ export class Writer {
     if (line.length > 0) {
       this.#out.push(line);
     }
-    this.#line = "";
+    this.#line = '';
   }
 
   write(s: string): void {
     if (this.#line.length === 0 && this.#depth > 0) {
       // indent before writing
-      this.#line = "  ".repeat(this.#depth);
+      this.#line = '  '.repeat(this.#depth);
     }
     this.#line += s;
   }
