@@ -63,5 +63,10 @@
     "@babel/core": "7.2.0",
     "@babel/generator": "7.2.0",
     "@babel/traverse": "7.7.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/babel-plugin-react-compiler"
   }
 }
