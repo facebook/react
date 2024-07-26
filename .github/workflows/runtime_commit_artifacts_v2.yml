@@ -64,12 +64,13 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
       - run: yarn install --frozen-lockfile
+        name: yarn install (react)
       - run: yarn install --frozen-lockfile
+        name: yarn install (scripts/release)
         working-directory: scripts/release
       - name: Download artifacts for base revision
         run: |
-          git fetch origin main
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build-ghaction.js --commit=$(git rev-parse origin/main)
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build-ghaction.js --commit=${{ github.event.workflow_run.head_sha }}
       - name: Display structure of build
         run: ls -R build
       - name: Strip @license from eslint plugin and react-refresh
@@ -126,9 +127,9 @@ jobs:
           ls -R ./compiled-rn
       - name: Add REVISION files
         run: |
-          echo ${{ github.sha }} >> ./compiled/facebook-www/REVISION
+          echo ${{ github.event.workflow_run.head_sha }} >> ./compiled/facebook-www/REVISION
           cp ./compiled/facebook-www/REVISION ./compiled/facebook-www/REVISION_TRANSFORMS
-          echo ${{ github.sha }} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
+          echo ${{ github.event.workflow_run.head_sha}} >> ./compiled-rn/facebook-fbsource/xplat/js/react-native-github/Libraries/Renderer/REVISION
       - name: "Get current version string"
         id: get_current_version
         run: |
@@ -149,3 +150,244 @@ jobs:
         with:
           name: compiled-rn
           path: compiled-rn/
+
+  commit_www_artifacts:
+    needs: download_artifacts
+    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.www_branch_count == '0') || github.ref == 'refs/heads/meta-www' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: builds/facebook-www
+      - name: Ensure clean directory
+        run: rm -rf compiled
+      - uses: actions/download-artifact@v3
+        with:
+          name: compiled
+          path: compiled/
+      - name: Revert version changes
+        if: needs.download_artifacts.outputs.last_version_classic != '' && needs.download_artifacts.outputs.last_version_modern != ''
+        env:
+          CURRENT_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.current_version_classic }}
+          CURRENT_VERSION_MODERN: ${{ needs.download_artifacts.outputs.current_version_modern }}
+          LAST_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.last_version_classic }}
+          LAST_VERSION_MODERN: ${{ needs.download_artifacts.outputs.last_version_modern }}
+        run: |
+          echo "Reverting $CURRENT_VERSION_CLASSIC to $LAST_VERSION_CLASSIC"
+          grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled || echo "No files found with $CURRENT_VERSION_CLASSIC"
+          grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled | xargs -r sed -i -e "s/$CURRENT_VERSION_CLASSIC/$LAST_VERSION_CLASSIC/g"
+          grep -rl "$CURRENT_VERSION_CLASSIC" ./compiled || echo "Classic version reverted"
+          echo "===================="
+          echo "Reverting $CURRENT_VERSION_MODERN to $LAST_VERSION_MODERN"
+          grep -rl "$CURRENT_VERSION_MODERN" ./compiled || echo "No files found with $CURRENT_VERSION_MODERN"
+          grep -rl "$CURRENT_VERSION_MODERN" ./compiled | xargs -r sed -i -e "s/$CURRENT_VERSION_MODERN/$LAST_VERSION_MODERN/g"
+          grep -rl "$CURRENT_VERSION_MODERN" ./compiled || echo "Modern version reverted"
+      - name: Check for changes
+        id: check_should_commit
+        run: |
+          echo "Full git status"
+          git add .
+          git status
+          echo "===================="
+          if git status --porcelain | grep -qv '/REVISION'; then
+            echo "Changes detected"
+            echo "===== Changes ====="
+            git --no-pager diff -U0 | grep '^[+-]' | head -n 50
+            echo "==================="
+            echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No Changes detected"
+            echo "should_commit=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Re-apply version changes
+        if: steps.check_should_commit.outputs.should_commit == 'true' && needs.download_artifacts.outputs.last_version_classic != '' && needs.download_artifacts.outputs.last_version_modern != ''
+        env:
+          CURRENT_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.current_version_classic }}
+          CURRENT_VERSION_MODERN: ${{ needs.download_artifacts.outputs.current_version_modern }}
+          LAST_VERSION_CLASSIC: ${{ needs.download_artifacts.outputs.last_version_classic }}
+          LAST_VERSION_MODERN: ${{ needs.download_artifacts.outputs.last_version_modern }}
+        run: |
+          echo "Re-applying $LAST_VERSION_CLASSIC to $CURRENT_VERSION_CLASSIC"
+          grep -rl "$LAST_VERSION_CLASSIC" ./compiled || echo "No files found with $LAST_VERSION_CLASSIC"
+          grep -rl "$LAST_VERSION_CLASSIC" ./compiled | xargs -r sed -i -e "s/$LAST_VERSION_CLASSIC/$CURRENT_VERSION_CLASSIC/g"
+          grep -rl "$LAST_VERSION_CLASSIC" ./compiled || echo "Classic version re-applied"
+          echo "===================="
+          echo "Re-applying $LAST_VERSION_MODERN to $CURRENT_VERSION_MODERN"
+          grep -rl "$LAST_VERSION_MODERN" ./compiled || echo "No files found with $LAST_VERSION_MODERN"
+          grep -rl "$LAST_VERSION_MODERN" ./compiled | xargs -r sed -i -e "s/$LAST_VERSION_MODERN/$CURRENT_VERSION_MODERN/g"
+          grep -rl "$LAST_VERSION_MODERN" ./compiled || echo "Classic version re-applied"
+      - name: Will commit these changes
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        run: |
+          echo ":"
+          git status -u
+      - name: Commit changes to branch
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: |
+            ${{ github.event.workflow_run.head_commit.message }}
+
+            DiffTrain build for [${{ github.event.workflow_run.head_sha }}](https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha }})
+          branch: builds/facebook-www
+          commit_user_name: ${{ github.event.workflow_run.actor.name }}
+          commit_user_email: ${{ github.event.workflow_run.actor.email || format('{0}@users.noreply.github.com', github.event.workflow_run.actor.name) }}
+          create_branch: true
+
+  commit_fbsource_artifacts:
+    needs: download_artifacts
+    if: ${{ (github.ref == 'refs/heads/main' && needs.download_artifacts.outputs.fbsource_branch_count == '0') || github.ref == 'refs/heads/meta-fbsource' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: builds/facebook-fbsource
+      - name: Ensure clean directory
+        run: rm -rf compiled-rn
+      - uses: actions/download-artifact@v3
+        with:
+          name: compiled-rn
+          path: compiled-rn/
+      - name: Revert version changes
+        if: needs.download_artifacts.outputs.last_version_rn != ''
+        env:
+          CURRENT_VERSION: ${{ needs.download_artifacts.outputs.current_version_rn }}
+          LAST_VERSION: ${{ needs.download_artifacts.outputs.last_version_rn }}
+        run: |
+          echo "Reverting $CURRENT_VERSION to $LAST_VERSION"
+          grep -rl "$CURRENT_VERSION" ./compiled-rn || echo "No files found with $CURRENT_VERSION"
+          grep -rl "$CURRENT_VERSION" ./compiled-rn | xargs -r sed -i -e "s/$CURRENT_VERSION/$LAST_VERSION/g"
+          grep -rl "$CURRENT_VERSION" ./compiled-rn || echo "Version reverted"
+      - name: Check for changes
+        id: check_should_commit
+        run: |
+          echo "Full git status"
+          git add .
+          git --no-pager diff -U0 --cached | grep '^[+-]' | head -n 100
+          echo "===================="
+          # Ignore REVISION or lines removing @generated headers.
+          if git diff --cached ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" > /dev/null; then
+            echo "Changes detected"
+            echo "===== Changes ====="
+            git --no-pager diff --cached ':(exclude)*REVISION' | grep -vE "^(@@|diff|index|\-\-\-|\+\+\+|\- \* @generated SignedSource)" | grep "^[+-]" | head -n 50
+            echo "==================="
+            echo "should_commit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No Changes detected"
+            echo "should_commit=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Re-apply version changes
+        if: steps.check_should_commit.outputs.should_commit == 'true' && needs.download_artifacts.outputs.last_version_rn != ''
+        env:
+          CURRENT_VERSION: ${{ needs.download_artifacts.outputs.current_version_rn }}
+          LAST_VERSION: ${{ needs.download_artifacts.outputs.last_version_rn }}
+        run: |
+          echo "Re-applying $LAST_VERSION to $CURRENT_VERSION"
+          grep -rl "$LAST_VERSION" ./compiled-rn || echo "No files found with $LAST_VERSION"
+          grep -rl "$LAST_VERSION" ./compiled-rn | xargs -r sed -i -e "s/$LAST_VERSION/$CURRENT_VERSION/g"
+          grep -rl "$LAST_VERSION" ./compiled-rn || echo "Version re-applied"
+      - name: Add files for signing
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        run: |
+          echo ":"
+          git add .
+      - name: Signing files
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // TODO: Move this to a script file.
+            // We currently can't call scripts from the repo because
+            // at this point in the workflow, we're on the compiled
+            // artifact branch (so the scripts don't exist).
+            // We can fix this with a composite action in the main repo.
+            // This script is duplicated above.
+            const fs = require('fs');
+            const crypto = require('crypto');
+            const {execSync} = require('child_process');
+
+            // TODO: when we move this to a script, we can use this from npm.
+            // Copy of signedsource since we can't install deps on this branch.
+            const GENERATED = '@' + 'generated';
+            const NEWTOKEN = '<<SignedSource::*O*zOeWoEQle#+L!plEphiEmie@IsG>>';
+            const PATTERN = new RegExp(`${GENERATED} (?:SignedSource<<([a-f0-9]{32})>>)`);
+
+            const TokenNotFoundError = new Error(
+              `SignedSource.signFile(...): Cannot sign file without token: ${NEWTOKEN}`
+            );
+
+            function hash(data, encoding) {
+              const md5sum = crypto.createHash('md5');
+              md5sum.update(data, encoding);
+              return md5sum.digest('hex');
+            }
+
+            const SignedSource = {
+              getSigningToken() {
+                return `${GENERATED} ${NEWTOKEN}`;
+              },
+              isSigned(data) {
+                return PATTERN.exec(data) != null;
+              },
+              signFile(data) {
+                if (!data.includes(NEWTOKEN)) {
+                  if (SignedSource.isSigned(data)) {
+                    // Signing a file that was previously signed.
+                   data = data.replace(PATTERN, SignedSource.getSigningToken());
+                  } else {
+                    throw TokenNotFoundError;
+                  }
+                }
+                return data.replace(NEWTOKEN, `SignedSource<<${hash(data, 'utf8')}>>`);
+              },
+            };
+
+            const directory = './compiled-rn';
+            console.log('Signing files in directory:', directory);
+            try {
+              const result = execSync(`git status --porcelain ${directory}`, {encoding: 'utf8'});
+
+              // Parse the git status output to get file paths
+              const files = result.split('\n').filter(file => file.endsWith('.js'));
+
+              if (files.length === 0) {
+                throw new Error(
+                  'git status returned no files to sign. this job should not have run.'
+                );
+              } else {
+                files.forEach(line => {
+                  const file = line.slice(3).trim();
+                  if (file) {
+                    console.log('  Signing file:', file);
+                    const originalContents = fs.readFileSync(file, 'utf8');
+                    const signedContents = SignedSource.signFile(
+                      originalContents
+                        // Need to add the header in, since it's not inserted at build time.
+                        .replace(' */\n', ` * ${SignedSource.getSigningToken()}\n */\n`)
+                    );
+
+                    fs.writeFileSync(file, signedContents, 'utf8');
+                  }
+                });
+              }
+            } catch (e) {
+              process.exitCode = 1;
+              console.error('Error signing files:', e);
+            }
+      - name: Will commit these changes
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        run: |
+          git add .
+          git status
+      - name: Commit changes to branch
+        if: steps.check_should_commit.outputs.should_commit == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: |
+            ${{ github.event.workflow_run.head_commit.message }}
+
+            DiffTrain build for commit https://github.com/facebook/react/commit/${{ github.event.workflow_run.head_sha }}.
+          branch: builds/facebook-fbsource
+          commit_user_name: ${{ github.event.workflow_run.actor.name }}
+          commit_user_email: ${{ github.event.workflow_run.actor.email || format('{0}@users.noreply.github.com', github.event.workflow_run.actor.name) }}
+          create_branch: true
