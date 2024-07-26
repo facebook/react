@@ -484,8 +484,6 @@ const skipFilter = new Set([
   'rules-of-hooks/rules-of-hooks-69521d94fa03',
 
   // bugs
-  'bug-invalid-update-global-should-bailout',
-  'bug-update-global-in-callback',
   'bug-invalid-hoisting-functionexpr',
   'original-reactive-scopes-fork/bug-nonmutating-capture-in-unsplittable-memo-block',
   'original-reactive-scopes-fork/bug-hoisted-declaration-with-scope',

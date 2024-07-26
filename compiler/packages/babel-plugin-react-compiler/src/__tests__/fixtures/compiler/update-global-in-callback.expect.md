@@ -40,6 +40,7 @@ function Foo() {
   return t0;
 }
 function _temp() {
+  renderCount = renderCount + 1;
   return renderCount;
 }
 
@@ -50,3 +51,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div>{"cb":{"kind":"Function","result":1},"shouldInvokeFns":true}</div>
