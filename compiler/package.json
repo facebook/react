@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/react-forget.git"
+    "url": "git+https://github.com/facebook/react.git"
   },
   "scripts": {
     "copyright": "node scripts/copyright.js",
