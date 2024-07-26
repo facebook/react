@@ -1,7 +1,7 @@
 // @enableAssumeHooksFollowRulesOfReact
-import { Stringify, identity, useHook } from "shared-runtime";
+import {Stringify, identity, useHook} from 'shared-runtime';
 
-function Component({ index }) {
+function Component({index}) {
   const data = useHook();
 
   const a = identity(data, index);
@@ -19,5 +19,5 @@ function Component({ index }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ index: 0 }],
+  params: [{index: 0}],
 };

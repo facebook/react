@@ -10,7 +10,7 @@ function Component(props) {
   const a = [];
   const b = [];
   b.push(props.cond);
-  a.push({ a: false });
+  a.push({a: false});
 
   // Downstream consumer of a, which initially seems non-reactive except
   // that a becomes reactive, per above
@@ -29,7 +29,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true }],
+  params: [{cond: true}],
 };
 
 ```

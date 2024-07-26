@@ -88,6 +88,7 @@ import {ConcurrentRoot} from './ReactRootTags';
 import {noopSuspenseyCommitThenable} from './ReactFiberThenable';
 import {REACT_POSTPONE_TYPE} from 'shared/ReactSymbols';
 import {runWithFiberInDEV} from './ReactCurrentFiber';
+import {callComponentDidCatchInDEV} from './ReactFiberCallUserSpace';
 
 function createRootErrorUpdate(
   root: FiberRoot,
@@ -172,11 +173,15 @@ function initializeClassErrorUpdate(
         // not defined.
         markLegacyErrorBoundaryAsFailed(this);
       }
-      const error = errorInfo.value;
-      const stack = errorInfo.stack;
-      this.componentDidCatch(error, {
-        componentStack: stack !== null ? stack : '',
-      });
+      if (__DEV__) {
+        callComponentDidCatchInDEV(this, errorInfo);
+      } else {
+        const error = errorInfo.value;
+        const stack = errorInfo.stack;
+        this.componentDidCatch(error, {
+          componentStack: stack !== null ? stack : '',
+        });
+      }
       if (__DEV__) {
         if (typeof getDerivedStateFromError !== 'function') {
           // If componentDidCatch is the only error boundary method defined,

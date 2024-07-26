@@ -1891,11 +1891,13 @@ function mountLazyComponent(
     }
   }
 
+  const loggedComponent = getComponentNameFromType(Component) || Component;
+
   // This message intentionally doesn't mention ForwardRef or MemoComponent
   // because the fact that it's a separate type of work is an
   // implementation detail.
   throw new Error(
-    `Element type is invalid. Received a promise that resolves to: ${Component}. ` +
+    `Element type is invalid. Received a promise that resolves to: ${loggedComponent}. ` +
       `Lazy element type must resolve to a class or function.${hint}`,
   );
 }

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function Router({ title, mapping }) {
+function Router({title, mapping}) {
   const array = [];
   for (let [, entry] of mapping) {
     array.push([title, entry]);
@@ -11,8 +11,8 @@ function Router({ title, mapping }) {
 }
 
 const routes = new Map([
-  ["about", "/about"],
-  ["contact", "/contact"],
+  ['about', '/about'],
+  ['contact', '/contact'],
 ]);
 
 export const FIXTURE_ENTRYPOINT = {
@@ -20,11 +20,11 @@ export const FIXTURE_ENTRYPOINT = {
   params: [],
   sequentialRenders: [
     {
-      title: "Foo",
+      title: 'Foo',
       mapping: routes,
     },
     {
-      title: "Bar",
+      title: 'Bar',
       mapping: routes,
     },
   ],

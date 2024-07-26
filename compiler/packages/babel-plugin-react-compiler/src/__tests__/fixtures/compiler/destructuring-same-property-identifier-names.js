@@ -1,8 +1,8 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(props) {
   const {
-    x: { destructured },
+    x: {destructured},
     sameName: renamed,
   } = props;
   const sameName = identity(destructured);
@@ -12,5 +12,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ x: { destructured: 0 }, sameName: 2 }],
+  params: [{x: {destructured: 0}, sameName: 2}],
 };

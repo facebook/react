@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { getNumber } from "shared-runtime";
+import {getNumber} from 'shared-runtime';
 
 function useFoo() {
   try {

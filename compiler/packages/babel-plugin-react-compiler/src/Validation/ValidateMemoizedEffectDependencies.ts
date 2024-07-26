@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError, ErrorSeverity } from "..";
+import {CompilerError, ErrorSeverity} from '..';
 import {
   Identifier,
   Instruction,
@@ -16,12 +16,12 @@ import {
   isUseEffectHookType,
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
-} from "../HIR";
-import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
+} from '../HIR';
+import {isMutable} from '../ReactiveScopes/InferReactiveScopeVariables';
 import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
-} from "../ReactiveScopes/visitors";
+} from '../ReactiveScopes/visitors';
 
 /**
  * Validates that all known effect dependencies are memoized. The algorithm checks two things:
@@ -60,7 +60,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    state: CompilerError
+    state: CompilerError,
   ): void {
     this.traverseScope(scopeBlock, state);
 
@@ -88,26 +88,30 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: CompilerError
+    state: CompilerError,
   ): void {
     this.traverseInstruction(instruction, state);
     if (
-      instruction.value.kind === "CallExpression" &&
+      instruction.value.kind === 'CallExpression' &&
       isEffectHook(instruction.value.callee.identifier) &&
       instruction.value.args.length >= 2
     ) {
       const deps = instruction.value.args[1]!;
       if (
-        deps.kind === "Identifier" &&
+        deps.kind === 'Identifier' &&
+        /*
+         * TODO: isMutable is not safe to call here as it relies on identifier mutableRange which is no longer valid at this point
+         * in the pipeline
+         */
         (isMutable(instruction as Instruction, deps) ||
           isUnmemoized(deps.identifier, this.scopes))
       ) {
         state.push({
           reason:
-            "React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior",
+            'React Compiler has skipped optimizing this component because the effect dependencies could not be memoized. Unmemoized effect dependencies can trigger an infinite loop or other unexpected behavior',
           description: null,
           severity: ErrorSeverity.CannotPreserveMemoization,
-          loc: typeof instruction.loc !== "symbol" ? instruction.loc : null,
+          loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
           suggestions: null,
         });
       }

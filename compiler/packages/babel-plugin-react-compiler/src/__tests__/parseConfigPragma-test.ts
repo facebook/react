@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { parseConfigPragma, validateEnvironmentConfig } from "..";
+import {parseConfigPragma, validateEnvironmentConfig} from '..';
 
-describe("parseConfigPragma()", () => {
-  it("parses flags in various forms", () => {
+describe('parseConfigPragma()', () => {
+  it('parses flags in various forms', () => {
     const defaultConfig = validateEnvironmentConfig({});
 
     // Validate defaults first to make sure that the parser is getting the value from the pragma,
@@ -18,7 +18,7 @@ describe("parseConfigPragma()", () => {
     expect(defaultConfig.validateNoSetStateInRender).toBe(true);
 
     const config = parseConfigPragma(
-      "@enableUseTypeAnnotations @validateRefAccessDuringRender:true @validateNoSetStateInRender:false"
+      '@enableUseTypeAnnotations @validateRefAccessDuringRender:true @validateNoSetStateInRender:false',
     );
     expect(config).toEqual({
       ...defaultConfig,

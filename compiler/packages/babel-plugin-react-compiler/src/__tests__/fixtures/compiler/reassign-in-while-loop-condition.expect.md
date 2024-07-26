@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { makeArray } from "shared-runtime";
+import {makeArray} from 'shared-runtime';
 
 // @flow
 function Component() {

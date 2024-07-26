@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from "react";
+import React from 'react';
 
 /**
  * Replacement to React.createContext.
@@ -29,9 +29,9 @@ export default function createContext<T>() {
   function useContext() {
     const c = React.useContext(context);
     if (!c)
-      throw new Error("useContext must be within a Provider with a value");
+      throw new Error('useContext must be within a Provider with a value');
     return c;
   }
 
-  return { useContext, Provider: context.Provider };
+  return {useContext, Provider: context.Provider};
 }

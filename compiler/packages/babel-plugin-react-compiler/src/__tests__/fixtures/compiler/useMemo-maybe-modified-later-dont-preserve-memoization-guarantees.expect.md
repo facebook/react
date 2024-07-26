@@ -3,8 +3,8 @@
 
 ```javascript
 // @enablePreserveExistingMemoizationGuarantees:false
-import { useMemo } from "react";
-import { identity, makeObject_Primitives, mutate } from "shared-runtime";
+import {useMemo} from 'react';
+import {identity, makeObject_Primitives, mutate} from 'shared-runtime';
 
 function Component(props) {
   const object = useMemo(() => makeObject_Primitives(), []);
