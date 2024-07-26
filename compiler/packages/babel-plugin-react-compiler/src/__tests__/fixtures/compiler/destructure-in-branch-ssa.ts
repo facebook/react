@@ -9,7 +9,7 @@ function useFoo(props: {
   let z = null;
   const myList = [];
   if (props.doDestructure) {
-    ({ x, y, z } = props);
+    ({x, y, z} = props);
 
     myList.push(z);
   }
@@ -22,5 +22,5 @@ function useFoo(props: {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ x: "hello", y: "world", doDestructure: true }],
+  params: [{x: 'hello', y: 'world', doDestructure: true}],
 };

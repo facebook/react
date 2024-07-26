@@ -6,7 +6,7 @@
  */
 
 module.exports = function makeSnapshotResolver(useForget) {
-  const modeExtension = useForget ? ".with-forget" : ".no-forget";
+  const modeExtension = useForget ? '.with-forget' : '.no-forget';
   return {
     resolveSnapshotPath: (testPath, snapshotExtension) =>
       testPath + modeExtension + snapshotExtension,
@@ -17,6 +17,6 @@ module.exports = function makeSnapshotResolver(useForget) {
         -modeExtension.length - snapshotExtension.length
       ),
 
-    testPathForConsistencyCheck: "some/__tests__/example.test.js",
+    testPathForConsistencyCheck: 'some/__tests__/example.test.js',
   };
 };

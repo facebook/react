@@ -1,7 +1,7 @@
-import fbt from "fbt";
+import fbt from 'fbt';
 
 const _ = fbt;
-function Component({ value }: { value: string }) {
+function Component({value}: {value: string}) {
   return (
     <fbt desc="descdesc">
       Before text <fbt:param name="paramName">{value}</fbt:param> after text
@@ -11,5 +11,5 @@ function Component({ value }: { value: string }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: "hello world" }],
+  params: [{value: 'hello world'}],
 };

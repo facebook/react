@@ -3,7 +3,7 @@
 
 ```javascript
 // @flow @enableAssumeHooksFollowRulesOfReact
-function Component({ label, highlightedItem }) {
+function Component({label, highlightedItem}) {
   const serverTime = useServerTime();
   const highlight = new Highlight(highlightedItem);
 
@@ -23,7 +23,7 @@ function Component({ label, highlightedItem }) {
 }
 
 function useServerTime() {
-  "use no forget";
+  'use no forget';
 
   return {
     get() {
@@ -44,7 +44,7 @@ class Highlight {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ label: "<unused>", highlightedItem: "Seconds passed: " }],
+  params: [{label: '<unused>', highlightedItem: 'Seconds passed: '}],
 };
 
 ```

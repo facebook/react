@@ -72,6 +72,7 @@ export type Options = {
   temporaryReferences?: TemporaryReferenceSet,
   findSourceMapURL?: FindSourceMapURLCallback,
   replayConsoleLogs?: boolean,
+  environmentName?: string,
 };
 
 function createResponseFromOptions(options: Options) {
@@ -88,6 +89,9 @@ function createResponseFromOptions(options: Options) {
       ? options.findSourceMapURL
       : undefined,
     __DEV__ && options ? options.replayConsoleLogs === true : false, // defaults to false
+    __DEV__ && options && options.environmentName
+      ? options.environmentName
+      : undefined,
   );
 }
 

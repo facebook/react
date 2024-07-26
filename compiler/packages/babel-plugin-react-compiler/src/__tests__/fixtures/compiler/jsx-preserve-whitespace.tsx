@@ -1,4 +1,4 @@
-import { StaticText1 } from "shared-runtime";
+import {StaticText1} from 'shared-runtime';
 
 function Component() {
   return (

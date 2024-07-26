@@ -4,8 +4,8 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useCallback } from "react";
-import { makeArray } from "shared-runtime";
+import {useCallback} from 'react';
+import {makeArray} from 'shared-runtime';
 
 // This case is fine, as all reassignments happen before the useCallback
 function Foo(props) {

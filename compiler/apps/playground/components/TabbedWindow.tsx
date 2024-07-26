@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Resizable } from "re-resizable";
-import React, { useCallback } from "react";
+import {Resizable} from 're-resizable';
+import React, {useCallback} from 'react';
 
 type TabsRecord = Map<string, React.ReactNode>;
 
@@ -21,15 +21,14 @@ export default function TabbedWindow(props: {
     return (
       <div
         className="flex items-center justify-center"
-        style={{ width: "calc(100vw - 650px)" }}
-      >
+        style={{width: 'calc(100vw - 650px)'}}>
         No compiler output detected, see errors below
       </div>
     );
   }
   return (
     <div className="flex flex-row">
-      {Array.from(props.tabs.keys()).map((name) => {
+      {Array.from(props.tabs.keys()).map(name => {
         return (
           <TabbedWindowItem
             name={name}
@@ -73,15 +72,14 @@ function TabbedWindowItem({
   return (
     <div key={name} className="flex flex-row">
       {isShow ? (
-        <Resizable className="border-r" minWidth={550} enable={{ right: true }}>
+        <Resizable className="border-r" minWidth={550} enable={{right: true}}>
           <h2
             title="Minimize tab"
             aria-label="Minimize tab"
             onClick={toggleTabs}
             className={`p-4 duration-150 ease-in border-b cursor-pointer border-grey-200 ${
-              hasChanged ? "font-bold" : "font-light"
-            } text-secondary hover:text-link`}
-          >
+              hasChanged ? 'font-bold' : 'font-light'
+            } text-secondary hover:text-link`}>
             - {name}
           </h2>
           {tabs.get(name) ?? <div>No output for {name}</div>}
@@ -91,12 +89,11 @@ function TabbedWindowItem({
           <button
             title={`Expand compiler tab: ${name}`}
             aria-label={`Expand compiler tab: ${name}`}
-            style={{ transform: "rotate(90deg) translate(-50%)" }}
+            style={{transform: 'rotate(90deg) translate(-50%)'}}
             onClick={toggleTabs}
             className={`flex-grow-0 w-5 transition-colors duration-150 ease-in ${
-              hasChanged ? "font-bold" : "font-light"
-            } text-secondary hover:text-link`}
-          >
+              hasChanged ? 'font-bold' : 'font-light'
+            } text-secondary hover:text-link`}>
             {name}
           </button>
         </div>

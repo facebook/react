@@ -2,8 +2,8 @@
 ## Input
 
 ```javascript
-import { useMemo } from "react";
-import { makeArray } from "shared-runtime";
+import {useMemo} from 'react';
+import {makeArray} from 'shared-runtime';
 
 function Component() {
   const x = useMemo(makeArray, []);

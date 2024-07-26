@@ -14,12 +14,12 @@ import {
   ReactiveValue,
   getHookKind,
   isUseOperator,
-} from "../HIR";
+} from '../HIR';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /**
  * For simplicity the majority of compiler passes do not treat hooks specially. However, hooks are different
@@ -57,7 +57,7 @@ type State = {
 class Transform extends ReactiveFunctionTransform<State> {
   override transformScope(
     scope: ReactiveScopeBlock,
-    outerState: State
+    outerState: State,
   ): Transformed<ReactiveStatement> {
     const innerState: State = {
       env: outerState.env,
@@ -72,7 +72,7 @@ class Transform extends ReactiveFunctionTransform<State> {
          * flatten it away
          */
         return {
-          kind: "replace-many",
+          kind: 'replace-many',
           value: scope.instructions,
         };
       }
@@ -81,26 +81,26 @@ class Transform extends ReactiveFunctionTransform<State> {
        * mark it as pruned
        */
       return {
-        kind: "replace",
+        kind: 'replace',
         value: {
-          kind: "pruned-scope",
+          kind: 'pruned-scope',
           scope: scope.scope,
           instructions: scope.instructions,
         },
       };
     } else {
-      return { kind: "keep" };
+      return {kind: 'keep'};
     }
   }
 
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: State
+    state: State,
   ): void {
     this.traverseValue(id, value, state);
     switch (value.kind) {
-      case "CallExpression": {
+      case 'CallExpression': {
         if (
           getHookKind(state.env, value.callee.identifier) != null ||
           isUseOperator(value.callee.identifier)
@@ -109,7 +109,7 @@ class Transform extends ReactiveFunctionTransform<State> {
         }
         break;
       }
-      case "MethodCall": {
+      case 'MethodCall': {
         if (
           getHookKind(state.env, value.property.identifier) != null ||
           isUseOperator(value.property.identifier)

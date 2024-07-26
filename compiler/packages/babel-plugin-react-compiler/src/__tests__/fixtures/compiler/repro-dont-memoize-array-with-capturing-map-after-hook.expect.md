@@ -2,11 +2,11 @@
 ## Input
 
 ```javascript
-import { useEffect, useState } from "react";
-import { mutate } from "shared-runtime";
+import {useEffect, useState} from 'react';
+import {mutate} from 'shared-runtime';
 
 function Component(props) {
-  const x = [{ ...props.value }];
+  const x = [{...props.value}];
   useEffect(() => {}, []);
   const onClick = () => {
     console.log(x.length);
@@ -14,7 +14,7 @@ function Component(props) {
   let y;
   return (
     <div onClick={onClick}>
-      {x.map((item) => {
+      {x.map(item => {
         y = item;
         return <span key={item.id}>{item.text}</span>;
       })}
@@ -25,7 +25,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: { id: 0, text: "Hello!" } }],
+  params: [{value: {id: 0, text: 'Hello!'}}],
   isComponent: true,
 };
 

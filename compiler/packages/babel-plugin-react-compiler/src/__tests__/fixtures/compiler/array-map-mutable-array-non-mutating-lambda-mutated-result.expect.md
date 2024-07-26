@@ -4,7 +4,7 @@
 ```javascript
 function Component(props) {
   const x = [{}];
-  const y = x.map((item) => {
+  const y = x.map(item => {
     return item;
   });
   y[0].flag = true;

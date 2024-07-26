@@ -170,20 +170,8 @@ describe(`onRender`, () => {
         'read current time',
         'read current time',
       ]);
-    } else if (gate(flags => !flags.allowConcurrentByDefault)) {
-      assertLog([
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        'read current time',
-        // TODO: why is there one less in this case?
-      ]);
     } else {
       assertLog([
-        'read current time',
         'read current time',
         'read current time',
         'read current time',

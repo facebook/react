@@ -238,6 +238,7 @@ export function createContainer(
   tag: RootTag,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
+  // TODO: Remove `concurrentUpdatesByDefaultOverride`. It is now ignored.
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
   onUncaughtError: (
@@ -266,7 +267,6 @@ export function createContainer(
     initialChildren,
     hydrationCallbacks,
     isStrictMode,
-    concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onUncaughtError,
     onCaughtError,
@@ -284,6 +284,7 @@ export function createHydrationContainer(
   tag: RootTag,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
+  // TODO: Remove `concurrentUpdatesByDefaultOverride`. It is now ignored.
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
   onUncaughtError: (
@@ -312,7 +313,6 @@ export function createHydrationContainer(
     initialChildren,
     hydrationCallbacks,
     isStrictMode,
-    concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onUncaughtError,
     onCaughtError,

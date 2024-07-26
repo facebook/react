@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
+import {CompilerError} from '..';
 import {
   BlockId,
   GeneratedSource,
@@ -16,14 +16,14 @@ import {
   assertTerminalSuccessorsExist,
   mergeConsecutiveBlocks,
   reversePostorderBlocks,
-} from "../HIR";
+} from '../HIR';
 import {
   markInstructionIds,
   removeDeadDoWhileStatements,
   removeUnnecessaryTryCatch,
   removeUnreachableForUpdates,
-} from "../HIR/HIRBuilder";
-import { printIdentifier } from "../HIR/PrintHIR";
+} from '../HIR/HIRBuilder';
+import {printIdentifier} from '../HIR/PrintHIR';
 
 /*
  * This pass prunes `maybe-throw` terminals for blocks that can provably *never* throw.
@@ -74,17 +74,17 @@ function pruneMaybeThrowsImpl(fn: HIRFunction): Map<BlockId, BlockId> | null {
   const terminalMapping = new Map<BlockId, BlockId>();
   for (const [_, block] of fn.body.blocks) {
     const terminal = block.terminal;
-    if (terminal.kind !== "maybe-throw") {
+    if (terminal.kind !== 'maybe-throw') {
       continue;
     }
-    const canThrow = block.instructions.some((instr) =>
-      instructionMayThrow(instr)
+    const canThrow = block.instructions.some(instr =>
+      instructionMayThrow(instr),
     );
     if (!canThrow) {
       const source = terminalMapping.get(block.id) ?? block.id;
       terminalMapping.set(terminal.continuation, source);
       block.terminal = {
-        kind: "goto",
+        kind: 'goto',
         block: terminal.continuation,
         variant: GotoVariant.Break,
         id: terminal.id,
@@ -97,9 +97,9 @@ function pruneMaybeThrowsImpl(fn: HIRFunction): Map<BlockId, BlockId> | null {
 
 function instructionMayThrow(instr: Instruction): boolean {
   switch (instr.value.kind) {
-    case "Primitive":
-    case "ArrayExpression":
-    case "ObjectExpression": {
+    case 'Primitive':
+    case 'ArrayExpression':
+    case 'ObjectExpression': {
       return false;
     }
     default: {
