@@ -1,8 +1,8 @@
-import * as React from "react";
-import { useContext } from "react";
-import { mutate } from "shared-runtime";
+import * as React from 'react';
+import {useContext} from 'react';
+import {mutate} from 'shared-runtime';
 
-const FooContext = React.createContext({ current: null });
+const FooContext = React.createContext({current: null});
 
 function Component(props) {
   const Foo = useContext(FooContext);
@@ -18,5 +18,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ children: <div>Hello</div> }],
+  params: [{children: <div>Hello</div>}],
 };

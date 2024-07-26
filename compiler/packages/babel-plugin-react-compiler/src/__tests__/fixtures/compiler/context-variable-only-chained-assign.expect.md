@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { identity, invoke } from "shared-runtime";
+import {identity, invoke} from 'shared-runtime';
 
 function foo() {
   let x = 2;

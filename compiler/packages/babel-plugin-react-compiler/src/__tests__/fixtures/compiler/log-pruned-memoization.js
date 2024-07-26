@@ -1,11 +1,11 @@
 // @logger
-import { createContext, use, useState } from "react";
+import {createContext, use, useState} from 'react';
 import {
   Stringify,
   identity,
   makeObject_Primitives,
   useHook,
-} from "shared-runtime";
+} from 'shared-runtime';
 
 function Component() {
   const w = use(Context);

@@ -3,9 +3,9 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
-function Component({ propA, propB }) {
+function Component({propA, propB}) {
   return useMemo(() => {
     if (propA) {
       return {
@@ -17,7 +17,7 @@ function Component({ propA, propB }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ propA: 1, propB: { x: { y: [] } } }],
+  params: [{propA: 1, propB: {x: {y: []}}}],
 };
 
 ```

@@ -9,13 +9,14 @@ function TypeAliasUsedAsAnnotation() {
   const fun = (f: Foo) => {
     console.log(f);
   };
-  fun("hello, world");
+  fun('hello, world');
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: TypeAliasUsedAsAnnotation,
   params: [],
 };
+
 ```
 
 ## Code

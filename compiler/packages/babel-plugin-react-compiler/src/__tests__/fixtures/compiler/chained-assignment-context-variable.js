@@ -1,4 +1,4 @@
-import { makeArray } from "shared-runtime";
+import {makeArray} from 'shared-runtime';
 
 function Component() {
   let x,

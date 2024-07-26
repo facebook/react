@@ -8,9 +8,6 @@ jest.mock('shared/ReactFeatureFlags', () => {
   );
   const actual = jest.requireActual('shared/forks/ReactFeatureFlags.www');
 
-  // This flag is only used by tests, it should never be set elsewhere.
-  actual.forceConcurrentByDefaultForTesting = !__VARIANT__;
-
   // Flags that aren't currently used, but we still want to force variants to keep the
   // code live.
   actual.disableInputAttributeSyncing = __VARIANT__;

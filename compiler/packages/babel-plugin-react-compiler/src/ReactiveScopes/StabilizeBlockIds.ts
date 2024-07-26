@@ -4,9 +4,9 @@ import {
   ReactiveScopeBlock,
   ReactiveTerminalStatement,
   makeBlockId,
-} from "../HIR";
-import { getOrInsertDefault } from "../Utils/utils";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR';
+import {getOrInsertDefault} from '../Utils/utils';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 export function stabilizeBlockIds(fn: ReactiveFunction): void {
   const referenced: Set<BlockId> = new Set();
@@ -22,7 +22,7 @@ export function stabilizeBlockIds(fn: ReactiveFunction): void {
 
 class CollectReferencedLabels extends ReactiveFunctionVisitor<Set<BlockId>> {
   override visitScope(scope: ReactiveScopeBlock, state: Set<BlockId>): void {
-    const { earlyReturnValue } = scope.scope;
+    const {earlyReturnValue} = scope.scope;
     if (earlyReturnValue != null) {
       state.add(earlyReturnValue.label);
     }
@@ -30,7 +30,7 @@ class CollectReferencedLabels extends ReactiveFunctionVisitor<Set<BlockId>> {
   }
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    state: Set<BlockId>
+    state: Set<BlockId>,
   ): void {
     if (stmt.label != null) {
       if (!stmt.label.implicit) {
@@ -44,14 +44,14 @@ class CollectReferencedLabels extends ReactiveFunctionVisitor<Set<BlockId>> {
 class RewriteBlockIds extends ReactiveFunctionVisitor<Map<BlockId, BlockId>> {
   override visitScope(
     scope: ReactiveScopeBlock,
-    state: Map<BlockId, BlockId>
+    state: Map<BlockId, BlockId>,
   ): void {
-    const { earlyReturnValue } = scope.scope;
+    const {earlyReturnValue} = scope.scope;
     if (earlyReturnValue != null) {
       const rewrittenId = getOrInsertDefault(
         state,
         earlyReturnValue.label,
-        state.size
+        state.size,
       );
       earlyReturnValue.label = makeBlockId(rewrittenId);
     }
@@ -59,7 +59,7 @@ class RewriteBlockIds extends ReactiveFunctionVisitor<Map<BlockId, BlockId>> {
   }
   override visitTerminal(
     stmt: ReactiveTerminalStatement,
-    state: Map<BlockId, BlockId>
+    state: Map<BlockId, BlockId>,
   ): void {
     if (stmt.label != null) {
       const rewrittenId = getOrInsertDefault(state, stmt.label.id, state.size);
@@ -67,11 +67,11 @@ class RewriteBlockIds extends ReactiveFunctionVisitor<Map<BlockId, BlockId>> {
     }
 
     const terminal = stmt.terminal;
-    if (terminal.kind === "break" || terminal.kind === "continue") {
+    if (terminal.kind === 'break' || terminal.kind === 'continue') {
       const rewrittenId = getOrInsertDefault(
         state,
         terminal.target,
-        state.size
+        state.size,
       );
       terminal.target = makeBlockId(rewrittenId);
     }

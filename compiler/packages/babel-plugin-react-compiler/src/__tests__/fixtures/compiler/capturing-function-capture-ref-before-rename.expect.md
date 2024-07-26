@@ -3,7 +3,7 @@
 
 ```javascript
 function component(a, b) {
-  let z = { a };
+  let z = {a};
   (function () {
     mutate(z);
   })();
@@ -11,8 +11,8 @@ function component(a, b) {
 
   {
     // z is shadowed & renamed but the lambda is unaffected.
-    let z = { b };
-    y = { y, z };
+    let z = {b};
+    y = {y, z};
   }
   return y;
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import {useState, useMemo} from 'react';
 
 function Component(props) {
   const [x] = useState(0);

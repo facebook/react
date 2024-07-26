@@ -3,7 +3,7 @@
 
 ```javascript
 function component(a) {
-  let t = { t: a };
+  let t = {t: a};
   let z = +t.t;
   let q = -t.t;
   let p = void t.t;
@@ -11,13 +11,13 @@ function component(a) {
   let m = !t.t;
   let e = ~t.t;
   let f = typeof t.t;
-  return { z, p, q, n, m, e, f };
+  return {z, p, q, n, m, e, f};
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };
 
 ```

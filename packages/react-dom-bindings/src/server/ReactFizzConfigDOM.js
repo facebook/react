@@ -515,8 +515,8 @@ export function createRenderState(
           typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
             ? undefined
             : scriptConfig.crossOrigin === 'use-credentials'
-            ? 'use-credentials'
-            : '';
+              ? 'use-credentials'
+              : '';
       }
 
       preloadBootstrapScriptOrModule(resumableState, renderState, src, props);
@@ -567,8 +567,8 @@ export function createRenderState(
           typeof scriptConfig === 'string' || scriptConfig.crossOrigin == null
             ? undefined
             : scriptConfig.crossOrigin === 'use-credentials'
-            ? 'use-credentials'
-            : '';
+              ? 'use-credentials'
+              : '';
       }
 
       preloadBootstrapScriptOrModule(resumableState, renderState, src, props);
@@ -736,8 +736,8 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
     namespaceURI === 'http://www.w3.org/2000/svg'
       ? SVG_MODE
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
-      ? MATHML_MODE
-      : ROOT_HTML_MODE;
+        ? MATHML_MODE
+        : ROOT_HTML_MODE;
   return createFormatContext(insertionMode, null, NO_SCOPE);
 }
 
@@ -2493,8 +2493,8 @@ function pushLink(
               props.onLoad && props.onError
                 ? '`onLoad` and `onError` props'
                 : props.onLoad
-                ? '`onLoad` prop'
-                : '`onError` prop';
+                  ? '`onLoad` prop'
+                  : '`onError` prop';
             console.error(
               'React encountered a `<link rel="stylesheet" .../>` with a `precedence` prop and %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.',
               propDescription,
@@ -2669,8 +2669,8 @@ function pushStyle(
           typeof child === 'function'
             ? 'a Function'
             : typeof child === 'symbol'
-            ? 'a Sybmol'
-            : 'an Array';
+              ? 'a Sybmol'
+              : 'an Array';
         console.error(
           'React expect children of <style> tags to be a string, number, or object with a `toString` method but found %s instead. ' +
             'In browsers style Elements can only have `Text` Nodes as children.',
@@ -3337,8 +3337,8 @@ function pushScriptImpl(
         typeof children === 'number'
           ? 'a number for children'
           : Array.isArray(children)
-          ? 'an array for children'
-          : 'something unexpected for children';
+            ? 'an array for children'
+            : 'something unexpected for children';
       console.error(
         'A script element was rendered with %s. If script element has children it must be a single string.' +
           ' Consider using dangerouslySetInnerHTML or passing a plain string as children.',
@@ -5436,8 +5436,8 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
       crossOrigin === 'use-credentials'
         ? 'credentials'
         : typeof crossOrigin === 'string'
-        ? 'anonymous'
-        : 'default';
+          ? 'anonymous'
+          : 'default';
     const key = getResourceKey(href);
     if (!resumableState.connectResources[bucket].hasOwnProperty(key)) {
       resumableState.connectResources[bucket][key] = EXISTS;

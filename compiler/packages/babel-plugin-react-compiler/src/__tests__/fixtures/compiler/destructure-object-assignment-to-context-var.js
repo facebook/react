@@ -1,16 +1,16 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(props) {
   let x;
-  ({ x } = props);
+  ({x} = props);
   const foo = () => {
     x = identity(props.x);
   };
   foo();
-  return { x };
+  return {x};
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ x: 42 }],
+  params: [{x: 42}],
 };

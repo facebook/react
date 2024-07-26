@@ -7,7 +7,7 @@ function useArray(items: Array<number>) {
   // With type information we know that the callback cannot escape
   // and does not need to be memoized, only the result needs to be
   // memoized:
-  return items.filter((x) => x !== 0);
+  return items.filter(x => x !== 0);
 }
 
 export const FIXTURE_ENTRYPOINT = {

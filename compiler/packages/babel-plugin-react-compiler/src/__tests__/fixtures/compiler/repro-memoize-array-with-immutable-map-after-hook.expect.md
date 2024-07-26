@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useEffect, useState } from "react";
+import {useEffect, useState} from 'react';
 
 function Component(props) {
   const x = [props.value];
@@ -12,7 +12,7 @@ function Component(props) {
   };
   return (
     <div onClick={onClick}>
-      {x.map((item) => {
+      {x.map(item => {
         return <span key={item}>{item}</span>;
       })}
     </div>
@@ -21,7 +21,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
   isComponent: true,
 };
 

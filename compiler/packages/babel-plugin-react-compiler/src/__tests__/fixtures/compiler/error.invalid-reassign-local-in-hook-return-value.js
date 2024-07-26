@@ -1,6 +1,6 @@
 function useFoo() {
   let x = 0;
-  return (value) => {
+  return value => {
     x = value;
   };
 }

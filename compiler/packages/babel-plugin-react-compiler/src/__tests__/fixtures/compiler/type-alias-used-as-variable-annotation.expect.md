@@ -6,11 +6,11 @@
 type Bar = string;
 function TypeAliasUsedAsVariableAnnotation() {
   type Foo = Bar;
-  const fun = (f) => {
+  const fun = f => {
     let g: Foo = f;
     console.log(g);
   };
-  fun("hello, world");
+  fun('hello, world');
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import chalk from "chalk";
+import chalk from 'chalk';
 
 const JsFileExtensionRE = /(js|ts|jsx|tsx)$/;
 const NextConfigFileRE = /^next\.config\.(js|mjs)$/;
@@ -28,9 +28,9 @@ export default {
 
   report(): void {
     if (StrictModeUsage) {
-      console.log(chalk.green("StrictMode usage found."));
+      console.log(chalk.green('StrictMode usage found.'));
     } else {
-      console.log(chalk.red("StrictMode usage not found."));
+      console.log(chalk.red('StrictMode usage not found.'));
     }
   },
 };

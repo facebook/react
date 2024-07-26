@@ -16,7 +16,7 @@
 // return x;
 // ```
 
-import { CONST_FALSE, identity } from "shared-runtime";
+import {CONST_FALSE, identity} from 'shared-runtime';
 
 function useReactiveDepsInCondScope(props) {
   let x = {};
