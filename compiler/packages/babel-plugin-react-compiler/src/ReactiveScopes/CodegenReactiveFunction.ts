@@ -1437,7 +1437,11 @@ function codegenDependency(
 ): t.Expression {
   let object: t.Expression = convertIdentifier(dependency.identifier);
   if (dependency.path !== null) {
-    for (const path of dependency.path) {
+    let depPath = dependency.path;
+    if (cx.env.config.enableChangeDetection != null && depPath.length > 0) {
+      depPath = depPath.slice(0, -1)
+    }
+    for (const path of depPath) {
       object = t.memberExpression(object, t.identifier(path));
     }
   }
