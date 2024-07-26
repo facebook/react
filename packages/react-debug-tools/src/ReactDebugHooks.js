@@ -37,7 +37,7 @@ import {
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 import hasOwnProperty from 'shared/hasOwnProperty';
-import type {ContextDependencyWithCompare} from '../../react-reconciler/src/ReactInternalTypes';
+import type {ContextDependencyWithSelect} from '../../react-reconciler/src/ReactInternalTypes';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals;
 
@@ -159,7 +159,7 @@ let currentHook: null | Hook = null;
 let currentContextDependency:
   | null
   | ContextDependency<mixed>
-  | ContextDependencyWithCompare<mixed, mixed> = null;
+  | ContextDependencyWithSelect<mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;

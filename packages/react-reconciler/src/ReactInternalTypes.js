@@ -63,29 +63,23 @@ export type HookType =
 
 export type ContextDependency<C> = {
   context: ReactContext<C>,
-  next:
-    | ContextDependency<mixed>
-    | ContextDependencyWithCompare<mixed, mixed>
-    | null,
+  next: ContextDependency<mixed> | ContextDependencyWithSelect<mixed> | null,
   memoizedValue: C,
 };
 
-export type ContextDependencyWithCompare<C, S> = {
+export type ContextDependencyWithSelect<C> = {
   context: ReactContext<C>,
-  next:
-    | ContextDependency<mixed>
-    | ContextDependencyWithCompare<mixed, mixed>
-    | null,
+  next: ContextDependency<mixed> | ContextDependencyWithSelect<mixed> | null,
   memoizedValue: C,
-  compare: C => Array<mixed>,
-  lastComparedValue: ?Array<mixed>,
+  select: C => Array<mixed>,
+  lastSelectedValue: ?Array<mixed>,
 };
 
 export type Dependencies = {
   lanes: Lanes,
   firstContext:
     | ContextDependency<mixed>
-    | ContextDependencyWithCompare<mixed, mixed>
+    | ContextDependencyWithSelect<mixed>
     | null,
   ...
 };
@@ -402,7 +396,7 @@ export type Dispatcher = {
   ): [S, Dispatch<A>],
   unstable_useContextWithBailout?: <T>(
     context: ReactContext<T>,
-    compare: (T => Array<mixed>) | null,
+    select: (T => Array<mixed>) | null,
   ) => T,
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},

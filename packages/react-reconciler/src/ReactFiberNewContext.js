@@ -12,7 +12,7 @@ import type {
   Fiber,
   ContextDependency,
   Dependencies,
-  ContextDependencyWithCompare,
+  ContextDependencyWithSelect,
 } from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack';
 import type {Lanes} from './ReactFiberLane';
@@ -75,7 +75,7 @@ if (__DEV__) {
 let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency:
   | ContextDependency<mixed>
-  | ContextDependencyWithCompare<mixed, mixed>
+  | ContextDependencyWithSelect<mixed>
   | null = null;
 let lastFullyObservedContext: ReactContext<any> | null = null;
 
@@ -408,15 +408,15 @@ function propagateContextChanges<T>(
           // Check if the context matches.
           if (dependency.context === context) {
             if (enableContextProfiling) {
-              const compare = dependency.compare;
-              if (compare != null && dependency.lastComparedValue != null) {
+              const select = dependency.select;
+              if (select != null && dependency.lastSelectedValue != null) {
                 const newValue = isPrimaryRenderer
                   ? dependency.context._currentValue
                   : dependency.context._currentValue2;
                 if (
-                  !checkIfComparedContextValuesChanged(
-                    dependency.lastComparedValue,
-                    compare(newValue),
+                  !checkIfSelectedContextValuesChanged(
+                    dependency.lastSelectedValue,
+                    select(newValue),
                   )
                 ) {
                   // Compared value hasn't changed. Bail out early.
@@ -663,7 +663,7 @@ function propagateParentContextChanges(
   workInProgress.flags |= DidPropagateContext;
 }
 
-function checkIfComparedContextValuesChanged(
+function checkIfSelectedContextValuesChanged(
   oldComparedValue: Array<mixed>,
   newComparedValue: Array<mixed>,
 ): boolean {
@@ -706,13 +706,13 @@ export function checkIfContextChanged(
     const oldValue = dependency.memoizedValue;
     if (
       enableContextProfiling &&
-      dependency.compare != null &&
-      dependency.lastComparedValue != null
+      dependency.select != null &&
+      dependency.lastSelectedValue != null
     ) {
       if (
-        checkIfComparedContextValuesChanged(
-          dependency.lastComparedValue,
-          dependency.compare(newValue),
+        checkIfSelectedContextValuesChanged(
+          dependency.lastSelectedValue,
+          dependency.select(newValue),
         )
       ) {
         return true;
@@ -762,7 +762,7 @@ export function readContextAndCompare<C>(
     throw new Error('Not implemented.');
   }
 
-  return readContextForConsumer_withCompare(
+  return readContextForConsumer_withSelect(
     currentlyRenderingFiber,
     context,
     compare,
@@ -796,10 +796,10 @@ export function readContextDuringReconciliation<T>(
   return readContextForConsumer(consumer, context);
 }
 
-function readContextForConsumer_withCompare<C, S>(
+function readContextForConsumer_withSelect<C>(
   consumer: Fiber | null,
   context: ReactContext<C>,
-  compare: C => Array<mixed>,
+  select: C => Array<mixed>,
 ): C {
   const value = isPrimaryRenderer
     ? context._currentValue
@@ -812,8 +812,8 @@ function readContextForConsumer_withCompare<C, S>(
       context: ((context: any): ReactContext<mixed>),
       memoizedValue: value,
       next: null,
-      compare: ((compare: any): (context: mixed) => Array<mixed>),
-      lastComparedValue: compare(value),
+      select: ((select: any): (context: mixed) => Array<mixed>),
+      lastSelectedValue: select(value),
     };
 
     if (lastContextDependency === null) {
