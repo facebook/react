@@ -335,4 +335,67 @@ describe('ReactDOMFizzStatic', () => {
     });
     expect(getVisibleChildren(container)).toEqual(undefined);
   });
+
+  // @gate experimental
+  it('will prerender Suspense fallbacks before children', async () => {
+    const values = [];
+    function Indirection({children}) {
+      values.push(children);
+      return children;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense
+            fallback={
+              <div>
+                <Indirection>outer loading...</Indirection>
+              </div>
+            }>
+            <Suspense
+              fallback={
+                <div>
+                  <Indirection>first inner loading...</Indirection>
+                </div>
+              }>
+              <div>
+                <Indirection>hello world</Indirection>
+              </div>
+            </Suspense>
+            <Suspense
+              fallback={
+                <div>
+                  <Indirection>second inner loading...</Indirection>
+                </div>
+              }>
+              <div>
+                <Indirection>goodbye world</Indirection>
+              </div>
+            </Suspense>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />);
+
+    expect(values).toEqual([
+      'outer loading...',
+      'first inner loading...',
+      'second inner loading...',
+      'hello world',
+      'goodbye world',
+    ]);
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>hello world</div>
+        <div>goodbye world</div>
+      </div>,
+    );
+  });
 });
