@@ -31,7 +31,7 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
 function printSummary(commit) {
   const commandPath = relative(
     process.env.PWD,
-    join(__dirname, '../download-experimental-build-ghaction.js')
+    join(__dirname, '../download-experimental-build.js')
   );
 
   clear();
