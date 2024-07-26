@@ -3,7 +3,7 @@
 
 ```javascript
 // @flow @enableUseTypeAnnotations
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 function Component(props: {id: number}) {
   const x = identity(props.id);

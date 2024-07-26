@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 
-function Component({ id }) {
+function Component({id}) {
   const bar = (() => {})();
 
   return (

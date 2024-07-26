@@ -3,8 +3,8 @@
 
 ```javascript
 // @compilationMode(infer) @enableResetCacheOnSourceFileChanges
-import { useEffect, useMemo, useState } from "react";
-import { ValidateMemoization } from "shared-runtime";
+import {useEffect, useMemo, useState} from 'react';
+import {ValidateMemoization} from 'shared-runtime';
 
 let pretendConst = 0;
 
@@ -30,7 +30,7 @@ function Component() {
   // as if value was reactive. However, we don't want to actually treat globals as
   // reactive (though that would be trivial) since it could change compilation too much
   // btw dev and prod. Instead, we should reset the cache via a secondary mechanism.
-  const value = useMemo(() => [{ pretendConst }], [pretendConst]);
+  const value = useMemo(() => [{pretendConst}], [pretendConst]);
 
   return <ValidateMemoization inputs={[pretendConst]} output={value} />;
 }
@@ -63,12 +63,12 @@ function unsafeUpdateConst() {
 function Component() {
   const $ = _c(3);
   if (
-    $[0] !== "4bf230b116dd95f382060ad17350e116395e41ed757e51fd074ea0b4ed281272"
+    $[0] !== "8d7015668f857996c3d895a7a90e3e16b8a791d5b9cd13f2c76e1c254aeedebb"
   ) {
     for (let $i = 0; $i < 3; $i += 1) {
       $[$i] = Symbol.for("react.memo_cache_sentinel");
     }
-    $[0] = "4bf230b116dd95f382060ad17350e116395e41ed757e51fd074ea0b4ed281272";
+    $[0] = "8d7015668f857996c3d895a7a90e3e16b8a791d5b9cd13f2c76e1c254aeedebb";
   }
   useState(_temp);
 

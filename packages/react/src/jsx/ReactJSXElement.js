@@ -23,7 +23,6 @@ import {
   enableRefAsProp,
   disableStringRefs,
   disableDefaultPropsExceptForClasses,
-  enableFastJSX,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
@@ -82,9 +81,7 @@ if (__DEV__) {
   didWarnAboutElementRef = {};
 }
 
-const enableFastJSXWithStringRefs = enableFastJSX && enableRefAsProp;
-const enableFastJSXWithoutStringRefs =
-  enableFastJSXWithStringRefs && disableStringRefs;
+const enableFastJSXWithoutStringRefs = enableRefAsProp && disableStringRefs;
 
 function hasValidRef(config) {
   if (__DEV__) {
@@ -416,7 +413,7 @@ export function jsxProd(type, config, maybeKey) {
   let props;
   if (
     (enableFastJSXWithoutStringRefs ||
-      (enableFastJSXWithStringRefs && !('ref' in config))) &&
+      (enableRefAsProp && !('ref' in config))) &&
     !('key' in config)
   ) {
     // If key was not spread in, we can reuse the original props object. This
@@ -701,7 +698,7 @@ function jsxDEVImpl(
     let props;
     if (
       (enableFastJSXWithoutStringRefs ||
-        (enableFastJSXWithStringRefs && !('ref' in config))) &&
+        (enableRefAsProp && !('ref' in config))) &&
       !('key' in config)
     ) {
       // If key was not spread in, we can reuse the original props object. This

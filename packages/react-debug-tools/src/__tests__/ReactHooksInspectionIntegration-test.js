@@ -182,14 +182,10 @@ describe('ReactHooksInspectionIntegration', () => {
       React.useLayoutEffect(effect);
       React.useEffect(effect);
 
-      React.useImperativeHandle(
-        outsideRef,
-        () => {
-          // Return a function so that jest treats them as non-equal.
-          return function Instance() {};
-        },
-        [],
-      );
+      React.useImperativeHandle(outsideRef, () => {
+        // Return a function so that jest treats them as non-equal.
+        return function Instance() {};
+      }, []);
 
       React.useMemo(() => state1 + state2, [state1]);
 
@@ -472,14 +468,10 @@ describe('ReactHooksInspectionIntegration', () => {
       React.useLayoutEffect(effect);
       React.useEffect(effect);
 
-      React.useImperativeHandle(
-        outsideRef,
-        () => {
-          // Return a function so that jest treats them as non-equal.
-          return function Instance() {};
-        },
-        [],
-      );
+      React.useImperativeHandle(outsideRef, () => {
+        // Return a function so that jest treats them as non-equal.
+        return function Instance() {};
+      }, []);
 
       React.useMemo(() => state1 + state2, [state1]);
 

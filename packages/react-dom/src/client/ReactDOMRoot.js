@@ -16,10 +16,7 @@ import type {
 import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {
-  allowConcurrentByDefault,
-  enableAsyncActions,
-} from 'shared/ReactFeatureFlags';
+import {enableAsyncActions} from 'shared/ReactFeatureFlags';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -29,7 +26,6 @@ export type RootType = {
 
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
-  unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onUncaughtError?: (
@@ -55,7 +51,6 @@ export type HydrateRootOptions = {
   onDeleted?: (suspenseNode: Comment) => void,
   // Options for all roots
   unstable_strictMode?: boolean,
-  unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onUncaughtError?: (
@@ -173,8 +168,8 @@ export function createRoot(
 
   warnIfReactDOMContainerInDEV(container);
 
+  const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
-  let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   let onUncaughtError = defaultOnUncaughtError;
   let onCaughtError = defaultOnCaughtError;
@@ -205,12 +200,6 @@ export function createRoot(
     }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
-    }
-    if (
-      allowConcurrentByDefault &&
-      options.unstable_concurrentUpdatesByDefault === true
-    ) {
-      concurrentUpdatesByDefaultOverride = true;
     }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
@@ -289,8 +278,8 @@ export function hydrateRoot(
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
 
+  const concurrentUpdatesByDefaultOverride = false;
   let isStrictMode = false;
-  let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   let onUncaughtError = defaultOnUncaughtError;
   let onCaughtError = defaultOnCaughtError;
@@ -300,12 +289,6 @@ export function hydrateRoot(
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
-    }
-    if (
-      allowConcurrentByDefault &&
-      options.unstable_concurrentUpdatesByDefault === true
-    ) {
-      concurrentUpdatesByDefaultOverride = true;
     }
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;

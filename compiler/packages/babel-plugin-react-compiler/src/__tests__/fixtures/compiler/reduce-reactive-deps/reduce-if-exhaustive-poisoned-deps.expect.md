@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-function useFoo({ input, inputHasAB, inputHasABC }) {
+function useFoo({input, inputHasAB, inputHasABC}) {
   const x = [];
   if (!inputHasABC) {
     x.push(identity(input.a));
@@ -20,7 +20,7 @@ function useFoo({ input, inputHasAB, inputHasABC }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
-  params: [{ input: { b: 1 }, inputHasAB: false, inputHasABC: false }],
+  params: [{input: {b: 1}, inputHasAB: false, inputHasABC: false}],
 };
 
 ```

@@ -5,27 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
+import * as t from '@babel/types';
 import {
   CompilerError,
   CompilerErrorDetail,
   ErrorSeverity,
-} from "../CompilerError";
-import { computeUnconditionalBlocks } from "../HIR/ComputeUnconditionalBlocks";
-import { isHookName } from "../HIR/Environment";
+} from '../CompilerError';
+import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
+import {isHookName} from '../HIR/Environment';
 import {
   HIRFunction,
   IdentifierId,
   Place,
   SourceLocation,
   getHookKind,
-} from "../HIR/HIR";
+} from '../HIR/HIR';
 import {
   eachInstructionLValue,
   eachInstructionOperand,
   eachTerminalOperand,
-} from "../HIR/visitors";
-import { assertExhaustive } from "../Utils/utils";
+} from '../HIR/visitors';
+import {assertExhaustive} from '../Utils/utils';
 
 /**
  * Represents the possible kinds of value which may be stored at a given Place during
@@ -34,7 +34,7 @@ import { assertExhaustive } from "../Utils/utils";
  */
 enum Kind {
   // A potential/known hook which was already used in an invalid way
-  Error = "Error",
+  Error = 'Error',
 
   /*
    * A known hook. Sources include:
@@ -44,7 +44,7 @@ enum Kind {
    * - PropertyLoad, ComputedLoad, and Destructuring instructions
    *   where the object is a Global and the property name is hook-like
    */
-  KnownHook = "KnownHook",
+  KnownHook = 'KnownHook',
 
   /*
    * A potential hook. Sources include:
@@ -53,13 +53,13 @@ enum Kind {
    *   where the object is a potential hook or the property name
    *   is hook-like
    */
-  PotentialHook = "PotentialHook",
+  PotentialHook = 'PotentialHook',
 
   // LoadGlobal values whose type was not inferred as a hook
-  Global = "Global",
+  Global = 'Global',
 
   // All other values, ie local variables
-  Local = "Local",
+  Local = 'Local',
 }
 
 function joinKinds(a: Kind, b: Kind): Kind {
@@ -95,9 +95,9 @@ export function validateHooksUsage(fn: HIRFunction): void {
 
   function recordError(
     loc: SourceLocation,
-    errorDetail: CompilerErrorDetail
+    errorDetail: CompilerErrorDetail,
   ): void {
-    if (typeof loc === "symbol") {
+    if (typeof loc === 'symbol') {
       errors.pushErrorDetail(errorDetail);
     } else {
       errorsByPlace.set(loc, errorDetail);
@@ -109,9 +109,9 @@ export function validateHooksUsage(fn: HIRFunction): void {
     setKind(place, Kind.Error);
 
     const reason =
-      "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)";
+      'Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)';
     const previousError =
-      typeof place.loc !== "symbol" ? errorsByPlace.get(place.loc) : undefined;
+      typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
 
     /*
      * In some circumstances such as optional calls, we may first encounter a "hook may not be referenced as normal values" error.
@@ -126,41 +126,41 @@ export function validateHooksUsage(fn: HIRFunction): void {
           loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
           suggestions: null,
-        })
+        }),
       );
     }
   }
   function recordInvalidHookUsageError(place: Place): void {
     const previousError =
-      typeof place.loc !== "symbol" ? errorsByPlace.get(place.loc) : undefined;
+      typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
     if (previousError === undefined) {
       recordError(
         place.loc,
         new CompilerErrorDetail({
           description: null,
           reason:
-            "Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values",
+            'Hooks may not be referenced as normal values, they must be called. See https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values',
           loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
           suggestions: null,
-        })
+        }),
       );
     }
   }
   function recordDynamicHookUsageError(place: Place): void {
     const previousError =
-      typeof place.loc !== "symbol" ? errorsByPlace.get(place.loc) : undefined;
+      typeof place.loc !== 'symbol' ? errorsByPlace.get(place.loc) : undefined;
     if (previousError === undefined) {
       recordError(
         place.loc,
         new CompilerErrorDetail({
           description: null,
           reason:
-            "Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks",
+            'Hooks must be the same function on every render, but this value may change over time to a different function. See https://react.dev/reference/rules/react-calls-components-and-hooks#dont-dynamically-use-hooks',
           loc: place.loc,
           severity: ErrorSeverity.InvalidReact,
           suggestions: null,
-        })
+        }),
       );
     }
   }
@@ -190,7 +190,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
   }
 
   for (const param of fn.params) {
-    const place = param.kind === "Identifier" ? param : param.place;
+    const place = param.kind === 'Identifier' ? param : param.place;
     const kind = getKindForPlace(place);
     setKind(place, kind);
   }
@@ -217,7 +217,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
     }
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
-        case "LoadGlobal": {
+        case 'LoadGlobal': {
           /*
            * Globals are the one source of known hooks: they are either
            * directly a hook, or infer a Global kind from which knownhooks
@@ -230,31 +230,31 @@ export function validateHooksUsage(fn: HIRFunction): void {
           }
           break;
         }
-        case "LoadContext":
-        case "LoadLocal": {
+        case 'LoadContext':
+        case 'LoadLocal': {
           visitPlace(instr.value.place);
           const kind = getKindForPlace(instr.value.place);
           setKind(instr.lvalue, kind);
           break;
         }
-        case "StoreLocal":
-        case "StoreContext": {
+        case 'StoreLocal':
+        case 'StoreContext': {
           visitPlace(instr.value.value);
           const kind = joinKinds(
             getKindForPlace(instr.value.value),
-            getKindForPlace(instr.value.lvalue.place)
+            getKindForPlace(instr.value.lvalue.place),
           );
           setKind(instr.value.lvalue.place, kind);
           setKind(instr.lvalue, kind);
           break;
         }
-        case "ComputedLoad": {
+        case 'ComputedLoad': {
           visitPlace(instr.value.object);
           const kind = getKindForPlace(instr.value.object);
           setKind(instr.lvalue, joinKinds(getKindForPlace(instr.lvalue), kind));
           break;
         }
-        case "PropertyLoad": {
+        case 'PropertyLoad': {
           const objectKind = getKindForPlace(instr.value.object);
           const isHookProperty = isHookName(instr.value.property);
           let kind: Kind;
@@ -311,7 +311,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           setKind(instr.lvalue, kind);
           break;
         }
-        case "CallExpression": {
+        case 'CallExpression': {
           const calleeKind = getKindForPlace(instr.value.callee);
           const isHookCallee =
             calleeKind === Kind.KnownHook || calleeKind === Kind.PotentialHook;
@@ -331,7 +331,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           }
           break;
         }
-        case "MethodCall": {
+        case 'MethodCall': {
           const calleeKind = getKindForPlace(instr.value.property);
           const isHookCallee =
             calleeKind === Kind.KnownHook || calleeKind === Kind.PotentialHook;
@@ -351,7 +351,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
           }
           break;
         }
-        case "Destructure": {
+        case 'Destructure': {
           visitPlace(instr.value.value);
           const objectKind = getKindForPlace(instr.value.value);
           for (const lvalue of eachInstructionLValue(instr)) {
@@ -383,7 +383,7 @@ export function validateHooksUsage(fn: HIRFunction): void {
               default: {
                 assertExhaustive(
                   objectKind,
-                  `Unexpected kind \`${objectKind}\``
+                  `Unexpected kind \`${objectKind}\``,
                 );
               }
             }
@@ -391,8 +391,8 @@ export function validateHooksUsage(fn: HIRFunction): void {
           }
           break;
         }
-        case "ObjectMethod":
-        case "FunctionExpression": {
+        case 'ObjectMethod':
+        case 'FunctionExpression': {
           visitFunctionExpression(errors, instr.value.loweredFunc.func);
           break;
         }
@@ -429,15 +429,15 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
-        case "ObjectMethod":
-        case "FunctionExpression": {
+        case 'ObjectMethod':
+        case 'FunctionExpression': {
           visitFunctionExpression(errors, instr.value.loweredFunc.func);
           break;
         }
-        case "MethodCall":
-        case "CallExpression": {
+        case 'MethodCall':
+        case 'CallExpression': {
           const callee =
-            instr.value.kind === "CallExpression"
+            instr.value.kind === 'CallExpression'
               ? instr.value.callee
               : instr.value.property;
           const hookKind = getHookKind(fn.env, callee.identifier);
@@ -446,11 +446,11 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
               new CompilerErrorDetail({
                 severity: ErrorSeverity.InvalidReact,
                 reason:
-                  "Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
+                  'Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)',
                 loc: callee.loc,
                 description: `Cannot call ${hookKind} within a function component`,
                 suggestions: null,
-              })
+              }),
             );
           }
           break;

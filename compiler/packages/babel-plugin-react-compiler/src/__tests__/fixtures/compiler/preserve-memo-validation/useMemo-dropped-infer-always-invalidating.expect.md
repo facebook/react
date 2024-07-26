@@ -4,8 +4,8 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo } from "react";
-import { useHook } from "shared-runtime";
+import {useMemo} from 'react';
+import {useHook} from 'shared-runtime';
 
 // useMemo values may not be memoized in Forget output if we
 // infer that their deps always invalidate.

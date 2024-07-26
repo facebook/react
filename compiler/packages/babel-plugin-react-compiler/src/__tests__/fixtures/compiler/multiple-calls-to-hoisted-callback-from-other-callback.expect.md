@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useState } from "react";
+import {useState} from 'react';
 
 function Component(props) {
   const [_state, setState] = useState();
@@ -17,7 +17,7 @@ function Component(props) {
       </>
     );
   };
-  const onClick = (value) => {
+  const onClick = value => {
     setState(value);
   };
 

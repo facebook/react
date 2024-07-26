@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { IntlVariations, IntlViewerContext, init } from "fbt";
-import React, { FunctionComponent } from "react";
+import {IntlVariations, IntlViewerContext, init} from 'fbt';
+import React, {FunctionComponent} from 'react';
 
 /**
  * This file is meant for use by `runner-evaluator` and fixture tests.
@@ -23,11 +23,11 @@ import React, { FunctionComponent } from "react";
  * ```
  */
 
-export type StringKeyedObject = { [key: string]: unknown };
+export type StringKeyedObject = {[key: string]: unknown};
 
-export const CONST_STRING0 = "global string 0";
-export const CONST_STRING1 = "global string 1";
-export const CONST_STRING2 = "global string 2";
+export const CONST_STRING0 = 'global string 0';
+export const CONST_STRING1 = 'global string 1';
+export const CONST_STRING2 = 'global string 2';
 
 export const CONST_NUMBER0 = 0;
 export const CONST_NUMBER1 = 1;
@@ -39,7 +39,7 @@ export const CONST_FALSE = false;
 export function initFbt(): void {
   const viewerContext: IntlViewerContext = {
     GENDER: IntlVariations.GENDER_UNKNOWN,
-    locale: "en_US",
+    locale: 'en_US',
   };
 
   init({
@@ -52,16 +52,16 @@ export function initFbt(): void {
 
 export function mutate(arg: any): void {
   // don't mutate primitive
-  if (arg == null || typeof arg !== "object") {
+  if (arg == null || typeof arg !== 'object') {
     return;
   }
 
   let count: number = 0;
   let key;
   while (true) {
-    key = "wat" + count;
+    key = 'wat' + count;
     if (!Object.hasOwn(arg, key)) {
-      arg[key] = "joe";
+      arg[key] = 'joe';
       return;
     }
     count++;
@@ -75,19 +75,19 @@ export function mutateAndReturn<T>(arg: T): T {
 
 export function mutateAndReturnNewValue<T>(arg: T): string {
   mutate(arg);
-  return "hello!";
+  return 'hello!';
 }
 
 export function setProperty(arg: any, property: any): void {
   // don't mutate primitive
-  if (arg == null || typeof arg !== "object") {
+  if (arg == null || typeof arg !== 'object') {
     return arg;
   }
 
   let count: number = 0;
   let key;
   while (true) {
-    key = "wat" + count;
+    key = 'wat' + count;
     if (!Object.hasOwn(arg, key)) {
       arg[key] = property;
       return arg;
@@ -128,7 +128,7 @@ export function shallowCopy(obj: object): object {
 }
 
 export function makeObject_Primitives(): StringKeyedObject {
-  return { a: 0, b: "value1", c: true };
+  return {a: 0, b: 'value1', c: true};
 }
 
 export function makeArray<T>(...values: Array<T>): Array<T> {
@@ -208,37 +208,37 @@ export function Text(props: {
   value: string;
   children?: Array<React.ReactNode>;
 }): React.ReactElement {
-  return React.createElement("div", null, props.value, props.children);
+  return React.createElement('div', null, props.value, props.children);
 }
 
 export function StaticText1(props: {
   children?: Array<React.ReactNode>;
 }): React.ReactElement {
-  return React.createElement("div", null, "StaticText1", props.children);
+  return React.createElement('div', null, 'StaticText1', props.children);
 }
 
 export function StaticText2(props: {
   children?: Array<React.ReactNode>;
 }): React.ReactElement {
-  return React.createElement("div", null, "StaticText2", props.children);
+  return React.createElement('div', null, 'StaticText2', props.children);
 }
 
 export function RenderPropAsChild(props: {
   items: Array<() => React.ReactNode>;
 }): React.ReactElement {
   return React.createElement(
-    "div",
+    'div',
     null,
-    "HigherOrderComponent",
-    props.items.map((item) => item())
+    'HigherOrderComponent',
+    props.items.map(item => item()),
   );
 }
 
 export function Stringify(props: any): React.ReactElement {
   return React.createElement(
-    "div",
+    'div',
     null,
-    toJSON(props, props?.shouldInvokeFns)
+    toJSON(props, props?.shouldInvokeFns),
   );
 }
 
@@ -249,7 +249,7 @@ export function ValidateMemoization({
   inputs: Array<any>;
   output: any;
 }): React.ReactElement {
-  "use no forget";
+  'use no forget';
   const [previousInputs, setPreviousInputs] = React.useState(inputs);
   const [previousOutput, setPreviousOutput] = React.useState(output);
   if (
@@ -261,13 +261,13 @@ export function ValidateMemoization({
     setPreviousOutput(output);
   } else if (output !== previousOutput) {
     // Else output should be stable
-    throw new Error("Output identity changed but inputs did not");
+    throw new Error('Output identity changed but inputs did not');
   }
-  return React.createElement(Stringify, { inputs, output });
+  return React.createElement(Stringify, {inputs, output});
 }
 
 export function createHookWrapper<TProps, TRet>(
-  useMaybeHook: (props: TProps) => TRet
+  useMaybeHook: (props: TProps) => TRet,
 ): FunctionComponent<TProps> {
   return function Component(props: TProps): React.ReactElement {
     const result = useMaybeHook(props);
@@ -283,27 +283,27 @@ export function toJSON(value: any, invokeFns: boolean = false): string {
   const seen = new Map();
 
   return JSON.stringify(value, (_key: string, val: any) => {
-    if (typeof val === "function") {
+    if (typeof val === 'function') {
       if (val.length === 0 && invokeFns) {
         return {
-          kind: "Function",
+          kind: 'Function',
           result: val(),
         };
       } else {
         return `[[ function params=${val.length} ]]`;
       }
-    } else if (typeof val === "object") {
+    } else if (typeof val === 'object') {
       let id = seen.get(val);
       if (id != null) {
         return `[[ cyclic ref *${id} ]]`;
       } else if (val instanceof Map) {
         return {
-          kind: "Map",
+          kind: 'Map',
           value: Array.from(val.entries()),
         };
       } else if (val instanceof Set) {
         return {
-          kind: "Set",
+          kind: 'Set',
           value: Array.from(val.values()),
         };
       }
@@ -344,6 +344,6 @@ export const ObjectWithHooks = {
 export function useFragment(..._args: Array<any>): object {
   return {
     a: [1, 2, 3],
-    b: { c: { d: 4 } },
+    b: {c: {d: 4}},
   };
 }

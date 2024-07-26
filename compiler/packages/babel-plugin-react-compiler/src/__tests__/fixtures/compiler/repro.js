@@ -3,10 +3,10 @@ function Component(props) {
   const thumbnails = [];
   const baseVideos = getBaseVideos(item);
   useMemo(() => {
-    baseVideos.forEach((video) => {
+    baseVideos.forEach(video => {
       const baseVideo = video.hasBaseVideo;
       if (Boolean(baseVideo)) {
-        thumbnails.push({ extraVideo: true });
+        thumbnails.push({extraVideo: true});
       }
     });
   });

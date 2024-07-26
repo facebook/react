@@ -21,11 +21,11 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true, value: 42 }],
+  params: [{cond: true, value: 42}],
   sequentialRenders: [
-    { cond: true, value: 3.14 },
-    { cond: false, value: 3.14 },
-    { cond: true, value: 42 },
+    {cond: true, value: 3.14},
+    {cond: false, value: 3.14},
+    {cond: true, value: 42},
   ],
 };
 

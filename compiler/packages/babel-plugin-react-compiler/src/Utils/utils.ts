@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath } from "@babel/traverse";
+import {NodePath} from '@babel/traverse';
 
 /*
  * Trigger an exhaustivess check in TypeScript and throw at runtime.
@@ -33,7 +33,7 @@ export function assertExhaustive(_: never, errorMsg: string): never {
 // Modifies @param array in place, retaining only the items where the predicate returns true.
 export function retainWhere<T>(
   array: Array<T>,
-  predicate: (item: T) => boolean
+  predicate: (item: T) => boolean,
 ): void {
   let writeIndex = 0;
   for (let readIndex = 0; readIndex < array.length; readIndex++) {
@@ -47,7 +47,7 @@ export function retainWhere<T>(
 
 export function retainWhere_Set<T>(
   items: Set<T>,
-  predicate: (item: T) => boolean
+  predicate: (item: T) => boolean,
 ): void {
   for (const item of items) {
     if (!predicate(item)) {
@@ -59,7 +59,7 @@ export function retainWhere_Set<T>(
 export function getOrInsertWith<U, V>(
   m: Map<U, V>,
   key: U,
-  makeDefault: () => V
+  makeDefault: () => V,
 ): V {
   if (m.has(key)) {
     return m.get(key) as V;
@@ -73,7 +73,7 @@ export function getOrInsertWith<U, V>(
 export function getOrInsertDefault<U, V>(
   m: Map<U, V>,
   key: U,
-  defaultValue: V
+  defaultValue: V,
 ): V {
   if (m.has(key)) {
     return m.get(key) as V;
@@ -94,13 +94,13 @@ export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
 }
 
 export function nonNull<T extends NonNullable<U>, U>(
-  value: T | null | undefined
+  value: T | null | undefined,
 ): value is T {
   return value != null;
 }
 
 export function hasNode<T>(
-  input: NodePath<T | null | undefined>
+  input: NodePath<T | null | undefined>,
 ): input is NodePath<NonNullable<T>> {
   /*
    * Internal babel is on an older version that does not have hasNode (v7.17)
@@ -112,7 +112,7 @@ export function hasNode<T>(
 
 export function hasOwnProperty<T>(
   obj: T,
-  key: string | number | symbol
+  key: string | number | symbol,
 ): key is keyof T {
   return Object.prototype.hasOwnProperty.call(obj, key);
 }

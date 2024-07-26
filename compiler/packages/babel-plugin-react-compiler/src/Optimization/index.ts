@@ -5,6 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export { constantPropagation } from "./ConstantPropagation";
-export { deadCodeElimination } from "./DeadCodeElimination";
-export { pruneMaybeThrows } from "./PruneMaybeThrows";
+export {constantPropagation} from './ConstantPropagation';
+export {deadCodeElimination} from './DeadCodeElimination';
+export {pruneMaybeThrows} from './PruneMaybeThrows';

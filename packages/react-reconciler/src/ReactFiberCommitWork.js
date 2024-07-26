@@ -213,6 +213,13 @@ import {
 } from './ReactFiberTracingMarkerComponent';
 import {scheduleUpdateOnFiber} from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
+import {
+  callComponentDidMountInDEV,
+  callComponentDidUpdateInDEV,
+  callComponentWillUnmountInDEV,
+  callCreateInDEV,
+  callDestroyInDEV,
+} from './ReactFiberCallUserSpace';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -244,7 +251,12 @@ function shouldProfile(current: Fiber): boolean {
   );
 }
 
-function callComponentWillUnmountWithTimer(current: Fiber, instance: any) {
+// Capture errors so they don't interrupt unmounting.
+function safelyCallComponentWillUnmount(
+  current: Fiber,
+  nearestMountedAncestor: Fiber | null,
+  instance: any,
+) {
   instance.props = resolveClassComponentProps(
     current.type,
     current.memoizedProps,
@@ -252,27 +264,27 @@ function callComponentWillUnmountWithTimer(current: Fiber, instance: any) {
   );
   instance.state = current.memoizedState;
   if (shouldProfile(current)) {
-    try {
-      startLayoutEffectTimer();
-      instance.componentWillUnmount();
-    } finally {
-      recordLayoutEffectDuration(current);
+    startLayoutEffectTimer();
+    if (__DEV__) {
+      callComponentWillUnmountInDEV(current, nearestMountedAncestor, instance);
+    } else {
+      try {
+        instance.componentWillUnmount();
+      } catch (error) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error);
+      }
     }
+    recordLayoutEffectDuration(current);
   } else {
-    instance.componentWillUnmount();
-  }
-}
-
-// Capture errors so they don't interrupt unmounting.
-function safelyCallComponentWillUnmount(
-  current: Fiber,
-  nearestMountedAncestor: Fiber | null,
-  instance: any,
-) {
-  try {
-    callComponentWillUnmountWithTimer(current, instance);
-  } catch (error) {
-    captureCommitPhaseError(current, nearestMountedAncestor, error);
+    if (__DEV__) {
+      callComponentWillUnmountInDEV(current, nearestMountedAncestor, instance);
+    } else {
+      try {
+        instance.componentWillUnmount();
+      } catch (error) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error);
+      }
+    }
   }
 }
 
@@ -339,10 +351,14 @@ function safelyCallDestroy(
   nearestMountedAncestor: Fiber | null,
   destroy: () => void,
 ) {
-  try {
-    destroy();
-  } catch (error) {
-    captureCommitPhaseError(current, nearestMountedAncestor, error);
+  if (__DEV__) {
+    callDestroyInDEV(current, nearestMountedAncestor, destroy);
+  } else {
+    try {
+      destroy();
+    } catch (error) {
+      captureCommitPhaseError(current, nearestMountedAncestor, error);
+    }
   }
 }
 
@@ -626,19 +642,20 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
         }
 
         // Mount
-        const create = effect.create;
+        let destroy;
         if (__DEV__) {
           if ((flags & HookInsertion) !== NoHookEffect) {
             setIsRunningInsertionEffect(true);
           }
-        }
-        const inst = effect.inst;
-        const destroy = create();
-        inst.destroy = destroy;
-        if (__DEV__) {
+          destroy = callCreateInDEV(effect);
           if ((flags & HookInsertion) !== NoHookEffect) {
             setIsRunningInsertionEffect(false);
           }
+        } else {
+          const create = effect.create;
+          const inst = effect.inst;
+          destroy = create();
+          inst.destroy = destroy;
         }
 
         if (enableSchedulingProfiler) {
@@ -826,18 +843,26 @@ function commitClassLayoutLifecycles(
       }
     }
     if (shouldProfile(finishedWork)) {
-      try {
-        startLayoutEffectTimer();
-        instance.componentDidMount();
-      } catch (error) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error);
+      startLayoutEffectTimer();
+      if (__DEV__) {
+        callComponentDidMountInDEV(finishedWork, instance);
+      } else {
+        try {
+          instance.componentDidMount();
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
       }
       recordLayoutEffectDuration(finishedWork);
     } else {
-      try {
-        instance.componentDidMount();
-      } catch (error) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error);
+      if (__DEV__) {
+        callComponentDidMountInDEV(finishedWork, instance);
+      } else {
+        try {
+          instance.componentDidMount();
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
       }
     }
   } else {
@@ -879,26 +904,46 @@ function commitClassLayoutLifecycles(
       }
     }
     if (shouldProfile(finishedWork)) {
-      try {
-        startLayoutEffectTimer();
-        instance.componentDidUpdate(
+      startLayoutEffectTimer();
+      if (__DEV__) {
+        callComponentDidUpdateInDEV(
+          finishedWork,
+          instance,
           prevProps,
           prevState,
           instance.__reactInternalSnapshotBeforeUpdate,
         );
-      } catch (error) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error);
+      } else {
+        try {
+          instance.componentDidUpdate(
+            prevProps,
+            prevState,
+            instance.__reactInternalSnapshotBeforeUpdate,
+          );
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
       }
       recordLayoutEffectDuration(finishedWork);
     } else {
-      try {
-        instance.componentDidUpdate(
+      if (__DEV__) {
+        callComponentDidUpdateInDEV(
+          finishedWork,
+          instance,
           prevProps,
           prevState,
           instance.__reactInternalSnapshotBeforeUpdate,
         );
-      } catch (error) {
-        captureCommitPhaseError(finishedWork, finishedWork.return, error);
+      } else {
+        try {
+          instance.componentDidUpdate(
+            prevProps,
+            prevState,
+            instance.__reactInternalSnapshotBeforeUpdate,
+          );
+        } catch (error) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+        }
       }
     }
   }

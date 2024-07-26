@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Stringify } from "shared-runtime";
+import {useState} from 'react';
+import {Stringify} from 'shared-runtime';
 
 // This is a translation of the original merge-consecutive-scopes which uses plain objects
 // to describe the UI instead of JSX. The JSXText elements in that fixture happen to
@@ -8,14 +8,14 @@ import { Stringify } from "shared-runtime";
 function Component(props) {
   let [state, setState] = useState(0);
   return [
-    { component: Stringify, props: { text: "Counter" } },
-    { component: "span", props: { children: [state] } },
+    {component: Stringify, props: {text: 'Counter'}},
+    {component: 'span', props: {children: [state]}},
     {
-      component: "button",
+      component: 'button',
       props: {
-        "data-testid": "button",
+        'data-testid': 'button',
         onClick: () => setState(state + 1),
-        children: ["increment"],
+        children: ['increment'],
       },
     },
   ];

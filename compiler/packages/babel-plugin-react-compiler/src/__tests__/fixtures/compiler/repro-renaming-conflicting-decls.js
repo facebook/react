@@ -1,5 +1,5 @@
-import { Stringify, identity, makeArray, toJSON } from "shared-runtime";
-import { useMemo } from "react";
+import {Stringify, identity, makeArray, toJSON} from 'shared-runtime';
+import {useMemo} from 'react';
 
 function Component(props) {
   const propsString = useMemo(() => toJSON(props), [props]);
@@ -20,8 +20,7 @@ function Component(props) {
       val2={[2]}
       val3={[3]}
       val4={[4]}
-      val5={[5]}
-    >
+      val5={[5]}>
       {makeArray(x, 2)}
     </Stringify>
   );
@@ -29,5 +28,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ val: 2 }],
+  params: [{val: 2}],
 };
