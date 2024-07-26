@@ -6,11 +6,19 @@ const {exec} = require('child-process-promise');
 const {existsSync} = require('fs');
 const {logPromise} = require('./utils');
 
+if (process.env.GH_TOKEN == null) {
+  console.log(
+    theme`{error Expected GH_TOKEN to be provided as an env variable}`
+  );
+  process.exit(1);
+}
+
 const OWNER = 'facebook';
 const REPO = 'react';
 const WORKFLOW_ID = 'runtime_build_and_test.yml';
 const GITHUB_HEADERS = `
   -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer ${process.env.GH_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28"`.trim();
 
 function getWorkflowId() {
