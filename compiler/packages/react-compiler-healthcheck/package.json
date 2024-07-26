@@ -23,5 +23,10 @@
   "engines": {
     "node": "^14.17.0 || ^16.0.0 || >= 18.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/react-compiler-healthcheck"
+  }
 }
