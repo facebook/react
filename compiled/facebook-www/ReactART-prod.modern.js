@@ -2583,6 +2583,29 @@ function updateWorkInProgressHook() {
   }
   return workInProgressHook;
 }
+function unstable_useContextWithBailout(context, select) {
+  if (null === select) return readContext(context);
+  if (!enableLazyContextPropagation) throw Error(formatProdErrorMessage(248));
+  var consumer = currentlyRenderingFiber,
+    value = context._currentValue2;
+  if (lastFullyObservedContext !== context)
+    if (
+      ((context = {
+        context: context,
+        memoizedValue: value,
+        next: null,
+        select: select,
+        lastSelectedValue: select(value)
+      }),
+      null === lastContextDependency)
+    ) {
+      if (null === consumer) throw Error(formatProdErrorMessage(308));
+      lastContextDependency = context;
+      consumer.dependencies = { lanes: 0, firstContext: context };
+      enableLazyContextPropagation && (consumer.flags |= 524288);
+    } else lastContextDependency = lastContextDependency.next = context;
+  return value;
+}
 var createFunctionComponentUpdateQueue;
 createFunctionComponentUpdateQueue = function () {
   return { lastEffect: null, events: null, stores: null, memoCache: null };
@@ -3426,6 +3449,7 @@ ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
 ContextOnlyDispatcher.useFormState = throwInvalidHookError;
 ContextOnlyDispatcher.useActionState = throwInvalidHookError;
 ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
+ContextOnlyDispatcher.unstable_useContextWithBailout = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
   use: use,
@@ -3588,6 +3612,8 @@ HooksDispatcherOnMount.useOptimistic = function (passthrough) {
   queue.dispatch = hook;
   return [passthrough, hook];
 };
+HooksDispatcherOnMount.unstable_useContextWithBailout =
+  unstable_useContextWithBailout;
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
   use: use,
@@ -3636,6 +3662,8 @@ HooksDispatcherOnUpdate.useOptimistic = function (passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
 };
+HooksDispatcherOnUpdate.unstable_useContextWithBailout =
+  unstable_useContextWithBailout;
 var HooksDispatcherOnRerender = {
   readContext: readContext,
   use: use,
@@ -3689,6 +3717,8 @@ HooksDispatcherOnRerender.useOptimistic = function (passthrough, reducer) {
   hook.baseState = passthrough;
   return [passthrough, hook.queue.dispatch];
 };
+HooksDispatcherOnRerender.unstable_useContextWithBailout =
+  unstable_useContextWithBailout;
 function applyDerivedStateFromProps(
   workInProgress,
   ctor,
@@ -5878,8 +5908,19 @@ function propagateContextChanges(
         a: for (; null !== list; ) {
           var dependency = list;
           list = fiber;
-          for (var i = 0; i < contexts.length; i++)
+          var i = 0;
+          b: for (; i < contexts.length; i++)
             if (dependency.context === contexts[i]) {
+              var select = dependency.select;
+              if (
+                null != select &&
+                null != dependency.lastSelectedValue &&
+                !checkIfSelectedContextValuesChanged(
+                  dependency.lastSelectedValue,
+                  select(dependency.context._currentValue2)
+                )
+              )
+                continue b;
               list.lanes |= renderLanes;
               dependency = list.alternate;
               null !== dependency && (dependency.lanes |= renderLanes);
@@ -5969,6 +6010,17 @@ function propagateParentContextChanges(
     workInProgress.flags |= 262144;
   }
 }
+function checkIfSelectedContextValuesChanged(
+  oldComparedValue,
+  newComparedValue
+) {
+  if (isArrayImpl(oldComparedValue) && isArrayImpl(newComparedValue)) {
+    if (oldComparedValue.length !== newComparedValue.length) return !0;
+    for (var i = 0; i < oldComparedValue.length; i++)
+      if (!objectIs(newComparedValue[i], oldComparedValue[i])) return !0;
+  } else throw Error(formatProdErrorMessage(541));
+  return !1;
+}
 function checkIfContextChanged(currentDependencies) {
   if (!enableLazyContextPropagation) return !1;
   for (
@@ -5976,13 +6028,20 @@ function checkIfContextChanged(currentDependencies) {
     null !== currentDependencies;
 
   ) {
+    var newValue = currentDependencies.context._currentValue2,
+      oldValue = currentDependencies.memoizedValue;
     if (
-      !objectIs(
-        currentDependencies.context._currentValue2,
-        currentDependencies.memoizedValue
+      null != currentDependencies.select &&
+      null != currentDependencies.lastSelectedValue
+    ) {
+      if (
+        checkIfSelectedContextValuesChanged(
+          currentDependencies.lastSelectedValue,
+          currentDependencies.select(newValue)
+        )
       )
-    )
-      return !0;
+        return !0;
+    } else if (!objectIs(newValue, oldValue)) return !0;
     currentDependencies = currentDependencies.next;
   }
   return !1;
@@ -10259,19 +10318,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1140 = {
+  devToolsConfig$jscomp$inline_1144 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "19.0.0-www-modern-7f217d1d-20240725",
+    version: "19.0.0-www-modern-b9af819f-20240726",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1361 = {
-  bundleType: devToolsConfig$jscomp$inline_1140.bundleType,
-  version: devToolsConfig$jscomp$inline_1140.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1140.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1140.rendererConfig,
+var internals$jscomp$inline_1371 = {
+  bundleType: devToolsConfig$jscomp$inline_1144.bundleType,
+  version: devToolsConfig$jscomp$inline_1144.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1144.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1144.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10288,26 +10347,26 @@ var internals$jscomp$inline_1361 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1140.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1144.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-7f217d1d-20240725"
+  reconcilerVersion: "19.0.0-www-modern-b9af819f-20240726"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1362 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1372 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1362.isDisabled &&
-    hook$jscomp$inline_1362.supportsFiber
+    !hook$jscomp$inline_1372.isDisabled &&
+    hook$jscomp$inline_1372.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1362.inject(
-        internals$jscomp$inline_1361
+      (rendererID = hook$jscomp$inline_1372.inject(
+        internals$jscomp$inline_1371
       )),
-        (injectedHook = hook$jscomp$inline_1362);
+        (injectedHook = hook$jscomp$inline_1372);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

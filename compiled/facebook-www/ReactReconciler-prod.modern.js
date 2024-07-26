@@ -2438,6 +2438,31 @@ module.exports = function ($$$config) {
     }
     return workInProgressHook;
   }
+  function unstable_useContextWithBailout(context, select) {
+    if (null === select) return readContext(context);
+    if (!enableLazyContextPropagation) throw Error(formatProdErrorMessage(248));
+    var consumer = currentlyRenderingFiber,
+      value = isPrimaryRenderer
+        ? context._currentValue
+        : context._currentValue2;
+    if (lastFullyObservedContext !== context)
+      if (
+        ((context = {
+          context: context,
+          memoizedValue: value,
+          next: null,
+          select: select,
+          lastSelectedValue: select(value)
+        }),
+        null === lastContextDependency)
+      ) {
+        if (null === consumer) throw Error(formatProdErrorMessage(308));
+        lastContextDependency = context;
+        consumer.dependencies = { lanes: 0, firstContext: context };
+        enableLazyContextPropagation && (consumer.flags |= 524288);
+      } else lastContextDependency = lastContextDependency.next = context;
+    return value;
+  }
   function useThenable(thenable) {
     var index = thenableIndexCounter;
     thenableIndexCounter += 1;
@@ -5813,8 +5838,23 @@ module.exports = function ($$$config) {
           a: for (; null !== list; ) {
             var dependency = list;
             list = fiber;
-            for (var i = 0; i < contexts.length; i++)
+            var i = 0;
+            b: for (; i < contexts.length; i++)
               if (dependency.context === contexts[i]) {
+                var select = dependency.select;
+                if (
+                  null != select &&
+                  null != dependency.lastSelectedValue &&
+                  !checkIfSelectedContextValuesChanged(
+                    dependency.lastSelectedValue,
+                    select(
+                      isPrimaryRenderer
+                        ? dependency.context._currentValue
+                        : dependency.context._currentValue2
+                    )
+                  )
+                )
+                  continue b;
                 list.lanes |= renderLanes;
                 dependency = list.alternate;
                 null !== dependency && (dependency.lanes |= renderLanes);
@@ -5910,6 +5950,17 @@ module.exports = function ($$$config) {
       workInProgress.flags |= 262144;
     }
   }
+  function checkIfSelectedContextValuesChanged(
+    oldComparedValue,
+    newComparedValue
+  ) {
+    if (isArrayImpl(oldComparedValue) && isArrayImpl(newComparedValue)) {
+      if (oldComparedValue.length !== newComparedValue.length) return !0;
+      for (var i = 0; i < oldComparedValue.length; i++)
+        if (!objectIs(newComparedValue[i], oldComparedValue[i])) return !0;
+    } else throw Error(formatProdErrorMessage(541));
+    return !1;
+  }
   function checkIfContextChanged(currentDependencies) {
     if (!enableLazyContextPropagation) return !1;
     for (
@@ -5918,13 +5969,22 @@ module.exports = function ($$$config) {
 
     ) {
       var context = currentDependencies.context;
+      context = isPrimaryRenderer
+        ? context._currentValue
+        : context._currentValue2;
+      var oldValue = currentDependencies.memoizedValue;
       if (
-        !objectIs(
-          isPrimaryRenderer ? context._currentValue : context._currentValue2,
-          currentDependencies.memoizedValue
+        null != currentDependencies.select &&
+        null != currentDependencies.lastSelectedValue
+      ) {
+        if (
+          checkIfSelectedContextValuesChanged(
+            currentDependencies.lastSelectedValue,
+            currentDependencies.select(context)
+          )
         )
-      )
-        return !0;
+          return !0;
+      } else if (!objectIs(context, oldValue)) return !0;
       currentDependencies = currentDependencies.next;
     }
     return !1;
@@ -11365,6 +11425,7 @@ module.exports = function ($$$config) {
   ContextOnlyDispatcher.useFormState = throwInvalidHookError;
   ContextOnlyDispatcher.useActionState = throwInvalidHookError;
   ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
+  ContextOnlyDispatcher.unstable_useContextWithBailout = throwInvalidHookError;
   var HooksDispatcherOnMount = {
     readContext: readContext,
     use: use,
@@ -11563,6 +11624,8 @@ module.exports = function ($$$config) {
     queue.dispatch = hook;
     return [passthrough, hook];
   };
+  HooksDispatcherOnMount.unstable_useContextWithBailout =
+    unstable_useContextWithBailout;
   var HooksDispatcherOnUpdate = {
     readContext: readContext,
     use: use,
@@ -11611,6 +11674,8 @@ module.exports = function ($$$config) {
     var hook = updateWorkInProgressHook();
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
   };
+  HooksDispatcherOnUpdate.unstable_useContextWithBailout =
+    unstable_useContextWithBailout;
   var HooksDispatcherOnRerender = {
     readContext: readContext,
     use: use,
@@ -11664,6 +11729,8 @@ module.exports = function ($$$config) {
     hook.baseState = passthrough;
     return [passthrough, hook.queue.dispatch];
   };
+  HooksDispatcherOnRerender.unstable_useContextWithBailout =
+    unstable_useContextWithBailout;
   var classComponentUpdater = {
       isMounted: function (component) {
         return (component = component._reactInternals)
@@ -12225,7 +12292,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-modern-7f217d1d-20240725"
+      reconcilerVersion: "19.0.0-www-modern-b9af819f-20240726"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

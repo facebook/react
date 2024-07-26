@@ -1197,6 +1197,8 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+      enableLazyContextPropagation =
+        dynamicFeatureFlags.enableLazyContextPropagation,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -1901,6 +1903,15 @@ __DEV__ &&
     exports.unstable_useCacheRefresh = function () {
       return resolveDispatcher().useCacheRefresh();
     };
+    exports.unstable_useContextWithBailout = function (context, select) {
+      if (!enableLazyContextPropagation) throw Error("Not implemented.");
+      var dispatcher = resolveDispatcher();
+      context.$$typeof === REACT_CONSUMER_TYPE &&
+        error$jscomp$0(
+          "Calling useContext(Context.Consumer) is not supported and will cause bugs. Did you mean to call useContext(Context) instead?"
+        );
+      return dispatcher.unstable_useContextWithBailout(context, select);
+    };
     exports.unstable_useMemoCache = useMemoCache;
     exports.use = function (usable) {
       return resolveDispatcher().use(usable);
@@ -1973,7 +1984,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-modern-7f217d1d-20240725";
+    exports.version = "19.0.0-www-modern-b9af819f-20240726";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

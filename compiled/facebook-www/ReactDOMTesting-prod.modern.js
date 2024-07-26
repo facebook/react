@@ -3371,6 +3371,29 @@ function updateWorkInProgressHook() {
   }
   return workInProgressHook;
 }
+function unstable_useContextWithBailout(context, select) {
+  if (null === select) return readContext(context);
+  if (!enableLazyContextPropagation) throw Error(formatProdErrorMessage(248));
+  var consumer = currentlyRenderingFiber,
+    value = context._currentValue;
+  if (lastFullyObservedContext !== context)
+    if (
+      ((context = {
+        context: context,
+        memoizedValue: value,
+        next: null,
+        select: select,
+        lastSelectedValue: select(value)
+      }),
+      null === lastContextDependency)
+    ) {
+      if (null === consumer) throw Error(formatProdErrorMessage(308));
+      lastContextDependency = context;
+      consumer.dependencies = { lanes: 0, firstContext: context };
+      enableLazyContextPropagation && (consumer.flags |= 524288);
+    } else lastContextDependency = lastContextDependency.next = context;
+  return value;
+}
 var createFunctionComponentUpdateQueue;
 createFunctionComponentUpdateQueue = function () {
   return { lastEffect: null, events: null, stores: null, memoCache: null };
@@ -4328,6 +4351,7 @@ ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
 ContextOnlyDispatcher.useFormState = throwInvalidHookError;
 ContextOnlyDispatcher.useActionState = throwInvalidHookError;
 ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
+ContextOnlyDispatcher.unstable_useContextWithBailout = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
   use: use,
@@ -4520,6 +4544,8 @@ HooksDispatcherOnMount.useOptimistic = function (passthrough) {
   queue.dispatch = hook;
   return [passthrough, hook];
 };
+HooksDispatcherOnMount.unstable_useContextWithBailout =
+  unstable_useContextWithBailout;
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
   use: use,
@@ -4568,6 +4594,8 @@ HooksDispatcherOnUpdate.useOptimistic = function (passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
 };
+HooksDispatcherOnUpdate.unstable_useContextWithBailout =
+  unstable_useContextWithBailout;
 var HooksDispatcherOnRerender = {
   readContext: readContext,
   use: use,
@@ -4621,6 +4649,8 @@ HooksDispatcherOnRerender.useOptimistic = function (passthrough, reducer) {
   hook.baseState = passthrough;
   return [passthrough, hook.queue.dispatch];
 };
+HooksDispatcherOnRerender.unstable_useContextWithBailout =
+  unstable_useContextWithBailout;
 function applyDerivedStateFromProps(
   workInProgress,
   ctor,
@@ -7098,8 +7128,19 @@ function propagateContextChanges(
         a: for (; null !== list; ) {
           var dependency = list;
           list = fiber;
-          for (var i = 0; i < contexts.length; i++)
+          var i = 0;
+          b: for (; i < contexts.length; i++)
             if (dependency.context === contexts[i]) {
+              var select = dependency.select;
+              if (
+                null != select &&
+                null != dependency.lastSelectedValue &&
+                !checkIfSelectedContextValuesChanged(
+                  dependency.lastSelectedValue,
+                  select(dependency.context._currentValue)
+                )
+              )
+                continue b;
               list.lanes |= renderLanes;
               dependency = list.alternate;
               null !== dependency && (dependency.lanes |= renderLanes);
@@ -7189,6 +7230,17 @@ function propagateParentContextChanges(
     workInProgress.flags |= 262144;
   }
 }
+function checkIfSelectedContextValuesChanged(
+  oldComparedValue,
+  newComparedValue
+) {
+  if (isArrayImpl(oldComparedValue) && isArrayImpl(newComparedValue)) {
+    if (oldComparedValue.length !== newComparedValue.length) return !0;
+    for (var i = 0; i < oldComparedValue.length; i++)
+      if (!objectIs(newComparedValue[i], oldComparedValue[i])) return !0;
+  } else throw Error(formatProdErrorMessage(541));
+  return !1;
+}
 function checkIfContextChanged(currentDependencies) {
   if (!enableLazyContextPropagation) return !1;
   for (
@@ -7196,13 +7248,20 @@ function checkIfContextChanged(currentDependencies) {
     null !== currentDependencies;
 
   ) {
+    var newValue = currentDependencies.context._currentValue,
+      oldValue = currentDependencies.memoizedValue;
     if (
-      !objectIs(
-        currentDependencies.context._currentValue,
-        currentDependencies.memoizedValue
+      null != currentDependencies.select &&
+      null != currentDependencies.lastSelectedValue
+    ) {
+      if (
+        checkIfSelectedContextValuesChanged(
+          currentDependencies.lastSelectedValue,
+          currentDependencies.select(newValue)
+        )
       )
-    )
-      return !0;
+        return !0;
+    } else if (!objectIs(newValue, oldValue)) return !0;
     currentDependencies = currentDependencies.next;
   }
   return !1;
@@ -12884,19 +12943,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$378;
+  var JSCompiler_inline_result$jscomp$379;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1559 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1559) {
-      var element$jscomp$inline_1560 = document.createElement("div");
-      element$jscomp$inline_1560.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1559 =
-        "function" === typeof element$jscomp$inline_1560.oninput;
+    var isSupported$jscomp$inline_1563 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1563) {
+      var element$jscomp$inline_1564 = document.createElement("div");
+      element$jscomp$inline_1564.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1563 =
+        "function" === typeof element$jscomp$inline_1564.oninput;
     }
-    JSCompiler_inline_result$jscomp$378 = isSupported$jscomp$inline_1559;
-  } else JSCompiler_inline_result$jscomp$378 = !1;
+    JSCompiler_inline_result$jscomp$379 = isSupported$jscomp$inline_1563;
+  } else JSCompiler_inline_result$jscomp$379 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$378 &&
+    JSCompiler_inline_result$jscomp$379 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13307,20 +13366,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1600 = 0;
-  i$jscomp$inline_1600 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1600++
+  var i$jscomp$inline_1604 = 0;
+  i$jscomp$inline_1604 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1604++
 ) {
-  var eventName$jscomp$inline_1601 =
-      simpleEventPluginEvents[i$jscomp$inline_1600],
-    domEventName$jscomp$inline_1602 =
-      eventName$jscomp$inline_1601.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1603 =
-      eventName$jscomp$inline_1601[0].toUpperCase() +
-      eventName$jscomp$inline_1601.slice(1);
+  var eventName$jscomp$inline_1605 =
+      simpleEventPluginEvents[i$jscomp$inline_1604],
+    domEventName$jscomp$inline_1606 =
+      eventName$jscomp$inline_1605.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1607 =
+      eventName$jscomp$inline_1605[0].toUpperCase() +
+      eventName$jscomp$inline_1605.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1602,
-    "on" + capitalizedEvent$jscomp$inline_1603
+    domEventName$jscomp$inline_1606,
+    "on" + capitalizedEvent$jscomp$inline_1607
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16927,16 +16986,16 @@ function getCrossOriginStringAs(as, input) {
   if ("string" === typeof input)
     return "use-credentials" === input ? input : "";
 }
-var isomorphicReactPackageVersion$jscomp$inline_1773 = React.version;
+var isomorphicReactPackageVersion$jscomp$inline_1777 = React.version;
 if (
-  "19.0.0-www-modern-7f217d1d-20240725" !==
-  isomorphicReactPackageVersion$jscomp$inline_1773
+  "19.0.0-www-modern-b9af819f-20240726" !==
+  isomorphicReactPackageVersion$jscomp$inline_1777
 )
   throw Error(
     formatProdErrorMessage(
       527,
-      isomorphicReactPackageVersion$jscomp$inline_1773,
-      "19.0.0-www-modern-7f217d1d-20240725"
+      isomorphicReactPackageVersion$jscomp$inline_1777,
+      "19.0.0-www-modern-b9af819f-20240726"
     )
   );
 Internals.findDOMNode = function (componentOrElement) {
@@ -16952,17 +17011,17 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1775 = {
+var devToolsConfig$jscomp$inline_1779 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "19.0.0-www-modern-7f217d1d-20240725",
+  version: "19.0.0-www-modern-b9af819f-20240726",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2237 = {
-  bundleType: devToolsConfig$jscomp$inline_1775.bundleType,
-  version: devToolsConfig$jscomp$inline_1775.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1775.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1775.rendererConfig,
+var internals$jscomp$inline_2247 = {
+  bundleType: devToolsConfig$jscomp$inline_1779.bundleType,
+  version: devToolsConfig$jscomp$inline_1779.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1779.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1779.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16978,26 +17037,26 @@ var internals$jscomp$inline_2237 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1775.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1779.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-modern-7f217d1d-20240725"
+  reconcilerVersion: "19.0.0-www-modern-b9af819f-20240726"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2238 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2248 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2238.isDisabled &&
-    hook$jscomp$inline_2238.supportsFiber
+    !hook$jscomp$inline_2248.isDisabled &&
+    hook$jscomp$inline_2248.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2238.inject(
-        internals$jscomp$inline_2237
+      (rendererID = hook$jscomp$inline_2248.inject(
+        internals$jscomp$inline_2247
       )),
-        (injectedHook = hook$jscomp$inline_2238);
+        (injectedHook = hook$jscomp$inline_2248);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -17499,4 +17558,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-modern-7f217d1d-20240725";
+exports.version = "19.0.0-www-modern-b9af819f-20240726";
