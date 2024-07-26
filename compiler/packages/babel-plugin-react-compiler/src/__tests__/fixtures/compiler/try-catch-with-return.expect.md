@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-const { shallowCopy, throwInput } = require("shared-runtime");
+const {shallowCopy, throwInput} = require('shared-runtime');
 
 function Component(props) {
   let x = [];

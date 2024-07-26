@@ -10,5 +10,5 @@ function TestDepsSubpathOrder3(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: TestDepsSubpathOrder3,
-  params: [{ a: { b: { c: 2 } } }],
+  params: [{a: {b: {c: 2}}}],
 };

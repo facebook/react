@@ -1,5 +1,5 @@
 function mutate(x, y) {
-  "use no forget";
+  'use no forget';
   if (!Array.isArray(x.value)) {
     x.value = [];
   }
@@ -13,7 +13,7 @@ function Component(props) {
   const a = {};
   const b = [a]; // array elements alias
   const c = {};
-  const d = { c }; // object values alias
+  const d = {c}; // object values alias
 
   // capture all the values into this object
   const x = {};

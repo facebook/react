@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useHook, identity } from "shared-runtime";
+import {useHook, identity} from 'shared-runtime';
 
 function Component(props) {
   let x = 42;
@@ -19,7 +19,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: "sathya" }],
+  params: [{value: 'sathya'}],
 };
 
 ```

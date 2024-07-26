@@ -564,23 +564,23 @@ const WheelEventInterface = {
     return 'deltaX' in event
       ? event.deltaX
       : // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
-      'wheelDeltaX' in event
-      ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
-        -event.wheelDeltaX
-      : 0;
+        'wheelDeltaX' in event
+        ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
+          -event.wheelDeltaX
+        : 0;
   },
   deltaY(event: {[propName: string]: mixed}) {
     return 'deltaY' in event
       ? event.deltaY
       : // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
-      'wheelDeltaY' in event
-      ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
-        -event.wheelDeltaY
-      : // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
-      'wheelDelta' in event
-      ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
-        -event.wheelDelta
-      : 0;
+        'wheelDeltaY' in event
+        ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
+          -event.wheelDeltaY
+        : // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
+          'wheelDelta' in event
+          ? // $FlowFixMe[unsafe-arithmetic] assuming this is a number
+            -event.wheelDelta
+          : 0;
   },
   deltaZ: 0,
 

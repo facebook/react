@@ -19,7 +19,6 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 // -----------------------------------------------------------------------------
 // All other flags
 // -----------------------------------------------------------------------------
-export const allowConcurrentByDefault = false;
 export const alwaysThrottleRetries = false;
 export const consoleManagedByDevToolsDuringStrictMode = true;
 export const disableClientCache = true;
@@ -45,13 +44,13 @@ export const enableCreateEventHandleAPI = false;
 export const enableDebugTracing = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
-export const enableFastJSX = true;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableInfiniteRenderLoopDetection = true;
 export const enableLazyContextPropagation = false;
+export const enableContextProfiling = false;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
 export const enableLegacyHidden = false;
@@ -77,7 +76,6 @@ export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
 export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
-export const forceConcurrentByDefaultForTesting = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const renameElementSymbol = true;
 export const retryLaneExpirationMs = 5000;

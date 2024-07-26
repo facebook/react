@@ -1,6 +1,6 @@
-import { StaticText1, StaticText2 } from "shared-runtime";
+import {StaticText1, StaticText2} from 'shared-runtime';
 
-function Component(props: { value: string }) {
+function Component(props: {value: string}) {
   let Tag = StaticText1;
 
   // Currently, Forget preserves jsx whitespace in the source text.
@@ -12,6 +12,6 @@ function Component(props: { value: string }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: "string value 1" }],
+  params: [{value: 'string value 1'}],
   isComponent: true,
 };

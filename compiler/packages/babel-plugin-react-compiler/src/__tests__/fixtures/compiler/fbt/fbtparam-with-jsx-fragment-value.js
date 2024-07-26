@@ -1,5 +1,5 @@
-import fbt from "fbt";
-import { identity } from "shared-runtime";
+import fbt from 'fbt';
+import {identity} from 'shared-runtime';
 
 function Component(props) {
   return (

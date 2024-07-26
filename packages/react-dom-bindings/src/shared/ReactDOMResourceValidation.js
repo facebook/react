@@ -68,20 +68,20 @@ export function getValueDescriptorExpectingObjectForWarning(
   return thing === null
     ? '`null`'
     : thing === undefined
-    ? '`undefined`'
-    : thing === ''
-    ? 'an empty string'
-    : `something with type "${typeof thing}"`;
+      ? '`undefined`'
+      : thing === ''
+        ? 'an empty string'
+        : `something with type "${typeof thing}"`;
 }
 
 export function getValueDescriptorExpectingEnumForWarning(thing: any): string {
   return thing === null
     ? '`null`'
     : thing === undefined
-    ? '`undefined`'
-    : thing === ''
-    ? 'an empty string'
-    : typeof thing === 'string'
-    ? JSON.stringify(thing)
-    : `something with type "${typeof thing}"`;
+      ? '`undefined`'
+      : thing === ''
+        ? 'an empty string'
+        : typeof thing === 'string'
+          ? JSON.stringify(thing)
+          : `something with type "${typeof thing}"`;
 }

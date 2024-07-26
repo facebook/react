@@ -542,10 +542,10 @@ function setResponderAndExtractTransfer(
   const shouldSetEventType = isStartish(topLevelType)
     ? eventTypes.startShouldSetResponder
     : isMoveish(topLevelType)
-    ? eventTypes.moveShouldSetResponder
-    : topLevelType === TOP_SELECTION_CHANGE
-    ? eventTypes.selectionChangeShouldSetResponder
-    : eventTypes.scrollShouldSetResponder;
+      ? eventTypes.moveShouldSetResponder
+      : topLevelType === TOP_SELECTION_CHANGE
+        ? eventTypes.selectionChangeShouldSetResponder
+        : eventTypes.scrollShouldSetResponder;
 
   // TODO: stop one short of the current responder.
   const bubbleShouldSetFrom = !responderInst
@@ -742,10 +742,10 @@ const ResponderEventPlugin = {
     const incrementalTouch = isResponderTouchStart
       ? eventTypes.responderStart
       : isResponderTouchMove
-      ? eventTypes.responderMove
-      : isResponderTouchEnd
-      ? eventTypes.responderEnd
-      : null;
+        ? eventTypes.responderMove
+        : isResponderTouchEnd
+          ? eventTypes.responderEnd
+          : null;
 
     if (incrementalTouch) {
       const gesture = ResponderSyntheticEvent.getPooled(
@@ -769,8 +769,8 @@ const ResponderEventPlugin = {
     const finalTouch = isResponderTerminate
       ? eventTypes.responderTerminate
       : isResponderRelease
-      ? eventTypes.responderRelease
-      : null;
+        ? eventTypes.responderRelease
+        : null;
     if (finalTouch) {
       const finalEvent = ResponderSyntheticEvent.getPooled(
         finalTouch,

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useEffect } from "react";
+import {useEffect} from 'react';
 
 function Foo(props, ref) {
   useEffect(() => {
@@ -13,7 +13,7 @@ function Foo(props, ref) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ bar: "foo" }, { ref: { cuurrent: 1 } }],
+  params: [{bar: 'foo'}, {ref: {cuurrent: 1}}],
   isComponent: true,
 };
 

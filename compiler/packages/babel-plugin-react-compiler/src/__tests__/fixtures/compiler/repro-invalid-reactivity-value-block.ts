@@ -3,7 +3,7 @@ import {
   identity,
   makeObject_Primitives,
   useNoAlias,
-} from "shared-runtime";
+} from 'shared-runtime';
 
 /**
  * Here the scope for `obj` is pruned because it spans the `useNoAlias()` hook call.
@@ -25,7 +25,7 @@ function Foo() {
   useNoAlias(result, obj);
 
   if (shouldCaptureObj && result[0] !== obj) {
-    throw new Error("Unexpected");
+    throw new Error('Unexpected');
   }
   return result;
 }

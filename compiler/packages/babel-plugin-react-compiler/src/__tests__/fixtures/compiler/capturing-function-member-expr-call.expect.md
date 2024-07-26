@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-function component({ mutator }) {
+function component({mutator}) {
   const poke = () => {
     mutator.poke();
   };
