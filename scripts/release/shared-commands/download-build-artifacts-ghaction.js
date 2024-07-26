@@ -1,10 +1,10 @@
 'use strict';
 
 const {join} = require('path');
-const theme = require('./theme');
+const theme = require('../theme');
 const {exec} = require('child-process-promise');
 const {existsSync} = require('fs');
-const {logPromise} = require('./utils');
+const {logPromise} = require('../utils');
 
 if (process.env.GH_TOKEN == null) {
   console.log(
