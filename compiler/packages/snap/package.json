@@ -15,7 +15,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/facebook/react-forget.git"
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "compiler/packages/snap"
   },
   "dependencies": {
     "@babel/code-frame": "^7.22.5",

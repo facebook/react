@@ -52,6 +52,7 @@ export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
+export const enableContextProfiling = false;
 export const enableLegacyHidden = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
