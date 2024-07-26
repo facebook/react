@@ -147,7 +147,6 @@ export function createFiberRoot(
   initialChildren: ReactNodeList,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
-  concurrentUpdatesByDefaultOverride: null | boolean,
   // TODO: We have several of these arguments that are conceptually part of the
   // host config, but because they are passed in at runtime, we have to thread
   // them through the root constructor. Perhaps we should put them all into a
@@ -192,11 +191,7 @@ export function createFiberRoot(
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber(
-    tag,
-    isStrictMode,
-    concurrentUpdatesByDefaultOverride,
-  );
+  const uninitializedFiber = createHostRootFiber(tag, isStrictMode);
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 

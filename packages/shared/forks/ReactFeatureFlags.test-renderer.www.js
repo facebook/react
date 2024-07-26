@@ -55,9 +55,8 @@ export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
+export const enableContextProfiling = false;
 export const enableLegacyHidden = false;
-export const forceConcurrentByDefaultForTesting = false;
-export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
@@ -81,7 +80,6 @@ export const enableInfiniteRenderLoopDetection = false;
 
 export const enableRefAsProp = true;
 export const disableStringRefs = false;
-export const enableFastJSX = false;
 
 export const enableReactTestRendererWarning = false;
 export const disableLegacyMode = true;

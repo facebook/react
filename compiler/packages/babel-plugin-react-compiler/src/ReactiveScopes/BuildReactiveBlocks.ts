@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   BlockId,
   InstructionId,
@@ -17,10 +17,10 @@ import {
   ReactiveScopeBlock,
   ReactiveStatement,
   ScopeId,
-} from "../HIR";
-import { eachInstructionLValue } from "../HIR/visitors";
-import { assertExhaustive } from "../Utils/utils";
-import { eachReactiveValueOperand, mapTerminalBlocks } from "./visitors";
+} from '../HIR';
+import {eachInstructionLValue} from '../HIR/visitors';
+import {assertExhaustive} from '../Utils/utils';
+import {eachReactiveValueOperand, mapTerminalBlocks} from './visitors';
 
 /*
  * Note: this is the 4th of 4 passes that determine how to break a function into discrete
@@ -63,7 +63,7 @@ class Context {
 
   append(
     stmt: ReactiveStatement,
-    label: { id: BlockId; implicit: boolean } | null
+    label: {id: BlockId; implicit: boolean} | null,
   ): void {
     this.#builders.at(-1)!.append(stmt, label);
   }
@@ -74,7 +74,7 @@ class Context {
     fn();
     const popped = this.#builders.pop();
     CompilerError.invariant(popped === builder, {
-      reason: "Expected push/pop to be called 1:1",
+      reason: 'Expected push/pop to be called 1:1',
       description: null,
       loc: null,
       suggestions: null,
@@ -86,23 +86,23 @@ class Context {
 class Builder {
   #instructions: ReactiveBlock;
   #stack: Array<
-    | { kind: "scope"; block: ReactiveScopeBlock }
-    | { kind: "block"; block: ReactiveBlock }
+    | {kind: 'scope'; block: ReactiveScopeBlock}
+    | {kind: 'block'; block: ReactiveBlock}
   >;
 
   constructor() {
     const block: ReactiveBlock = [];
     this.#instructions = block;
-    this.#stack = [{ kind: "block", block }];
+    this.#stack = [{kind: 'block', block}];
   }
 
   append(
     item: ReactiveStatement,
-    label: { id: BlockId; implicit: boolean } | null
+    label: {id: BlockId; implicit: boolean} | null,
   ): void {
     if (label !== null) {
-      CompilerError.invariant(item.kind === "terminal", {
-        reason: "Only terminals may have a label",
+      CompilerError.invariant(item.kind === 'terminal', {
+        reason: 'Only terminals may have a label',
         description: null,
         loc: null,
         suggestions: null,
@@ -114,25 +114,25 @@ class Builder {
 
   startScope(scope: ReactiveScope): void {
     const block: ReactiveScopeBlock = {
-      kind: "scope",
+      kind: 'scope',
       scope,
       instructions: [],
     };
     this.append(block, null);
     this.#instructions = block.instructions;
-    this.#stack.push({ kind: "scope", block });
+    this.#stack.push({kind: 'scope', block});
   }
 
   visitId(id: InstructionId): void {
     for (let i = 0; i < this.#stack.length; i++) {
       const entry = this.#stack[i]!;
-      if (entry.kind === "scope" && id >= entry.block.scope.range.end) {
+      if (entry.kind === 'scope' && id >= entry.block.scope.range.end) {
         this.#stack.length = i;
         break;
       }
     }
     const last = this.#stack[this.#stack.length - 1]!;
-    if (last.kind === "block") {
+    if (last.kind === 'block') {
       this.#instructions = last.block;
     } else {
       this.#instructions = last.block.instructions;
@@ -148,8 +148,8 @@ class Builder {
      * );
      */
     const first = this.#stack[0]!;
-    CompilerError.invariant(first.kind === "block", {
-      reason: "Expected first stack item to be a basic block",
+    CompilerError.invariant(first.kind === 'block', {
+      reason: 'Expected first stack item to be a basic block',
       description: null,
       loc: null,
       suggestions: null,
@@ -161,7 +161,7 @@ class Builder {
 function visitBlock(context: Context, block: ReactiveBlock): void {
   for (const stmt of block) {
     switch (stmt.kind) {
-      case "instruction": {
+      case 'instruction': {
         context.visitId(stmt.instruction.id);
         const scope = getInstructionScope(stmt.instruction);
         if (scope !== null) {
@@ -170,12 +170,12 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
         context.append(stmt, null);
         break;
       }
-      case "terminal": {
+      case 'terminal': {
         const id = stmt.terminal.id;
         if (id !== null) {
           context.visitId(id);
         }
-        mapTerminalBlocks(stmt.terminal, (block) => {
+        mapTerminalBlocks(stmt.terminal, block => {
           return context.enter(() => {
             visitBlock(context, block);
           });
@@ -183,10 +183,10 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
         context.append(stmt, stmt.label);
         break;
       }
-      case "pruned-scope":
-      case "scope": {
+      case 'pruned-scope':
+      case 'scope': {
         CompilerError.invariant(false, {
-          reason: "Expected the function to not have scopes already assigned",
+          reason: 'Expected the function to not have scopes already assigned',
           description: null,
           loc: null,
           suggestions: null,
@@ -195,7 +195,7 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
       default: {
         assertExhaustive(
           stmt,
-          `Unexpected statement kind \`${(stmt as any).kind}\``
+          `Unexpected statement kind \`${(stmt as any).kind}\``,
         );
       }
     }
@@ -203,12 +203,12 @@ function visitBlock(context: Context, block: ReactiveBlock): void {
 }
 
 export function getInstructionScope(
-  instr: ReactiveInstruction
+  instr: ReactiveInstruction,
 ): ReactiveScope | null {
   CompilerError.invariant(instr.lvalue !== null, {
     reason:
-      "Expected lvalues to not be null when assigning scopes. " +
-      "Pruning lvalues too early can result in missing scope information.",
+      'Expected lvalues to not be null when assigning scopes. ' +
+      'Pruning lvalues too early can result in missing scope information.',
     description: null,
     loc: instr.loc,
     suggestions: null,
@@ -230,7 +230,7 @@ export function getInstructionScope(
 
 export function getPlaceScope(
   id: InstructionId,
-  place: Place
+  place: Place,
 ): ReactiveScope | null {
   const scope = place.identifier.scope;
   if (scope !== null && isScopeActive(scope, id)) {

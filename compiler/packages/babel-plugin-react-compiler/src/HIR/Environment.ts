@@ -5,19 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
-import { ZodError, z } from "zod";
-import { fromZodError } from "zod-validation-error";
-import { CompilerError } from "../CompilerError";
-import { Logger } from "../Entrypoint";
-import { Err, Ok, Result } from "../Utils/Result";
+import * as t from '@babel/types';
+import {ZodError, z} from 'zod';
+import {fromZodError} from 'zod-validation-error';
+import {CompilerError} from '../CompilerError';
+import {Logger} from '../Entrypoint';
+import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
   DEFAULT_SHAPES,
   Global,
   GlobalRegistry,
   installReAnimatedTypes,
-} from "./Globals";
+} from './Globals';
 import {
   BlockId,
   BuiltInType,
@@ -35,7 +35,7 @@ import {
   makeIdentifierId,
   makeIdentifierName,
   makeScopeId,
-} from "./HIR";
+} from './HIR';
 import {
   BuiltInMixedReadonlyId,
   DefaultMutatingHook,
@@ -43,8 +43,8 @@ import {
   FunctionSignature,
   ShapeRegistry,
   addHook,
-} from "./ObjectShape";
-import { Scope as BabelScope } from "@babel/traverse";
+} from './ObjectShape';
+import {Scope as BabelScope} from '@babel/traverse';
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -61,8 +61,8 @@ export const InstrumentationSchema = z
     globalGating: z.string().nullish(),
   })
   .refine(
-    (opts) => opts.gating != null || opts.globalGating != null,
-    "Expected at least one of gating or globalGating"
+    opts => opts.gating != null || opts.globalGating != null,
+    'Expected at least one of gating or globalGating',
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
@@ -443,34 +443,34 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
   // Get the defaults to programmatically check for boolean properties
   const defaultConfig = EnvironmentConfigSchema.parse({});
 
-  for (const token of pragma.split(" ")) {
-    if (!token.startsWith("@")) {
+  for (const token of pragma.split(' ')) {
+    if (!token.startsWith('@')) {
       continue;
     }
     const keyVal = token.slice(1);
-    let [key, val]: any = keyVal.split(":");
+    let [key, val]: any = keyVal.split(':');
 
-    if (key === "validateNoCapitalizedCalls") {
+    if (key === 'validateNoCapitalizedCalls') {
       maybeConfig[key] = [];
       continue;
     }
 
     if (
-      key === "enableChangeDetectionForDebugging" &&
-      (val === undefined || val === "true")
+      key === 'enableChangeDetectionForDebugging' &&
+      (val === undefined || val === 'true')
     ) {
       maybeConfig[key] = {
-        source: "react-compiler-runtime",
-        importSpecifierName: "$structuralCheck",
+        source: 'react-compiler-runtime',
+        importSpecifierName: '$structuralCheck',
       };
       continue;
     }
 
-    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {
+    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean') {
       // skip parsing non-boolean properties
       continue;
     }
-    if (val === undefined || val === "true") {
+    if (val === undefined || val === 'true') {
       val = true;
     } else {
       val = false;
@@ -483,7 +483,7 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
     return config.data;
   }
   CompilerError.invariant(false, {
-    reason: "Internal error, could not parse config from pragma string",
+    reason: 'Internal error, could not parse config from pragma string',
     description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
@@ -492,18 +492,18 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
 
 export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
-export type ReactFunctionType = "Component" | "Hook" | "Other";
+export type ReactFunctionType = 'Component' | 'Hook' | 'Other';
 
 export function printFunctionType(type: ReactFunctionType): string {
   switch (type) {
-    case "Component": {
-      return "component";
+    case 'Component': {
+      return 'component';
     }
-    case "Hook": {
-      return "hook";
+    case 'Hook': {
+      return 'hook';
     }
     default: {
-      return "function";
+      return 'function';
     }
   }
 }
@@ -537,7 +537,7 @@ export class Environment {
     logger: Logger | null,
     filename: string | null,
     code: string | null,
-    useMemoCacheIdentifier: string
+    useMemoCacheIdentifier: string,
   ) {
     this.#scope = scope;
     this.fnType = fnType;
@@ -574,13 +574,13 @@ export class Environment {
           positionalParams: [],
           restParam: hook.effectKind,
           returnType: hook.transitiveMixedData
-            ? { kind: "Object", shapeId: BuiltInMixedReadonlyId }
-            : { kind: "Poly" },
+            ? {kind: 'Object', shapeId: BuiltInMixedReadonlyId}
+            : {kind: 'Poly'},
           returnValueKind: hook.valueKind,
           calleeEffect: Effect.Read,
-          hookKind: "Custom",
+          hookKind: 'Custom',
           noAlias: hook.noAlias,
-        })
+        }),
       );
     }
 
@@ -613,14 +613,14 @@ export class Environment {
   }
 
   generateGloballyUniqueIdentifierName(
-    name: string | null
+    name: string | null,
   ): ValidatedIdentifier {
     const identifierNode = this.#scope.generateUidIdentifier(name ?? undefined);
     return makeIdentifierName(identifierNode.name);
   }
 
   outlineFunction(fn: HIRFunction, type: ReactFunctionType | null): void {
-    this.#outlinedFunctions.push({ fn, type });
+    this.#outlinedFunctions.push({fn, type});
   }
 
   getOutlinedFunctions(): Array<{
@@ -635,7 +635,7 @@ export class Environment {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
         match != null &&
-        typeof match[1] === "string" &&
+        typeof match[1] === 'string' &&
         isHookName(match[1])
       ) {
         const resolvedName = match[1];
@@ -644,17 +644,17 @@ export class Environment {
     }
 
     switch (binding.kind) {
-      case "ModuleLocal": {
+      case 'ModuleLocal': {
         // don't resolve module locals
         return isHookName(binding.name) ? this.#getCustomHookType() : null;
       }
-      case "Global": {
+      case 'Global': {
         return (
           this.#globals.get(binding.name) ??
           (isHookName(binding.name) ? this.#getCustomHookType() : null)
         );
       }
-      case "ImportSpecifier": {
+      case 'ImportSpecifier': {
         if (this.#isKnownReactModule(binding.module)) {
           /**
            * For `import {imported as name} from "..."` form, we use the `imported`
@@ -681,8 +681,8 @@ export class Environment {
             : null;
         }
       }
-      case "ImportDefault":
-      case "ImportNamespace": {
+      case 'ImportDefault':
+      case 'ImportNamespace': {
         if (this.#isKnownReactModule(binding.module)) {
           // only resolve imports to modules we know about
           return (
@@ -698,19 +698,19 @@ export class Environment {
 
   #isKnownReactModule(moduleName: string): boolean {
     return (
-      moduleName.toLowerCase() === "react" ||
-      moduleName.toLowerCase() === "react-dom" ||
+      moduleName.toLowerCase() === 'react' ||
+      moduleName.toLowerCase() === 'react-dom' ||
       (this.config.enableSharedRuntime__testonly &&
-        moduleName === "shared-runtime")
+        moduleName === 'shared-runtime')
     );
   }
 
   getPropertyType(
     receiver: Type,
-    property: string
+    property: string,
   ): BuiltInType | PolyType | null {
     let shapeId = null;
-    if (receiver.kind === "Object" || receiver.kind === "Function") {
+    if (receiver.kind === 'Object' || receiver.kind === 'Function') {
       shapeId = receiver.shapeId;
     }
     if (shapeId !== null) {
@@ -726,7 +726,7 @@ export class Environment {
         suggestions: null,
       });
       let value =
-        shape.properties.get(property) ?? shape.properties.get("*") ?? null;
+        shape.properties.get(property) ?? shape.properties.get('*') ?? null;
       if (value === null && isHookName(property)) {
         value = this.#getCustomHookType();
       }
@@ -739,7 +739,7 @@ export class Environment {
   }
 
   getFunctionSignature(type: FunctionType): FunctionSignature | null {
-    const { shapeId } = type;
+    const {shapeId} = type;
     if (shapeId !== null) {
       const shape = this.#shapes.get(shapeId);
       CompilerError.invariant(shape !== undefined, {
@@ -773,7 +773,7 @@ export function isHookName(name: string): boolean {
 }
 
 export function parseEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig
+  partialConfig: PartialEnvironmentConfig,
 ): Result<EnvironmentConfig, ZodError<PartialEnvironmentConfig>> {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
@@ -784,7 +784,7 @@ export function parseEnvironmentConfig(
 }
 
 export function validateEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig
+  partialConfig: PartialEnvironmentConfig,
 ): EnvironmentConfig {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
@@ -793,7 +793,7 @@ export function validateEnvironmentConfig(
 
   CompilerError.throwInvalidConfig({
     reason:
-      "Could not validate environment config. Update React Compiler config to fix the error",
+      'Could not validate environment config. Update React Compiler config to fix the error',
     description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
@@ -801,10 +801,10 @@ export function validateEnvironmentConfig(
 }
 
 export function tryParseExternalFunction(
-  maybeExternalFunction: any
+  maybeExternalFunction: any,
 ): ExternalFunction {
   const externalFunction = ExternalFunctionSchema.safeParse(
-    maybeExternalFunction
+    maybeExternalFunction,
   );
   if (externalFunction.success) {
     return externalFunction.data;
@@ -812,7 +812,7 @@ export function tryParseExternalFunction(
 
   CompilerError.throwInvalidConfig({
     reason:
-      "Could not parse external function. Update React Compiler config to fix the error",
+      'Could not parse external function. Update React Compiler config to fix the error',
     description: `${fromZodError(externalFunction.error)}`,
     loc: null,
     suggestions: null,

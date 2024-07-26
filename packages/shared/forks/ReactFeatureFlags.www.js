@@ -23,7 +23,6 @@ export const {
   enableDebugTracing,
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
-  enableFastJSX,
   enableInfiniteRenderLoopDetection,
   enableLazyContextPropagation,
   enableNoCloningMemoCache,
@@ -79,6 +78,8 @@ export const enableTaint = false;
 
 export const enablePostpone = false;
 
+export const enableContextProfiling = true;
+
 // TODO: www currently relies on this feature. It's disabled in open source.
 // Need to remove it.
 export const disableCommentsAsDOMContainers = false;
@@ -97,13 +98,9 @@ export const enableRefAsProp = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
-export const allowConcurrentByDefault = true;
-
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const enableFizzExternalRuntime = true;
-
-export const forceConcurrentByDefaultForTesting = false;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 

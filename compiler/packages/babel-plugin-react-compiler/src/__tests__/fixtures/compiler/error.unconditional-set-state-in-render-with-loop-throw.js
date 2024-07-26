@@ -5,7 +5,7 @@ function Component(props) {
     if (props.cond) {
       break;
     } else {
-      throw new Error("bye!");
+      throw new Error('bye!');
     }
   }
   setState(true);

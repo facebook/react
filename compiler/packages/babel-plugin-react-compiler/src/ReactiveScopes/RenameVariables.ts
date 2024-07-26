@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   Identifier,
   IdentifierId,
@@ -21,9 +21,9 @@ import {
   isPromotedJsxTemporary,
   isPromotedTemporary,
   makeIdentifierName,
-} from "../HIR/HIR";
-import { collectReferencedGlobals } from "./CollectReferencedGlobals";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR/HIR';
+import {collectReferencedGlobals} from './CollectReferencedGlobals';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /**
  * Ensures that each named variable in the given function has a unique name
@@ -55,11 +55,11 @@ export function renameVariables(fn: ReactiveFunction): Set<string> {
 function renameVariablesImpl(
   fn: ReactiveFunction,
   visitor: Visitor,
-  scopes: Scopes
+  scopes: Scopes,
 ): void {
   scopes.enter(() => {
     for (const param of fn.params) {
-      if (param.kind === "Identifier") {
+      if (param.kind === 'Identifier') {
         scopes.visit(param.identifier);
       } else {
         scopes.visit(param.place.identifier);
@@ -87,7 +87,7 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
 
   override visitPrunedScope(
     scopeBlock: PrunedReactiveScopeBlock,
-    state: Scopes
+    state: Scopes,
   ): void {
     this.traverseBlock(scopeBlock.instructions, state);
   }
@@ -102,10 +102,10 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: Scopes
+    state: Scopes,
   ): void {
     this.traverseValue(id, value, state);
-    if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
+    if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
       this.visitHirFunction(value.loweredFunc.func, state);
     }
   }
@@ -114,7 +114,7 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     _fn: ReactiveFunction,
-    _state: Scopes
+    _state: Scopes,
   ): void {
     renameVariablesImpl(_fn, this, _state);
   }
@@ -180,7 +180,7 @@ class Scopes {
     fn();
     const last = this.#stack.pop();
     CompilerError.invariant(last === next, {
-      reason: "Mismatch push/pop calls",
+      reason: 'Mismatch push/pop calls',
       description: null,
       loc: null,
       suggestions: null,

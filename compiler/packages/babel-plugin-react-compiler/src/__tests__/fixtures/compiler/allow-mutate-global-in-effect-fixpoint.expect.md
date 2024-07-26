@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { useEffect, useState } from "react";
+import {useEffect, useState} from 'react';
 
-let someGlobal = { value: null };
+let someGlobal = {value: null};
 
 function Component() {
   const [state, setState] = useState(someGlobal);
@@ -20,7 +20,7 @@ function Component() {
   // capture into a separate variable that is not a context variable.
   const y = x;
   useEffect(() => {
-    y.value = "hello";
+    y.value = 'hello';
   }, []);
 
   useEffect(() => {

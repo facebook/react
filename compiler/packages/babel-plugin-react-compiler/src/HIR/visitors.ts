@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { assertExhaustive } from "../Utils/utils";
+import {assertExhaustive} from '../Utils/utils';
 import {
   BlockId,
   Instruction,
@@ -17,10 +17,10 @@ import {
   ReactiveValue,
   SpreadPattern,
   Terminal,
-} from "./HIR";
+} from './HIR';
 
 export function* eachInstructionLValue(
-  instr: ReactiveInstruction
+  instr: ReactiveInstruction,
 ): Iterable<Place> {
   if (instr.lvalue !== null) {
     yield instr.lvalue;
@@ -29,22 +29,22 @@ export function* eachInstructionLValue(
 }
 
 export function* eachInstructionValueLValue(
-  value: ReactiveValue
+  value: ReactiveValue,
 ): Iterable<Place> {
   switch (value.kind) {
-    case "DeclareContext":
-    case "StoreContext":
-    case "DeclareLocal":
-    case "StoreLocal": {
+    case 'DeclareContext':
+    case 'StoreContext':
+    case 'DeclareLocal':
+    case 'StoreLocal': {
       yield value.lvalue.place;
       break;
     }
-    case "Destructure": {
+    case 'Destructure': {
       yield* eachPatternOperand(value.lvalue.pattern);
       break;
     }
-    case "PostfixUpdate":
-    case "PrefixUpdate": {
+    case 'PostfixUpdate':
+    case 'PrefixUpdate': {
       yield value.lvalue;
       break;
     }
@@ -55,103 +55,103 @@ export function* eachInstructionOperand(instr: Instruction): Iterable<Place> {
   yield* eachInstructionValueOperand(instr.value);
 }
 export function* eachInstructionValueOperand(
-  instrValue: InstructionValue
+  instrValue: InstructionValue,
 ): Iterable<Place> {
   switch (instrValue.kind) {
-    case "NewExpression":
-    case "CallExpression": {
+    case 'NewExpression':
+    case 'CallExpression': {
       yield instrValue.callee;
       yield* eachCallArgument(instrValue.args);
       break;
     }
-    case "BinaryExpression": {
+    case 'BinaryExpression': {
       yield instrValue.left;
       yield instrValue.right;
       break;
     }
-    case "MethodCall": {
+    case 'MethodCall': {
       yield instrValue.receiver;
       yield instrValue.property;
       yield* eachCallArgument(instrValue.args);
       break;
     }
-    case "DeclareContext":
-    case "DeclareLocal": {
+    case 'DeclareContext':
+    case 'DeclareLocal': {
       break;
     }
-    case "LoadLocal":
-    case "LoadContext": {
+    case 'LoadLocal':
+    case 'LoadContext': {
       yield instrValue.place;
       break;
     }
-    case "StoreLocal": {
+    case 'StoreLocal': {
       yield instrValue.value;
       break;
     }
-    case "StoreContext": {
+    case 'StoreContext': {
       yield instrValue.lvalue.place;
       yield instrValue.value;
       break;
     }
-    case "StoreGlobal": {
+    case 'StoreGlobal': {
       yield instrValue.value;
       break;
     }
-    case "Destructure": {
+    case 'Destructure': {
       yield instrValue.value;
       break;
     }
-    case "PropertyLoad": {
+    case 'PropertyLoad': {
       yield instrValue.object;
       break;
     }
-    case "PropertyDelete": {
+    case 'PropertyDelete': {
       yield instrValue.object;
       break;
     }
-    case "PropertyStore": {
+    case 'PropertyStore': {
       yield instrValue.object;
       yield instrValue.value;
       break;
     }
-    case "ComputedLoad": {
+    case 'ComputedLoad': {
       yield instrValue.object;
       yield instrValue.property;
       break;
     }
-    case "ComputedDelete": {
+    case 'ComputedDelete': {
       yield instrValue.object;
       yield instrValue.property;
       break;
     }
-    case "ComputedStore": {
+    case 'ComputedStore': {
       yield instrValue.object;
       yield instrValue.property;
       yield instrValue.value;
       break;
     }
-    case "UnaryExpression": {
+    case 'UnaryExpression': {
       yield instrValue.value;
       break;
     }
-    case "JsxExpression": {
-      if (instrValue.tag.kind === "Identifier") {
+    case 'JsxExpression': {
+      if (instrValue.tag.kind === 'Identifier') {
         yield instrValue.tag;
       }
       for (const attribute of instrValue.props) {
         switch (attribute.kind) {
-          case "JsxAttribute": {
+          case 'JsxAttribute': {
             yield attribute.place;
             break;
           }
-          case "JsxSpreadAttribute": {
+          case 'JsxSpreadAttribute': {
             yield attribute.argument;
             break;
           }
           default: {
             assertExhaustive(
               attribute,
-              `Unexpected attribute kind \`${(attribute as any).kind}\``
+              `Unexpected attribute kind \`${(attribute as any).kind}\``,
             );
           }
         }
@@ -161,15 +161,15 @@ export function* eachInstructionValueOperand(
       }
       break;
     }
-    case "JsxFragment": {
+    case 'JsxFragment': {
       yield* instrValue.children;
       break;
     }
-    case "ObjectExpression": {
+    case 'ObjectExpression': {
       for (const property of instrValue.properties) {
         if (
-          property.kind === "ObjectProperty" &&
-          property.key.kind === "computed"
+          property.kind === 'ObjectProperty' &&
+          property.key.kind === 'computed'
         ) {
           yield property.key.name;
         }
@@ -177,92 +177,92 @@ export function* eachInstructionValueOperand(
       }
       break;
     }
-    case "ArrayExpression": {
+    case 'ArrayExpression': {
       for (const element of instrValue.elements) {
-        if (element.kind === "Identifier") {
+        if (element.kind === 'Identifier') {
           yield element;
-        } else if (element.kind === "Spread") {
+        } else if (element.kind === 'Spread') {
           yield element.place;
         }
       }
       break;
     }
-    case "ObjectMethod":
-    case "FunctionExpression": {
+    case 'ObjectMethod':
+    case 'FunctionExpression': {
       yield* instrValue.loweredFunc.dependencies;
       break;
     }
-    case "TaggedTemplateExpression": {
+    case 'TaggedTemplateExpression': {
       yield instrValue.tag;
       break;
     }
-    case "TypeCastExpression": {
+    case 'TypeCastExpression': {
       yield instrValue.value;
       break;
     }
-    case "TemplateLiteral": {
+    case 'TemplateLiteral': {
       yield* instrValue.subexprs;
       break;
     }
-    case "Await": {
+    case 'Await': {
       yield instrValue.value;
       break;
     }
-    case "GetIterator": {
+    case 'GetIterator': {
       yield instrValue.collection;
       break;
     }
-    case "IteratorNext": {
+    case 'IteratorNext': {
       yield instrValue.iterator;
       yield instrValue.collection;
       break;
     }
-    case "NextPropertyOf": {
+    case 'NextPropertyOf': {
       yield instrValue.value;
       break;
     }
-    case "PostfixUpdate":
-    case "PrefixUpdate": {
+    case 'PostfixUpdate':
+    case 'PrefixUpdate': {
       yield instrValue.value;
       break;
     }
-    case "StartMemoize": {
+    case 'StartMemoize': {
       if (instrValue.deps != null) {
         for (const dep of instrValue.deps) {
-          if (dep.root.kind === "NamedLocal") {
+          if (dep.root.kind === 'NamedLocal') {
             yield dep.root.value;
           }
         }
       }
       break;
     }
-    case "FinishMemoize": {
+    case 'FinishMemoize': {
       yield instrValue.decl;
       break;
     }
-    case "Debugger":
-    case "RegExpLiteral":
-    case "MetaProperty":
-    case "LoadGlobal":
-    case "UnsupportedNode":
-    case "Primitive":
-    case "JSXText": {
+    case 'Debugger':
+    case 'RegExpLiteral':
+    case 'MetaProperty':
+    case 'LoadGlobal':
+    case 'UnsupportedNode':
+    case 'Primitive':
+    case 'JSXText': {
       break;
     }
     default: {
       assertExhaustive(
         instrValue,
-        `Unexpected instruction kind \`${(instrValue as any).kind}\``
+        `Unexpected instruction kind \`${(instrValue as any).kind}\``,
       );
     }
   }
 }
 
 export function* eachCallArgument(
-  args: Array<Place | SpreadPattern>
+  args: Array<Place | SpreadPattern>,
 ): Iterable<Place> {
   for (const arg of args) {
-    if (arg.kind === "Identifier") {
+    if (arg.kind === 'Identifier') {
       yield arg;
     } else {
       yield arg.place;
@@ -272,17 +272,17 @@ export function* eachCallArgument(
 
 export function doesPatternContainSpreadElement(pattern: Pattern): boolean {
   switch (pattern.kind) {
-    case "ArrayPattern": {
+    case 'ArrayPattern': {
       for (const item of pattern.items) {
-        if (item.kind === "Spread") {
+        if (item.kind === 'Spread') {
           return true;
         }
       }
       break;
     }
-    case "ObjectPattern": {
+    case 'ObjectPattern': {
       for (const property of pattern.properties) {
-        if (property.kind === "Spread") {
+        if (property.kind === 'Spread') {
           return true;
         }
       }
@@ -291,7 +291,7 @@ export function doesPatternContainSpreadElement(pattern: Pattern): boolean {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -300,33 +300,33 @@ export function doesPatternContainSpreadElement(pattern: Pattern): boolean {
 
 export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
   switch (pattern.kind) {
-    case "ArrayPattern": {
+    case 'ArrayPattern': {
       for (const item of pattern.items) {
-        if (item.kind === "Identifier") {
+        if (item.kind === 'Identifier') {
           yield item;
-        } else if (item.kind === "Spread") {
+        } else if (item.kind === 'Spread') {
           yield item.place;
-        } else if (item.kind === "Hole") {
+        } else if (item.kind === 'Hole') {
           continue;
         } else {
           assertExhaustive(
             item,
-            `Unexpected item kind \`${(item as any).kind}\``
+            `Unexpected item kind \`${(item as any).kind}\``,
           );
         }
       }
       break;
     }
-    case "ObjectPattern": {
+    case 'ObjectPattern': {
       for (const property of pattern.properties) {
-        if (property.kind === "ObjectProperty") {
+        if (property.kind === 'ObjectProperty') {
           yield property.place;
-        } else if (property.kind === "Spread") {
+        } else if (property.kind === 'Spread') {
           yield property.place;
         } else {
           assertExhaustive(
             property,
-            `Unexpected item kind \`${(property as any).kind}\``
+            `Unexpected item kind \`${(property as any).kind}\``,
           );
         }
       }
@@ -335,7 +335,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -343,21 +343,21 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
 
 export function mapInstructionLValues(
   instr: Instruction,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   switch (instr.value.kind) {
-    case "DeclareLocal":
-    case "StoreLocal": {
+    case 'DeclareLocal':
+    case 'StoreLocal': {
       const lvalue = instr.value.lvalue;
       lvalue.place = fn(lvalue.place);
       break;
     }
-    case "Destructure": {
+    case 'Destructure': {
       mapPatternOperands(instr.value.lvalue.pattern, fn);
       break;
     }
-    case "PostfixUpdate":
-    case "PrefixUpdate": {
+    case 'PostfixUpdate':
+    case 'PrefixUpdate': {
       instr.value.lvalue = fn(instr.value.lvalue);
       break;
     }
@@ -369,124 +369,124 @@ export function mapInstructionLValues(
 
 export function mapInstructionOperands(
   instr: Instruction,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   mapInstructionValueOperands(instr.value, fn);
 }
 
 export function mapInstructionValueOperands(
   instrValue: InstructionValue,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   switch (instrValue.kind) {
-    case "BinaryExpression": {
+    case 'BinaryExpression': {
       instrValue.left = fn(instrValue.left);
       instrValue.right = fn(instrValue.right);
       break;
     }
-    case "PropertyLoad": {
+    case 'PropertyLoad': {
       instrValue.object = fn(instrValue.object);
       break;
     }
-    case "PropertyDelete": {
+    case 'PropertyDelete': {
       instrValue.object = fn(instrValue.object);
       break;
     }
-    case "PropertyStore": {
+    case 'PropertyStore': {
       instrValue.object = fn(instrValue.object);
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "ComputedLoad": {
+    case 'ComputedLoad': {
       instrValue.object = fn(instrValue.object);
       instrValue.property = fn(instrValue.property);
       break;
     }
-    case "ComputedDelete": {
+    case 'ComputedDelete': {
       instrValue.object = fn(instrValue.object);
       instrValue.property = fn(instrValue.property);
       break;
     }
-    case "ComputedStore": {
+    case 'ComputedStore': {
       instrValue.object = fn(instrValue.object);
       instrValue.property = fn(instrValue.property);
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "DeclareContext":
-    case "DeclareLocal": {
+    case 'DeclareContext':
+    case 'DeclareLocal': {
       break;
     }
-    case "LoadLocal":
-    case "LoadContext": {
+    case 'LoadLocal':
+    case 'LoadContext': {
       instrValue.place = fn(instrValue.place);
       break;
     }
-    case "StoreLocal": {
+    case 'StoreLocal': {
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "StoreContext": {
+    case 'StoreContext': {
       instrValue.lvalue.place = fn(instrValue.lvalue.place);
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "StoreGlobal": {
+    case 'StoreGlobal': {
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "Destructure": {
+    case 'Destructure': {
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "NewExpression":
-    case "CallExpression": {
+    case 'NewExpression':
+    case 'CallExpression': {
       instrValue.callee = fn(instrValue.callee);
       instrValue.args = mapCallArguments(instrValue.args, fn);
       break;
     }
-    case "MethodCall": {
+    case 'MethodCall': {
       instrValue.receiver = fn(instrValue.receiver);
       instrValue.property = fn(instrValue.property);
       instrValue.args = mapCallArguments(instrValue.args, fn);
       break;
     }
-    case "UnaryExpression": {
+    case 'UnaryExpression': {
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "JsxExpression": {
-      if (instrValue.tag.kind === "Identifier") {
+    case 'JsxExpression': {
+      if (instrValue.tag.kind === 'Identifier') {
         instrValue.tag = fn(instrValue.tag);
       }
       for (const attribute of instrValue.props) {
         switch (attribute.kind) {
-          case "JsxAttribute": {
+          case 'JsxAttribute': {
             attribute.place = fn(attribute.place);
             break;
           }
-          case "JsxSpreadAttribute": {
+          case 'JsxSpreadAttribute': {
             attribute.argument = fn(attribute.argument);
             break;
           }
           default: {
             assertExhaustive(
               attribute,
-              `Unexpected attribute kind \`${(attribute as any).kind}\``
+              `Unexpected attribute kind \`${(attribute as any).kind}\``,
             );
           }
         }
       }
       if (instrValue.children) {
-        instrValue.children = instrValue.children.map((p) => fn(p));
+        instrValue.children = instrValue.children.map(p => fn(p));
       }
       break;
     }
-    case "ObjectExpression": {
+    case 'ObjectExpression': {
       for (const property of instrValue.properties) {
         if (
-          property.kind === "ObjectProperty" &&
-          property.key.kind === "computed"
+          property.kind === 'ObjectProperty' &&
+          property.key.kind === 'computed'
         ) {
           property.key.name = fn(property.key.name);
         }
@@ -494,11 +494,11 @@ export function mapInstructionValueOperands(
       }
       break;
     }
-    case "ArrayExpression": {
-      instrValue.elements = instrValue.elements.map((element) => {
-        if (element.kind === "Identifier") {
+    case 'ArrayExpression': {
+      instrValue.elements = instrValue.elements.map(element => {
+        if (element.kind === 'Identifier') {
           return fn(element);
-        } else if (element.kind === "Spread") {
+        } else if (element.kind === 'Spread') {
           element.place = fn(element.place);
           return element;
         } else {
@@ -507,85 +507,85 @@ export function mapInstructionValueOperands(
       });
       break;
     }
-    case "JsxFragment": {
-      instrValue.children = instrValue.children.map((e) => fn(e));
+    case 'JsxFragment': {
+      instrValue.children = instrValue.children.map(e => fn(e));
       break;
     }
-    case "ObjectMethod":
-    case "FunctionExpression": {
+    case 'ObjectMethod':
+    case 'FunctionExpression': {
       instrValue.loweredFunc.dependencies =
-        instrValue.loweredFunc.dependencies.map((d) => fn(d));
+        instrValue.loweredFunc.dependencies.map(d => fn(d));
       break;
     }
-    case "TaggedTemplateExpression": {
+    case 'TaggedTemplateExpression': {
       instrValue.tag = fn(instrValue.tag);
       break;
     }
-    case "TypeCastExpression": {
+    case 'TypeCastExpression': {
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "TemplateLiteral": {
+    case 'TemplateLiteral': {
       instrValue.subexprs = instrValue.subexprs.map(fn);
       break;
     }
-    case "Await": {
+    case 'Await': {
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "GetIterator": {
+    case 'GetIterator': {
       instrValue.collection = fn(instrValue.collection);
       break;
     }
-    case "IteratorNext": {
+    case 'IteratorNext': {
       instrValue.iterator = fn(instrValue.iterator);
       instrValue.collection = fn(instrValue.collection);
       break;
     }
-    case "NextPropertyOf": {
+    case 'NextPropertyOf': {
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "PostfixUpdate":
-    case "PrefixUpdate": {
+    case 'PostfixUpdate':
+    case 'PrefixUpdate': {
       instrValue.value = fn(instrValue.value);
       break;
     }
-    case "StartMemoize": {
+    case 'StartMemoize': {
       if (instrValue.deps != null) {
         for (const dep of instrValue.deps) {
-          if (dep.root.kind === "NamedLocal") {
+          if (dep.root.kind === 'NamedLocal') {
             dep.root.value = fn(dep.root.value);
           }
         }
       }
       break;
     }
-    case "FinishMemoize": {
+    case 'FinishMemoize': {
       instrValue.decl = fn(instrValue.decl);
       break;
     }
-    case "Debugger":
-    case "RegExpLiteral":
-    case "MetaProperty":
-    case "LoadGlobal":
-    case "UnsupportedNode":
-    case "Primitive":
-    case "JSXText": {
+    case 'Debugger':
+    case 'RegExpLiteral':
+    case 'MetaProperty':
+    case 'LoadGlobal':
+    case 'UnsupportedNode':
+    case 'Primitive':
+    case 'JSXText': {
       break;
     }
     default: {
-      assertExhaustive(instrValue, "Unexpected instruction kind");
+      assertExhaustive(instrValue, 'Unexpected instruction kind');
     }
   }
 }
 
 export function mapCallArguments(
   args: Array<Place | SpreadPattern>,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): Array<Place | SpreadPattern> {
-  return args.map((arg) => {
-    if (arg.kind === "Identifier") {
+  return args.map(arg => {
+    if (arg.kind === 'Identifier') {
       return fn(arg);
     } else {
       arg.place = fn(arg.place);
@@ -596,14 +596,14 @@ export function mapCallArguments(
 
 export function mapPatternOperands(
   pattern: Pattern,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   switch (pattern.kind) {
-    case "ArrayPattern": {
-      pattern.items = pattern.items.map((item) => {
-        if (item.kind === "Identifier") {
+    case 'ArrayPattern': {
+      pattern.items = pattern.items.map(item => {
+        if (item.kind === 'Identifier') {
           return fn(item);
-        } else if (item.kind === "Spread") {
+        } else if (item.kind === 'Spread') {
           item.place = fn(item.place);
           return item;
         } else {
@@ -612,7 +612,7 @@ export function mapPatternOperands(
       });
       break;
     }
-    case "ObjectPattern": {
+    case 'ObjectPattern': {
       for (const property of pattern.properties) {
         property.place = fn(property.place);
       }
@@ -621,7 +621,7 @@ export function mapPatternOperands(
     default: {
       assertExhaustive(
         pattern,
-        `Unexpected pattern kind \`${(pattern as any).kind}\``
+        `Unexpected pattern kind \`${(pattern as any).kind}\``,
       );
     }
   }
@@ -630,25 +630,25 @@ export function mapPatternOperands(
 // Maps a terminal node's block assignments using the provided function.
 export function mapTerminalSuccessors(
   terminal: Terminal,
-  fn: (block: BlockId) => BlockId
+  fn: (block: BlockId) => BlockId,
 ): Terminal {
   switch (terminal.kind) {
-    case "goto": {
+    case 'goto': {
       const target = fn(terminal.block);
       return {
-        kind: "goto",
+        kind: 'goto',
         block: target,
         variant: terminal.variant,
         id: makeInstructionId(0),
         loc: terminal.loc,
       };
     }
-    case "if": {
+    case 'if': {
       const consequent = fn(terminal.consequent);
       const alternate = fn(terminal.alternate);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "if",
+        kind: 'if',
         test: terminal.test,
         consequent,
         alternate,
@@ -657,11 +657,11 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "branch": {
+    case 'branch': {
       const consequent = fn(terminal.consequent);
       const alternate = fn(terminal.alternate);
       return {
-        kind: "branch",
+        kind: 'branch',
         test: terminal.test,
         consequent,
         alternate,
@@ -669,8 +669,8 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "switch": {
-      const cases = terminal.cases.map((case_) => {
+    case 'switch': {
+      const cases = terminal.cases.map(case_ => {
         const target = fn(case_.block);
         return {
           test: case_.test,
@@ -679,7 +679,7 @@ export function mapTerminalSuccessors(
       });
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "switch",
+        kind: 'switch',
         test: terminal.test,
         cases,
         fallthrough,
@@ -687,11 +687,11 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "logical": {
+    case 'logical': {
       const test = fn(terminal.test);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "logical",
+        kind: 'logical',
         test,
         fallthrough,
         operator: terminal.operator,
@@ -699,22 +699,22 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "ternary": {
+    case 'ternary': {
       const test = fn(terminal.test);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "ternary",
+        kind: 'ternary',
         test,
         fallthrough,
         id: makeInstructionId(0),
         loc: terminal.loc,
       };
     }
-    case "optional": {
+    case 'optional': {
       const test = fn(terminal.test);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "optional",
+        kind: 'optional',
         optional: terminal.optional,
         test,
         fallthrough,
@@ -722,23 +722,23 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "return": {
+    case 'return': {
       return {
-        kind: "return",
+        kind: 'return',
         loc: terminal.loc,
         value: terminal.value,
         id: makeInstructionId(0),
       };
     }
-    case "throw": {
+    case 'throw': {
       return terminal;
     }
-    case "do-while": {
+    case 'do-while': {
       const loop = fn(terminal.loop);
       const test = fn(terminal.test);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "do-while",
+        kind: 'do-while',
         loc: terminal.loc,
         test,
         loop,
@@ -746,12 +746,12 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
-    case "while": {
+    case 'while': {
       const test = fn(terminal.test);
       const loop = fn(terminal.loop);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "while",
+        kind: 'while',
         loc: terminal.loc,
         test,
         loop,
@@ -759,14 +759,14 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
-    case "for": {
+    case 'for': {
       const init = fn(terminal.init);
       const test = fn(terminal.test);
       const update = terminal.update !== null ? fn(terminal.update) : null;
       const loop = fn(terminal.loop);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "for",
+        kind: 'for',
         loc: terminal.loc,
         init,
         test,
@@ -776,13 +776,13 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
-    case "for-of": {
+    case 'for-of': {
       const init = fn(terminal.init);
       const loop = fn(terminal.loop);
       const test = fn(terminal.test);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "for-of",
+        kind: 'for-of',
         loc: terminal.loc,
         init,
         test,
@@ -791,12 +791,12 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
-    case "for-in": {
+    case 'for-in': {
       const init = fn(terminal.init);
       const loop = fn(terminal.loop);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "for-in",
+        kind: 'for-in',
         loc: terminal.loc,
         init,
         loop,
@@ -804,45 +804,45 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
-    case "label": {
+    case 'label': {
       const block = fn(terminal.block);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "label",
+        kind: 'label',
         block,
         fallthrough,
         id: makeInstructionId(0),
         loc: terminal.loc,
       };
     }
-    case "sequence": {
+    case 'sequence': {
       const block = fn(terminal.block);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "sequence",
+        kind: 'sequence',
         block,
         fallthrough,
         id: makeInstructionId(0),
         loc: terminal.loc,
       };
     }
-    case "maybe-throw": {
+    case 'maybe-throw': {
       const continuation = fn(terminal.continuation);
       const handler = fn(terminal.handler);
       return {
-        kind: "maybe-throw",
+        kind: 'maybe-throw',
         continuation,
         handler,
         id: makeInstructionId(0),
         loc: terminal.loc,
       };
     }
-    case "try": {
+    case 'try': {
       const block = fn(terminal.block);
       const handler = fn(terminal.handler);
       const fallthrough = fn(terminal.fallthrough);
       return {
-        kind: "try",
+        kind: 'try',
         block,
         handlerBinding: terminal.handlerBinding,
         handler,
@@ -851,8 +851,8 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "scope":
-    case "pruned-scope": {
+    case 'scope':
+    case 'pruned-scope': {
       const block = fn(terminal.block);
       const fallthrough = fn(terminal.fallthrough);
       return {
@@ -864,14 +864,14 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
-    case "unreachable":
-    case "unsupported": {
+    case 'unreachable':
+    case 'unsupported': {
       return terminal;
     }
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``
+        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``,
       );
     }
   }
@@ -879,41 +879,41 @@ export function mapTerminalSuccessors(
 
 export function terminalHasFallthrough<
   T extends Terminal,
-  U extends T & { fallthrough: BlockId },
+  U extends T & {fallthrough: BlockId},
 >(terminal: T): terminal is U {
   switch (terminal.kind) {
-    case "maybe-throw":
-    case "branch":
-    case "goto":
-    case "return":
-    case "throw":
-    case "unreachable":
-    case "unsupported": {
+    case 'maybe-throw':
+    case 'branch':
+    case 'goto':
+    case 'return':
+    case 'throw':
+    case 'unreachable':
+    case 'unsupported': {
       const _: undefined = terminal.fallthrough;
       return false;
     }
-    case "try":
-    case "do-while":
-    case "for-of":
-    case "for-in":
-    case "for":
-    case "if":
-    case "label":
-    case "logical":
-    case "optional":
-    case "sequence":
-    case "switch":
-    case "ternary":
-    case "while":
-    case "scope":
-    case "pruned-scope": {
+    case 'try':
+    case 'do-while':
+    case 'for-of':
+    case 'for-in':
+    case 'for':
+    case 'if':
+    case 'label':
+    case 'logical':
+    case 'optional':
+    case 'sequence':
+    case 'switch':
+    case 'ternary':
+    case 'while':
+    case 'scope':
+    case 'pruned-scope': {
       const _: BlockId = terminal.fallthrough;
       return true;
     }
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }
@@ -939,87 +939,87 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
  */
 export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
   switch (terminal.kind) {
-    case "goto": {
+    case 'goto': {
       yield terminal.block;
       break;
     }
-    case "if": {
+    case 'if': {
       yield terminal.consequent;
       yield terminal.alternate;
       break;
     }
-    case "branch": {
+    case 'branch': {
       yield terminal.consequent;
       yield terminal.alternate;
       break;
     }
-    case "switch": {
+    case 'switch': {
       for (const case_ of terminal.cases) {
         yield case_.block;
       }
       break;
     }
-    case "optional":
-    case "ternary":
-    case "logical": {
+    case 'optional':
+    case 'ternary':
+    case 'logical': {
       yield terminal.test;
       break;
     }
-    case "return": {
+    case 'return': {
       break;
     }
-    case "throw": {
+    case 'throw': {
       break;
     }
-    case "do-while": {
+    case 'do-while': {
       yield terminal.loop;
       break;
     }
-    case "while": {
+    case 'while': {
       yield terminal.test;
       break;
     }
-    case "for": {
+    case 'for': {
       yield terminal.init;
       break;
     }
-    case "for-of": {
+    case 'for-of': {
       yield terminal.init;
       break;
     }
-    case "for-in": {
+    case 'for-in': {
       yield terminal.init;
       break;
     }
-    case "label": {
+    case 'label': {
       yield terminal.block;
       break;
     }
-    case "sequence": {
+    case 'sequence': {
       yield terminal.block;
       break;
     }
-    case "maybe-throw": {
+    case 'maybe-throw': {
       yield terminal.continuation;
       yield terminal.handler;
       break;
     }
-    case "try": {
+    case 'try': {
       yield terminal.block;
       break;
     }
-    case "scope":
-    case "pruned-scope": {
+    case 'scope':
+    case 'pruned-scope': {
       yield terminal.block;
       break;
     }
-    case "unreachable":
-    case "unsupported":
+    case 'unreachable':
+    case 'unsupported':
       break;
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``
+        `Unexpected terminal kind \`${(terminal as any as Terminal).kind}\``,
       );
     }
   }
@@ -1027,18 +1027,18 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
 
 export function mapTerminalOperands(
   terminal: Terminal,
-  fn: (place: Place) => Place
+  fn: (place: Place) => Place,
 ): void {
   switch (terminal.kind) {
-    case "if": {
+    case 'if': {
       terminal.test = fn(terminal.test);
       break;
     }
-    case "branch": {
+    case 'branch': {
       terminal.test = fn(terminal.test);
       break;
     }
-    case "switch": {
+    case 'switch': {
       terminal.test = fn(terminal.test);
       for (const case_ of terminal.cases) {
         if (case_.test === null) {
@@ -1048,12 +1048,12 @@ export function mapTerminalOperands(
       }
       break;
     }
-    case "return":
-    case "throw": {
+    case 'return':
+    case 'throw': {
       terminal.value = fn(terminal.value);
       break;
     }
-    case "try": {
+    case 'try': {
       if (terminal.handlerBinding !== null) {
         terminal.handlerBinding = fn(terminal.handlerBinding);
       } else {
@@ -1061,29 +1061,29 @@ export function mapTerminalOperands(
       }
       break;
     }
-    case "maybe-throw":
-    case "sequence":
-    case "label":
-    case "optional":
-    case "ternary":
-    case "logical":
-    case "do-while":
-    case "while":
-    case "for":
-    case "for-of":
-    case "for-in":
-    case "goto":
-    case "unreachable":
-    case "unsupported":
-    case "scope":
-    case "pruned-scope": {
+    case 'maybe-throw':
+    case 'sequence':
+    case 'label':
+    case 'optional':
+    case 'ternary':
+    case 'logical':
+    case 'do-while':
+    case 'while':
+    case 'for':
+    case 'for-of':
+    case 'for-in':
+    case 'goto':
+    case 'unreachable':
+    case 'unsupported':
+    case 'scope':
+    case 'pruned-scope': {
       // no-op
       break;
     }
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }
@@ -1091,15 +1091,15 @@ export function mapTerminalOperands(
 
 export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
   switch (terminal.kind) {
-    case "if": {
+    case 'if': {
       yield terminal.test;
       break;
     }
-    case "branch": {
+    case 'branch': {
       yield terminal.test;
       break;
     }
-    case "switch": {
+    case 'switch': {
       yield terminal.test;
       for (const case_ of terminal.cases) {
         if (case_.test === null) {
@@ -1109,40 +1109,40 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       }
       break;
     }
-    case "return":
-    case "throw": {
+    case 'return':
+    case 'throw': {
       yield terminal.value;
       break;
     }
-    case "try": {
+    case 'try': {
       if (terminal.handlerBinding !== null) {
         yield terminal.handlerBinding;
       }
       break;
     }
-    case "maybe-throw":
-    case "sequence":
-    case "label":
-    case "optional":
-    case "ternary":
-    case "logical":
-    case "do-while":
-    case "while":
-    case "for":
-    case "for-of":
-    case "for-in":
-    case "goto":
-    case "unreachable":
-    case "unsupported":
-    case "scope":
-    case "pruned-scope": {
+    case 'maybe-throw':
+    case 'sequence':
+    case 'label':
+    case 'optional':
+    case 'ternary':
+    case 'logical':
+    case 'do-while':
+    case 'while':
+    case 'for':
+    case 'for-of':
+    case 'for-in':
+    case 'goto':
+    case 'unreachable':
+    case 'unsupported':
+    case 'scope':
+    case 'pruned-scope': {
       // no-op
       break;
     }
     default: {
       assertExhaustive(
         terminal,
-        `Unexpected terminal kind \`${(terminal as any).kind}\``
+        `Unexpected terminal kind \`${(terminal as any).kind}\``,
       );
     }
   }

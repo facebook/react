@@ -3,21 +3,21 @@
 
 ```javascript
 // @enableReactiveScopesInHIR:false
-import { useRef } from "react";
-import { addOne } from "shared-runtime";
+import {useRef} from 'react';
+import {addOne} from 'shared-runtime';
 
 function useKeyCommand() {
   const currentPosition = useRef(0);
-  const handleKey = (direction) => () => {
+  const handleKey = direction => () => {
     const position = currentPosition.current;
-    const nextPosition = direction === "left" ? addOne(position) : position;
+    const nextPosition = direction === 'left' ? addOne(position) : position;
     currentPosition.current = nextPosition;
   };
   const moveLeft = {
-    handler: handleKey("left"),
+    handler: handleKey('left'),
   };
   const moveRight = {
-    handler: handleKey("right"),
+    handler: handleKey('right'),
   };
   return [moveLeft, moveRight];
 }

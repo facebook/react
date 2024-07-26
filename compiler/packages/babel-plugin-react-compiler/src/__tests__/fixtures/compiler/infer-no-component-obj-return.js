@@ -1,7 +1,7 @@
 // @compilationMode(infer)
 function Component(props) {
   const ignore = <foo />;
-  return { foo: f(props) };
+  return {foo: f(props)};
 }
 
 function f(props) {

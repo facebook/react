@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useState } from "react"; // @enableChangeDetectionForDebugging
+import {useState} from 'react'; // @enableChangeDetectionForDebugging
 
 function Component(props) {
   const w = f(props.x);
@@ -21,7 +21,7 @@ function f(x) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ x: 42 }],
+  params: [{x: 42}],
   isComponent: true,
 };
 

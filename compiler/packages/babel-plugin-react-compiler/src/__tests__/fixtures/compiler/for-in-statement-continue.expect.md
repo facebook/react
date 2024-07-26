@@ -4,9 +4,9 @@
 ```javascript
 function Component(props) {
   let x;
-  const object = { ...props.value };
+  const object = {...props.value};
   for (const y in object) {
-    if (y === "continue") {
+    if (y === 'continue') {
       continue;
     }
     x = object[y];
@@ -16,16 +16,16 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: { a: "a", continue: "skip", b: "hello!" } }],
+  params: [{value: {a: 'a', continue: 'skip', b: 'hello!'}}],
   sequentialRenders: [
-    { value: { a: "a", continue: "skip", b: "hello!" } },
-    { value: { a: "a", continue: "skip", b: "hello!" } },
-    { value: { a: "skip!", continue: true } },
-    { value: { a: "a", continue: "skip", b: "hello!" } },
-    { value: { a: "skip!", continue: true } },
-    { value: { a: "a", continue: "skip", b: "hello!" } },
-    { value: { a: "skip!", continue: true } },
-    { value: { a: "skip!", continue: true } },
+    {value: {a: 'a', continue: 'skip', b: 'hello!'}},
+    {value: {a: 'a', continue: 'skip', b: 'hello!'}},
+    {value: {a: 'skip!', continue: true}},
+    {value: {a: 'a', continue: 'skip', b: 'hello!'}},
+    {value: {a: 'skip!', continue: true}},
+    {value: {a: 'a', continue: 'skip', b: 'hello!'}},
+    {value: {a: 'skip!', continue: true}},
+    {value: {a: 'skip!', continue: true}},
   ],
 };
 

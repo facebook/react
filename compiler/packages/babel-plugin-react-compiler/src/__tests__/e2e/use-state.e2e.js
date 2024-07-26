@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import * as React from "react";
-import { useState } from "react";
-import { expectLogsAndClear, log } from "./expectLogs";
+import {render, screen, fireEvent} from '@testing-library/react';
+import * as React from 'react';
+import {useState} from 'react';
+import {expectLogsAndClear, log} from './expectLogs';
 
 function Counter() {
   let [state, setState] = useState(0);
@@ -23,13 +23,13 @@ function Counter() {
   );
 }
 
-function Title({ text }) {
+function Title({text}) {
   log(`rendering: ${text}`);
   return <h1>{text}</h1>;
 }
 
-test("use-state", async () => {
-  const { asFragment } = render(<Counter />);
+test('use-state', async () => {
+  const {asFragment} = render(<Counter />);
 
   expect(asFragment()).toMatchInlineSnapshot(`
   <DocumentFragment>
@@ -49,10 +49,10 @@ test("use-state", async () => {
   </DocumentFragment>
   `);
 
-  expectLogsAndClear(["rendering: Counter"]);
+  expectLogsAndClear(['rendering: Counter']);
 
-  fireEvent.click(screen.getByTestId("button"));
-  await screen.findByText("1");
+  fireEvent.click(screen.getByTestId('button'));
+  await screen.findByText('1');
 
-  expectLogsAndClear(__FORGET__ ? [] : ["rendering: Counter"]);
+  expectLogsAndClear(__FORGET__ ? [] : ['rendering: Counter']);
 });

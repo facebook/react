@@ -1,5 +1,5 @@
 function Foo() {
-  return <div> {", "}</div>;
+  return <div> {', '}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {

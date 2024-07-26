@@ -1,9 +1,9 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-function Component({ data }) {
+function Component({data}) {
   let x = 0;
   for (const item of data) {
-    const { current, other } = item;
+    const {current, other} = item;
     x += current;
     identity(other);
   }
@@ -15,8 +15,8 @@ export const FIXTURE_ENTRYPOINT = {
   params: [
     {
       data: [
-        { current: 2, other: 3 },
-        { current: 4, other: 5 },
+        {current: 2, other: 3},
+        {current: 4, other: 5},
       ],
     },
   ],

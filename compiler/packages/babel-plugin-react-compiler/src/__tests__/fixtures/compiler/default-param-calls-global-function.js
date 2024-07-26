@@ -1,6 +1,6 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
-function Component(x = identity([() => {}, true, 42, "hello"])) {
+function Component(x = identity([() => {}, true, 42, 'hello'])) {
   return x;
 }
 

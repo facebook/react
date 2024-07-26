@@ -3,13 +3,8 @@
 
 ```javascript
 // @enablePreserveExistingMemoizationGuarantees
-import { useCallback } from "react";
-import {
-  identity,
-  makeObject_Primitives,
-  mutate,
-  useHook,
-} from "shared-runtime";
+import {useCallback} from 'react';
+import {identity, makeObject_Primitives, mutate, useHook} from 'shared-runtime';
 
 function Component(props) {
   const free = makeObject_Primitives();
@@ -27,7 +22,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };
 
 ```

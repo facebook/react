@@ -13,6 +13,7 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{name: 'Mofei'}],
 };
+
 ```
 
 ## Code

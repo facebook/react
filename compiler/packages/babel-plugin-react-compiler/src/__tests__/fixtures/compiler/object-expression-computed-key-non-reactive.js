@@ -1,4 +1,4 @@
-import { identity } from "shared-runtime";
+import {identity} from 'shared-runtime';
 
 const SCALE = 2;
 
@@ -12,5 +12,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ key: "Sathya", value: "Compiler" }],
+  params: [{key: 'Sathya', value: 'Compiler'}],
 };

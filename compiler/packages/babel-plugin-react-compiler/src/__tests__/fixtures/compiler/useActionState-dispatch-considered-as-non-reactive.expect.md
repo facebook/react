@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useActionState } from "react";
+import {useActionState} from 'react';
 
 function Component() {
   const [actionState, dispatchAction] = useActionState();

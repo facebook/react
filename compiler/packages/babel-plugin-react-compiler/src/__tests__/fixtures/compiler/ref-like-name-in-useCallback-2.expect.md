@@ -3,10 +3,10 @@
 
 ```javascript
 // @enableTreatRefLikeIdentifiersAsRefs @validatePreserveExistingMemoizationGuarantees
-import { useRef, useCallback } from "react";
+import {useRef, useCallback} from 'react';
 
 function useCustomRef() {
-  return useRef({ click: () => {} });
+  return useRef({click: () => {}});
 }
 
 function Foo() {

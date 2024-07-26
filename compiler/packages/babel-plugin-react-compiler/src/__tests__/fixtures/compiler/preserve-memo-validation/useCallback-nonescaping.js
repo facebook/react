@@ -1,7 +1,7 @@
 // @validatePreserveExistingMemoizationGuarantees @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
-import { useCallback } from "react";
+import {useCallback} from 'react';
 
-function Component({ entity, children }) {
+function Component({entity, children}) {
   // showMessage doesn't escape so we don't memoize it.
   // However, validatePreserveExistingMemoizationGuarantees only sees that the scope
   // doesn't exist, and thinks the memoization was missed instead of being intentionally dropped.
@@ -18,7 +18,7 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [
     {
-      entity: { name: "Sathya" },
+      entity: {name: 'Sathya'},
       children: [<div key="gsathya">Hi Sathya!</div>],
     },
   ],
