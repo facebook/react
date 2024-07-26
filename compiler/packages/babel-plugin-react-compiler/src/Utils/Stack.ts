@@ -104,7 +104,7 @@ class Empty<T> implements StackInterface<T> {
     return null;
   }
   print(_: (node: T) => string): string {
-    return "";
+    return '';
   }
 }
 

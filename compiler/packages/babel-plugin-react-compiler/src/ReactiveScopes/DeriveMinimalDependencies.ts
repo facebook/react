@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
-import { Identifier, ReactiveScopeDependency } from "../HIR";
-import { printIdentifier } from "../HIR/PrintHIR";
-import { assertExhaustive } from "../Utils/utils";
+import {CompilerError} from '../CompilerError';
+import {Identifier, ReactiveScopeDependency} from '../HIR';
+import {printIdentifier} from '../HIR/PrintHIR';
+import {assertExhaustive} from '../Utils/utils';
 
 /*
  * We need to understand optional member expressions only when determining
@@ -69,7 +69,7 @@ export class ReactiveScopeDependencyTree {
   }
 
   add(dep: ReactiveScopePropertyDependency, inConditional: boolean): void {
-    const { path, optionalPath } = dep;
+    const {path, optionalPath} = dep;
     let currNode = this.#getOrCreateRoot(dep.identifier);
 
     const accessType = inConditional
@@ -111,7 +111,7 @@ export class ReactiveScopeDependencyTree {
         let currChild = getOrMakeProperty(currNode, property);
         currChild.accessType = merge(
           currChild.accessType,
-          PropertyAccessType.ConditionalAccess
+          PropertyAccessType.ConditionalAccess,
         );
         currNode = currChild;
       }
@@ -119,7 +119,7 @@ export class ReactiveScopeDependencyTree {
       // The final node should be marked as a conditional dependency.
       currNode.accessType = merge(
         currNode.accessType,
-        PropertyAccessType.ConditionalDependency
+        PropertyAccessType.ConditionalDependency,
       );
     }
   }
@@ -130,15 +130,15 @@ export class ReactiveScopeDependencyTree {
       const deps = deriveMinimalDependenciesInSubtree(rootNode);
       CompilerError.invariant(
         deps.every(
-          (dep) => dep.accessType === PropertyAccessType.UnconditionalDependency
+          dep => dep.accessType === PropertyAccessType.UnconditionalDependency,
         ),
         {
           reason:
-            "[PropagateScopeDependencies] All dependencies must be reduced to unconditional dependencies.",
+            '[PropagateScopeDependencies] All dependencies must be reduced to unconditional dependencies.',
           description: null,
           loc: null,
           suggestions: null,
-        }
+        },
       );
 
       for (const dep of deps) {
@@ -155,10 +155,10 @@ export class ReactiveScopeDependencyTree {
   addDepsFromInnerScope(
     depsFromInnerScope: ReactiveScopeDependencyTree,
     innerScopeInConditionalWithinParent: boolean,
-    checkValidDepIdFn: (dep: ReactiveScopeDependency) => boolean
+    checkValidDepIdFn: (dep: ReactiveScopeDependency) => boolean,
   ): void {
     for (const [id, otherRoot] of depsFromInnerScope.#roots) {
-      if (!checkValidDepIdFn({ identifier: id, path: [] })) {
+      if (!checkValidDepIdFn({identifier: id, path: []})) {
         continue;
       }
       let currRoot = this.#getOrCreateRoot(id);
@@ -172,17 +172,17 @@ export class ReactiveScopeDependencyTree {
   }
 
   promoteDepsFromExhaustiveConditionals(
-    trees: Array<ReactiveScopeDependencyTree>
+    trees: Array<ReactiveScopeDependencyTree>,
   ): void {
     CompilerError.invariant(trees.length > 1, {
-      reason: "Expected trees to be at least 2 elements long.",
+      reason: 'Expected trees to be at least 2 elements long.',
       description: null,
       loc: null,
       suggestions: null,
     });
 
     for (const [id, root] of this.#roots) {
-      const nodesForRootId = mapNonNull(trees, (tree) => {
+      const nodesForRootId = mapNonNull(trees, tree => {
         const node = tree.#roots.get(id);
         if (node != null && isUnconditional(node.accessType)) {
           return node;
@@ -193,7 +193,7 @@ export class ReactiveScopeDependencyTree {
       if (nodesForRootId) {
         addSubtreeIntersection(
           root.properties,
-          nodesForRootId.map((root) => root.properties)
+          nodesForRootId.map(root => root.properties),
         );
       }
     }
@@ -209,11 +209,11 @@ export class ReactiveScopeDependencyTree {
 
     for (const [rootId, rootNode] of this.#roots.entries()) {
       const rootResults = printSubtree(rootNode, includeAccesses).map(
-        (result) => `${printIdentifier(rootId)}.${result}`
+        result => `${printIdentifier(rootId)}.${result}`,
       );
       res.push(rootResults);
     }
-    return res.flat().join("\n");
+    return res.flat().join('\n');
   }
 }
 
@@ -237,10 +237,10 @@ export class ReactiveScopeDependencyTree {
  *    ```
  */
 enum PropertyAccessType {
-  ConditionalAccess = "ConditionalAccess",
-  UnconditionalAccess = "UnconditionalAccess",
-  ConditionalDependency = "ConditionalDependency",
-  UnconditionalDependency = "UnconditionalDependency",
+  ConditionalAccess = 'ConditionalAccess',
+  UnconditionalAccess = 'UnconditionalAccess',
+  ConditionalDependency = 'ConditionalDependency',
+  UnconditionalDependency = 'UnconditionalDependency',
 }
 
 const MIN_ACCESS_TYPE = PropertyAccessType.ConditionalAccess;
@@ -259,7 +259,7 @@ function isDependency(access: PropertyAccessType): boolean {
 
 function merge(
   access1: PropertyAccessType,
-  access2: PropertyAccessType
+  access2: PropertyAccessType,
 ): PropertyAccessType {
   const resultIsUnconditional =
     isUnconditional(access1) || isUnconditional(access2);
@@ -318,17 +318,17 @@ const promoteCondResult = [
  * @returns a minimal list of dependencies in this subtree.
  */
 function deriveMinimalDependenciesInSubtree(
-  dep: DependencyNode
+  dep: DependencyNode,
 ): Array<ReduceResultNode> {
   const results: Array<ReduceResultNode> = [];
   for (const [childName, childNode] of dep.properties) {
     const childResult = deriveMinimalDependenciesInSubtree(childNode).map(
-      ({ relativePath, accessType }) => {
+      ({relativePath, accessType}) => {
         return {
           relativePath: [childName, ...relativePath],
           accessType,
         };
-      }
+      },
     );
     results.push(...childResult);
   }
@@ -340,8 +340,8 @@ function deriveMinimalDependenciesInSubtree(
     case PropertyAccessType.UnconditionalAccess: {
       if (
         results.every(
-          ({ accessType }) =>
-            accessType === PropertyAccessType.UnconditionalDependency
+          ({accessType}) =>
+            accessType === PropertyAccessType.UnconditionalDependency,
         )
       ) {
         // all children are unconditional dependencies, return them to preserve granularity
@@ -358,8 +358,8 @@ function deriveMinimalDependenciesInSubtree(
     case PropertyAccessType.ConditionalDependency: {
       if (
         results.every(
-          ({ accessType }) =>
-            accessType === PropertyAccessType.ConditionalDependency
+          ({accessType}) =>
+            accessType === PropertyAccessType.ConditionalDependency,
         )
       ) {
         /*
@@ -379,7 +379,7 @@ function deriveMinimalDependenciesInSubtree(
     default: {
       assertExhaustive(
         dep.accessType,
-        "[PropgateScopeDependencies] Unhandled access type!"
+        '[PropgateScopeDependencies] Unhandled access type!',
       );
     }
   }
@@ -395,7 +395,7 @@ function demoteSubtreeToConditional(subtree: DependencyNode): void {
 
   let node;
   while ((node = stack.pop()) !== undefined) {
-    const { accessType, properties } = node;
+    const {accessType, properties} = node;
     if (!isUnconditional(accessType)) {
       // A conditionally accessed node should not have unconditional children
       continue;
@@ -435,7 +435,7 @@ function demoteSubtreeToConditional(subtree: DependencyNode): void {
 function addSubtree(
   currNode: DependencyNode,
   otherNode: DependencyNode,
-  demoteOtherNode: boolean
+  demoteOtherNode: boolean,
 ): void {
   let otherType = otherNode.accessType;
   if (demoteOtherNode) {
@@ -488,11 +488,11 @@ function addSubtree(
  */
 function addSubtreeIntersection(
   currProperties: Map<string, DependencyNode>,
-  otherProperties: Array<Map<string, DependencyNode>>
+  otherProperties: Array<Map<string, DependencyNode>>,
 ): void {
   CompilerError.invariant(otherProperties.length > 1, {
     reason:
-      "[DeriveMinimalDependencies] Expected otherProperties to be at least 2 elements long.",
+      '[DeriveMinimalDependencies] Expected otherProperties to be at least 2 elements long.',
     description: null,
     loc: null,
     suggestions: null,
@@ -506,7 +506,7 @@ function addSubtreeIntersection(
    */
 
   for (const [propertyName, currNode] of currProperties) {
-    const otherNodes = mapNonNull(otherProperties, (properties) => {
+    const otherNodes = mapNonNull(otherProperties, properties => {
       const node = properties.get(propertyName);
       if (node != null && isUnconditional(node.accessType)) {
         return node;
@@ -522,10 +522,10 @@ function addSubtreeIntersection(
     if (otherNodes) {
       addSubtreeIntersection(
         currNode.properties,
-        otherNodes.map((node) => node.properties)
+        otherNodes.map(node => node.properties),
       );
 
-      const isDep = otherNodes.some((tree) => isDependency(tree.accessType));
+      const isDep = otherNodes.some(tree => isDependency(tree.accessType));
       const externalAccessType = isDep
         ? PropertyAccessType.UnconditionalDependency
         : PropertyAccessType.UnconditionalAccess;
@@ -536,7 +536,7 @@ function addSubtreeIntersection(
 
 function printSubtree(
   node: DependencyNode,
-  includeAccesses: boolean
+  includeAccesses: boolean,
 ): Array<string> {
   const results: Array<string> = [];
   for (const [propertyName, propertyNode] of node.properties) {
@@ -544,16 +544,14 @@ function printSubtree(
       results.push(`${propertyName} (${propertyNode.accessType})`);
     }
     const propertyResults = printSubtree(propertyNode, includeAccesses);
-    results.push(
-      ...propertyResults.map((result) => `${propertyName}.${result}`)
-    );
+    results.push(...propertyResults.map(result => `${propertyName}.${result}`));
   }
   return results;
 }
 
 function getOrMakeProperty(
   node: DependencyNode,
-  property: string
+  property: string,
 ): DependencyNode {
   let child = node.properties.get(property);
   if (child == null) {
@@ -568,7 +566,7 @@ function getOrMakeProperty(
 
 function mapNonNull<T extends NonNullable<V>, V, U>(
   arr: Array<U>,
-  fn: (arg0: U) => T | undefined | null
+  fn: (arg0: U) => T | undefined | null,
 ): Array<T> | null {
   const result = [];
   for (let i = 0; i < arr.length; i++) {

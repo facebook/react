@@ -39,6 +39,7 @@ export {
   use,
   useActionState,
   useCallback,
+  unstable_useContextWithBailout,
   useContext,
   useDebugValue,
   useDeferredValue,

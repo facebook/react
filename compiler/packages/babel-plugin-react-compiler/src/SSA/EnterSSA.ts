@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
-import { Environment } from "../HIR/Environment";
+import {CompilerError} from '../CompilerError';
+import {Environment} from '../HIR/Environment';
 import {
   BasicBlock,
   BlockId,
@@ -17,14 +17,14 @@ import {
   makeType,
   Phi,
   Place,
-} from "../HIR/HIR";
-import { printIdentifier } from "../HIR/PrintHIR";
+} from '../HIR/HIR';
+import {printIdentifier} from '../HIR/PrintHIR';
 import {
   eachTerminalSuccessor,
   mapInstructionLValues,
   mapInstructionOperands,
   mapTerminalOperands,
-} from "../HIR/visitors";
+} from '../HIR/visitors';
 
 type IncompletePhi = {
   oldId: Identifier;
@@ -68,7 +68,7 @@ class SSABuilder {
 
   state(): State {
     CompilerError.invariant(this.#current !== null, {
-      reason: "we need to be in a block to access state!",
+      reason: 'we need to be in a block to access state!',
       description: null,
       loc: null,
       suggestions: null,
@@ -156,7 +156,7 @@ class SSABuilder {
        * for now.
        */
       const newId = this.makeId(oldId);
-      state.incompletePhis.push({ oldId, newId });
+      state.incompletePhis.push({oldId, newId});
       state.defs.set(oldId, newId);
       return newId;
     }
@@ -188,7 +188,7 @@ class SSABuilder {
     }
 
     const phi: Phi = {
-      kind: "Phi",
+      kind: 'Phi',
       id: newId,
       operands: predDefs,
       type: makeType(),
@@ -224,14 +224,14 @@ class SSABuilder {
       for (const incompletePhi of state.incompletePhis) {
         text.push(
           `  iphi \$${printIdentifier(
-            incompletePhi.newId
-          )} = \$${printIdentifier(incompletePhi.oldId)}`
+            incompletePhi.newId,
+          )} = \$${printIdentifier(incompletePhi.oldId)}`,
         );
       }
     }
 
     text.push(`current block: bb${this.#current?.id}`);
-    console.log(text.join("\n"));
+    console.log(text.join('\n'));
   }
 }
 
@@ -243,7 +243,7 @@ export default function enterSSA(func: HIRFunction): void {
 function enterSSAImpl(
   func: HIRFunction,
   builder: SSABuilder,
-  rootEntry: BlockId
+  rootEntry: BlockId,
 ): void {
   const visitedBlocks: Set<BasicBlock> = new Set();
   for (const [blockId, block] of func.body.blocks) {
@@ -266,12 +266,12 @@ function enterSSAImpl(
         loc: func.loc,
         suggestions: null,
       });
-      func.params = func.params.map((param) => {
-        if (param.kind === "Identifier") {
+      func.params = func.params.map(param => {
+        if (param.kind === 'Identifier') {
           return builder.definePlace(param);
         } else {
           return {
-            kind: "Spread",
+            kind: 'Spread',
             place: builder.definePlace(param.place),
           };
         }
@@ -279,18 +279,18 @@ function enterSSAImpl(
     }
 
     for (const instr of block.instructions) {
-      mapInstructionOperands(instr, (place) => builder.getPlace(place));
-      mapInstructionLValues(instr, (lvalue) => builder.definePlace(lvalue));
+      mapInstructionOperands(instr, place => builder.getPlace(place));
+      mapInstructionLValues(instr, lvalue => builder.definePlace(lvalue));
 
       if (
-        instr.value.kind === "FunctionExpression" ||
-        instr.value.kind === "ObjectMethod"
+        instr.value.kind === 'FunctionExpression' ||
+        instr.value.kind === 'ObjectMethod'
       ) {
         const loweredFunc = instr.value.loweredFunc.func;
         const entry = loweredFunc.body.blocks.get(loweredFunc.body.entry)!;
         CompilerError.invariant(entry.preds.size === 0, {
           reason:
-            "Expected function expression entry block to have zero predecessors",
+            'Expected function expression entry block to have zero predecessors',
           description: null,
           loc: null,
           suggestions: null,
@@ -298,15 +298,15 @@ function enterSSAImpl(
         entry.preds.add(blockId);
         builder.defineFunction(loweredFunc);
         builder.enter(() => {
-          loweredFunc.context = loweredFunc.context.map((p) =>
-            builder.getPlace(p)
+          loweredFunc.context = loweredFunc.context.map(p =>
+            builder.getPlace(p),
           );
-          loweredFunc.params = loweredFunc.params.map((param) => {
-            if (param.kind === "Identifier") {
+          loweredFunc.params = loweredFunc.params.map(param => {
+            if (param.kind === 'Identifier') {
               return builder.definePlace(param);
             } else {
               return {
-                kind: "Spread",
+                kind: 'Spread',
                 place: builder.definePlace(param.place),
               };
             }
@@ -317,7 +317,7 @@ function enterSSAImpl(
       }
     }
 
-    mapTerminalOperands(block.terminal, (place) => builder.getPlace(place));
+    mapTerminalOperands(block.terminal, place => builder.getPlace(place));
     for (const outputId of eachTerminalSuccessor(block.terminal)) {
       const output = func.body.blocks.get(outputId)!;
       let count;

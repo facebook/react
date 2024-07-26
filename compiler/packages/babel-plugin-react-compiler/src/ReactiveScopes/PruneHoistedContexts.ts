@@ -11,12 +11,12 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveStatement,
-} from "../HIR";
+} from '../HIR';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Prunes DeclareContexts lowered for HoistedConsts, and transforms any references back to its
@@ -32,25 +32,25 @@ type HoistedIdentifiers = Set<Identifier>;
 class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: HoistedIdentifiers
+    state: HoistedIdentifiers,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
     if (
-      instruction.value.kind === "DeclareContext" &&
-      instruction.value.lvalue.kind === "HoistedConst"
+      instruction.value.kind === 'DeclareContext' &&
+      instruction.value.lvalue.kind === 'HoistedConst'
     ) {
       state.add(instruction.value.lvalue.place.identifier);
-      return { kind: "remove" };
+      return {kind: 'remove'};
     }
 
     if (
-      instruction.value.kind === "StoreContext" &&
+      instruction.value.kind === 'StoreContext' &&
       state.has(instruction.value.lvalue.place.identifier)
     ) {
       return {
-        kind: "replace",
+        kind: 'replace',
         value: {
-          kind: "instruction",
+          kind: 'instruction',
           instruction: {
             ...instruction,
             value: {
@@ -60,13 +60,13 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
                 kind: InstructionKind.Const,
               },
               type: null,
-              kind: "StoreLocal",
+              kind: 'StoreLocal',
             },
           },
         },
       };
     }
 
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 }

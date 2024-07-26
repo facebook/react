@@ -1848,6 +1848,7 @@ describe('ReactDOMFizzServer', () => {
         (gate(flags => flags.enableOwnerStacks)
           ? '    in span (at **)\n' +
             '    in mapper (at **)\n' +
+            '    in Array.map (at **)\n' +
             '    in B (at **)\n' +
             '    in A (at **)'
           : '    in span (at **)\n' +

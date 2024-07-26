@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type { Dispatch, ReactNode } from "react";
-import { useReducer } from "react";
-import createContext from "../lib/createContext";
-import { emptyStore } from "../lib/defaultStore";
-import type { Store } from "../lib/stores";
-import { saveStore } from "../lib/stores";
+import type {Dispatch, ReactNode} from 'react';
+import {useReducer} from 'react';
+import createContext from '../lib/createContext';
+import {emptyStore} from '../lib/defaultStore';
+import type {Store} from '../lib/stores';
+import {saveStore} from '../lib/stores';
 
 const StoreContext = createContext<Store>();
 
@@ -29,7 +29,7 @@ export const useStoreDispatch = StoreDispatchContext.useContext;
 /**
  * Make Store and dispatch function available to all sub-components in children.
  */
-export function StoreProvider({ children }: { children: ReactNode }) {
+export function StoreProvider({children}: {children: ReactNode}) {
   const [store, dispatch] = useReducer(storeReducer, emptyStore);
 
   return (
@@ -43,13 +43,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
 type ReducerAction =
   | {
-      type: "setStore";
+      type: 'setStore';
       payload: {
         store: Store;
       };
     }
   | {
-      type: "updateFile";
+      type: 'updateFile';
       payload: {
         source: string;
       };
@@ -57,14 +57,14 @@ type ReducerAction =
 
 function storeReducer(store: Store, action: ReducerAction): Store {
   switch (action.type) {
-    case "setStore": {
+    case 'setStore': {
       const newStore = action.payload.store;
 
       saveStore(newStore);
       return newStore;
     }
-    case "updateFile": {
-      const { source } = action.payload;
+    case 'updateFile': {
+      const {source} = action.payload;
 
       const newStore = {
         ...store,

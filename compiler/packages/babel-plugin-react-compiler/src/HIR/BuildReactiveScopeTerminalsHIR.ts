@@ -1,6 +1,6 @@
-import { CompilerError } from "../CompilerError";
-import { getScopes, recursivelyTraverseItems } from "./AssertValidBlockNesting";
-import { Environment } from "./Environment";
+import {CompilerError} from '../CompilerError';
+import {getScopes, recursivelyTraverseItems} from './AssertValidBlockNesting';
+import {Environment} from './Environment';
 import {
   BasicBlock,
   BlockId,
@@ -12,7 +12,12 @@ import {
   ReactiveScope,
   ReactiveScopeTerminal,
   ScopeId,
-} from "./HIR";
+} from './HIR';
+import {
+  markInstructionIds,
+  markPredecessors,
+  reversePostorderBlocks,
+} from './HIRBuilder';
 
 /**
  * This pass assumes that all program blocks are properly nested with respect to fallthroughs
@@ -72,14 +77,14 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
   const queuedRewrites: Array<TerminalRewriteInfo> = [];
   recursivelyTraverseItems(
     [...getScopes(fn)],
-    (scope) => scope.range,
+    scope => scope.range,
     {
       fallthroughs: new Map(),
       rewrites: queuedRewrites,
       env: fn.env,
     },
     pushStartScopeTerminal,
-    pushEndScopeTerminal
+    pushEndScopeTerminal,
   );
 
   /**
@@ -142,16 +147,9 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
 
   /**
    * Step 3:
-   * Repoint preds and phis when they refer to a rewritten block.
+   * Repoint phis when they refer to a rewritten block.
    */
   for (const [, block] of originalBlocks) {
-    for (const pred of block.preds) {
-      const newId = rewrittenFinalBlocks.get(pred);
-      if (newId != null) {
-        block.preds.delete(pred);
-        block.preds.add(newId);
-      }
-    }
     for (const phi of block.phis) {
       for (const [originalId, value] of phi.operands) {
         const newId = rewrittenFinalBlocks.get(originalId);
@@ -162,18 +160,48 @@ export function buildReactiveScopeTerminalsHIR(fn: HIRFunction): void {
       }
     }
   }
+
+  /**
+   * Step 4:
+   * Fixup the HIR to restore RPO, ensure correct predecessors, and
+   * renumber instructions. Note that the renumbering instructions
+   * invalidates scope and identifier ranges, so we fix them in the
+   * next step.
+   */
+  reversePostorderBlocks(fn.body);
+  markPredecessors(fn.body);
+  markInstructionIds(fn.body);
+
+  /**
+   * Step 5:
+   * Fix scope and identifier ranges to account for renumbered instructions
+   */
+  for (const [, block] of fn.body.blocks) {
+    const terminal = block.terminal;
+    if (terminal.kind === 'scope' || terminal.kind === 'pruned-scope') {
+      /*
+       * Scope ranges should always align to start at the 'scope' terminal
+       * and end at the first instruction of the fallthrough block
+       */
+      const fallthroughBlock = fn.body.blocks.get(terminal.fallthrough)!;
+      const firstId =
+        fallthroughBlock.instructions[0]?.id ?? fallthroughBlock.terminal.id;
+      terminal.scope.range.start = terminal.id;
+      terminal.scope.range.end = firstId;
+    }
+  }
 }
 
 type TerminalRewriteInfo =
   | {
-      kind: "StartScope";
+      kind: 'StartScope';
       blockId: BlockId;
       fallthroughId: BlockId;
       instrId: InstructionId;
       scope: ReactiveScope;
     }
   | {
-      kind: "EndScope";
+      kind: 'EndScope';
       instrId: InstructionId;
       fallthroughId: BlockId;
     };
@@ -190,12 +218,12 @@ type ScopeTraversalContext = {
 
 function pushStartScopeTerminal(
   scope: ReactiveScope,
-  context: ScopeTraversalContext
+  context: ScopeTraversalContext,
 ): void {
   const blockId = context.env.nextBlockId;
   const fallthroughId = context.env.nextBlockId;
   context.rewrites.push({
-    kind: "StartScope",
+    kind: 'StartScope',
     blockId,
     fallthroughId,
     instrId: scope.range.start,
@@ -206,15 +234,15 @@ function pushStartScopeTerminal(
 
 function pushEndScopeTerminal(
   scope: ReactiveScope,
-  context: ScopeTraversalContext
+  context: ScopeTraversalContext,
 ): void {
   const fallthroughId = context.fallthroughs.get(scope.id);
   CompilerError.invariant(fallthroughId != null, {
-    reason: "Expected scope to exist",
+    reason: 'Expected scope to exist',
     loc: GeneratedSource,
   });
   context.rewrites.push({
-    kind: "EndScope",
+    kind: 'EndScope',
     fallthroughId,
     instrId: scope.range.end,
   });
@@ -248,13 +276,13 @@ type RewriteContext = {
 function handleRewrite(
   terminalInfo: TerminalRewriteInfo,
   idx: number,
-  context: RewriteContext
+  context: RewriteContext,
 ): void {
   // TODO make consistent instruction IDs instead of reusing
   const terminal: ReactiveScopeTerminal | GotoTerminal =
-    terminalInfo.kind === "StartScope"
+    terminalInfo.kind === 'StartScope'
       ? {
-          kind: "scope",
+          kind: 'scope',
           fallthrough: terminalInfo.fallthroughId,
           block: terminalInfo.blockId,
           scope: terminalInfo.scope,
@@ -262,7 +290,7 @@ function handleRewrite(
           loc: GeneratedSource,
         }
       : {
-          kind: "goto",
+          kind: 'goto',
           variant: GotoVariant.Break,
           block: terminalInfo.fallthroughId,
           id: terminalInfo.instrId,
@@ -281,7 +309,7 @@ function handleRewrite(
   });
   context.nextPreds = new Set([currBlockId]);
   context.nextBlockId =
-    terminalInfo.kind === "StartScope"
+    terminalInfo.kind === 'StartScope'
       ? terminalInfo.blockId
       : terminalInfo.fallthroughId;
   context.instrSliceIdx = idx;

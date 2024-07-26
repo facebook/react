@@ -31,8 +31,6 @@ import {
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
-  forceConcurrentByDefaultForTesting,
-  allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
   enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -86,7 +84,6 @@ import {
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  ConcurrentUpdatesByDefaultMode,
   NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
@@ -296,11 +293,15 @@ function createFiberImplObject(
   }
 
   if (__DEV__) {
+    // This isn't directly used but is handy for debugging internals:
     fiber._debugInfo = null;
     fiber._debugOwner = null;
+    if (enableOwnerStacks) {
+      fiber._debugStack = null;
+      fiber._debugTask = null;
+    }
     fiber._debugNeedsRemount = false;
     fiber._debugHookTypes = null;
-
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(fiber);
     }
@@ -521,25 +522,12 @@ export function resetWorkInProgress(
 export function createHostRootFiber(
   tag: RootTag,
   isStrictMode: boolean,
-  concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
   if (disableLegacyMode || tag === ConcurrentRoot) {
     mode = ConcurrentMode;
     if (isStrictMode === true) {
       mode |= StrictLegacyMode | StrictEffectsMode;
-    }
-    if (
-      // We only use this flag for our repo tests to check both behaviors.
-      forceConcurrentByDefaultForTesting
-    ) {
-      mode |= ConcurrentUpdatesByDefaultMode;
-    } else if (
-      // Only for internal experiments.
-      allowConcurrentByDefault &&
-      concurrentUpdatesByDefaultOverride
-    ) {
-      mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
     mode = NoMode;
@@ -584,8 +572,8 @@ export function createFiberFromTypeAndProps(
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
-        ? HostSingleton
-        : HostComponent;
+          ? HostSingleton
+          : HostComponent;
     } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)

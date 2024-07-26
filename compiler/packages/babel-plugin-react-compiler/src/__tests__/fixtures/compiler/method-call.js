@@ -1,4 +1,4 @@
-import { addOne, shallowCopy } from "shared-runtime";
+import {addOne, shallowCopy} from 'shared-runtime';
 
 function foo(a, b, c) {
   // Construct and freeze x
@@ -12,6 +12,6 @@ function foo(a, b, c) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: [{ foo: addOne }, 3],
+  params: [{foo: addOne}, 3],
   isComponent: false,
 };

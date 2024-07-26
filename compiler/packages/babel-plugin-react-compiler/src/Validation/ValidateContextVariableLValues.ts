@@ -5,13 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "..";
-import { HIRFunction, IdentifierId, Place } from "../HIR";
-import { printPlace } from "../HIR/PrintHIR";
-import {
-  eachInstructionValueLValue,
-  eachPatternOperand,
-} from "../HIR/visitors";
+import {CompilerError} from '..';
+import {HIRFunction, IdentifierId, Place} from '../HIR';
+import {printPlace} from '../HIR/PrintHIR';
+import {eachInstructionValueLValue, eachPatternOperand} from '../HIR/visitors';
 
 /**
  * Validates that all store/load references to a given named identifier align with the
@@ -25,46 +22,46 @@ export function validateContextVariableLValues(fn: HIRFunction): void {
 
 function validateContextVariableLValuesImpl(
   fn: HIRFunction,
-  identifierKinds: IdentifierKinds
+  identifierKinds: IdentifierKinds,
 ): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      const { value } = instr;
+      const {value} = instr;
       switch (value.kind) {
-        case "DeclareContext":
-        case "StoreContext": {
-          visit(identifierKinds, value.lvalue.place, "context");
+        case 'DeclareContext':
+        case 'StoreContext': {
+          visit(identifierKinds, value.lvalue.place, 'context');
           break;
         }
-        case "LoadContext": {
-          visit(identifierKinds, value.place, "context");
+        case 'LoadContext': {
+          visit(identifierKinds, value.place, 'context');
           break;
         }
-        case "StoreLocal":
-        case "DeclareLocal": {
-          visit(identifierKinds, value.lvalue.place, "local");
+        case 'StoreLocal':
+        case 'DeclareLocal': {
+          visit(identifierKinds, value.lvalue.place, 'local');
           break;
         }
-        case "LoadLocal": {
-          visit(identifierKinds, value.place, "local");
+        case 'LoadLocal': {
+          visit(identifierKinds, value.place, 'local');
           break;
         }
-        case "PostfixUpdate":
-        case "PrefixUpdate": {
-          visit(identifierKinds, value.lvalue, "local");
+        case 'PostfixUpdate':
+        case 'PrefixUpdate': {
+          visit(identifierKinds, value.lvalue, 'local');
           break;
         }
-        case "Destructure": {
+        case 'Destructure': {
           for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
-            visit(identifierKinds, lvalue, "destructure");
+            visit(identifierKinds, lvalue, 'destructure');
           }
           break;
         }
-        case "ObjectMethod":
-        case "FunctionExpression": {
+        case 'ObjectMethod':
+        case 'FunctionExpression': {
           validateContextVariableLValuesImpl(
             value.loweredFunc.func,
-            identifierKinds
+            identifierKinds,
           );
           break;
         }
@@ -72,7 +69,7 @@ function validateContextVariableLValuesImpl(
           for (const _ of eachInstructionValueLValue(value)) {
             CompilerError.throwTodo({
               reason:
-                "ValidateContextVariableLValues: unhandled instruction variant",
+                'ValidateContextVariableLValues: unhandled instruction variant',
               loc: value.loc,
               description: `Handle '${value.kind} lvalues`,
               suggestions: null,
@@ -86,23 +83,23 @@ function validateContextVariableLValuesImpl(
 
 type IdentifierKinds = Map<
   IdentifierId,
-  { place: Place; kind: "local" | "context" | "destructure" }
+  {place: Place; kind: 'local' | 'context' | 'destructure'}
 >;
 
 function visit(
   identifiers: IdentifierKinds,
   place: Place,
-  kind: "local" | "context" | "destructure"
+  kind: 'local' | 'context' | 'destructure',
 ): void {
   const prev = identifiers.get(place.identifier.id);
   if (prev !== undefined) {
-    const wasContext = prev.kind === "context";
-    const isContext = kind === "context";
+    const wasContext = prev.kind === 'context';
+    const isContext = kind === 'context';
     if (wasContext !== isContext) {
-      if (prev.kind === "destructure" || kind === "destructure") {
+      if (prev.kind === 'destructure' || kind === 'destructure') {
         CompilerError.throwTodo({
           reason: `Support destructuring of context variables`,
-          loc: kind === "destructure" ? place.loc : prev.place.loc,
+          loc: kind === 'destructure' ? place.loc : prev.place.loc,
           description: null,
           suggestions: null,
         });
@@ -112,11 +109,11 @@ function visit(
         reason: `Expected all references to a variable to be consistently local or context references`,
         loc: place.loc,
         description: `Identifier ${printPlace(
-          place
+          place,
         )} is referenced as a ${kind} variable, but was previously referenced as a ${prev} variable`,
         suggestions: null,
       });
     }
   }
-  identifiers.set(place.identifier.id, { place, kind });
+  identifiers.set(place.identifier.id, {place, kind});
 }

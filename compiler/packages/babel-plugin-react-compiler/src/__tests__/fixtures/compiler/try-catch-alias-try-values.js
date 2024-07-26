@@ -1,4 +1,4 @@
-const { throwInput } = require("shared-runtime");
+const {throwInput} = require('shared-runtime');
 
 function Component(props) {
   let y;

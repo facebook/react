@@ -14,11 +14,11 @@ import {
   ReactiveInstruction,
   ReactiveScope,
   ScopeId,
-} from "../HIR";
-import DisjointSet from "../Utils/DisjointSet";
-import { retainWhere } from "../Utils/utils";
-import { getPlaceScope } from "./BuildReactiveBlocks";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR';
+import DisjointSet from '../Utils/DisjointSet';
+import {retainWhere} from '../Utils/utils';
+import {getPlaceScope} from './BuildReactiveBlocks';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
  * Note: this is the 3rd of 4 passes that determine how to break a function into discrete
@@ -120,12 +120,12 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
   }
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: Context
+    state: Context,
   ): void {
     if (
-      instruction.value.kind === "ConditionalExpression" ||
-      instruction.value.kind === "LogicalExpression" ||
-      instruction.value.kind === "OptionalExpression"
+      instruction.value.kind === 'ConditionalExpression' ||
+      instruction.value.kind === 'LogicalExpression' ||
+      instruction.value.kind === 'OptionalExpression'
     ) {
       state.enter(() => {
         super.visitInstruction(instruction, state);
@@ -154,7 +154,7 @@ class Context {
 
   visitId(id: InstructionId): void {
     const currentBlock = this.scopes[this.scopes.length - 1]!;
-    retainWhere(currentBlock.scopes, (pending) => {
+    retainWhere(currentBlock.scopes, pending => {
       if (pending.scope.range.end > id) {
         return true;
       } else {
@@ -175,7 +175,7 @@ class Context {
     if (!this.seenScopes.has(scope.id)) {
       this.seenScopes.add(scope.id);
       currentBlock.seen.add(scope.id);
-      currentBlock.scopes.push({ shadowedBy: null, scope });
+      currentBlock.scopes.push({shadowedBy: null, scope});
       return;
     }
     // Scope has already been seen, find it in the current block or a parent
@@ -186,7 +186,7 @@ class Context {
        * scopes that cross control-flow boundaries are merged with overlapping
        * scopes
        */
-      this.joinedScopes.union([scope, ...nextBlock.scopes.map((s) => s.scope)]);
+      this.joinedScopes.union([scope, ...nextBlock.scopes.map(s => s.scope)]);
       index--;
       if (index < 0) {
         /*
@@ -213,7 +213,7 @@ class Context {
          * }
          */
         currentBlock.seen.add(scope.id);
-        currentBlock.scopes.push({ shadowedBy: null, scope });
+        currentBlock.scopes.push({shadowedBy: null, scope});
         return;
       }
       nextBlock = this.scopes[index]!;
@@ -240,7 +240,7 @@ class Context {
            * a scope relative to its eventual post-merge mutable range
            */
           const end = makeInstructionId(
-            Math.max(current.scope.range.end, scope.range.end)
+            Math.max(current.scope.range.end, scope.range.end),
           );
           current.scope.range.end = end;
           scope.range.end = end;
@@ -250,7 +250,7 @@ class Context {
     }
     if (!currentBlock.seen.has(scope.id)) {
       currentBlock.seen.add(scope.id);
-      currentBlock.scopes.push({ shadowedBy: null, scope });
+      currentBlock.scopes.push({shadowedBy: null, scope});
     }
   }
 
@@ -264,10 +264,10 @@ class Context {
     this.joinedScopes.forEach((scope, groupScope) => {
       if (scope !== groupScope) {
         groupScope.range.start = makeInstructionId(
-          Math.min(groupScope.range.start, scope.range.start)
+          Math.min(groupScope.range.start, scope.range.start),
         );
         groupScope.range.end = makeInstructionId(
-          Math.max(groupScope.range.end, scope.range.end)
+          Math.max(groupScope.range.end, scope.range.end),
         );
       }
     });

@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import {useEffect} from 'react';
 
-let x = { a: 42 };
+let x = {a: 42};
 
 function Component(props) {
   useEffect(() => {

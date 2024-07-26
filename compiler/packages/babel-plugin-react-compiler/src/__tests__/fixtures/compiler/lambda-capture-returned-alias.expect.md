@@ -13,7 +13,7 @@ function CaptureNotMutate(props) {
   const element = bar(props.el);
 
   const fn = function () {
-    const arr = { element };
+    const arr = {element};
     return arr[idx];
   };
   const aliasedElement = fn();

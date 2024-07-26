@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { defineConfig, devices } from "@playwright/test";
-import path from "path";
+import {defineConfig, devices} from '@playwright/test';
+import path from 'path';
 
 // Use process.env.PORT by default and fallback to port 3000
 const PORT = process.env.PORT || 3000;
@@ -19,19 +19,19 @@ export default defineConfig({
   // Timeout per test
   timeout: 30 * 1000,
   // Test directory
-  testDir: path.join(__dirname, "__tests__/e2e"),
+  testDir: path.join(__dirname, '__tests__/e2e'),
   // If a test fails, retry it additional 2 times
   retries: 2,
   // Artifacts folder where screenshots, videos, and traces are stored.
-  outputDir: "test-results/",
+  outputDir: 'test-results/',
   // Note: we only use text snapshots, so its safe to omit the host environment name
-  snapshotPathTemplate: "{testDir}/__snapshots__/{testFilePath}/{arg}{ext}",
+  snapshotPathTemplate: '{testDir}/__snapshots__/{testFilePath}/{arg}{ext}',
 
   // Run your local dev server before starting the tests:
   // https://playwright.dev/docs/test-advanced#launching-a-development-web-server-during-the-tests
   webServer: {
     command:
-      "yarn workspace babel-plugin-react-compiler build && yarn workspace react-compiler-runtime build && yarn dev",
+      'yarn workspace babel-plugin-react-compiler build && yarn workspace react-compiler-runtime build && yarn dev',
     url: baseURL,
     timeout: 300 * 1000,
     reuseExistingServer: !process.env.CI,
@@ -44,7 +44,7 @@ export default defineConfig({
 
     // Retry a test if its failing with enabled tracing. This allows you to analyze the DOM, console logs, network traffic etc.
     // More information: https://playwright.dev/docs/trace-viewer
-    trace: "retry-with-trace",
+    trace: 'retry-with-trace',
 
     // All available context options: https://playwright.dev/docs/api/class-browser#browser-new-context
     // contextOptions: {
@@ -54,8 +54,8 @@ export default defineConfig({
 
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: {...devices['Desktop Chrome']},
     },
     // {
     //   name: 'Desktop Firefox',

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-const FooContext = React.createContext({ current: null });
+const FooContext = React.createContext({current: null});
 
 function Component(props) {
   const foo = React.useContext(FooContext);
@@ -17,7 +17,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ children: <div>Hello</div> }],
+  params: [{children: <div>Hello</div>}],
 };
 
 ```

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { Stringify } from "shared-runtime";
+import {Stringify} from 'shared-runtime';
 function Component(props) {
   const cb = (x, y, z) => x + y + z;
 
@@ -11,7 +11,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ id: 0 }],
+  params: [{id: 0}],
 };
 
 ```

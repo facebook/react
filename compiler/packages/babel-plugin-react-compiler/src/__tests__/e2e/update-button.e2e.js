@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { render } from "@testing-library/react";
-import * as React from "react";
+import {render} from '@testing-library/react';
+import * as React from 'react';
 
-function Button({ label }) {
+function Button({label}) {
   const theme = useTheme();
   const style = computeStyle(theme);
   return <button color={style}>{label}</button>;
 }
 
-let currentTheme = "light";
+let currentTheme = 'light';
 function useTheme() {
   return currentTheme;
 }
@@ -22,11 +22,11 @@ function useTheme() {
 let styleComputations = 0;
 function computeStyle(theme) {
   styleComputations++;
-  return theme === "light" ? "white" : "black";
+  return theme === 'light' ? 'white' : 'black';
 }
 
-test("update-button", () => {
-  const { asFragment, rerender } = render(<Button label="Click me" />);
+test('update-button', () => {
+  const {asFragment, rerender} = render(<Button label="Click me" />);
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>
       <button
@@ -51,7 +51,7 @@ test("update-button", () => {
     </DocumentFragment>
   `);
 
-  currentTheme = "dark";
+  currentTheme = 'dark';
   rerender(<Button label="Click again" />);
   expect(asFragment()).toMatchInlineSnapshot(`
     <DocumentFragment>
