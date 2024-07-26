@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
-import invariant from "invariant";
-import { runBabelPluginReactCompiler } from "../Babel/RunReactCompilerBabelPlugin";
-import type { Logger, LoggerEvent } from "../Entrypoint";
+import * as t from '@babel/types';
+import invariant from 'invariant';
+import {runBabelPluginReactCompiler} from '../Babel/RunReactCompilerBabelPlugin';
+import type {Logger, LoggerEvent} from '../Entrypoint';
 
-it("logs succesful compilation", () => {
+it('logs succesful compilation', () => {
   const logs: [string | null, LoggerEvent][] = [];
   const logger: Logger = {
     logEvent(filename, event) {
@@ -19,22 +19,22 @@ it("logs succesful compilation", () => {
   };
 
   const _ = runBabelPluginReactCompiler(
-    "function Component(props) { return <div>{props}</div> }",
-    "test.js",
-    "flow",
-    { logger, panicThreshold: "all_errors" }
+    'function Component(props) { return <div>{props}</div> }',
+    'test.js',
+    'flow',
+    {logger, panicThreshold: 'all_errors'},
   );
 
   const [filename, event] = logs.at(0)!;
-  expect(filename).toContain("test.js");
-  expect(event.kind).toEqual("CompileSuccess");
-  invariant(event.kind === "CompileSuccess", "typescript be smarter");
-  expect(event.fnName).toEqual("Component");
-  expect(event.fnLoc?.end).toEqual({ column: 55, index: 55, line: 1 });
-  expect(event.fnLoc?.start).toEqual({ column: 0, index: 0, line: 1 });
+  expect(filename).toContain('test.js');
+  expect(event.kind).toEqual('CompileSuccess');
+  invariant(event.kind === 'CompileSuccess', 'typescript be smarter');
+  expect(event.fnName).toEqual('Component');
+  expect(event.fnLoc?.end).toEqual({column: 55, index: 55, line: 1});
+  expect(event.fnLoc?.start).toEqual({column: 0, index: 0, line: 1});
 });
 
-it("logs failed compilation", () => {
+it('logs failed compilation', () => {
   const logs: [string | null, LoggerEvent][] = [];
   const logger: Logger = {
     logEvent(filename, event) {
@@ -44,26 +44,26 @@ it("logs failed compilation", () => {
 
   expect(() => {
     runBabelPluginReactCompiler(
-      "function Component(props) { props.foo = 1; return <div>{props}</div> }",
-      "test.js",
-      "flow",
-      { logger, panicThreshold: "all_errors" }
+      'function Component(props) { props.foo = 1; return <div>{props}</div> }',
+      'test.js',
+      'flow',
+      {logger, panicThreshold: 'all_errors'},
     );
   }).toThrow();
 
   const [filename, event] = logs.at(0)!;
-  expect(filename).toContain("test.js");
-  expect(event.kind).toEqual("CompileError");
-  invariant(event.kind === "CompileError", "typescript be smarter");
+  expect(filename).toContain('test.js');
+  expect(event.kind).toEqual('CompileError');
+  invariant(event.kind === 'CompileError', 'typescript be smarter');
 
-  expect(event.detail.severity).toEqual("InvalidReact");
+  expect(event.detail.severity).toEqual('InvalidReact');
   //@ts-ignore
-  const { start, end, identifierName } = event.detail.loc as t.SourceLocation;
-  expect(start).toEqual({ column: 28, index: 28, line: 1 });
-  expect(end).toEqual({ column: 33, index: 33, line: 1 });
-  expect(identifierName).toEqual("props");
+  const {start, end, identifierName} = event.detail.loc as t.SourceLocation;
+  expect(start).toEqual({column: 28, index: 28, line: 1});
+  expect(end).toEqual({column: 33, index: 33, line: 1});
+  expect(identifierName).toEqual('props');
 
   // Make sure event.fnLoc is different from event.detail.loc
-  expect(event.fnLoc?.start).toEqual({ column: 0, index: 0, line: 1 });
-  expect(event.fnLoc?.end).toEqual({ column: 70, index: 70, line: 1 });
+  expect(event.fnLoc?.start).toEqual({column: 0, index: 0, line: 1});
+  expect(event.fnLoc?.end).toEqual({column: 70, index: 70, line: 1});
 });

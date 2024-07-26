@@ -133,6 +133,11 @@ const deepProxyHandlers = {
             `Instead, you can export a Client Component wrapper ` +
             `that itself renders a Client Context Provider.`,
         );
+      case 'then':
+        throw new Error(
+          `Cannot await or return from a thenable. ` +
+            `You cannot await a client module from a server component.`,
+        );
     }
     // eslint-disable-next-line react-internal/safe-string-coercion
     const expression = String(target.name) + '.' + String(name);

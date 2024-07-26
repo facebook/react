@@ -15,27 +15,28 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  enableTrustedTypesIntegration,
+  alwaysThrottleRetries,
+  disableDefaultPropsExceptForClasses,
+  disableLegacyContextForFunctionComponents,
+  disableSchedulerTimeoutInWorkLoop,
+  enableAddPropertiesFastPath,
   enableDebugTracing,
+  enableDeferRootSchedulingToMicrotask,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableInfiniteRenderLoopDetection,
   enableLazyContextPropagation,
+  enableNoCloningMemoCache,
+  enableObjectFiber,
+  enableRenderableContext,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleRetries,
-  enableDO_NOT_USE_disableStrictPassiveEffect,
-  disableSchedulerTimeoutInWorkLoop,
+  enableTrustedTypesIntegration,
   enableUseDeferredValueInitialArg,
+  favorSafetyOverHydrationPerf,
+  renameElementSymbol,
   retryLaneExpirationMs,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
-  enableInfiniteRenderLoopDetection,
-  enableRenderableContext,
-  favorSafetyOverHydrationPerf,
-  disableDefaultPropsExceptForClasses,
-  enableNoCloningMemoCache,
-  enableAddPropertiesFastPath,
-  enableFastJSX,
-  renameElementSymbol,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -95,13 +96,9 @@ export const enableRefAsProp = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
-export const allowConcurrentByDefault = true;
-
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
 export const enableFizzExternalRuntime = true;
-
-export const forceConcurrentByDefaultForTesting = false;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 

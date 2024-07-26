@@ -4,7 +4,7 @@
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees
 
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
 // It's correct to infer a useMemo value is non-allocating
 // and not provide it with a reactive scope

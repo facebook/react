@@ -41,6 +41,8 @@ export type Options = {
   callServer?: CallServerCallback,
   temporaryReferences?: TemporaryReferenceSet,
   findSourceMapURL?: FindSourceMapURLCallback,
+  replayConsoleLogs?: boolean,
+  environmentName?: string,
 };
 
 function createResponseFromOptions(options: void | Options) {
@@ -55,6 +57,10 @@ function createResponseFromOptions(options: void | Options) {
       : undefined,
     __DEV__ && options && options.findSourceMapURL
       ? options.findSourceMapURL
+      : undefined,
+    __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
+    __DEV__ && options && options.environmentName
+      ? options.environmentName
       : undefined,
   );
 }

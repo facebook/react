@@ -8,7 +8,7 @@ function foo() {
     y = 3;
   }
 
-  let t = { x: x, y: y };
+  let t = {x: x, y: y};
   return t;
 }
 

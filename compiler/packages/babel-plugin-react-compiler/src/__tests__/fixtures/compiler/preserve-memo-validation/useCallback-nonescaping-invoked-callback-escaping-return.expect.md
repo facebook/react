@@ -3,9 +3,9 @@
 
 ```javascript
 // @validatePreserveExistingMemoizationGuarantees @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
-import { useCallback } from "react";
+import {useCallback} from 'react';
 
-function Component({ entity, children }) {
+function Component({entity, children}) {
   const showMessage = useCallback(() => entity != null);
 
   // We currently model functions as if they could escape intor their return value
@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [
     {
-      entity: { name: "Sathya" },
+      entity: {name: 'Sathya'},
       children: [<div key="gsathya">Hi Sathya!</div>],
     },
   ],

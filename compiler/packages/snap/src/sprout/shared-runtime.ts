@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { IntlVariations, IntlViewerContext, init } from "fbt";
-import React, { FunctionComponent } from "react";
+import {IntlVariations, IntlViewerContext, init} from 'fbt';
+import React, {FunctionComponent} from 'react';
 
 /**
  * This file is meant for use by `runner-evaluator` and fixture tests.
@@ -23,11 +23,11 @@ import React, { FunctionComponent } from "react";
  * ```
  */
 
-export type StringKeyedObject = { [key: string]: unknown };
+export type StringKeyedObject = {[key: string]: unknown};
 
-export const CONST_STRING0 = "global string 0";
-export const CONST_STRING1 = "global string 1";
-export const CONST_STRING2 = "global string 2";
+export const CONST_STRING0 = 'global string 0';
+export const CONST_STRING1 = 'global string 1';
+export const CONST_STRING2 = 'global string 2';
 
 export const CONST_NUMBER0 = 0;
 export const CONST_NUMBER1 = 1;
@@ -36,10 +36,10 @@ export const CONST_NUMBER2 = 2;
 export const CONST_TRUE = true;
 export const CONST_FALSE = false;
 
-export function initFbt() {
+export function initFbt(): void {
   const viewerContext: IntlViewerContext = {
     GENDER: IntlVariations.GENDER_UNKNOWN,
-    locale: "en_US",
+    locale: 'en_US',
   };
 
   init({
@@ -52,16 +52,16 @@ export function initFbt() {
 
 export function mutate(arg: any): void {
   // don't mutate primitive
-  if (typeof arg === null || typeof arg !== "object") {
+  if (arg == null || typeof arg !== 'object') {
     return;
   }
 
   let count: number = 0;
   let key;
   while (true) {
-    key = "wat" + count;
+    key = 'wat' + count;
     if (!Object.hasOwn(arg, key)) {
-      arg[key] = "joe";
+      arg[key] = 'joe';
       return;
     }
     count++;
@@ -75,19 +75,19 @@ export function mutateAndReturn<T>(arg: T): T {
 
 export function mutateAndReturnNewValue<T>(arg: T): string {
   mutate(arg);
-  return "hello!";
+  return 'hello!';
 }
 
 export function setProperty(arg: any, property: any): void {
   // don't mutate primitive
-  if (typeof arg === null || typeof arg !== "object") {
+  if (arg == null || typeof arg !== 'object') {
     return arg;
   }
 
   let count: number = 0;
   let key;
   while (true) {
-    key = "wat" + count;
+    key = 'wat' + count;
     if (!Object.hasOwn(arg, key)) {
       arg[key] = property;
       return arg;
@@ -123,12 +123,12 @@ export function calculateExpensiveNumber(x: number): number {
 /**
  * Functions that do not mutate their parameters
  */
-export function shallowCopy(obj: Object): object {
+export function shallowCopy(obj: object): object {
   return Object.assign({}, obj);
 }
 
 export function makeObject_Primitives(): StringKeyedObject {
-  return { a: 0, b: "value1", c: true };
+  return {a: 0, b: 'value1', c: true};
 }
 
 export function makeArray<T>(...values: Array<T>): Array<T> {
@@ -139,9 +139,11 @@ export function addOne(value: number): number {
   return value + 1;
 }
 
-// Alias console.log, as it is defined as a global and may have
-// different compiler handling than unknown functions
-export function print(...args: Array<unknown>) {
+/*
+ * Alias console.log, as it is defined as a global and may have
+ * different compiler handling than unknown functions
+ */
+export function print(...args: Array<unknown>): void {
   console.log(...args);
 }
 
@@ -153,7 +155,7 @@ export function throwErrorWithMessage(message: string): never {
   throw new Error(message);
 }
 
-export function throwInput(x: Object): never {
+export function throwInput(x: object): never {
   throw x;
 }
 
@@ -167,12 +169,12 @@ export function logValue<T>(value: T): void {
   console.log(value);
 }
 
-export function useHook(): Object {
+export function useHook(): object {
   return makeObject_Primitives();
 }
 
 const noAliasObject = Object.freeze({});
-export function useNoAlias(...args: Array<any>): object {
+export function useNoAlias(..._args: Array<any>): object {
   return noAliasObject;
 }
 
@@ -183,7 +185,7 @@ export function useIdentity<T>(arg: T): T {
 export function invoke<T extends Array<any>, ReturnType>(
   fn: (...input: T) => ReturnType,
   ...params: T
-) {
+): ReturnType {
   return fn(...params);
 }
 
@@ -191,7 +193,7 @@ export function conditionalInvoke<T extends Array<any>, ReturnType>(
   shouldInvoke: boolean,
   fn: (...input: T) => ReturnType,
   ...params: T
-) {
+): ReturnType | null {
   if (shouldInvoke) {
     return fn(...params);
   } else {
@@ -205,34 +207,38 @@ export function conditionalInvoke<T extends Array<any>, ReturnType>(
 export function Text(props: {
   value: string;
   children?: Array<React.ReactNode>;
-}) {
-  return React.createElement("div", null, props.value, props.children);
+}): React.ReactElement {
+  return React.createElement('div', null, props.value, props.children);
 }
 
-export function StaticText1(props: { children?: Array<React.ReactNode> }) {
-  return React.createElement("div", null, "StaticText1", props.children);
+export function StaticText1(props: {
+  children?: Array<React.ReactNode>;
+}): React.ReactElement {
+  return React.createElement('div', null, 'StaticText1', props.children);
 }
 
-export function StaticText2(props: { children?: Array<React.ReactNode> }) {
-  return React.createElement("div", null, "StaticText2", props.children);
+export function StaticText2(props: {
+  children?: Array<React.ReactNode>;
+}): React.ReactElement {
+  return React.createElement('div', null, 'StaticText2', props.children);
 }
 
 export function RenderPropAsChild(props: {
   items: Array<() => React.ReactNode>;
-}) {
+}): React.ReactElement {
   return React.createElement(
-    "div",
+    'div',
     null,
-    "HigherOrderComponent",
-    props.items.map((item) => item())
+    'HigherOrderComponent',
+    props.items.map(item => item()),
   );
 }
 
 export function Stringify(props: any): React.ReactElement {
   return React.createElement(
-    "div",
+    'div',
     null,
-    toJSON(props, props?.shouldInvokeFns)
+    toJSON(props, props?.shouldInvokeFns),
   );
 }
 
@@ -242,8 +248,8 @@ export function ValidateMemoization({
 }: {
   inputs: Array<any>;
   output: any;
-}) {
-  "use no forget";
+}): React.ReactElement {
+  'use no forget';
   const [previousInputs, setPreviousInputs] = React.useState(inputs);
   const [previousOutput, setPreviousOutput] = React.useState(output);
   if (
@@ -255,13 +261,13 @@ export function ValidateMemoization({
     setPreviousOutput(output);
   } else if (output !== previousOutput) {
     // Else output should be stable
-    throw new Error("Output identity changed but inputs did not");
+    throw new Error('Output identity changed but inputs did not');
   }
-  return React.createElement(Stringify, { inputs, output });
+  return React.createElement(Stringify, {inputs, output});
 }
 
 export function createHookWrapper<TProps, TRet>(
-  useMaybeHook: (props: TProps) => TRet
+  useMaybeHook: (props: TProps) => TRet,
 ): FunctionComponent<TProps> {
   return function Component(props: TProps): React.ReactElement {
     const result = useMaybeHook(props);
@@ -273,31 +279,31 @@ export function createHookWrapper<TProps, TRet>(
 }
 
 // helper functions
-export function toJSON(value: any, invokeFns: boolean = false) {
+export function toJSON(value: any, invokeFns: boolean = false): string {
   const seen = new Map();
 
   return JSON.stringify(value, (_key: string, val: any) => {
-    if (typeof val === "function") {
+    if (typeof val === 'function') {
       if (val.length === 0 && invokeFns) {
         return {
-          kind: "Function",
+          kind: 'Function',
           result: val(),
         };
       } else {
         return `[[ function params=${val.length} ]]`;
       }
-    } else if (typeof val === "object") {
+    } else if (typeof val === 'object') {
       let id = seen.get(val);
       if (id != null) {
         return `[[ cyclic ref *${id} ]]`;
       } else if (val instanceof Map) {
         return {
-          kind: "Map",
+          kind: 'Map',
           value: Array.from(val.entries()),
         };
       } else if (val instanceof Set) {
         return {
-          kind: "Set",
+          kind: 'Set',
           value: Array.from(val.values()),
         };
       }
@@ -305,6 +311,22 @@ export function toJSON(value: any, invokeFns: boolean = false) {
     }
     return val;
   });
+}
+export class Builder {
+  vals: Array<any> = [];
+  static makeBuilder(isNull: boolean, ...args: Array<any>): Builder | null {
+    if (isNull) {
+      return null;
+    } else {
+      const builder = new Builder();
+      builder.push(...args);
+      return builder;
+    }
+  }
+  push(...args: Array<any>): Builder {
+    this.vals.push(...args);
+    return this;
+  }
 }
 
 export const ObjectWithHooks = {
@@ -319,9 +341,9 @@ export const ObjectWithHooks = {
   },
 };
 
-export function useFragment(...args: Array<any>): Object {
+export function useFragment(..._args: Array<any>): object {
   return {
     a: [1, 2, 3],
-    b: { c: { d: 4 } },
+    b: {c: {d: 4}},
   };
 }

@@ -1,4 +1,4 @@
-function Foo({ value }: { value: number }) {
+function Foo({value}: {value: number}) {
   const factorial = (x: number) => {
     if (x <= 1) {
       return 1;
@@ -12,5 +12,5 @@ function Foo({ value }: { value: number }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [{ value: 3 }],
+  params: [{value: 3}],
 };

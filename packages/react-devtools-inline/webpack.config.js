@@ -73,6 +73,10 @@ module.exports = {
       __EXTENSION__: false,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      // TODO: Should this be feature tested somehow?
+      __IS_CHROME__: false,
+      __IS_FIREFOX__: false,
+      __IS_EDGE__: false,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-inline"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,

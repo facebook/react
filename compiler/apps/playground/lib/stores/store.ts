@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from "invariant";
+import invariant from 'invariant';
 import {
   compressToEncodedURIComponent,
   decompressFromEncodedURIComponent,
-} from "lz-string";
-import { defaultStore } from "../defaultStore";
+} from 'lz-string';
+import {defaultStore} from '../defaultStore';
 
 /**
  * Global Store for Playground
@@ -30,8 +30,8 @@ export function decodeStore(hash: string): Store {
  */
 export function saveStore(store: Store) {
   const hash = encodeStore(store);
-  localStorage.setItem("playgroundStore", hash);
-  history.replaceState({}, "", `#${hash}`);
+  localStorage.setItem('playgroundStore', hash);
+  history.replaceState({}, '', `#${hash}`);
 }
 
 /**
@@ -41,9 +41,9 @@ export function saveStore(store: Store) {
 function isValidStore(raw: unknown): raw is Store {
   return (
     raw != null &&
-    typeof raw == "object" &&
-    "source" in raw &&
-    typeof raw["source"] === "string"
+    typeof raw == 'object' &&
+    'source' in raw &&
+    typeof raw['source'] === 'string'
   );
 }
 
@@ -53,7 +53,7 @@ function isValidStore(raw: unknown): raw is Store {
  */
 export function initStoreFromUrlOrLocalStorage(): Store {
   const encodedSourceFromUrl = location.hash.slice(1);
-  const encodedSourceFromLocal = localStorage.getItem("playgroundStore");
+  const encodedSourceFromLocal = localStorage.getItem('playgroundStore');
   const encodedSource = encodedSourceFromUrl || encodedSourceFromLocal;
 
   // No data in the URL and no data in the localStorage to fallback to.
@@ -62,6 +62,6 @@ export function initStoreFromUrlOrLocalStorage(): Store {
 
   const raw = decodeStore(encodedSource);
 
-  invariant(isValidStore(raw), "Invalid Store");
+  invariant(isValidStore(raw), 'Invalid Store');
   return raw;
 }

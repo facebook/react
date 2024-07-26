@@ -3,7 +3,7 @@
 
 ```javascript
 function Component(props) {
-  const filtered = props.items.filter((item) => item != null);
+  const filtered = props.items.filter(item => item != null);
   return filtered;
 }
 
@@ -11,17 +11,7 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [
     {
-      items: [
-        { a: true },
-        null,
-        true,
-        false,
-        null,
-        "string",
-        3.14,
-        null,
-        [null],
-      ],
+      items: [{a: true}, null, true, false, null, 'string', 3.14, null, [null]],
     },
   ],
 };
@@ -33,17 +23,10 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(3);
+  const $ = _c(2);
   let t0;
   if ($[0] !== props.items) {
-    let t1;
-    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-      t1 = (item) => item != null;
-      $[2] = t1;
-    } else {
-      t1 = $[2];
-    }
-    t0 = props.items.filter(t1);
+    t0 = props.items.filter(_temp);
     $[0] = props.items;
     $[1] = t0;
   } else {
@@ -51,6 +34,9 @@ function Component(props) {
   }
   const filtered = t0;
   return filtered;
+}
+function _temp(item) {
+  return item != null;
 }
 
 export const FIXTURE_ENTRYPOINT = {

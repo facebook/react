@@ -213,14 +213,18 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      );
+    }
+
     let error;
     try {
       await act(() => {
-        root.update(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <LazyText text="Hi" />
-          </Suspense>,
-        );
+        root.update(<App />);
       });
     } catch (e) {
       error = e;
@@ -753,6 +757,32 @@ describe('ReactLazy', () => {
     );
   });
 
+  it('throws with a useful error when wrapping fragment with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.Fragment));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.Fragment);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Fragment. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
   it('throws with a useful error when wrapping lazy() multiple times', async () => {
     const Lazy1 = lazy(() => fakeImport(Text));
     const Lazy2 = lazy(() => fakeImport(Lazy1));
@@ -811,10 +841,10 @@ describe('ReactLazy', () => {
             'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
           ]
         : shouldWarnAboutMemoDefaultProps
-        ? [
-            'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-          ]
-        : [],
+          ? [
+              'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+            ]
+          : [],
     );
     expect(root).toMatchRenderedOutput('22');
 

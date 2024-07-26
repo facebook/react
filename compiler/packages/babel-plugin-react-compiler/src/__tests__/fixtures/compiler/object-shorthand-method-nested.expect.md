@@ -2,10 +2,10 @@
 ## Input
 
 ```javascript
-import { useState } from "react";
-import { createHookWrapper } from "shared-runtime";
+import {useState} from 'react';
+import {createHookWrapper} from 'shared-runtime';
 
-function useHook({ value }) {
+function useHook({value}) {
   const [state] = useState(false);
 
   return {
@@ -23,7 +23,7 @@ function useHook({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: createHookWrapper(useHook),
-  params: [{ value: 0 }],
+  params: [{value: 0}],
 };
 
 ```

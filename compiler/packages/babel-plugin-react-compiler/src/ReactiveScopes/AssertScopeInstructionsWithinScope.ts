@@ -5,17 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { visitReactiveFunction } from ".";
-import { CompilerError } from "..";
+import {visitReactiveFunction} from '.';
+import {CompilerError} from '..';
 import {
   InstructionId,
   Place,
   ReactiveFunction,
   ReactiveScopeBlock,
   ScopeId,
-} from "../HIR";
-import { getPlaceScope } from "./BuildReactiveBlocks";
-import { ReactiveFunctionVisitor } from "./visitors";
+} from '../HIR';
+import {getPlaceScope} from './BuildReactiveBlocks';
+import {ReactiveFunctionVisitor} from './visitors';
 
 /*
  * Internal validation pass that checks all the instructions involved in creating
@@ -41,14 +41,14 @@ import { ReactiveFunctionVisitor } from "./visitors";
  * against compiler coding mistakes in earlier passes.
  */
 export function assertScopeInstructionsWithinScopes(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): void {
   const existingScopes = new Set<ScopeId>();
   visitReactiveFunction(fn, new FindAllScopesVisitor(), existingScopes);
   visitReactiveFunction(
     fn,
     new CheckInstructionsAgainstScopesVisitor(),
-    existingScopes
+    existingScopes,
   );
 }
 
@@ -67,7 +67,7 @@ class CheckInstructionsAgainstScopesVisitor extends ReactiveFunctionVisitor<
   override visitPlace(
     id: InstructionId,
     place: Place,
-    state: Set<ScopeId>
+    state: Set<ScopeId>,
   ): void {
     const scope = getPlaceScope(id, place);
     if (
@@ -84,7 +84,7 @@ class CheckInstructionsAgainstScopesVisitor extends ReactiveFunctionVisitor<
         description: `Instruction [${id}] is part of scope @${scope.id}, but that scope has already completed.`,
         loc: place.loc,
         reason:
-          "Encountered an instruction that should be part of a scope, but where that scope has already completed",
+          'Encountered an instruction that should be part of a scope, but where that scope has already completed',
         suggestions: null,
       });
     }

@@ -1,4 +1,4 @@
-let x = { a: 42 };
+let x = {a: 42};
 
 function Component(props) {
   foo(() => {

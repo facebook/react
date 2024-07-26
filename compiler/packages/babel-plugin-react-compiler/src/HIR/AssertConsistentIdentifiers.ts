@@ -5,20 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
   GeneratedSource,
   HIRFunction,
   Identifier,
   IdentifierId,
   SourceLocation,
-} from "./HIR";
-import { printPlace } from "./PrintHIR";
+} from './HIR';
+import {printPlace} from './PrintHIR';
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Validation pass to check that there is a 1:1 mapping between Identifier objects and IdentifierIds,
@@ -44,7 +44,7 @@ export function assertConsistentIdentifiers(fn: HIRFunction): void {
       CompilerError.invariant(!assignments.has(instr.lvalue.identifier.id), {
         reason: `Expected lvalues to be assigned exactly once`,
         description: `Found duplicate assignment of '${printPlace(
-          instr.lvalue
+          instr.lvalue,
         )}'`,
         loc: instr.lvalue.loc,
         suggestions: null,
@@ -68,7 +68,7 @@ type Identifiers = Map<IdentifierId, Identifier>;
 function validate(
   identifiers: Identifiers,
   identifier: Identifier,
-  loc: SourceLocation | null = null
+  loc: SourceLocation | null = null,
 ): void {
   const previous = identifiers.get(identifier.id);
   if (previous === undefined) {

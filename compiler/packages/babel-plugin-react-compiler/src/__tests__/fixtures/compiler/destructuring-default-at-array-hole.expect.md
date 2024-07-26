@@ -10,7 +10,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: [, /* hole! */ 3.14] }],
+  params: [{value: [, /* hole! */ 3.14]}],
 };
 
 ```

@@ -60,6 +60,8 @@ export type Options = {
   nonce?: string,
   encodeFormAction?: EncodeFormActionCallback,
   findSourceMapURL?: FindSourceMapURLCallback,
+  replayConsoleLogs?: boolean,
+  environmentName?: string,
 };
 
 function createFromNodeStream<T>(
@@ -76,6 +78,10 @@ function createFromNodeStream<T>(
     undefined, // TODO: If encodeReply is supported, this should support temporaryReferences
     __DEV__ && options && options.findSourceMapURL
       ? options.findSourceMapURL
+      : undefined,
+    __DEV__ && options ? options.replayConsoleLogs === true : false, // defaults to false
+    __DEV__ && options && options.environmentName
+      ? options.environmentName
       : undefined,
   );
   stream.on('data', chunk => {

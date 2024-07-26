@@ -23,7 +23,6 @@ import {
   enableRefAsProp,
   disableStringRefs,
   disableDefaultPropsExceptForClasses,
-  enableFastJSX,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
@@ -82,9 +81,7 @@ if (__DEV__) {
   didWarnAboutElementRef = {};
 }
 
-const enableFastJSXWithStringRefs = enableFastJSX && enableRefAsProp;
-const enableFastJSXWithoutStringRefs =
-  enableFastJSXWithStringRefs && disableStringRefs;
+const enableFastJSXWithoutStringRefs = enableRefAsProp && disableStringRefs;
 
 function hasValidRef(config) {
   if (__DEV__) {
@@ -416,7 +413,7 @@ export function jsxProd(type, config, maybeKey) {
   let props;
   if (
     (enableFastJSXWithoutStringRefs ||
-      (enableFastJSXWithStringRefs && !('ref' in config))) &&
+      (enableRefAsProp && !('ref' in config))) &&
     !('key' in config)
   ) {
     // If key was not spread in, we can reuse the original props object. This
@@ -559,8 +556,13 @@ function jsxDEVImpl(
   debugTask,
 ) {
   if (__DEV__) {
-    if (!isValidElementType(type)) {
+    if (!enableOwnerStacks && !isValidElementType(type)) {
       // This is an invalid element type.
+      //
+      // We warn here so that we can get better stack traces but with enableOwnerStacks
+      // enabled we don't need this because we get good stacks if we error in the
+      // renderer anyway. The renderer is the only one that knows what types are valid
+      // for this particular renderer so we let it error there instead.
       //
       // We warn in this case but don't throw. We expect the element creation to
       // succeed and there will likely be errors in render.
@@ -604,6 +606,9 @@ function jsxDEVImpl(
       // errors. We don't want exception behavior to differ between dev and
       // prod. (Rendering will throw with a helpful message and as soon as the
       // type is fixed, the key warnings will appear.)
+      // When enableOwnerStacks is on, we no longer need the type here so this
+      // comment is no longer true. Which is why we can run this even for invalid
+      // types.
       const children = config.children;
       if (children !== undefined) {
         if (isStaticChildren) {
@@ -693,7 +698,7 @@ function jsxDEVImpl(
     let props;
     if (
       (enableFastJSXWithoutStringRefs ||
-        (enableFastJSXWithStringRefs && !('ref' in config))) &&
+        (enableRefAsProp && !('ref' in config))) &&
       !('key' in config)
     ) {
       // If key was not spread in, we can reuse the original props object. This
@@ -1103,6 +1108,17 @@ export function cloneElement(element, config, children) {
  */
 function validateChildKeys(node, parentType) {
   if (__DEV__) {
+    if (enableOwnerStacks) {
+      // When owner stacks is enabled no warnings happens. All we do is
+      // mark elements as being in a valid static child position so they
+      // don't need keys.
+      if (isValidElement(node)) {
+        if (node._store) {
+          node._store.validated = 1;
+        }
+      }
+      return;
+    }
     if (typeof node !== 'object' || !node) {
       return;
     }

@@ -3,9 +3,9 @@ import {
   identity,
   CONST_STRING0,
   CONST_STRING1,
-} from "shared-runtime";
+} from 'shared-runtime';
 
-function useHook({ value }) {
+function useHook({value}) {
   return {
     getValue() {
       return identity(value);
@@ -17,5 +17,5 @@ function useHook({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: createHookWrapper(useHook),
-  params: [{ value: 0 }],
+  params: [{value: 0}],
 };

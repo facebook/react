@@ -1562,7 +1562,7 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('Async!');
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('unwrap uncached promises in component that accesses legacy context', async () => {
     class ContextProvider extends React.Component {
       static childContextTypes = {
@@ -1656,7 +1656,6 @@ describe('ReactUse', () => {
     expect(root).toMatchRenderedOutput('C');
   });
 
-  // @gate !forceConcurrentByDefaultForTesting
   it('an async component outside of a Suspense boundary crashes with an error (resolves in microtask)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1708,7 +1707,6 @@ describe('ReactUse', () => {
     );
   });
 
-  // @gate !forceConcurrentByDefaultForTesting
   it('an async component outside of a Suspense boundary crashes with an error (resolves in macrotask)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};

@@ -11,8 +11,8 @@ import {
   Place,
   ReactiveFunction,
   ReactiveInstruction,
-} from "../HIR/HIR";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR/HIR';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
  * Nulls out lvalues for temporary variables that are never accessed later. This only
@@ -34,7 +34,7 @@ class Visitor extends ReactiveFunctionVisitor<LValues> {
   }
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: LValues
+    state: LValues,
   ): void {
     this.traverseInstruction(instruction, state);
     if (

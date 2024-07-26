@@ -206,8 +206,8 @@ describe('ReactFlightDOM', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   it('should resolve HTML using Node streams', async () => {
@@ -620,6 +620,20 @@ describe('ReactFlightDOM', () => {
       'Cannot access Component.deep on the server. ' +
         'You cannot dot into a client module from a server component. ' +
         'You can only pass the imported name through.',
+    );
+  });
+
+  it('throws when await a client module prop of client exports', async () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    async function awaitExport() {
+      const mod = await ClientModule;
+      return await Promise.resolve(mod.Component);
+    }
+    await expect(awaitExport()).rejects.toThrowError(
+      `Cannot await or return from a thenable. ` +
+        `You cannot await a client module from a server component.`,
     );
   });
 

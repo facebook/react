@@ -20,24 +20,22 @@ const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  consoleManagedByDevToolsDuringStrictMode,
-  disableDefaultPropsExceptForClasses,
   enableAddPropertiesFastPath,
-  enableDeferRootSchedulingToMicrotask,
-  enableFastJSX,
-  enableInfiniteRenderLoopDetection,
+  enableObjectFiber,
   enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
-export const allowConcurrentByDefault = false;
+export const consoleManagedByDevToolsDuringStrictMode = true;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const disableClientCache = true;
 export const disableCommentsAsDOMContainers = true;
+export const disableDefaultPropsExceptForClasses = true;
 export const disableIEWorkarounds = true;
 export const disableInputAttributeSyncing = false;
 export const disableLegacyContext = false;
+export const disableLegacyContextForFunctionComponents = false;
 export const disableLegacyMode = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const disableStringRefs = true;
@@ -51,11 +49,13 @@ export const enableComponentStackLocations = true;
 export const enableCPUSuspense = true;
 export const enableCreateEventHandleAPI = false;
 export const enableDebugTracing = false;
+export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
+export const enableInfiniteRenderLoopDetection = true;
 export const enableLazyContextPropagation = false;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
@@ -84,7 +84,6 @@ export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
 export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;
-export const forceConcurrentByDefaultForTesting = false;
 export const renameElementSymbol = false;
 export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;

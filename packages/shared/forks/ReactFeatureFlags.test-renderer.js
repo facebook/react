@@ -53,8 +53,6 @@ export const transitionLaneExpirationMs = 5000;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
-export const forceConcurrentByDefaultForTesting = false;
-export const allowConcurrentByDefault = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
@@ -89,13 +87,14 @@ export const enableShallowPropDiffing = false;
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const enableRefAsProp = true;
 export const disableStringRefs = true;
-export const enableFastJSX = true;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
+export const disableLegacyContextForFunctionComponents = true;
 export const enableRenderableContext = true;
 export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;
 
+export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 
 // Flow magic to verify the exports of this file match the original version.

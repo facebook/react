@@ -503,15 +503,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       typeof queueMicrotask === 'function'
         ? queueMicrotask
         : typeof Promise !== 'undefined'
-        ? callback =>
-            Promise.resolve(null)
-              .then(callback)
-              .catch(error => {
-                setTimeout(() => {
-                  throw error;
-                });
-              })
-        : setTimeout,
+          ? callback =>
+              Promise.resolve(null)
+                .then(callback)
+                .catch(error => {
+                  setTimeout(() => {
+                    throw error;
+                  });
+                })
+          : setTimeout,
 
     prepareForCommit(): null | Object {
       return null;
@@ -635,6 +635,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     NotPendingTransition: (null: TransitionStatus),
 
     resetFormInstance(form: Instance) {},
+
+    bindToConsole(methodName, args, badgeName) {
+      return Function.prototype.bind.apply(
+        // eslint-disable-next-line react-internal/no-production-logging
+        console[methodName],
+        [console].concat(args),
+      );
+    },
   };
 
   const hostConfig = useMutation

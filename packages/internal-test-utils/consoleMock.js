@@ -44,6 +44,34 @@ const patchConsoleMethod = (
       return;
     }
 
+    // Append Component Stacks. Simulates a framework or DevTools appending them.
+    if (
+      typeof format === 'string' &&
+      (methodName === 'error' || methodName === 'warn')
+    ) {
+      const React = require('react');
+      if (React.captureOwnerStack) {
+        // enableOwnerStacks enabled. When it's always on, we can assume this case.
+        const stack = React.captureOwnerStack();
+        if (stack) {
+          format += '%s';
+          args.push(stack);
+        }
+      } else {
+        // Otherwise we have to use internals to emulate parent stacks.
+        const ReactSharedInternals =
+          React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
+          React.__SERVER_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+        if (ReactSharedInternals && ReactSharedInternals.getCurrentStack) {
+          const stack = ReactSharedInternals.getCurrentStack();
+          if (stack !== '') {
+            format += '%s';
+            args.push(stack);
+          }
+        }
+      }
+    }
+
     // Capture the call stack now so we can warn about it later.
     // The call stack has helpful information for the test author.
     // Don't throw yet though b'c it might be accidentally caught and suppressed.
@@ -204,7 +232,7 @@ export function assertConsoleLogsCleared() {
     if (warnings.length > 0) {
       message += `\nconsole.warn was called without assertConsoleWarnDev:\n${diff(
         '',
-        warnings.join('\n'),
+        warnings.map(normalizeComponentStack).join('\n'),
         {
           omitAnnotationLines: true,
         },
@@ -213,7 +241,7 @@ export function assertConsoleLogsCleared() {
     if (errors.length > 0) {
       message += `\nconsole.error was called without assertConsoleErrorDev:\n${diff(
         '',
-        errors.join('\n'),
+        errors.map(normalizeComponentStack).join('\n'),
         {
           omitAnnotationLines: true,
         },
@@ -228,7 +256,7 @@ export function assertConsoleLogsCleared() {
   }
 }
 
-function replaceComponentStack(str) {
+function normalizeCodeLocInfo(str) {
   if (typeof str !== 'string') {
     return str;
   }
@@ -239,9 +267,27 @@ function replaceComponentStack(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*.*/, function (m, name) {
-    return chalk.dim(' <component stack>');
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+    if (name.endsWith('.render')) {
+      // Class components will have the `render` method as part of their stack trace.
+      // We strip that out in our normalization to make it look more like component stacks.
+      name = name.slice(0, name.length - 7);
+    }
+    return '\n    in ' + name + ' (at **)';
   });
+}
+
+function normalizeComponentStack(entry) {
+  if (
+    typeof entry[0] === 'string' &&
+    entry[0].endsWith('%s') &&
+    isLikelyAComponentStack(entry[entry.length - 1])
+  ) {
+    const clone = entry.slice(0);
+    clone[clone.length - 1] = normalizeCodeLocInfo(entry[entry.length - 1]);
+    return clone;
+  }
+  return entry;
 }
 
 const isLikelyAComponentStack = message =>
@@ -382,11 +428,11 @@ export function createLogAssertion(
             );
           }
 
-          expectedMessage = replaceComponentStack(currentExpectedMessage);
+          expectedMessage = normalizeCodeLocInfo(currentExpectedMessage);
           expectedWithoutStack = expectedMessageOrArray[1].withoutStack;
         } else if (typeof expectedMessageOrArray === 'string') {
           // Should be in the form assert(['log']) or assert(['log'], {withoutStack: true})
-          expectedMessage = replaceComponentStack(expectedMessageOrArray);
+          expectedMessage = normalizeCodeLocInfo(expectedMessageOrArray);
           if (consoleMethod === 'log') {
             expectedWithoutStack = true;
           } else {
@@ -410,7 +456,7 @@ export function createLogAssertion(
           );
         }
 
-        const normalizedMessage = replaceComponentStack(message);
+        const normalizedMessage = normalizeCodeLocInfo(message);
         receivedLogs.push(normalizedMessage);
 
         // Check the number of %s interpolations.
@@ -418,13 +464,18 @@ export function createLogAssertion(
         let argIndex = 0;
         // console.* could have been called with a non-string e.g. `console.error(new Error())`
         // eslint-disable-next-line react-internal/safe-string-coercion
-        String(format).replace(/%s/g, () => argIndex++);
+        String(format).replace(/%s|%c/g, () => argIndex++);
         if (argIndex !== args.length) {
-          logsMismatchingFormat.push({
-            format,
-            args,
-            expectedArgCount: argIndex,
-          });
+          if (format.includes('%c%s')) {
+            // We intentionally use mismatching formatting when printing badging because we don't know
+            // the best default to use for different types because the default varies by platform.
+          } else {
+            logsMismatchingFormat.push({
+              format,
+              args,
+              expectedArgCount: argIndex,
+            });
+          }
         }
 
         // Check for extra component stacks

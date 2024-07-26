@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { HIRFunction, Identifier } from "../HIR/HIR";
-import { inferAliases } from "./InferAlias";
-import { inferAliasForPhis } from "./InferAliasForPhis";
-import { inferAliasForStores } from "./InferAliasForStores";
-import { inferMutableLifetimes } from "./InferMutableLifetimes";
-import { inferMutableRangesForAlias } from "./InferMutableRangesForAlias";
-import { inferTryCatchAliases } from "./InferTryCatchAliases";
+import {HIRFunction, Identifier} from '../HIR/HIR';
+import {inferAliases} from './InferAlias';
+import {inferAliasForPhis} from './InferAliasForPhis';
+import {inferAliasForStores} from './InferAliasForStores';
+import {inferMutableLifetimes} from './InferMutableLifetimes';
+import {inferMutableRangesForAlias} from './InferMutableRangesForAlias';
+import {inferTryCatchAliases} from './InferTryCatchAliases';
 
 export function inferMutableRanges(ir: HIRFunction): void {
   // Infer mutable ranges for non fields

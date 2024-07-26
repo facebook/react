@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { useState as state } from "react";
+import {useState as state} from 'react';
 
 function Component(props) {
   let s;

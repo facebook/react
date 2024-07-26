@@ -12,6 +12,7 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   ReactAsyncInfo,
+  ReactStackTrace,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -55,7 +56,7 @@ import {
   readFinalStringChunk,
   createStringDecoder,
   prepareDestinationForModule,
-  printToConsole,
+  bindToConsole,
 } from './ReactFlightClientConfig';
 
 import {registerServerReference} from './ReactFlightReplyClient';
@@ -231,7 +232,10 @@ Chunk.prototype.then = function <T>(
   }
 };
 
-export type FindSourceMapURLCallback = (fileName: string) => null | string;
+export type FindSourceMapURLCallback = (
+  fileName: string,
+  environmentName: string,
+) => null | string;
 
 export type Response = {
   _bundlerConfig: SSRModuleMap,
@@ -250,6 +254,8 @@ export type Response = {
   _tempRefs: void | TemporaryReferenceSet, // the set temporary references can be resolved from
   _debugRootTask?: null | ConsoleTask, // DEV-only
   _debugFindSourceMapURL?: void | FindSourceMapURLCallback, // DEV-only
+  _replayConsole: boolean, // DEV-only
+  _rootEnvironmentName: string, // DEV-only, the requested environment name.
 };
 
 function readChunk<T>(chunk: SomeChunk<T>): T {
@@ -623,7 +629,7 @@ function createElement(
   key: mixed,
   props: mixed,
   owner: null | ReactComponentInfo, // DEV-only
-  stack: null | string, // DEV-only
+  stack: null | ReactStackTrace, // DEV-only
   validated: number, // DEV-only
 ):
   | React$Element<any>
@@ -687,12 +693,34 @@ function createElement(
       writable: true,
       value: null,
     });
+    let env = response._rootEnvironmentName;
     if (enableOwnerStacks) {
+      if (owner !== null && owner.env != null) {
+        // Interestingly we don't actually have the environment name of where
+        // this JSX was created if it doesn't have an owner but if it does
+        // it must be the same environment as the owner. We could send it separately
+        // but it seems a bit unnecessary for this edge case.
+        env = owner.env;
+      }
+      let normalizedStackTrace: null | Error = null;
+      if (stack !== null) {
+        // We create a fake stack and then create an Error object inside of it.
+        // This means that the stack trace is now normalized into the native format
+        // of the browser and the stack frames will have been registered with
+        // source mapping information.
+        // This can unfortunately happen within a user space callstack which will
+        // remain on the stack.
+        normalizedStackTrace = createFakeJSXCallStackInDEV(
+          response,
+          stack,
+          env,
+        );
+      }
       Object.defineProperty(element, '_debugStack', {
         configurable: false,
         enumerable: false,
         writable: true,
-        value: stack,
+        value: normalizedStackTrace,
       });
 
       let task: null | ConsoleTask = null;
@@ -701,11 +729,16 @@ function createElement(
           console,
           getTaskName(type),
         );
-        const callStack = buildFakeCallStack(response, stack, createTaskFn);
+        const callStack = buildFakeCallStack(
+          response,
+          stack,
+          env,
+          createTaskFn,
+        );
         // This owner should ideally have already been initialized to avoid getting
         // user stack frames on the stack.
         const ownerTask =
-          owner === null ? null : initializeFakeTask(response, owner);
+          owner === null ? null : initializeFakeTask(response, owner, env);
         if (ownerTask === null) {
           const rootTask = response._debugRootTask;
           if (rootTask != null) {
@@ -723,6 +756,12 @@ function createElement(
         writable: true,
         value: task,
       });
+
+      // This owner should ideally have already been initialized to avoid getting
+      // user stack frames on the stack.
+      if (owner !== null) {
+        initializeFakeStack(response, owner);
+      }
     }
   }
 
@@ -751,9 +790,9 @@ function createElement(
         };
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.stack = element._debugStack;
+          erroredComponent.debugStack = element._debugStack;
           // $FlowFixMe[cannot-write]
-          erroredComponent.task = element._debugTask;
+          erroredComponent.debugTask = element._debugTask;
         }
         erroredChunk._debugInfo = [erroredComponent];
       }
@@ -809,7 +848,7 @@ function getChunk(response: Response, id: number): SomeChunk<any> {
 }
 
 function waitForReference<T>(
-  referencedChunk: PendingChunk<T> | BlockedChunk<T>,
+  referencedChunk: SomeChunk<T>,
   parentObject: Object,
   key: string,
   response: Response,
@@ -914,9 +953,9 @@ function waitForReference<T>(
         };
         if (enableOwnerStacks) {
           // $FlowFixMe[cannot-write]
-          erroredComponent.stack = element._debugStack;
+          erroredComponent.debugStack = element._debugStack;
           // $FlowFixMe[cannot-write]
-          erroredComponent.task = element._debugTask;
+          erroredComponent.debugTask = element._debugTask;
         }
         const chunkDebugInfo: ReactDebugInfo =
           chunk._debugInfo || (chunk._debugInfo = []);
@@ -985,6 +1024,21 @@ function getOutlinedModel<T>(
       let value = chunk.value;
       for (let i = 1; i < path.length; i++) {
         value = value[path[i]];
+        if (value.$$typeof === REACT_LAZY_TYPE) {
+          const referencedChunk: SomeChunk<any> = value._payload;
+          if (referencedChunk.status === INITIALIZED) {
+            value = referencedChunk.value;
+          } else {
+            return waitForReference(
+              referencedChunk,
+              parentObject,
+              key,
+              response,
+              map,
+              path.slice(i),
+            );
+          }
+        }
       }
       const chunkValue = map(response, value);
       if (__DEV__ && chunk._debugInfo) {
@@ -1230,6 +1284,29 @@ function parseModelString(
         }
         // Fallthrough
       }
+      case 'Y': {
+        if (__DEV__) {
+          // In DEV mode we encode omitted objects in logs as a getter that throws
+          // so that when you try to access it on the client, you know why that
+          // happened.
+          Object.defineProperty(parentObject, key, {
+            get: function () {
+              // We intentionally don't throw an error object here because it looks better
+              // without the stack in the console which isn't useful anyway.
+              // eslint-disable-next-line no-throw-literal
+              throw (
+                'This object has been omitted by React in the console log ' +
+                'to avoid sending too much data from the server. Try logging smaller ' +
+                'or more specific objects.'
+              );
+            },
+            enumerable: true,
+            configurable: false,
+          });
+          return null;
+        }
+        // Fallthrough
+      }
       default: {
         // We assume that anything else is a reference ID.
         const ref = value.slice(1);
@@ -1278,6 +1355,8 @@ function ResponseInstance(
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
+  replayConsole: boolean,
+  environmentName: void | string,
 ) {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   this._bundlerConfig = bundlerConfig;
@@ -1294,16 +1373,21 @@ function ResponseInstance(
   this._rowLength = 0;
   this._buffer = [];
   this._tempRefs = temporaryReferences;
-  if (supportsCreateTask) {
-    // Any stacks that appear on the server need to be rooted somehow on the client
-    // so we create a root Task for this response which will be the root owner for any
-    // elements created by the server. We use the "use server" string to indicate that
-    // this is where we enter the server from the client.
-    // TODO: Make this string configurable.
-    this._debugRootTask = (console: any).createTask('"use server"');
-  }
   if (__DEV__) {
+    const rootEnv = environmentName === undefined ? 'Server' : environmentName;
+    if (supportsCreateTask) {
+      // Any stacks that appear on the server need to be rooted somehow on the client
+      // so we create a root Task for this response which will be the root owner for any
+      // elements created by the server. We use the "use server" string to indicate that
+      // this is where we enter the server from the client.
+      // TODO: Make this string configurable.
+      this._debugRootTask = (console: any).createTask(
+        '"use ' + rootEnv.toLowerCase() + '"',
+      );
+    }
     this._debugFindSourceMapURL = findSourceMapURL;
+    this._replayConsole = replayConsole;
+    this._rootEnvironmentName = rootEnv;
   }
   // Don't inline this call because it causes closure to outline the call above.
   this._fromJSON = createFromJSONCallback(this);
@@ -1317,6 +1401,8 @@ export function createResponse(
   nonce: void | string,
   temporaryReferences: void | TemporaryReferenceSet,
   findSourceMapURL: void | FindSourceMapURLCallback,
+  replayConsole: boolean,
+  environmentName: void | string,
 ): Response {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new ResponseInstance(
@@ -1327,6 +1413,8 @@ export function createResponse(
     nonce,
     temporaryReferences,
     findSourceMapURL,
+    replayConsole,
+    environmentName,
   );
 }
 
@@ -1694,6 +1782,27 @@ function stopStream(
   controller.close(row === '' ? '"$undefined"' : row);
 }
 
+function formatV8Stack(
+  errorName: string,
+  errorMessage: string,
+  stack: null | ReactStackTrace,
+): string {
+  let v8StyleStack = errorName + ': ' + errorMessage;
+  if (stack) {
+    for (let i = 0; i < stack.length; i++) {
+      const frame = stack[i];
+      const [name, filename, line, col] = frame;
+      if (!name) {
+        v8StyleStack += '\n    at ' + filename + ':' + line + ':' + col;
+      } else {
+        v8StyleStack +=
+          '\n    at ' + name + ' (' + filename + ':' + line + ':' + col + ')';
+      }
+    }
+  }
+  return v8StyleStack;
+}
+
 type ErrorWithDigest = Error & {digest?: string};
 function resolveErrorProd(
   response: Response,
@@ -1729,7 +1838,8 @@ function resolveErrorDev(
   id: number,
   digest: string,
   message: string,
-  stack: string,
+  stack: ReactStackTrace,
+  env: string,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1748,11 +1858,13 @@ function resolveErrorDev(
       message ||
         'An error occurred in the Server Components render but no message was provided',
     );
-    error.stack = stack;
+    // For backwards compat we use the V8 formatting when the flag is off.
+    error.stack = formatV8Stack(error.name, error.message, stack);
   } else {
     const callStack = buildFakeCallStack(
       response,
       stack,
+      env,
       // $FlowFixMe[incompatible-use]
       Error.bind(
         null,
@@ -1760,7 +1872,7 @@ function resolveErrorDev(
           'An error occurred in the Server Components render but no message was provided',
       ),
     );
-    const rootTask = response._debugRootTask;
+    const rootTask = getRootTask(response, env);
     if (rootTask != null) {
       error = rootTask.run(callStack);
     } else {
@@ -1769,6 +1881,7 @@ function resolveErrorDev(
   }
 
   (error: any).digest = digest;
+  (error: any).environmentName = env;
   const errorWithDigest: ErrorWithDigest = (error: any);
   const chunks = response._chunks;
   const chunk = chunks.get(id);
@@ -1807,7 +1920,8 @@ function resolvePostponeDev(
   response: Response,
   id: number,
   reason: string,
-  stack: string,
+  stack: ReactStackTrace,
+  env: string,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1816,11 +1930,35 @@ function resolvePostponeDev(
       'resolvePostponeDev should never be called in production mode. Use resolvePostponeProd instead. This is a bug in React.',
     );
   }
-  // eslint-disable-next-line react-internal/prod-error-codes
-  const error = new Error(reason || '');
-  const postponeInstance: Postpone = (error: any);
-  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
-  postponeInstance.stack = stack;
+  let postponeInstance: Postpone;
+  if (!enableOwnerStacks) {
+    // Executing Error within a native stack isn't really limited to owner stacks
+    // but we gate it behind the same flag for now while iterating.
+    // eslint-disable-next-line react-internal/prod-error-codes
+    postponeInstance = (Error(reason || ''): any);
+    postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
+    // For backwards compat we use the V8 formatting when the flag is off.
+    postponeInstance.stack = formatV8Stack(
+      postponeInstance.name,
+      postponeInstance.message,
+      stack,
+    );
+  } else {
+    const callStack = buildFakeCallStack(
+      response,
+      stack,
+      env,
+      // $FlowFixMe[incompatible-use]
+      Error.bind(null, reason || ''),
+    );
+    const rootTask = response._debugRootTask;
+    if (rootTask != null) {
+      postponeInstance = rootTask.run(callStack);
+    } else {
+      postponeInstance = callStack();
+    }
+    postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
+  }
   const chunks = response._chunks;
   const chunk = chunks.get(id);
   if (!chunk) {
@@ -1854,6 +1992,7 @@ function createFakeFunction<T>(
   sourceMap: null | string,
   line: number,
   col: number,
+  environmentName: string,
 ): FakeFunction<T> {
   // This creates a fake copy of a Server Module. It represents a module that has already
   // executed on the server but we re-execute a blank copy for its stack frames on the client.
@@ -1861,19 +2000,33 @@ function createFakeFunction<T>(
   const comment =
     '/* This module was rendered by a Server Component. Turn on Source Maps to see the server source. */';
 
+  if (!name) {
+    // An eval:ed function with no name gets the name "eval". We give it something more descriptive.
+    name = '<anonymous>';
+  }
+  const encodedName = JSON.stringify(name);
   // We generate code where the call is at the line and column of the server executed code.
   // This allows us to use the original source map as the source map of this fake file to
   // point to the original source.
   let code;
   if (line <= 1) {
-    code = '_=>' + ' '.repeat(col < 4 ? 0 : col - 4) + '_()\n' + comment;
+    const minSize = encodedName.length + 7;
+    code =
+      '({' +
+      encodedName +
+      ':_=>' +
+      ' '.repeat(col < minSize ? 0 : col - minSize) +
+      '_()})\n' +
+      comment;
   } else {
     code =
       comment +
       '\n'.repeat(line - 2) +
-      '_=>\n' +
+      '({' +
+      encodedName +
+      ':_=>\n' +
       ' '.repeat(col < 1 ? 0 : col - 1) +
-      '_()';
+      '_()})';
   }
 
   if (filename.startsWith('/')) {
@@ -1892,7 +2045,13 @@ function createFakeFunction<T>(
     // 1) A printed stack trace string needs a unique URL to be able to source map it.
     // 2) If source maps are disabled or fails, you should at least be able to tell
     //    which file it was.
-    code += '\n//# sourceURL=rsc://React/' + filename + '?' + fakeFunctionIdx++;
+    code +=
+      '\n//# sourceURL=rsc://React/' +
+      encodeURIComponent(environmentName) +
+      '/' +
+      filename +
+      '?' +
+      fakeFunctionIdx++;
     code += '\n//# sourceMappingURL=' + sourceMap;
   } else if (filename) {
     code += '\n//# sourceURL=' + filename;
@@ -1901,7 +2060,7 @@ function createFakeFunction<T>(
   let fn: FakeFunction<T>;
   try {
     // eslint-disable-next-line no-eval
-    fn = (0, eval)(code);
+    fn = (0, eval)(code)[name];
   } catch (x) {
     // If eval fails, such as if in an environment that doesn't support it,
     // we fallback to creating a function here. It'll still have the right
@@ -1910,92 +2069,191 @@ function createFakeFunction<T>(
       return _();
     };
   }
-  // $FlowFixMe[cannot-write]
-  Object.defineProperty(fn, 'name', {value: name || '(anonymous)'});
-  // $FlowFixMe[prop-missing]
-  fn.displayName = name;
   return fn;
 }
 
-// This matches either of these V8 formats.
-//     at name (filename:0:0)
-//     at filename:0:0
-//     at async filename:0:0
-const frameRegExp =
-  /^ {3} at (?:(.+) \(([^\)]+):(\d+):(\d+)\)|(?:async )?([^\)]+):(\d+):(\d+))$/;
-
 function buildFakeCallStack<T>(
   response: Response,
-  stack: string,
+  stack: ReactStackTrace,
+  environmentName: string,
   innerCall: () => T,
 ): () => T {
-  const frames = stack.split('\n');
   let callStack = innerCall;
-  for (let i = 0; i < frames.length; i++) {
-    const frame = frames[i];
-    let fn = fakeFunctionCache.get(frame);
+  for (let i = 0; i < stack.length; i++) {
+    const frame = stack[i];
+    const frameKey = frame.join('-') + '-' + environmentName;
+    let fn = fakeFunctionCache.get(frameKey);
     if (fn === undefined) {
-      const parsed = frameRegExp.exec(frame);
-      if (!parsed) {
-        // We assume the server returns a V8 compatible stack trace.
-        continue;
-      }
-      const name = parsed[1] || '';
-      const filename = parsed[2] || parsed[5] || '';
-      const line = +(parsed[3] || parsed[6]);
-      const col = +(parsed[4] || parsed[7]);
-      const sourceMap = response._debugFindSourceMapURL
-        ? response._debugFindSourceMapURL(filename)
+      const [name, filename, line, col] = frame;
+      const findSourceMapURL = response._debugFindSourceMapURL;
+      const sourceMap = findSourceMapURL
+        ? findSourceMapURL(filename, environmentName)
         : null;
-      fn = createFakeFunction(name, filename, sourceMap, line, col);
+      fn = createFakeFunction(
+        name,
+        filename,
+        sourceMap,
+        line,
+        col,
+        environmentName,
+      );
       // TODO: This cache should technically live on the response since the _debugFindSourceMapURL
       // function is an input and can vary by response.
-      fakeFunctionCache.set(frame, fn);
+      fakeFunctionCache.set(frameKey, fn);
     }
     callStack = fn.bind(null, callStack);
   }
   return callStack;
 }
 
+function getRootTask(
+  response: Response,
+  childEnvironmentName: string,
+): null | ConsoleTask {
+  const rootTask = response._debugRootTask;
+  if (!rootTask) {
+    return null;
+  }
+  if (response._rootEnvironmentName !== childEnvironmentName) {
+    // If the root most owner component is itself in a different environment than the requested
+    // environment then we create an extra task to indicate that we're transitioning into it.
+    // Like if one environment just requests another environment.
+    const createTaskFn = (console: any).createTask.bind(
+      console,
+      '"use ' + childEnvironmentName.toLowerCase() + '"',
+    );
+    return rootTask.run(createTaskFn);
+  }
+  return rootTask;
+}
+
 function initializeFakeTask(
   response: Response,
   debugInfo: ReactComponentInfo | ReactAsyncInfo,
+  childEnvironmentName: string,
 ): null | ConsoleTask {
-  if (!supportsCreateTask || typeof debugInfo.stack !== 'string') {
+  if (!supportsCreateTask) {
     return null;
   }
   const componentInfo: ReactComponentInfo = (debugInfo: any); // Refined
-  const stack: string = debugInfo.stack;
-  const cachedEntry = componentInfo.task;
-  if (cachedEntry !== undefined) {
-    return cachedEntry;
+  if (debugInfo.stack == null) {
+    // If this is an error, we should've really already initialized the task.
+    // If it's null, we can't initialize a task.
+    return null;
   }
+  const stack = debugInfo.stack;
+  const env: string =
+    componentInfo.env == null
+      ? response._rootEnvironmentName
+      : componentInfo.env;
+  if (env !== childEnvironmentName) {
+    // This is the boundary between two environments so we'll annotate the task name.
+    // That is unusual so we don't cache it.
+    const ownerTask =
+      componentInfo.owner == null
+        ? null
+        : initializeFakeTask(response, componentInfo.owner, env);
+    return buildFakeTask(
+      response,
+      ownerTask,
+      stack,
+      '"use ' + childEnvironmentName.toLowerCase() + '"',
+      env,
+    );
+  } else {
+    const cachedEntry = componentInfo.debugTask;
+    if (cachedEntry !== undefined) {
+      return cachedEntry;
+    }
+    const ownerTask =
+      componentInfo.owner == null
+        ? null
+        : initializeFakeTask(response, componentInfo.owner, env);
+    // $FlowFixMe[cannot-write]: We consider this part of initialization.
+    return (componentInfo.debugTask = buildFakeTask(
+      response,
+      ownerTask,
+      stack,
+      getServerComponentTaskName(componentInfo),
+      env,
+    ));
+  }
+}
 
-  const ownerTask =
-    componentInfo.owner == null
-      ? null
-      : initializeFakeTask(response, componentInfo.owner);
-
-  const createTaskFn = (console: any).createTask.bind(
-    console,
-    getServerComponentTaskName(componentInfo),
-  );
-  const callStack = buildFakeCallStack(response, stack, createTaskFn);
-
-  let componentTask;
+function buildFakeTask(
+  response: Response,
+  ownerTask: null | ConsoleTask,
+  stack: ReactStackTrace,
+  taskName: string,
+  env: string,
+): ConsoleTask {
+  const createTaskFn = (console: any).createTask.bind(console, taskName);
+  const callStack = buildFakeCallStack(response, stack, env, createTaskFn);
   if (ownerTask === null) {
-    const rootTask = response._debugRootTask;
+    const rootTask = getRootTask(response, env);
     if (rootTask != null) {
-      componentTask = rootTask.run(callStack);
+      return rootTask.run(callStack);
     } else {
-      componentTask = callStack();
+      return callStack();
     }
   } else {
-    componentTask = ownerTask.run(callStack);
+    return ownerTask.run(callStack);
   }
-  // $FlowFixMe[cannot-write]: We consider this part of initialization.
-  componentInfo.task = componentTask;
-  return componentTask;
+}
+
+const createFakeJSXCallStack = {
+  'react-stack-bottom-frame': function (
+    response: Response,
+    stack: ReactStackTrace,
+    environmentName: string,
+  ): Error {
+    const callStackForError = buildFakeCallStack(
+      response,
+      stack,
+      environmentName,
+      fakeJSXCallSite,
+    );
+    return callStackForError();
+  },
+};
+
+const createFakeJSXCallStackInDEV: (
+  response: Response,
+  stack: ReactStackTrace,
+  environmentName: string,
+) => Error = __DEV__
+  ? // We use this technique to trick minifiers to preserve the function name.
+    (createFakeJSXCallStack['react-stack-bottom-frame'].bind(
+      createFakeJSXCallStack,
+    ): any)
+  : (null: any);
+
+/** @noinline */
+function fakeJSXCallSite() {
+  // This extra call frame represents the JSX creation function. We always pop this frame
+  // off before presenting so it needs to be part of the stack.
+  return new Error('react-stack-top-frame');
+}
+
+function initializeFakeStack(
+  response: Response,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): void {
+  const cachedEntry = debugInfo.debugStack;
+  if (cachedEntry !== undefined) {
+    return;
+  }
+  if (debugInfo.stack != null) {
+    const stack = debugInfo.stack;
+    const env = debugInfo.env == null ? '' : debugInfo.env;
+    // $FlowFixMe[cannot-write]
+    // $FlowFixMe[prop-missing]
+    debugInfo.debugStack = createFakeJSXCallStackInDEV(response, stack, env);
+  }
+  if (debugInfo.owner != null) {
+    // Initialize any owners not yet initialized.
+    initializeFakeStack(response, debugInfo.owner);
+  }
 }
 
 function resolveDebugInfo(
@@ -2013,7 +2271,11 @@ function resolveDebugInfo(
   // We eagerly initialize the fake task because this resolving happens outside any
   // render phase so we're not inside a user space stack at this point. If we waited
   // to initialize it when we need it, we might be inside user code.
-  initializeFakeTask(response, debugInfo);
+  const env =
+    debugInfo.env === undefined ? response._rootEnvironmentName : debugInfo.env;
+  initializeFakeTask(response, debugInfo, env);
+  initializeFakeStack(response, debugInfo);
+
   const chunk = getChunk(response, id);
   const chunkDebugInfo: ReactDebugInfo =
     chunk._debugInfo || (chunk._debugInfo = []);
@@ -2032,8 +2294,17 @@ function resolveConsoleEntry(
     );
   }
 
-  const payload: [string, string, null | ReactComponentInfo, string, mixed] =
-    parseModel(response, value);
+  if (!response._replayConsole) {
+    return;
+  }
+
+  const payload: [
+    string,
+    ReactStackTrace,
+    null | ReactComponentInfo,
+    string,
+    mixed,
+  ] = parseModel(response, value);
   const methodName = payload[0];
   const stackTrace = payload[1];
   const owner = payload[2];
@@ -2042,22 +2313,26 @@ function resolveConsoleEntry(
   if (!enableOwnerStacks) {
     // Printing with stack isn't really limited to owner stacks but
     // we gate it behind the same flag for now while iterating.
-    printToConsole(methodName, args, env);
+    bindToConsole(methodName, args, env)();
     return;
   }
   const callStack = buildFakeCallStack(
     response,
     stackTrace,
-    printToConsole.bind(null, methodName, args, env),
+    env,
+    bindToConsole(methodName, args, env),
   );
   if (owner != null) {
-    const task = initializeFakeTask(response, owner);
+    const task = initializeFakeTask(response, owner, env);
+    initializeFakeStack(response, owner);
     if (task !== null) {
       task.run(callStack);
       return;
     }
+    // TODO: Set the current owner so that captureOwnerStack() adds the component
+    // stack during the replay - if needed.
   }
-  const rootTask = response._debugRootTask;
+  const rootTask = getRootTask(response, env);
   if (rootTask != null) {
     rootTask.run(callStack);
     return;
@@ -2117,7 +2392,7 @@ function resolveTypedArray(
   resolveBuffer(response, id, view);
 }
 
-function processFullRow(
+function processFullBinaryRow(
   response: Response,
   id: number,
   tag: number,
@@ -2179,6 +2454,15 @@ function processFullRow(
     row += readPartialStringChunk(stringDecoder, buffer[i]);
   }
   row += readFinalStringChunk(stringDecoder, chunk);
+  processFullStringRow(response, id, tag, row);
+}
+
+function processFullStringRow(
+  response: Response,
+  id: number,
+  tag: number,
+  row: string,
+): void {
   switch (tag) {
     case 73 /* "I" */: {
       resolveModule(response, id, row);
@@ -2198,6 +2482,7 @@ function processFullRow(
           errorInfo.digest,
           errorInfo.message,
           errorInfo.stack,
+          errorInfo.env,
         );
       } else {
         resolveErrorProd(response, id, errorInfo.digest);
@@ -2274,6 +2559,7 @@ function processFullRow(
             id,
             postponeInfo.reason,
             postponeInfo.stack,
+            postponeInfo.env,
           );
         } else {
           resolvePostponeProd(response, id);
@@ -2380,7 +2666,7 @@ export function processBinaryChunk(
       // We found the last chunk of the row
       const length = lastIdx - i;
       const lastChunk = new Uint8Array(chunk.buffer, offset, length);
-      processFullRow(response, rowID, rowTag, buffer, lastChunk);
+      processFullBinaryRow(response, rowID, rowTag, buffer, lastChunk);
       // Reset state machine for a new row
       i = lastIdx;
       if (rowState === ROW_CHUNK_BY_NEWLINE) {
@@ -2402,6 +2688,151 @@ export function processBinaryChunk(
       // a newline, this doesn't hurt since we'll just ignore it.
       rowLength -= remainingSlice.byteLength;
       break;
+    }
+  }
+  response._rowState = rowState;
+  response._rowID = rowID;
+  response._rowTag = rowTag;
+  response._rowLength = rowLength;
+}
+
+export function processStringChunk(response: Response, chunk: string): void {
+  // This is a fork of processBinaryChunk that takes a string as input.
+  // This can't be just any binary chunk coverted to a string. It needs to be
+  // in the same offsets given from the Flight Server. E.g. if it's shifted by
+  // one byte then it won't line up to the UCS-2 encoding. It also needs to
+  // be valid Unicode. Also binary chunks cannot use this even if they're
+  // value Unicode. Large strings are encoded as binary and cannot be passed
+  // here. Basically, only if Flight Server gave you this string as a chunk,
+  // you can use it here.
+  let i = 0;
+  let rowState = response._rowState;
+  let rowID = response._rowID;
+  let rowTag = response._rowTag;
+  let rowLength = response._rowLength;
+  const buffer = response._buffer;
+  const chunkLength = chunk.length;
+  while (i < chunkLength) {
+    let lastIdx = -1;
+    switch (rowState) {
+      case ROW_ID: {
+        const byte = chunk.charCodeAt(i++);
+        if (byte === 58 /* ":" */) {
+          // Finished the rowID, next we'll parse the tag.
+          rowState = ROW_TAG;
+        } else {
+          rowID = (rowID << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_TAG: {
+        const resolvedRowTag = chunk.charCodeAt(i);
+        if (
+          resolvedRowTag === 84 /* "T" */ ||
+          (enableBinaryFlight &&
+            (resolvedRowTag === 65 /* "A" */ ||
+              resolvedRowTag === 79 /* "O" */ ||
+              resolvedRowTag === 111 /* "o" */ ||
+              resolvedRowTag === 85 /* "U" */ ||
+              resolvedRowTag === 83 /* "S" */ ||
+              resolvedRowTag === 115 /* "s" */ ||
+              resolvedRowTag === 76 /* "L" */ ||
+              resolvedRowTag === 108 /* "l" */ ||
+              resolvedRowTag === 71 /* "G" */ ||
+              resolvedRowTag === 103 /* "g" */ ||
+              resolvedRowTag === 77 /* "M" */ ||
+              resolvedRowTag === 109 /* "m" */ ||
+              resolvedRowTag === 86)) /* "V" */
+        ) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_LENGTH;
+          i++;
+        } else if (
+          (resolvedRowTag > 64 && resolvedRowTag < 91) /* "A"-"Z" */ ||
+          resolvedRowTag === 114 /* "r" */ ||
+          resolvedRowTag === 120 /* "x" */
+        ) {
+          rowTag = resolvedRowTag;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          i++;
+        } else {
+          rowTag = 0;
+          rowState = ROW_CHUNK_BY_NEWLINE;
+          // This was an unknown tag so it was probably part of the data.
+        }
+        continue;
+      }
+      case ROW_LENGTH: {
+        const byte = chunk.charCodeAt(i++);
+        if (byte === 44 /* "," */) {
+          // Finished the rowLength, next we'll buffer up to that length.
+          rowState = ROW_CHUNK_BY_LENGTH;
+        } else {
+          rowLength = (rowLength << 4) | (byte > 96 ? byte - 87 : byte - 48);
+        }
+        continue;
+      }
+      case ROW_CHUNK_BY_NEWLINE: {
+        // We're looking for a newline
+        lastIdx = chunk.indexOf('\n', i);
+        break;
+      }
+      case ROW_CHUNK_BY_LENGTH: {
+        if (rowTag !== 84) {
+          throw new Error(
+            'Binary RSC chunks cannot be encoded as strings. ' +
+              'This is a bug in the wiring of the React streams.',
+          );
+        }
+        // For a large string by length, we don't know how many unicode characters
+        // we are looking for but we can assume that the raw string will be its own
+        // chunk. We add extra validation that the length is at least within the
+        // possible byte range it could possibly be to catch mistakes.
+        if (rowLength < chunk.length || chunk.length > rowLength * 3) {
+          throw new Error(
+            'String chunks need to be passed in their original shape. ' +
+              'Not split into smaller string chunks. ' +
+              'This is a bug in the wiring of the React streams.',
+          );
+        }
+        lastIdx = chunk.length;
+        break;
+      }
+    }
+    if (lastIdx > -1) {
+      // We found the last chunk of the row
+      if (buffer.length > 0) {
+        // If we had a buffer already, it means that this chunk was split up into
+        // binary chunks preceeding it.
+        throw new Error(
+          'String chunks need to be passed in their original shape. ' +
+            'Not split into smaller string chunks. ' +
+            'This is a bug in the wiring of the React streams.',
+        );
+      }
+      const lastChunk = chunk.slice(i, lastIdx);
+      processFullStringRow(response, rowID, rowTag, lastChunk);
+      // Reset state machine for a new row
+      i = lastIdx;
+      if (rowState === ROW_CHUNK_BY_NEWLINE) {
+        // If we're trailing by a newline we need to skip it.
+        i++;
+      }
+      rowState = ROW_ID;
+      rowTag = 0;
+      rowID = 0;
+      rowLength = 0;
+      buffer.length = 0;
+    } else if (chunk.length !== i) {
+      // The rest of this row is in a future chunk. We only support passing the
+      // string from chunks in their entirety. Not split up into smaller string chunks.
+      // We could support this by buffering them but we shouldn't need to for
+      // this use case.
+      throw new Error(
+        'String chunks need to be passed in their original shape. ' +
+          'Not split into smaller string chunks. ' +
+          'This is a bug in the wiring of the React streams.',
+      );
     }
   }
   response._rowState = rowState;
