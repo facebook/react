@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2361bda7ee812079297a128e1ca9b170>>
+ * @generated SignedSource<<0335dbe121c5ca3a54c066fea68c8125>>
  */
 
 "use strict";
@@ -1629,6 +1629,9 @@ __DEV__ &&
     exports.unstable_useCacheRefresh = function () {
       return resolveDispatcher().useCacheRefresh();
     };
+    exports.unstable_useContextWithBailout = function () {
+      throw Error("Not implemented.");
+    };
     exports.unstable_useMemoCache = useMemoCache;
     exports.use = function (usable) {
       return resolveDispatcher().use(usable);
@@ -1701,7 +1704,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-e8df0cf9-20240725";
+    exports.version = "19.0.0-native-fb-b9af819f-20240726";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
