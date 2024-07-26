@@ -1,4 +1,4 @@
-// @disableMemoizationForDebugging @enableChangeDetection
+// @disableMemoization @enableChangeDetection
 import { useMemo } from "react";
 
 function Component(props) {

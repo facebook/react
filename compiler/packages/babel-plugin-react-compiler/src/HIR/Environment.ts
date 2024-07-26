@@ -385,7 +385,7 @@ const EnvironmentConfigSchema = z.object({
    * @enablePreserveExistingManualUseMemo, because otherwise memoization in the
    * original source will be disabled as well.
    */
-  disableMemoizationForDebugging: z.boolean().default(false),
+  disableMemoization: z.boolean().default(false),
 
   /**
    * When true, rather using memoized values, the compiler will always re-compute
@@ -778,7 +778,7 @@ export class Environment {
   preserveManualMemo(): boolean {
     return (
       this.config.enablePreserveExistingManualUseMemo ||
-      this.config.disableMemoizationForDebugging ||
+      this.config.disableMemoization ||
       this.config.enableChangeDetection != null
     );
   }

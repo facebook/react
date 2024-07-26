@@ -669,7 +669,7 @@ function codegenReactiveScope(
     );
   }
 
-  if (cx.env.config.disableMemoizationForDebugging) {
+  if (cx.env.config.disableMemoization) {
     testCondition = t.logicalExpression(
       '||',
       testCondition,
@@ -736,7 +736,7 @@ function codegenReactiveScope(
           t.variableDeclarator(t.identifier(loadNameStr), genSlot()),
         ]),
       );
-      if (!cx.env.config.disableMemoizationForDebugging) {
+      if (!cx.env.config.disableMemoization) {
         restoreOldValueStatements.push(
           t.expressionStatement(
             t.assignmentExpression("=", t.identifier(nameStr), restoredValue)
