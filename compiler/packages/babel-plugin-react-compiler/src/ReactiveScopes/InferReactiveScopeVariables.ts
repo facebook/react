@@ -274,11 +274,13 @@ function mayHaveChanged(env: Environment, instruction: Instruction): boolean {
     case "GetIterator":
     case "IteratorNext":
     case "NextPropertyOf":
-    case "PropertyLoad":
     case "CallExpression":
     case "MethodCall":
     case "NewExpression": {
       return true;
+    }
+    case "PropertyLoad": {
+      return instruction.value.property !== "current"
     }
     case "LoadGlobal": {
       return (
