@@ -8,7 +8,7 @@
  * @flow
  */
 
-import {attach} from 'react-devtools-shared/src/backend/renderer';
+import {attach} from 'react-devtools-shared/src/backend/fiber/renderer';
 import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 

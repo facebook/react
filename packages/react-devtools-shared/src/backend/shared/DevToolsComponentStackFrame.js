@@ -12,7 +12,7 @@
 // while still maintaining support for multiple renderer versions
 // (which use different values for ReactTypeOfWork).
 
-import type {CurrentDispatcherRef} from './types';
+import type {CurrentDispatcherRef} from '../types';
 
 // The shared console patching code is DEV-only.
 // We can't use it since DevTools only ships production builds.

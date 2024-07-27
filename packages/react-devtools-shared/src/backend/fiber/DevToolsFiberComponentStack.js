@@ -22,9 +22,9 @@ import {
   describeFunctionComponentFrame,
   describeClassComponentFrame,
   describeDebugInfoFrame,
-} from '../DevToolsComponentStackFrame';
+} from '../shared/DevToolsComponentStackFrame';
 
-import {formatOwnerStack} from '../DevToolsOwnerStack';
+import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
 
 export function describeFiber(
   workTagMap: WorkTagMap,

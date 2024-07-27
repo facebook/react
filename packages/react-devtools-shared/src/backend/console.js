@@ -32,7 +32,7 @@ import {
   supportsOwnerStacks,
   supportsNativeConsoleTasks,
 } from './fiber/DevToolsFiberComponentStack';
-import {formatOwnerStack} from './DevToolsOwnerStack';
+import {formatOwnerStack} from './shared/DevToolsOwnerStack';
 import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];

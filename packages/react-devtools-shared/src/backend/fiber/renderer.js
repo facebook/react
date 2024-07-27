@@ -95,7 +95,7 @@ import {
   MEMO_NUMBER,
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
-} from '../ReactSymbols';
+} from '../shared/ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
