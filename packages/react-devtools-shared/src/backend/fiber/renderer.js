@@ -3870,9 +3870,9 @@ export function attach(
     if (result.hooks !== null) {
       console.log('Hooks:', result.hooks);
     }
-    const nativeNodes = findHostInstancesForElementID(id);
-    if (nativeNodes !== null) {
-      console.log('Nodes:', nativeNodes);
+    const hostInstances = findHostInstancesForElementID(id);
+    if (hostInstances !== null) {
+      console.log('Nodes:', hostInstances);
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(
