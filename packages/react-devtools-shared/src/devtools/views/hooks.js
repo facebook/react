@@ -352,7 +352,7 @@ export function useHighlightNativeElement(): {
           displayName: element.displayName,
           hideAfterTimeout: false,
           id,
-          openNativeElementsPanel: false,
+          openBuiltinElementsPanel: false,
           rendererID,
           scrollIntoView: false,
         });

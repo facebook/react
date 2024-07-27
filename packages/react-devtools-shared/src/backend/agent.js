@@ -212,8 +212,8 @@ export default class Agent extends EventEmitter<{
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener('storeAsGlobal', this.storeAsGlobal);
     bridge.addListener(
-      'syncSelectionFromNativeElementsPanel',
-      this.syncSelectionFromNativeElementsPanel,
+      'syncSelectionFromBuiltinElementsPanel',
+      this.syncSelectionFromBuiltinElementsPanel,
     );
     bridge.addListener('shutdown', this.shutdown);
     bridge.addListener(
@@ -439,7 +439,7 @@ export default class Agent extends EventEmitter<{
       }
 
       // TODO: If there was a way to change the selected DOM element
-      // in native Elements tab without forcing a switch to it, we'd do it here.
+      // in built-in Elements tab without forcing a switch to it, we'd do it here.
       // For now, it doesn't seem like there is a way to do that:
       // https://github.com/bvaughn/react-devtools-experimental/issues/102
       // (Setting $0 doesn't work, and calling inspect() switches the tab.)
@@ -658,7 +658,7 @@ export default class Agent extends EventEmitter<{
       }
     };
 
-  syncSelectionFromNativeElementsPanel: () => void = () => {
+  syncSelectionFromBuiltinElementsPanel: () => void = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
     if (target == null) {
       return;

@@ -84,7 +84,7 @@ type HighlightHostInstance = {
   ...ElementAndRendererID,
   displayName: string | null,
   hideAfterTimeout: boolean,
-  openNativeElementsPanel: boolean,
+  openBuiltinElementsPanel: boolean,
   scrollIntoView: boolean,
 };
 
@@ -198,8 +198,8 @@ export type BackendEvents = {
   selectElement: [number],
   shutdown: [],
   stopInspectingHost: [boolean],
-  syncSelectionFromNativeElementsPanel: [],
-  syncSelectionToNativeElementsPanel: [],
+  syncSelectionFromBuiltinElementsPanel: [],
+  syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [RendererID],
 
   // React Native style editor plug-in.

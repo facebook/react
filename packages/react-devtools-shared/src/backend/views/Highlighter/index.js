@@ -86,14 +86,14 @@ export default function setupHighlighter(
     displayName,
     hideAfterTimeout,
     id,
-    openNativeElementsPanel,
+    openBuiltinElementsPanel,
     rendererID,
     scrollIntoView,
   }: {
     displayName: string | null,
     hideAfterTimeout: boolean,
     id: number,
-    openNativeElementsPanel: boolean,
+    openBuiltinElementsPanel: boolean,
     rendererID: number,
     scrollIntoView: boolean,
     ...
@@ -127,9 +127,9 @@ export default function setupHighlighter(
 
       showOverlay(nodes, displayName, agent, hideAfterTimeout);
 
-      if (openNativeElementsPanel) {
+      if (openBuiltinElementsPanel) {
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
-        bridge.send('syncSelectionToNativeElementsPanel');
+        bridge.send('syncSelectionToBuiltinElementsPanel');
       }
     } else {
       hideOverlay(agent);
