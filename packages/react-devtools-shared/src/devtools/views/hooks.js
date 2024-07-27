@@ -336,8 +336,8 @@ export function useSubscription<Value>({
   return state.value;
 }
 
-export function useHighlightNativeElement(): {
-  clearHighlightNativeElement: () => void,
+export function useHighlightHostInstance(): {
+  clearHighlightHostInstance: () => void,
   highlightHostInstance: (id: number) => void,
 } {
   const bridge = useContext(BridgeContext);
@@ -361,12 +361,12 @@ export function useHighlightNativeElement(): {
     [store, bridge],
   );
 
-  const clearHighlightNativeElement = useCallback(() => {
+  const clearHighlightHostInstance = useCallback(() => {
     bridge.send('clearHostInstanceHighlight');
   }, [bridge]);
 
   return {
     highlightHostInstance,
-    clearHighlightNativeElement,
+    clearHighlightHostInstance,
   };
 }

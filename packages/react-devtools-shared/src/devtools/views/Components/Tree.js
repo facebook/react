@@ -31,7 +31,7 @@ import ComponentSearchInput from './ComponentSearchInput';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
-import {useHighlightNativeElement, useSubscription} from '../hooks';
+import {useHighlightHostInstance, useSubscription} from '../hooks';
 import {clearErrorsAndWarnings as clearErrorsAndWarningsAPI} from 'react-devtools-shared/src/backendAPI';
 import styles from './Tree.css';
 import ButtonIcon from '../ButtonIcon';
@@ -66,8 +66,8 @@ export default function Tree(props: Props): React.Node {
   const {hideSettings} = useContext(OptionsContext);
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] =
     useState(false);
-  const {highlightHostInstance, clearHighlightNativeElement} =
-    useHighlightNativeElement();
+  const {highlightHostInstance, clearHighlightHostInstance} =
+    useHighlightHostInstance();
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
 
@@ -258,7 +258,7 @@ export default function Tree(props: Props): React.Node {
       if (selectedElementID !== null) {
         highlightHostInstance(selectedElementID);
       } else {
-        clearHighlightNativeElement();
+        clearHighlightHostInstance();
       }
     }
   }, [
@@ -288,7 +288,7 @@ export default function Tree(props: Props): React.Node {
     setIsNavigatingWithKeyboard(false);
   }, []);
 
-  const handleMouseLeave = clearHighlightNativeElement;
+  const handleMouseLeave = clearHighlightHostInstance;
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
