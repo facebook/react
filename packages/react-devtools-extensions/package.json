@@ -2,6 +2,11 @@
   "name": "react-devtools-extensions",
   "version": "0.0.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-devtools-extensions"
+  },
   "scripts": {
     "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox && yarn run build:edge",
     "build:local": "cross-env NODE_ENV=development yarn run build:chrome:local && yarn run build:firefox:local && yarn run build:edge:local",

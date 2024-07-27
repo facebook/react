@@ -2,6 +2,11 @@
   "name": "playground",
   "version": "0.1.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "compiler/apps/playground"
+  },
   "scripts": {
     "dev": "NODE_ENV=development next dev",
     "build": "next build && node ./scripts/downloadFonts.js",
