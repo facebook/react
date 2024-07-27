@@ -142,21 +142,21 @@ export function attach(
   const internalInstanceToRootIDMap: WeakMap<InternalInstance, number> =
     new WeakMap();
 
-  let getInternalIDForNative: GetElementIDForHostInstance =
+  let getElementIDForHostInstance: GetElementIDForHostInstance =
     ((null: any): GetElementIDForHostInstance);
-  let findNativeNodeForInternalID: (id: number) => ?HostInstance;
+  let findHostInstanceForInternalID: (id: number) => ?HostInstance;
   let getFiberForNative = (node: HostInstance) => {
     // Not implemented.
     return null;
   };
 
   if (renderer.ComponentTree) {
-    getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
+    getElementIDForHostInstance = (node, findNearestUnfilteredAncestor) => {
       const internalInstance =
         renderer.ComponentTree.getClosestInstanceFromNode(node);
       return internalInstanceToIDMap.get(internalInstance) || null;
     };
-    findNativeNodeForInternalID = (id: number) => {
+    findHostInstanceForInternalID = (id: number) => {
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
     };
@@ -164,11 +164,11 @@ export function attach(
       return renderer.ComponentTree.getClosestInstanceFromNode(node);
     };
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
-    getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
+    getElementIDForHostInstance = (node, findNearestUnfilteredAncestor) => {
       // Not implemented.
       return null;
     };
-    findNativeNodeForInternalID = (id: number) => {
+    findHostInstanceForInternalID = (id: number) => {
       // Not implemented.
       return null;
     };
@@ -884,9 +884,9 @@ export function attach(
     if (result.context !== null) {
       console.log('Context:', result.context);
     }
-    const nativeNode = findNativeNodeForInternalID(id);
-    if (nativeNode !== null) {
-      console.log('Node:', nativeNode);
+    const hostInstance = findHostInstanceForInternalID(id);
+    if (hostInstance !== null) {
+      console.log('Node:', hostInstance);
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(
@@ -1112,11 +1112,11 @@ export function attach(
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
     getFiberForNative,
-    getElementIDForHostInstance: getInternalIDForNative,
+    getElementIDForHostInstance,
     getInstanceAndStyle,
     findHostInstancesForElementID: (id: number) => {
-      const nativeNode = findNativeNodeForInternalID(id);
-      return nativeNode == null ? null : [nativeNode];
+      const hostInstance = findHostInstanceForInternalID(id);
+      return hostInstance == null ? null : [hostInstance];
     },
     getOwnersList,
     getPathForElement,
