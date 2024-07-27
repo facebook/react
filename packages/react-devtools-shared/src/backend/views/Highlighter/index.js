@@ -157,7 +157,7 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    selectFiberForNode(getEventTarget(event));
+    selectElementForNode(getEventTarget(event));
   }
 
   let lastHoveredNode: HTMLElement | null = null;
@@ -186,7 +186,7 @@ export default function setupHighlighter(
     // It will be inferred from DOM tag and Fiber owner.
     showOverlay([target], null, agent, false);
 
-    selectFiberForNode(target);
+    selectElementForNode(target);
   }
 
   function onPointerUp(event: MouseEvent) {
@@ -194,7 +194,7 @@ export default function setupHighlighter(
     event.stopPropagation();
   }
 
-  const selectFiberForNode = throttle(
+  const selectElementForNode = throttle(
     memoize((node: HTMLElement) => {
       const id = agent.getIDForNode(node);
       if (id !== null) {
