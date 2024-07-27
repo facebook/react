@@ -338,17 +338,17 @@ export function useSubscription<Value>({
 
 export function useHighlightNativeElement(): {
   clearHighlightNativeElement: () => void,
-  highlightNativeElement: (id: number) => void,
+  highlightHostInstance: (id: number) => void,
 } {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const highlightNativeElement = useCallback(
+  const highlightHostInstance = useCallback(
     (id: number) => {
       const element = store.getElementByID(id);
       const rendererID = store.getRendererIDForElement(id);
       if (element !== null && rendererID !== null) {
-        bridge.send('highlightNativeElement', {
+        bridge.send('highlightHostInstance', {
           displayName: element.displayName,
           hideAfterTimeout: false,
           id,
@@ -362,11 +362,11 @@ export function useHighlightNativeElement(): {
   );
 
   const clearHighlightNativeElement = useCallback(() => {
-    bridge.send('clearNativeElementHighlight');
+    bridge.send('clearHostInstanceHighlight');
   }, [bridge]);
 
   return {
-    highlightNativeElement,
+    highlightHostInstance,
     clearHighlightNativeElement,
   };
 }

@@ -26,10 +26,10 @@ export default function setupHighlighter(
   agent: Agent,
 ): void {
   bridge.addListener(
-    'clearNativeElementHighlight',
-    clearNativeElementHighlight,
+    'clearHostInstanceHighlight',
+    clearHostInstanceHighlight,
   );
-  bridge.addListener('highlightNativeElement', highlightNativeElement);
+  bridge.addListener('highlightHostInstance', highlightHostInstance);
   bridge.addListener('shutdown', stopInspectingNative);
   bridge.addListener('startInspectingNative', startInspectingNative);
   bridge.addListener('stopInspectingNative', stopInspectingNative);
@@ -81,11 +81,11 @@ export default function setupHighlighter(
     }
   }
 
-  function clearNativeElementHighlight() {
+  function clearHostInstanceHighlight() {
     hideOverlay(agent);
   }
 
-  function highlightNativeElement({
+  function highlightHostInstance({
     displayName,
     hideAfterTimeout,
     id,

@@ -80,7 +80,7 @@ type Message = {
   payload: any,
 };
 
-type HighlightElementInDOM = {
+type HighlightHostInstance = {
   ...ElementAndRendererID,
   displayName: string | null,
   hideAfterTimeout: boolean,
@@ -212,7 +212,7 @@ export type BackendEvents = {
 type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForElementID: [ElementAndRendererID],
-  clearNativeElementHighlight: [],
+  clearHostInstanceHighlight: [],
   clearWarningsForElementID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
@@ -221,7 +221,7 @@ type FrontendEvents = {
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
-  highlightNativeElement: [HighlightElementInDOM],
+  highlightHostInstance: [HighlightHostInstance],
   inspectElement: [InspectElementParams],
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],

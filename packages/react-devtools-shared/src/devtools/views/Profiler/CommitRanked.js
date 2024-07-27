@@ -99,7 +99,7 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
     useState<TooltipFiberData | null>(null);
   const {lineHeight} = useContext(SettingsContext);
   const {selectedFiberID, selectFiber} = useContext(ProfilerContext);
-  const {highlightNativeElement, clearHighlightNativeElement} =
+  const {highlightHostInstance, clearHighlightNativeElement} =
     useHighlightNativeElement();
 
   const selectedFiberIndex = useMemo(
@@ -109,10 +109,10 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
 
   const handleElementMouseEnter = useCallback(
     ({id, name}: $FlowFixMe) => {
-      highlightNativeElement(id); // Highlight last hovered element.
+      highlightHostInstance(id); // Highlight last hovered element.
       setHoveredFiberData({id, name}); // Set hovered fiber data for tooltip
     },
-    [highlightNativeElement],
+    [highlightHostInstance],
   );
 
   const handleElementMouseLeave = useCallback(() => {

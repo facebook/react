@@ -66,7 +66,7 @@ export default function Tree(props: Props): React.Node {
   const {hideSettings} = useContext(OptionsContext);
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] =
     useState(false);
-  const {highlightNativeElement, clearHighlightNativeElement} =
+  const {highlightHostInstance, clearHighlightNativeElement} =
     useHighlightNativeElement();
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
@@ -256,7 +256,7 @@ export default function Tree(props: Props): React.Node {
     }
     if (isNavigatingWithKeyboard || didSelectNewSearchResult) {
       if (selectedElementID !== null) {
-        highlightNativeElement(selectedElementID);
+        highlightHostInstance(selectedElementID);
       } else {
         clearHighlightNativeElement();
       }
@@ -264,7 +264,7 @@ export default function Tree(props: Props): React.Node {
   }, [
     bridge,
     isNavigatingWithKeyboard,
-    highlightNativeElement,
+    highlightHostInstance,
     searchIndex,
     searchResults,
     selectedElementID,
@@ -276,10 +276,10 @@ export default function Tree(props: Props): React.Node {
       // Ignore hover while we're navigating with keyboard.
       // This avoids flicker from the hovered nodes under the mouse.
       if (!isNavigatingWithKeyboard) {
-        highlightNativeElement(id);
+        highlightHostInstance(id);
       }
     },
-    [isNavigatingWithKeyboard, highlightNativeElement],
+    [isNavigatingWithKeyboard, highlightHostInstance],
   );
 
   const handleMouseMove = useCallback(() => {

@@ -188,7 +188,7 @@ function OwnerView({
   isInStore,
 }: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
-  const {highlightNativeElement, clearHighlightNativeElement} =
+  const {highlightHostInstance, clearHighlightNativeElement} =
     useHighlightNativeElement();
 
   const handleClick = useCallback(() => {
@@ -208,7 +208,7 @@ function OwnerView({
       className={styles.OwnerButton}
       disabled={!isInStore}
       onClick={handleClick}
-      onMouseEnter={() => highlightNativeElement(id)}
+      onMouseEnter={() => highlightHostInstance(id)}
       onMouseLeave={clearHighlightNativeElement}>
       <span className={styles.OwnerContent}>
         <span
