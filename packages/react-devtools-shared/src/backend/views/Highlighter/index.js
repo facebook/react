@@ -110,12 +110,12 @@ export default function setupHighlighter(
     }
 
     // In some cases fiber may already be unmounted
-    if (!renderer.hasFiberWithId(id)) {
+    if (!renderer.hasElementWithId(id)) {
       hideOverlay(agent);
       return;
     }
 
-    const nodes: ?Array<HTMLElement> = (renderer.findNativeNodesForFiberID(
+    const nodes: ?Array<HTMLElement> = (renderer.findNativeNodesForElementID(
       id,
     ): any);
 

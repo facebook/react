@@ -367,7 +367,7 @@ export default class Agent extends EventEmitter<{
     const rendererInterface = this.getBestMatchingRendererInterface(node);
     if (rendererInterface != null) {
       try {
-        return rendererInterface.getFiberIDForNative(node, true);
+        return rendererInterface.getElementIDForNative(node, true);
       } catch (error) {
         // Some old React versions might throw if they can't find a match.
         // If so we should ignore it...

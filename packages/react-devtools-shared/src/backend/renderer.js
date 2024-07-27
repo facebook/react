@@ -2862,7 +2862,7 @@ export function attach(
     return fibers;
   }
 
-  function findNativeNodesForFiberID(id: number) {
+  function findNativeNodesForElementID(id: number) {
     try {
       const fiber = findCurrentFiberUsingSlowPathById(id);
       if (fiber === null) {
@@ -2877,7 +2877,7 @@ export function attach(
     }
   }
 
-  function getDisplayNameForFiberID(id: number): null | string {
+  function getDisplayNameForElementID(id: number): null | string {
     const fiber = idToArbitraryFiberMap.get(id);
     return fiber != null ? getDisplayNameForFiber(fiber) : null;
   }
@@ -2886,7 +2886,7 @@ export function attach(
     return renderer.findFiberByHostInstance(hostInstance);
   }
 
-  function getFiberIDForNative(
+  function getElementIDForNative(
     hostInstance: NativeType,
     findNearestUnfilteredAncestor: boolean = false,
   ) {
@@ -3870,7 +3870,7 @@ export function attach(
     if (result.hooks !== null) {
       console.log('Hooks:', result.hooks);
     }
-    const nativeNodes = findNativeNodesForFiberID(id);
+    const nativeNodes = findNativeNodesForElementID(id);
     if (nativeNodes !== null) {
       console.log('Nodes:', nativeNodes);
     }
@@ -4616,7 +4616,7 @@ export function attach(
     traceUpdatesEnabled = isEnabled;
   }
 
-  function hasFiberWithId(id: number): boolean {
+  function hasElementWithId(id: number): boolean {
     return idToArbitraryFiberMap.has(id);
   }
 
@@ -4655,14 +4655,14 @@ export function attach(
     clearWarningsForElementID,
     getSerializedElementValueByPath,
     deletePath,
-    findNativeNodesForFiberID,
+    findNativeNodesForElementID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getComponentStackForFiber,
     getSourceForFiber,
-    getDisplayNameForFiberID,
+    getDisplayNameForElementID,
     getFiberForNative,
-    getFiberIDForNative,
+    getElementIDForNative,
     getInstanceAndStyle,
     getOwnersList,
     getPathForElement,
@@ -4670,7 +4670,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,
-    hasFiberWithId,
+    hasElementWithId,
     inspectElement,
     logElementToConsole,
     patchConsoleForStrictMode,

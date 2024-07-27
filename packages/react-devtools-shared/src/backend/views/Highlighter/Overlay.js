@@ -236,9 +236,9 @@ export default class Overlay {
       const rendererInterface =
         this.agent.getBestMatchingRendererInterface(node);
       if (rendererInterface) {
-        const id = rendererInterface.getFiberIDForNative(node, true);
+        const id = rendererInterface.getElementIDForNative(node, true);
         if (id) {
-          const ownerName = rendererInterface.getDisplayNameForFiberID(
+          const ownerName = rendererInterface.getDisplayNameForElementID(
             id,
             true,
           );
