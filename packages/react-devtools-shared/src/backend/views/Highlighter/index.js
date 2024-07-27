@@ -198,7 +198,7 @@ export default function setupHighlighter(
     memoize((node: HTMLElement) => {
       const id = agent.getIDForNode(node);
       if (id !== null) {
-        bridge.send('selectFiber', id);
+        bridge.send('selectElement', id);
       }
     }),
     200,

@@ -811,7 +811,7 @@ export function attach(
     }
   }
 
-  function clearErrorsForFiberID(fiberID: number) {
+  function clearErrorsForElementID(fiberID: number) {
     clearMessageCountHelper(
       fiberID,
       pendingFiberToErrorsMap,
@@ -819,7 +819,7 @@ export function attach(
     );
   }
 
-  function clearWarningsForFiberID(fiberID: number) {
+  function clearWarningsForElementID(fiberID: number) {
     clearMessageCountHelper(
       fiberID,
       pendingFiberToWarningsMap,
@@ -1311,8 +1311,8 @@ export function attach(
         idToArbitraryFiberMap.delete(fiberID);
 
         // Also clear any errors/warnings associated with this fiber.
-        clearErrorsForFiberID(fiberID);
-        clearWarningsForFiberID(fiberID);
+        clearErrorsForElementID(fiberID);
+        clearWarningsForElementID(fiberID);
       }
 
       fiberToIDMap.delete(fiber);
@@ -4651,8 +4651,8 @@ export function attach(
   return {
     cleanup,
     clearErrorsAndWarnings,
-    clearErrorsForFiberID,
-    clearWarningsForFiberID,
+    clearErrorsForElementID,
+    clearWarningsForElementID,
     getSerializedElementValueByPath,
     deletePath,
     findNativeNodesForFiberID,

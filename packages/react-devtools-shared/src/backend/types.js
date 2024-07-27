@@ -359,8 +359,8 @@ type Type = 'props' | 'hooks' | 'state' | 'context';
 export type RendererInterface = {
   cleanup: () => void,
   clearErrorsAndWarnings: () => void,
-  clearErrorsForFiberID: (id: number) => void,
-  clearWarningsForFiberID: (id: number) => void,
+  clearErrorsForElementID: (id: number) => void,
+  clearWarningsForElementID: (id: number) => void,
   deletePath: (
     type: Type,
     id: number,
