@@ -39,10 +39,10 @@ import {decorateMany, forceUpdate, restoreMany} from './utils';
 
 import type {
   DevToolsHook,
-  GetElementIDForNative,
+  GetElementIDForHostInstance,
   InspectedElementPayload,
   InstanceAndStyle,
-  NativeType,
+  HostInstance,
   PathFrame,
   PathMatch,
   RendererInterface,
@@ -142,10 +142,10 @@ export function attach(
   const internalInstanceToRootIDMap: WeakMap<InternalInstance, number> =
     new WeakMap();
 
-  let getInternalIDForNative: GetElementIDForNative =
-    ((null: any): GetElementIDForNative);
-  let findNativeNodeForInternalID: (id: number) => ?NativeType;
-  let getFiberForNative = (node: NativeType) => {
+  let getInternalIDForNative: GetElementIDForHostInstance =
+    ((null: any): GetElementIDForHostInstance);
+  let findNativeNodeForInternalID: (id: number) => ?HostInstance;
+  let getFiberForNative = (node: HostInstance) => {
     // Not implemented.
     return null;
   };
@@ -160,7 +160,7 @@ export function attach(
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
     };
-    getFiberForNative = (node: NativeType) => {
+    getFiberForNative = (node: HostInstance) => {
       return renderer.ComponentTree.getClosestInstanceFromNode(node);
     };
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
@@ -1112,9 +1112,9 @@ export function attach(
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
     getFiberForNative,
-    getElementIDForNative: getInternalIDForNative,
+    getElementIDForHostInstance: getInternalIDForNative,
     getInstanceAndStyle,
-    findNativeNodesForElementID: (id: number) => {
+    findHostInstancesForElementID: (id: number) => {
       const nativeNode = findNativeNodeForInternalID(id);
       return nativeNode == null ? null : [nativeNode];
     },

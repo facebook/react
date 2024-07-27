@@ -31,7 +31,7 @@ import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InstanceAndStyle,
-  NativeType,
+  HostInstance,
   OwnersList,
   PathFrame,
   PathMatch,
@@ -146,12 +146,12 @@ type PersistedSelection = {
 
 export default class Agent extends EventEmitter<{
   hideNativeHighlight: [],
-  showNativeHighlight: [NativeType],
+  showNativeHighlight: [HostInstance],
   startInspectingNative: [],
   stopInspectingNative: [],
   shutdown: [],
-  traceUpdates: [Set<NativeType>],
-  drawTraceUpdates: [Array<NativeType>],
+  traceUpdates: [Set<HostInstance>],
+  drawTraceUpdates: [Array<HostInstance>],
   disableTraceUpdates: [],
 }> {
   _bridge: BackendBridge;
@@ -367,7 +367,7 @@ export default class Agent extends EventEmitter<{
     const rendererInterface = this.getBestMatchingRendererInterface(node);
     if (rendererInterface != null) {
       try {
-        return rendererInterface.getElementIDForNative(node, true);
+        return rendererInterface.getElementIDForHostInstance(node, true);
       } catch (error) {
         // Some old React versions might throw if they can't find a match.
         // If so we should ignore it...
@@ -768,7 +768,7 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  onTraceUpdates: (nodes: Set<NativeType>) => void = nodes => {
+  onTraceUpdates: (nodes: Set<HostInstance>) => void = nodes => {
     this.emit('traceUpdates', nodes);
   };
 

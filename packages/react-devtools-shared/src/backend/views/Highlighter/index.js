@@ -115,7 +115,7 @@ export default function setupHighlighter(
       return;
     }
 
-    const nodes: ?Array<HTMLElement> = (renderer.findNativeNodesForElementID(
+    const nodes: ?Array<HTMLElement> = (renderer.findHostInstancesForElementID(
       id,
     ): any);
 

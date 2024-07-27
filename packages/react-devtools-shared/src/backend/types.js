@@ -75,7 +75,7 @@ export type WorkTagMap = {
   Throw: WorkTag,
 };
 
-export type NativeType = Object;
+export type HostInstance = Object;
 export type RendererID = number;
 
 type Dispatcher = any;
@@ -91,11 +91,13 @@ export type GetDisplayNameForElementID = (
   findNearestUnfilteredAncestor?: boolean,
 ) => string | null;
 
-export type GetElementIDForNative = (
-  component: NativeType,
+export type GetElementIDForHostInstance = (
+  component: HostInstance,
   findNearestUnfilteredAncestor?: boolean,
 ) => number | null;
-export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
+export type FindHostInstancesForElementID = (
+  id: number,
+) => ?Array<HostInstance>;
 
 export type ReactProviderType<T> = {
   $$typeof: symbol | number,
@@ -107,7 +109,7 @@ export type Lane = number;
 export type Lanes = number;
 
 export type ReactRenderer = {
-  findFiberByHostInstance: (hostInstance: NativeType) => Fiber | null,
+  findFiberByHostInstance: (hostInstance: HostInstance) => Fiber | null,
   version: string,
   rendererPackageName: string,
   bundleType: BundleType,
@@ -358,11 +360,11 @@ export type RendererInterface = {
     hookID: ?number,
     path: Array<string | number>,
   ) => void,
-  findNativeNodesForElementID: FindNativeNodesForFiberID,
+  findHostInstancesForElementID: FindHostInstancesForElementID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getFiberForNative: (component: NativeType) => Fiber | null,
-  getElementIDForNative: GetElementIDForNative,
+  getFiberForNative: (component: HostInstance) => Fiber | null,
+  getElementIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
