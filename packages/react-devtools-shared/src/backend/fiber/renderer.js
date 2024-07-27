@@ -52,7 +52,7 @@ import {
   copyWithRename,
   copyWithSet,
   getEffectDurations,
-} from './utils';
+} from '../utils';
 import {
   __DEBUG__,
   PROFILING_FLAG_BASIC_SUPPORT,
@@ -66,14 +66,14 @@ import {
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
-} from '../constants';
+} from '../../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
   patchConsoleUsingWindowValues,
   registerRenderer as registerRendererWithConsole,
   patchForStrictMode as patchConsoleForStrictMode,
   unpatchForStrictMode as unpatchConsoleForStrictMode,
-} from './console';
+} from '../console';
 import {
   CONCURRENT_MODE_NUMBER,
   CONCURRENT_MODE_SYMBOL_STRING,
@@ -95,14 +95,14 @@ import {
   MEMO_NUMBER,
   MEMO_SYMBOL_STRING,
   SERVER_CONTEXT_SYMBOL_STRING,
-} from './ReactSymbols';
+} from '../ReactSymbols';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import hasOwnProperty from 'shared/hasOwnProperty';
-import {getStyleXData} from './StyleX/utils';
-import {createProfilingHooks} from './profilingHooks';
+import {getStyleXData} from '../StyleX/utils';
+import {createProfilingHooks} from '../profilingHooks';
 
-import type {GetTimelineData, ToggleProfilingStatus} from './profilingHooks';
+import type {GetTimelineData, ToggleProfilingStatus} from '../profilingHooks';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ChangeDescription,
@@ -122,7 +122,7 @@ import type {
   WorkTagMap,
   CurrentDispatcherRef,
   LegacyDispatcherRef,
-} from './types';
+} from '../types';
 import type {
   ComponentFilter,
   ElementType,

@@ -35,7 +35,7 @@ import {
   REACT_TOTAL_NUM_LANES,
   SCHEDULING_PROFILER_VERSION,
 } from 'react-devtools-timeline/src/constants';
-import {describeFiber} from './DevToolsFiberComponentStack';
+import {describeFiber} from './fiber/DevToolsFiberComponentStack';
 
 // Add padding to the start/stop time of the profile.
 // This makes the UI nicer to use.

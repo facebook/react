@@ -25,13 +25,13 @@ import {
   ANSI_STYLE_DIMMING_TEMPLATE,
   ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK,
 } from 'react-devtools-shared/src/constants';
-import {getInternalReactConstants, getDispatcherRef} from './renderer';
+import {getInternalReactConstants, getDispatcherRef} from './fiber/renderer';
 import {
   getStackByFiberInDevAndProd,
   getOwnerStackByFiberInDev,
   supportsOwnerStacks,
   supportsNativeConsoleTasks,
-} from './DevToolsFiberComponentStack';
+} from './fiber/DevToolsFiberComponentStack';
 import {formatOwnerStack} from './DevToolsOwnerStack';
 import {castBool, castBrowserTheme} from '../utils';
 
