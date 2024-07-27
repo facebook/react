@@ -697,7 +697,7 @@ export default class Agent extends EventEmitter<{
   };
 
   stopInspectingNative: (selected: boolean) => void = selected => {
-    this._bridge.send('stopInspectingNative', selected);
+    this._bridge.send('stopInspectingHost', selected);
   };
 
   storeAsGlobal: StoreAsGlobalParams => void = ({

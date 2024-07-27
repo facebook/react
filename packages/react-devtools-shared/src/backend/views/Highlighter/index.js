@@ -25,16 +25,13 @@ export default function setupHighlighter(
   bridge: BackendBridge,
   agent: Agent,
 ): void {
-  bridge.addListener(
-    'clearHostInstanceHighlight',
-    clearHostInstanceHighlight,
-  );
+  bridge.addListener('clearHostInstanceHighlight', clearHostInstanceHighlight);
   bridge.addListener('highlightHostInstance', highlightHostInstance);
-  bridge.addListener('shutdown', stopInspectingNative);
-  bridge.addListener('startInspectingNative', startInspectingNative);
-  bridge.addListener('stopInspectingNative', stopInspectingNative);
+  bridge.addListener('shutdown', stopInspectingHost);
+  bridge.addListener('startInspectingHost', startInspectingHost);
+  bridge.addListener('stopInspectingHost', stopInspectingHost);
 
-  function startInspectingNative() {
+  function startInspectingHost() {
     registerListenersOnWindow(window);
   }
 
@@ -53,7 +50,7 @@ export default function setupHighlighter(
     }
   }
 
-  function stopInspectingNative() {
+  function stopInspectingHost() {
     hideOverlay(agent);
     removeListenersOnWindow(window);
     iframesListeningTo.forEach(function (frame) {
@@ -143,9 +140,9 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    stopInspectingNative();
+    stopInspectingHost();
 
-    bridge.send('stopInspectingNative', true);
+    bridge.send('stopInspectingHost', true);
   }
 
   function onMouseEvent(event: MouseEvent) {

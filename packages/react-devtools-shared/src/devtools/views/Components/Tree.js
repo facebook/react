@@ -98,7 +98,7 @@ export default function Tree(props: Props): React.Node {
   // Picking an element in the inspector should put focus into the tree.
   // This ensures that keyboard navigation works right after picking a node.
   useEffect(() => {
-    function handleStopInspectingNative(didSelectNode: boolean) {
+    function handleStopInspectingHost(didSelectNode: boolean) {
       if (didSelectNode && focusTargetRef.current !== null) {
         focusTargetRef.current.focus();
         logEvent({
@@ -107,9 +107,9 @@ export default function Tree(props: Props): React.Node {
         });
       }
     }
-    bridge.addListener('stopInspectingNative', handleStopInspectingNative);
+    bridge.addListener('stopInspectingHost', handleStopInspectingHost);
     return () =>
-      bridge.removeListener('stopInspectingNative', handleStopInspectingNative);
+      bridge.removeListener('stopInspectingHost', handleStopInspectingHost);
   }, [bridge]);
 
   // This ref is passed down the context to elements.
