@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactComponentInfo} from 'shared/ReactTypes';
+
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -130,6 +132,55 @@ import type {
 } from 'react-devtools-shared/src/frontend/types';
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
+
+const FIBER_INSTANCE = 0;
+// const VIRTUAL_INSTANCE = 1;
+
+// This type represents a stateful instance of a Client Component i.e. a Fiber pair.
+// These instances also let us track stateful DevTools meta data like id and warnings.
+type FiberInstance = {
+  kind: 0,
+  id: number,
+  parent: null | DevToolsInstance, // virtual parent
+  componentStack: null | string,
+  errors: null | Map<string, number>, // error messages and count
+  warnings: null | Map<string, number>, // warning messages and count
+  data: Fiber, // one of a Fiber pair
+};
+
+function createFiberInstance(fiber: Fiber): FiberInstance {
+  return {
+    kind: 0,
+    id: getUID(),
+    parent: null,
+    componentStack: null,
+    errors: null,
+    warnings: null,
+    data: fiber,
+  };
+}
+
+// This type represents a stateful instance of a Server Component or a Component
+// that gets optimized away - e.g. call-through without creating a Fiber.
+// It's basically a virtual Fiber. This is not a semantic concept in React.
+// It only exists as a virtual concept to let the same Element in the DevTools
+// persist. To be selectable separately from all ReactComponentInfo and overtime.
+type VirtualInstance = {
+  kind: 1,
+  id: number,
+  parent: null | DevToolsInstance, // virtual parent
+  componentStack: null | string,
+  // Errors and Warnings happen per ReactComponentInfo which can appear in
+  // multiple places but we track them per stateful VirtualInstance so
+  // that old errors/warnings don't disappear when the instance is refreshed.
+  errors: null | Map<string, number>, // error messages and count
+  warnings: null | Map<string, number>, // warning messages and count
+  // The latest info for this instance. This can be updated over time and the
+  // same info can appear in more than once ServerComponentInstance.
+  data: ReactComponentInfo,
+};
+
+type DevToolsInstance = FiberInstance | VirtualInstance;
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => symbol | number;
@@ -629,14 +680,12 @@ export function getInternalReactConstants(version: string): {
 // We track both Fibers to support Fast Refresh,
 // which may forcefully replace one of the pair as part of hot reloading.
 // In that case it's still important to be able to locate the previous ID during subsequent renders.
-const fiberToIDMap: Map<Fiber, number> = new Map();
+const fiberToFiberInstanceMap: Map<Fiber, FiberInstance> = new Map();
 
 // Map of id to one (arbitrary) Fiber in a pair.
 // This Map is used to e.g. get the display name for a Fiber or schedule an update,
 // operations that should be the same whether the current and work-in-progress Fiber is used.
-const idToArbitraryFiberMap: Map<number, Fiber> = new Map();
-
-const fiberToComponentStackMap: WeakMap<Fiber, string> = new WeakMap();
+const idToDevToolsInstanceMap: Map<number, DevToolsInstance> = new Map();
 
 export function attach(
   hook: DevToolsHook,
@@ -750,81 +799,80 @@ export function attach(
   }
 
   // Tracks Fibers with recently changed number of error/warning messages.
-  // These collections store the Fiber rather than the ID,
-  // in order to avoid generating an ID for Fibers that never get mounted
+  // These collections store the Fiber rather than the DevToolsInstance,
+  // in order to avoid generating an DevToolsInstance for Fibers that never get mounted
   // (due to e.g. Suspense or error boundaries).
   // onErrorOrWarning() adds Fibers and recordPendingErrorsAndWarnings() later clears them.
   const fibersWithChangedErrorOrWarningCounts: Set<Fiber> = new Set();
   const pendingFiberToErrorsMap: Map<Fiber, Map<string, number>> = new Map();
   const pendingFiberToWarningsMap: Map<Fiber, Map<string, number>> = new Map();
 
-  // Mapping of fiber IDs to error/warning messages and counts.
-  const fiberIDToErrorsMap: Map<number, Map<string, number>> = new Map();
-  const fiberIDToWarningsMap: Map<number, Map<string, number>> = new Map();
-
   function clearErrorsAndWarnings() {
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const id of fiberIDToErrorsMap.keys()) {
-      const fiber = idToArbitraryFiberMap.get(id);
-      if (fiber != null) {
-        fibersWithChangedErrorOrWarningCounts.add(fiber);
-        updateMostRecentlyInspectedElementIfNecessary(id);
+    for (const devtoolsInstance of idToDevToolsInstanceMap.values()) {
+      devtoolsInstance.errors = null;
+      devtoolsInstance.warnings = null;
+      if (devtoolsInstance.kind === FIBER_INSTANCE) {
+        fibersWithChangedErrorOrWarningCounts.add(devtoolsInstance.data);
+      } else {
+        // TODO: Handle VirtualInstance.
       }
+      updateMostRecentlyInspectedElementIfNecessary(devtoolsInstance.id);
     }
-
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const id of fiberIDToWarningsMap.keys()) {
-      const fiber = idToArbitraryFiberMap.get(id);
-      if (fiber != null) {
-        fibersWithChangedErrorOrWarningCounts.add(fiber);
-        updateMostRecentlyInspectedElementIfNecessary(id);
-      }
-    }
-
-    fiberIDToErrorsMap.clear();
-    fiberIDToWarningsMap.clear();
-
     flushPendingEvents();
   }
 
   function clearMessageCountHelper(
-    fiberID: number,
+    instanceID: number,
     pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
-    fiberIDToMessageCountMap: Map<number, Map<string, number>>,
+    forError: boolean,
   ) {
-    const fiber = idToArbitraryFiberMap.get(fiberID);
-    if (fiber != null) {
-      // Throw out any pending changes.
-      pendingFiberToErrorsMap.delete(fiber);
-
-      if (fiberIDToMessageCountMap.has(fiberID)) {
-        fiberIDToMessageCountMap.delete(fiberID);
-
-        // If previous flushed counts have changed, schedule an update too.
-        fibersWithChangedErrorOrWarningCounts.add(fiber);
-        flushPendingEvents();
-
-        updateMostRecentlyInspectedElementIfNecessary(fiberID);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(instanceID);
+    if (devtoolsInstance !== undefined) {
+      let changed = false;
+      if (forError) {
+        if (
+          devtoolsInstance.errors !== null &&
+          devtoolsInstance.errors.size > 0
+        ) {
+          changed = true;
+        }
+        devtoolsInstance.errors = null;
       } else {
-        fibersWithChangedErrorOrWarningCounts.delete(fiber);
+        if (
+          devtoolsInstance.warnings !== null &&
+          devtoolsInstance.warnings.size > 0
+        ) {
+          changed = true;
+        }
+        devtoolsInstance.warnings = null;
+      }
+      if (devtoolsInstance.kind === FIBER_INSTANCE) {
+        const fiber = devtoolsInstance.data;
+        // Throw out any pending changes.
+        pendingFiberToErrorsMap.delete(fiber);
+
+        if (changed) {
+          // If previous flushed counts have changed, schedule an update too.
+          fibersWithChangedErrorOrWarningCounts.add(fiber);
+          flushPendingEvents();
+
+          updateMostRecentlyInspectedElementIfNecessary(instanceID);
+        } else {
+          fibersWithChangedErrorOrWarningCounts.delete(fiber);
+        }
+      } else {
+        // TODO: Handle VirtualInstance.
       }
     }
   }
 
-  function clearErrorsForElementID(fiberID: number) {
-    clearMessageCountHelper(
-      fiberID,
-      pendingFiberToErrorsMap,
-      fiberIDToErrorsMap,
-    );
+  function clearErrorsForElementID(instanceID: number) {
+    clearMessageCountHelper(instanceID, pendingFiberToErrorsMap, true);
   }
 
-  function clearWarningsForElementID(fiberID: number) {
-    clearMessageCountHelper(
-      fiberID,
-      pendingFiberToWarningsMap,
-      fiberIDToWarningsMap,
-    );
+  function clearWarningsForElementID(instanceID: number) {
+    clearMessageCountHelper(instanceID, pendingFiberToWarningsMap, false);
   }
 
   function updateMostRecentlyInspectedElementIfNecessary(
@@ -1186,39 +1234,24 @@ export function attach(
   // Returns the unique ID for a Fiber or generates and caches a new one if the Fiber hasn't been seen before.
   // Once this method has been called for a Fiber, untrackFiberID() should always be called later to avoid leaking.
   function getOrGenerateFiberID(fiber: Fiber): number {
-    let id = null;
-    if (fiberToIDMap.has(fiber)) {
-      id = fiberToIDMap.get(fiber);
-    } else {
+    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
+    if (fiberInstance === undefined) {
       const {alternate} = fiber;
-      if (alternate !== null && fiberToIDMap.has(alternate)) {
-        id = fiberToIDMap.get(alternate);
+      if (alternate !== null) {
+        fiberInstance = fiberToFiberInstanceMap.get(alternate);
+        if (fiberInstance !== undefined) {
+          // We found the other pair, so we need to make sure we track the other side.
+          fiberToFiberInstanceMap.set(fiber, fiberInstance);
+        }
       }
     }
 
     let didGenerateID = false;
-    if (id === null) {
+    if (fiberInstance === undefined) {
       didGenerateID = true;
-      id = getUID();
-    }
-
-    // This refinement is for Flow purposes only.
-    const refinedID = ((id: any): number);
-
-    // Make sure we're tracking this Fiber
-    // e.g. if it just mounted or an error was logged during initial render.
-    if (!fiberToIDMap.has(fiber)) {
-      fiberToIDMap.set(fiber, refinedID);
-      idToArbitraryFiberMap.set(refinedID, fiber);
-    }
-
-    // Also make sure we're tracking its alternate,
-    // e.g. in case this is the first update after mount.
-    const {alternate} = fiber;
-    if (alternate !== null) {
-      if (!fiberToIDMap.has(alternate)) {
-        fiberToIDMap.set(alternate, refinedID);
-      }
+      fiberInstance = createFiberInstance(fiber);
+      fiberToFiberInstanceMap.set(fiber, fiberInstance);
+      idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
     }
 
     if (__DEBUG__) {
@@ -1232,7 +1265,7 @@ export function attach(
       }
     }
 
-    return refinedID;
+    return fiberInstance.id;
   }
 
   // Returns an ID if one has already been generated for the Fiber or throws.
@@ -1249,12 +1282,16 @@ export function attach(
   // Returns an ID if one has already been generated for the Fiber or null if one has not been generated.
   // Use this method while e.g. logging to avoid over-retaining Fibers.
   function getFiberIDUnsafe(fiber: Fiber): number | null {
-    if (fiberToIDMap.has(fiber)) {
-      return ((fiberToIDMap.get(fiber): any): number);
+    const fiberInstance = fiberToFiberInstanceMap.get(fiber);
+    if (fiberInstance !== undefined) {
+      return fiberInstance.id;
     } else {
       const {alternate} = fiber;
-      if (alternate !== null && fiberToIDMap.has(alternate)) {
-        return ((fiberToIDMap.get(alternate): any): number);
+      if (alternate !== null) {
+        const alternateInstance = fiberToFiberInstanceMap.get(alternate);
+        if (alternateInstance !== undefined) {
+          return alternateInstance.id;
+        }
       }
     }
     return null;
@@ -1308,20 +1345,18 @@ export function attach(
     untrackFibersSet.forEach(fiber => {
       const fiberID = getFiberIDUnsafe(fiber);
       if (fiberID !== null) {
-        idToArbitraryFiberMap.delete(fiberID);
+        idToDevToolsInstanceMap.delete(fiberID);
 
         // Also clear any errors/warnings associated with this fiber.
         clearErrorsForElementID(fiberID);
         clearWarningsForElementID(fiberID);
       }
 
-      fiberToIDMap.delete(fiber);
-      fiberToComponentStackMap.delete(fiber);
+      fiberToFiberInstanceMap.delete(fiber);
 
       const {alternate} = fiber;
       if (alternate !== null) {
-        fiberToIDMap.delete(alternate);
-        fiberToComponentStackMap.delete(alternate);
+        fiberToFiberInstanceMap.delete(alternate);
       }
 
       if (forceErrorForFiberIDs.has(fiberID)) {
@@ -1738,18 +1773,14 @@ export function attach(
 
   function reevaluateErrorsAndWarnings() {
     fibersWithChangedErrorOrWarningCounts.clear();
-    fiberIDToErrorsMap.forEach((countMap, fiberID) => {
-      const fiber = idToArbitraryFiberMap.get(fiberID);
-      if (fiber != null) {
-        fibersWithChangedErrorOrWarningCounts.add(fiber);
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const devtoolsInstance of idToDevToolsInstanceMap.values()) {
+      if (devtoolsInstance.kind === FIBER_INSTANCE) {
+        fibersWithChangedErrorOrWarningCounts.add(devtoolsInstance.data);
+      } else {
+        // TODO: Handle VirtualInstance.
       }
-    });
-    fiberIDToWarningsMap.forEach((countMap, fiberID) => {
-      const fiber = idToArbitraryFiberMap.get(fiberID);
-      if (fiber != null) {
-        fibersWithChangedErrorOrWarningCounts.add(fiber);
-      }
-    });
+    }
     recordPendingErrorsAndWarnings();
   }
 
@@ -1757,18 +1788,29 @@ export function attach(
     fiber: Fiber,
     fiberID: number,
     pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
-    fiberIDToMessageCountMap: Map<number, Map<string, number>>,
+    forError: boolean,
   ): number {
     let newCount = 0;
 
-    let messageCountMap = fiberIDToMessageCountMap.get(fiberID);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(fiberID);
+
+    if (devtoolsInstance === undefined) {
+      return 0;
+    }
+
+    let messageCountMap = forError
+      ? devtoolsInstance.errors
+      : devtoolsInstance.warnings;
 
     const pendingMessageCountMap = pendingFiberToMessageCountMap.get(fiber);
     if (pendingMessageCountMap != null) {
-      if (messageCountMap == null) {
+      if (messageCountMap === null) {
         messageCountMap = pendingMessageCountMap;
-
-        fiberIDToMessageCountMap.set(fiberID, pendingMessageCountMap);
+        if (forError) {
+          devtoolsInstance.errors = pendingMessageCountMap;
+        } else {
+          devtoolsInstance.warnings = pendingMessageCountMap;
+        }
       } else {
         // This Flow refinement should not be necessary and yet...
         const refinedMessageCountMap = ((messageCountMap: any): Map<
@@ -1808,13 +1850,13 @@ export function attach(
           fiber,
           fiberID,
           pendingFiberToErrorsMap,
-          fiberIDToErrorsMap,
+          true,
         );
         const warningCount = mergeMapsAndGetCountHelper(
           fiber,
           fiberID,
           pendingFiberToWarningsMap,
-          fiberIDToWarningsMap,
+          false,
         );
 
         pushOperation(TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS);
@@ -2878,8 +2920,15 @@ export function attach(
   }
 
   function getDisplayNameForElementID(id: number): null | string {
-    const fiber = idToArbitraryFiberMap.get(id);
-    return fiber != null ? getDisplayNameForFiber(fiber) : null;
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      return null;
+    }
+    if (devtoolsInstance.kind === FIBER_INSTANCE) {
+      return getDisplayNameForFiber(devtoolsInstance.data);
+    } else {
+      return devtoolsInstance.data.name || '';
+    }
   }
 
   function getNearestMountedHostInstance(
@@ -2961,12 +3010,17 @@ export function attach(
   // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
   // BEGIN copied code
   function findCurrentFiberUsingSlowPathById(id: number): Fiber | null {
-    const fiber = idToArbitraryFiberMap.get(id);
-    if (fiber == null) {
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return null;
     }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return null;
+    }
 
+    const fiber = devtoolsInstance.data;
     const alternate = fiber.alternate;
     if (!alternate) {
       // If there is no alternate, then we only need to check if it is mounted.
@@ -3126,11 +3180,16 @@ export function attach(
   }
 
   function prepareViewElementSource(id: number): void {
-    const fiber = idToArbitraryFiberMap.get(id);
-    if (fiber == null) {
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
     }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return;
+    }
+    const fiber = devtoolsInstance.data;
 
     const {elementType, tag, type} = fiber;
 
@@ -3427,8 +3486,9 @@ export function attach(
       rootType = fiberRoot._debugRootType;
     }
 
-    const errors = fiberIDToErrorsMap.get(id) || new Map();
-    const warnings = fiberIDToWarningsMap.get(id) || new Map();
+    const devtoolsInstance: DevToolsInstance = (idToDevToolsInstanceMap.get(
+      id,
+    ): any);
 
     let isErrored = false;
     let targetErrorBoundaryID;
@@ -3513,8 +3573,14 @@ export function attach(
       hooks,
       props: memoizedProps,
       state: showState ? memoizedState : null,
-      errors: Array.from(errors.entries()),
-      warnings: Array.from(warnings.entries()),
+      errors:
+        devtoolsInstance.errors === null
+          ? []
+          : Array.from(devtoolsInstance.errors.entries()),
+      warnings:
+        devtoolsInstance.warnings === null
+          ? []
+          : Array.from(devtoolsInstance.warnings.entries()),
 
       // List of owners
       owners,
@@ -3612,12 +3678,17 @@ export function attach(
   function updateSelectedElement(inspectedElement: InspectedElement): void {
     const {hooks, id, props} = inspectedElement;
 
-    const fiber = idToArbitraryFiberMap.get(id);
-    if (fiber == null) {
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
     }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return;
+    }
 
+    const fiber = devtoolsInstance.data;
     const {elementType, stateNode, tag, type} = fiber;
 
     switch (tag) {
@@ -4338,9 +4409,15 @@ export function attach(
       setErrorHandler(shouldErrorFiberAccordingToMap);
     }
 
-    const fiber = idToArbitraryFiberMap.get(id);
-    if (fiber != null) {
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      return;
+    }
+    if (devtoolsInstance.kind === FIBER_INSTANCE) {
+      const fiber = devtoolsInstance.data;
       scheduleUpdate(fiber);
+    } else {
+      // TODO: Handle VirtualInstance.
     }
   }
 
@@ -4377,9 +4454,16 @@ export function attach(
         setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
       }
     }
-    const fiber = idToArbitraryFiberMap.get(id);
-    if (fiber != null) {
+
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      return;
+    }
+    if (devtoolsInstance.kind === FIBER_INSTANCE) {
+      const fiber = devtoolsInstance.data;
       scheduleUpdate(fiber);
+    } else {
+      // TODO: Handle VirtualInstance.
     }
   }
 
@@ -4557,10 +4641,16 @@ export function attach(
   // The return path will contain Fibers that are "invisible" to the store
   // because their keys and indexes are important to restoring the selection.
   function getPathForElement(id: number): Array<PathFrame> | null {
-    let fiber: ?Fiber = idToArbitraryFiberMap.get(id);
-    if (fiber == null) {
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
       return null;
     }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return null;
+    }
+
+    let fiber: null | Fiber = devtoolsInstance.data;
     const keyPath = [];
     while (fiber !== null) {
       // $FlowFixMe[incompatible-call] found when upgrading Flow
@@ -4623,26 +4713,30 @@ export function attach(
   }
 
   function hasElementWithId(id: number): boolean {
-    return idToArbitraryFiberMap.has(id);
+    return idToDevToolsInstanceMap.has(id);
   }
 
   function getComponentStackForFiber(fiber: Fiber): string | null {
-    let componentStack = fiberToComponentStackMap.get(fiber);
-    if (componentStack == null) {
-      const dispatcherRef = getDispatcherRef(renderer);
-      if (dispatcherRef == null) {
-        return null;
-      }
-
-      componentStack = getStackByFiberInDevAndProd(
-        ReactTypeOfWork,
-        fiber,
-        dispatcherRef,
-      );
-      fiberToComponentStackMap.set(fiber, componentStack);
+    // TODO: This should really just take an DevToolsInstance directly.
+    const fiberInstance = fiberToFiberInstanceMap.get(fiber);
+    if (fiberInstance === undefined) {
+      // We're no longer tracking this instance.
+      return null;
+    }
+    if (fiberInstance.componentStack !== null) {
+      // Cached entry.
+      return fiberInstance.componentStack;
+    }
+    const dispatcherRef = getDispatcherRef(renderer);
+    if (dispatcherRef == null) {
+      return null;
     }
 
-    return componentStack;
+    return (fiberInstance.componentStack = getStackByFiberInDevAndProd(
+      ReactTypeOfWork,
+      fiber,
+      dispatcherRef,
+    ));
   }
 
   function getSourceForFiber(fiber: Fiber): Source | null {
