@@ -233,19 +233,9 @@ export default class Overlay {
       name = elements[0].nodeName.toLowerCase();
 
       const node = elements[0];
-      const rendererInterface =
-        this.agent.getBestMatchingRendererInterface(node);
-      if (rendererInterface) {
-        const id = rendererInterface.getElementIDForHostInstance(node, true);
-        if (id) {
-          const ownerName = rendererInterface.getDisplayNameForElementID(
-            id,
-            true,
-          );
-          if (ownerName) {
-            name += ' (in ' + ownerName + ')';
-          }
-        }
+      const ownerName = this.agent.getComponentNameForHostInstance(node);
+      if (ownerName) {
+        name += ' (in ' + ownerName + ')';
       }
     }
 

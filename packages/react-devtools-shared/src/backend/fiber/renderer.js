@@ -2882,8 +2882,14 @@ export function attach(
     return fiber != null ? getDisplayNameForFiber(fiber) : null;
   }
 
-  function getFiberForNative(hostInstance: HostInstance) {
-    return renderer.findFiberByHostInstance(hostInstance);
+  function getNearestMountedHostInstance(
+    hostInstance: HostInstance,
+  ): null | HostInstance {
+    const mountedHostInstance = renderer.findFiberByHostInstance(hostInstance);
+    if (mountedHostInstance != null) {
+      return mountedHostInstance.stateNode;
+    }
+    return null;
   }
 
   function getElementIDForHostInstance(
@@ -4659,7 +4665,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
-    getFiberForNative,
+    getNearestMountedHostInstance,
     getElementIDForHostInstance,
     getInstanceAndStyle,
     getOwnersList,

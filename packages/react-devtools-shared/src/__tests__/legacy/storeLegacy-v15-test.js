@@ -905,7 +905,7 @@ describe('Store (legacy)', () => {
         [root]
           ▸ <Wrapper>
       `);
-        const deepestedNodeID = global.agent.getIDForNode(ref);
+        const deepestedNodeID = global.agent.getIDForHostInstance(ref);
         act(() => store.toggleIsCollapsed(deepestedNodeID, false));
         expect(store).toMatchInlineSnapshot(`
         [root]
