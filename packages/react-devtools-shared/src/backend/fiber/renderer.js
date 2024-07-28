@@ -4658,8 +4658,6 @@ export function attach(
     findNativeNodesForElementID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
-    getComponentStackForFiber,
-    getSourceForFiber,
     getDisplayNameForElementID,
     getFiberForNative,
     getElementIDForNative,
