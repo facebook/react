@@ -38,6 +38,7 @@ import {
   getInspectorDataForInstance,
 } from './ReactNativeFiberInspector';
 
+export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
 export const rendererPackageName = 'react-native-renderer';
 export const extraDevToolsConfig = {
   getInspectorDataForInstance,

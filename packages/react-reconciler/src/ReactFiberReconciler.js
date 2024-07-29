@@ -45,6 +45,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   getPublicInstance,
   getInstanceFromNode,
+  rendererVersion,
   rendererPackageName,
   extraDevToolsConfig,
 } from './ReactFiberConfig';
@@ -844,7 +845,7 @@ function getLaneLabelMap(): Map<Lane, string> | null {
 export function injectIntoDevTools(): boolean {
   const internals: Object = {
     bundleType: __DEV__ ? 1 : 0, // Might add PROFILE later.
-    version: ReactVersion, // TODO: Maybe make this a Config. E.g. react-native version.
+    version: rendererVersion,
     rendererPackageName: rendererPackageName,
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,

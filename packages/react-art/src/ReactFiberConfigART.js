@@ -17,6 +17,7 @@ import {
   NoEventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 
+export {default as rendererVersion} from 'shared/ReactVersion';
 export const rendererPackageName = 'react-art';
 export const extraDevToolsConfig = null;
 

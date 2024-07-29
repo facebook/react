@@ -107,6 +107,7 @@ import {requestFormReset as requestFormResetOnFiber} from 'react-reconciler/src/
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 
+export {default as rendererVersion} from 'shared/ReactVersion';
 export const rendererPackageName = 'react-dom';
 export const extraDevToolsConfig = null;
 
