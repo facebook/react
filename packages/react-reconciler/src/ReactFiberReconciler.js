@@ -846,29 +846,33 @@ export function injectIntoDevTools(): boolean {
     bundleType: __DEV__ ? 1 : 0, // Might add PROFILE later.
     version: ReactVersion, // TODO: Maybe make this a Config. E.g. react-native version.
     rendererPackageName: rendererPackageName,
-    rendererConfig: (extraDevToolsConfig: null | RendererInspectionConfig),
-    overrideHookState,
-    overrideHookStateDeletePath,
-    overrideHookStateRenamePath,
-    overrideProps,
-    overridePropsDeletePath,
-    overridePropsRenamePath,
-    setErrorHandler,
-    setSuspenseHandler,
-    scheduleUpdate,
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    // React Refresh
-    findHostInstancesForRefresh: __DEV__ ? findHostInstancesForRefresh : null,
-    scheduleRefresh: __DEV__ ? scheduleRefresh : null,
-    scheduleRoot: __DEV__ ? scheduleRoot : null,
-    setRefreshHandler: __DEV__ ? setRefreshHandler : null,
-    // Enables DevTools to append owner stacks to error messages in DEV mode.
-    getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,
   };
+  if (extraDevToolsConfig !== null) {
+    internals.rendererConfig = (extraDevToolsConfig: RendererInspectionConfig);
+  }
+  if (__DEV__) {
+    internals.overrideHookState = overrideHookState;
+    internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
+    internals.overrideHookStateRenamePath = overrideHookStateRenamePath;
+    internals.overrideProps = overrideProps;
+    internals.overridePropsDeletePath = overridePropsDeletePath;
+    internals.overridePropsRenamePath = overridePropsRenamePath;
+    internals.scheduleUpdate = scheduleUpdate;
+    internals.setErrorHandler = setErrorHandler;
+    internals.setSuspenseHandler = setSuspenseHandler;
+    // React Refresh
+    internals.findHostInstancesForRefresh = findHostInstancesForRefresh;
+    internals.scheduleRefresh = scheduleRefresh;
+    internals.scheduleRoot = scheduleRoot;
+    internals.setRefreshHandler = setRefreshHandler;
+    // Enables DevTools to append owner stacks to error messages in DEV mode.
+    internals.getCurrentFiber = getCurrentFiberForDevTools;
+  }
   if (enableSchedulingProfiler) {
     // Conditionally inject these hooks only if Timeline profiler is supported by this build.
     // This gives DevTools a way to feature detect that isn't tied to version number
@@ -876,5 +880,5 @@ export function injectIntoDevTools(): boolean {
     internals.getLaneLabelMap = getLaneLabelMap;
     internals.injectProfilingHooks = injectProfilingHooks;
   }
-  return injectInternals();
+  return injectInternals(internals);
 }
