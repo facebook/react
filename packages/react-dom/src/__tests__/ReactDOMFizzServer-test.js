@@ -3994,6 +3994,67 @@ describe('ReactDOMFizzServer', () => {
     expect(headers.Link.length).toBe(306);
   });
 
+  it('does not perform any additional work after fatally erroring', async () => {
+    let resolve: () => void;
+    const promise = new Promise(r => {
+      resolve = r;
+    });
+    function AsyncComp() {
+      React.use(promise);
+      return <DidRender>Async</DidRender>;
+    }
+
+    let didRender = false;
+    function DidRender({children}) {
+      didRender = true;
+      return children;
+    }
+
+    function ErrorComp() {
+      throw new Error('boom');
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <AsyncComp />
+          </Suspense>
+          <ErrorComp />
+        </div>
+      );
+    }
+
+    let pipe;
+    const errors = [];
+    let didFatal = true;
+    await act(() => {
+      pipe = renderToPipeableStream(<App />, {
+        onError(error) {
+          errors.push(error.message);
+        },
+        onShellError(error) {
+          didFatal = true;
+        },
+      }).pipe;
+    });
+
+    expect(didRender).toBe(false);
+    await act(() => {
+      resolve();
+    });
+    expect(didRender).toBe(false);
+
+    const testWritable = new Stream.Writable();
+    await act(() => pipe(testWritable));
+    expect(didRender).toBe(false);
+    expect(didFatal).toBe(didFatal);
+    expect(errors).toEqual([
+      'boom',
+      'The destination stream errored while writing data.',
+    ]);
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};
