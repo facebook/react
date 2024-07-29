@@ -94,8 +94,8 @@ export const enableObjectFiber = false;
 
 export const enableTransitionTracing = false;
 
-// No known bugs, but needs performance testing
-export const enableLazyContextPropagation = false;
+// Shipped on FB, waiting for next stable release to roll out to OSS
+export const enableLazyContextPropagation = __EXPERIMENTAL__;
 
 // Expose unstable useContext for performance testing
 export const enableContextProfiling = false;
