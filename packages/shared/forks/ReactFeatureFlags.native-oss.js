@@ -44,6 +44,7 @@ export const enableCreateEventHandleAPI = false;
 export const enableDebugTracing = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
+export const enableFabricCompleteRootInCommitPhase = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;

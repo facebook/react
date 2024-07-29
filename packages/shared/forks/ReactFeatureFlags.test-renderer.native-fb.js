@@ -78,6 +78,7 @@ export const retryLaneExpirationMs = 5000;
 export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 export const useModernStrictMode = true;
+export const enableFabricCompleteRootInCommitPhase = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
