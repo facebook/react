@@ -4,10 +4,6 @@ on:
   schedule:
     # At 10 minutes past 16:00 on Mon, Tue, Wed, Thu, and Fri
     - cron: 10 16 * * 1,2,3,4,5
-  workflow_dispatch:
-    inputs:
-      prerelease_commit_sha:
-        required: false
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles

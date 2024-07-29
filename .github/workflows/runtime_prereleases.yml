@@ -1,7 +1,7 @@
 name: (Runtime) Publish Prereleases
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       commit_sha:
         required: true
@@ -9,10 +9,7 @@ on:
         type: string
       release_channel:
         required: true
-        type: choice
-        options:
-          - stable
-          - experimental
+        type: string
       dist_tag:
         required: true
         type: string
