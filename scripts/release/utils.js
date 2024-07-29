@@ -5,7 +5,6 @@ const {createPatch} = require('diff');
 const {hashElement} = require('folder-hash');
 const {existsSync, readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
-const fetch = require('node-fetch');
 const logUpdate = require('log-update');
 const {join} = require('path');
 const createLogger = require('progress-estimator');
