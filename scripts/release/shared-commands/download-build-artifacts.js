@@ -90,8 +90,8 @@ async function getArtifact(workflowRunId, artifactName) {
 async function downloadArtifactsFromGitHub(commit, releaseChannel) {
   const workflowRun = await getWorkflowRun(commit);
   let retries = 0;
-  // wait up to 6 mins for build to finish: 6 * 60 * 1_000) / 30_000 = 12
-  while (retries < 12) {
+  // wait up to 10 mins for build to finish: 10 * 60 * 1_000) / 30_000 = 20
+  while (retries < 20) {
     if (typeof workflowRun.status === 'string') {
       switch (workflowRun.status) {
         case 'queued':
