@@ -813,7 +813,7 @@ function handleRollupError(error) {
   }
 }
 
-async function buildEverything(index, total) {
+async function buildEverything() {
   if (!argv['unsafe-partial']) {
     await asyncRimRaf('build');
   }
@@ -850,7 +850,7 @@ async function buildEverything(index, total) {
     return !shouldSkipBundle(bundle, bundleType);
   });
 
-  if (process.env.CI_TOTAL != null && process.env.CI_INDEX != null) {
+  if (process.env.CI_TOTAL && process.env.CI_INDEX) {
     const nodeTotal = parseInt(process.env.CI_TOTAL, 10);
     const nodeIndex = parseInt(process.env.CI_INDEX, 10);
     bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
