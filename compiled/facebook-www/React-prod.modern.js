@@ -14,8 +14,6 @@
 var dynamicFeatureFlags = require("ReactFeatureFlags"),
   disableDefaultPropsExceptForClasses =
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
-  enableLazyContextPropagation =
-    dynamicFeatureFlags.enableLazyContextPropagation,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -604,7 +602,6 @@ exports.unstable_useCacheRefresh = function () {
   return ReactSharedInternals.H.useCacheRefresh();
 };
 exports.unstable_useContextWithBailout = function (context, select) {
-  if (!enableLazyContextPropagation) throw Error("Not implemented.");
   return ReactSharedInternals.H.unstable_useContextWithBailout(context, select);
 };
 exports.unstable_useMemoCache = useMemoCache;
@@ -668,4 +665,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactSharedInternals.H.useTransition();
 };
-exports.version = "19.0.0-www-modern-a451de01-20240729";
+exports.version = "19.0.0-www-modern-397646ad-20240729";

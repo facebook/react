@@ -1197,8 +1197,6 @@ __DEV__ &&
       disableDefaultPropsExceptForClasses =
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableLazyContextPropagation =
-        dynamicFeatureFlags.enableLazyContextPropagation,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -1904,7 +1902,6 @@ __DEV__ &&
       return resolveDispatcher().useCacheRefresh();
     };
     exports.unstable_useContextWithBailout = function (context, select) {
-      if (!enableLazyContextPropagation) throw Error("Not implemented.");
       var dispatcher = resolveDispatcher();
       context.$$typeof === REACT_CONSUMER_TYPE &&
         error$jscomp$0(
@@ -1984,7 +1981,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-www-modern-a451de01-20240729";
+    exports.version = "19.0.0-www-modern-397646ad-20240729";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
