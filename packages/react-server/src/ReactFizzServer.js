@@ -4215,7 +4215,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
 }
 
 export function performWork(request: Request): void {
-  if (request.status === CLOSED) {
+  if (request.status === CLOSED || request.status === CLOSING) {
     return;
   }
   const prevContext = getActiveContext();
