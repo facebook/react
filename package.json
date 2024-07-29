@@ -134,7 +134,7 @@
     "publish-prereleases": "node ./scripts/release/publish-using-ci-workflow.js",
     "download-build": "node ./scripts/release/download-experimental-build.js",
     "download-build-for-head": "node ./scripts/release/download-experimental-build.js --commit=$(git rev-parse HEAD)",
-    "download-build-in-codesandbox-ci": "cd scripts/release && yarn install && cd ../../ && yarn download-build-for-head || yarn build --type=node react/index react-dom/index react-dom/src/server react-dom/test-utils scheduler/index react/jsx-runtime react/jsx-dev-runtime",
+    "download-build-in-codesandbox-ci": "yarn build --type=node react/index react-dom/index react-dom/src/server react-dom/test-utils scheduler/index react/jsx-runtime react/jsx-dev-runtime",
     "check-release-dependencies": "node ./scripts/release/check-release-dependencies",
     "generate-inline-fizz-runtime": "node ./scripts/rollup/generate-inline-fizz-runtime.js",
     "flags": "node ./scripts/flags/flags.js"
