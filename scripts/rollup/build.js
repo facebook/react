@@ -23,15 +23,6 @@ const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
 
-const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
-
-// Default to building in experimental mode. If the release channel is set via
-// an environment variable, then check if it's "experimental".
-const __EXPERIMENTAL__ =
-  typeof RELEASE_CHANNEL === 'string'
-    ? RELEASE_CHANNEL === 'experimental'
-    : true;
-
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
 process.on('unhandledRejection', err => {
@@ -366,7 +357,8 @@ function getPlugins(
   globalName,
   moduleType,
   pureExternalModules,
-  bundle
+  bundle,
+  isExperimental
 ) {
   try {
     const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
@@ -428,7 +420,7 @@ function getPlugins(
           'process.env.NODE_ENV': isProduction
             ? "'production'"
             : "'development'",
-          __EXPERIMENTAL__,
+          __EXPERIMENTAL__: isExperimental,
         },
       }),
       {
@@ -571,7 +563,7 @@ function shouldSkipBundle(bundle, bundleType) {
   return false;
 }
 
-function resolveEntryFork(resolvedEntry, isFBBundle) {
+function resolveEntryFork(resolvedEntry, isFBBundle, isExperimental) {
   // Pick which entry point fork to use:
   // .modern.fb.js
   // .classic.fb.js
@@ -584,7 +576,7 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
-      __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
+      isExperimental ? '.modern.fb.js' : '.classic.fb.js'
     );
     const developmentFBEntry = resolvedFBEntry.replace(
       '.js',
@@ -611,7 +603,7 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   }
   const resolvedForkedEntry = resolvedEntry.replace(
     '.js',
-    __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
+    isExperimental ? '.experimental.js' : '.stable.js'
   );
   const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
   if (fs.existsSync(devForkedEntry)) {
@@ -624,7 +616,7 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   return resolvedEntry;
 }
 
-async function createBundle(bundle, bundleType) {
+async function createBundle(bundle, bundleType, isExperimental) {
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
@@ -636,7 +628,8 @@ async function createBundle(bundle, bundleType) {
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle,
-    !isProductionBundleType(bundleType)
+    !isProductionBundleType(bundleType),
+    isExperimental
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
@@ -813,7 +806,14 @@ function handleRollupError(error) {
   }
 }
 
-async function buildEverything(index, total) {
+async function buildEverything(releaseChannel, index, total) {
+  // Default to building in experimental mode. If the release channel is set via
+  // an environment variable, then check if it's "experimental".
+  const isExperimental =
+    typeof releaseChannel === 'string'
+      ? releaseChannel === 'experimental'
+      : true;
+
   if (!argv['unsafe-partial']) {
     await asyncRimRaf('build');
   }
@@ -850,13 +850,15 @@ async function buildEverything(index, total) {
     return !shouldSkipBundle(bundle, bundleType);
   });
 
-  const nodeTotal = parseInt(total, 10);
-  const nodeIndex = parseInt(index, 10);
-  bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
+  if (index != null && total != null) {
+    const nodeTotal = parseInt(total, 10);
+    const nodeIndex = parseInt(index, 10);
+    bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
+  }
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const [bundle, bundleType] of bundles) {
-    await createBundle(bundle, bundleType);
+    await createBundle(bundle, bundleType, isExperimental);
   }
 
   await Packaging.copyAllShims();
