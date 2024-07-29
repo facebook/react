@@ -1,0 +1,49 @@
+name: (Runtime) Publish Prereleases
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        required: true
+        default: ''
+        type: string
+      release_channel:
+        required: true
+        type: choice
+        options:
+          - stable
+          - experimental
+      dist_tag:
+        required: true
+        type: string
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  publish_prerelease:
+    name: Publish prelease (${{ inputs.release_channel }}) ${{ inputs.commit_sha }} @${{ inputs.dist_tag }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.20.1
+          cache: yarn
+          cache-dependency-path: yarn.lock
+      - name: Restore cached node_modules
+        uses: actions/cache@v4
+        id: node_modules
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock', 'scripts/release/yarn.lock') }}
+      - run: yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile
+        working-directory: scripts/release
+      - run: |
+          scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
+          cp ./scripts/release/ci-npmrc ~/.npmrc
+          scripts/release/publish.js --ci --tags ${{ inputs.dist_tag }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
