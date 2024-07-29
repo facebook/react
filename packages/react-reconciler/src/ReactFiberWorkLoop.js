@@ -1939,6 +1939,10 @@ export function renderDidSuspendDelayIfPossible(): void {
   }
 }
 
+export function renderDidSuspendWithDelay(): boolean {
+  return workInProgressRootExitStatus === RootSuspendedWithDelay;
+}
+
 export function renderDidError() {
   if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
     workInProgressRootExitStatus = RootErrored;
