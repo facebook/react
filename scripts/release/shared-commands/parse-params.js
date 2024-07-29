@@ -3,9 +3,7 @@
 'use strict';
 
 const commandLineArgs = require('command-line-args');
-const getBuildIdForCommit = require('./get-build-id-for-commit');
 const theme = require('../theme');
-const {logPromise} = require('../utils');
 
 const paramDefinitions = [
   {
@@ -59,22 +57,8 @@ module.exports = async () => {
     process.exit(1);
   }
 
-  if (params.build === null && params.commit === null) {
-    console.error(
-      theme.error`Either a --commit or --build param must be specified.`
-    );
-    process.exit(1);
-  }
-
-  try {
-    if (params.build === null) {
-      params.build = await logPromise(
-        getBuildIdForCommit(params.commit, params.allowBrokenCI),
-        theme`Getting build ID for commit "${params.commit}"`
-      );
-    }
-  } catch (error) {
-    console.error(theme.error(error));
+  if (params.commit === null) {
+    console.error(theme.error`A --commit param must be specified.`);
     process.exit(1);
   }
 
