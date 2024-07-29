@@ -9,6 +9,8 @@ on:
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
 
 jobs:
   download_artifacts:
@@ -70,7 +72,7 @@ jobs:
         working-directory: scripts/release
       - name: Download artifacts for base revision
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build-ghaction.js --commit=${{ github.event.workflow_run.head_sha }}
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ github.event.workflow_run.head_sha }}
       - name: Display structure of build
         run: ls -R build
       - name: Strip @license from eslint plugin and react-refresh
