@@ -23,6 +23,15 @@ const {asyncRimRaf} = require('./utils');
 const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+// Default to building in experimental mode. If the release channel is set via
+// an environment variable, then check if it's "experimental".
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
 process.on('unhandledRejection', err => {
@@ -357,8 +366,7 @@ function getPlugins(
   globalName,
   moduleType,
   pureExternalModules,
-  bundle,
-  isExperimental
+  bundle
 ) {
   try {
     const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
@@ -420,7 +428,7 @@ function getPlugins(
           'process.env.NODE_ENV': isProduction
             ? "'production'"
             : "'development'",
-          __EXPERIMENTAL__: isExperimental,
+          __EXPERIMENTAL__,
         },
       }),
       {
@@ -563,7 +571,7 @@ function shouldSkipBundle(bundle, bundleType) {
   return false;
 }
 
-function resolveEntryFork(resolvedEntry, isFBBundle, isExperimental) {
+function resolveEntryFork(resolvedEntry, isFBBundle) {
   // Pick which entry point fork to use:
   // .modern.fb.js
   // .classic.fb.js
@@ -576,7 +584,7 @@ function resolveEntryFork(resolvedEntry, isFBBundle, isExperimental) {
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
-      isExperimental ? '.modern.fb.js' : '.classic.fb.js'
+      __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
     const developmentFBEntry = resolvedFBEntry.replace(
       '.js',
@@ -603,7 +611,7 @@ function resolveEntryFork(resolvedEntry, isFBBundle, isExperimental) {
   }
   const resolvedForkedEntry = resolvedEntry.replace(
     '.js',
-    isExperimental ? '.experimental.js' : '.stable.js'
+    __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
   const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
   if (fs.existsSync(devForkedEntry)) {
@@ -616,7 +624,7 @@ function resolveEntryFork(resolvedEntry, isFBBundle, isExperimental) {
   return resolvedEntry;
 }
 
-async function createBundle(bundle, bundleType, isExperimental) {
+async function createBundle(bundle, bundleType) {
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
@@ -629,7 +637,7 @@ async function createBundle(bundle, bundleType, isExperimental) {
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle,
     !isProductionBundleType(bundleType),
-    isExperimental
+    __EXPERIMENTAL__
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
@@ -680,8 +688,7 @@ async function createBundle(bundle, bundleType, isExperimental) {
       bundle.global,
       bundle.moduleType,
       pureExternalModules,
-      bundle,
-      isExperimental
+      bundle
     ),
     output: {
       externalLiveBindings: false,
@@ -807,14 +814,7 @@ function handleRollupError(error) {
   }
 }
 
-async function buildEverything(releaseChannel, index, total) {
-  // Default to building in experimental mode. If the release channel is set via
-  // an environment variable, then check if it's "experimental".
-  const isExperimental =
-    typeof releaseChannel === 'string'
-      ? releaseChannel === 'experimental'
-      : true;
-
+async function buildEverything(index, total) {
   if (!argv['unsafe-partial']) {
     await asyncRimRaf('build');
   }
@@ -851,15 +851,15 @@ async function buildEverything(releaseChannel, index, total) {
     return !shouldSkipBundle(bundle, bundleType);
   });
 
-  if (index != null && total != null) {
-    const nodeTotal = parseInt(total, 10);
-    const nodeIndex = parseInt(index, 10);
+  if (process.env.CI_TOTAL != null && process.env.CI_INDEX != null) {
+    const nodeTotal = parseInt(process.env.CI_TOTAL, 10);
+    const nodeIndex = parseInt(process.env.CI_INDEX, 10);
     bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
   }
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const [bundle, bundleType] of bundles) {
-    await createBundle(bundle, bundleType, isExperimental);
+    await createBundle(bundle, bundleType);
   }
 
   await Packaging.copyAllShims();
@@ -877,6 +877,4 @@ async function buildEverything(releaseChannel, index, total) {
   }
 }
 
-module.exports = {
-  buildEverything,
-};
+buildEverything();
