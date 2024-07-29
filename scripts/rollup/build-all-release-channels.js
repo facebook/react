@@ -16,7 +16,6 @@ const {
   rcNumber,
 } = require('../../ReactVersions');
 const yargs = require('yargs');
-const {buildEverything} = require('./build');
 const Bundles = require('./bundles');
 
 // Runs the build script for both stable and experimental release channels,
@@ -111,7 +110,7 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
 
 async function main() {
   if (argv.ci === 'github') {
-    await buildEverything(argv.releaseChannel, argv.index, argv.total);
+    buildForChannel(argv.releaseChannel, argv.total, argv.index);
     switch (argv.releaseChannel) {
       case 'stable': {
         processStable('./build');
@@ -127,11 +126,11 @@ async function main() {
   } else {
     // Running locally, no concurrency. Move each channel's build artifacts into
     // a temporary directory so that they don't conflict.
-    await buildEverything('stable');
+    buildForChannel('stable', '', '');
     const stableDir = tmp.dirSync().name;
     crossDeviceRenameSync('./build', stableDir);
     processStable(stableDir);
-    await buildEverything('experimental');
+    buildForChannel('experimental', '', '');
     const experimentalDir = tmp.dirSync().name;
     crossDeviceRenameSync('./build', experimentalDir);
     processExperimental(experimentalDir);
@@ -144,6 +143,27 @@ async function main() {
 
     // Now restore the combined directory back to its original name
     crossDeviceRenameSync(stableDir, './build');
+  }
+}
+
+function buildForChannel(channel, total, index) {
+  const {status} = spawnSync(
+    'node',
+    ['./scripts/rollup/build.js', ...process.argv.slice(2)],
+    {
+      stdio: ['pipe', process.stdout, process.stderr],
+      env: {
+        ...process.env,
+        RELEASE_CHANNEL: channel,
+        CI_TOTAL: total,
+        CI_INDEX: index,
+      },
+    }
+  );
+
+  if (status !== 0) {
+    // Error of spawned process is already piped to this stderr
+    process.exit(status);
   }
 }
 
