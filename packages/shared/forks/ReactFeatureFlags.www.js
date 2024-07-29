@@ -24,7 +24,6 @@ export const {
   enableDeferRootSchedulingToMicrotask,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableInfiniteRenderLoopDetection,
-  enableLazyContextPropagation,
   enableNoCloningMemoCache,
   enableObjectFiber,
   enableRenderableContext,
@@ -59,6 +58,7 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableAsyncActions = true;
 export const disableInputAttributeSyncing = false;
 export const enableLegacyFBSupport = true;
+export const enableLazyContextPropagation = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
