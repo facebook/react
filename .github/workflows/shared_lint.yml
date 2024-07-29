@@ -63,7 +63,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: ./scripts/circleci/check_license.sh
+      - run: ./scripts/ci/check_license.sh
 
   test_print_warnings:
     name: Test print warnings
@@ -81,4 +81,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: ./scripts/circleci/test_print_warnings.sh
+      - run: ./scripts/ci/test_print_warnings.sh

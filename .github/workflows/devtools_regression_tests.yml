@@ -69,7 +69,7 @@ jobs:
         with:
           name: build
           path: build
-      - run: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
+      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh
         env:
           RELEASE_CHANNEL: experimental
       - name: Display structure of build
@@ -122,7 +122,7 @@ jobs:
         uses: actions/download-artifact@v4
       - name: Display structure of build
         run: ls -R build
-      - run: ./scripts/circleci/download_devtools_regression_build.js ${{ matrix.version }} --replaceBuild
+      - run: ./scripts/ci/download_devtools_regression_build.js ${{ matrix.version }} --replaceBuild
       - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion ${{ matrix.version }} --ci=github
 
   run_devtools_e2e_tests_for_versions:
@@ -160,9 +160,9 @@ jobs:
         run: |
           npx playwright install
           sudo npx playwright install-deps
-      - run: ./scripts/circleci/download_devtools_regression_build.js ${{ matrix.version }}
+      - run: ./scripts/ci/download_devtools_regression_build.js ${{ matrix.version }}
       - run: ls -R build-regression
-      - run: ./scripts/circleci/run_devtools_e2e_tests.js ${{ matrix.version }}
+      - run: ./scripts/ci/run_devtools_e2e_tests.js ${{ matrix.version }}
         env:
           RELEASE_CHANNEL: experimental
       - name: Cleanup build regression folder

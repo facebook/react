@@ -472,7 +472,7 @@ jobs:
           pattern: _build_*
           path: build
           merge-multiple: true
-      - run: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
+      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh
         env:
           RELEASE_CHANNEL: experimental
       - name: Display structure of build
@@ -521,7 +521,7 @@ jobs:
       - run: |
           npx playwright install
           sudo npx playwright install-deps
-      - run: ./scripts/circleci/run_devtools_e2e_tests.js
+      - run: ./scripts/ci/run_devtools_e2e_tests.js
         env:
           RELEASE_CHANNEL: experimental
 
