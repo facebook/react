@@ -28,6 +28,8 @@ jobs:
       # downstream consumers might still expect that tag. We can remove this
       # after some time has elapsed and the change has been communicated.
       dist_tag: canary,next,rc
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish_prerelease_experimental:
     name: Publish to Experimental channel
@@ -41,3 +43,5 @@ jobs:
       commit_sha: ${{ inputs.prerelease_commit_sha }}
       release_channel: experimental
       dist_tag: experimental
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

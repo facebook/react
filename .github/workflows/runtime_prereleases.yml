@@ -13,6 +13,9 @@ on:
       dist_tag:
         required: true
         type: string
+    secrets:
+      NPM_TOKEN:
+        required: true
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
