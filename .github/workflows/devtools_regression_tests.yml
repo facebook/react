@@ -37,7 +37,7 @@ jobs:
       - name: Download react-devtools artifacts for base revision
         run: |
           git fetch origin main
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build-ghaction.js --commit=$(git rev-parse origin/main)
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse origin/main)
       - name: Display structure of build
         run: ls -R build
       - name: Archive build

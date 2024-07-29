@@ -16,7 +16,6 @@ const {
   rcNumber,
 } = require('../../ReactVersions');
 const yargs = require('yargs');
-const {buildEverything} = require('./build-ghaction');
 const Bundles = require('./bundles');
 
 // Runs the build script for both stable and experimental release channels,
@@ -111,7 +110,7 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
 
 async function main() {
   if (argv.ci === 'github') {
-    await buildEverything(argv.index, argv.total);
+    buildForChannel(argv.releaseChannel, argv.total, argv.index);
     switch (argv.releaseChannel) {
       case 'stable': {
         processStable('./build');
@@ -147,7 +146,7 @@ async function main() {
   }
 }
 
-function buildForChannel(channel) {
+function buildForChannel(channel, total, index) {
   const {status} = spawnSync(
     'node',
     ['./scripts/rollup/build.js', ...process.argv.slice(2)],
@@ -156,6 +155,8 @@ function buildForChannel(channel) {
       env: {
         ...process.env,
         RELEASE_CHANNEL: channel,
+        CI_TOTAL: total,
+        CI_INDEX: index,
       },
     }
   );
