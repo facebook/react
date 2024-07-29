@@ -19,6 +19,8 @@ on:
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
+  # https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cache-segment-restore-timeout
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
   GH_TOKEN: ${{ github.token }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
