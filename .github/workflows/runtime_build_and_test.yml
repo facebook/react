@@ -141,7 +141,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test ${{ matrix.params }} --ci=github --shard=${{ matrix.shard }}
+      - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
 
   # ----- BUILD -----
   build_and_lint:
@@ -170,7 +170,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci=github
+      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
@@ -248,7 +248,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci=github
+      - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci
 
   process_artifacts_combined:
     name: Process artifacts combined

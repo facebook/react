@@ -123,7 +123,7 @@ jobs:
       - name: Display structure of build
         run: ls -R build
       - run: ./scripts/ci/download_devtools_regression_build.js ${{ matrix.version }} --replaceBuild
-      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion ${{ matrix.version }} --ci=github
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion ${{ matrix.version }} --ci
 
   run_devtools_e2e_tests_for_versions:
     name: Run DevTools e2e tests for versions
