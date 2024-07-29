@@ -636,8 +636,7 @@ async function createBundle(bundle, bundleType) {
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle,
-    !isProductionBundleType(bundleType),
-    __EXPERIMENTAL__
+    !isProductionBundleType(bundleType)
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
