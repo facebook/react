@@ -8127,6 +8127,256 @@ describe('ReactDOMFizzServer', () => {
     expect(document.body.textContent).toBe('HelloWorld');
   });
 
+  it('can abort synchronously during render', async () => {
+    function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>
+            <ComponentThatAborts />
+            <Sibling />
+          </Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    function ComponentThatAborts() {
+      abortRef.current();
+      return <p>hello world</p>;
+    }
+
+    let finished = false;
+    await act(() => {
+      const {pipe, abort} = renderToPipeableStream(<App />);
+      abortRef.current = abort;
+      writable.on('finish', () => {
+        finished = true;
+      });
+      pipe(writable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(finished).toBe(true);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
+  it('can abort during render in a lazy initializer for a component', async () => {
+    function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>
+            <LazyAbort />
+            <Sibling />
+          </Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    const LazyAbort = React.lazy(() => {
+      abortRef.current();
+      return {
+        then(cb) {
+          cb({default: 'div'});
+        },
+      };
+    });
+
+    let finished = false;
+    await act(() => {
+      const {pipe, abort} = renderToPipeableStream(<App />);
+      abortRef.current = abort;
+      writable.on('finish', () => {
+        finished = true;
+      });
+      pipe(writable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(finished).toBe(true);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
+  it('can abort during render in a lazy initializer for an element', async () => {
+    function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>
+            {lazyAbort}
+            <Sibling />
+          </Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    const lazyAbort = React.lazy(() => {
+      abortRef.current();
+      return {
+        then(cb) {
+          cb({default: 'hello world'});
+        },
+      };
+    });
+
+    let finished = false;
+    await act(() => {
+      const {pipe, abort} = renderToPipeableStream(<App />);
+      abortRef.current = abort;
+      writable.on('finish', () => {
+        finished = true;
+      });
+      pipe(writable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(finished).toBe(true);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
+  it('can abort during a synchronous thenable resolution', async () => {
+    function Sibling() {
+      return <p>sibling</p>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading 1...</p>}>
+            {thenable}
+            <Sibling />
+          </Suspense>
+          <Suspense fallback={<p>loading 2...</p>}>
+            <Sibling />
+          </Suspense>
+          <div>
+            <Suspense fallback={<p>loading 3...</p>}>
+              <div>
+                <Sibling />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+    const thenable = {
+      then(cb) {
+        abortRef.current();
+        cb(thenable.value);
+      },
+    };
+
+    let finished = false;
+    await act(() => {
+      const {pipe, abort} = renderToPipeableStream(<App />);
+      abortRef.current = abort;
+      writable.on('finish', () => {
+        finished = true;
+      });
+      pipe(writable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(finished).toBe(true);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>loading 1...</p>
+        <p>loading 2...</p>
+        <div>
+          <p>loading 3...</p>
+        </div>
+      </div>,
+    );
+  });
+
   it('should warn for using generators as children props', async () => {
     function* getChildren() {
       yield <h1 key="1">Hello</h1>;
