@@ -60,6 +60,7 @@ import {
   injectInternals,
   markRenderScheduled,
   onScheduleRoot,
+  injectProfilingHooks,
 } from './ReactFiberDevToolsHook';
 import {
   requestUpdateLane,
@@ -118,6 +119,7 @@ export {
   defaultOnCaughtError,
   defaultOnRecoverableError,
 } from './ReactFiberErrorLogger';
+import {getLabelForLane, TotalLanes} from 'react-reconciler/src/ReactFiberLane';
 
 type OpaqueRoot = FiberRoot;
 
@@ -822,8 +824,25 @@ function getCurrentFiberForDevTools() {
   return ReactCurrentFiberCurrent;
 }
 
+function getLaneLabelMap(): Map<Lane, string> | null {
+  if (enableSchedulingProfiler) {
+    const map: Map<Lane, string> = new Map();
+
+    let lane = 1;
+    for (let index = 0; index < TotalLanes; index++) {
+      const label = ((getLabelForLane(lane): any): string);
+      map.set(lane, label);
+      lane *= 2;
+    }
+
+    return map;
+  } else {
+    return null;
+  }
+}
+
 export function injectIntoDevTools(): boolean {
-  return injectInternals({
+  const internals: Object = {
     bundleType: __DEV__ ? 1 : 0, // Might add PROFILE later.
     version: ReactVersion, // TODO: Maybe make this a Config. E.g. react-native version.
     rendererPackageName: rendererPackageName,
@@ -849,5 +868,13 @@ export function injectIntoDevTools(): boolean {
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,
-  });
+  };
+  if (enableSchedulingProfiler) {
+    // Conditionally inject these hooks only if Timeline profiler is supported by this build.
+    // This gives DevTools a way to feature detect that isn't tied to version number
+    // (since profiling and timeline are controlled by different feature flags).
+    internals.getLaneLabelMap = getLaneLabelMap;
+    internals.injectProfilingHooks = injectProfilingHooks;
+  }
+  return injectInternals();
 }
