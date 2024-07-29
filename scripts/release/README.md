@@ -20,7 +20,7 @@ The release process consists of several phases, each one represented by one of t
 A typical release cycle goes like this:
 1. When a commit is pushed to the React repo, [GitHub Actions](https://github.com/facebook/react/actions) will build all release bundles and run unit tests against both the source code and the built bundles.
 2. Each weekday, an automated CI cron job publishes prereleases to the `next` and `experimental` channels, from tip of the main branch.
-   1. You can also [trigger an automated prerelease via the command line](#trigger-an-automated-prerelease), instead of waiting until the next time the cron job runs.
+   1. You can also [trigger an automated prerelease via the GitHub UI](#trigger-an-automated-prerelease), instead of waiting until the next time the cron job runs.
    2. For advanced cases, you can [**manually prepare and publish to the `next` channel**](#publishing-release) using the [`prepare-release-from-ci`](#prepare-release-from-ci) and [`publish`](#publish) scripts; or to the [**`experimental` channel**](#publishing-an-experimental-release) using the same scripts (but different build artifacts).
 3. Finally, a "next" release can be [**promoted to stable**](#publishing-a-stable-release)<sup>1</sup> using the [`prepare-release-from-npm`](#prepare-release-from-npm) and [`publish`](#publish) scripts. (This process is always manual.)
 
@@ -34,13 +34,15 @@ The high level process of creating releases is [documented below](#process). Ind
 
 ## Trigger an Automated Prerelease
 
-If your code lands in the main branch, it will be automatically published to the prerelease channels within the next weekday. However, if you want to immediately publish a prerelease, you can trigger the job to run immediately:
+If your code lands in the main branch, it will be automatically published to the prerelease channels within the next weekday. However, if you want to immediately publish a prerelease, you can trigger the job to run immediately via the GitHub UI:
 
-```sh
-yarn publish-prereleases
-```
+1. Wait for the commit you want to release to finish its [(Runtime) Build and Test workflow](https://github.com/facebook/react/actions/workflows/runtime_build_and_test.yml), as the prerelease script needs to download the build from that workflow.
+2. Copy the git sha of whichever commit you are trying to release
+3. Go to https://github.com/facebook/react/actions/workflows/runtime_prereleases_manual.yml
+4. Paste the git sha into the "Run workflow" dropdown
+5. Let the job finish and it will be released on npm
 
-This will grab the most recent revision on the main branch and publish it to the Next and Experimental channels.
+This will grab the specified revision on the main branch and publish it to the Next and Experimental channels.
 ## Publishing Without Tags
 
 The sections below include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
