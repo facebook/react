@@ -124,24 +124,6 @@ async function main() {
       default:
         throw new Error(`Unknown release channel ${argv.releaseChannel}`);
     }
-  } else if (argv.ci === 'circleci') {
-    // In CI, we use multiple concurrent processes. Allocate half the processes to
-    // build the stable channel, and the other half for experimental. Override
-    // the environment variables to "trick" the underlying build script.
-    const total = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
-    const halfTotal = Math.floor(total / 2);
-    const index = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
-    if (index < halfTotal) {
-      const nodeTotal = halfTotal;
-      const nodeIndex = index;
-      buildForChannel('stable', nodeTotal, nodeIndex);
-      processStable('./build');
-    } else {
-      const nodeTotal = total - halfTotal;
-      const nodeIndex = index - halfTotal;
-      buildForChannel('experimental', nodeTotal, nodeIndex);
-      processExperimental('./build');
-    }
   } else {
     // Running locally, no concurrency. Move each channel's build artifacts into
     // a temporary directory so that they don't conflict.
@@ -165,7 +147,7 @@ async function main() {
   }
 }
 
-function buildForChannel(channel, nodeTotal, nodeIndex) {
+function buildForChannel(channel) {
   const {status} = spawnSync(
     'node',
     ['./scripts/rollup/build.js', ...process.argv.slice(2)],
@@ -174,8 +156,6 @@ function buildForChannel(channel, nodeTotal, nodeIndex) {
       env: {
         ...process.env,
         RELEASE_CHANNEL: channel,
-        CIRCLE_NODE_TOTAL: nodeTotal,
-        CIRCLE_NODE_INDEX: nodeIndex,
       },
     }
   );
