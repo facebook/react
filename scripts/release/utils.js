@@ -58,17 +58,6 @@ const extractCommitFromVersionNumber = version => {
   return match[2];
 };
 
-const getArtifactsList = async buildID => {
-  const headers = {};
-  const {CIRCLE_CI_API_TOKEN} = process.env;
-  if (CIRCLE_CI_API_TOKEN != null) {
-    headers['Circle-Token'] = CIRCLE_CI_API_TOKEN;
-  }
-  const jobArtifactsURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${buildID}/artifacts`;
-  const jobArtifacts = await fetch(jobArtifactsURL, {headers});
-  return jobArtifacts.json();
-};
-
 const getBuildInfo = async () => {
   const cwd = join(__dirname, '..', '..');
 
@@ -86,10 +75,6 @@ const getBuildInfo = async () => {
     ? `0.0.0-experimental-${commit}-${dateString}`
     : `0.0.0-${commit}-${dateString}`;
 
-  // Only available for Circle CI builds.
-  // https://circleci.com/docs/2.0/env-vars/
-  const buildNumber = process.env.CIRCLE_BUILD_NUM;
-
   // React version is stored explicitly, separately for DevTools support.
   // See updateVersionsForNext() below for more info.
   const packageJSON = await readJson(
@@ -99,7 +84,7 @@ const getBuildInfo = async () => {
     ? `${packageJSON.version}-experimental-${commit}-${dateString}`
     : `${packageJSON.version}-${commit}-${dateString}`;
 
-  return {branch, buildNumber, checksum, commit, reactVersion, version};
+  return {branch, checksum, commit, reactVersion, version};
 };
 
 const getChecksumForCurrentRevision = async cwd => {
@@ -275,7 +260,6 @@ module.exports = {
   addDefaultParamValue,
   confirm,
   execRead,
-  getArtifactsList,
   getBuildInfo,
   getChecksumForCurrentRevision,
   getCommitFromCurrentBuild,

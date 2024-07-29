@@ -32,5 +32,5 @@ jobs:
       shell: bash
     - name: Run fuzz tests
       run: |-
-        FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci=github
-        FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci=github
+        FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
+        FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci

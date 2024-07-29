@@ -18,7 +18,7 @@ If this is your first time running the release scripts, go to the `scripts/relea
 The release process consists of several phases, each one represented by one of the scripts below.
 
 A typical release cycle goes like this:
-1. When a commit is pushed to the React repo, [Circle CI](https://circleci.com/gh/facebook/react/) will build all release bundles and run unit tests against both the source code and the built bundles.
+1. When a commit is pushed to the React repo, [GitHub Actions](https://github.com/facebook/react/actions) will build all release bundles and run unit tests against both the source code and the built bundles.
 2. Each weekday, an automated CI cron job publishes prereleases to the `next` and `experimental` channels, from tip of the main branch.
    1. You can also [trigger an automated prerelease via the command line](#trigger-an-automated-prerelease), instead of waiting until the next time the cron job runs.
    2. For advanced cases, you can [**manually prepare and publish to the `next` channel**](#publishing-release) using the [`prepare-release-from-ci`](#prepare-release-from-ci) and [`publish`](#publish) scripts; or to the [**`experimental` channel**](#publishing-an-experimental-release) using the same scripts (but different build artifacts).
