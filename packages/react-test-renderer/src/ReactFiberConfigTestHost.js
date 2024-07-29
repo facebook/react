@@ -14,6 +14,9 @@ import {
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 
+export const rendererPackageName = 'react-test-renderer';
+export const extraDevToolsConfig = null;
+
 export type Type = string;
 export type Props = Object;
 export type Container = {

@@ -367,6 +367,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   const sharedHostConfig = {
+    rendererPackageName: 'react-noop',
+
     supportsSingletons: false,
 
     getRootHostContext() {

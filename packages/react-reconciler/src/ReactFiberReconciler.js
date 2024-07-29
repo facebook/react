@@ -42,7 +42,12 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {getPublicInstance} from './ReactFiberConfig';
+import {
+  getPublicInstance,
+  getInstanceFromNode,
+  rendererPackageName,
+  extraDevToolsConfig,
+} from './ReactFiberConfig';
 import {
   findCurrentUnmaskedContext,
   processChildContext,
@@ -115,20 +120,6 @@ export {
 } from './ReactFiberErrorLogger';
 
 type OpaqueRoot = FiberRoot;
-
-// 0 is PROD, 1 is DEV.
-// Might add PROFILE later.
-type BundleType = 0 | 1;
-
-type DevToolsConfig = {
-  bundleType: BundleType,
-  version: string,
-  rendererPackageName: string,
-  // Note: this actually *does* depend on Fiber internal fields.
-  // Used by "inspect clicked DOM element" in React DevTools.
-  findFiberByHostInstance?: (instance: Instance | TextInstance) => Fiber | null,
-  rendererConfig?: RendererInspectionConfig,
-};
 
 let didWarnAboutNestedUpdates;
 let didWarnAboutFindNodeInStrictMode;
@@ -827,24 +818,16 @@ if (__DEV__) {
   };
 }
 
-function emptyFindFiberByHostInstance(
-  instance: Instance | TextInstance,
-): Fiber | null {
-  return null;
-}
-
 function getCurrentFiberForDevTools() {
   return ReactCurrentFiberCurrent;
 }
 
-export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
-  const {findFiberByHostInstance} = devToolsConfig;
-
+export function injectIntoDevTools(): boolean {
   return injectInternals({
-    bundleType: devToolsConfig.bundleType,
-    version: devToolsConfig.version,
-    rendererPackageName: devToolsConfig.rendererPackageName,
-    rendererConfig: devToolsConfig.rendererConfig,
+    bundleType: __DEV__ ? 1 : 0, // Might add PROFILE later.
+    version: ReactVersion, // TODO: Maybe make this a Config. E.g. react-native version.
+    rendererPackageName: rendererPackageName,
+    rendererConfig: (extraDevToolsConfig: null | RendererInspectionConfig),
     overrideHookState,
     overrideHookStateDeletePath,
     overrideHookStateRenamePath,
@@ -855,8 +838,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setSuspenseHandler,
     scheduleUpdate,
     currentDispatcherRef: ReactSharedInternals,
-    findFiberByHostInstance:
-      findFiberByHostInstance || emptyFindFiberByHostInstance,
+    findFiberByHostInstance: getInstanceFromNode,
     // React Refresh
     findHostInstancesForRefresh: __DEV__ ? findHostInstancesForRefresh : null,
     scheduleRefresh: __DEV__ ? scheduleRefresh : null,

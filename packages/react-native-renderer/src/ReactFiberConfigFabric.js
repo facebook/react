@@ -48,10 +48,25 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
+import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
+
+import {
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+  getInspectorDataForInstance,
+} from './ReactNativeFiberInspector';
+
 import {
   enableFabricCompleteRootInCommitPhase,
   passChildrenWhenCloningPersistedNodes,
 } from 'shared/ReactFeatureFlags';
+
+export const rendererPackageName = 'react-native-renderer';
+export const extraDevToolsConfig = {
+  getInspectorDataForInstance,
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+};
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -487,9 +502,7 @@ export function replaceContainerChildren(
   }
 }
 
-export function getInstanceFromNode(node: any): empty {
-  throw new Error('Not yet implemented.');
-}
+export {getClosestInstanceFromNode as getInstanceFromNode};
 
 export function beforeActiveInstanceBlur(
   internalInstanceHandle: InternalInstanceHandle,

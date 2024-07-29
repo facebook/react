@@ -633,18 +633,12 @@ function wrapFiber(fiber: Fiber): ReactTestInstance {
 }
 
 // Enable ReactTestRenderer to be used to test DevTools integration.
-injectIntoDevTools({
-  findFiberByHostInstance: (() => {
-    throw new Error('TestRenderer does not support findFiberByHostInstance()');
-  }: any),
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-test-renderer',
-});
+injectIntoDevTools();
 
 export {
   Scheduler as _Scheduler,
   create,
   batchedUpdates as unstable_batchedUpdates,
   act,
+  ReactVersion as version,
 };
