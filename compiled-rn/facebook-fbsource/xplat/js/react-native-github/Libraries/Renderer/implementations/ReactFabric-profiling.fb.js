@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<26de5a2a02f8ccaadfcc2fc66a21235a>>
+ * @generated SignedSource<<98d2398d407ec8c3a245d12211a967c4>>
  */
 
 "use strict";
@@ -23,6 +23,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enableAddPropertiesFastPath = dynamicFlagsUntyped.enableAddPropertiesFastPath,
+  enableFabricCompleteRootInCommitPhase =
+    dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
   enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes =
@@ -7352,7 +7354,8 @@ function updateHostContainer(current, workInProgress) {
     appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1);
     current.pendingChildren = newChildSet;
     workInProgress.flags |= 4;
-    completeRoot(container, newChildSet);
+    enableFabricCompleteRootInCommitPhase ||
+      completeRoot(container, newChildSet);
   }
 }
 function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -8466,7 +8469,12 @@ function commitDeletionEffectsOnFiber(
     case 18:
       break;
     case 4:
-      passChildrenWhenCloningPersistedNodes || createChildNodeSet();
+      var containerInfo = deletedFiber.stateNode.containerInfo,
+        emptyChildSet = passChildrenWhenCloningPersistedNodes
+          ? []
+          : createChildNodeSet();
+      enableFabricCompleteRootInCommitPhase &&
+        completeRoot(containerInfo, emptyChildSet);
       recursivelyTraverseDeletionEffects(
         finishedRoot,
         nearestMountedAncestor,
@@ -8477,46 +8485,45 @@ function commitDeletionEffectsOnFiber(
     case 11:
     case 14:
     case 15:
-      if (!offscreenSubtreeWasHidden) {
-        var updateQueue = deletedFiber.updateQueue;
-        if (
-          null !== updateQueue &&
-          ((updateQueue = updateQueue.lastEffect), null !== updateQueue)
-        ) {
-          var effect = (updateQueue = updateQueue.next);
-          do {
-            var tag = effect.tag,
-              inst = effect.inst,
-              destroy = inst.destroy;
-            void 0 !== destroy &&
-              (0 !== (tag & 2)
-                ? ((inst.destroy = void 0),
-                  safelyCallDestroy(
-                    deletedFiber,
-                    nearestMountedAncestor,
-                    destroy
-                  ))
-                : 0 !== (tag & 4) &&
-                  (markComponentLayoutEffectUnmountStarted(deletedFiber),
-                  shouldProfile(deletedFiber)
-                    ? (startLayoutEffectTimer(),
-                      (inst.destroy = void 0),
-                      safelyCallDestroy(
-                        deletedFiber,
-                        nearestMountedAncestor,
-                        destroy
-                      ),
-                      recordLayoutEffectDuration(deletedFiber))
-                    : ((inst.destroy = void 0),
-                      safelyCallDestroy(
-                        deletedFiber,
-                        nearestMountedAncestor,
-                        destroy
-                      )),
-                  markComponentLayoutEffectUnmountStopped()));
-            effect = effect.next;
-          } while (effect !== updateQueue);
-        }
+      if (
+        !offscreenSubtreeWasHidden &&
+        ((containerInfo = deletedFiber.updateQueue),
+        null !== containerInfo &&
+          ((containerInfo = containerInfo.lastEffect), null !== containerInfo))
+      ) {
+        emptyChildSet = containerInfo = containerInfo.next;
+        do {
+          var tag = emptyChildSet.tag,
+            inst = emptyChildSet.inst,
+            destroy = inst.destroy;
+          void 0 !== destroy &&
+            (0 !== (tag & 2)
+              ? ((inst.destroy = void 0),
+                safelyCallDestroy(
+                  deletedFiber,
+                  nearestMountedAncestor,
+                  destroy
+                ))
+              : 0 !== (tag & 4) &&
+                (markComponentLayoutEffectUnmountStarted(deletedFiber),
+                shouldProfile(deletedFiber)
+                  ? (startLayoutEffectTimer(),
+                    (inst.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy
+                    ),
+                    recordLayoutEffectDuration(deletedFiber))
+                  : ((inst.destroy = void 0),
+                    safelyCallDestroy(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy
+                    )),
+                markComponentLayoutEffectUnmountStopped()));
+          emptyChildSet = emptyChildSet.next;
+        } while (emptyChildSet !== containerInfo);
       }
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -8527,12 +8534,12 @@ function commitDeletionEffectsOnFiber(
     case 1:
       offscreenSubtreeWasHidden ||
         (safelyDetachRef(deletedFiber, nearestMountedAncestor),
-        (updateQueue = deletedFiber.stateNode),
-        "function" === typeof updateQueue.componentWillUnmount &&
+        (containerInfo = deletedFiber.stateNode),
+        "function" === typeof containerInfo.componentWillUnmount &&
           safelyCallComponentWillUnmount(
             deletedFiber,
             nearestMountedAncestor,
-            updateQueue
+            containerInfo
           ));
       recursivelyTraverseDeletionEffects(
         finishedRoot,
@@ -8551,14 +8558,14 @@ function commitDeletionEffectsOnFiber(
       safelyDetachRef(deletedFiber, nearestMountedAncestor);
       deletedFiber.mode & 1
         ? ((offscreenSubtreeWasHidden =
-            (updateQueue = offscreenSubtreeWasHidden) ||
+            (containerInfo = offscreenSubtreeWasHidden) ||
             null !== deletedFiber.memoizedState),
           recursivelyTraverseDeletionEffects(
             finishedRoot,
             nearestMountedAncestor,
             deletedFiber
           ),
-          (offscreenSubtreeWasHidden = updateQueue))
+          (offscreenSubtreeWasHidden = containerInfo))
         : recursivelyTraverseDeletionEffects(
             finishedRoot,
             nearestMountedAncestor,
@@ -8712,10 +8719,29 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
     case 3:
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
+      if (flags & 4) {
+        flags = root.containerInfo;
+        current = root.pendingChildren;
+        try {
+          enableFabricCompleteRootInCommitPhase && completeRoot(flags, current);
+        } catch (error$135) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$135);
+        }
+      }
       break;
     case 4:
       recursivelyTraverseMutationEffects(root, finishedWork);
       commitReconciliationEffects(finishedWork);
+      if (flags & 4) {
+        current = finishedWork.stateNode;
+        flags = current.containerInfo;
+        current = current.pendingChildren;
+        try {
+          enableFabricCompleteRootInCommitPhase && completeRoot(flags, current);
+        } catch (error$138) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$138);
+        }
+      }
       break;
     case 13:
       recursivelyTraverseMutationEffects(root, finishedWork);
@@ -8762,10 +8788,10 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
           ? root._visibility & -2
           : root._visibility | 1),
         isHidden &&
-          ((isHidden = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
+          ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
           null === current ||
             isShowingFallback ||
-            isHidden ||
+            root ||
             (0 !== (finishedWork.mode & 1) &&
               recursivelyTraverseDisappearLayoutEffects(finishedWork))));
       flags & 4 &&
@@ -11261,10 +11287,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1220 = {
+  devToolsConfig$jscomp$inline_1223 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "19.0.0-native-fb-b9af819f-20240726",
+    version: "19.0.0-native-fb-6b82f3c9-20240729",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -11294,10 +11320,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1220.bundleType,
-  version: devToolsConfig$jscomp$inline_1220.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1220.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1220.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1223.bundleType,
+  version: devToolsConfig$jscomp$inline_1223.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1223.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1223.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -11313,14 +11339,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1220.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1223.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-b9af819f-20240726"
+  reconcilerVersion: "19.0.0-native-fb-6b82f3c9-20240729"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

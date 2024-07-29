@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aaf49563f86374430006d608a4140ad7>>
+ * @generated SignedSource<<21e82ca5963e783e2f6590a40ce8119e>>
  */
 
 "use strict";
@@ -8996,7 +8996,8 @@ __DEV__ &&
         appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1);
         current.pendingChildren = newChildSet;
         workInProgress.flags |= 4;
-        completeRoot(container, newChildSet);
+        enableFabricCompleteRootInCommitPhase ||
+          completeRoot(container, newChildSet);
       }
     }
     function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -10291,7 +10292,12 @@ __DEV__ &&
         case 18:
           break;
         case 4:
-          passChildrenWhenCloningPersistedNodes || createChildNodeSet();
+          var containerInfo = deletedFiber.stateNode.containerInfo,
+            emptyChildSet = passChildrenWhenCloningPersistedNodes
+              ? []
+              : createChildNodeSet();
+          enableFabricCompleteRootInCommitPhase &&
+            completeRoot(containerInfo, emptyChildSet);
           recursivelyTraverseDeletionEffects(
             finishedRoot,
             nearestMountedAncestor,
@@ -10302,46 +10308,46 @@ __DEV__ &&
         case 11:
         case 14:
         case 15:
-          if (!offscreenSubtreeWasHidden) {
-            var updateQueue = deletedFiber.updateQueue;
-            if (
-              null !== updateQueue &&
-              ((updateQueue = updateQueue.lastEffect), null !== updateQueue)
-            ) {
-              var effect = (updateQueue = updateQueue.next);
-              do {
-                var tag = effect.tag,
-                  inst = effect.inst,
-                  destroy = inst.destroy;
-                void 0 !== destroy &&
-                  ((tag & Insertion) !== NoFlags
-                    ? ((inst.destroy = void 0),
-                      callDestroyInDEV(
-                        deletedFiber,
-                        nearestMountedAncestor,
-                        destroy
-                      ))
-                    : (tag & Layout) !== NoFlags &&
-                      (markComponentLayoutEffectUnmountStarted(deletedFiber),
-                      shouldProfile(deletedFiber)
-                        ? (startLayoutEffectTimer(),
-                          (inst.destroy = void 0),
-                          callDestroyInDEV(
-                            deletedFiber,
-                            nearestMountedAncestor,
-                            destroy
-                          ),
-                          recordLayoutEffectDuration(deletedFiber))
-                        : ((inst.destroy = void 0),
-                          callDestroyInDEV(
-                            deletedFiber,
-                            nearestMountedAncestor,
-                            destroy
-                          )),
-                      markComponentLayoutEffectUnmountStopped()));
-                effect = effect.next;
-              } while (effect !== updateQueue);
-            }
+          if (
+            !offscreenSubtreeWasHidden &&
+            ((containerInfo = deletedFiber.updateQueue),
+            null !== containerInfo &&
+              ((containerInfo = containerInfo.lastEffect),
+              null !== containerInfo))
+          ) {
+            emptyChildSet = containerInfo = containerInfo.next;
+            do {
+              var tag = emptyChildSet.tag,
+                inst = emptyChildSet.inst,
+                destroy = inst.destroy;
+              void 0 !== destroy &&
+                ((tag & Insertion) !== NoFlags
+                  ? ((inst.destroy = void 0),
+                    callDestroyInDEV(
+                      deletedFiber,
+                      nearestMountedAncestor,
+                      destroy
+                    ))
+                  : (tag & Layout) !== NoFlags &&
+                    (markComponentLayoutEffectUnmountStarted(deletedFiber),
+                    shouldProfile(deletedFiber)
+                      ? (startLayoutEffectTimer(),
+                        (inst.destroy = void 0),
+                        callDestroyInDEV(
+                          deletedFiber,
+                          nearestMountedAncestor,
+                          destroy
+                        ),
+                        recordLayoutEffectDuration(deletedFiber))
+                      : ((inst.destroy = void 0),
+                        callDestroyInDEV(
+                          deletedFiber,
+                          nearestMountedAncestor,
+                          destroy
+                        )),
+                    markComponentLayoutEffectUnmountStopped()));
+              emptyChildSet = emptyChildSet.next;
+            } while (emptyChildSet !== containerInfo);
           }
           recursivelyTraverseDeletionEffects(
             finishedRoot,
@@ -10352,12 +10358,12 @@ __DEV__ &&
         case 1:
           offscreenSubtreeWasHidden ||
             (safelyDetachRef(deletedFiber, nearestMountedAncestor),
-            (updateQueue = deletedFiber.stateNode),
-            "function" === typeof updateQueue.componentWillUnmount &&
+            (containerInfo = deletedFiber.stateNode),
+            "function" === typeof containerInfo.componentWillUnmount &&
               safelyCallComponentWillUnmount(
                 deletedFiber,
                 nearestMountedAncestor,
-                updateQueue
+                containerInfo
               ));
           recursivelyTraverseDeletionEffects(
             finishedRoot,
@@ -10376,14 +10382,14 @@ __DEV__ &&
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
           deletedFiber.mode & 1
             ? ((offscreenSubtreeWasHidden =
-                (updateQueue = offscreenSubtreeWasHidden) ||
+                (containerInfo = offscreenSubtreeWasHidden) ||
                 null !== deletedFiber.memoizedState),
               recursivelyTraverseDeletionEffects(
                 finishedRoot,
                 nearestMountedAncestor,
                 deletedFiber
               ),
-              (offscreenSubtreeWasHidden = updateQueue))
+              (offscreenSubtreeWasHidden = containerInfo))
             : recursivelyTraverseDeletionEffects(
                 finishedRoot,
                 nearestMountedAncestor,
@@ -10566,10 +10572,39 @@ __DEV__ &&
         case 3:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
+          if (flags & 4) {
+            flags = root.containerInfo;
+            current = root.pendingChildren;
+            try {
+              enableFabricCompleteRootInCommitPhase &&
+                completeRoot(flags, current);
+            } catch (error$26) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$26
+              );
+            }
+          }
           break;
         case 4:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
           commitReconciliationEffects(finishedWork);
+          if (flags & 4) {
+            current = finishedWork.stateNode;
+            flags = current.containerInfo;
+            current = current.pendingChildren;
+            try {
+              enableFabricCompleteRootInCommitPhase &&
+                completeRoot(flags, current);
+            } catch (error$27) {
+              captureCommitPhaseError(
+                finishedWork,
+                finishedWork.return,
+                error$27
+              );
+            }
+          }
           break;
         case 13:
           recursivelyTraverseMutationEffects(root, finishedWork, lanes);
@@ -10617,11 +10652,10 @@ __DEV__ &&
               ? root._visibility & -2
               : root._visibility | 1),
             isHidden &&
-              ((isHidden =
-                offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
+              ((root = offscreenSubtreeIsHidden || offscreenSubtreeWasHidden),
               null === current ||
                 isShowingFallback ||
-                isHidden ||
+                root ||
                 (0 !== (finishedWork.mode & 1) &&
                   recursivelyTraverseDisappearLayoutEffects(finishedWork))));
           flags & 4 &&
@@ -14050,6 +14084,8 @@ __DEV__ &&
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
       enableAddPropertiesFastPath =
         dynamicFlagsUntyped.enableAddPropertiesFastPath,
+      enableFabricCompleteRootInCommitPhase =
+        dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
       enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
       passChildrenWhenCloningPersistedNodes =
@@ -16724,12 +16760,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-b9af819f-20240726"
+        reconcilerVersion: "19.0.0-native-fb-6b82f3c9-20240729"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-b9af819f-20240726",
+      version: "19.0.0-native-fb-6b82f3c9-20240729",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,
