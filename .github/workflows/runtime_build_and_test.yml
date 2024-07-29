@@ -139,7 +139,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn test ${{ matrix.params }} --ci --shard=${{ matrix.shard }}
+      - run: yarn test ${{ matrix.params }} --ci=github --shard=${{ matrix.shard }}
 
   # ----- BUILD -----
   build_and_lint:
@@ -168,7 +168,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci
+      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci=github
         env:
           CI: github
           RELEASE_CHANNEL: ${{ matrix.release_channel }}
@@ -246,7 +246,7 @@ jobs:
           merge-multiple: true
       - name: Display structure of build
         run: ls -R build
-      - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci
+      - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci=github
 
   process_artifacts_combined:
     name: Process artifacts combined
@@ -470,7 +470,7 @@ jobs:
           pattern: _build_*
           path: build
           merge-multiple: true
-      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh
+      - run: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
         env:
           RELEASE_CHANNEL: experimental
       - name: Display structure of build
@@ -519,7 +519,7 @@ jobs:
       - run: |
           npx playwright install
           sudo npx playwright install-deps
-      - run: ./scripts/ci/run_devtools_e2e_tests.js
+      - run: ./scripts/circleci/run_devtools_e2e_tests.js
         env:
           RELEASE_CHANNEL: experimental
 
@@ -547,7 +547,7 @@ jobs:
       - name: Download artifacts for base revision
         run: |
           git fetch origin main
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse origin/main)
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build-ghaction.js --commit=$(git rev-parse origin/main)
           mv ./build ./base-build
       # TODO: The `download-experimental-build` script copies the npm
       # packages into the `node_modules` directory. This is a historical

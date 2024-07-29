@@ -91,8 +91,8 @@ const argv = yargs
     ci: {
       describe: 'Run tests in CI',
       requiresArg: false,
-      type: 'boolean',
-      default: false,
+      type: 'choices',
+      choices: ['circleci', 'github'],
     },
     compactConsole: {
       alias: 'c',
@@ -308,7 +308,12 @@ function getCommandArgs() {
     args.push('--useStderr');
   }
 
-  if (argv.ci === true) {
+  // CI Environments have limited workers.
+  if (argv.ci === 'circleci') {
+    args.push('--maxWorkers=2');
+  }
+
+  if (argv.ci === 'github') {
     args.push('--maxConcurrency=10');
   }
 
@@ -363,7 +368,7 @@ function main() {
   const envars = getEnvars();
   const env = Object.entries(envars).map(([k, v]) => `${k}=${v}`);
 
-  if (argv.ci !== true) {
+  if (argv.ci !== 'github') {
     // Print the full command we're actually running.
     const command = `$ ${env.join(' ')} node ${args.join(' ')}`;
     console.log(chalk.dim(command));

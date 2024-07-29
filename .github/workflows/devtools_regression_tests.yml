@@ -35,7 +35,7 @@ jobs:
       - name: Download react-devtools artifacts for base revision
         run: |
           git fetch origin main
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse origin/main)
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build-ghaction.js --commit=$(git rev-parse origin/main)
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
@@ -67,7 +67,7 @@ jobs:
         with:
           name: build
           path: build
-      - run: ./scripts/ci/pack_and_store_devtools_artifacts.sh
+      - run: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
         env:
           RELEASE_CHANNEL: experimental
       - name: Display structure of build
@@ -120,8 +120,8 @@ jobs:
         uses: actions/download-artifact@v4
       - name: Display structure of build
         run: ls -R build
-      - run: ./scripts/ci/download_devtools_regression_build.js ${{ matrix.version }} --replaceBuild
-      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion ${{ matrix.version }} --ci
+      - run: ./scripts/circleci/download_devtools_regression_build.js ${{ matrix.version }} --replaceBuild
+      - run: node ./scripts/jest/jest-cli.js --build --project devtools --release-channel=experimental --reactVersion ${{ matrix.version }} --ci=github
 
   run_devtools_e2e_tests_for_versions:
     name: Run DevTools e2e tests for versions
@@ -158,9 +158,9 @@ jobs:
         run: |
           npx playwright install
           sudo npx playwright install-deps
-      - run: ./scripts/ci/download_devtools_regression_build.js ${{ matrix.version }}
+      - run: ./scripts/circleci/download_devtools_regression_build.js ${{ matrix.version }}
       - run: ls -R build-regression
-      - run: ./scripts/ci/run_devtools_e2e_tests.js ${{ matrix.version }}
+      - run: ./scripts/circleci/run_devtools_e2e_tests.js ${{ matrix.version }}
         env:
           RELEASE_CHANNEL: experimental
       - name: Cleanup build regression folder

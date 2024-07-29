@@ -18,7 +18,7 @@ const currentBuildResults = {
 };
 
 function saveResults() {
-  if (process.env.CI === true) {
+  if (process.env.CI === 'github') {
     mkdirp.sync('build/sizes');
     fs.writeFileSync(
       join('build', 'sizes', `bundle-sizes-${process.env.NODE_INDEX}.json`),

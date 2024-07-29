@@ -16,7 +16,7 @@ const {
   rcNumber,
 } = require('../../ReactVersions');
 const yargs = require('yargs');
-const {buildEverything} = require('./build');
+const {buildEverything} = require('./build-ghaction');
 const Bundles = require('./bundles');
 
 // Runs the build script for both stable and experimental release channels,
@@ -77,8 +77,8 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
   ci: {
     describe: 'Run tests in CI',
     requiresArg: false,
-    type: 'boolean',
-    default: false,
+    type: 'choices',
+    choices: ['circleci', 'github'],
   },
   type: {
     describe: `Build the given bundle type. (${Object.values(
@@ -110,7 +110,7 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
 }).argv;
 
 async function main() {
-  if (argv.ci === true) {
+  if (argv.ci === 'github') {
     await buildEverything(argv.index, argv.total);
     switch (argv.releaseChannel) {
       case 'stable': {
@@ -139,7 +139,7 @@ async function main() {
     // Then merge the experimental folder into the stable one. processExperimental
     // will have already removed conflicting files.
     //
-    // In CI, merging is handled by the GitHub Download Artifacts plugin.
+    // In CI, merging is handled automatically by CircleCI's workspace feature.
     mergeDirsSync(experimentalDir + '/', stableDir + '/');
 
     // Now restore the combined directory back to its original name
