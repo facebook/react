@@ -154,6 +154,13 @@ async function downloadArtifactsFromGitHub(commit, releaseChannel) {
             );
             process.exit(1);
           }
+          break;
+        }
+        default: {
+          console.log(
+            theme`{error Unhandled workflow run status: ${workflowRun.status}}`
+          );
+          process.exit(1);
         }
       }
     }
