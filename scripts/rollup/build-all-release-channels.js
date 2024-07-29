@@ -16,7 +16,7 @@ const {
   rcNumber,
 } = require('../../ReactVersions');
 const yargs = require('yargs');
-const {buildEverything} = require('./build-ghaction');
+const {buildEverything} = require('./build');
 const Bundles = require('./bundles');
 
 // Runs the build script for both stable and experimental release channels,
