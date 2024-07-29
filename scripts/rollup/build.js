@@ -680,7 +680,8 @@ async function createBundle(bundle, bundleType, isExperimental) {
       bundle.global,
       bundle.moduleType,
       pureExternalModules,
-      bundle
+      bundle,
+      isExperimental
     ),
     output: {
       externalLiveBindings: false,
