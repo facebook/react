@@ -21,7 +21,6 @@ export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableAddPropertiesFastPath = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
-export const enableLazyContextPropagation = __VARIANT__;
 export const enableNoCloningMemoCache = __VARIANT__;
 export const enableObjectFiber = __VARIANT__;
 export const enableRenderableContext = __VARIANT__;
