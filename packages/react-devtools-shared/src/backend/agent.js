@@ -188,8 +188,11 @@ export default class Agent extends EventEmitter<{
     this._bridge = bridge;
 
     bridge.addListener('clearErrorsAndWarnings', this.clearErrorsAndWarnings);
-    bridge.addListener('clearErrorsForFiberID', this.clearErrorsForFiberID);
-    bridge.addListener('clearWarningsForFiberID', this.clearWarningsForFiberID);
+    bridge.addListener('clearErrorsForElementID', this.clearErrorsForElementID);
+    bridge.addListener(
+      'clearWarningsForElementID',
+      this.clearWarningsForElementID,
+    );
     bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('deletePath', this.deletePath);
     bridge.addListener('getBackendVersion', this.getBackendVersion);
@@ -270,16 +273,7 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  clearErrorsForFiberID: ElementAndRendererID => void = ({id, rendererID}) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      renderer.clearErrorsForFiberID(id);
-    }
-  };
-
-  clearWarningsForFiberID: ElementAndRendererID => void = ({
+  clearErrorsForElementID: ElementAndRendererID => void = ({
     id,
     rendererID,
   }) => {
@@ -287,7 +281,19 @@ export default class Agent extends EventEmitter<{
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
     } else {
-      renderer.clearWarningsForFiberID(id);
+      renderer.clearErrorsForElementID(id);
+    }
+  };
+
+  clearWarningsForElementID: ElementAndRendererID => void = ({
+    id,
+    rendererID,
+  }) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      renderer.clearWarningsForElementID(id);
     }
   };
 
@@ -361,7 +367,7 @@ export default class Agent extends EventEmitter<{
     const rendererInterface = this.getBestMatchingRendererInterface(node);
     if (rendererInterface != null) {
       try {
-        return rendererInterface.getFiberIDForNative(node, true);
+        return rendererInterface.getElementIDForNative(node, true);
       } catch (error) {
         // Some old React versions might throw if they can't find a match.
         // If so we should ignore it...
@@ -613,7 +619,7 @@ export default class Agent extends EventEmitter<{
   selectNode(target: Object): void {
     const id = this.getIDForNode(target);
     if (id !== null) {
-      this._bridge.send('selectFiber', id);
+      this._bridge.send('selectElement', id);
     }
   }
 
@@ -820,7 +826,7 @@ export default class Agent extends EventEmitter<{
           if (prevMatchID !== nextMatchID) {
             if (nextMatchID !== null) {
               // We moved forward, unlocking a deeper node.
-              this._bridge.send('selectFiber', nextMatchID);
+              this._bridge.send('selectElement', nextMatchID);
             }
           }
           if (nextMatch !== null && nextMatch.isFullMatch) {

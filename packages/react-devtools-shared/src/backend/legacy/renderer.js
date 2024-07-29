@@ -39,7 +39,7 @@ import {decorateMany, forceUpdate, restoreMany} from './utils';
 
 import type {
   DevToolsHook,
-  GetFiberIDForNative,
+  GetElementIDForNative,
   InspectedElementPayload,
   InstanceAndStyle,
   NativeType,
@@ -142,8 +142,8 @@ export function attach(
   const internalInstanceToRootIDMap: WeakMap<InternalInstance, number> =
     new WeakMap();
 
-  let getInternalIDForNative: GetFiberIDForNative =
-    ((null: any): GetFiberIDForNative);
+  let getInternalIDForNative: GetElementIDForNative =
+    ((null: any): GetElementIDForNative);
   let findNativeNodeForInternalID: (id: number) => ?NativeType;
   let getFiberForNative = (node: NativeType) => {
     // Not implemented.
@@ -174,7 +174,7 @@ export function attach(
     };
   }
 
-  function getDisplayNameForFiberID(id: number): string | null {
+  function getDisplayNameForElementID(id: number): string | null {
     const internalInstance = idToInternalInstanceMap.get(id);
     return internalInstance ? getData(internalInstance).displayName : null;
   }
@@ -1085,11 +1085,11 @@ export function attach(
     // Not implemented
   }
 
-  function clearErrorsForFiberID(id: number) {
+  function clearErrorsForElementID(id: number) {
     // Not implemented
   }
 
-  function clearWarningsForFiberID(id: number) {
+  function clearWarningsForElementID(id: number) {
     // Not implemented
   }
 
@@ -1097,24 +1097,24 @@ export function attach(
 
   function unpatchConsoleForStrictMode() {}
 
-  function hasFiberWithId(id: number): boolean {
+  function hasElementWithId(id: number): boolean {
     return idToInternalInstanceMap.has(id);
   }
 
   return {
     clearErrorsAndWarnings,
-    clearErrorsForFiberID,
-    clearWarningsForFiberID,
+    clearErrorsForElementID,
+    clearWarningsForElementID,
     cleanup,
     getSerializedElementValueByPath,
     deletePath,
     flushInitialOperations,
     getBestMatchForTrackedPath,
-    getDisplayNameForFiberID,
+    getDisplayNameForElementID,
     getFiberForNative,
-    getFiberIDForNative: getInternalIDForNative,
+    getElementIDForNative: getInternalIDForNative,
     getInstanceAndStyle,
-    findNativeNodesForFiberID: (id: number) => {
+    findNativeNodesForElementID: (id: number) => {
       const nativeNode = findNativeNodeForInternalID(id);
       return nativeNode == null ? null : [nativeNode];
     },
@@ -1124,7 +1124,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,
-    hasFiberWithId,
+    hasElementWithId,
     inspectElement,
     logElementToConsole,
     overrideError,

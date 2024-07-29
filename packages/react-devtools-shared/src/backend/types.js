@@ -75,15 +75,6 @@ export type WorkTagMap = {
   Throw: WorkTag,
 };
 
-// TODO: If it's useful for the frontend to know which types of data an Element has
-// (e.g. props, state, context, hooks) then we could add a bitmask field for this
-// to keep the number of attributes small.
-export type FiberData = {
-  key: string | null,
-  displayName: string | null,
-  type: ElementType,
-};
-
 export type NativeType = Object;
 export type RendererID = number;
 
@@ -95,12 +86,12 @@ type SharedInternalsSubset = {
 };
 export type CurrentDispatcherRef = SharedInternalsSubset;
 
-export type GetDisplayNameForFiberID = (
+export type GetDisplayNameForElementID = (
   id: number,
   findNearestUnfilteredAncestor?: boolean,
 ) => string | null;
 
-export type GetFiberIDForNative = (
+export type GetElementIDForNative = (
   component: NativeType,
   findNearestUnfilteredAncestor?: boolean,
 ) => number | null;
@@ -359,20 +350,20 @@ type Type = 'props' | 'hooks' | 'state' | 'context';
 export type RendererInterface = {
   cleanup: () => void,
   clearErrorsAndWarnings: () => void,
-  clearErrorsForFiberID: (id: number) => void,
-  clearWarningsForFiberID: (id: number) => void,
+  clearErrorsForElementID: (id: number) => void,
+  clearWarningsForElementID: (id: number) => void,
   deletePath: (
     type: Type,
     id: number,
     hookID: ?number,
     path: Array<string | number>,
   ) => void,
-  findNativeNodesForFiberID: FindNativeNodesForFiberID,
+  findNativeNodesForElementID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
   getFiberForNative: (component: NativeType) => Fiber | null,
-  getFiberIDForNative: GetFiberIDForNative,
-  getDisplayNameForFiberID: GetDisplayNameForFiberID,
+  getElementIDForNative: GetElementIDForNative,
+  getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<SerializedElement> | null,
@@ -384,7 +375,7 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   handlePostCommitFiberRoot: (fiber: Object) => void,
-  hasFiberWithId: (id: number) => boolean,
+  hasElementWithId: (id: number) => boolean,
   inspectElement: (
     requestID: number,
     id: number,

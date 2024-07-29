@@ -25,14 +25,14 @@ import {
   ANSI_STYLE_DIMMING_TEMPLATE,
   ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK,
 } from 'react-devtools-shared/src/constants';
-import {getInternalReactConstants, getDispatcherRef} from './renderer';
+import {getInternalReactConstants, getDispatcherRef} from './fiber/renderer';
 import {
   getStackByFiberInDevAndProd,
   getOwnerStackByFiberInDev,
   supportsOwnerStacks,
   supportsNativeConsoleTasks,
-} from './DevToolsFiberComponentStack';
-import {formatOwnerStack} from './DevToolsOwnerStack';
+} from './fiber/DevToolsFiberComponentStack';
+import {formatOwnerStack} from './shared/DevToolsOwnerStack';
 import {castBool, castBrowserTheme} from '../utils';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];

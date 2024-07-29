@@ -13,7 +13,7 @@
 // (which use different values for ReactTypeOfWork).
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {CurrentDispatcherRef, WorkTagMap} from './types';
+import type {CurrentDispatcherRef, WorkTagMap} from '../types';
 
 import type {ReactComponentInfo} from 'shared/ReactTypes';
 
@@ -22,9 +22,9 @@ import {
   describeFunctionComponentFrame,
   describeClassComponentFrame,
   describeDebugInfoFrame,
-} from './DevToolsComponentStackFrame';
+} from '../shared/DevToolsComponentStackFrame';
 
-import {formatOwnerStack} from './DevToolsOwnerStack';
+import {formatOwnerStack} from '../shared/DevToolsOwnerStack';
 
 export function describeFiber(
   workTagMap: WorkTagMap,

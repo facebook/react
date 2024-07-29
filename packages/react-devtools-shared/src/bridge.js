@@ -195,7 +195,7 @@ export type BackendEvents = {
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
   saveToClipboard: [string],
-  selectFiber: [number],
+  selectElement: [number],
   shutdown: [],
   stopInspectingNative: [boolean],
   syncSelectionFromNativeElementsPanel: [],
@@ -211,9 +211,9 @@ export type BackendEvents = {
 
 type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
-  clearErrorsForFiberID: [ElementAndRendererID],
+  clearErrorsForElementID: [ElementAndRendererID],
   clearNativeElementHighlight: [],
-  clearWarningsForFiberID: [ElementAndRendererID],
+  clearWarningsForElementID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
   getBackendVersion: [],
@@ -231,7 +231,6 @@ type FrontendEvents = {
   reloadAndProfile: [boolean],
   renamePath: [RenamePath],
   savedPreferences: [SavedPreferencesParams],
-  selectFiber: [number],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
   startInspectingNative: [],
