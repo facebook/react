@@ -16,6 +16,8 @@ on:
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
+  GH_TOKEN: ${{ github.token }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 jobs:
   publish_prerelease:
@@ -41,6 +43,3 @@ jobs:
           scripts/release/prepare-release-from-ci.js --skipTests -r ${{ inputs.release_channel }} --commit=${{ inputs.commit_sha }}
           cp ./scripts/release/ci-npmrc ~/.npmrc
           scripts/release/publish.js --ci --tags ${{ inputs.dist_tag }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
