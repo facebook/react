@@ -48,7 +48,10 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
-import {passChildrenWhenCloningPersistedNodes} from 'shared/ReactFeatureFlags';
+import {
+  enableFabricCompleteRootInCommitPhase,
+  passChildrenWhenCloningPersistedNodes,
+} from 'shared/ReactFeatureFlags';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -469,7 +472,9 @@ export function finalizeContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {
-  completeRoot(container, newChildren);
+  if (!enableFabricCompleteRootInCommitPhase) {
+    completeRoot(container, newChildren);
+  }
 }
 
 export function replaceContainerChildren(
@@ -477,6 +482,9 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {
   // Noop - children will be replaced in finalizeContainerChildren
+  if (enableFabricCompleteRootInCommitPhase) {
+    completeRoot(container, newChildren);
+  }
 }
 
 export function getInstanceFromNode(node: any): empty {
