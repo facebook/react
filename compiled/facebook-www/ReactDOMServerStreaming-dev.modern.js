@@ -8116,7 +8116,7 @@ __DEV__ &&
     exports.renderNextChunk = function (stream) {
       var request = stream.request;
       stream = stream.destination;
-      if (2 !== request.status) {
+      if (2 !== request.status && 1 !== request.status) {
         var prevContext = currentActiveSnapshot,
           prevDispatcher = ReactSharedInternals.H;
         ReactSharedInternals.H = HooksDispatcher;
