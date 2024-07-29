@@ -127,11 +127,11 @@ async function main() {
   } else {
     // Running locally, no concurrency. Move each channel's build artifacts into
     // a temporary directory so that they don't conflict.
-    buildForChannel('stable', '', '');
+    buildForChannel('stable');
     const stableDir = tmp.dirSync().name;
     crossDeviceRenameSync('./build', stableDir);
     processStable(stableDir);
-    buildForChannel('experimental', '', '');
+    buildForChannel('experimental');
     const experimentalDir = tmp.dirSync().name;
     crossDeviceRenameSync('./build', experimentalDir);
     processExperimental(experimentalDir);
