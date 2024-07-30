@@ -3,6 +3,18 @@
 
 ```javascript
 import fbt from 'fbt';
+
+/**
+ * Similar to error.todo-multiple-fbt-plural
+ *
+ * Evaluator error:
+ *   Found differences in evaluator results
+ *   Non-forget (expected):
+ *   (kind: ok) <div>1 apple and 2 bananas</div>
+ *   Forget:
+ *   (kind: ok) <div>1 apples and 2 bananas</div>
+ */
+
 function useFoo({apples, bananas}) {
   return fbt(
     `${fbt.param('number of apples', apples)} ` +
@@ -25,6 +37,18 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
+
+/**
+ * Similar to error.todo-multiple-fbt-plural
+ *
+ * Evaluator error:
+ *   Found differences in evaluator results
+ *   Non-forget (expected):
+ *   (kind: ok) <div>1 apple and 2 bananas</div>
+ *   Forget:
+ *   (kind: ok) <div>1 apples and 2 bananas</div>
+ */
+
 function useFoo(t0) {
   const $ = _c(3);
   const { apples, bananas } = t0;
