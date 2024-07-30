@@ -96,7 +96,6 @@ import {
   scheduleRefresh,
   scheduleRoot,
   setRefreshHandler,
-  findHostInstancesForRefresh,
 } from './ReactFiberHotReloading';
 import ReactVersion from 'shared/ReactVersion';
 export {createPortal} from './ReactPortal';
@@ -865,7 +864,6 @@ export function injectIntoDevTools(): boolean {
     internals.setErrorHandler = setErrorHandler;
     internals.setSuspenseHandler = setSuspenseHandler;
     // React Refresh
-    internals.findHostInstancesForRefresh = findHostInstancesForRefresh;
     internals.scheduleRefresh = scheduleRefresh;
     internals.scheduleRoot = scheduleRoot;
     internals.setRefreshHandler = setRefreshHandler;
