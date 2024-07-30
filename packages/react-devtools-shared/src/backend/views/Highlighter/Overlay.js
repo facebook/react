@@ -236,7 +236,7 @@ export default class Overlay {
       const rendererInterface =
         this.agent.getBestMatchingRendererInterface(node);
       if (rendererInterface) {
-        const id = rendererInterface.getElementIDForNative(node, true);
+        const id = rendererInterface.getElementIDForHostInstance(node, true);
         if (id) {
           const ownerName = rendererInterface.getDisplayNameForElementID(
             id,

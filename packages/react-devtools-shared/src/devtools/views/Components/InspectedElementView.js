@@ -22,7 +22,7 @@ import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
 import NativeStyleEditor from './NativeStyleEditor';
 import ElementBadges from './ElementBadges';
-import {useHighlightNativeElement} from '../hooks';
+import {useHighlightHostInstance} from '../hooks';
 import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 import InspectedElementSourcePanel from './InspectedElementSourcePanel';
@@ -188,8 +188,8 @@ function OwnerView({
   isInStore,
 }: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
-  const {highlightNativeElement, clearHighlightNativeElement} =
-    useHighlightNativeElement();
+  const {highlightHostInstance, clearHighlightHostInstance} =
+    useHighlightHostInstance();
 
   const handleClick = useCallback(() => {
     logEvent({
@@ -208,8 +208,8 @@ function OwnerView({
       className={styles.OwnerButton}
       disabled={!isInStore}
       onClick={handleClick}
-      onMouseEnter={() => highlightNativeElement(id)}
-      onMouseLeave={clearHighlightNativeElement}>
+      onMouseEnter={() => highlightHostInstance(id)}
+      onMouseLeave={clearHighlightHostInstance}>
       <span className={styles.OwnerContent}>
         <span
           className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}

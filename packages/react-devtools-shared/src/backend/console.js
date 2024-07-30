@@ -30,7 +30,7 @@ import {
   getStackByFiberInDevAndProd,
   getOwnerStackByFiberInDev,
   supportsOwnerStacks,
-  supportsNativeConsoleTasks,
+  supportsConsoleTasks,
 } from './fiber/DevToolsFiberComponentStack';
 import {formatOwnerStack} from './shared/DevToolsOwnerStack';
 import {castBool, castBrowserTheme} from '../utils';
@@ -251,7 +251,7 @@ export function patch({
 
                 if (
                   consoleSettingsRef.appendComponentStack &&
-                  !supportsNativeConsoleTasks(current)
+                  !supportsConsoleTasks(current)
                 ) {
                   const enableOwnerStacks = supportsOwnerStacks(current);
                   let componentStack = '';

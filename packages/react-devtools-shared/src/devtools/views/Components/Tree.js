@@ -31,7 +31,7 @@ import ComponentSearchInput from './ComponentSearchInput';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
-import {useHighlightNativeElement, useSubscription} from '../hooks';
+import {useHighlightHostInstance, useSubscription} from '../hooks';
 import {clearErrorsAndWarnings as clearErrorsAndWarningsAPI} from 'react-devtools-shared/src/backendAPI';
 import styles from './Tree.css';
 import ButtonIcon from '../ButtonIcon';
@@ -66,8 +66,8 @@ export default function Tree(props: Props): React.Node {
   const {hideSettings} = useContext(OptionsContext);
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] =
     useState(false);
-  const {highlightNativeElement, clearHighlightNativeElement} =
-    useHighlightNativeElement();
+  const {highlightHostInstance, clearHighlightHostInstance} =
+    useHighlightHostInstance();
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
 
@@ -98,7 +98,7 @@ export default function Tree(props: Props): React.Node {
   // Picking an element in the inspector should put focus into the tree.
   // This ensures that keyboard navigation works right after picking a node.
   useEffect(() => {
-    function handleStopInspectingNative(didSelectNode: boolean) {
+    function handleStopInspectingHost(didSelectNode: boolean) {
       if (didSelectNode && focusTargetRef.current !== null) {
         focusTargetRef.current.focus();
         logEvent({
@@ -107,9 +107,9 @@ export default function Tree(props: Props): React.Node {
         });
       }
     }
-    bridge.addListener('stopInspectingNative', handleStopInspectingNative);
+    bridge.addListener('stopInspectingHost', handleStopInspectingHost);
     return () =>
-      bridge.removeListener('stopInspectingNative', handleStopInspectingNative);
+      bridge.removeListener('stopInspectingHost', handleStopInspectingHost);
   }, [bridge]);
 
   // This ref is passed down the context to elements.
@@ -256,15 +256,15 @@ export default function Tree(props: Props): React.Node {
     }
     if (isNavigatingWithKeyboard || didSelectNewSearchResult) {
       if (selectedElementID !== null) {
-        highlightNativeElement(selectedElementID);
+        highlightHostInstance(selectedElementID);
       } else {
-        clearHighlightNativeElement();
+        clearHighlightHostInstance();
       }
     }
   }, [
     bridge,
     isNavigatingWithKeyboard,
-    highlightNativeElement,
+    highlightHostInstance,
     searchIndex,
     searchResults,
     selectedElementID,
@@ -276,10 +276,10 @@ export default function Tree(props: Props): React.Node {
       // Ignore hover while we're navigating with keyboard.
       // This avoids flicker from the hovered nodes under the mouse.
       if (!isNavigatingWithKeyboard) {
-        highlightNativeElement(id);
+        highlightHostInstance(id);
       }
     },
-    [isNavigatingWithKeyboard, highlightNativeElement],
+    [isNavigatingWithKeyboard, highlightHostInstance],
   );
 
   const handleMouseMove = useCallback(() => {
@@ -288,7 +288,7 @@ export default function Tree(props: Props): React.Node {
     setIsNavigatingWithKeyboard(false);
   }, []);
 
-  const handleMouseLeave = clearHighlightNativeElement;
+  const handleMouseLeave = clearHighlightHostInstance;
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.

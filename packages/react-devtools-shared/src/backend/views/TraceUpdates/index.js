@@ -11,7 +11,7 @@ import Agent from 'react-devtools-shared/src/backend/agent';
 import {destroy as destroyCanvas, draw} from './canvas';
 import {getNestedBoundingClientRect} from '../utils';
 
-import type {NativeType} from '../../types';
+import type {HostInstance} from '../../types';
 import type {Rect} from '../utils';
 
 // How long the rect should be shown for?
@@ -38,7 +38,7 @@ export type Data = {
   rect: Rect | null,
 };
 
-const nodeToData: Map<NativeType, Data> = new Map();
+const nodeToData: Map<HostInstance, Data> = new Map();
 
 let agent: Agent = ((null: any): Agent);
 let drawAnimationFrameID: AnimationFrameID | null = null;
@@ -70,7 +70,7 @@ export function toggleEnabled(value: boolean): void {
   }
 }
 
-function traceUpdates(nodes: Set<NativeType>): void {
+function traceUpdates(nodes: Set<HostInstance>): void {
   if (!isEnabled) {
     return;
   }

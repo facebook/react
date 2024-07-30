@@ -13,6 +13,7 @@ import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {HostInstance} from '../../types';
 
 // This plug-in provides in-page highlighting of the selected element.
 // It is used by the browser extension and the standalone DevTools shell (when connected to a browser).
@@ -25,16 +26,13 @@ export default function setupHighlighter(
   bridge: BackendBridge,
   agent: Agent,
 ): void {
-  bridge.addListener(
-    'clearNativeElementHighlight',
-    clearNativeElementHighlight,
-  );
-  bridge.addListener('highlightNativeElement', highlightNativeElement);
-  bridge.addListener('shutdown', stopInspectingNative);
-  bridge.addListener('startInspectingNative', startInspectingNative);
-  bridge.addListener('stopInspectingNative', stopInspectingNative);
+  bridge.addListener('clearHostInstanceHighlight', clearHostInstanceHighlight);
+  bridge.addListener('highlightHostInstance', highlightHostInstance);
+  bridge.addListener('shutdown', stopInspectingHost);
+  bridge.addListener('startInspectingHost', startInspectingHost);
+  bridge.addListener('stopInspectingHost', stopInspectingHost);
 
-  function startInspectingNative() {
+  function startInspectingHost() {
     registerListenersOnWindow(window);
   }
 
@@ -53,7 +51,7 @@ export default function setupHighlighter(
     }
   }
 
-  function stopInspectingNative() {
+  function stopInspectingHost() {
     hideOverlay(agent);
     removeListenersOnWindow(window);
     iframesListeningTo.forEach(function (frame) {
@@ -81,22 +79,22 @@ export default function setupHighlighter(
     }
   }
 
-  function clearNativeElementHighlight() {
+  function clearHostInstanceHighlight() {
     hideOverlay(agent);
   }
 
-  function highlightNativeElement({
+  function highlightHostInstance({
     displayName,
     hideAfterTimeout,
     id,
-    openNativeElementsPanel,
+    openBuiltinElementsPanel,
     rendererID,
     scrollIntoView,
   }: {
     displayName: string | null,
     hideAfterTimeout: boolean,
     id: number,
-    openNativeElementsPanel: boolean,
+    openBuiltinElementsPanel: boolean,
     rendererID: number,
     scrollIntoView: boolean,
     ...
@@ -115,9 +113,8 @@ export default function setupHighlighter(
       return;
     }
 
-    const nodes: ?Array<HTMLElement> = (renderer.findNativeNodesForElementID(
-      id,
-    ): any);
+    const nodes: ?Array<HostInstance> =
+      renderer.findHostInstancesForElementID(id);
 
     if (nodes != null && nodes[0] != null) {
       const node = nodes[0];
@@ -130,9 +127,9 @@ export default function setupHighlighter(
 
       showOverlay(nodes, displayName, agent, hideAfterTimeout);
 
-      if (openNativeElementsPanel) {
+      if (openBuiltinElementsPanel) {
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
-        bridge.send('syncSelectionToNativeElementsPanel');
+        bridge.send('syncSelectionToBuiltinElementsPanel');
       }
     } else {
       hideOverlay(agent);
@@ -143,9 +140,9 @@ export default function setupHighlighter(
     event.preventDefault();
     event.stopPropagation();
 
-    stopInspectingNative();
+    stopInspectingHost();
 
-    bridge.send('stopInspectingNative', true);
+    bridge.send('stopInspectingHost', true);
   }
 
   function onMouseEvent(event: MouseEvent) {

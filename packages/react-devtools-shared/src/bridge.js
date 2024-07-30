@@ -80,11 +80,11 @@ type Message = {
   payload: any,
 };
 
-type HighlightElementInDOM = {
+type HighlightHostInstance = {
   ...ElementAndRendererID,
   displayName: string | null,
   hideAfterTimeout: boolean,
-  openNativeElementsPanel: boolean,
+  openBuiltinElementsPanel: boolean,
   scrollIntoView: boolean,
 };
 
@@ -197,9 +197,9 @@ export type BackendEvents = {
   saveToClipboard: [string],
   selectElement: [number],
   shutdown: [],
-  stopInspectingNative: [boolean],
-  syncSelectionFromNativeElementsPanel: [],
-  syncSelectionToNativeElementsPanel: [],
+  stopInspectingHost: [boolean],
+  syncSelectionFromBuiltinElementsPanel: [],
+  syncSelectionToBuiltinElementsPanel: [],
   unsupportedRendererVersion: [RendererID],
 
   // React Native style editor plug-in.
@@ -212,7 +212,7 @@ export type BackendEvents = {
 type FrontendEvents = {
   clearErrorsAndWarnings: [{rendererID: RendererID}],
   clearErrorsForElementID: [ElementAndRendererID],
-  clearNativeElementHighlight: [],
+  clearHostInstanceHighlight: [],
   clearWarningsForElementID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
@@ -221,7 +221,7 @@ type FrontendEvents = {
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{rendererID: RendererID}],
   getProfilingStatus: [],
-  highlightNativeElement: [HighlightElementInDOM],
+  highlightHostInstance: [HighlightHostInstance],
   inspectElement: [InspectElementParams],
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
@@ -233,9 +233,9 @@ type FrontendEvents = {
   savedPreferences: [SavedPreferencesParams],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
-  startInspectingNative: [],
+  startInspectingHost: [],
   startProfiling: [boolean],
-  stopInspectingNative: [boolean],
+  stopInspectingHost: [boolean],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
