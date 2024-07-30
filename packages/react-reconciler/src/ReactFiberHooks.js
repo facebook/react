@@ -3276,8 +3276,7 @@ function useHostTransitionStatus(): TransitionStatus {
   if (!enableAsyncActions) {
     throw new Error('Not implemented.');
   }
-  const status: TransitionStatus | null = readContext(HostTransitionContext);
-  return status !== null ? status : NoPendingHostTransition;
+  return readContext(HostTransitionContext);
 }
 
 function mountId(): string {
