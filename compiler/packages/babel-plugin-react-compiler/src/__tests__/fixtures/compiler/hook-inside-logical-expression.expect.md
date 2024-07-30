@@ -3,7 +3,15 @@
 
 ```javascript
 function Component(props) {
-  const user = useFragment(graphql`...`, props.user) ?? {};
+  const user =
+    useFragment(
+      graphql`
+        fragment F on T {
+          id
+        }
+      `,
+      props.user
+    ) ?? {};
   return user.name;
 }
 
@@ -13,7 +21,15 @@ function Component(props) {
 
 ```javascript
 function Component(props) {
-  const user = useFragment(graphql`...`, props.user) ?? {};
+  const user =
+    useFragment(
+      graphql`
+        fragment F on T {
+          id
+        }
+      `,
+      props.user,
+    ) ?? {};
   return user.name;
 }
 
