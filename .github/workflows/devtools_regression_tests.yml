@@ -5,8 +5,9 @@ on:
     - cron: 0 0 * * *
   workflow_dispatch:
     inputs:
-      prerelease_commit_sha:
+      commit_sha:
         required: false
+        type: string
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -15,7 +16,6 @@ env:
 
 jobs:
   download_build:
-    if: inputs.prerelease_commit_sha == ''
     name: Download base build
     runs-on: ubuntu-latest
     steps:
@@ -37,7 +37,7 @@ jobs:
       - name: Download react-devtools artifacts for base revision
         run: |
           git fetch origin main
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=$(git rev-parse origin/main)
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || '$(git rev-parse origin/main)' }}
       - name: Display structure of build
         run: ls -R build
       - name: Archive build
