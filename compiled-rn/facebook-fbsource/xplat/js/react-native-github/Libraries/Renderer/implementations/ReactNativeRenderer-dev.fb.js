@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0badebf0018add7158eaf19a77b3cec8>>
+ * @generated SignedSource<<aaf0d7e0823868acf59df41c5015cff2>>
  */
 
 "use strict";
@@ -71,20 +71,6 @@ __DEV__ &&
     }
     function shouldErrorImpl() {
       return null;
-    }
-    function findHostInstancesForRefresh(root, families) {
-      var hostInstances = new Set();
-      families = new Set(
-        families.map(function (family) {
-          return family.current;
-        })
-      );
-      findHostInstancesForMatchingFibersRecursively(
-        root.current,
-        families,
-        hostInstances
-      );
-      return hostInstances;
     }
     function scheduleRoot(root, element) {
       root.context === emptyContextObject &&
@@ -13389,83 +13375,6 @@ __DEV__ &&
           staleFamilies
         );
     }
-    function findHostInstancesForMatchingFibersRecursively(
-      fiber,
-      types,
-      hostInstances
-    ) {
-      var child = fiber.child,
-        sibling = fiber.sibling,
-        type = fiber.type,
-        candidateType = null;
-      switch (fiber.tag) {
-        case 0:
-        case 15:
-        case 1:
-          candidateType = type;
-          break;
-        case 11:
-          candidateType = type.render;
-      }
-      type = !1;
-      null !== candidateType && types.has(candidateType) && (type = !0);
-      if (type)
-        a: {
-          b: for (child = fiber, candidateType = !1; ; ) {
-            if (5 === child.tag || 26 === child.tag)
-              (candidateType = !0), hostInstances.add(child.stateNode);
-            else if (null !== child.child) {
-              child.child.return = child;
-              child = child.child;
-              continue;
-            }
-            if (child === fiber) {
-              child = candidateType;
-              break b;
-            }
-            for (; null === child.sibling; ) {
-              if (null === child.return || child.return === fiber) {
-                child = candidateType;
-                break b;
-              }
-              child = child.return;
-            }
-            child.sibling.return = child.return;
-            child = child.sibling;
-          }
-          if (!child)
-            for (;;) {
-              switch (fiber.tag) {
-                case 27:
-                case 5:
-                  hostInstances.add(fiber.stateNode);
-                  break a;
-                case 4:
-                  hostInstances.add(fiber.stateNode.containerInfo);
-                  break a;
-                case 3:
-                  hostInstances.add(fiber.stateNode.containerInfo);
-                  break a;
-              }
-              if (null === fiber.return)
-                throw Error("Expected to reach root first.");
-              fiber = fiber.return;
-            }
-        }
-      else
-        null !== child &&
-          findHostInstancesForMatchingFibersRecursively(
-            child,
-            types,
-            hostInstances
-          );
-      null !== sibling &&
-        findHostInstancesForMatchingFibersRecursively(
-          sibling,
-          types,
-          hostInstances
-        );
-    }
     function FiberNode(tag, pendingProps, key, mode) {
       this.tag = tag;
       this.key = key;
@@ -16930,11 +16839,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-146df7c3-20240730" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-96f3093b-20240730" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-146df7c3-20240730\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-96f3093b-20240730\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16960,11 +16869,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-146df7c3-20240730",
+        version: "19.0.0-native-fb-96f3093b-20240730",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-146df7c3-20240730"
+        reconcilerVersion: "19.0.0-native-fb-96f3093b-20240730"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
@@ -16977,7 +16886,6 @@ __DEV__ &&
       internals.scheduleUpdate = scheduleUpdate;
       internals.setErrorHandler = setErrorHandler;
       internals.setSuspenseHandler = setSuspenseHandler;
-      internals.findHostInstancesForRefresh = findHostInstancesForRefresh;
       internals.scheduleRefresh = scheduleRefresh;
       internals.scheduleRoot = scheduleRoot;
       internals.setRefreshHandler = setRefreshHandler;
