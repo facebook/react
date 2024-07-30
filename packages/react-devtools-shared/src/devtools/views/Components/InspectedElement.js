@@ -80,11 +80,11 @@ export default function InspectedElementWrapper(_: Props): React.Node {
     if (element !== null && inspectedElementID !== null) {
       const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
-        bridge.send('highlightNativeElement', {
+        bridge.send('highlightHostInstance', {
           displayName: element.displayName,
           hideAfterTimeout: true,
           id: inspectedElementID,
-          openNativeElementsPanel: true,
+          openBuiltinElementsPanel: true,
           rendererID,
           scrollIntoView: true,
         });

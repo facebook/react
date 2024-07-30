@@ -9,7 +9,7 @@
 
 import type {Data} from './index';
 import type {Rect} from '../utils';
-import type {NativeType} from '../../types';
+import type {HostInstance} from '../../types';
 import type Agent from '../../agent';
 
 import {isReactNativeEnvironment} from 'react-devtools-shared/src/backend/utils';
@@ -32,7 +32,7 @@ const COLORS = [
 
 let canvas: HTMLCanvasElement | null = null;
 
-function drawNative(nodeToData: Map<NativeType, Data>, agent: Agent) {
+function drawNative(nodeToData: Map<HostInstance, Data>, agent: Agent) {
   const nodesToDraw = [];
   iterateNodes(nodeToData, (_, color, node) => {
     nodesToDraw.push({node, color});
@@ -41,7 +41,7 @@ function drawNative(nodeToData: Map<NativeType, Data>, agent: Agent) {
   agent.emit('drawTraceUpdates', nodesToDraw);
 }
 
-function drawWeb(nodeToData: Map<NativeType, Data>) {
+function drawWeb(nodeToData: Map<HostInstance, Data>) {
   if (canvas === null) {
     initialize();
   }
@@ -59,15 +59,15 @@ function drawWeb(nodeToData: Map<NativeType, Data>) {
   });
 }
 
-export function draw(nodeToData: Map<NativeType, Data>, agent: Agent): void {
+export function draw(nodeToData: Map<HostInstance, Data>, agent: Agent): void {
   return isReactNativeEnvironment()
     ? drawNative(nodeToData, agent)
     : drawWeb(nodeToData);
 }
 
 function iterateNodes(
-  nodeToData: Map<NativeType, Data>,
-  execute: (rect: Rect | null, color: string, node: NativeType) => void,
+  nodeToData: Map<HostInstance, Data>,
+  execute: (rect: Rect | null, color: string, node: HostInstance) => void,
 ) {
   nodeToData.forEach(({count, rect}, node) => {
     const colorIndex = Math.min(COLORS.length - 1, count - 1);

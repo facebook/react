@@ -58,7 +58,7 @@ function createBridge() {
   });
 
   bridge.addListener(
-    'syncSelectionToNativeElementsPanel',
+    'syncSelectionToBuiltinElementsPanel',
     setBrowserSelectionFromReact,
   );
 

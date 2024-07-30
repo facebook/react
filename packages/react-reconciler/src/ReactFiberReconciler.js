@@ -827,14 +827,6 @@ if (__DEV__) {
   };
 }
 
-function findHostInstanceByFiber(fiber: Fiber): Instance | TextInstance | null {
-  const hostFiber = findCurrentHostFiber(fiber);
-  if (hostFiber === null) {
-    return null;
-  }
-  return hostFiber.stateNode;
-}
-
 function emptyFindFiberByHostInstance(
   instance: Instance | TextInstance,
 ): Fiber | null {
@@ -863,7 +855,6 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setSuspenseHandler,
     scheduleUpdate,
     currentDispatcherRef: ReactSharedInternals,
-    findHostInstanceByFiber,
     findFiberByHostInstance:
       findFiberByHostInstance || emptyFindFiberByHostInstance,
     // React Refresh
