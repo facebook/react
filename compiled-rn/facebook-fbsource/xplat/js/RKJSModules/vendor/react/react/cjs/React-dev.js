@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3d06ad2166842760b7fc295fa3c6e3a2>>
+ * @generated SignedSource<<7c38a63e9c2ae28b3a43383fc597ef11>>
  */
 
 "use strict";
@@ -1021,6 +1021,7 @@ __DEV__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
+    require("ReactNativeInternalFeatureFlags");
     var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_PORTAL_TYPE = Symbol.for("react.portal"),
       REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1704,7 +1705,7 @@ __DEV__ &&
     exports.useTransition = function () {
       return resolveDispatcher().useTransition();
     };
-    exports.version = "19.0.0-native-fb-96f3093b-20240730";
+    exports.version = "19.0.0-native-fb-3f8b1333-20240730";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
