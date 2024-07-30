@@ -145,7 +145,9 @@ export function attach(
   let getElementIDForHostInstance: GetElementIDForHostInstance =
     ((null: any): GetElementIDForHostInstance);
   let findHostInstanceForInternalID: (id: number) => ?HostInstance;
-  let getFiberForNative = (node: HostInstance) => {
+  let getNearestMountedHostInstance = (
+    node: HostInstance,
+  ): null | HostInstance => {
     // Not implemented.
     return null;
   };
@@ -160,8 +162,15 @@ export function attach(
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
     };
-    getFiberForNative = (node: HostInstance) => {
-      return renderer.ComponentTree.getClosestInstanceFromNode(node);
+    getNearestMountedHostInstance = (
+      node: HostInstance,
+    ): null | HostInstance => {
+      const internalInstance =
+        renderer.ComponentTree.getClosestInstanceFromNode(node);
+      if (internalInstance != null) {
+        return renderer.ComponentTree.getNodeFromInstance(internalInstance);
+      }
+      return null;
     };
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
     getElementIDForHostInstance = (node, findNearestUnfilteredAncestor) => {
@@ -1111,7 +1120,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
-    getFiberForNative,
+    getNearestMountedHostInstance,
     getElementIDForHostInstance,
     getInstanceAndStyle,
     findHostInstancesForElementID: (id: number) => {

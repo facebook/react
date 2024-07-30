@@ -193,7 +193,7 @@ export default function setupHighlighter(
 
   const selectElementForNode = throttle(
     memoize((node: HTMLElement) => {
-      const id = agent.getIDForNode(node);
+      const id = agent.getIDForHostInstance(node);
       if (id !== null) {
         bridge.send('selectElement', id);
       }

@@ -1217,7 +1217,7 @@ describe('Store', () => {
           ▸ <Wrapper>
       `);
 
-      const deepestedNodeID = agent.getIDForNode(ref.current);
+      const deepestedNodeID = agent.getIDForHostInstance(ref.current);
 
       act(() => store.toggleIsCollapsed(deepestedNodeID, false));
       expect(store).toMatchInlineSnapshot(`

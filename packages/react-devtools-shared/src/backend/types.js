@@ -86,10 +86,7 @@ type SharedInternalsSubset = {
 };
 export type CurrentDispatcherRef = SharedInternalsSubset;
 
-export type GetDisplayNameForElementID = (
-  id: number,
-  findNearestUnfilteredAncestor?: boolean,
-) => string | null;
+export type GetDisplayNameForElementID = (id: number) => string | null;
 
 export type GetElementIDForHostInstance = (
   component: HostInstance,
@@ -363,7 +360,9 @@ export type RendererInterface = {
   findHostInstancesForElementID: FindHostInstancesForElementID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getFiberForNative: (component: HostInstance) => Fiber | null,
+  getNearestMountedHostInstance: (
+    component: HostInstance,
+  ) => HostInstance | null,
   getElementIDForHostInstance: GetElementIDForHostInstance,
   getDisplayNameForElementID: GetDisplayNameForElementID,
   getInstanceAndStyle(id: number): InstanceAndStyle,

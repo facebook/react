@@ -43,7 +43,7 @@ import type {
   ComponentFilter,
   BrowserTheme,
 } from 'react-devtools-shared/src/frontend/types';
-import {isSynchronousXHRSupported} from './utils';
+import {isSynchronousXHRSupported, isReactNativeEnvironment} from './utils';
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
@@ -343,31 +343,79 @@ export default class Agent extends EventEmitter<{
     return renderer.getInstanceAndStyle(id);
   }
 
-  getBestMatchingRendererInterface(node: Object): RendererInterface | null {
-    let bestMatch = null;
+  getIDForHostInstance(target: HostInstance): number | null {
+    let bestMatch: null | HostInstance = null;
+    let bestRenderer: null | RendererInterface = null;
+    // Find the nearest ancestor which is mounted by a React.
     for (const rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
-      const fiber = renderer.getFiberForNative(node);
-      if (fiber !== null) {
-        // check if fiber.stateNode is matching the original hostInstance
-        if (fiber.stateNode === node) {
-          return renderer;
-        } else if (bestMatch === null) {
-          bestMatch = renderer;
+      const nearestNode: null = renderer.getNearestMountedHostInstance(target);
+      if (nearestNode !== null) {
+        if (nearestNode === target) {
+          // Exact match we can exit early.
+          bestMatch = nearestNode;
+          bestRenderer = renderer;
+          break;
+        }
+        if (
+          bestMatch === null ||
+          (!isReactNativeEnvironment() && bestMatch.contains(nearestNode))
+        ) {
+          // If this is the first match or the previous match contains the new match,
+          // so the new match is a deeper and therefore better match.
+          bestMatch = nearestNode;
+          bestRenderer = renderer;
         }
       }
     }
-    // if an exact match is not found, return the first valid renderer as fallback
-    return bestMatch;
+    if (bestRenderer != null && bestMatch != null) {
+      try {
+        return bestRenderer.getElementIDForHostInstance(bestMatch, true);
+      } catch (error) {
+        // Some old React versions might throw if they can't find a match.
+        // If so we should ignore it...
+      }
+    }
+    return null;
   }
 
-  getIDForNode(node: Object): number | null {
-    const rendererInterface = this.getBestMatchingRendererInterface(node);
-    if (rendererInterface != null) {
+  getComponentNameForHostInstance(target: HostInstance): string | null {
+    // We duplicate this code from getIDForHostInstance to avoid an object allocation.
+    let bestMatch: null | HostInstance = null;
+    let bestRenderer: null | RendererInterface = null;
+    // Find the nearest ancestor which is mounted by a React.
+    for (const rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      const nearestNode = renderer.getNearestMountedHostInstance(target);
+      if (nearestNode !== null) {
+        if (nearestNode === target) {
+          // Exact match we can exit early.
+          bestMatch = nearestNode;
+          bestRenderer = renderer;
+          break;
+        }
+        if (
+          bestMatch === null ||
+          (!isReactNativeEnvironment() && bestMatch.contains(nearestNode))
+        ) {
+          // If this is the first match or the previous match contains the new match,
+          // so the new match is a deeper and therefore better match.
+          bestMatch = nearestNode;
+          bestRenderer = renderer;
+        }
+      }
+    }
+
+    if (bestRenderer != null && bestMatch != null) {
       try {
-        return rendererInterface.getElementIDForHostInstance(node, true);
+        const id = bestRenderer.getElementIDForHostInstance(bestMatch, true);
+        if (id) {
+          return bestRenderer.getDisplayNameForElementID(id);
+        }
       } catch (error) {
         // Some old React versions might throw if they can't find a match.
         // If so we should ignore it...
@@ -616,8 +664,8 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  selectNode(target: Object): void {
-    const id = this.getIDForNode(target);
+  selectNode(target: HostInstance): void {
+    const id = this.getIDForHostInstance(target);
     if (id !== null) {
       this._bridge.send('selectElement', id);
     }
