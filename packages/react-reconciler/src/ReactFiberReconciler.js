@@ -15,8 +15,6 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
-  Instance,
-  TextInstance,
   Container,
   PublicInstance,
   RendererInspectionConfig,
