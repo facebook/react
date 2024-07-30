@@ -1064,13 +1064,7 @@ __DEV__ &&
           !0
         );
       try {
-        enableSchedulingProfiler &&
-          (internals = assign({}, internals, {
-            getLaneLabelMap: getLaneLabelMap,
-            injectProfilingHooks: injectProfilingHooks
-          })),
-          (rendererID = hook.inject(internals)),
-          (injectedHook = hook);
+        (rendererID = hook.inject(internals)), (injectedHook = hook);
       } catch (err) {
         error$jscomp$0("React instrumentation encountered an error: %s.", err);
       }
@@ -1129,17 +1123,6 @@ __DEV__ &&
     }
     function injectProfilingHooks(profilingHooks) {
       injectedProfilingHooks = profilingHooks;
-    }
-    function getLaneLabelMap() {
-      if (enableSchedulingProfiler) {
-        for (var map = new Map(), lane = 1, index = 0; 31 > index; index++) {
-          var label = getLabelForLane(lane);
-          map.set(lane, label);
-          lane *= 2;
-        }
-        return map;
-      }
-      return null;
     }
     function markCommitStopped() {
       enableSchedulingProfiler &&
@@ -15751,11 +15734,19 @@ __DEV__ &&
       markRetryLaneImpl(fiber, retryLane);
       (fiber = fiber.alternate) && markRetryLaneImpl(fiber, retryLane);
     }
-    function emptyFindFiberByHostInstance() {
-      return null;
-    }
     function getCurrentFiberForDevTools() {
       return current;
+    }
+    function getLaneLabelMap() {
+      if (enableSchedulingProfiler) {
+        for (var map = new Map(), lane = 1, index = 0; 31 > index; index++) {
+          var label = getLabelForLane(lane);
+          map.set(lane, label);
+          lane *= 2;
+        }
+        return map;
+      }
+      return null;
     }
     var exports = {};
     ("use strict");
@@ -15836,6 +15827,9 @@ __DEV__ &&
     var current = null,
       isRendering = !1,
       isArrayImpl = Array.isArray,
+      rendererVersion = $$$config.rendererVersion,
+      rendererPackageName = $$$config.rendererPackageName,
+      extraDevToolsConfig = $$$config.extraDevToolsConfig,
       getPublicInstance = $$$config.getPublicInstance,
       getRootHostContext = $$$config.getRootHostContext,
       getChildHostContext = $$$config.getChildHostContext,
@@ -18479,32 +18473,35 @@ __DEV__ &&
           return container.child.stateNode;
       }
     };
-    exports.injectIntoDevTools = function (devToolsConfig) {
-      return injectInternals({
-        bundleType: devToolsConfig.bundleType,
-        version: devToolsConfig.version,
-        rendererPackageName: devToolsConfig.rendererPackageName,
-        rendererConfig: devToolsConfig.rendererConfig,
-        overrideHookState: overrideHookState,
-        overrideHookStateDeletePath: overrideHookStateDeletePath,
-        overrideHookStateRenamePath: overrideHookStateRenamePath,
-        overrideProps: overrideProps,
-        overridePropsDeletePath: overridePropsDeletePath,
-        overridePropsRenamePath: overridePropsRenamePath,
-        setErrorHandler: setErrorHandler,
-        setSuspenseHandler: setSuspenseHandler,
-        scheduleUpdate: scheduleUpdate,
+    exports.injectIntoDevTools = function () {
+      var internals = {
+        bundleType: 1,
+        version: rendererVersion,
+        rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
-        findFiberByHostInstance:
-          devToolsConfig.findFiberByHostInstance ||
-          emptyFindFiberByHostInstance,
-        findHostInstancesForRefresh: findHostInstancesForRefresh,
-        scheduleRefresh: scheduleRefresh,
-        scheduleRoot: scheduleRoot,
-        setRefreshHandler: setRefreshHandler,
-        getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-bea5a2bc-20240729"
-      });
+        findFiberByHostInstance: getInstanceFromNode,
+        reconcilerVersion: "19.0.0-www-modern-146df7c3-20240730"
+      };
+      null !== extraDevToolsConfig &&
+        (internals.rendererConfig = extraDevToolsConfig);
+      internals.overrideHookState = overrideHookState;
+      internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
+      internals.overrideHookStateRenamePath = overrideHookStateRenamePath;
+      internals.overrideProps = overrideProps;
+      internals.overridePropsDeletePath = overridePropsDeletePath;
+      internals.overridePropsRenamePath = overridePropsRenamePath;
+      internals.scheduleUpdate = scheduleUpdate;
+      internals.setErrorHandler = setErrorHandler;
+      internals.setSuspenseHandler = setSuspenseHandler;
+      internals.findHostInstancesForRefresh = findHostInstancesForRefresh;
+      internals.scheduleRefresh = scheduleRefresh;
+      internals.scheduleRoot = scheduleRoot;
+      internals.setRefreshHandler = setRefreshHandler;
+      internals.getCurrentFiber = getCurrentFiberForDevTools;
+      enableSchedulingProfiler &&
+        ((internals.getLaneLabelMap = getLaneLabelMap),
+        (internals.injectProfilingHooks = injectProfilingHooks));
+      return injectInternals(internals);
     };
     exports.isAlreadyRendering = function () {
       return (executionContext & (RenderContext | CommitContext)) !== NoContext;

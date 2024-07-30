@@ -6439,7 +6439,11 @@ function DO_NOT_USE_queryFirstNode(fn) {
     : null;
 }
 function containsNode() {
-  throw Error(formatProdErrorMessage(248));
+  for (var fiber = null; null !== fiber; ) {
+    if (21 === fiber.tag && fiber.stateNode === this) return !0;
+    fiber = fiber.return;
+  }
+  return !1;
 }
 function getChildContextValues(context) {
   var currentFiber = shim$1();
@@ -10488,9 +10492,6 @@ function updateContainerSync(element, container, parentComponent, callback) {
     entangleTransitions(element, current, 2));
   return 2;
 }
-function emptyFindFiberByHostInstance() {
-  return null;
-}
 Mode$1.setCurrent(FastNoSideEffects);
 var slice = Array.prototype.slice,
   LinearGradient = (function () {
@@ -10619,51 +10620,28 @@ var slice = Array.prototype.slice,
       );
     };
     return Text;
-  })(React.Component),
-  devToolsConfig$jscomp$inline_1148 = {
-    findFiberByHostInstance: function () {
-      return null;
-    },
-    bundleType: 0,
-    version: "19.0.0-www-classic-bea5a2bc-20240729",
-    rendererPackageName: "react-art"
-  };
-var internals$jscomp$inline_1364 = {
-  bundleType: devToolsConfig$jscomp$inline_1148.bundleType,
-  version: devToolsConfig$jscomp$inline_1148.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1148.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1148.rendererConfig,
-  overrideHookState: null,
-  overrideHookStateDeletePath: null,
-  overrideHookStateRenamePath: null,
-  overrideProps: null,
-  overridePropsDeletePath: null,
-  overridePropsRenamePath: null,
-  setErrorHandler: null,
-  setSuspenseHandler: null,
-  scheduleUpdate: null,
+  })(React.Component);
+var internals$jscomp$inline_1361 = {
+  bundleType: 0,
+  version: "19.0.0-www-classic-146df7c3-20240730",
+  rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
-  findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1148.findFiberByHostInstance ||
-    emptyFindFiberByHostInstance,
-  findHostInstancesForRefresh: null,
-  scheduleRefresh: null,
-  scheduleRoot: null,
-  setRefreshHandler: null,
-  getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-bea5a2bc-20240729"
+  findFiberByHostInstance: function () {
+    return null;
+  },
+  reconcilerVersion: "19.0.0-www-classic-146df7c3-20240730"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1365 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1362 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1365.isDisabled &&
-    hook$jscomp$inline_1365.supportsFiber
+    !hook$jscomp$inline_1362.isDisabled &&
+    hook$jscomp$inline_1362.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1365.inject(
-        internals$jscomp$inline_1364
+      (rendererID = hook$jscomp$inline_1362.inject(
+        internals$jscomp$inline_1361
       )),
-        (injectedHook = hook$jscomp$inline_1365);
+        (injectedHook = hook$jscomp$inline_1362);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
@@ -10677,3 +10655,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
+exports.version = "19.0.0-www-classic-146df7c3-20240730";

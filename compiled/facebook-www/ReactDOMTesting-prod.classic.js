@@ -7776,7 +7776,7 @@ function DO_NOT_USE_queryFirstNode(fn) {
     : null;
 }
 function containsNode$1(node) {
-  for (node = getClosestInstanceFromNode(node) || null; null !== node; ) {
+  for (node = getClosestInstanceFromNode(node); null !== node; ) {
     if (21 === node.tag && node.stateNode === this) return !0;
     node = node.return;
   }
@@ -10843,7 +10843,7 @@ if ("function" === typeof Symbol && Symbol.for) {
   TEXT_TYPE = symbolFor("selector.text");
 }
 function findFiberRootForHostRoot(hostRoot) {
-  var maybeFiber = getClosestInstanceFromNode(hostRoot) || null;
+  var maybeFiber = getClosestInstanceFromNode(hostRoot);
   if (null != maybeFiber) {
     if ("string" !== typeof maybeFiber.memoizedProps["data-testname"])
       throw Error(formatProdErrorMessage(364));
@@ -12871,9 +12871,6 @@ function attemptContinuousHydration(fiber) {
     null !== root && scheduleUpdateOnFiber(root, fiber, 67108864);
     markRetryLaneIfNotHydrated(fiber, 67108864);
   }
-}
-function emptyFindFiberByHostInstance() {
-  return null;
 }
 var isInsideEventHandler = !1;
 function batchedUpdates(fn, a, b) {
@@ -17507,14 +17504,14 @@ function getCrossOriginStringAs(as, input) {
 }
 var isomorphicReactPackageVersion$jscomp$inline_1783 = React.version;
 if (
-  "19.0.0-www-classic-bea5a2bc-20240729" !==
+  "19.0.0-www-classic-146df7c3-20240730" !==
   isomorphicReactPackageVersion$jscomp$inline_1783
 )
   throw Error(
     formatProdErrorMessage(
       527,
       isomorphicReactPackageVersion$jscomp$inline_1783,
-      "19.0.0-www-classic-bea5a2bc-20240729"
+      "19.0.0-www-classic-146df7c3-20240730"
     )
   );
 function flushSyncFromReconciler(fn) {
@@ -17557,48 +17554,25 @@ Internals.Events = [
     return fn(a);
   }
 ];
-var devToolsConfig$jscomp$inline_1790 = {
-  findFiberByHostInstance: getClosestInstanceFromNode,
+var internals$jscomp$inline_2243 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-bea5a2bc-20240729",
-  rendererPackageName: "react-dom"
-};
-var internals$jscomp$inline_2244 = {
-  bundleType: devToolsConfig$jscomp$inline_1790.bundleType,
-  version: devToolsConfig$jscomp$inline_1790.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1790.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1790.rendererConfig,
-  overrideHookState: null,
-  overrideHookStateDeletePath: null,
-  overrideHookStateRenamePath: null,
-  overrideProps: null,
-  overridePropsDeletePath: null,
-  overridePropsRenamePath: null,
-  setErrorHandler: null,
-  setSuspenseHandler: null,
-  scheduleUpdate: null,
+  version: "19.0.0-www-classic-146df7c3-20240730",
+  rendererPackageName: "react-dom",
   currentDispatcherRef: ReactSharedInternals,
-  findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1790.findFiberByHostInstance ||
-    emptyFindFiberByHostInstance,
-  findHostInstancesForRefresh: null,
-  scheduleRefresh: null,
-  scheduleRoot: null,
-  setRefreshHandler: null,
-  getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-www-classic-bea5a2bc-20240729"
+  findFiberByHostInstance: getClosestInstanceFromNode,
+  reconcilerVersion: "19.0.0-www-classic-146df7c3-20240730"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2245 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2244 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2245.isDisabled &&
-    hook$jscomp$inline_2245.supportsFiber
+    !hook$jscomp$inline_2244.isDisabled &&
+    hook$jscomp$inline_2244.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2245.inject(
-        internals$jscomp$inline_2244
+      (rendererID = hook$jscomp$inline_2244.inject(
+        internals$jscomp$inline_2243
       )),
-        (injectedHook = hook$jscomp$inline_2245);
+        (injectedHook = hook$jscomp$inline_2244);
     } catch (err) {}
 }
 function ReactDOMRoot(internalRoot) {
@@ -18193,4 +18167,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactSharedInternals.H.useHostTransitionStatus();
 };
-exports.version = "19.0.0-www-classic-bea5a2bc-20240729";
+exports.version = "19.0.0-www-classic-146df7c3-20240730";

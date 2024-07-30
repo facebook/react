@@ -13,7 +13,7 @@
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1078() {
+    function JSCompiler_object_inline_createNodeMock_1075() {
       return null;
     }
     function findHook(fiber, id) {
@@ -1027,6 +1027,10 @@ __DEV__ &&
     function removeChild(parentInstance, child) {
       child = parentInstance.children.indexOf(child);
       parentInstance.children.splice(child, 1);
+    }
+    function getInstanceFromNode(mockNode) {
+      mockNode = nodeToInstanceMap.get(mockNode);
+      return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
     }
     function bindToConsole(methodName, args, badgeName) {
       var offset = 0;
@@ -7924,9 +7928,7 @@ __DEV__ &&
         : null;
     }
     function containsNode(node) {
-      node = nodeToInstanceMap.get(node);
-      node = void 0 !== node ? node.internalInstanceHandle : null;
-      for (; null !== node; ) {
+      for (node = getInstanceFromNode(node); null !== node; ) {
         if (21 === node.tag && node.stateNode === this) return !0;
         node = node.return;
       }
@@ -12672,9 +12674,6 @@ __DEV__ &&
         (scheduleUpdateOnFiber(element, rootFiber, lane),
         entangleTransitions(element, rootFiber, lane));
     }
-    function emptyFindFiberByHostInstance() {
-      return null;
-    }
     function getCurrentFiberForDevTools() {
       return current;
     }
@@ -14900,44 +14899,35 @@ __DEV__ &&
         return ReactTestInstance;
       })(),
       fiberToWrapper = new WeakMap();
-    (function (devToolsConfig) {
-      return injectInternals({
-        bundleType: devToolsConfig.bundleType,
-        version: devToolsConfig.version,
-        rendererPackageName: devToolsConfig.rendererPackageName,
-        rendererConfig: devToolsConfig.rendererConfig,
-        overrideHookState: overrideHookState,
-        overrideHookStateDeletePath: overrideHookStateDeletePath,
-        overrideHookStateRenamePath: overrideHookStateRenamePath,
-        overrideProps: overrideProps,
-        overridePropsDeletePath: overridePropsDeletePath,
-        overridePropsRenamePath: overridePropsRenamePath,
-        setErrorHandler: setErrorHandler,
-        setSuspenseHandler: setSuspenseHandler,
-        scheduleUpdate: scheduleUpdate,
+    (function () {
+      var internals = {
+        bundleType: 1,
+        version: "19.0.0-www-classic-146df7c3-20240730",
+        rendererPackageName: "react-test-renderer",
         currentDispatcherRef: ReactSharedInternals,
-        findFiberByHostInstance:
-          devToolsConfig.findFiberByHostInstance ||
-          emptyFindFiberByHostInstance,
-        findHostInstancesForRefresh: findHostInstancesForRefresh,
-        scheduleRefresh: scheduleRefresh,
-        scheduleRoot: scheduleRoot,
-        setRefreshHandler: setRefreshHandler,
-        getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-bea5a2bc-20240729"
-      });
-    })({
-      findFiberByHostInstance: function () {
-        throw Error("TestRenderer does not support findFiberByHostInstance()");
-      },
-      bundleType: 1,
-      version: "19.0.0-www-classic-bea5a2bc-20240729",
-      rendererPackageName: "react-test-renderer"
-    });
+        findFiberByHostInstance: getInstanceFromNode,
+        reconcilerVersion: "19.0.0-www-classic-146df7c3-20240730"
+      };
+      internals.overrideHookState = overrideHookState;
+      internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
+      internals.overrideHookStateRenamePath = overrideHookStateRenamePath;
+      internals.overrideProps = overrideProps;
+      internals.overridePropsDeletePath = overridePropsDeletePath;
+      internals.overridePropsRenamePath = overridePropsRenamePath;
+      internals.scheduleUpdate = scheduleUpdate;
+      internals.setErrorHandler = setErrorHandler;
+      internals.setSuspenseHandler = setSuspenseHandler;
+      internals.findHostInstancesForRefresh = findHostInstancesForRefresh;
+      internals.scheduleRefresh = scheduleRefresh;
+      internals.scheduleRoot = scheduleRoot;
+      internals.setRefreshHandler = setRefreshHandler;
+      internals.getCurrentFiber = getCurrentFiberForDevTools;
+      return injectInternals(internals);
+    })();
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1078,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1075,
         isConcurrentOnly = !0 !== global.IS_REACT_NATIVE_TEST_ENVIRONMENT,
         isConcurrent = isConcurrentOnly,
         isStrictMode = !1;
@@ -15052,4 +15042,5 @@ __DEV__ &&
     exports.unstable_batchedUpdates = function (fn, a) {
       return fn(a);
     };
+    exports.version = "19.0.0-www-classic-146df7c3-20240730";
   })();

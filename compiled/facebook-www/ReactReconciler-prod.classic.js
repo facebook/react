@@ -11485,9 +11485,6 @@ module.exports = function ($$$config) {
     markRetryLaneImpl(fiber, retryLane);
     (fiber = fiber.alternate) && markRetryLaneImpl(fiber, retryLane);
   }
-  function emptyFindFiberByHostInstance() {
-    return null;
-  }
   var exports = {};
   ("use strict");
   var React = require("react"),
@@ -11553,6 +11550,9 @@ module.exports = function ($$$config) {
     reentry = !1,
     current = null,
     isArrayImpl = Array.isArray,
+    rendererVersion = $$$config.rendererVersion,
+    rendererPackageName = $$$config.rendererPackageName,
+    extraDevToolsConfig = $$$config.extraDevToolsConfig,
     getPublicInstance = $$$config.getPublicInstance,
     getRootHostContext = $$$config.getRootHostContext,
     getChildHostContext = $$$config.getChildHostContext,
@@ -12654,44 +12654,29 @@ module.exports = function ($$$config) {
         return container.child.stateNode;
     }
   };
-  exports.injectIntoDevTools = function (devToolsConfig) {
-    devToolsConfig = {
-      bundleType: devToolsConfig.bundleType,
-      version: devToolsConfig.version,
-      rendererPackageName: devToolsConfig.rendererPackageName,
-      rendererConfig: devToolsConfig.rendererConfig,
-      overrideHookState: null,
-      overrideHookStateDeletePath: null,
-      overrideHookStateRenamePath: null,
-      overrideProps: null,
-      overridePropsDeletePath: null,
-      overridePropsRenamePath: null,
-      setErrorHandler: null,
-      setSuspenseHandler: null,
-      scheduleUpdate: null,
+  exports.injectIntoDevTools = function () {
+    var internals = {
+      bundleType: 0,
+      version: rendererVersion,
+      rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
-      findFiberByHostInstance:
-        devToolsConfig.findFiberByHostInstance || emptyFindFiberByHostInstance,
-      findHostInstancesForRefresh: null,
-      scheduleRefresh: null,
-      scheduleRoot: null,
-      setRefreshHandler: null,
-      getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-bea5a2bc-20240729"
+      findFiberByHostInstance: getInstanceFromNode,
+      reconcilerVersion: "19.0.0-www-classic-146df7c3-20240730"
     };
-    if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
-      devToolsConfig = !1;
+    null !== extraDevToolsConfig &&
+      (internals.rendererConfig = extraDevToolsConfig);
+    if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) internals = !1;
     else {
       var hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
-      if (hook.isDisabled || !hook.supportsFiber) devToolsConfig = !0;
+      if (hook.isDisabled || !hook.supportsFiber) internals = !0;
       else {
         try {
-          (rendererID = hook.inject(devToolsConfig)), (injectedHook = hook);
+          (rendererID = hook.inject(internals)), (injectedHook = hook);
         } catch (err) {}
-        devToolsConfig = hook.checkDCE ? !0 : !1;
+        internals = hook.checkDCE ? !0 : !1;
       }
     }
-    return devToolsConfig;
+    return internals;
   };
   exports.isAlreadyRendering = function () {
     return !1;
