@@ -525,7 +525,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('{"foo":1}{"foo":1}');
   });
 
-  it('should handle deduped props of elements in fragments', async () => {
+  it('should handle deduped props of re-used elements in fragments (same-chunk reference)', async () => {
     let resolveFooClientComponentChunk;
 
     const FooClient = clientExports(
@@ -542,7 +542,58 @@ describe('ReactFlightDOMBrowser', () => {
     function Server() {
       return (
         <FooClient track={shared}>
-          <React.Fragment>{shared}</React.Fragment>
+          <>{shared}</>
+        </FooClient>
+      );
+    }
+
+    const stream = await serverAct(() =>
+      ReactServerDOMServer.renderToReadableStream(<Server />, webpackMap),
+    );
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('');
+
+    await act(() => {
+      resolveFooClientComponentChunk();
+    });
+
+    expect(container.innerHTML).toBe('<div></div>');
+  });
+
+  it('should handle deduped props of re-used elements in server components (cross-chunk reference)', async () => {
+    let resolveFooClientComponentChunk;
+
+    function PassthroughServerComponent({children}) {
+      return children;
+    }
+
+    const FooClient = clientExports(
+      function Foo({children, item}) {
+        return children;
+      },
+      '1',
+      '/foo.js',
+      new Promise(resolve => (resolveFooClientComponentChunk = resolve)),
+    );
+
+    const shared = <div />;
+
+    function Server() {
+      return (
+        <FooClient track={shared}>
+          <PassthroughServerComponent>{shared}</PassthroughServerComponent>
         </FooClient>
       );
     }
