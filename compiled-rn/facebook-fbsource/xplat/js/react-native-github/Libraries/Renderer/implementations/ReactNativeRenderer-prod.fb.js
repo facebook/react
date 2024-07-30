@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3538740a5a5b7ee70997f06fa4896250>>
+ * @generated SignedSource<<cac57ff9bc2a3013f69273c9038486de>>
  */
 
 "use strict";
@@ -2081,6 +2081,131 @@ function lanesToEventPriority(lanes) {
       : 8
     : 2;
 }
+function findNodeHandle(componentOrHandle) {
+  if (null == componentOrHandle) return null;
+  if ("number" === typeof componentOrHandle) return componentOrHandle;
+  if (componentOrHandle._nativeTag) return componentOrHandle._nativeTag;
+  if (
+    null != componentOrHandle.canonical &&
+    null != componentOrHandle.canonical.nativeTag
+  )
+    return componentOrHandle.canonical.nativeTag;
+  var nativeTag =
+    ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+      componentOrHandle
+    );
+  if (nativeTag) return nativeTag;
+  componentOrHandle = findHostInstance(componentOrHandle);
+  return null == componentOrHandle
+    ? componentOrHandle
+    : null != componentOrHandle._nativeTag
+      ? componentOrHandle._nativeTag
+      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(
+          componentOrHandle
+        );
+}
+var emptyObject = {};
+function createHierarchy(fiberHierarchy) {
+  return fiberHierarchy.map(function (fiber$jscomp$0) {
+    return {
+      name: getComponentNameFromType(fiber$jscomp$0.type),
+      getInspectorData: function () {
+        return {
+          props: getHostProps(fiber$jscomp$0),
+          measure: function (callback) {
+            var hostFiber = findCurrentHostFiber(fiber$jscomp$0);
+            if (
+              (hostFiber =
+                null != hostFiber &&
+                null !== hostFiber.stateNode &&
+                hostFiber.stateNode.node)
+            )
+              nativeFabricUIManager.measure(hostFiber, callback);
+            else {
+              hostFiber = ReactNativePrivateInterface.UIManager;
+              var JSCompiler_temp_const = hostFiber.measure,
+                JSCompiler_inline_result;
+              a: {
+                for (var fiber = fiber$jscomp$0; fiber; ) {
+                  null !== fiber.stateNode &&
+                    5 === fiber.tag &&
+                    (JSCompiler_inline_result = findNodeHandle(
+                      fiber.stateNode
+                    ));
+                  if (JSCompiler_inline_result) break a;
+                  fiber = fiber.child;
+                }
+                JSCompiler_inline_result = null;
+              }
+              return JSCompiler_temp_const.call(
+                hostFiber,
+                JSCompiler_inline_result,
+                callback
+              );
+            }
+          }
+        };
+      }
+    };
+  });
+}
+function getHostProps(fiber) {
+  return (fiber = findCurrentHostFiber(fiber))
+    ? fiber.memoizedProps || emptyObject
+    : emptyObject;
+}
+function getInspectorDataForInstance(closestInstance) {
+  if (!closestInstance)
+    return {
+      hierarchy: [],
+      props: emptyObject,
+      selectedIndex: null,
+      componentStack: ""
+    };
+  closestInstance = findCurrentFiberUsingSlowPath(closestInstance);
+  if (null === closestInstance)
+    return {
+      hierarchy: [],
+      props: emptyObject,
+      selectedIndex: null,
+      componentStack: ""
+    };
+  var hierarchy = [];
+  traverseOwnerTreeUp(hierarchy, closestInstance);
+  var JSCompiler_inline_result;
+  a: {
+    for (
+      JSCompiler_inline_result = hierarchy.length - 1;
+      1 < JSCompiler_inline_result;
+      JSCompiler_inline_result--
+    ) {
+      var instance = hierarchy[JSCompiler_inline_result];
+      if (5 !== instance.tag) {
+        JSCompiler_inline_result = instance;
+        break a;
+      }
+    }
+    JSCompiler_inline_result = hierarchy[0];
+  }
+  instance = createHierarchy(hierarchy);
+  var props = getHostProps(JSCompiler_inline_result);
+  hierarchy = hierarchy.indexOf(JSCompiler_inline_result);
+  closestInstance = getStackByFiberInDevAndProd(closestInstance);
+  return {
+    closestInstance: JSCompiler_inline_result,
+    hierarchy: instance,
+    props: props,
+    selectedIndex: hierarchy,
+    componentStack: closestInstance
+  };
+}
+function traverseOwnerTreeUp(hierarchy, instance) {
+  hierarchy.unshift(instance);
+  instance = instance._debugOwner;
+  null != instance &&
+    "number" === typeof instance.tag &&
+    traverseOwnerTreeUp(hierarchy, instance);
+}
 function shim$1() {
   throw Error(
     "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
@@ -2091,7 +2216,20 @@ function shim() {
     "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue."
   );
 }
-var getViewConfigForType =
+var extraDevToolsConfig = {
+    getInspectorDataForInstance: getInspectorDataForInstance,
+    getInspectorDataForViewTag: function () {
+      throw Error(
+        "getInspectorDataForViewTag() is not available in production"
+      );
+    },
+    getInspectorDataForViewAtPoint: function () {
+      throw Error(
+        "getInspectorDataForViewAtPoint() is not available in production."
+      );
+    }
+  },
+  getViewConfigForType =
     ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get,
   nextReactTag = 3;
 function allocateTag() {
@@ -10573,140 +10711,12 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
-function emptyFindFiberByHostInstance() {
-  return null;
-}
-function findNodeHandle(componentOrHandle) {
-  if (null == componentOrHandle) return null;
-  if ("number" === typeof componentOrHandle) return componentOrHandle;
-  if (componentOrHandle._nativeTag) return componentOrHandle._nativeTag;
-  if (
-    null != componentOrHandle.canonical &&
-    null != componentOrHandle.canonical.nativeTag
-  )
-    return componentOrHandle.canonical.nativeTag;
-  var nativeTag =
-    ReactNativePrivateInterface.getNativeTagFromPublicInstance(
-      componentOrHandle
-    );
-  if (nativeTag) return nativeTag;
-  componentOrHandle = findHostInstance(componentOrHandle);
-  return null == componentOrHandle
-    ? componentOrHandle
-    : null != componentOrHandle._nativeTag
-      ? componentOrHandle._nativeTag
-      : ReactNativePrivateInterface.getNativeTagFromPublicInstance(
-          componentOrHandle
-        );
-}
-var emptyObject = {};
-function createHierarchy(fiberHierarchy) {
-  return fiberHierarchy.map(function (fiber$jscomp$0) {
-    return {
-      name: getComponentNameFromType(fiber$jscomp$0.type),
-      getInspectorData: function (findNodeHandle) {
-        return {
-          props: getHostProps(fiber$jscomp$0),
-          measure: function (callback) {
-            var hostFiber = findCurrentHostFiber(fiber$jscomp$0);
-            if (
-              (hostFiber =
-                null != hostFiber &&
-                null !== hostFiber.stateNode &&
-                hostFiber.stateNode.node)
-            )
-              nativeFabricUIManager.measure(hostFiber, callback);
-            else {
-              hostFiber = ReactNativePrivateInterface.UIManager;
-              var JSCompiler_temp_const = hostFiber.measure,
-                JSCompiler_inline_result;
-              a: {
-                for (var fiber = fiber$jscomp$0; fiber; ) {
-                  null !== fiber.stateNode &&
-                    5 === fiber.tag &&
-                    (JSCompiler_inline_result = findNodeHandle(
-                      fiber.stateNode
-                    ));
-                  if (JSCompiler_inline_result) break a;
-                  fiber = fiber.child;
-                }
-                JSCompiler_inline_result = null;
-              }
-              return JSCompiler_temp_const.call(
-                hostFiber,
-                JSCompiler_inline_result,
-                callback
-              );
-            }
-          }
-        };
-      }
-    };
-  });
-}
-function getHostProps(fiber) {
-  return (fiber = findCurrentHostFiber(fiber))
-    ? fiber.memoizedProps || emptyObject
-    : emptyObject;
-}
-function getInspectorDataForInstance(closestInstance) {
-  if (!closestInstance)
-    return {
-      hierarchy: [],
-      props: emptyObject,
-      selectedIndex: null,
-      componentStack: ""
-    };
-  closestInstance = findCurrentFiberUsingSlowPath(closestInstance);
-  if (null === closestInstance)
-    return {
-      hierarchy: [],
-      props: emptyObject,
-      selectedIndex: null,
-      componentStack: ""
-    };
-  var hierarchy = [];
-  traverseOwnerTreeUp(hierarchy, closestInstance);
-  var JSCompiler_inline_result;
-  a: {
-    for (
-      JSCompiler_inline_result = hierarchy.length - 1;
-      1 < JSCompiler_inline_result;
-      JSCompiler_inline_result--
-    ) {
-      var instance = hierarchy[JSCompiler_inline_result];
-      if (5 !== instance.tag) {
-        JSCompiler_inline_result = instance;
-        break a;
-      }
-    }
-    JSCompiler_inline_result = hierarchy[0];
-  }
-  instance = createHierarchy(hierarchy);
-  var props = getHostProps(JSCompiler_inline_result);
-  hierarchy = hierarchy.indexOf(JSCompiler_inline_result);
-  closestInstance = getStackByFiberInDevAndProd(closestInstance);
-  return {
-    closestInstance: JSCompiler_inline_result,
-    hierarchy: instance,
-    props: props,
-    selectedIndex: hierarchy,
-    componentStack: closestInstance
-  };
-}
-function traverseOwnerTreeUp(hierarchy, instance) {
-  hierarchy.unshift(instance);
-  instance = instance._debugOwner;
-  null != instance &&
-    "number" === typeof instance.tag &&
-    traverseOwnerTreeUp(hierarchy, instance);
-}
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-bea5a2bc-20240729" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-146df7c3-20240730" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-bea5a2bc-20240729\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-146df7c3-20240730\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -10753,61 +10763,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1212 = {
-    findFiberByHostInstance: getInstanceFromTag,
+  internals$jscomp$inline_1211 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-bea5a2bc-20240729",
+    version: "19.0.0-native-fb-146df7c3-20240730",
     rendererPackageName: "react-native-renderer",
-    rendererConfig: {
-      getInspectorDataForInstance: getInspectorDataForInstance,
-      getInspectorDataForViewTag: function () {
-        throw Error(
-          "getInspectorDataForViewTag() is not available in production"
-        );
-      },
-      getInspectorDataForViewAtPoint: function () {
-        throw Error(
-          "getInspectorDataForViewAtPoint() is not available in production."
-        );
-      }.bind(null, findNodeHandle)
-    }
+    currentDispatcherRef: ReactSharedInternals,
+    findFiberByHostInstance: getInstanceFromTag,
+    reconcilerVersion: "19.0.0-native-fb-146df7c3-20240730"
   };
-var internals$jscomp$inline_1447 = {
-  bundleType: devToolsConfig$jscomp$inline_1212.bundleType,
-  version: devToolsConfig$jscomp$inline_1212.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1212.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1212.rendererConfig,
-  overrideHookState: null,
-  overrideHookStateDeletePath: null,
-  overrideHookStateRenamePath: null,
-  overrideProps: null,
-  overridePropsDeletePath: null,
-  overridePropsRenamePath: null,
-  setErrorHandler: null,
-  setSuspenseHandler: null,
-  scheduleUpdate: null,
-  currentDispatcherRef: ReactSharedInternals,
-  findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1212.findFiberByHostInstance ||
-    emptyFindFiberByHostInstance,
-  findHostInstancesForRefresh: null,
-  scheduleRefresh: null,
-  scheduleRoot: null,
-  setRefreshHandler: null,
-  getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-bea5a2bc-20240729"
-};
+null !== extraDevToolsConfig &&
+  (internals$jscomp$inline_1211.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1448 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1446 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1448.isDisabled &&
-    hook$jscomp$inline_1448.supportsFiber
+    !hook$jscomp$inline_1446.isDisabled &&
+    hook$jscomp$inline_1446.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1448.inject(
-        internals$jscomp$inline_1447
+      (rendererID = hook$jscomp$inline_1446.inject(
+        internals$jscomp$inline_1211
       )),
-        (injectedHook = hook$jscomp$inline_1448);
+        (injectedHook = hook$jscomp$inline_1446);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

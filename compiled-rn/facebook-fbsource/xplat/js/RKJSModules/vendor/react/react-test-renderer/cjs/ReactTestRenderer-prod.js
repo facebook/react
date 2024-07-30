@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3b0950e1d465316145b94897bec0f920>>
+ * @generated SignedSource<<c3bfd3e45f3840d2b620a159b37f9bff>>
  */
 
 "use strict";
@@ -9014,9 +9014,6 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
-function emptyFindFiberByHostInstance() {
-  return null;
-}
 var act = React.act,
   defaultTestOptions = {
     createNodeMock: function () {
@@ -9313,50 +9310,28 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1031 = {
-  findFiberByHostInstance: function () {
-    throw Error("TestRenderer does not support findFiberByHostInstance()");
-  },
+var internals$jscomp$inline_1206 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-bea5a2bc-20240729",
-  rendererPackageName: "react-test-renderer"
-};
-var internals$jscomp$inline_1207 = {
-  bundleType: devToolsConfig$jscomp$inline_1031.bundleType,
-  version: devToolsConfig$jscomp$inline_1031.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1031.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1031.rendererConfig,
-  overrideHookState: null,
-  overrideHookStateDeletePath: null,
-  overrideHookStateRenamePath: null,
-  overrideProps: null,
-  overridePropsDeletePath: null,
-  overridePropsRenamePath: null,
-  setErrorHandler: null,
-  setSuspenseHandler: null,
-  scheduleUpdate: null,
+  version: "19.0.0-native-fb-146df7c3-20240730",
+  rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
-  findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1031.findFiberByHostInstance ||
-    emptyFindFiberByHostInstance,
-  findHostInstancesForRefresh: null,
-  scheduleRefresh: null,
-  scheduleRoot: null,
-  setRefreshHandler: null,
-  getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-bea5a2bc-20240729"
+  findFiberByHostInstance: function (mockNode) {
+    mockNode = nodeToInstanceMap.get(mockNode);
+    return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
+  },
+  reconcilerVersion: "19.0.0-native-fb-146df7c3-20240730"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1208 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1207 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1208.isDisabled &&
-    hook$jscomp$inline_1208.supportsFiber
+    !hook$jscomp$inline_1207.isDisabled &&
+    hook$jscomp$inline_1207.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1208.inject(
-        internals$jscomp$inline_1207
+      (rendererID = hook$jscomp$inline_1207.inject(
+        internals$jscomp$inline_1206
       )),
-        (injectedHook = hook$jscomp$inline_1208);
+        (injectedHook = hook$jscomp$inline_1207);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
@@ -9480,3 +9455,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(!0));
   }
 };
+exports.version = "19.0.0-native-fb-146df7c3-20240730";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bbb0cad9b4b4944ddd2e3c424d4127e4>>
+ * @generated SignedSource<<a16decc9b4665f45e937bb3b63ce5f1e>>
  */
 
 "use strict";
@@ -1880,123 +1880,6 @@ function lanesToEventPriority(lanes) {
       : 8
     : 2;
 }
-function shim$1() {
-  throw Error(
-    "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
-  );
-}
-function shim() {
-  throw Error(
-    "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue."
-  );
-}
-var _nativeFabricUIManage = nativeFabricUIManager,
-  createNode = _nativeFabricUIManage.createNode,
-  cloneNodeWithNewChildren = _nativeFabricUIManage.cloneNodeWithNewChildren,
-  cloneNodeWithNewChildrenAndProps =
-    _nativeFabricUIManage.cloneNodeWithNewChildrenAndProps,
-  cloneNodeWithNewProps = _nativeFabricUIManage.cloneNodeWithNewProps,
-  createChildNodeSet = _nativeFabricUIManage.createChildSet,
-  appendChildNode = _nativeFabricUIManage.appendChild,
-  appendChildNodeToSet = _nativeFabricUIManage.appendChildToSet,
-  completeRoot = _nativeFabricUIManage.completeRoot,
-  registerEventHandler = _nativeFabricUIManage.registerEventHandler,
-  FabricDiscretePriority = _nativeFabricUIManage.unstable_DiscreteEventPriority,
-  fabricGetCurrentEventPriority =
-    _nativeFabricUIManage.unstable_getCurrentEventPriority,
-  getViewConfigForType =
-    ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get,
-  nextReactTag = 2;
-registerEventHandler && registerEventHandler(dispatchEvent);
-var PROD_HOST_CONTEXT = { isInAParentText: !0 };
-function createTextInstance(
-  text,
-  rootContainerInstance,
-  hostContext,
-  internalInstanceHandle
-) {
-  hostContext = nextReactTag;
-  nextReactTag += 2;
-  return {
-    node: createNode(
-      hostContext,
-      "RCTRawText",
-      rootContainerInstance,
-      { text: text },
-      internalInstanceHandle
-    )
-  };
-}
-function getPublicInstance(instance) {
-  return null != instance.canonical && null != instance.canonical.publicInstance
-    ? instance.canonical.publicInstance
-    : null != instance._nativeTag
-      ? instance
-      : null;
-}
-var currentUpdatePriority = 0;
-function resolveUpdatePriority() {
-  if (0 !== currentUpdatePriority) return currentUpdatePriority;
-  var currentEventPriority = fabricGetCurrentEventPriority
-    ? fabricGetCurrentEventPriority()
-    : null;
-  if (null != currentEventPriority)
-    switch (currentEventPriority) {
-      case FabricDiscretePriority:
-        return 2;
-    }
-  return 32;
-}
-var scheduleTimeout = setTimeout,
-  cancelTimeout = clearTimeout;
-function cloneHiddenInstance(instance) {
-  var node = instance.node,
-    updatePayload = create(
-      { style: { display: "none" } },
-      instance.canonical.viewConfig.validAttributes
-    );
-  return {
-    node: cloneNodeWithNewProps(node, updatePayload),
-    canonical: instance.canonical
-  };
-}
-var supportsMicrotasks =
-    "undefined" !== typeof RN$enableMicrotasksInReact &&
-    !!RN$enableMicrotasksInReact,
-  scheduleMicrotask =
-    "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
-function getInstanceFromNode(node) {
-  return null != node.canonical && null != node.canonical.internalInstanceHandle
-    ? node.canonical.internalInstanceHandle
-    : node;
-}
-getFiberCurrentPropsFromNode$1 = function (instance) {
-  return instance.canonical.currentProps;
-};
-getInstanceFromNode$1 = getInstanceFromNode;
-getNodeFromInstance$1 = function (fiber) {
-  fiber = getPublicInstance(fiber.stateNode);
-  if (null == fiber) throw Error("Could not find host instance from fiber");
-  return fiber;
-};
-ResponderEventPlugin.injection.injectGlobalResponderHandler({
-  onChange: function (from, to, blockNativeResponder) {
-    from &&
-      from.stateNode &&
-      nativeFabricUIManager.setIsJSResponder(
-        from.stateNode.node,
-        !1,
-        blockNativeResponder || !1
-      );
-    to &&
-      to.stateNode &&
-      nativeFabricUIManager.setIsJSResponder(
-        to.stateNode.node,
-        !0,
-        blockNativeResponder || !1
-      );
-  }
-});
 function getNearestMountedFiber(fiber) {
   var node = fiber,
     nearestMounted = fiber;
@@ -2232,8 +2115,9 @@ function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
   push(contextFiberStackCursor, fiber);
   push(contextStackCursor, null);
+  fiber = PROD_HOST_CONTEXT;
   pop(contextStackCursor);
-  push(contextStackCursor, PROD_HOST_CONTEXT);
+  push(contextStackCursor, fiber);
 }
 function popHostContainer() {
   pop(contextStackCursor);
@@ -10407,9 +10291,6 @@ function updateContainer(element, container, parentComponent, callback) {
     entangleTransitions(element, current, lane));
   return lane;
 }
-function emptyFindFiberByHostInstance() {
-  return null;
-}
 function findNodeHandle(componentOrHandle) {
   if (null == componentOrHandle) return null;
   if ("number" === typeof componentOrHandle) return componentOrHandle;
@@ -10438,7 +10319,7 @@ function createHierarchy(fiberHierarchy) {
   return fiberHierarchy.map(function (fiber$jscomp$0) {
     return {
       name: getComponentNameFromType(fiber$jscomp$0.type),
-      getInspectorData: function (findNodeHandle) {
+      getInspectorData: function () {
         return {
           props: getHostProps(fiber$jscomp$0),
           measure: function (callback) {
@@ -10535,6 +10416,136 @@ function traverseOwnerTreeUp(hierarchy, instance) {
     "number" === typeof instance.tag &&
     traverseOwnerTreeUp(hierarchy, instance);
 }
+function shim$1() {
+  throw Error(
+    "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue."
+  );
+}
+function shim() {
+  throw Error(
+    "The current renderer does not support Resources. This error is likely caused by a bug in React. Please file an issue."
+  );
+}
+var _nativeFabricUIManage = nativeFabricUIManager,
+  createNode = _nativeFabricUIManage.createNode,
+  cloneNodeWithNewChildren = _nativeFabricUIManage.cloneNodeWithNewChildren,
+  cloneNodeWithNewChildrenAndProps =
+    _nativeFabricUIManage.cloneNodeWithNewChildrenAndProps,
+  cloneNodeWithNewProps = _nativeFabricUIManage.cloneNodeWithNewProps,
+  createChildNodeSet = _nativeFabricUIManage.createChildSet,
+  appendChildNode = _nativeFabricUIManage.appendChild,
+  appendChildNodeToSet = _nativeFabricUIManage.appendChildToSet,
+  completeRoot = _nativeFabricUIManage.completeRoot,
+  registerEventHandler = _nativeFabricUIManage.registerEventHandler,
+  FabricDiscretePriority = _nativeFabricUIManage.unstable_DiscreteEventPriority,
+  fabricGetCurrentEventPriority =
+    _nativeFabricUIManage.unstable_getCurrentEventPriority,
+  extraDevToolsConfig = {
+    getInspectorDataForInstance: getInspectorDataForInstance,
+    getInspectorDataForViewTag: function () {
+      throw Error(
+        "getInspectorDataForViewTag() is not available in production"
+      );
+    },
+    getInspectorDataForViewAtPoint: function () {
+      throw Error(
+        "getInspectorDataForViewAtPoint() is not available in production."
+      );
+    }
+  },
+  getViewConfigForType =
+    ReactNativePrivateInterface.ReactNativeViewConfigRegistry.get,
+  nextReactTag = 2;
+registerEventHandler && registerEventHandler(dispatchEvent);
+var PROD_HOST_CONTEXT = { isInAParentText: !0 };
+function createTextInstance(
+  text,
+  rootContainerInstance,
+  hostContext,
+  internalInstanceHandle
+) {
+  hostContext = nextReactTag;
+  nextReactTag += 2;
+  return {
+    node: createNode(
+      hostContext,
+      "RCTRawText",
+      rootContainerInstance,
+      { text: text },
+      internalInstanceHandle
+    )
+  };
+}
+function getPublicInstance(instance) {
+  return null != instance.canonical && null != instance.canonical.publicInstance
+    ? instance.canonical.publicInstance
+    : null != instance._nativeTag
+      ? instance
+      : null;
+}
+var currentUpdatePriority = 0;
+function resolveUpdatePriority() {
+  if (0 !== currentUpdatePriority) return currentUpdatePriority;
+  var currentEventPriority = fabricGetCurrentEventPriority
+    ? fabricGetCurrentEventPriority()
+    : null;
+  if (null != currentEventPriority)
+    switch (currentEventPriority) {
+      case FabricDiscretePriority:
+        return 2;
+    }
+  return 32;
+}
+var scheduleTimeout = setTimeout,
+  cancelTimeout = clearTimeout;
+function cloneHiddenInstance(instance) {
+  var node = instance.node,
+    updatePayload = create(
+      { style: { display: "none" } },
+      instance.canonical.viewConfig.validAttributes
+    );
+  return {
+    node: cloneNodeWithNewProps(node, updatePayload),
+    canonical: instance.canonical
+  };
+}
+var supportsMicrotasks =
+    "undefined" !== typeof RN$enableMicrotasksInReact &&
+    !!RN$enableMicrotasksInReact,
+  scheduleMicrotask =
+    "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
+function getInstanceFromNode(node) {
+  return null != node.canonical && null != node.canonical.internalInstanceHandle
+    ? node.canonical.internalInstanceHandle
+    : node;
+}
+getFiberCurrentPropsFromNode$1 = function (instance) {
+  return instance.canonical.currentProps;
+};
+getInstanceFromNode$1 = getInstanceFromNode;
+getNodeFromInstance$1 = function (fiber) {
+  fiber = getPublicInstance(fiber.stateNode);
+  if (null == fiber) throw Error("Could not find host instance from fiber");
+  return fiber;
+};
+ResponderEventPlugin.injection.injectGlobalResponderHandler({
+  onChange: function (from, to, blockNativeResponder) {
+    from &&
+      from.stateNode &&
+      nativeFabricUIManager.setIsJSResponder(
+        from.stateNode.node,
+        !1,
+        blockNativeResponder || !1
+      );
+    to &&
+      to.stateNode &&
+      nativeFabricUIManager.setIsJSResponder(
+        to.stateNode.node,
+        !0,
+        blockNativeResponder || !1
+      );
+  }
+});
 if (
   "function" !==
   typeof ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog
@@ -10573,61 +10584,27 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1141 = {
-    findFiberByHostInstance: getInstanceFromNode,
+  internals$jscomp$inline_1140 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-bea5a2bc-20240729",
+    version: "19.0.0-native-fb-146df7c3-20240730",
     rendererPackageName: "react-native-renderer",
-    rendererConfig: {
-      getInspectorDataForInstance: getInspectorDataForInstance,
-      getInspectorDataForViewTag: function () {
-        throw Error(
-          "getInspectorDataForViewTag() is not available in production"
-        );
-      },
-      getInspectorDataForViewAtPoint: function () {
-        throw Error(
-          "getInspectorDataForViewAtPoint() is not available in production."
-        );
-      }.bind(null, findNodeHandle)
-    }
+    currentDispatcherRef: ReactSharedInternals,
+    findFiberByHostInstance: getInstanceFromNode,
+    reconcilerVersion: "19.0.0-native-fb-146df7c3-20240730"
   };
-var internals$jscomp$inline_1364 = {
-  bundleType: devToolsConfig$jscomp$inline_1141.bundleType,
-  version: devToolsConfig$jscomp$inline_1141.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1141.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1141.rendererConfig,
-  overrideHookState: null,
-  overrideHookStateDeletePath: null,
-  overrideHookStateRenamePath: null,
-  overrideProps: null,
-  overridePropsDeletePath: null,
-  overridePropsRenamePath: null,
-  setErrorHandler: null,
-  setSuspenseHandler: null,
-  scheduleUpdate: null,
-  currentDispatcherRef: ReactSharedInternals,
-  findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1141.findFiberByHostInstance ||
-    emptyFindFiberByHostInstance,
-  findHostInstancesForRefresh: null,
-  scheduleRefresh: null,
-  scheduleRoot: null,
-  setRefreshHandler: null,
-  getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-bea5a2bc-20240729"
-};
+null !== extraDevToolsConfig &&
+  (internals$jscomp$inline_1140.rendererConfig = extraDevToolsConfig);
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1365 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1363 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1365.isDisabled &&
-    hook$jscomp$inline_1365.supportsFiber
+    !hook$jscomp$inline_1363.isDisabled &&
+    hook$jscomp$inline_1363.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1365.inject(
-        internals$jscomp$inline_1364
+      (rendererID = hook$jscomp$inline_1363.inject(
+        internals$jscomp$inline_1140
       )),
-        (injectedHook = hook$jscomp$inline_1365);
+        (injectedHook = hook$jscomp$inline_1363);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
