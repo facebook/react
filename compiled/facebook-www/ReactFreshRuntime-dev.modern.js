@@ -146,22 +146,6 @@ __DEV__ &&
           ((didCollectHooks = !0), collectCustomHooksForSignature(savedType));
       };
     };
-    exports.findAffectedHostInstances = function (families) {
-      var affectedInstances = new Set();
-      mountedRoots.forEach(function (root) {
-        var helpers = helpersByRoot.get(root);
-        if (void 0 === helpers)
-          throw Error(
-            "Could not find helpers for a root. This is a bug in React Refresh."
-          );
-        helpers
-          .findHostInstancesForRefresh(root, families)
-          .forEach(function (inst) {
-            affectedInstances.add(inst);
-          });
-      });
-      return affectedInstances;
-    };
     exports.getFamilyByID = function (id) {
       return allFamiliesByID.get(id);
     };
