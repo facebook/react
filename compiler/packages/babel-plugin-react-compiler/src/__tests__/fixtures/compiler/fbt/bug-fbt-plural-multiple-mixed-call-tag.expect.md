@@ -4,16 +4,29 @@
 ```javascript
 import fbt from 'fbt';
 
+/**
+ * Similar to error.todo-multiple-fbt-plural, but note that we must
+ * count fbt plurals across both <fbt:plural /> namespaced jsx tags
+ * and fbt.plural(...) call expressions.
+ *
+ * Evaluator error:
+ *   Found differences in evaluator results
+ *   Non-forget (expected):
+ *   (kind: ok) <div>1 apple and 2 bananas</div>
+ *   Forget:
+ *   (kind: ok) <div>1 apples and 2 bananas</div>
+ */
 function useFoo({apples, bananas}) {
   return (
     <div>
-      <fbt desc="Comments ">
+      <fbt desc="Test Description">
         {fbt.param('number of apples', apples)}
         {'  '}
         {fbt.plural('apple', apples)} and
-        {fbt.param('number of bananas', bananas)}
         {'  '}
-        {fbt.plural('banana', bananas)}
+        <fbt:plural name={'number of bananas'} count={bananas} showCount="yes">
+          banana
+        </fbt:plural>
       </fbt>
     </div>
   );
@@ -32,6 +45,18 @@ export const FIXTURE_ENTRYPOINT = {
 import { c as _c } from "react/compiler-runtime";
 import fbt from "fbt";
 
+/**
+ * Similar to error.todo-multiple-fbt-plural, but note that we must
+ * count fbt plurals across both <fbt:plural /> namespaced jsx tags
+ * and fbt.plural(...) call expressions.
+ *
+ * Evaluator error:
+ *   Found differences in evaluator results
+ *   Non-forget (expected):
+ *   (kind: ok) <div>1 apple and 2 bananas</div>
+ *   Forget:
+ *   (kind: ok) <div>1 apples and 2 bananas</div>
+ */
 function useFoo(t0) {
   const $ = _c(3);
   const { apples, bananas } = t0;
@@ -44,17 +69,14 @@ function useFoo(t0) {
             "*": {
               "*": "{number of apples} apples and {number of bananas} bananas",
             },
-            _1: {
-              _1: "{number of apples} apple and {number of bananas} banana",
-            },
+            _1: { _1: "{number of apples} apple and 1 banana" },
           },
           [
             fbt._plural(apples),
-            fbt._plural(bananas),
+            fbt._plural(bananas, "number of bananas"),
             fbt._param("number of apples", apples),
-            fbt._param("number of bananas", bananas),
           ],
-          { hk: "2f5FtZ" },
+          { hk: "2xXrUW" },
         )}
       </div>
     );
