@@ -25,6 +25,7 @@ export const {
   enableObjectFiber,
   enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
+  enableLazyContextPropagation,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -57,7 +58,6 @@ export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
 export const enableInfiniteRenderLoopDetection = true;
-export const enableLazyContextPropagation = false;
 export const enableContextProfiling = false;
 export const enableLegacyCache = false;
 export const enableLegacyFBSupport = false;
