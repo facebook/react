@@ -902,6 +902,20 @@ function waitForReference<T>(
       handler.value = parentObject[key];
     }
 
+    // If the parent object is an unparsed React element tuple and its outlined
+    // props have now been resolved, we also need to update the props of the
+    // parsed element object (i.e. handler.value).
+    if (
+      parentObject[0] === REACT_ELEMENT_TYPE &&
+      key === '3' &&
+      typeof handler.value === 'object' &&
+      handler.value !== null &&
+      handler.value.$$typeof === REACT_ELEMENT_TYPE &&
+      handler.value.props === null
+    ) {
+      handler.value.props = parentObject[key];
+    }
+
     handler.deps--;
 
     if (handler.deps === 0) {
