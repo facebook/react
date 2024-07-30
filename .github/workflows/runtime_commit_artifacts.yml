@@ -6,6 +6,11 @@ on:
     types: [completed]
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        required: false
+        type: string
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -56,7 +61,7 @@ jobs:
           echo "fbsource_branch_count=$(git ls-remote --heads origin "refs/heads/meta-fbsource" | wc -l)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.20.1
+          node-version-file: '.nvmrc'
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
@@ -72,7 +77,7 @@ jobs:
         working-directory: scripts/release
       - name: Download artifacts for base revision
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ github.event.workflow_run.head_sha }}
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha }}
       - name: Display structure of build
         run: ls -R build
       - name: Strip @license from eslint plugin and react-refresh
