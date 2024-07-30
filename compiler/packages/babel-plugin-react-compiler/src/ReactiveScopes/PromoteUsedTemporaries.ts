@@ -138,6 +138,7 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
         usedOutsideScope: false,
       });
     }
+    this.visitBlock(scopeBlock.instructions, state);
   }
 
   override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
