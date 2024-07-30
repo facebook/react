@@ -42,6 +42,10 @@ export opaque type TransitionStatus = mixed;
 export opaque type FormInstance = mixed;
 export type EventResponder = any;
 
+export const rendererVersion = $$$config.rendererVersion;
+export const rendererPackageName = $$$config.rendererPackageName;
+export const extraDevToolsConfig = $$$config.extraDevToolsConfig;
+
 export const getPublicInstance = $$$config.getPublicInstance;
 export const getRootHostContext = $$$config.getRootHostContext;
 export const getChildHostContext = $$$config.getChildHostContext;

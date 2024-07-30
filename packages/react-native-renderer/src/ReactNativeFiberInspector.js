@@ -23,7 +23,10 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {enableGetInspectorDataForInstanceInProduction} from 'shared/ReactFeatureFlags';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
-import {getNodeFromInternalInstanceHandle} from './ReactNativePublicCompat';
+import {
+  getNodeFromInternalInstanceHandle,
+  findNodeHandle,
+} from './ReactNativePublicCompat';
 import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 
 const emptyObject = {};
@@ -35,7 +38,7 @@ if (__DEV__) {
 function createHierarchy(fiberHierarchy) {
   return fiberHierarchy.map(fiber => ({
     name: getComponentNameFromType(fiber.type),
-    getInspectorData: findNodeHandle => {
+    getInspectorData: () => {
       return {
         props: getHostProps(fiber),
         measure: callback => {
@@ -49,10 +52,7 @@ function createHierarchy(fiberHierarchy) {
           if (node) {
             nativeFabricUIManager.measure(node, callback);
           } else {
-            return UIManager.measure(
-              getHostNode(fiber, findNodeHandle),
-              callback,
-            );
+            return UIManager.measure(getHostNode(fiber), callback);
           }
         },
       };
@@ -60,8 +60,7 @@ function createHierarchy(fiberHierarchy) {
   }));
 }
 
-// $FlowFixMe[missing-local-annot]
-function getHostNode(fiber: Fiber | null, findNodeHandle) {
+function getHostNode(fiber: Fiber | null) {
   if (__DEV__ || enableGetInspectorDataForInstanceInProduction) {
     let hostNode;
     // look for children first for the hostNode
@@ -179,7 +178,6 @@ function getInspectorDataForViewTag(viewTag: number): InspectorData {
 }
 
 function getInspectorDataForViewAtPoint(
-  findNodeHandle: (componentOrHandle: any) => ?number,
   inspectedView: Object,
   locationX: number,
   locationY: number,

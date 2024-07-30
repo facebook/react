@@ -29,7 +29,6 @@ import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomor
 ensureCorrectIsomorphicReactVersion();
 
 import {
-  getClosestInstanceFromNode,
   getInstanceFromNode,
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
@@ -147,12 +146,7 @@ Internals.Events /* Events */ = [
   unstable_batchedUpdates,
 ];
 
-const foundDevTools = injectIntoDevTools({
-  findFiberByHostInstance: getClosestInstanceFromNode,
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-dom',
-});
+const foundDevTools = injectIntoDevTools();
 
 if (__DEV__) {
   if (!foundDevTools && canUseDOM && window.top === window.self) {

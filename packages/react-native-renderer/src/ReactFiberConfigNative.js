@@ -21,6 +21,7 @@ import {
   precacheFiberNode,
   uncacheFiberNode,
   updateFiberProps,
+  getClosestInstanceFromNode,
 } from './ReactNativeComponentTree';
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
@@ -30,6 +31,20 @@ import {
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+
+import {
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+  getInspectorDataForInstance,
+} from './ReactNativeFiberInspector';
+
+export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
+export const rendererPackageName = 'react-native-renderer';
+export const extraDevToolsConfig = {
+  getInspectorDataForInstance,
+  getInspectorDataForViewTag,
+  getInspectorDataForViewAtPoint,
+};
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -506,9 +521,7 @@ export function unhideTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function getInstanceFromNode(node: any): empty {
-  throw new Error('Not yet implemented.');
-}
+export {getClosestInstanceFromNode as getInstanceFromNode};
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop

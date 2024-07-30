@@ -28,14 +28,8 @@ import {
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
-import ReactVersion from 'shared/ReactVersion';
 
-import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
-import {
-  getInspectorDataForViewTag,
-  getInspectorDataForViewAtPoint,
-  getInspectorDataForInstance,
-} from './ReactNativeFiberInspector';
+import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   findHostInstance_DEPRECATED,
@@ -209,18 +203,4 @@ export {
   isChildPublicInstance,
 };
 
-injectIntoDevTools({
-  // $FlowExpectedError[incompatible-call] The type of `Instance` in `getClosestInstanceFromNode` does not match in Fabric and the legacy renderer, so it fails to typecheck here.
-  findFiberByHostInstance: getClosestInstanceFromNode,
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-native-renderer',
-  rendererConfig: {
-    getInspectorDataForInstance,
-    getInspectorDataForViewTag: getInspectorDataForViewTag,
-    getInspectorDataForViewAtPoint: getInspectorDataForViewAtPoint.bind(
-      null,
-      findNodeHandle,
-    ),
-  },
-});
+injectIntoDevTools();

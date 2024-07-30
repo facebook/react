@@ -14,6 +14,10 @@ import {
   type EventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 
+export {default as rendererVersion} from 'shared/ReactVersion'; // TODO: Consider exporting the react-native version.
+export const rendererPackageName = 'react-test-renderer';
+export const extraDevToolsConfig = null;
+
 export type Type = string;
 export type Props = Object;
 export type Container = {

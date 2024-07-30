@@ -17,6 +17,10 @@ import {
   NoEventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 
+export {default as rendererVersion} from 'shared/ReactVersion';
+export const rendererPackageName = 'react-art';
+export const extraDevToolsConfig = null;
+
 const pooledTransform = new Transform();
 
 const NO_CONTEXT = {};
@@ -441,8 +445,8 @@ export function clearContainer(container) {
   // TODO Implement this
 }
 
-export function getInstanceFromNode(node) {
-  throw new Error('Not implemented.');
+export function getInstanceFromNode(node): null {
+  return null;
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {

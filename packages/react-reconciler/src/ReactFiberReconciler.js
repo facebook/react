@@ -15,8 +15,6 @@ import type {
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
-  Instance,
-  TextInstance,
   Container,
   PublicInstance,
   RendererInspectionConfig,
@@ -42,7 +40,13 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {getPublicInstance} from './ReactFiberConfig';
+import {
+  getPublicInstance,
+  getInstanceFromNode,
+  rendererVersion,
+  rendererPackageName,
+  extraDevToolsConfig,
+} from './ReactFiberConfig';
 import {
   findCurrentUnmaskedContext,
   processChildContext,
@@ -55,6 +59,7 @@ import {
   injectInternals,
   markRenderScheduled,
   onScheduleRoot,
+  injectProfilingHooks,
 } from './ReactFiberDevToolsHook';
 import {
   requestUpdateLane,
@@ -113,22 +118,9 @@ export {
   defaultOnCaughtError,
   defaultOnRecoverableError,
 } from './ReactFiberErrorLogger';
+import {getLabelForLane, TotalLanes} from 'react-reconciler/src/ReactFiberLane';
 
 type OpaqueRoot = FiberRoot;
-
-// 0 is PROD, 1 is DEV.
-// Might add PROFILE later.
-type BundleType = 0 | 1;
-
-type DevToolsConfig = {
-  bundleType: BundleType,
-  version: string,
-  rendererPackageName: string,
-  // Note: this actually *does* depend on Fiber internal fields.
-  // Used by "inspect clicked DOM element" in React DevTools.
-  findFiberByHostInstance?: (instance: Instance | TextInstance) => Fiber | null,
-  rendererConfig?: RendererInspectionConfig,
-};
 
 let didWarnAboutNestedUpdates;
 let didWarnAboutFindNodeInStrictMode;
@@ -827,45 +819,65 @@ if (__DEV__) {
   };
 }
 
-function emptyFindFiberByHostInstance(
-  instance: Instance | TextInstance,
-): Fiber | null {
-  return null;
-}
-
 function getCurrentFiberForDevTools() {
   return ReactCurrentFiberCurrent;
 }
 
-export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
-  const {findFiberByHostInstance} = devToolsConfig;
+function getLaneLabelMap(): Map<Lane, string> | null {
+  if (enableSchedulingProfiler) {
+    const map: Map<Lane, string> = new Map();
 
-  return injectInternals({
-    bundleType: devToolsConfig.bundleType,
-    version: devToolsConfig.version,
-    rendererPackageName: devToolsConfig.rendererPackageName,
-    rendererConfig: devToolsConfig.rendererConfig,
-    overrideHookState,
-    overrideHookStateDeletePath,
-    overrideHookStateRenamePath,
-    overrideProps,
-    overridePropsDeletePath,
-    overridePropsRenamePath,
-    setErrorHandler,
-    setSuspenseHandler,
-    scheduleUpdate,
+    let lane = 1;
+    for (let index = 0; index < TotalLanes; index++) {
+      const label = ((getLabelForLane(lane): any): string);
+      map.set(lane, label);
+      lane *= 2;
+    }
+
+    return map;
+  } else {
+    return null;
+  }
+}
+
+export function injectIntoDevTools(): boolean {
+  const internals: Object = {
+    bundleType: __DEV__ ? 1 : 0, // Might add PROFILE later.
+    version: rendererVersion,
+    rendererPackageName: rendererPackageName,
     currentDispatcherRef: ReactSharedInternals,
-    findFiberByHostInstance:
-      findFiberByHostInstance || emptyFindFiberByHostInstance,
-    // React Refresh
-    findHostInstancesForRefresh: __DEV__ ? findHostInstancesForRefresh : null,
-    scheduleRefresh: __DEV__ ? scheduleRefresh : null,
-    scheduleRoot: __DEV__ ? scheduleRoot : null,
-    setRefreshHandler: __DEV__ ? setRefreshHandler : null,
-    // Enables DevTools to append owner stacks to error messages in DEV mode.
-    getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
+    findFiberByHostInstance: getInstanceFromNode,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,
-  });
+  };
+  if (extraDevToolsConfig !== null) {
+    internals.rendererConfig = (extraDevToolsConfig: RendererInspectionConfig);
+  }
+  if (__DEV__) {
+    internals.overrideHookState = overrideHookState;
+    internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
+    internals.overrideHookStateRenamePath = overrideHookStateRenamePath;
+    internals.overrideProps = overrideProps;
+    internals.overridePropsDeletePath = overridePropsDeletePath;
+    internals.overridePropsRenamePath = overridePropsRenamePath;
+    internals.scheduleUpdate = scheduleUpdate;
+    internals.setErrorHandler = setErrorHandler;
+    internals.setSuspenseHandler = setSuspenseHandler;
+    // React Refresh
+    internals.findHostInstancesForRefresh = findHostInstancesForRefresh;
+    internals.scheduleRefresh = scheduleRefresh;
+    internals.scheduleRoot = scheduleRoot;
+    internals.setRefreshHandler = setRefreshHandler;
+    // Enables DevTools to append owner stacks to error messages in DEV mode.
+    internals.getCurrentFiber = getCurrentFiberForDevTools;
+  }
+  if (enableSchedulingProfiler) {
+    // Conditionally inject these hooks only if Timeline profiler is supported by this build.
+    // This gives DevTools a way to feature detect that isn't tied to version number
+    // (since profiling and timeline are controlled by different feature flags).
+    internals.getLaneLabelMap = getLaneLabelMap;
+    internals.injectProfilingHooks = injectProfilingHooks;
+  }
+  return injectInternals(internals);
 }
