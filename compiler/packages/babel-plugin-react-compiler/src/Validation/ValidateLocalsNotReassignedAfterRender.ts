@@ -8,6 +8,7 @@
 import {CompilerError, Effect} from '..';
 import {HIRFunction, IdentifierId, Place} from '../HIR';
 import {
+  eachInstructionLValue,
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
@@ -139,15 +140,18 @@ function getContextReassignment(
             const reassignment = reassigningFunctions.get(
               operand.identifier.id,
             );
-            if (
-              reassignment !== undefined &&
-              operand.effect === Effect.Freeze
-            ) {
+            if (reassignment !== undefined) {
               /*
                * Functions that reassign local variables are inherently mutable and are unsafe to pass
                * to a place that expects a frozen value. Propagate the reassignment upward.
                */
-              return reassignment;
+              if (operand.effect === Effect.Freeze) {
+                return reassignment;
+              } else {
+                for (const lval of eachInstructionLValue(instr)) {
+                  reassigningFunctions.set(lval.identifier.id, reassignment);
+                }
+              }
             }
           }
           break;

@@ -187,7 +187,6 @@ const skipFilter = new Set([
   'alias-nested-member-path-mutate',
   'concise-arrow-expr',
   'const-propagation-into-function-expression-global',
-  'declare-reassign-variable-in-function-declaration',
   'lambda-mutate-shadowed-object',
   'fbt/lambda-with-fbt',
   'recursive-function-expr',
@@ -503,8 +502,6 @@ const skipFilter = new Set([
 
   // needs to be executed as a module
   'meta-property',
-
-  'todo.invalid-nested-function-reassign-local-variable-in-effect',
 ]);
 
 export default skipFilter;
