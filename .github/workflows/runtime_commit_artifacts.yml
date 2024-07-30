@@ -61,7 +61,7 @@ jobs:
           echo "fbsource_branch_count=$(git ls-remote --heads origin "refs/heads/meta-fbsource" | wc -l)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.20.1
+          node-version-file: '.nvmrc'
           cache: yarn
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
