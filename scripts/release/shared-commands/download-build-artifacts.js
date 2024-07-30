@@ -87,11 +87,51 @@ async function getArtifact(workflowRunId, artifactName) {
   return artifact;
 }
 
+async function processArtifact(artifact, releaseChannel) {
+  // Download and extract artifact
+  const cwd = join(__dirname, '..', '..', '..');
+  await exec(`rm -rf ./build`, {cwd});
+  await exec(
+    `curl -L ${GITHUB_HEADERS} ${artifact.archive_download_url} \
+              > a.zip && unzip a.zip -d . && rm a.zip build2.tgz && tar -xvzf build.tgz && rm build.tgz`,
+    {
+      cwd,
+    }
+  );
+
+  // Copy to staging directory
+  // TODO: Consider staging the release in a different directory from the CI
+  // build artifacts: `./build/node_modules` -> `./staged-releases`
+  if (!existsSync(join(cwd, 'build'))) {
+    await exec(`mkdir ./build`, {cwd});
+  } else {
+    await exec(`rm -rf ./build/node_modules`, {cwd});
+  }
+  let sourceDir;
+  // TODO: Rename release channel to `next`
+  if (releaseChannel === 'stable') {
+    sourceDir = 'oss-stable';
+  } else if (releaseChannel === 'experimental') {
+    sourceDir = 'oss-experimental';
+  } else if (releaseChannel === 'rc') {
+    sourceDir = 'oss-stable-rc';
+  } else if (releaseChannel === 'latest') {
+    sourceDir = 'oss-stable-semver';
+  } else {
+    console.error('Internal error: Invalid release channel: ' + releaseChannel);
+    process.exit(releaseChannel);
+  }
+  await exec(`cp -r ./build/${sourceDir} ./build/node_modules`, {
+    cwd,
+  });
+}
+
 async function downloadArtifactsFromGitHub(commit, releaseChannel) {
-  const workflowRun = await getWorkflowRun(commit);
+  let workflowRun;
   let retries = 0;
   // wait up to 10 mins for build to finish: 10 * 60 * 1_000) / 30_000 = 20
   while (retries < 20) {
+    workflowRun = await getWorkflowRun(commit);
     if (typeof workflowRun.status === 'string') {
       switch (workflowRun.status) {
         case 'queued':
@@ -108,49 +148,11 @@ async function downloadArtifactsFromGitHub(commit, releaseChannel) {
               workflowRun.id,
               'artifacts_combined'
             );
-
-            // Download and extract artifact
-            const cwd = join(__dirname, '..', '..', '..');
-            await exec(`rm -rf ./build`, {cwd});
-            await exec(
-              `curl -L ${GITHUB_HEADERS} ${artifact.archive_download_url} \
-              > a.zip && unzip a.zip -d . && rm a.zip build2.tgz && tar -xvzf build.tgz && rm build.tgz`,
-              {
-                cwd,
-              }
-            );
-
-            // Copy to staging directory
-            // TODO: Consider staging the release in a different directory from the CI
-            // build artifacts: `./build/node_modules` -> `./staged-releases`
-            if (!existsSync(join(cwd, 'build'))) {
-              await exec(`mkdir ./build`, {cwd});
-            } else {
-              await exec(`rm -rf ./build/node_modules`, {cwd});
-            }
-            let sourceDir;
-            // TODO: Rename release channel to `next`
-            if (releaseChannel === 'stable') {
-              sourceDir = 'oss-stable';
-            } else if (releaseChannel === 'experimental') {
-              sourceDir = 'oss-experimental';
-            } else if (releaseChannel === 'rc') {
-              sourceDir = 'oss-stable-rc';
-            } else if (releaseChannel === 'latest') {
-              sourceDir = 'oss-stable-semver';
-            } else {
-              console.error(
-                'Internal error: Invalid release channel: ' + releaseChannel
-              );
-              process.exit(releaseChannel);
-            }
-            await exec(`cp -r ./build/${sourceDir} ./build/node_modules`, {
-              cwd,
-            });
+            await processArtifact(artifact, releaseChannel);
             return;
           } else {
             console.log(
-              theme`{error Could not download build for ${commit} from GitHub as its conclusion was: ${workflowRun.conclusion}}`
+              theme`{error Could not download build as its conclusion was: ${workflowRun.conclusion}}`
             );
             process.exit(1);
           }
@@ -163,11 +165,18 @@ async function downloadArtifactsFromGitHub(commit, releaseChannel) {
           process.exit(1);
         }
       }
+    } else {
+      retries++;
+      console.log(
+        theme`{error Expected workflow run status to be a string, got: ${workflowRun.status}. Retrying...}`
+      );
     }
   }
 
   console.log(
-    theme`{error Could not download build for ${commit} from GitHub as it timed out}`
+    theme`{error Could not download build from GitHub. Last workflow run: }
+
+${workflowRun != null ? JSON.stringify(workflowRun, null, '\t') : workflowRun}`
   );
   process.exit(1);
 }
