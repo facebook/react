@@ -14,12 +14,12 @@ function Component(props) {
 ## Error
 
 ```
-  2 |   const fbt = require('fbt');
+  1 | function Component(props) {
+> 2 |   const fbt = require('fbt');
+    |         ^^^ Todo: Support local variables named "fbt" (2:2)
   3 |
-> 4 |   return <fbt desc="Description">{'Text'}</fbt>;
-    |           ^^^ Todo: Support <fbt> tags where 'fbt' is a local variable instead of a global (4:4)
+  4 |   return <fbt desc="Description">{'Text'}</fbt>;
   5 | }
-  6 |
 ```
           
       

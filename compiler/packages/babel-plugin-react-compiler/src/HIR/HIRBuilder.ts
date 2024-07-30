@@ -311,6 +311,12 @@ export default class HIRBuilder {
   }
 
   resolveBinding(node: t.Identifier): Identifier {
+    if (node.name === 'fbt') {
+      CompilerError.throwTodo({
+        reason: 'Support local variables named "fbt"',
+        loc: node.loc ?? null,
+      });
+    }
     const originalName = node.name;
     let name = originalName;
     let index = 0;

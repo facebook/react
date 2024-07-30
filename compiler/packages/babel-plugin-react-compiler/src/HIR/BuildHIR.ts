@@ -2133,9 +2133,10 @@ function lowerExpression(
         const tagIdentifier = openingIdentifier.isJSXIdentifier()
           ? builder.resolveIdentifier(openingIdentifier)
           : null;
-        if (tagIdentifier != null && tagIdentifier.kind === 'Identifier') {
-          CompilerError.throwTodo({
-            reason: `Support <${tagName}> tags where '${tagName}' is a local variable instead of a global`,
+        if (tagIdentifier != null) {
+          // This is already checked in builder.resolveIdentifier
+          CompilerError.invariant(tagIdentifier.kind !== 'Identifier', {
+            reason: `<${tagName}> tags should be module-level imports`,
             loc: openingIdentifier.node.loc ?? GeneratedSource,
             description: null,
             suggestions: null,
