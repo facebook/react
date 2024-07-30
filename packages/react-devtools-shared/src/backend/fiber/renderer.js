@@ -111,7 +111,7 @@ import type {
   InspectedElement,
   InspectedElementPayload,
   InstanceAndStyle,
-  NativeType,
+  HostInstance,
   PathFrame,
   PathMatch,
   ProfilingDataBackend,
@@ -937,7 +937,7 @@ export function attach(
 
   // Highlight updates
   let traceUpdatesEnabled: boolean = false;
-  const traceUpdatesForNodes: Set<NativeType> = new Set();
+  const traceUpdatesForNodes: Set<HostInstance> = new Set();
 
   function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
     hideElementsWithTypes.clear();
@@ -2862,7 +2862,7 @@ export function attach(
     return fibers;
   }
 
-  function findNativeNodesForElementID(id: number) {
+  function findHostInstancesForElementID(id: number) {
     try {
       const fiber = findCurrentFiberUsingSlowPathById(id);
       if (fiber === null) {
@@ -2882,12 +2882,12 @@ export function attach(
     return fiber != null ? getDisplayNameForFiber(fiber) : null;
   }
 
-  function getFiberForNative(hostInstance: NativeType) {
+  function getFiberForNative(hostInstance: HostInstance) {
     return renderer.findFiberByHostInstance(hostInstance);
   }
 
-  function getElementIDForNative(
-    hostInstance: NativeType,
+  function getElementIDForHostInstance(
+    hostInstance: HostInstance,
     findNearestUnfilteredAncestor: boolean = false,
   ) {
     let fiber = renderer.findFiberByHostInstance(hostInstance);
@@ -3870,9 +3870,9 @@ export function attach(
     if (result.hooks !== null) {
       console.log('Hooks:', result.hooks);
     }
-    const nativeNodes = findNativeNodesForElementID(id);
-    if (nativeNodes !== null) {
-      console.log('Nodes:', nativeNodes);
+    const hostInstances = findHostInstancesForElementID(id);
+    if (hostInstances !== null) {
+      console.log('Nodes:', hostInstances);
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(
@@ -4655,12 +4655,12 @@ export function attach(
     clearWarningsForElementID,
     getSerializedElementValueByPath,
     deletePath,
-    findNativeNodesForElementID,
+    findHostInstancesForElementID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getDisplayNameForElementID,
     getFiberForNative,
-    getElementIDForNative,
+    getElementIDForHostInstance,
     getInstanceAndStyle,
     getOwnersList,
     getPathForElement,

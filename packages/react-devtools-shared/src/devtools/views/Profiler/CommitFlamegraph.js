@@ -16,7 +16,7 @@ import NoCommitData from './NoCommitData';
 import CommitFlamegraphListItem from './CommitFlamegraphListItem';
 import HoveredFiberInfo from './HoveredFiberInfo';
 import {scale} from './utils';
-import {useHighlightNativeElement} from '../hooks';
+import {useHighlightHostInstance} from '../hooks';
 import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
 import Tooltip from './Tooltip';
@@ -101,8 +101,8 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
     useState<TooltipFiberData | null>(null);
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
-  const {highlightNativeElement, clearHighlightNativeElement} =
-    useHighlightNativeElement();
+  const {highlightHostInstance, clearHighlightHostInstance} =
+    useHighlightHostInstance();
 
   const selectedChartNodeIndex = useMemo<number>(() => {
     if (selectedFiberID === null) {
@@ -127,16 +127,16 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
 
   const handleElementMouseEnter = useCallback(
     ({id, name}: $FlowFixMe) => {
-      highlightNativeElement(id); // Highlight last hovered element.
+      highlightHostInstance(id); // Highlight last hovered element.
       setHoveredFiberData({id, name}); // Set hovered fiber data for tooltip
     },
-    [highlightNativeElement],
+    [highlightHostInstance],
   );
 
   const handleElementMouseLeave = useCallback(() => {
-    clearHighlightNativeElement(); // clear highlighting of element on mouse leave
+    clearHighlightHostInstance(); // clear highlighting of element on mouse leave
     setHoveredFiberData(null); // clear hovered fiber data for tooltip
-  }, [clearHighlightNativeElement]);
+  }, [clearHighlightHostInstance]);
 
   const itemData = useMemo<ItemData>(
     () => ({

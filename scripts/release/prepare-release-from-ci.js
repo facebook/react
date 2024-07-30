@@ -7,7 +7,7 @@ const {addDefaultParamValue, handleError} = require('./utils');
 
 const {
   downloadBuildArtifacts,
-} = require('./shared-commands/download-build-artifacts-ghaction');
+} = require('./shared-commands/download-build-artifacts');
 const parseParams = require('./shared-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
 const testPackagingFixture = require('./shared-commands/test-packaging-fixture');

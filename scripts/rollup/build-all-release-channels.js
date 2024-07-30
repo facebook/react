@@ -16,7 +16,6 @@ const {
   rcNumber,
 } = require('../../ReactVersions');
 const yargs = require('yargs');
-const {buildEverything} = require('./build-ghaction');
 const Bundles = require('./bundles');
 
 // Runs the build script for both stable and experimental release channels,
@@ -77,8 +76,8 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
   ci: {
     describe: 'Run tests in CI',
     requiresArg: false,
-    type: 'choices',
-    choices: ['circleci', 'github'],
+    type: 'boolean',
+    default: false,
   },
   type: {
     describe: `Build the given bundle type. (${Object.values(
@@ -110,8 +109,8 @@ const argv = yargs.wrap(yargs.terminalWidth()).options({
 }).argv;
 
 async function main() {
-  if (argv.ci === 'github') {
-    await buildEverything(argv.index, argv.total);
+  if (argv.ci === true) {
+    buildForChannel(argv.releaseChannel, argv.total, argv.index);
     switch (argv.releaseChannel) {
       case 'stable': {
         processStable('./build');
@@ -139,7 +138,7 @@ async function main() {
     // Then merge the experimental folder into the stable one. processExperimental
     // will have already removed conflicting files.
     //
-    // In CI, merging is handled automatically by CircleCI's workspace feature.
+    // In CI, merging is handled by the GitHub Download Artifacts plugin.
     mergeDirsSync(experimentalDir + '/', stableDir + '/');
 
     // Now restore the combined directory back to its original name
@@ -147,7 +146,7 @@ async function main() {
   }
 }
 
-function buildForChannel(channel) {
+function buildForChannel(channel, total, index) {
   const {status} = spawnSync(
     'node',
     ['./scripts/rollup/build.js', ...process.argv.slice(2)],
@@ -156,6 +155,8 @@ function buildForChannel(channel) {
       env: {
         ...process.env,
         RELEASE_CHANNEL: channel,
+        CI_TOTAL: total,
+        CI_INDEX: index,
       },
     }
   );

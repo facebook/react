@@ -850,10 +850,9 @@ async function buildEverything() {
     return !shouldSkipBundle(bundle, bundleType);
   });
 
-  if (process.env.CIRCLE_NODE_TOTAL) {
-    // In CI, parallelize bundles across multiple tasks.
-    const nodeTotal = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
-    const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
+  if (process.env.CI_TOTAL && process.env.CI_INDEX) {
+    const nodeTotal = parseInt(process.env.CI_TOTAL, 10);
+    const nodeIndex = parseInt(process.env.CI_INDEX, 10);
     bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
   }
 
