@@ -1,4 +1,16 @@
 import fbt from 'fbt';
+
+/**
+ * Similar to error.todo-multiple-fbt-plural
+ *
+ * Evaluator error:
+ *   Found differences in evaluator results
+ *   Non-forget (expected):
+ *   (kind: ok) <div>1 apple and 2 bananas</div>
+ *   Forget:
+ *   (kind: ok) <div>1 apples and 2 bananas</div>
+ */
+
 function useFoo({apples, bananas}) {
   return fbt(
     `${fbt.param('number of apples', apples)} ` +
