@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<21e82ca5963e783e2f6590a40ce8119e>>
+ * @generated SignedSource<<890a4ea59cd9164f3a5525dce24215bb>>
  */
 
 "use strict";
@@ -13898,10 +13898,6 @@ __DEV__ &&
         (scheduleUpdateOnFiber(element, rootFiber, lane),
         entangleTransitions(element, rootFiber, lane));
     }
-    function findHostInstanceByFiber(fiber) {
-      fiber = findCurrentHostFiber(fiber);
-      return null === fiber ? null : fiber.stateNode;
-    }
     function emptyFindFiberByHostInstance() {
       return null;
     }
@@ -16751,7 +16747,6 @@ __DEV__ &&
         setSuspenseHandler: setSuspenseHandler,
         scheduleUpdate: scheduleUpdate,
         currentDispatcherRef: ReactSharedInternals,
-        findHostInstanceByFiber: findHostInstanceByFiber,
         findFiberByHostInstance:
           devToolsConfig.findFiberByHostInstance ||
           emptyFindFiberByHostInstance,
@@ -16760,12 +16755,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-6b82f3c9-20240729"
+        reconcilerVersion: "19.0.0-native-fb-bea5a2bc-20240729"
       });
     })({
       findFiberByHostInstance: getInstanceFromNode,
       bundleType: 1,
-      version: "19.0.0-native-fb-6b82f3c9-20240729",
+      version: "19.0.0-native-fb-bea5a2bc-20240729",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<774ba082873687e04f5ad7709de0d6e9>>
+ * @generated SignedSource<<2da6c63d304dd91d31638bc3c5682c93>>
  */
 
 "use strict";
@@ -13997,10 +13997,6 @@ __DEV__ &&
         (scheduleUpdateOnFiber(element, rootFiber, lane),
         entangleTransitions(element, rootFiber, lane));
     }
-    function findHostInstanceByFiber(fiber) {
-      fiber = findCurrentHostFiber(fiber);
-      return null === fiber ? null : fiber.stateNode;
-    }
     function emptyFindFiberByHostInstance() {
       return null;
     }
@@ -16909,11 +16905,11 @@ __DEV__ &&
     var emptyObject = {};
     Object.freeze(emptyObject);
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-6b82f3c9-20240729" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-bea5a2bc-20240729" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-6b82f3c9-20240729\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-bea5a2bc-20240729\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -16952,7 +16948,6 @@ __DEV__ &&
         setSuspenseHandler: setSuspenseHandler,
         scheduleUpdate: scheduleUpdate,
         currentDispatcherRef: ReactSharedInternals,
-        findHostInstanceByFiber: findHostInstanceByFiber,
         findFiberByHostInstance:
           devToolsConfig.findFiberByHostInstance ||
           emptyFindFiberByHostInstance,
@@ -16961,12 +16956,12 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-6b82f3c9-20240729"
+        reconcilerVersion: "19.0.0-native-fb-bea5a2bc-20240729"
       });
     })({
       findFiberByHostInstance: getInstanceFromTag,
       bundleType: 1,
-      version: "19.0.0-native-fb-6b82f3c9-20240729",
+      version: "19.0.0-native-fb-bea5a2bc-20240729",
       rendererPackageName: "react-native-renderer",
       rendererConfig: {
         getInspectorDataForInstance: getInspectorDataForInstance,

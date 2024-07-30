@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ebdb7058bb4b6e0370bac7651360c216>>
+ * @generated SignedSource<<d632c5265089eef1357fa59e74d227eb>>
  */
 
 "use strict";
@@ -447,16 +447,6 @@ function findCurrentFiberUsingSlowPath(fiber) {
   if (3 !== a.tag)
     throw Error("Unable to find node on an unmounted component.");
   return a.stateNode.current === a ? fiber : alternate;
-}
-function findCurrentHostFiberImpl(node) {
-  var tag = node.tag;
-  if (5 === tag || 26 === tag || 27 === tag || 6 === tag) return node;
-  for (node = node.child; null !== node; ) {
-    tag = findCurrentHostFiberImpl(node);
-    if (null !== tag) return tag;
-    node = node.sibling;
-  }
-  return null;
 }
 var isArrayImpl = Array.isArray,
   scheduleCallback$3 = Scheduler$1.unstable_scheduleCallback,
@@ -9947,12 +9937,12 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1119 = {
+var devToolsConfig$jscomp$inline_1115 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "19.0.0-native-fb-6b82f3c9-20240729",
+  version: "19.0.0-native-fb-bea5a2bc-20240729",
   rendererPackageName: "react-test-renderer"
 };
 (function (internals) {
@@ -9969,10 +9959,10 @@ var devToolsConfig$jscomp$inline_1119 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1119.bundleType,
-  version: devToolsConfig$jscomp$inline_1119.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1119.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1119.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1115.bundleType,
+  version: devToolsConfig$jscomp$inline_1115.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1115.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1115.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9983,20 +9973,15 @@ var devToolsConfig$jscomp$inline_1119 = {
   setSuspenseHandler: null,
   scheduleUpdate: null,
   currentDispatcherRef: ReactSharedInternals,
-  findHostInstanceByFiber: function (fiber) {
-    fiber = findCurrentFiberUsingSlowPath(fiber);
-    fiber = null !== fiber ? findCurrentHostFiberImpl(fiber) : null;
-    return null === fiber ? null : fiber.stateNode;
-  },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1119.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1115.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "19.0.0-native-fb-6b82f3c9-20240729"
+  reconcilerVersion: "19.0.0-native-fb-bea5a2bc-20240729"
 });
 exports._Scheduler = Scheduler;
 exports.act = act;

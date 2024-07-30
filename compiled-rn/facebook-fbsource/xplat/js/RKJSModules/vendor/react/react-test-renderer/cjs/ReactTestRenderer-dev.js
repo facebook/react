@@ -7,13 +7,13 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<45825b7fcc62c4e0270bf13c80f968b7>>
+ * @generated SignedSource<<f86c05005971e3a7b71fb09889af7bf1>>
  */
 
 "use strict";
 __DEV__ &&
   (function () {
-    function JSCompiler_object_inline_createNodeMock_1096() {
+    function JSCompiler_object_inline_createNodeMock_1093() {
       return null;
     }
     function findHook(fiber, id) {
@@ -682,16 +682,6 @@ __DEV__ &&
       if (3 !== a.tag)
         throw Error("Unable to find node on an unmounted component.");
       return a.stateNode.current === a ? fiber : alternate;
-    }
-    function findCurrentHostFiberImpl(node) {
-      var tag = node.tag;
-      if (5 === tag || 26 === tag || 27 === tag || 6 === tag) return node;
-      for (node = node.child; null !== node; ) {
-        tag = findCurrentHostFiberImpl(node);
-        if (null !== tag) return tag;
-        node = node.sibling;
-      }
-      return null;
     }
     function injectInternals(internals) {
       if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) return !1;
@@ -12837,11 +12827,6 @@ __DEV__ &&
         (scheduleUpdateOnFiber(element, rootFiber, lane),
         entangleTransitions(element, rootFiber, lane));
     }
-    function findHostInstanceByFiber(fiber) {
-      fiber = findCurrentFiberUsingSlowPath(fiber);
-      fiber = null !== fiber ? findCurrentHostFiberImpl(fiber) : null;
-      return null === fiber ? null : fiber.stateNode;
-    }
     function emptyFindFiberByHostInstance() {
       return null;
     }
@@ -15109,7 +15094,6 @@ __DEV__ &&
         setSuspenseHandler: setSuspenseHandler,
         scheduleUpdate: scheduleUpdate,
         currentDispatcherRef: ReactSharedInternals,
-        findHostInstanceByFiber: findHostInstanceByFiber,
         findFiberByHostInstance:
           devToolsConfig.findFiberByHostInstance ||
           emptyFindFiberByHostInstance,
@@ -15118,20 +15102,20 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-native-fb-6b82f3c9-20240729"
+        reconcilerVersion: "19.0.0-native-fb-bea5a2bc-20240729"
       });
     })({
       findFiberByHostInstance: function () {
         throw Error("TestRenderer does not support findFiberByHostInstance()");
       },
       bundleType: 1,
-      version: "19.0.0-native-fb-6b82f3c9-20240729",
+      version: "19.0.0-native-fb-bea5a2bc-20240729",
       rendererPackageName: "react-test-renderer"
     });
     exports._Scheduler = Scheduler;
     exports.act = act;
     exports.create = function (element, options) {
-      var createNodeMock = JSCompiler_object_inline_createNodeMock_1096,
+      var createNodeMock = JSCompiler_object_inline_createNodeMock_1093,
         isConcurrent = !1,
         isStrictMode = !1;
       "object" === typeof options &&
