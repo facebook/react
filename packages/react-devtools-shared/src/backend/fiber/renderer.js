@@ -133,8 +133,14 @@ import type {
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
+// Kinds
 const FIBER_INSTANCE = 0;
 // const VIRTUAL_INSTANCE = 1;
+
+// Flags
+const FORCE_SUSPENSE_FALLBACK = /*    */ 0b001;
+const FORCE_ERROR = /*                */ 0b010;
+const FORCE_ERROR_RESET = /*          */ 0b100;
 
 // This type represents a stateful instance of a Client Component i.e. a Fiber pair.
 // These instances also let us track stateful DevTools meta data like id and warnings.
@@ -142,6 +148,7 @@ type FiberInstance = {
   kind: 0,
   id: number,
   parent: null | DevToolsInstance, // virtual parent
+  flags: number, // Force Error/Suspense
   componentStack: null | string,
   errors: null | Map<string, number>, // error messages and count
   warnings: null | Map<string, number>, // warning messages and count
@@ -153,6 +160,7 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     kind: 0,
     id: getUID(),
     parent: null,
+    flags: 0,
     componentStack: null,
     errors: null,
     warnings: null,
@@ -169,6 +177,7 @@ type VirtualInstance = {
   kind: 1,
   id: number,
   parent: null | DevToolsInstance, // virtual parent
+  flags: number,
   componentStack: null | string,
   // Errors and Warnings happen per ReactComponentInfo which can appear in
   // multiple places but we track them per stateful VirtualInstance so
@@ -893,9 +902,12 @@ export function attach(
     args: $ReadOnlyArray<any>,
   ): void {
     if (type === 'error') {
-      const maybeID = getFiberIDUnsafe(fiber);
+      let fiberInstance = fiberToFiberInstanceMap.get(fiber);
+      if (fiberInstance === undefined && fiber.alternate !== null) {
+        fiberInstance = fiberToFiberInstanceMap.get(fiber.alternate);
+      }
       // if this is an error simulated by us to trigger error boundary, ignore
-      if (maybeID != null && forceErrorForFiberIDs.get(maybeID) === true) {
+      if (fiberInstance !== undefined && fiberInstance.flags & FORCE_ERROR) {
         return;
       }
     }
@@ -1343,13 +1355,27 @@ export function attach(
     }
 
     untrackFibersSet.forEach(fiber => {
-      const fiberID = getFiberIDUnsafe(fiber);
-      if (fiberID !== null) {
-        idToDevToolsInstanceMap.delete(fiberID);
+      const fiberInstance = fiberToFiberInstanceMap.get(fiber);
+      if (fiberInstance !== undefined) {
+        idToDevToolsInstanceMap.delete(fiberInstance.id);
 
         // Also clear any errors/warnings associated with this fiber.
-        clearErrorsForElementID(fiberID);
-        clearWarningsForElementID(fiberID);
+        clearErrorsForElementID(fiberInstance.id);
+        clearWarningsForElementID(fiberInstance.id);
+        if (fiberInstance.flags & FORCE_ERROR) {
+          fiberInstance.flags &= ~FORCE_ERROR;
+          forceErrorCount--;
+          if (forceErrorCount === 0 && setErrorHandler != null) {
+            setErrorHandler(shouldErrorFiberAlwaysNull);
+          }
+        }
+        if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
+          fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
+          forceFallbackCount--;
+          if (forceFallbackCount === 0 && setSuspenseHandler != null) {
+            setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+          }
+        }
       }
 
       fiberToFiberInstanceMap.delete(fiber);
@@ -1357,13 +1383,6 @@ export function attach(
       const {alternate} = fiber;
       if (alternate !== null) {
         fiberToFiberInstanceMap.delete(alternate);
-      }
-
-      if (forceErrorForFiberIDs.has(fiberID)) {
-        forceErrorForFiberIDs.delete(fiberID);
-        if (forceErrorForFiberIDs.size === 0 && setErrorHandler != null) {
-          setErrorHandler(shouldErrorFiberAlwaysNull);
-        }
       }
     });
     untrackFibersSet.clear();
@@ -3504,7 +3523,7 @@ export function attach(
       const DidCapture = 0b000000000000000000010000000;
       isErrored =
         (fiber.flags & DidCapture) !== 0 ||
-        forceErrorForFiberIDs.get(id) === true;
+        (devtoolsInstance.flags & FORCE_ERROR) !== 0;
       targetErrorBoundaryID = isErrored ? id : getNearestErrorBoundaryID(fiber);
     } else {
       targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
@@ -3553,7 +3572,7 @@ export function attach(
         (!isTimedOutSuspense ||
           // If it's showing fallback because we previously forced it to,
           // allow toggling it back to remove the fallback override.
-          forceFallbackForSuspenseIDs.has(id)),
+          (devtoolsInstance.flags & FORCE_SUSPENSE_FALLBACK) !== 0),
 
       // Can view component source location.
       canViewSource,
@@ -4352,44 +4371,45 @@ export function attach(
     return null;
   }
 
-  // Map of id and its force error status: true (error), false (toggled off),
-  // null (do nothing)
-  const forceErrorForFiberIDs = new Map<number | null, $FlowFixMe>();
+  let forceErrorCount = 0;
 
-  function shouldErrorFiberAccordingToMap(fiber: any) {
+  function shouldErrorFiberAccordingToMap(fiber: any): null | boolean {
     if (typeof setErrorHandler !== 'function') {
       throw new Error(
         'Expected overrideError() to not get called for earlier React versions.',
       );
     }
 
-    const id = getFiberIDUnsafe(fiber);
-    if (id === null) {
+    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
+    if (fiberInstance === undefined && fiber.alternate !== null) {
+      fiberInstance = fiberToFiberInstanceMap.get(fiber.alternate);
+    }
+    if (fiberInstance === undefined) {
       return null;
     }
 
-    let status = null;
-    if (forceErrorForFiberIDs.has(id)) {
-      status = forceErrorForFiberIDs.get(id);
-      if (status === false) {
-        // TRICKY overrideError adds entries to this Map,
-        // so ideally it would be the method that clears them too,
-        // but that would break the functionality of the feature,
-        // since DevTools needs to tell React to act differently than it normally would
-        // (don't just re-render the failed boundary, but reset its errored state too).
-        // So we can only clear it after telling React to reset the state.
-        // Technically this is premature and we should schedule it for later,
-        // since the render could always fail without committing the updated error boundary,
-        // but since this is a DEV-only feature, the simplicity is worth the trade off.
-        forceErrorForFiberIDs.delete(id);
-
-        if (forceErrorForFiberIDs.size === 0) {
-          // Last override is gone. Switch React back to fast path.
-          setErrorHandler(shouldErrorFiberAlwaysNull);
-        }
+    if (fiberInstance.flags & FORCE_ERROR_RESET) {
+      // TRICKY overrideError adds entries to this Map,
+      // so ideally it would be the method that clears them too,
+      // but that would break the functionality of the feature,
+      // since DevTools needs to tell React to act differently than it normally would
+      // (don't just re-render the failed boundary, but reset its errored state too).
+      // So we can only clear it after telling React to reset the state.
+      // Technically this is premature and we should schedule it for later,
+      // since the render could always fail without committing the updated error boundary,
+      // but since this is a DEV-only feature, the simplicity is worth the trade off.
+      forceErrorCount--;
+      fiberInstance.flags &= ~FORCE_ERROR_RESET;
+      if (forceErrorCount === 0) {
+        // Last override is gone. Switch React back to fast path.
+        setErrorHandler(shouldErrorFiberAlwaysNull);
       }
+      return false;
+    } else if (fiberInstance.flags & FORCE_ERROR) {
+      return true;
+    } else {
+      return null;
     }
-    return status;
   }
 
   function overrideError(id: number, forceError: boolean) {
@@ -4402,17 +4422,20 @@ export function attach(
       );
     }
 
-    forceErrorForFiberIDs.set(id, forceError);
-
-    if (forceErrorForFiberIDs.size === 1) {
-      // First override is added. Switch React to slower path.
-      setErrorHandler(shouldErrorFiberAccordingToMap);
-    }
-
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
       return;
     }
+    if ((devtoolsInstance.flags & (FORCE_ERROR | FORCE_ERROR_RESET)) === 0) {
+      forceErrorCount++;
+      if (forceErrorCount === 1) {
+        // First override is added. Switch React to slower path.
+        setErrorHandler(shouldErrorFiberAccordingToMap);
+      }
+    }
+    devtoolsInstance.flags &= forceError ? ~FORCE_ERROR_RESET : ~FORCE_ERROR;
+    devtoolsInstance.flags |= forceError ? FORCE_ERROR : FORCE_ERROR_RESET;
+
     if (devtoolsInstance.kind === FIBER_INSTANCE) {
       const fiber = devtoolsInstance.data;
       scheduleUpdate(fiber);
@@ -4425,11 +4448,17 @@ export function attach(
     return false;
   }
 
-  const forceFallbackForSuspenseIDs = new Set<number>();
+  let forceFallbackCount = 0;
 
   function shouldSuspendFiberAccordingToSet(fiber: any) {
-    const maybeID = getFiberIDUnsafe(((fiber: any): Fiber));
-    return maybeID !== null && forceFallbackForSuspenseIDs.has(maybeID);
+    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
+    if (fiberInstance === undefined && fiber.alternate !== null) {
+      fiberInstance = fiberToFiberInstanceMap.get(fiber.alternate);
+    }
+    return (
+      fiberInstance !== undefined &&
+      (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) !== 0
+    );
   }
 
   function overrideSuspense(id: number, forceFallback: boolean) {
@@ -4441,24 +4470,31 @@ export function attach(
         'Expected overrideSuspense() to not get called for earlier React versions.',
       );
     }
-    if (forceFallback) {
-      forceFallbackForSuspenseIDs.add(id);
-      if (forceFallbackForSuspenseIDs.size === 1) {
-        // First override is added. Switch React to slower path.
-        setSuspenseHandler(shouldSuspendFiberAccordingToSet);
-      }
-    } else {
-      forceFallbackForSuspenseIDs.delete(id);
-      if (forceFallbackForSuspenseIDs.size === 0) {
-        // Last override is gone. Switch React back to fast path.
-        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
-      }
-    }
-
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
       return;
     }
+
+    if (forceFallback) {
+      if ((devtoolsInstance.flags & FORCE_SUSPENSE_FALLBACK) === 0) {
+        devtoolsInstance.flags |= FORCE_SUSPENSE_FALLBACK;
+        forceFallbackCount++;
+        if (forceFallbackCount === 1) {
+          // First override is added. Switch React to slower path.
+          setSuspenseHandler(shouldSuspendFiberAccordingToSet);
+        }
+      }
+    } else {
+      if ((devtoolsInstance.flags & FORCE_SUSPENSE_FALLBACK) !== 0) {
+        devtoolsInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
+        forceFallbackCount--;
+        if (forceFallbackCount === 0) {
+          // Last override is gone. Switch React back to fast path.
+          setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+        }
+      }
+    }
+
     if (devtoolsInstance.kind === FIBER_INSTANCE) {
       const fiber = devtoolsInstance.data;
       scheduleUpdate(fiber);
@@ -4718,7 +4754,10 @@ export function attach(
 
   function getComponentStackForFiber(fiber: Fiber): string | null {
     // TODO: This should really just take an DevToolsInstance directly.
-    const fiberInstance = fiberToFiberInstanceMap.get(fiber);
+    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
+    if (fiberInstance === undefined && fiber.alternate !== null) {
+      fiberInstance = fiberToFiberInstanceMap.get(fiber.alternate);
+    }
     if (fiberInstance === undefined) {
       // We're no longer tracking this instance.
       return null;
