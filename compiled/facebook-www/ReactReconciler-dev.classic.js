@@ -16368,10 +16368,6 @@ __DEV__ &&
       markRetryLaneImpl(fiber, retryLane);
       (fiber = fiber.alternate) && markRetryLaneImpl(fiber, retryLane);
     }
-    function findHostInstanceByFiber(fiber) {
-      fiber = findCurrentHostFiber(fiber);
-      return null === fiber ? null : fiber.stateNode;
-    }
     function emptyFindFiberByHostInstance() {
       return null;
     }
@@ -19137,7 +19133,6 @@ __DEV__ &&
         setSuspenseHandler: setSuspenseHandler,
         scheduleUpdate: scheduleUpdate,
         currentDispatcherRef: ReactSharedInternals,
-        findHostInstanceByFiber: findHostInstanceByFiber,
         findFiberByHostInstance:
           devToolsConfig.findFiberByHostInstance ||
           emptyFindFiberByHostInstance,
@@ -19146,7 +19141,7 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-classic-397646ad-20240729"
+        reconcilerVersion: "19.0.0-www-classic-bea5a2bc-20240729"
       });
     };
     exports.isAlreadyRendering = function () {

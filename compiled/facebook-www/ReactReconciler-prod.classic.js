@@ -435,10 +435,6 @@ module.exports = function ($$$config) {
     if (3 !== a.tag) throw Error(formatProdErrorMessage(188));
     return a.stateNode.current === a ? fiber : alternate;
   }
-  function findCurrentHostFiber(parent) {
-    parent = findCurrentFiberUsingSlowPath(parent);
-    return null !== parent ? findCurrentHostFiberImpl(parent) : null;
-  }
   function findCurrentHostFiberImpl(node) {
     var tag = node.tag;
     if (5 === tag || 26 === tag || 27 === tag || 6 === tag) return node;
@@ -11453,7 +11449,8 @@ module.exports = function ($$$config) {
       component = Object.keys(component).join(",");
       throw Error(formatProdErrorMessage(268, component));
     }
-    component = findCurrentHostFiber(fiber);
+    component = findCurrentFiberUsingSlowPath(fiber);
+    component = null !== component ? findCurrentHostFiberImpl(component) : null;
     return null === component ? null : getPublicInstance(component.stateNode);
   }
   function updateContainerImpl(
@@ -11487,10 +11484,6 @@ module.exports = function ($$$config) {
   function markRetryLaneIfNotHydrated(fiber, retryLane) {
     markRetryLaneImpl(fiber, retryLane);
     (fiber = fiber.alternate) && markRetryLaneImpl(fiber, retryLane);
-  }
-  function findHostInstanceByFiber(fiber) {
-    fiber = findCurrentHostFiber(fiber);
-    return null === fiber ? null : fiber.stateNode;
   }
   function emptyFindFiberByHostInstance() {
     return null;
@@ -12677,7 +12670,6 @@ module.exports = function ($$$config) {
       setSuspenseHandler: null,
       scheduleUpdate: null,
       currentDispatcherRef: ReactSharedInternals,
-      findHostInstanceByFiber: findHostInstanceByFiber,
       findFiberByHostInstance:
         devToolsConfig.findFiberByHostInstance || emptyFindFiberByHostInstance,
       findHostInstancesForRefresh: null,
@@ -12685,7 +12677,7 @@ module.exports = function ($$$config) {
       scheduleRoot: null,
       setRefreshHandler: null,
       getCurrentFiber: null,
-      reconcilerVersion: "19.0.0-www-classic-397646ad-20240729"
+      reconcilerVersion: "19.0.0-www-classic-bea5a2bc-20240729"
     };
     if ("undefined" === typeof __REACT_DEVTOOLS_GLOBAL_HOOK__)
       devToolsConfig = !1;

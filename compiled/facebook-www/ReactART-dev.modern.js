@@ -619,110 +619,6 @@ __DEV__ &&
       isRendering = !1;
       current = null;
     }
-    function getNearestMountedFiber(fiber) {
-      var node = fiber,
-        nearestMounted = fiber;
-      if (fiber.alternate) for (; node.return; ) node = node.return;
-      else {
-        fiber = node;
-        do
-          (node = fiber),
-            0 !== (node.flags & 4098) && (nearestMounted = node.return),
-            (fiber = node.return);
-        while (fiber);
-      }
-      return 3 === node.tag ? nearestMounted : null;
-    }
-    function assertIsMounted(fiber) {
-      if (getNearestMountedFiber(fiber) !== fiber)
-        throw Error("Unable to find node on an unmounted component.");
-    }
-    function findCurrentFiberUsingSlowPath(fiber) {
-      var alternate = fiber.alternate;
-      if (!alternate) {
-        alternate = getNearestMountedFiber(fiber);
-        if (null === alternate)
-          throw Error("Unable to find node on an unmounted component.");
-        return alternate !== fiber ? null : fiber;
-      }
-      for (var a = fiber, b = alternate; ; ) {
-        var parentA = a.return;
-        if (null === parentA) break;
-        var parentB = parentA.alternate;
-        if (null === parentB) {
-          b = parentA.return;
-          if (null !== b) {
-            a = b;
-            continue;
-          }
-          break;
-        }
-        if (parentA.child === parentB.child) {
-          for (parentB = parentA.child; parentB; ) {
-            if (parentB === a) return assertIsMounted(parentA), fiber;
-            if (parentB === b) return assertIsMounted(parentA), alternate;
-            parentB = parentB.sibling;
-          }
-          throw Error("Unable to find node on an unmounted component.");
-        }
-        if (a.return !== b.return) (a = parentA), (b = parentB);
-        else {
-          for (var didFindChild = !1, _child = parentA.child; _child; ) {
-            if (_child === a) {
-              didFindChild = !0;
-              a = parentA;
-              b = parentB;
-              break;
-            }
-            if (_child === b) {
-              didFindChild = !0;
-              b = parentA;
-              a = parentB;
-              break;
-            }
-            _child = _child.sibling;
-          }
-          if (!didFindChild) {
-            for (_child = parentB.child; _child; ) {
-              if (_child === a) {
-                didFindChild = !0;
-                a = parentB;
-                b = parentA;
-                break;
-              }
-              if (_child === b) {
-                didFindChild = !0;
-                b = parentB;
-                a = parentA;
-                break;
-              }
-              _child = _child.sibling;
-            }
-            if (!didFindChild)
-              throw Error(
-                "Child was not found in either parent set. This indicates a bug in React related to the return pointer. Please file an issue."
-              );
-          }
-        }
-        if (a.alternate !== b)
-          throw Error(
-            "Return fibers should always be each others' alternates. This error is likely caused by a bug in React. Please file an issue."
-          );
-      }
-      if (3 !== a.tag)
-        throw Error("Unable to find node on an unmounted component.");
-      return a.stateNode.current === a ? fiber : alternate;
-    }
-    function findCurrentHostFiberImpl(node) {
-      var tag = node.tag;
-      if (5 === tag || 26 === tag || 27 === tag || 6 === tag) return node;
-      for (node = node.child; null !== node; ) {
-        tag = findCurrentHostFiberImpl(node);
-        if (null !== tag) return tag;
-        node = node.sibling;
-      }
-      return null;
-    }
     function isFiberSuspenseAndTimedOut(fiber) {
       var memoizedState = fiber.memoizedState;
       return (
@@ -14195,11 +14091,6 @@ __DEV__ &&
         entangleTransitions(element, parentComponent, lane));
       return SyncLane;
     }
-    function findHostInstanceByFiber(fiber) {
-      fiber = findCurrentFiberUsingSlowPath(fiber);
-      fiber = null !== fiber ? findCurrentHostFiberImpl(fiber) : null;
-      return null === fiber ? null : fiber.stateNode;
-    }
     function emptyFindFiberByHostInstance() {
       return null;
     }
@@ -15959,9 +15850,20 @@ __DEV__ &&
             );
           instance._warnedAboutRefsInRender = !0;
         }
-        return (component = component._reactInternals)
-          ? getNearestMountedFiber(component) === component
-          : !1;
+        component = component._reactInternals;
+        if (!component) return !1;
+        instance = owner = component;
+        if (component.alternate) for (; owner.return; ) owner = owner.return;
+        else {
+          var nextNode = owner;
+          do
+            (owner = nextNode),
+              0 !== (owner.flags & 4098) && (instance = owner.return),
+              (nextNode = owner.return);
+          while (nextNode);
+        }
+        owner = 3 === owner.tag ? instance : null;
+        return owner === component;
       },
       enqueueSetState: function (inst, payload, callback) {
         inst = inst._reactInternals;
@@ -16459,7 +16361,6 @@ __DEV__ &&
         setSuspenseHandler: setSuspenseHandler,
         scheduleUpdate: scheduleUpdate,
         currentDispatcherRef: ReactSharedInternals,
-        findHostInstanceByFiber: findHostInstanceByFiber,
         findFiberByHostInstance:
           devToolsConfig.findFiberByHostInstance ||
           emptyFindFiberByHostInstance,
@@ -16468,14 +16369,14 @@ __DEV__ &&
         scheduleRoot: scheduleRoot,
         setRefreshHandler: setRefreshHandler,
         getCurrentFiber: getCurrentFiberForDevTools,
-        reconcilerVersion: "19.0.0-www-modern-397646ad-20240729"
+        reconcilerVersion: "19.0.0-www-modern-bea5a2bc-20240729"
       });
     })({
       findFiberByHostInstance: function () {
         return null;
       },
       bundleType: 1,
-      version: "19.0.0-www-modern-397646ad-20240729",
+      version: "19.0.0-www-modern-bea5a2bc-20240729",
       rendererPackageName: "react-art"
     });
     var ClippingRectangle = TYPES.CLIPPING_RECTANGLE,

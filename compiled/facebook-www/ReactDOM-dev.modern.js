@@ -17483,10 +17483,6 @@ __DEV__ &&
         markRetryLaneIfNotHydrated(fiber, lane);
       }
     }
-    function findHostInstanceByFiber(fiber) {
-      fiber = findCurrentHostFiber(fiber);
-      return null === fiber ? null : fiber.stateNode;
-    }
     function emptyFindFiberByHostInstance() {
       return null;
     }
@@ -26784,11 +26780,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-397646ad-20240729" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-bea5a2bc-20240729" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-397646ad-20240729\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-bea5a2bc-20240729\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26844,7 +26840,6 @@ __DEV__ &&
           setSuspenseHandler: setSuspenseHandler,
           scheduleUpdate: scheduleUpdate,
           currentDispatcherRef: ReactSharedInternals,
-          findHostInstanceByFiber: findHostInstanceByFiber,
           findFiberByHostInstance:
             devToolsConfig.findFiberByHostInstance ||
             emptyFindFiberByHostInstance,
@@ -26853,12 +26848,12 @@ __DEV__ &&
           scheduleRoot: scheduleRoot,
           setRefreshHandler: setRefreshHandler,
           getCurrentFiber: getCurrentFiberForDevTools,
-          reconcilerVersion: "19.0.0-www-modern-397646ad-20240729"
+          reconcilerVersion: "19.0.0-www-modern-bea5a2bc-20240729"
         });
       })({
         findFiberByHostInstance: getClosestInstanceFromNode,
         bundleType: 1,
-        version: "19.0.0-www-modern-397646ad-20240729",
+        version: "19.0.0-www-modern-bea5a2bc-20240729",
         rendererPackageName: "react-dom"
       }) &&
       canUseDOM &&
@@ -27446,7 +27441,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-397646ad-20240729";
+    exports.version = "19.0.0-www-modern-bea5a2bc-20240729";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
