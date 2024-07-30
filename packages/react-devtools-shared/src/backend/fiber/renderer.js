@@ -2891,7 +2891,17 @@ export function attach(
 
   function findAllCurrentHostFibers(id: number): $ReadOnlyArray<Fiber> {
     const fibers = [];
-    const fiber = findCurrentFiberUsingSlowPathById(id);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
+      return fibers;
+    }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return fibers;
+    }
+    const fiber =
+      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
     if (!fiber) {
       return fibers;
     }
@@ -2925,7 +2935,17 @@ export function attach(
 
   function findHostInstancesForElementID(id: number) {
     try {
-      const fiber = findCurrentFiberUsingSlowPathById(id);
+      const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+      if (devtoolsInstance === undefined) {
+        console.warn(`Could not find DevToolsInstance with id "${id}"`);
+        return null;
+      }
+      if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+        // TODO: Handle VirtualInstance.
+        return null;
+      }
+      const fiber =
+        findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
       if (fiber === null) {
         return null;
       }
@@ -3028,18 +3048,10 @@ export function attach(
   // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
   // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
   // BEGIN copied code
-  function findCurrentFiberUsingSlowPathById(id: number): Fiber | null {
-    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
-    if (devtoolsInstance === undefined) {
-      console.warn(`Could not find Fiber with id "${id}"`);
-      return null;
-    }
-    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
-      // TODO: Handle VirtualInstance.
-      return null;
-    }
-
-    const fiber = devtoolsInstance.data;
+  function findCurrentFiberUsingSlowPathByFiberInstance(
+    fiberInstance: FiberInstance,
+  ): Fiber | null {
+    const fiber = fiberInstance.data;
     const alternate = fiber.alternate;
     if (!alternate) {
       // If there is no alternate, then we only need to check if it is mounted.
@@ -3201,7 +3213,7 @@ export function attach(
   function prepareViewElementSource(id: number): void {
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
-      console.warn(`Could not find Fiber with id "${id}"`);
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
       return;
     }
     if (devtoolsInstance.kind !== FIBER_INSTANCE) {
@@ -3246,7 +3258,17 @@ export function attach(
   }
 
   function getOwnersList(id: number): Array<SerializedElement> | null {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
+      return null;
+    }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return null;
+    }
+    const fiber =
+      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
     if (fiber == null) {
       return null;
     }
@@ -3275,7 +3297,18 @@ export function attach(
     let instance = null;
     let style = null;
 
-    const fiber = findCurrentFiberUsingSlowPathById(id);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
+      return {instance, style};
+    }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return {instance, style};
+    }
+
+    const fiber =
+      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
     if (fiber !== null) {
       instance = fiber.stateNode;
 
@@ -3316,7 +3349,17 @@ export function attach(
   }
 
   function inspectElementRaw(id: number): InspectedElement | null {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
+      return null;
+    }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return null;
+    }
+    const fiber =
+      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
     if (fiber == null) {
       return null;
     }
@@ -3504,10 +3547,6 @@ export function attach(
     if (fiberRoot != null && fiberRoot._debugRootType !== null) {
       rootType = fiberRoot._debugRootType;
     }
-
-    const devtoolsInstance: DevToolsInstance = (idToDevToolsInstanceMap.get(
-      id,
-    ): any);
 
     let isErrored = false;
     let targetErrorBoundaryID;
@@ -3699,7 +3738,7 @@ export function attach(
 
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
-      console.warn(`Could not find Fiber with id "${id}"`);
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
       return;
     }
     if (devtoolsInstance.kind !== FIBER_INSTANCE) {
@@ -3841,9 +3880,7 @@ export function attach(
         // Log error & cause for user to debug
         console.error(message + '\n\n', error);
         if (error.cause != null) {
-          const fiber = findCurrentFiberUsingSlowPathById(id);
-          const componentName =
-            fiber != null ? getDisplayNameForFiber(fiber) : null;
+          const componentName = getDisplayNameForElementID(id);
           console.error(
             'React DevTools encountered an error while trying to inspect hooks. ' +
               'This is most likely caused by an error in current inspected component' +
@@ -3945,7 +3982,7 @@ export function attach(
       ? mostRecentlyInspectedElement
       : inspectElementRaw(id);
     if (result === null) {
-      console.warn(`Could not find Fiber with id "${id}"`);
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
       return;
     }
 
@@ -3986,7 +4023,17 @@ export function attach(
     hookID: ?number,
     path: Array<string | number>,
   ): void {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
+      return;
+    }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return;
+    }
+    const fiber =
+      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
@@ -4042,7 +4089,17 @@ export function attach(
     oldPath: Array<string | number>,
     newPath: Array<string | number>,
   ): void {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
+      return;
+    }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return;
+    }
+    const fiber =
+      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
@@ -4108,7 +4165,17 @@ export function attach(
     path: Array<string | number>,
     value: any,
   ): void {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
+    const devtoolsInstance = idToDevToolsInstanceMap.get(id);
+    if (devtoolsInstance === undefined) {
+      console.warn(`Could not find DevToolsInstance with id "${id}"`);
+      return;
+    }
+    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
+      // TODO: Handle VirtualInstance.
+      return;
+    }
+    const fiber =
+      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
     if (fiber !== null) {
       const instance = fiber.stateNode;
 
