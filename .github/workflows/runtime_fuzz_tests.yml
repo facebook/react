@@ -1,24 +1,19 @@
 name: (Runtime) Fuzz tests
+
 on:
   schedule:
-  - cron: 0 * * * *
+    - cron: 0 * * * *
   push:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      prerelease_commit_sha:
-        required: false
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
 
 jobs:
   test_fuzz:
-    if: inputs.prerelease_commit_sha == ''
     runs-on: ubuntu-latest
-    env:
-      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
     steps:
     - uses: actions/checkout@v4.1.0
     - uses: actions/setup-node@v4

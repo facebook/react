@@ -6,6 +6,11 @@ on:
     types: [completed]
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        required: false
+        type: string
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -72,7 +77,7 @@ jobs:
         working-directory: scripts/release
       - name: Download artifacts for base revision
         run: |
-          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ github.event.workflow_run.head_sha }}
+          GH_TOKEN=${{ github.token }} scripts/release/download-experimental-build.js --commit=${{ inputs.commit_sha || github.event.workflow_run.head_sha }}
       - name: Display structure of build
         run: ls -R build
       - name: Strip @license from eslint plugin and react-refresh
