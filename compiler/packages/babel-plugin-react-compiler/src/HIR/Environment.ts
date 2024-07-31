@@ -434,6 +434,25 @@ const EnvironmentConfigSchema = z.object({
    * Here the variables `ref` and `myRef` will be typed as Refs.
    */
   enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
+
+  /*
+   * If enabled, this lowers any calls to `useContext` hook to use a selector
+   * function.
+   *
+   * The compiler automatically figures out the keys by looking for the immediate
+   * destructuring of the return value from the useContext call. In the future,
+   * this can be extended to different kinds of context access like property
+   * loads and accesses over multiple statements as well.
+   *
+   * ```
+   * // input
+   * const {foo, bar} = useContext(MyContext);
+   *
+   * // output
+   * const {foo, bar} = useContext(MyContext, (c) => [c.foo, c.bar]);
+   * ```
+   */
+  enableLowerContextAccess: z.boolean().nullable().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
