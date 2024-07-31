@@ -15,6 +15,7 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsBackend,
+  DevToolsHookSettings,
 } from './backend/types';
 
 import {
@@ -24,7 +25,17 @@ import {
 
 declare var window: any;
 
-export function installHook(target: any): DevToolsHook | null {
+const defaultHookSettings: DevToolsHookSettings = {
+  appendComponentStack: true,
+  breakOnConsoleErrors: false,
+  showInlineWarningsAndErrors: true,
+  hideConsoleLogsInStrictMode: false,
+};
+
+export function installHook(
+  target: any,
+  settingsToInject?: DevToolsHookSettings,
+): DevToolsHook | null {
   if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
     return null;
   }
@@ -526,6 +537,16 @@ export function installHook(target: any): DevToolsHook | null {
   const renderers = new Map<RendererID, ReactRenderer>();
   const backends = new Map<string, DevToolsBackend>();
 
+  const settings = settingsToInject || defaultHookSettings;
+  const settingsHaveBeenInjected = settingsToInject != null;
+
+  // Should be used once when the persisted settings were loaded from some asynchronous storage
+  // This will be used as a signal that Hook initialization has finished, and it can now use patched console implementation
+  function injectSettings(newSettings: DevToolsHookSettings): void {
+    hook.settings = newSettings;
+    hook.settingsHaveBeenInjected = true;
+  }
+
   const hook: DevToolsHook = {
     rendererInterfaces,
     listeners,
@@ -562,6 +583,10 @@ export function installHook(target: any): DevToolsHook | null {
     getInternalModuleRanges,
     registerInternalModuleStart,
     registerInternalModuleStop,
+
+    settings,
+    settingsHaveBeenInjected,
+    injectSettings,
   };
 
   if (__TEST__) {
