@@ -19,7 +19,6 @@ import {
   LoadLocal,
   Place,
   PropertyLoad,
-  ReturnTerminal,
   isUseContextHookType,
   makeBlockId,
   makeIdentifierId,
@@ -284,7 +283,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
   return fnInstr;
 }
 
-function emitArrayInstr(elements: Place[], env: Environment): Instruction {
+function emitArrayInstr(elements: Array<Place>, env: Environment): Instruction {
   const array: ArrayExpression = {
     kind: 'ArrayExpression',
     elements,
