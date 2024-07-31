@@ -3270,7 +3270,7 @@ function lowerFunctionToValue(
   return {
     kind: 'FunctionExpression',
     name,
-    expr: expr.node,
+    type: expr.node.type,
     loc: exprLoc,
     loweredFunc,
   };

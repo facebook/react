@@ -1997,7 +1997,7 @@ function codegenInstructionValue(
         ),
         reactiveFunction,
       ).unwrap();
-      if (instrValue.expr.type === 'ArrowFunctionExpression') {
+      if (instrValue.type === 'ArrowFunctionExpression') {
         let body: t.BlockStatement | t.Expression = fn.body;
         if (body.body.length === 1 && loweredFunc.directives.length == 0) {
           const stmt = body.body[0]!;
