@@ -8,7 +8,6 @@
 import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {HIRFunction, IdentifierId, Place, isSetStateType} from '../HIR';
 import {computeUnconditionalBlocks} from '../HIR/ComputeUnconditionalBlocks';
-import {printIdentifier} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {Err, Ok, Result} from '../Utils/Result';
 
