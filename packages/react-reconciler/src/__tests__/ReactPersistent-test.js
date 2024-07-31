@@ -213,4 +213,26 @@ describe('ReactPersistent', () => {
     // The original is unchanged.
     expect(newPortalChildren).toEqual([div(span(), 'Hello ', 'World')]);
   });
+
+  it('remove children', async () => {
+    function Wrapper({children}) {
+      return children;
+    }
+
+    const root = ReactNoopPersistent.createRoot();
+    root.render(
+      <Wrapper>
+        <inner />
+      </Wrapper>,
+    );
+    waitForAll([]);
+
+    expect(root.getChildrenAsJSX()).toEqual(<inner />);
+
+    console.log('#### SECOND RENDER ####');
+    root.render(<Wrapper />);
+    waitForAll([]);
+
+    expect(root.getChildrenAsJSX()).toEqual(null);
+  });
 });
