@@ -135,7 +135,7 @@ export function patch({
   showInlineWarningsAndErrors,
   hideConsoleLogsInStrictMode,
   browserTheme,
-}: ConsolePatchSettings): void {
+}: $ReadOnly<ConsolePatchSettings>): void {
   // Settings may change after we've patched the console.
   // Using a shared ref allows the patch function to read the latest values.
   consoleSettingsRef.appendComponentStack = appendComponentStack;
