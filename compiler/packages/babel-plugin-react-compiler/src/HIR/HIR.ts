@@ -1599,6 +1599,12 @@ export function isUseInsertionEffectHookType(id: Identifier): boolean {
   );
 }
 
+export function isUseContextHookType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInUseContextHook'
+  );
+}
+
 export function getHookKind(env: Environment, id: Identifier): HookKind | null {
   return getHookKindForType(env, id.type);
 }

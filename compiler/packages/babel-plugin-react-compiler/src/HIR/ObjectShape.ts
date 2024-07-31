@@ -208,6 +208,7 @@ export const BuiltInUseInsertionEffectHookId = 'BuiltInUseInsertionEffectHook';
 export const BuiltInUseOperatorId = 'BuiltInUseOperator';
 export const BuiltInUseReducerId = 'BuiltInUseReducer';
 export const BuiltInDispatchId = 'BuiltInDispatch';
+export const BuiltInUseContextHookId = 'BuiltInUseContextHook';
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
