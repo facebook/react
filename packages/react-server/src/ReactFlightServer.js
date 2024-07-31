@@ -2665,6 +2665,12 @@ function renderModelDestructive(
             case '3':
               propertyName = 'props';
               break;
+            case '4':
+              propertyName = '_owner';
+              break;
+            case '5':
+              propertyName = '_debugStack';
+              break;
           }
         }
         writtenObjects.set(value, parentReference + ':' + propertyName);
