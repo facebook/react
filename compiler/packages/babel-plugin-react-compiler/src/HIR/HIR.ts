@@ -11,7 +11,7 @@ import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import {HookKind} from './ObjectShape';
-import {Type} from './Types';
+import {Type, makeType} from './Types';
 
 /*
  * *******************************************************************************************
@@ -1204,6 +1204,20 @@ const opaqueValidIdentifierName = Symbol();
 export type ValidIdentifierName = string & {
   [opaqueValidIdentifierName]: 'ValidIdentifierName';
 };
+
+export function makeTemporary(
+  id: IdentifierId,
+  loc: SourceLocation,
+): Identifier {
+  return {
+    id,
+    name: null,
+    mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
+    scope: null,
+    type: makeType(),
+    loc,
+  };
+}
 
 /**
  * Creates a valid identifier name. This should *not* be used for synthesizing
