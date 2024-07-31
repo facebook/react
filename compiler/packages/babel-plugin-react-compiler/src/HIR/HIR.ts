@@ -1076,10 +1076,10 @@ export type FunctionExpression = {
   kind: 'FunctionExpression';
   name: string | null;
   loweredFunc: LoweredFunction;
-  expr:
-    | t.ArrowFunctionExpression
-    | t.FunctionExpression
-    | t.FunctionDeclaration;
+  type:
+    | 'ArrowFunctionExpression'
+    | 'FunctionExpression'
+    | 'FunctionDeclaration';
   loc: SourceLocation;
 };
 
