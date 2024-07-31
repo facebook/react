@@ -15,6 +15,7 @@ import type {
   RendererID,
   RendererInterface,
   DevToolsBackend,
+  DevToolsHookSettings,
 } from './backend/types';
 
 import {
@@ -24,7 +25,10 @@ import {
 
 declare var window: any;
 
-export function installHook(target: any): DevToolsHook | null {
+export function installHook(
+  target: any,
+  injectedSettings?: DevToolsHookSettings,
+): DevToolsHook | null {
   if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
     return null;
   }
@@ -543,6 +547,14 @@ export function installHook(target: any): DevToolsHook | null {
   const listeners: {[string]: Array<Handler>} = {};
   const renderers = new Map<RendererID, ReactRenderer>();
   const backends = new Map<string, DevToolsBackend>();
+  const settings = injectedSettings
+    ? injectedSettings
+    : {
+        appendComponentStack: true,
+        breakOnConsoleErrors: false,
+        showInlineWarningsAndErrors: true,
+        hideConsoleLogsInStrictMode: false,
+      };
 
   const hook: DevToolsHook = {
     rendererInterfaces,
@@ -577,6 +589,8 @@ export function installHook(target: any): DevToolsHook | null {
     getInternalModuleRanges,
     registerInternalModuleStart,
     registerInternalModuleStop,
+
+    settings,
   };
 
   if (__TEST__) {
