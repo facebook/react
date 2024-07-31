@@ -1104,6 +1104,11 @@ export function attach(
     flushPendingEvents();
   }
 
+  function shouldFilterVirtual(data: ReactComponentInfo): boolean {
+    // TODO: Apply filters to VirtualInstances.
+    return false;
+  }
+
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
     const {tag, type, key} = fiber;
@@ -3024,15 +3029,43 @@ export function attach(
   function getElementIDForHostInstance(
     hostInstance: HostInstance,
     findNearestUnfilteredAncestor: boolean = false,
-  ) {
+  ): number | null {
     let fiber = renderer.findFiberByHostInstance(hostInstance);
     if (fiber != null) {
-      if (findNearestUnfilteredAncestor) {
-        while (fiber !== null && shouldFilterFiber(fiber)) {
-          fiber = fiber.return;
-        }
+      if (!findNearestUnfilteredAncestor) {
+        // TODO: Remove this option. It's not used.
+        return getFiberIDThrows(fiber);
       }
-      return getFiberIDThrows(((fiber: any): Fiber));
+      while (fiber !== null) {
+        const fiberInstance = getFiberInstanceUnsafe(fiber);
+        if (fiberInstance !== null) {
+          // TODO: Ideally we would not have any filtered FiberInstances which
+          // would make this logic much simpler. Unfortunately, we sometimes
+          // eagerly add to the map and some times don't eagerly clean it up.
+          // TODO: If the fiber is filtered, the FiberInstance wouldn't really
+          // exist which would mean that we also don't have a way to get to the
+          // VirtualInstances.
+          if (!shouldFilterFiber(fiberInstance.data)) {
+            return fiberInstance.id;
+          }
+          // We couldn't use this Fiber but we might have a VirtualInstance
+          // that is the nearest unfiltered instance.
+          let parentInstance = fiberInstance.parent;
+          while (parentInstance !== null) {
+            if (parentInstance.kind === FIBER_INSTANCE) {
+              // If we find a parent Fiber, it might not be the nearest parent
+              // so we break out and continue walking the Fiber tree instead.
+              break;
+            } else {
+              if (!shouldFilterVirtual(parentInstance.data)) {
+                return parentInstance.id;
+              }
+            }
+            parentInstance = parentInstance.parent;
+          }
+        }
+        fiber = fiber.return;
+      }
     }
     return null;
   }
@@ -3382,6 +3415,7 @@ export function attach(
     let parent = fiber.return;
     while (parent !== null) {
       if (isErrorBoundary(parent)) {
+        // TODO: If this boundary is filtered it won't have an ID.
         return getFiberIDUnsafe(parent);
       }
       parent = parent.return;
