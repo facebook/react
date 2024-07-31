@@ -5910,20 +5910,6 @@ __DEV__ &&
         !1
       );
     }
-    function erroredTask(request, boundary, error, errorInfo) {
-      var errorDigest = logRecoverableError(request, error, errorInfo);
-      null === boundary
-        ? fatalError(request, error)
-        : (boundary.pendingTasks--,
-          4 !== boundary.status &&
-            ((boundary.status = 4),
-            encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, !1),
-            untrackBoundary(request, boundary),
-            boundary.parentFlushed &&
-              request.clientRenderedBoundaries.push(boundary)));
-      request.allPendingTasks--;
-      0 === request.allPendingTasks && completeAll(request);
-    }
     function abortTaskSoft(task) {
       var boundary = task.blockedBoundary;
       task = task.blockedSegment;
@@ -8173,33 +8159,34 @@ __DEV__ &&
               segment = task.blockedSegment;
             if (null === segment) {
               var prevTaskInDEV = void 0,
-                task$jscomp$0 = task;
-              if (0 !== task$jscomp$0.replay.pendingTasks) {
-                switchContext(task$jscomp$0.context);
+                request$jscomp$1 = request$jscomp$0;
+              request$jscomp$0 = task;
+              if (0 !== request$jscomp$0.replay.pendingTasks) {
+                switchContext(request$jscomp$0.context);
                 prevTaskInDEV = currentTaskInDEV;
-                currentTaskInDEV = task$jscomp$0;
+                currentTaskInDEV = request$jscomp$0;
                 try {
-                  "number" === typeof task$jscomp$0.replay.slots
+                  "number" === typeof request$jscomp$0.replay.slots
                     ? resumeNode(
+                        request$jscomp$1,
                         request$jscomp$0,
-                        task$jscomp$0,
-                        task$jscomp$0.replay.slots,
-                        task$jscomp$0.node,
-                        task$jscomp$0.childIndex
+                        request$jscomp$0.replay.slots,
+                        request$jscomp$0.node,
+                        request$jscomp$0.childIndex
                       )
-                    : retryNode(request$jscomp$0, task$jscomp$0);
+                    : retryNode(request$jscomp$1, request$jscomp$0);
                   if (
-                    1 === task$jscomp$0.replay.pendingTasks &&
-                    0 < task$jscomp$0.replay.nodes.length
+                    1 === request$jscomp$0.replay.pendingTasks &&
+                    0 < request$jscomp$0.replay.nodes.length
                   )
                     throw Error(
                       "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering."
                     );
-                  task$jscomp$0.replay.pendingTasks--;
-                  task$jscomp$0.abortSet.delete(task$jscomp$0);
+                  request$jscomp$0.replay.pendingTasks--;
+                  request$jscomp$0.abortSet.delete(request$jscomp$0);
                   finishedTask(
-                    request$jscomp$0,
-                    task$jscomp$0.blockedBoundary,
+                    request$jscomp$1,
+                    request$jscomp$0.blockedBoundary,
                     null
                   );
                 } catch (thrownValue) {
@@ -8213,41 +8200,43 @@ __DEV__ &&
                     null !== x &&
                     "function" === typeof x.then
                   ) {
-                    var ping = task$jscomp$0.ping;
+                    var ping = request$jscomp$0.ping;
                     x.then(ping, ping);
-                    task$jscomp$0.thenableState =
+                    request$jscomp$0.thenableState =
                       getThenableStateAfterSuspending();
                   } else {
-                    task$jscomp$0.replay.pendingTasks--;
-                    task$jscomp$0.abortSet.delete(task$jscomp$0);
-                    var errorInfo = getThrownInfo(task$jscomp$0.componentStack);
-                    erroredReplay(
-                      request$jscomp$0,
-                      task$jscomp$0.blockedBoundary,
-                      x === AbortSigil ? request$jscomp$0.fatalError : x,
-                      errorInfo,
-                      task$jscomp$0.replay.nodes,
-                      task$jscomp$0.replay.slots
+                    request$jscomp$0.replay.pendingTasks--;
+                    request$jscomp$0.abortSet.delete(request$jscomp$0);
+                    var errorInfo = getThrownInfo(
+                      request$jscomp$0.componentStack
                     );
-                    request$jscomp$0.pendingRootTasks--;
-                    0 === request$jscomp$0.pendingRootTasks &&
-                      completeShell(request$jscomp$0);
-                    request$jscomp$0.allPendingTasks--;
-                    0 === request$jscomp$0.allPendingTasks &&
-                      completeAll(request$jscomp$0);
+                    erroredReplay(
+                      request$jscomp$1,
+                      request$jscomp$0.blockedBoundary,
+                      x === AbortSigil ? request$jscomp$1.fatalError : x,
+                      errorInfo,
+                      request$jscomp$0.replay.nodes,
+                      request$jscomp$0.replay.slots
+                    );
+                    request$jscomp$1.pendingRootTasks--;
+                    0 === request$jscomp$1.pendingRootTasks &&
+                      completeShell(request$jscomp$1);
+                    request$jscomp$1.allPendingTasks--;
+                    0 === request$jscomp$1.allPendingTasks &&
+                      completeAll(request$jscomp$1);
                   }
                 } finally {
                   currentTaskInDEV = prevTaskInDEV;
                 }
               }
             } else {
-              prevTaskInDEV = void 0;
-              task$jscomp$0 = task;
-              var segment$jscomp$0 = segment;
+              request$jscomp$1 = prevTaskInDEV = void 0;
+              var task$jscomp$0 = task,
+                segment$jscomp$0 = segment;
               if (0 === segment$jscomp$0.status) {
                 segment$jscomp$0.status = 6;
                 switchContext(task$jscomp$0.context);
-                prevTaskInDEV = currentTaskInDEV;
+                request$jscomp$1 = currentTaskInDEV;
                 currentTaskInDEV = task$jscomp$0;
                 var childrenLength = segment$jscomp$0.children.length,
                   chunkLength = segment$jscomp$0.chunks.length;
@@ -8270,7 +8259,9 @@ __DEV__ &&
                   var x$jscomp$0 =
                     thrownValue === SuspenseException
                       ? getSuspendedThenable()
-                      : thrownValue;
+                      : thrownValue === AbortSigil
+                        ? request$jscomp$0.fatalError
+                        : thrownValue;
                   if (
                     "object" === typeof x$jscomp$0 &&
                     null !== x$jscomp$0 &&
@@ -8286,24 +8277,36 @@ __DEV__ &&
                       task$jscomp$0.componentStack
                     );
                     task$jscomp$0.abortSet.delete(task$jscomp$0);
-                    x$jscomp$0 === AbortSigil
-                      ? ((segment$jscomp$0.status = 3),
-                        erroredTask(
-                          request$jscomp$0,
-                          task$jscomp$0.blockedBoundary,
-                          request$jscomp$0.fatalError,
-                          errorInfo$jscomp$0
-                        ))
-                      : ((segment$jscomp$0.status = 4),
-                        erroredTask(
-                          request$jscomp$0,
-                          task$jscomp$0.blockedBoundary,
-                          x$jscomp$0,
-                          errorInfo$jscomp$0
-                        ));
+                    segment$jscomp$0.status = 4;
+                    var boundary = task$jscomp$0.blockedBoundary;
+                    prevTaskInDEV = logRecoverableError(
+                      request$jscomp$0,
+                      x$jscomp$0,
+                      errorInfo$jscomp$0
+                    );
+                    null === boundary
+                      ? fatalError(request$jscomp$0, x$jscomp$0)
+                      : (boundary.pendingTasks--,
+                        4 !== boundary.status &&
+                          ((boundary.status = 4),
+                          encodeErrorForBoundary(
+                            boundary,
+                            prevTaskInDEV,
+                            x$jscomp$0,
+                            errorInfo$jscomp$0,
+                            !1
+                          ),
+                          untrackBoundary(request$jscomp$0, boundary),
+                          boundary.parentFlushed &&
+                            request$jscomp$0.clientRenderedBoundaries.push(
+                              boundary
+                            )));
+                    request$jscomp$0.allPendingTasks--;
+                    0 === request$jscomp$0.allPendingTasks &&
+                      completeAll(request$jscomp$0);
                   }
                 } finally {
-                  currentTaskInDEV = prevTaskInDEV;
+                  currentTaskInDEV = request$jscomp$1;
                 }
               }
             }

@@ -4721,20 +4721,6 @@ function renderNode(request, task, node, childIndex) {
   switchContext(previousContext);
   throw node;
 }
-function erroredTask(request, boundary, error, errorInfo) {
-  errorInfo = logRecoverableError(request, error, errorInfo);
-  null === boundary
-    ? fatalError(request, error)
-    : (boundary.pendingTasks--,
-      4 !== boundary.status &&
-        ((boundary.status = 4),
-        (boundary.errorDigest = errorInfo),
-        untrackBoundary(request, boundary),
-        boundary.parentFlushed &&
-          request.clientRenderedBoundaries.push(boundary)));
-  request.allPendingTasks--;
-  0 === request.allPendingTasks && completeAll(request);
-}
 function abortTaskSoft(task) {
   var boundary = task.blockedBoundary;
   task = task.blockedSegment;
@@ -5540,62 +5526,74 @@ exports.renderNextChunk = function (stream) {
             } finally {
             }
           }
-        } else if (
-          ((errorDigest = task),
-          (task$jscomp$0 = segment),
-          0 === task$jscomp$0.status)
-        ) {
-          task$jscomp$0.status = 6;
-          switchContext(errorDigest.context);
-          var childrenLength = task$jscomp$0.children.length,
-            chunkLength = task$jscomp$0.chunks.length;
-          try {
-            retryNode(request, errorDigest),
-              task$jscomp$0.lastPushedText &&
-                task$jscomp$0.textEmbedded &&
-                task$jscomp$0.chunks.push("\x3c!-- --\x3e"),
-              errorDigest.abortSet.delete(errorDigest),
-              (task$jscomp$0.status = 1),
-              finishedTask(request, errorDigest.blockedBoundary, task$jscomp$0);
-          } catch (thrownValue) {
-            resetHooksState();
-            task$jscomp$0.children.length = childrenLength;
-            task$jscomp$0.chunks.length = chunkLength;
-            var x$jscomp$0 =
-              thrownValue === SuspenseException
-                ? getSuspendedThenable()
-                : thrownValue;
-            if (
-              "object" === typeof x$jscomp$0 &&
-              null !== x$jscomp$0 &&
-              "function" === typeof x$jscomp$0.then
-            ) {
-              task$jscomp$0.status = 0;
-              errorDigest.thenableState = getThenableStateAfterSuspending();
-              var ping$jscomp$0 = errorDigest.ping;
-              x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
-            } else {
-              var errorInfo$jscomp$0 = getThrownInfo(
-                errorDigest.componentStack
-              );
-              errorDigest.abortSet.delete(errorDigest);
-              x$jscomp$0 === AbortSigil
-                ? ((task$jscomp$0.status = 3),
-                  erroredTask(
-                    request,
-                    errorDigest.blockedBoundary,
-                    request.fatalError,
-                    errorInfo$jscomp$0
-                  ))
-                : ((task$jscomp$0.status = 4),
-                  erroredTask(
-                    request,
-                    errorDigest.blockedBoundary,
-                    x$jscomp$0,
-                    errorInfo$jscomp$0
-                  ));
+        } else {
+          errorDigest = void 0;
+          task$jscomp$0 = task;
+          var segment$jscomp$0 = segment;
+          if (0 === segment$jscomp$0.status) {
+            segment$jscomp$0.status = 6;
+            switchContext(task$jscomp$0.context);
+            var childrenLength = segment$jscomp$0.children.length,
+              chunkLength = segment$jscomp$0.chunks.length;
+            try {
+              retryNode(request, task$jscomp$0),
+                segment$jscomp$0.lastPushedText &&
+                  segment$jscomp$0.textEmbedded &&
+                  segment$jscomp$0.chunks.push("\x3c!-- --\x3e"),
+                task$jscomp$0.abortSet.delete(task$jscomp$0),
+                (segment$jscomp$0.status = 1),
+                finishedTask(
+                  request,
+                  task$jscomp$0.blockedBoundary,
+                  segment$jscomp$0
+                );
+            } catch (thrownValue) {
+              resetHooksState();
+              segment$jscomp$0.children.length = childrenLength;
+              segment$jscomp$0.chunks.length = chunkLength;
+              var x$jscomp$0 =
+                thrownValue === SuspenseException
+                  ? getSuspendedThenable()
+                  : thrownValue === AbortSigil
+                    ? request.fatalError
+                    : thrownValue;
+              if (
+                "object" === typeof x$jscomp$0 &&
+                null !== x$jscomp$0 &&
+                "function" === typeof x$jscomp$0.then
+              ) {
+                segment$jscomp$0.status = 0;
+                task$jscomp$0.thenableState = getThenableStateAfterSuspending();
+                var ping$jscomp$0 = task$jscomp$0.ping;
+                x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
+              } else {
+                var errorInfo$jscomp$0 = getThrownInfo(
+                  task$jscomp$0.componentStack
+                );
+                task$jscomp$0.abortSet.delete(task$jscomp$0);
+                segment$jscomp$0.status = 4;
+                var boundary$jscomp$0 = task$jscomp$0.blockedBoundary;
+                errorDigest = logRecoverableError(
+                  request,
+                  x$jscomp$0,
+                  errorInfo$jscomp$0
+                );
+                null === boundary$jscomp$0
+                  ? fatalError(request, x$jscomp$0)
+                  : (boundary$jscomp$0.pendingTasks--,
+                    4 !== boundary$jscomp$0.status &&
+                      ((boundary$jscomp$0.status = 4),
+                      (boundary$jscomp$0.errorDigest = errorDigest),
+                      untrackBoundary(request, boundary$jscomp$0),
+                      boundary$jscomp$0.parentFlushed &&
+                        request.clientRenderedBoundaries.push(
+                          boundary$jscomp$0
+                        )));
+                request.allPendingTasks--;
+                0 === request.allPendingTasks && completeAll(request);
+              }
+            } finally {
             }
-          } finally {
           }
         }
       }
