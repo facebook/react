@@ -2594,7 +2594,7 @@ export function attach(
         updateFiberRecursively(
           nextFallbackChildSet,
           prevFallbackChildSet,
-          newParentInstance, // Note this used to be the equivalent of fiberInstance if it was filtered but I think that was a bug.
+          newParentInstance,
           traceNearestHostComponentUpdate,
         )
       ) {
