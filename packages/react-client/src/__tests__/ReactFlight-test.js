@@ -2918,7 +2918,7 @@ describe('ReactFlight', () => {
     expect(ReactNoop).toMatchRenderedOutput(<div>hi</div>);
   });
 
-  // @gate enableServerComponentLogs && __DEV__
+  // @gate enableServerComponentLogs && __DEV__ && enableOwnerStacks
   it('replays logs, but not onError logs', async () => {
     function foo() {
       return 'hello';
@@ -2928,12 +2928,21 @@ describe('ReactFlight', () => {
       throw new Error('err');
     }
 
+    function App() {
+      return ReactServer.createElement(ServerComponent);
+    }
+
+    let ownerStacks = [];
+
     // These tests are specifically testing console.log.
     // Assign to `mockConsoleLog` so we can still inspect it when `console.log`
     // is overridden by the test modules. The original function will be restored
     // after this test finishes by `jest.restoreAllMocks()`.
     const mockConsoleLog = spyOnDevAndProd(console, 'log').mockImplementation(
-      () => {},
+      () => {
+        // Uses server React.
+        ownerStacks.push(normalizeCodeLocInfo(ReactServer.captureOwnerStack()));
+      },
     );
 
     let transport;
@@ -2946,14 +2955,20 @@ describe('ReactFlight', () => {
       ReactServer = require('react');
       ReactNoopFlightServer = require('react-noop-renderer/flight-server');
       transport = ReactNoopFlightServer.render({
-        root: ReactServer.createElement(ServerComponent),
+        root: ReactServer.createElement(App),
       });
     }).toErrorDev('err');
 
     expect(mockConsoleLog).toHaveBeenCalledTimes(1);
     expect(mockConsoleLog.mock.calls[0][0]).toBe('hi');
     expect(mockConsoleLog.mock.calls[0][1].prop).toBe(123);
+    expect(ownerStacks).toEqual(['\n    in App (at **)']);
     mockConsoleLog.mockClear();
+    mockConsoleLog.mockImplementation(() => {
+      // Switching to client React.
+      ownerStacks.push(normalizeCodeLocInfo(React.captureOwnerStack()));
+    });
+    ownerStacks = [];
 
     // The error should not actually get logged because we're not awaiting the root
     // so it's not thrown but the server log also shouldn't be replayed.
@@ -2973,6 +2988,8 @@ describe('ReactFlight', () => {
     expect(typeof loggedFn2).toBe('function');
     expect(loggedFn2).not.toBe(foo);
     expect(loggedFn2.toString()).toBe(foo.toString());
+
+    expect(ownerStacks).toEqual(['\n    in App (at **)']);
   });
 
   it('uses the server component debug info as the element owner in DEV', async () => {
@@ -3159,18 +3176,18 @@ describe('ReactFlight', () => {
     jest.resetModules();
     jest.mock('react', () => React);
     ReactNoopFlightClient.read(transport);
-    assertConsoleErrorDev(
-      [
-        'Each child in a list should have a unique "key" prop.' +
-          ' See https://react.dev/link/warning-keys for more information.',
-        'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
-          '  <div>Womp womp: {Error}</div>\n' +
-          '                  ^^^^^^^',
-      ],
-      // We should have a stack in the replay but we don't yet set the owner from the Flight replaying
-      // so our simulated polyfill doesn't end up getting any component stacks yet.
-      {withoutStack: true},
-    );
+    assertConsoleErrorDev([
+      'Each child in a list should have a unique "key" prop.' +
+        ' See https://react.dev/link/warning-keys for more information.\n' +
+        '    in Bar (at **)\n' +
+        '    in App (at **)',
+      'Error objects cannot be rendered as text children. Try formatting it using toString().\n' +
+        '  <div>Womp womp: {Error}</div>\n' +
+        '                  ^^^^^^^\n' +
+        '    in Foo (at **)\n' +
+        '    in Bar (at **)\n' +
+        '    in App (at **)',
+    ]);
   });
 
   it('can filter out stack frames of a serialized error in dev', async () => {
