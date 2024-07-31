@@ -398,4 +398,60 @@ describe('ReactDOMFizzStatic', () => {
       </div>,
     );
   });
+
+  // @gate enablePostpone
+  it('does not fatally error when aborting with a postpone during a prerender', async () => {
+    let postponedValue;
+    try {
+      React.unstable_postpone('aborting with postpone');
+    } catch (e) {
+      postponedValue = e;
+    }
+
+    const controller = new AbortController();
+    const infinitePromise = new Promise(() => {});
+    function App() {
+      React.use(infinitePromise);
+      return <div>aborted</div>;
+    }
+
+    const pendingResult = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      signal: controller.signal,
+    });
+    pendingResult.catch(() => {});
+
+    await Promise.resolve();
+    controller.abort(postponedValue);
+
+    const result = await pendingResult;
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(undefined);
+  });
+
+  // @gate enablePostpone
+  it('does not fatally error when aborting with a postpone during a prerender from within', async () => {
+    let postponedValue;
+    try {
+      React.unstable_postpone('aborting with postpone');
+    } catch (e) {
+      postponedValue = e;
+    }
+
+    const controller = new AbortController();
+    function App() {
+      controller.abort(postponedValue);
+      return <div>aborted</div>;
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      signal: controller.signal,
+    });
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(undefined);
+  });
 });
