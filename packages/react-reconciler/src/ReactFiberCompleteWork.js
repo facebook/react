@@ -212,7 +212,7 @@ function doesRequireClone(current: null | Fiber, completedWork: Fiber) {
   let child = completedWork.child;
   while (child !== null) {
     const checkedFlags = enablePersistedModeClonedFlag
-      ? Cloned | Visibility | Placement
+      ? Cloned | Visibility | Placement | ChildDeletion
       : MutationMask;
     if (
       (child.flags & checkedFlags) !== NoFlags ||
