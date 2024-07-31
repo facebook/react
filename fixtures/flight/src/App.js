@@ -12,10 +12,11 @@ import Button from './Button.js';
 import Form from './Form.js';
 import {Dynamic} from './Dynamic.js';
 import {Client} from './Client.js';
+import {TemporaryReferences} from './TemporaryReferences.js';
 
 import {Note} from './cjs/Note.js';
 
-import {like, greet, increment} from './actions.js';
+import {like, greet, increment, returnElement} from './actions.js';
 
 import {getServerState} from './ServerState.js';
 
@@ -61,6 +62,7 @@ export default async function App() {
           </div>
           <Client />
           <Note />
+          <TemporaryReferences action={returnElement} />
         </Container>
       </body>
     </html>

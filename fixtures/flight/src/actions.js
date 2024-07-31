@@ -1,6 +1,8 @@
 'use server';
 
+import * as React from 'react';
 import {setServerState} from './ServerState.js';
+import Deduped from './Deduped.js';
 
 export async function like() {
   setServerState('Liked!');
@@ -21,4 +23,15 @@ export async function greet(formData) {
 
 export async function increment(n) {
   return n + 1;
+}
+
+export async function returnElement(prevElement) {
+  const text = <div>Hello</div>;
+
+  return (
+    <Deduped thing={text}>
+      {prevElement}
+      {text}
+    </Deduped>
+  );
 }
