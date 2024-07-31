@@ -12,6 +12,7 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from '../HIR/visitors';
+import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
 
 /**
  * Validates that local variables cannot be reassigned after render.
@@ -132,7 +133,26 @@ function getContextReassignment(
           break;
         }
         default: {
-          for (const operand of eachInstructionValueOperand(value)) {
+          let operands = eachInstructionValueOperand(value);
+          // If we're calling a function that doesn't let its arguments escape, only test the callee
+          if (value.kind === 'CallExpression') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.callee.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.callee];
+            }
+          } else if (value.kind === 'MethodCall') {
+            const signature = getFunctionCallSignature(
+              fn.env,
+              value.property.identifier.type,
+            );
+            if (signature?.noAlias) {
+              operands = [value.receiver, value.property];
+            }
+          }
+          for (const operand of operands) {
             CompilerError.invariant(operand.effect !== Effect.Unknown, {
               reason: `Expected effects to be inferred prior to ValidateLocalsNotReassignedAfterRender`,
               loc: operand.loc,
@@ -148,6 +168,10 @@ function getContextReassignment(
               if (operand.effect === Effect.Freeze) {
                 return reassignment;
               } else {
+                /*
+                 * If the operand is not frozen but it does reassign, then the lvalues
+                 * of the instruction could also be reassigning
+                 */
                 for (const lval of eachInstructionLValue(instr)) {
                   reassigningFunctions.set(lval.identifier.id, reassignment);
                 }
