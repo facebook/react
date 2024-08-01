@@ -80,9 +80,7 @@ export function leaveSSA(fn: HIRFunction): void {
                 },
               );
               declarations.set(lvalue.place.identifier.declarationId, lvalue);
-              if (lvalue.kind === InstructionKind.Let) {
-                lvalue.kind = InstructionKind.Const;
-              }
+              lvalue.kind = InstructionKind.Const;
             } else {
               declaration.kind = InstructionKind.Let;
               lvalue.kind = InstructionKind.Reassign;
