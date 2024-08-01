@@ -8,8 +8,8 @@
 import {CompilerError} from '../CompilerError';
 import {GeneratedSource} from '../HIR';
 import {
+  DeclarationId,
   Identifier,
-  IdentifierId,
   InstructionId,
   Place,
   PrunedReactiveScopeBlock,
@@ -24,7 +24,6 @@ import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 class Visitor extends ReactiveFunctionVisitor<State> {
   override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
-    this.traverseScope(scopeBlock, state);
     for (const dep of scopeBlock.scope.dependencies) {
       const {identifier} = dep;
       if (identifier.name == null) {
@@ -43,21 +42,23 @@ class Visitor extends ReactiveFunctionVisitor<State> {
         promoteIdentifier(declaration.identifier, state);
       }
     }
+    this.traverseScope(scopeBlock, state);
   }
 
   override visitPrunedScope(
     scopeBlock: PrunedReactiveScopeBlock,
     state: State,
   ): void {
-    this.traversePrunedScope(scopeBlock, state);
     for (const [, declaration] of scopeBlock.scope.declarations) {
       if (
         declaration.identifier.name == null &&
-        state.pruned.get(declaration.identifier.id)?.usedOutsideScope === true
+        state.pruned.get(declaration.identifier.declarationId)
+          ?.usedOutsideScope === true
       ) {
         promoteIdentifier(declaration.identifier, state);
       }
     }
+    this.traversePrunedScope(scopeBlock, state);
   }
 
   override visitParam(place: Place, state: State): void {
@@ -93,11 +94,38 @@ class Visitor extends ReactiveFunctionVisitor<State> {
   }
 }
 
-type JsxExpressionTags = Set<IdentifierId>;
+class Visitor2 extends ReactiveFunctionVisitor<State> {
+  override visitPlace(_id: InstructionId, place: Place, state: State): void {
+    if (
+      place.identifier.name === null &&
+      state.promoted.has(place.identifier.declarationId)
+    ) {
+      promoteIdentifier(place.identifier, state);
+    }
+  }
+  override visitLValue(
+    _id: InstructionId,
+    _lvalue: Place,
+    _state: State,
+  ): void {
+    this.visitPlace(_id, _lvalue, _state);
+  }
+  override visitReactiveFunctionValue(
+    _id: InstructionId,
+    _dependencies: Array<Place>,
+    fn: ReactiveFunction,
+    state: State,
+  ): void {
+    visitReactiveFunction(fn, this, state);
+  }
+}
+
+type JsxExpressionTags = Set<DeclarationId>;
 type State = {
   tags: JsxExpressionTags;
+  promoted: Set<DeclarationId>;
   pruned: Map<
-    IdentifierId,
+    DeclarationId,
     {activeScopes: Array<ScopeId>; usedOutsideScope: boolean}
   >; // true if referenced within another scope, false if only accessed outside of scopes
 };
@@ -108,9 +136,9 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
   override visitPlace(_id: InstructionId, place: Place, state: State): void {
     if (
       this.activeScopes.length !== 0 &&
-      state.pruned.has(place.identifier.id)
+      state.pruned.has(place.identifier.declarationId)
     ) {
-      const prunedPlace = state.pruned.get(place.identifier.id)!;
+      const prunedPlace = state.pruned.get(place.identifier.declarationId)!;
       if (prunedPlace.activeScopes.indexOf(this.activeScopes.at(-1)!) === -1) {
         prunedPlace.usedOutsideScope = true;
       }
@@ -124,7 +152,7 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
   ): void {
     this.traverseValue(id, value, state);
     if (value.kind === 'JsxExpression' && value.tag.kind === 'Identifier') {
-      state.tags.add(value.tag.identifier.id);
+      state.tags.add(value.tag.identifier.declarationId);
     }
   }
 
@@ -132,8 +160,8 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
     scopeBlock: PrunedReactiveScopeBlock,
     state: State,
   ): void {
-    for (const [id] of scopeBlock.scope.declarations) {
-      state.pruned.set(id, {
+    for (const [_id, decl] of scopeBlock.scope.declarations) {
+      state.pruned.set(decl.identifier.declarationId, {
         activeScopes: [...this.activeScopes],
         usedOutsideScope: false,
       });
@@ -151,6 +179,7 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
 export function promoteUsedTemporaries(fn: ReactiveFunction): void {
   const state: State = {
     tags: new Set(),
+    promoted: new Set(),
     pruned: new Map(),
   };
   visitReactiveFunction(fn, new CollectPromotableTemporaries(), state);
@@ -161,6 +190,7 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
     }
   }
   visitReactiveFunction(fn, new Visitor(), state);
+  visitReactiveFunction(fn, new Visitor2(), state);
 }
 
 function promoteIdentifier(identifier: Identifier, state: State): void {
@@ -171,9 +201,10 @@ function promoteIdentifier(identifier: Identifier, state: State): void {
     loc: GeneratedSource,
     suggestions: null,
   });
-  if (state.tags.has(identifier.id)) {
+  if (state.tags.has(identifier.declarationId)) {
     promoteTemporaryJsxTag(identifier);
   } else {
     promoteTemporary(identifier);
   }
+  state.promoted.add(identifier.declarationId);
 }

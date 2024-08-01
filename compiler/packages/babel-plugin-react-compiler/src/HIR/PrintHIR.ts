@@ -833,6 +833,7 @@ export function printPlace(place: Place): string {
 }
 
 export function printIdentifier(id: Identifier): string {
+  // return `${printName(id.name)}\$${id.id}${Number(id.declarationId) !== id.id ? `_d${id.declarationId}` : ''}${printScope(id.scope)}`;
   return `${printName(id.name)}\$${id.id}${printScope(id.scope)}`;
 }
 

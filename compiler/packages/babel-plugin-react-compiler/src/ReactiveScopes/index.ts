@@ -27,7 +27,7 @@ export {pruneAllReactiveScopes} from './PruneAllReactiveScopes';
 export {pruneHoistedContexts} from './PruneHoistedContexts';
 export {pruneNonEscapingScopes} from './PruneNonEscapingScopes';
 export {pruneNonReactiveDependencies} from './PruneNonReactiveDependencies';
-export {pruneTemporaryLValues as pruneUnusedLValues} from './PruneTemporaryLValues';
+export {pruneUnusedLValues} from './PruneTemporaryLValues';
 export {pruneUnusedLabels} from './PruneUnusedLabels';
 export {pruneUnusedScopes} from './PruneUnusedScopes';
 export {renameVariables} from './RenameVariables';

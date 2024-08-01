@@ -39,6 +39,14 @@ export function leaveSSA(fn: HIRFunction): void {
       });
     }
   }
+  for (const place of fn.context) {
+    if (place.identifier.name !== null) {
+      declarations.set(place.identifier.declarationId, {
+        kind: InstructionKind.Let,
+        place,
+      });
+    }
+  }
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       const {value} = instr;
