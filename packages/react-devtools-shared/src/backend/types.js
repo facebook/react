@@ -31,7 +31,6 @@ import type {
 } from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
-import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import type Agent from './agent';
@@ -531,17 +530,12 @@ export type DevToolsHook = {
   ...
 };
 
-export type ConsolePatchSettings = {
-  appendComponentStack: boolean,
-  breakOnConsoleErrors: boolean,
-  showInlineWarningsAndErrors: boolean,
-  hideConsoleLogsInStrictMode: boolean,
-  browserTheme: BrowserTheme,
-};
-
 export type DevToolsHookSettings = {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
 };
+
+// Will be removed together with console patching from backend/console.js to hook.js
+export type ConsolePatchSettings = DevToolsHookSettings;
