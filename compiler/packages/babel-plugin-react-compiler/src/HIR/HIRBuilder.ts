@@ -25,6 +25,7 @@ import {
   Terminal,
   VariableBinding,
   makeBlockId,
+  makeDeclarationId,
   makeIdentifierName,
   makeInstructionId,
   makeType,
@@ -184,6 +185,7 @@ export default class HIRBuilder {
     const id = this.nextIdentifierId;
     return {
       id,
+      declarationId: makeDeclarationId(id),
       name: null,
       mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
       scope: null,
@@ -326,6 +328,7 @@ export default class HIRBuilder {
         const id = this.nextIdentifierId;
         const identifier: Identifier = {
           id,
+          declarationId: makeDeclarationId(id),
           name: makeIdentifierName(name),
           mutableRange: {
             start: makeInstructionId(0),
@@ -895,10 +898,12 @@ export function createTemporaryPlace(
   env: Environment,
   loc: SourceLocation,
 ): Place {
+  const id = env.nextIdentifierId;
   return {
     kind: 'Identifier',
     identifier: {
-      id: env.nextIdentifierId,
+      id,
+      declarationId: makeDeclarationId(id),
       mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
       name: null,
       scope: null,

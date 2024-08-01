@@ -23,7 +23,11 @@ import {
   promoteTemporary,
   reversePostorderBlocks,
 } from '../HIR';
-import {markInstructionIds, markPredecessors} from '../HIR/HIRBuilder';
+import {
+  createTemporaryPlace,
+  markInstructionIds,
+  markPredecessors,
+} from '../HIR/HIRBuilder';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {retainWhere} from '../Utils/utils';
 
@@ -225,23 +229,7 @@ function rewriteBlock(
   block.instructions.push({
     id: makeInstructionId(0),
     loc: terminal.loc,
-    lvalue: {
-      effect: Effect.Unknown,
-      identifier: {
-        id: env.nextIdentifierId,
-        mutableRange: {
-          start: makeInstructionId(0),
-          end: makeInstructionId(0),
-        },
-        name: null,
-        scope: null,
-        type: makeType(),
-        loc: terminal.loc,
-      },
-      kind: 'Identifier',
-      reactive: false,
-      loc: terminal.loc,
-    },
+    lvalue: createTemporaryPlace(env, terminal.loc),
     value: {
       kind: 'StoreLocal',
       lvalue: {kind: InstructionKind.Reassign, place: {...returnValue}},
@@ -267,23 +255,7 @@ function declareTemporary(
   block.instructions.push({
     id: makeInstructionId(0),
     loc: GeneratedSource,
-    lvalue: {
-      effect: Effect.Unknown,
-      identifier: {
-        id: env.nextIdentifierId,
-        mutableRange: {
-          start: makeInstructionId(0),
-          end: makeInstructionId(0),
-        },
-        name: null,
-        scope: null,
-        type: makeType(),
-        loc: result.loc,
-      },
-      kind: 'Identifier',
-      reactive: false,
-      loc: GeneratedSource,
-    },
+    lvalue: createTemporaryPlace(env, result.loc),
     value: {
       kind: 'DeclareLocal',
       lvalue: {
