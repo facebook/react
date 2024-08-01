@@ -51,7 +51,6 @@ export function leaveSSA(fn: HIRFunction): void {
     for (const instr of block.instructions) {
       const {value} = instr;
       switch (value.kind) {
-        case 'DeclareContext':
         case 'DeclareLocal': {
           const lvalue = value.lvalue;
           CompilerError.invariant(
@@ -68,7 +67,6 @@ export function leaveSSA(fn: HIRFunction): void {
           }
           break;
         }
-        case 'StoreContext':
         case 'StoreLocal': {
           const lvalue = value.lvalue;
           if (lvalue.place.identifier.name !== null) {

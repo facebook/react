@@ -465,7 +465,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'DeclareContext': {
-      value = `DeclareContext ${instrValue.lvalue.kind} ${printPlace(
+      value = `DeclareContext (${instrValue.lvalue.kind}) ${instrValue.lvalue.kind} ${printPlace(
         instrValue.lvalue.place,
       )}`;
       break;
