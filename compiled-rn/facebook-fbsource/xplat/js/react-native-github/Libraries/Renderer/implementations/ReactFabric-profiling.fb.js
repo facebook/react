@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<57c396a4b3acd8f1e28f0121f12a2c31>>
+ * @generated SignedSource<<b98aab9ffed40f129f17759dadbb2a51>>
  */
 
 "use strict";
@@ -2215,15 +2215,7 @@ function createCapturedValueAtFiber(value, source) {
 var contextStackCursor = createCursor(null),
   contextFiberStackCursor = createCursor(null),
   rootInstanceStackCursor = createCursor(null),
-  hostTransitionProviderCursor = createCursor(null),
-  HostTransitionContext = {
-    $$typeof: REACT_CONTEXT_TYPE,
-    Provider: null,
-    Consumer: null,
-    _currentValue: null,
-    _currentValue2: null,
-    _threadCount: 0
-  };
+  hostTransitionProviderCursor = createCursor(null);
 function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
   push(contextFiberStackCursor, fiber);
@@ -4515,8 +4507,7 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
   }
 }
 function useHostTransitionStatus() {
-  var status = readContext(HostTransitionContext);
-  return null !== status ? status : null;
+  return readContext(HostTransitionContext);
 }
 function updateId() {
   return updateWorkInProgressHook().memoizedState;
@@ -11423,7 +11414,15 @@ function cloneHiddenInstance(instance) {
     canonical: instance.canonical
   };
 }
-var supportsMicrotasks =
+var HostTransitionContext = {
+    $$typeof: REACT_CONTEXT_TYPE,
+    Provider: null,
+    Consumer: null,
+    _currentValue: null,
+    _currentValue2: null,
+    _threadCount: 0
+  },
+  supportsMicrotasks =
     "undefined" !== typeof RN$enableMicrotasksInReact &&
     !!RN$enableMicrotasksInReact,
   scheduleMicrotask =
@@ -11500,11 +11499,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1226 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-3f8b1333-20240730",
+    version: "19.0.0-native-fb-88ee14ff-20240801",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-3f8b1333-20240730"
+    reconcilerVersion: "19.0.0-native-fb-88ee14ff-20240801"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1226.rendererConfig = extraDevToolsConfig);

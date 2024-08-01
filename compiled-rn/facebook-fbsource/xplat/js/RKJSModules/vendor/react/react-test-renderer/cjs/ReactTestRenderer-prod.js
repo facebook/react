@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f2316128be60fa267876871507711ea8>>
+ * @generated SignedSource<<cc9754db5bad09d4d691779880f01ebd>>
  */
 
 "use strict";
@@ -727,6 +727,14 @@ function insertBefore(parentInstance, child, beforeChild) {
 var currentUpdatePriority = 0,
   scheduleTimeout = setTimeout,
   cancelTimeout = clearTimeout,
+  HostTransitionContext = {
+    $$typeof: REACT_CONTEXT_TYPE,
+    Provider: null,
+    Consumer: null,
+    _currentValue: null,
+    _currentValue2: null,
+    _threadCount: 0
+  },
   valueStack = [],
   index = -1;
 function createCursor(defaultValue) {
@@ -841,15 +849,7 @@ function createCapturedValueAtFiber(value, source) {
 var contextStackCursor = createCursor(null),
   contextFiberStackCursor = createCursor(null),
   rootInstanceStackCursor = createCursor(null),
-  hostTransitionProviderCursor = createCursor(null),
-  HostTransitionContext = {
-    $$typeof: REACT_CONTEXT_TYPE,
-    Provider: null,
-    Consumer: null,
-    _currentValue: null,
-    _currentValue2: null,
-    _threadCount: 0
-  };
+  hostTransitionProviderCursor = createCursor(null);
 function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
   push(contextFiberStackCursor, fiber);
@@ -3118,8 +3118,7 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
   }
 }
 function useHostTransitionStatus() {
-  var status = readContext(HostTransitionContext);
-  return null !== status ? status : null;
+  return readContext(HostTransitionContext);
 }
 function updateId() {
   return updateWorkInProgressHook().memoizedState;
@@ -9312,14 +9311,14 @@ function wrapFiber(fiber) {
 }
 var internals$jscomp$inline_1206 = {
   bundleType: 0,
-  version: "19.0.0-native-fb-3f8b1333-20240730",
+  version: "19.0.0-native-fb-88ee14ff-20240801",
   rendererPackageName: "react-test-renderer",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function (mockNode) {
     mockNode = nodeToInstanceMap.get(mockNode);
     return void 0 !== mockNode ? mockNode.internalInstanceHandle : null;
   },
-  reconcilerVersion: "19.0.0-native-fb-3f8b1333-20240730"
+  reconcilerVersion: "19.0.0-native-fb-88ee14ff-20240801"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1207 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9455,4 +9454,4 @@ exports.unstable_batchedUpdates = function (fn, a) {
         flushSyncWorkAcrossRoots_impl(!0));
   }
 };
-exports.version = "19.0.0-native-fb-3f8b1333-20240730";
+exports.version = "19.0.0-native-fb-88ee14ff-20240801";

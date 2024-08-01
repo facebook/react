@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<27b848f3cc19ce43a5a81d26e5ee96fe>>
+ * @generated SignedSource<<ccf803f43b9e96e1c53c80fe55e3f4c7>>
  */
 
 "use strict";
@@ -2097,7 +2097,7 @@ __DEV__ &&
         (pop(contextStackCursor, fiber), pop(contextFiberStackCursor, fiber));
       hostTransitionProviderCursor.current === fiber &&
         (pop(hostTransitionProviderCursor, fiber),
-        (HostTransitionContext._currentValue2 = null));
+        (HostTransitionContext._currentValue2 = NotPendingTransition));
     }
     function findNotableNode(node, indent) {
       return void 0 === node.serverProps &&
@@ -5645,8 +5645,7 @@ __DEV__ &&
       ];
     }
     function useHostTransitionStatus() {
-      var status = readContext(HostTransitionContext);
-      return null !== status ? status : NotPendingTransition;
+      return readContext(HostTransitionContext);
     }
     function mountId() {
       var hook = mountWorkInProgressHook(),
@@ -14893,14 +14892,6 @@ __DEV__ &&
       contextFiberStackCursor = createCursor(null),
       rootInstanceStackCursor = createCursor(null),
       hostTransitionProviderCursor = createCursor(null),
-      HostTransitionContext = {
-        $$typeof: REACT_CONTEXT_TYPE,
-        Provider: null,
-        Consumer: null,
-        _currentValue: null,
-        _currentValue2: null,
-        _threadCount: 0
-      },
       needsEscaping = /["'&<>\n\t]|^\s|\s$/,
       hydrationDiffRootDEV = null,
       hydrationErrors = null,
@@ -16831,6 +16822,14 @@ __DEV__ &&
       cancelTimeout = clearTimeout,
       noTimeout = -1,
       NotPendingTransition = null,
+      HostTransitionContext = {
+        $$typeof: REACT_CONTEXT_TYPE,
+        Provider: null,
+        Consumer: null,
+        _currentValue: NotPendingTransition,
+        _currentValue2: NotPendingTransition,
+        _threadCount: 0
+      },
       supportsMicrotasks =
         "undefined" !== typeof RN$enableMicrotasksInReact &&
         !!RN$enableMicrotasksInReact,
@@ -16902,11 +16901,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-3f8b1333-20240730",
+        version: "19.0.0-native-fb-88ee14ff-20240801",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-3f8b1333-20240730"
+        reconcilerVersion: "19.0.0-native-fb-88ee14ff-20240801"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
