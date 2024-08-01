@@ -154,14 +154,14 @@ class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
 
 type InterState = Map<IdentifierId, [Identifier, boolean]>;
 class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
+  #promotable: State;
+  #consts: Set<IdentifierId> = new Set();
+
   /*
    * Unpromoted temporaries will be emitted at their use sites rather than as separate
    * declarations. However, this causes errors if an interposing temporary has been
    * promoted, or if an interposing instruction has had its lvalues
    */
-  #promotable: State;
-  #consts: Set<IdentifierId> = new Set();
-
   constructor(promotable: State, params: Array<Place | SpreadPattern>) {
     super();
     params.forEach(param => {
@@ -177,10 +177,6 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
     this.#promotable = promotable;
   }
 
-  override visitParam(place: Place, _state: InterState): void {
-    this.#consts.add(place.identifier.id);
-  }
-
   override visitPlace(
     _id: InstructionId,
     place: Place,
@@ -194,6 +190,11 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
         identifier.name === null &&
         !this.#consts.has(identifier.id)
       ) {
+        /*
+         * If the identifier hasn't been promoted but is marked as needing
+         * promotion by the logic in `visitInstruction`, and we've seen a
+         * use of it after said marking, promote it
+         */
         promoteIdentifier(identifier, this.#promotable);
       }
     }
@@ -212,17 +213,6 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
     }
 
     switch (instruction.value.kind) {
-      case 'DeclareContext':
-      case 'DeclareLocal': {
-        if (
-          instruction.value.lvalue.kind === 'Const' ||
-          instruction.value.lvalue.kind === 'HoistedConst'
-        ) {
-          this.#consts.add(instruction.value.lvalue.place.identifier.id);
-        }
-        super.visitInstruction(instruction, state);
-        break;
-      }
       case 'CallExpression':
       case 'MethodCall':
       case 'Await':
@@ -236,7 +226,14 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
       case 'StoreContext':
       case 'StoreGlobal':
       case 'Destructure': {
+        /*
+         * Copy current state entries so that we can iterate over it
+         * later without hitting the entries added by visiting this
+         * instruction.
+         */
         const preEntries = [...state.entries()];
+
+        let constStore = false;
 
         if (
           (instruction.value.kind === 'StoreContext' ||
@@ -244,7 +241,12 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
           (instruction.value.lvalue.kind === 'Const' ||
             instruction.value.lvalue.kind === 'HoistedConst')
         ) {
+          /*
+           * If an identifier is const, we don't need to worry about it
+           * being mutated between being loaded and being used
+           */
           this.#consts.add(instruction.value.lvalue.place.identifier.id);
+          constStore = true;
         }
         if (
           instruction.value.kind === 'Destructure' &&
@@ -254,30 +256,52 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
           [...eachPatternOperand(instruction.value.lvalue.pattern)].forEach(
             ident => this.#consts.add(ident.identifier.id),
           );
+          constStore = true;
         }
         if (instruction.value.kind === 'MethodCall') {
-          // Treat property of method call as constlike so we don't promote it. This is potentially unsound.
+          // Treat property of method call as constlike so we don't promote it.
           this.#consts.add(instruction.value.property.identifier.id);
         }
 
         super.visitInstruction(instruction, state);
 
         if (instruction.lvalue && instruction.lvalue.identifier.name === null) {
+          // Add this instruction's lvalue to the state, initially not marked as needing promotion
           state.set(instruction.lvalue.identifier.id, [
             instruction.lvalue.identifier,
             false,
           ]);
         }
         if (
-          instruction.lvalue == null ||
-          instruction.lvalue.identifier.name != null
+          !constStore &&
+          (instruction.lvalue == null ||
+            instruction.lvalue.identifier.name != null)
         ) {
-          // console.log(`marking at ${instruction.id}:`);
+          /*
+           * If we've stripped the lvalue or promoted the lvalue, then we will emit this instruction
+           * as a statement in codegen.
+           *
+           * If this instruction will be emitted directly as a statement rather than as a temporary
+           * during codegen, then it can interpose between the defs and the uses of other temporaries.
+           * Since this instruction could potentially mutate those defs, it's not safe to relocate
+           * the definition of those temporaries to after this instruction. Mark all those temporaries
+           * as needing promotion, but don't promote them until we actually see them being used.
+           */
           for (const [key, [ident, _]] of preEntries) {
-            // console.log(key);
             state.set(key, [ident, true]);
           }
         }
+        break;
+      }
+      case 'DeclareContext':
+      case 'DeclareLocal': {
+        if (
+          instruction.value.lvalue.kind === 'Const' ||
+          instruction.value.lvalue.kind === 'HoistedConst'
+        ) {
+          this.#consts.add(instruction.value.lvalue.place.identifier.id);
+        }
+        super.visitInstruction(instruction, state);
         break;
       }
       case 'LoadContext':
@@ -333,6 +357,13 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
     }
     switch (terminal.kind) {
       case 'if': {
+        /*
+         * Visit if branches separately -- we don't want
+         * to promote a use in the alternate branch because
+         * of an interposing instruction in the consequent branch,
+         * because it's not actually interposing at runtime.
+         * After finishing the branches, merge their states.
+         */
         this.visitPlace(terminal.id, terminal.test, state);
         const state1 = copyState();
         this.visitBlock(terminal.consequent, state1);
