@@ -36,6 +36,9 @@ class Visitor extends ReactiveFunctionVisitor<LValues> {
     instruction: ReactiveInstruction,
     state: LValues,
   ): void {
+    if (instruction.value.kind === 'FunctionExpression') {
+      this.visitHirFunction(instruction.value.loweredFunc.func, state)
+    }
     this.traverseInstruction(instruction, state);
     if (
       instruction.lvalue !== null &&

@@ -18,7 +18,7 @@ import {
   getHookKind,
   isSetStateType,
 } from '../HIR/HIR';
-import { eachInstructionValueLValue } from '../HIR/visitors';
+import { eachInstructionLValue, eachInstructionValueLValue } from '../HIR/visitors';
 import {
   ReactiveFunctionVisitor,
   eachReactiveValueOperand,
@@ -115,6 +115,8 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
           break;
         }
       }
+    } else {
+      super.visitInstruction(instr, state);
     }
 
     let hookKind = null;
@@ -131,11 +133,11 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
       hookKind = getHookKind(this.#env, callee.identifier);
     }
 
-    if (hookKind !== 'useEffect' && hookKind !== 'useLayoutEffect' && hookKind !== 'useInsertionEffect' && instr.value.kind !== "JsxExpression") {
+    if (instr.value.kind !== 'JsxExpression') {
       for (const operand of eachReactiveValueOperand(instr.value)) {
         const errors = this.#functions.get(operand.identifier.id);
         if (errors != null) {
-          for (const lval of eachInstructionValueLValue(instr.value)) {
+          for (const lval of eachInstructionLValue(instr)) {
             const existing = this.#functions.get(lval.identifier.id) ?? new CompilerError();
             errors.details.forEach(detail => existing.pushErrorDetail(detail));
             this.#functions.set(lval.identifier.id, existing);
@@ -150,7 +152,9 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
         isSetStateType(callee.identifier);
       const name = this.getName(callee.identifier) ?? "(unknown)";
 
-      this.#functions.get(callee.identifier.id)?.details?.forEach(detail => state.pushErrorDetail(detail));
+      if (hookKind !== 'useEffect' && hookKind !== 'useLayoutEffect' && hookKind !== 'useInsertionEffect') {
+        [...eachReactiveValueOperand(instr.value)].forEach(operand => this.#functions.get(operand.identifier.id)?.details?.forEach(detail => state.pushErrorDetail(detail)));
+      }
 
       if (instr.lvalue === null && !isException && !allowedNames.has(name)) {
         let allReads = true;
