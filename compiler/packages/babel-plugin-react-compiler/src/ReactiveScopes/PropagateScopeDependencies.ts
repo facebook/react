@@ -614,7 +614,15 @@ class Context {
       originalDeclaration.scope.value !== null
     ) {
       originalDeclaration.scope.each(scope => {
-        if (!this.#isScopeActive(scope.value)) {
+        if (
+          !this.#isScopeActive(scope.value) &&
+          // TODO LeaveSSA: key scope.declarations by DeclarationId
+          !Array.from(scope.value.declarations.values()).some(
+            decl =>
+              decl.identifier.declarationId ===
+              maybeDependency.identifier.declarationId,
+          )
+        ) {
           scope.value.declarations.set(maybeDependency.identifier.id, {
             identifier: maybeDependency.identifier,
             scope: originalDeclaration.scope.value!.value,

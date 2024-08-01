@@ -8,6 +8,7 @@
 import {CompilerError, SourceLocation} from '..';
 import {Environment} from '../HIR';
 import {
+  DeclarationId,
   GeneratedSource,
   HIRFunction,
   Identifier,
@@ -257,6 +258,14 @@ export function findDisjointMutableValues(
   fn: HIRFunction,
 ): DisjointSet<Identifier> {
   const scopeIdentifiers = new DisjointSet<Identifier>();
+
+  const declarations = new Map<DeclarationId, Identifier>();
+  function declareIdentifier(lvalue: Place): void {
+    if (!declarations.has(lvalue.identifier.declarationId)) {
+      declarations.set(lvalue.identifier.declarationId, lvalue.identifier);
+    }
+  }
+
   for (const [_, block] of fn.body.blocks) {
     /*
      * If a phi is mutated after creation, then we need to alias all of its operands such that they
@@ -264,14 +273,19 @@ export function findDisjointMutableValues(
      */
     for (const phi of block.phis) {
       if (
-        // The phi was reset because it was not mutated after creation
         phi.id.mutableRange.start + 1 !== phi.id.mutableRange.end &&
         phi.id.mutableRange.end >
           (block.instructions.at(0)?.id ?? block.terminal.id)
       ) {
-        for (const [, phiId] of phi.operands) {
-          scopeIdentifiers.union([phi.id, phiId]);
+        const operands = [phi.id];
+        const declaration = declarations.get(phi.id.declarationId);
+        if (declaration !== undefined) {
+          operands.push(declaration);
         }
+        for (const [_, phiId] of phi.operands) {
+          operands.push(phiId);
+        }
+        scopeIdentifiers.union(operands);
       } else if (fn.env.config.enableForest) {
         for (const [, phiId] of phi.operands) {
           scopeIdentifiers.union([phi.id, phiId]);
@@ -286,9 +300,15 @@ export function findDisjointMutableValues(
         operands.push(instr.lvalue!.identifier);
       }
       if (
+        instr.value.kind === 'DeclareLocal' ||
+        instr.value.kind === 'DeclareContext'
+      ) {
+        declareIdentifier(instr.value.lvalue.place);
+      } else if (
         instr.value.kind === 'StoreLocal' ||
         instr.value.kind === 'StoreContext'
       ) {
+        declareIdentifier(instr.value.lvalue.place);
         if (
           instr.value.lvalue.place.identifier.mutableRange.end >
           instr.value.lvalue.place.identifier.mutableRange.start + 1
@@ -303,6 +323,7 @@ export function findDisjointMutableValues(
         }
       } else if (instr.value.kind === 'Destructure') {
         for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+          declareIdentifier(place);
           if (
             place.identifier.mutableRange.end >
             place.identifier.mutableRange.start + 1
