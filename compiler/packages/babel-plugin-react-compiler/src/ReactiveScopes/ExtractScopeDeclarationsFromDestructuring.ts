@@ -6,6 +6,7 @@
  */
 
 import {
+  DeclarationId,
   Destructure,
   Environment,
   IdentifierId,
@@ -17,6 +18,7 @@ import {
   ReactiveStatement,
   promoteTemporary,
 } from '../HIR';
+import {createTemporaryPlace} from '../HIR/HIRBuilder';
 import {eachPatternOperand, mapPatternOperands} from '../HIR/visitors';
 import {
   ReactiveFunctionTransform,
@@ -82,7 +84,7 @@ export function extractScopeDeclarationsFromDestructuring(
 
 class State {
   env: Environment;
-  declared: Set<IdentifierId> = new Set();
+  declared: Set<DeclarationId> = new Set();
 
   constructor(env: Environment) {
     this.env = env;
@@ -92,7 +94,7 @@ class State {
 class Visitor extends ReactiveFunctionTransform<State> {
   override visitScope(scope: ReactiveScopeBlock, state: State): void {
     for (const [, declaration] of scope.scope.declarations) {
-      state.declared.add(declaration.identifier.id);
+      state.declared.add(declaration.identifier.declarationId);
     }
     this.traverseScope(scope, state);
   }
@@ -131,7 +133,7 @@ function transformDestructuring(
   let reassigned: Set<IdentifierId> = new Set();
   let hasDeclaration = false;
   for (const place of eachPatternOperand(destructure.lvalue.pattern)) {
-    const isDeclared = state.declared.has(place.identifier.id);
+    const isDeclared = state.declared.has(place.identifier.declarationId);
     if (isDeclared) {
       reassigned.add(place.identifier.id);
     }
@@ -150,15 +152,7 @@ function transformDestructuring(
     if (!reassigned.has(place.identifier.id)) {
       return place;
     }
-    const tempId = state.env.nextIdentifierId;
-    const temporary = {
-      ...place,
-      identifier: {
-        ...place.identifier,
-        id: tempId,
-        name: null, // overwritten below
-      },
-    };
+    const temporary = createTemporaryPlace(state.env, place.loc);
     promoteTemporary(temporary.identifier);
     renamed.set(place, temporary);
     return temporary;
