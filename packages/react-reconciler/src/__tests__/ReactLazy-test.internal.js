@@ -1671,4 +1671,63 @@ describe('ReactLazy', () => {
     ]);
     expect(root).toMatchRenderedOutput('ba');
   });
+
+  it('lazy class component defaultProps should not be removed with will unmount hook.', async () => {
+    class Component extends React.Component {
+      state = {};
+      static defaultProps = {defaultProp: true};
+
+      componentDidMount() {
+        Scheduler.unstable_yieldValue(
+          'componentDidMount: ' + this.props.defaultProp,
+        );
+        this.setState({defaultProp: this.props.defaultProp});
+      }
+
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue(
+          'componentWillUnmount: ' + this.props.defaultProp,
+        );
+      }
+
+      render() {
+        Scheduler.unstable_yieldValue('render: ' + this.state.defaultProp);
+        return this.state.defaultProp ? (
+          <Text text="ok" />
+        ) : (
+          <Text text="not ok" />
+        );
+      }
+    }
+
+    const LazyComponent = lazy(() => fakeImport(Component));
+
+    function Parent() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <React.StrictMode>
+            <LazyComponent />
+          </React.StrictMode>
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent />);
+
+    expect(Scheduler).toHaveYielded(['Loading...'], {
+      unstable_isConcurrent: false,
+    });
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await LazyComponent;
+
+    expect(Scheduler).toFlushAndYield([
+      'render: undefined',
+      'not ok',
+      'componentDidMount: true',
+      'render: true',
+      'ok',
+    ]);
+    expect(root).toMatchRenderedOutput('ok');
+  });
 });

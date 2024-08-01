@@ -30,6 +30,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import type {RootState} from './ReactFiberRoot.new';
 import type {Transition} from './ReactFiberTracingMarkerComponent.new';
+import assign from 'shared/assign';
 
 import {
   enableCreateEventHandleAPI,
@@ -199,8 +200,27 @@ export function reportUncaughtErrorInDEV(error: mixed) {
   }
 }
 
-const callComponentWillUnmountWithTimer = function(current, instance) {
-  instance.props = current.memoizedProps;
+function resolveClassComponentProps(Component, baseProps) {
+  var newProps = baseProps;
+  if ('ref' in baseProps) {
+    newProps = {};
+    for (var propName in baseProps)
+      'ref' !== propName && (newProps[propName] = baseProps[propName]);
+  }
+  if ((Component = Component.defaultProps)) {
+    newProps === baseProps && (newProps = assign({}, newProps));
+    for (var _propName in Component)
+      void 0 === newProps[_propName] &&
+        (newProps[_propName] = Component[_propName]);
+  }
+  return newProps;
+}
+
+const callComponentWillUnmountWithTimer = function (current, instance) {
+  instance.props = resolveClassComponentProps(
+    current.type,
+    current.memoizedProps,
+  );
   instance.state = current.memoizedState;
   if (
     enableProfilerTimer &&
@@ -457,7 +477,8 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
             prevState,
           );
           if (__DEV__) {
-            const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
+            const didWarnSet =
+              ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
             if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
               didWarnSet.add(finishedWork.type);
               console.error(
@@ -514,7 +535,8 @@ function commitHookEffectListUnmount(
   finishedWork: Fiber,
   nearestMountedAncestor: Fiber | null,
 ) {
-  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  const updateQueue: FunctionComponentUpdateQueue | null =
+    (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
@@ -560,7 +582,8 @@ function commitHookEffectListUnmount(
 }
 
 function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
-  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  const updateQueue: FunctionComponentUpdateQueue | null =
+    (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
@@ -854,9 +877,8 @@ function commitLayoutEffectOnFiber(
 
         // TODO: I think this is now always non-null by the time it reaches the
         // commit phase. Consider removing the type check.
-        const updateQueue: UpdateQueue<
-          *,
-        > | null = (finishedWork.updateQueue: any);
+        const updateQueue: UpdateQueue<*> | null =
+          (finishedWork.updateQueue: any);
         if (updateQueue !== null) {
           if (__DEV__) {
             if (
@@ -895,9 +917,8 @@ function commitLayoutEffectOnFiber(
       case HostRoot: {
         // TODO: I think this is now always non-null by the time it reaches the
         // commit phase. Consider removing the type check.
-        const updateQueue: UpdateQueue<
-          *,
-        > | null = (finishedWork.updateQueue: any);
+        const updateQueue: UpdateQueue<*> | null =
+          (finishedWork.updateQueue: any);
         if (updateQueue !== null) {
           let instance = null;
           if (finishedWork.child !== null) {
@@ -1799,7 +1820,8 @@ function commitDeletionEffectsOnFiber(
     case MemoComponent:
     case SimpleMemoComponent: {
       if (!offscreenSubtreeWasHidden) {
-        const updateQueue: FunctionComponentUpdateQueue | null = (deletedFiber.updateQueue: any);
+        const updateQueue: FunctionComponentUpdateQueue | null =
+          (deletedFiber.updateQueue: any);
         if (updateQueue !== null) {
           const lastEffect = updateQueue.lastEffect;
           if (lastEffect !== null) {
@@ -2196,7 +2218,8 @@ function commitMutationEffectsOnFiber(
               current !== null ? current.memoizedProps : newProps;
             const type = finishedWork.type;
             // TODO: Type the updateQueue to be specific to host components.
-            const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
+            const updatePayload: null | UpdatePayload =
+              (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
             if (updatePayload !== null) {
               try {
@@ -2948,7 +2971,8 @@ function commitPassiveMountOnFiber(
                 // We only have one instance of the transitions set
                 // because we update it only during the commit phase. We
                 // will create the set on a as needed basis in the commit phase
-                finishedWork.memoizedState.transitions = prevTransitions = new Set();
+                finishedWork.memoizedState.transitions = prevTransitions =
+                  new Set();
               }
 
               transitions.forEach(transition => {

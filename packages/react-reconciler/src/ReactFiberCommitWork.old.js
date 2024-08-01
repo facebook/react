@@ -30,6 +30,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {RootState} from './ReactFiberRoot.old';
 import type {Transition} from './ReactFiberTracingMarkerComponent.old';
+import assign from 'shared/assign';
 
 import {
   enableCreateEventHandleAPI,
@@ -199,8 +200,26 @@ export function reportUncaughtErrorInDEV(error: mixed) {
   }
 }
 
+function resolveClassComponentProps(Component, baseProps) {
+  var newProps = baseProps;
+  if ("ref" in baseProps) {
+    newProps = {};
+    for (var propName in baseProps)
+      "ref" !== propName && (newProps[propName] = baseProps[propName]);
+  }
+  if (Component = Component.defaultProps) {
+    newProps === baseProps && (newProps = assign({}, newProps));
+    for (var _propName in Component)
+      void 0 === newProps[_propName] && (newProps[_propName] = Component[_propName]);
+  }
+  return newProps;
+}
+
 const callComponentWillUnmountWithTimer = function(current, instance) {
-  instance.props = current.memoizedProps;
+  instance.props = resolveClassComponentProps(
+    current.type,
+    current.memoizedProps
+  );
   instance.state = current.memoizedState;
   if (
     enableProfilerTimer &&
