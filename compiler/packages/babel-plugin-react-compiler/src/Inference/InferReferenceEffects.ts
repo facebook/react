@@ -30,6 +30,7 @@ import {
   isMutableEffect,
   isObjectType,
   isRefValueType,
+  isSetStateType,
   isUseRefType,
 } from '../HIR/HIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
@@ -238,7 +239,6 @@ export default function inferReferenceEffects(
   }
 
   if (!options.isFunctionExpression) {
-    let usedIdentifiers: null | Set<IdentifierId> = null;
     functionEffects.forEach(eff => {
       switch (eff.kind) {
         case 'ReactMutation':
@@ -252,26 +252,8 @@ export default function inferReferenceEffects(
             loc: eff.loc,
           });
         }
-        case "GlobalFunctionCall": {
-          if (eff.lvalue == null) {
-            functionEffects.push(eff);
-          } else {
-            if (usedIdentifiers === null) {
-              usedIdentifiers = new Set();
-              for (const [,block] of fn.body.blocks) {
-                for (const instr of block.instructions) {
-                  Array.from(eachInstructionOperand(instr)).forEach(operand => usedIdentifiers?.add(operand.identifier.id));
-                }
-                for (const phi of block.phis) {
-                  Array.from(phi.operands.values()).forEach(operand => usedIdentifiers?.add(operand.id));
-                }
-                Array.from(eachTerminalOperand(block.terminal)).forEach(operand => usedIdentifiers?.add(operand.identifier.id));
-              }
-            }
-            if (!usedIdentifiers.has(eff.lvalue)) {
-              CompilerError.throw(eff.error);
-            }
-          }
+        case 'ImmutableFunctionCall': {
+          // Handled below
           break;
         }
         default:
@@ -281,9 +263,122 @@ export default function inferReferenceEffects(
           );
       }
     });
-  } else {
-    fn.effects = functionEffects;
+
+    if (functionEffects.length > 0) {
+      const error = new CompilerError();
+      let usedIdentifiers = new Set<IdentifierId>();
+      let names = new Map<IdentifierId, string | undefined>();
+
+      function visitFunction(fn: HIRFunction): void {
+        for (const [, block] of fn.body.blocks) {
+          for (const instr of block.instructions) {
+            switch (instr.value.kind) {
+              case 'FunctionExpression':
+              case 'ObjectMethod':
+                names.set(
+                  instr.lvalue.identifier.id,
+                  instr.value.loweredFunc.func.id ?? '(anonymous function)',
+                );
+                visitFunction(instr.value.loweredFunc.func);
+                break;
+              case 'LoadGlobal':
+                names.set(instr.lvalue.identifier.id, instr.value.binding.name);
+                break;
+              case 'LoadLocal':
+              case 'LoadContext':
+                names.set(
+                  instr.lvalue.identifier.id,
+                  instr.value.place.identifier.name?.value ??
+                    names.get(instr.value.place.identifier.id),
+                );
+                break;
+              case 'StoreContext':
+              case 'StoreLocal':
+                names.set(
+                  instr.lvalue.identifier.id,
+                  instr.value.value.identifier.name?.value ??
+                    names.get(instr.value.value.identifier.id),
+                );
+                names.set(
+                  instr.value.lvalue.place.identifier.id,
+                  instr.value.value.identifier.name?.value ??
+                    names.get(instr.value.value.identifier.id),
+                );
+                break;
+              case 'PropertyLoad':
+                names.set(
+                  instr.lvalue.identifier.id,
+                  `${instr.value.object.identifier.name?.value ?? names.get(instr.value.object.identifier.id) ?? '(unknown)'}.${instr.value.property}`,
+                );
+                break;
+              case 'ComputedLoad':
+                names.set(
+                  instr.lvalue.identifier.id,
+                  `${instr.value.object.identifier.name?.value ?? names.get(instr.value.object.identifier.id) ?? '(unknown)'}[...]`,
+                );
+                break;
+              case 'Destructure': {
+                const destructuredName =
+                  instr.value.value.identifier.name?.value ??
+                  names.get(instr.value.value.identifier.id);
+                const destructuredMsg = destructuredName
+                  ? `(destructured from \`${destructuredName}\`)`
+                  : '(destructured)';
+                Array.from(
+                  eachPatternOperand(instr.value.lvalue.pattern),
+                ).forEach(place =>
+                  names.set(
+                    place.identifier.id,
+                    `${place.identifier.name?.value ?? 'value'} ${destructuredMsg}`,
+                  ),
+                );
+              }
+            }
+            Array.from(eachInstructionOperand(instr)).forEach(operand =>
+              usedIdentifiers.add(operand.identifier.id),
+            );
+          }
+          for (const phi of block.phis) {
+            Array.from(phi.operands.values()).forEach(operand =>
+              usedIdentifiers.add(operand.id),
+            );
+          }
+          Array.from(eachTerminalOperand(block.terminal)).forEach(operand =>
+            usedIdentifiers.add(operand.identifier.id),
+          );
+        }
+      }
+      visitFunction(fn);
+
+      const allowedNames = new Set(['invariant', 'recoverableViolation']);
+
+      for (const effect of functionEffects) {
+        CompilerError.invariant(effect.kind === 'ImmutableFunctionCall', {
+          reason:
+            'All effects other than ImmutableFunctionCall should have been handled earlier',
+          loc: null,
+        });
+        if (
+          !usedIdentifiers.has(effect.lvalue) &&
+          (!effect.global ||
+            !names.has(effect.callee) ||
+            !allowedNames.has(names.get(effect.callee)!))
+        ) {
+          const name = names.get(effect.callee) ?? '(unknown)';
+          error.push({
+            reason: `Function \'${name}\' is called with arguments that React Compiler expects to be immutable and its return value is ignored. This call is likely to perform unsafe side effects, which violates the rules of React.`,
+            loc: effect.loc,
+            severity: ErrorSeverity.InvalidReact,
+          });
+        }
+      }
+
+      if (error.hasErrors()) {
+        throw error;
+      }
+    }
   }
+  fn.effects = functionEffects;
 }
 
 // Maintains a mapping of top-level variables to the kind of value they hold
@@ -429,34 +524,14 @@ class InferenceState {
           value.kind === 'ObjectMethod') &&
         value.loweredFunc.func.effects != null
       ) {
-        let usedIdentifiers: null | Set<IdentifierId> = null;
         for (const effect of value.loweredFunc.func.effects) {
           if (
             effect.kind === 'GlobalMutation' ||
-            effect.kind === 'ReactMutation'
+            effect.kind === 'ReactMutation' ||
+            effect.kind === 'ImmutableFunctionCall'
           ) {
             // Known effects are always propagated upwards
             functionEffects.push(effect);
-          } else if (effect.kind === "GlobalFunctionCall") {
-            if (effect.lvalue == null) {
-              functionEffects.push(effect);
-            } else {
-              if (usedIdentifiers === null) {
-                usedIdentifiers = new Set();
-                for (const [,block] of value.loweredFunc.func.body.blocks) {
-                  for (const instr of block.instructions) {
-                    Array.from(eachInstructionOperand(instr)).forEach(operand => usedIdentifiers?.add(operand.identifier.id));
-                  }
-                  for (const phi of block.phis) {
-                    Array.from(phi.operands.values()).forEach(operand => usedIdentifiers?.add(operand.id));
-                  }
-                  Array.from(eachTerminalOperand(block.terminal)).forEach(operand => usedIdentifiers?.add(operand.identifier.id));
-                }
-              }
-              if (!usedIdentifiers.has(effect.lvalue)) {
-                functionEffects.push({ ...effect, lvalue: null });
-              }
-            }
           } else if (effect.kind === 'ContextMutation') {
             /**
              * Contextual effects need to be replayed against the current inference
@@ -1197,7 +1272,9 @@ function inferBlock(
             );
             functionEffects.push(
               ...propEffects.filter(
-                propEffect => propEffect.kind !== 'GlobalMutation',
+                propEffect =>
+                  propEffect.kind !== 'GlobalMutation' &&
+                  propEffect.kind !== 'ImmutableFunctionCall',
               ),
             );
           }
@@ -1403,7 +1480,10 @@ function inferBlock(
           functionEffects.push(
             ...argumentEffects.filter(
               argEffect =>
-                !isUseEffect || i !== 0 || (argEffect.kind !== 'GlobalMutation' && argEffect.kind !== 'GlobalFunctionCall'),
+                !isUseEffect ||
+                i !== 0 ||
+                (argEffect.kind !== 'GlobalMutation' &&
+                  argEffect.kind !== 'ImmutableFunctionCall'),
             ),
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
@@ -1425,23 +1505,31 @@ function inferBlock(
         }
         hasCaptureArgument ||= instrValue.callee.effect === Effect.Capture;
 
-        const calleeValue = state.kind(instrValue.callee);
-        if (calleeValue.kind === ValueKind.Global && signature?.hookKind == null) {
+        if (
+          !isSetStateType(instrValue.callee.identifier) &&
+          instrValue.callee.effect === Effect.Read &&
+          signature?.hookKind == null
+        ) {
           const allRead = instrValue.args.every(arg => {
             switch (arg.kind) {
-              case "Identifier":
+              case 'Identifier':
                 return arg.effect === Effect.Read;
-              case "Spread":
+              case 'Spread':
                 return arg.place.effect === Effect.Read;
               default:
                 assertExhaustive(arg, 'Unexpected arg kind');
             }
           });
           if (allRead) {
-            functionEffects.push({kind: "GlobalFunctionCall", lvalue: instr.lvalue.identifier.id, error: {reason: "External function is called with arguments that React Compiler expects to be immutable and return value is ignored. This call is likely to perform unsafe side effects, which violates the rules of React.", loc: instrValue.loc, severity: ErrorSeverity.InvalidReact}});
+            functionEffects.push({
+              kind: 'ImmutableFunctionCall',
+              lvalue: instr.lvalue.identifier.id,
+              callee: instrValue.callee.identifier.id,
+              loc: instrValue.loc,
+              global: state.kind(instrValue.callee).kind === ValueKind.Global,
+            });
           }
         }
-
 
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
@@ -1550,7 +1638,10 @@ function inferBlock(
           functionEffects.push(
             ...argumentEffects.filter(
               argEffect =>
-                !isUseEffect || i !== 0 || (argEffect.kind !== 'GlobalMutation' && argEffect.kind !== 'GlobalFunctionCall'),
+                !isUseEffect ||
+                i !== 0 ||
+                (argEffect.kind !== 'GlobalMutation' &&
+                  argEffect.kind !== 'ImmutableFunctionCall'),
             ),
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
@@ -1571,6 +1662,33 @@ function inferBlock(
           );
         }
         hasCaptureArgument ||= instrValue.receiver.effect === Effect.Capture;
+
+        if (
+          !isSetStateType(instrValue.property.identifier) &&
+          instrValue.receiver.effect === Effect.Read &&
+          instrValue.property.effect === Effect.Read &&
+          signature?.hookKind == null
+        ) {
+          const allRead = instrValue.args.every(arg => {
+            switch (arg.kind) {
+              case 'Identifier':
+                return arg.effect === Effect.Read;
+              case 'Spread':
+                return arg.place.effect === Effect.Read;
+              default:
+                assertExhaustive(arg, 'Unexpected arg kind');
+            }
+          });
+          if (allRead) {
+            functionEffects.push({
+              kind: 'ImmutableFunctionCall',
+              lvalue: instr.lvalue.identifier.id,
+              callee: instrValue.property.identifier.id,
+              loc: instrValue.loc,
+              global: state.kind(instrValue.property).kind === ValueKind.Global,
+            });
+          }
+        }
 
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
