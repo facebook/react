@@ -238,6 +238,7 @@ export default function inferReferenceEffects(
   }
 
   if (!options.isFunctionExpression) {
+    let usedIdentifiers: null | Set<IdentifierId> = null;
     functionEffects.forEach(eff => {
       switch (eff.kind) {
         case 'ReactMutation':
@@ -250,6 +251,28 @@ export default function inferReferenceEffects(
             reason: `Unexpected ContextMutation in top-level function effects`,
             loc: eff.loc,
           });
+        }
+        case "GlobalFunctionCall": {
+          if (eff.lvalue == null) {
+            functionEffects.push(eff);
+          } else {
+            if (usedIdentifiers === null) {
+              usedIdentifiers = new Set();
+              for (const [,block] of fn.body.blocks) {
+                for (const instr of block.instructions) {
+                  Array.from(eachInstructionOperand(instr)).forEach(operand => usedIdentifiers?.add(operand.identifier.id));
+                }
+                for (const phi of block.phis) {
+                  Array.from(phi.operands.values()).forEach(operand => usedIdentifiers?.add(operand.id));
+                }
+                Array.from(eachTerminalOperand(block.terminal)).forEach(operand => usedIdentifiers?.add(operand.identifier.id));
+              }
+            }
+            if (!usedIdentifiers.has(eff.lvalue)) {
+              CompilerError.throw(eff.error);
+            }
+          }
+          break;
         }
         default:
           assertExhaustive(
@@ -406,6 +429,7 @@ class InferenceState {
           value.kind === 'ObjectMethod') &&
         value.loweredFunc.func.effects != null
       ) {
+        let usedIdentifiers: null | Set<IdentifierId> = null;
         for (const effect of value.loweredFunc.func.effects) {
           if (
             effect.kind === 'GlobalMutation' ||
@@ -413,7 +437,27 @@ class InferenceState {
           ) {
             // Known effects are always propagated upwards
             functionEffects.push(effect);
-          } else {
+          } else if (effect.kind === "GlobalFunctionCall") {
+            if (effect.lvalue == null) {
+              functionEffects.push(effect);
+            } else {
+              if (usedIdentifiers === null) {
+                usedIdentifiers = new Set();
+                for (const [,block] of value.loweredFunc.func.body.blocks) {
+                  for (const instr of block.instructions) {
+                    Array.from(eachInstructionOperand(instr)).forEach(operand => usedIdentifiers?.add(operand.identifier.id));
+                  }
+                  for (const phi of block.phis) {
+                    Array.from(phi.operands.values()).forEach(operand => usedIdentifiers?.add(operand.id));
+                  }
+                  Array.from(eachTerminalOperand(block.terminal)).forEach(operand => usedIdentifiers?.add(operand.identifier.id));
+                }
+              }
+              if (!usedIdentifiers.has(effect.lvalue)) {
+                functionEffects.push({ ...effect, lvalue: null });
+              }
+            }
+          } else if (effect.kind === 'ContextMutation') {
             /**
              * Contextual effects need to be replayed against the current inference
              * state, which may know more about the value to which the effect applied.
@@ -444,6 +488,8 @@ class InferenceState {
                 } // else case 2, local mutable value so this effect was fine
               }
             }
+          } else {
+            assertExhaustive(effect, `Unexpected function effect kind`);
           }
         }
       }
@@ -1357,7 +1403,7 @@ function inferBlock(
           functionEffects.push(
             ...argumentEffects.filter(
               argEffect =>
-                !isUseEffect || i !== 0 || argEffect.kind !== 'GlobalMutation',
+                !isUseEffect || i !== 0 || (argEffect.kind !== 'GlobalMutation' && argEffect.kind !== 'GlobalFunctionCall'),
             ),
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
@@ -1378,6 +1424,24 @@ function inferBlock(
           );
         }
         hasCaptureArgument ||= instrValue.callee.effect === Effect.Capture;
+
+        const calleeValue = state.kind(instrValue.callee);
+        if (calleeValue.kind === ValueKind.Global && signature?.hookKind == null) {
+          const allRead = instrValue.args.every(arg => {
+            switch (arg.kind) {
+              case "Identifier":
+                return arg.effect === Effect.Read;
+              case "Spread":
+                return arg.place.effect === Effect.Read;
+              default:
+                assertExhaustive(arg, 'Unexpected arg kind');
+            }
+          });
+          if (allRead) {
+            functionEffects.push({kind: "GlobalFunctionCall", lvalue: instr.lvalue.identifier.id, error: {reason: "External function is called with arguments that React Compiler expects to be immutable and return value is ignored. This call is likely to perform unsafe side effects, which violates the rules of React.", loc: instrValue.loc, severity: ErrorSeverity.InvalidReact}});
+          }
+        }
+
 
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
@@ -1486,7 +1550,7 @@ function inferBlock(
           functionEffects.push(
             ...argumentEffects.filter(
               argEffect =>
-                !isUseEffect || i !== 0 || argEffect.kind !== 'GlobalMutation',
+                !isUseEffect || i !== 0 || (argEffect.kind !== 'GlobalMutation' && argEffect.kind !== 'GlobalFunctionCall'),
             ),
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;

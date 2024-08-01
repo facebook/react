@@ -1,12 +1,19 @@
-import {useEffect, useMemo} from 'react';
+import {useMemo} from 'react';
 
 function Component(props) {
-  function foo() {
-    mutate();
-  }
-  const h = [foo];
-  useEffect(() => { a(h) });
-  return lengh();
+  const outerHandlers = useMemo(() => {
+    let handlers = {value: props.value};
+    switch (props.test) {
+      case true: {
+        console.log(handlers.value);
+        break;
+      }
+      default: {
+      }
+    }
+    return handlers;
+  });
+  return outerHandlers;
 }
 
 export const FIXTURE_ENTRYPOINT = {
