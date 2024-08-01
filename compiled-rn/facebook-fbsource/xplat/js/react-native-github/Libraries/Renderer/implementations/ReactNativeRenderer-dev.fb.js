@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e6e3658c2a560f2302e63eebf7f929a4>>
+ * @generated SignedSource<<e7d2cd534c1bc73735e6e8624354984f>>
  */
 
 "use strict";
@@ -10716,7 +10716,10 @@ __DEV__ &&
             captureCommitPhaseError(childToDelete, parentFiber, error$24);
           }
         }
-      if (parentFiber.subtreeFlags & 13878)
+      if (
+        parentFiber.subtreeFlags &
+        (enablePersistedModeClonedFlag ? 13886 : 13878)
+      )
         for (parentFiber = parentFiber.child; null !== parentFiber; )
           runWithFiberInDEV(
             parentFiber,
@@ -14256,6 +14259,8 @@ __DEV__ &&
       isArrayImpl = Array.isArray,
       alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
+      enablePersistedModeClonedFlag =
+        dynamicFlagsUntyped.enablePersistedModeClonedFlag,
       enableLazyContextPropagation =
         dynamicFlagsUntyped.enableLazyContextPropagation,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
@@ -17062,11 +17067,11 @@ __DEV__ &&
       shouldSuspendImpl = newShouldSuspendImpl;
     };
     var isomorphicReactPackageVersion = React.version;
-    if ("19.0.0-native-fb-88ee14ff-20240801" !== isomorphicReactPackageVersion)
+    if ("19.0.0-native-fb-5fb67fa2-20240801" !== isomorphicReactPackageVersion)
       throw Error(
         'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
           (isomorphicReactPackageVersion +
-            "\n  - react-native-renderer:  19.0.0-native-fb-88ee14ff-20240801\nLearn more: https://react.dev/warnings/version-mismatch")
+            "\n  - react-native-renderer:  19.0.0-native-fb-5fb67fa2-20240801\nLearn more: https://react.dev/warnings/version-mismatch")
       );
     if (
       "function" !==
@@ -17092,11 +17097,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-88ee14ff-20240801",
+        version: "19.0.0-native-fb-5fb67fa2-20240801",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromTag,
-        reconcilerVersion: "19.0.0-native-fb-88ee14ff-20240801"
+        reconcilerVersion: "19.0.0-native-fb-5fb67fa2-20240801"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

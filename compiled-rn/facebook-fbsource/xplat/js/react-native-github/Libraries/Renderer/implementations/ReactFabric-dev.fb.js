@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ccf803f43b9e96e1c53c80fe55e3f4c7>>
+ * @generated SignedSource<<3f990e5fd99baa100025988a07806f74>>
  */
 
 "use strict";
@@ -8986,13 +8986,17 @@ __DEV__ &&
         ? null
         : { parent: CacheContext._currentValue2, pool: cacheFromPool };
     }
+    function markCloned(workInProgress) {
+      enablePersistedModeClonedFlag && (workInProgress.flags |= 8);
+    }
     function doesRequireClone(current, completedWork) {
       if (null !== current && current.child === completedWork.child) return !1;
       if (0 !== (completedWork.flags & 16)) return !0;
       for (current = completedWork.child; null !== current; ) {
+        completedWork = enablePersistedModeClonedFlag ? 8218 : 13878;
         if (
-          0 !== (current.flags & 13878) ||
-          0 !== (current.subtreeFlags & 13878)
+          0 !== (current.flags & completedWork) ||
+          0 !== (current.subtreeFlags & completedWork)
         )
           return !0;
         current = current.sibling;
@@ -9255,7 +9259,8 @@ __DEV__ &&
               var newChildSet = null;
               current &&
                 passChildrenWhenCloningPersistedNodes &&
-                ((newChildSet = passChildrenWhenCloningPersistedNodes
+                (markCloned(workInProgress),
+                (newChildSet = passChildrenWhenCloningPersistedNodes
                   ? []
                   : createChildNodeSet()),
                 appendAllChildrenToContainer(
@@ -9298,11 +9303,13 @@ __DEV__ &&
               }
               newProps === renderLanes
                 ? (workInProgress.stateNode = renderLanes)
-                : ((workInProgress.stateNode = newProps),
+                : (markCloned(workInProgress),
+                  (workInProgress.stateNode = newProps),
                   current
                     ? passChildrenWhenCloningPersistedNodes ||
                       appendAllChildren(newProps, workInProgress, !1, !1)
-                    : (workInProgress.flags |= 4));
+                    : enablePersistedModeClonedFlag ||
+                      (workInProgress.flags |= 4));
             } else workInProgress.stateNode = renderLanes;
           } else {
             if (!newProps) {
@@ -9346,6 +9353,7 @@ __DEV__ &&
                 publicInstance: _oldProps
               }
             };
+            markCloned(workInProgress);
             appendAllChildren(current, workInProgress, !1, !1);
             workInProgress.stateNode = current;
           }
@@ -9357,13 +9365,14 @@ __DEV__ &&
             current.memoizedProps !== newProps
               ? ((current = requiredContext(rootInstanceStackCursor.current)),
                 (renderLanes = requiredContext(contextStackCursor.current)),
+                markCloned(workInProgress),
                 (workInProgress.stateNode = createTextInstance(
                   newProps,
                   current,
                   renderLanes,
                   workInProgress
                 )),
-                (workInProgress.flags |= 4))
+                enablePersistedModeClonedFlag || (workInProgress.flags |= 4))
               : (workInProgress.stateNode = current.stateNode);
           else {
             if (
@@ -9375,6 +9384,7 @@ __DEV__ &&
               );
             current = requiredContext(rootInstanceStackCursor.current);
             renderLanes = requiredContext(contextStackCursor.current);
+            markCloned(workInProgress);
             workInProgress.stateNode = createTextInstance(
               newProps,
               current,
@@ -10573,7 +10583,10 @@ __DEV__ &&
             captureCommitPhaseError(childToDelete, parentFiber, error$22);
           }
         }
-      if (parentFiber.subtreeFlags & 13878)
+      if (
+        parentFiber.subtreeFlags &
+        (enablePersistedModeClonedFlag ? 13886 : 13878)
+      )
         for (parentFiber = parentFiber.child; null !== parentFiber; )
           runWithFiberInDEV(
             parentFiber,
@@ -14169,6 +14182,8 @@ __DEV__ &&
       enableFabricCompleteRootInCommitPhase =
         dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
       enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
+      enablePersistedModeClonedFlag =
+        dynamicFlagsUntyped.enablePersistedModeClonedFlag,
       enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
       passChildrenWhenCloningPersistedNodes =
         dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
@@ -16901,11 +16916,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-88ee14ff-20240801",
+        version: "19.0.0-native-fb-5fb67fa2-20240801",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-88ee14ff-20240801"
+        reconcilerVersion: "19.0.0-native-fb-5fb67fa2-20240801"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

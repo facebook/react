@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1ef90aaf2532c5fad5e946e83e77c0b9>>
+ * @generated SignedSource<<a990d92e3fe10d8fad28e9ffe5368da5>>
  */
 
 "use strict";
@@ -23,6 +23,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   isArrayImpl = Array.isArray,
   alwaysThrottleRetries = dynamicFlagsUntyped.alwaysThrottleRetries,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
+  enablePersistedModeClonedFlag =
+    dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableLazyContextPropagation =
     dynamicFlagsUntyped.enableLazyContextPropagation,
   ReactSharedInternals =
@@ -9009,7 +9011,9 @@ function recursivelyTraverseMutationEffects(root$jscomp$0, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 13878)
+  if (
+    parentFiber.subtreeFlags & (enablePersistedModeClonedFlag ? 13886 : 13878)
+  )
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root$jscomp$0),
         (parentFiber = parentFiber.sibling);
@@ -11626,11 +11630,11 @@ function updateContainer(element, container, parentComponent, callback) {
   return lane;
 }
 var isomorphicReactPackageVersion = React.version;
-if ("19.0.0-native-fb-88ee14ff-20240801" !== isomorphicReactPackageVersion)
+if ("19.0.0-native-fb-5fb67fa2-20240801" !== isomorphicReactPackageVersion)
   throw Error(
     'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
       (isomorphicReactPackageVersion +
-        "\n  - react-native-renderer:  19.0.0-native-fb-88ee14ff-20240801\nLearn more: https://react.dev/warnings/version-mismatch")
+        "\n  - react-native-renderer:  19.0.0-native-fb-5fb67fa2-20240801\nLearn more: https://react.dev/warnings/version-mismatch")
   );
 if (
   "function" !==
@@ -11679,11 +11683,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1297 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-88ee14ff-20240801",
+    version: "19.0.0-native-fb-5fb67fa2-20240801",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromTag,
-    reconcilerVersion: "19.0.0-native-fb-88ee14ff-20240801"
+    reconcilerVersion: "19.0.0-native-fb-5fb67fa2-20240801"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1297.rendererConfig = extraDevToolsConfig);

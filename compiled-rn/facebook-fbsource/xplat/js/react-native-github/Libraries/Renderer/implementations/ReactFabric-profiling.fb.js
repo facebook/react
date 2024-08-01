@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b98aab9ffed40f129f17759dadbb2a51>>
+ * @generated SignedSource<<ac20c35f19f3379a2f08375288c04bdb>>
  */
 
 "use strict";
@@ -26,6 +26,8 @@ var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/R
   enableFabricCompleteRootInCommitPhase =
     dynamicFlagsUntyped.enableFabricCompleteRootInCommitPhase,
   enableObjectFiber = dynamicFlagsUntyped.enableObjectFiber,
+  enablePersistedModeClonedFlag =
+    dynamicFlagsUntyped.enablePersistedModeClonedFlag,
   enableShallowPropDiffing = dynamicFlagsUntyped.enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlagsUntyped.passChildrenWhenCloningPersistedNodes,
@@ -7321,11 +7323,18 @@ function getSuspendedCache() {
     ? null
     : { parent: CacheContext._currentValue2, pool: cacheFromPool };
 }
+function markCloned(workInProgress) {
+  enablePersistedModeClonedFlag && (workInProgress.flags |= 8);
+}
 function doesRequireClone(current, completedWork) {
   if (null !== current && current.child === completedWork.child) return !1;
   if (0 !== (completedWork.flags & 16)) return !0;
   for (current = completedWork.child; null !== current; ) {
-    if (0 !== (current.flags & 13878) || 0 !== (current.subtreeFlags & 13878))
+    completedWork = enablePersistedModeClonedFlag ? 8218 : 13878;
+    if (
+      0 !== (current.flags & completedWork) ||
+      0 !== (current.subtreeFlags & completedWork)
+    )
       return !0;
     current = current.sibling;
   }
@@ -7586,7 +7595,8 @@ function completeWork(current, workInProgress, renderLanes) {
           var newChildSet = null;
           current &&
             passChildrenWhenCloningPersistedNodes &&
-            ((newChildSet = passChildrenWhenCloningPersistedNodes
+            (markCloned(workInProgress),
+            (newChildSet = passChildrenWhenCloningPersistedNodes
               ? []
               : createChildNodeSet()),
             appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1));
@@ -7622,11 +7632,12 @@ function completeWork(current, workInProgress, renderLanes) {
           }
           newProps === renderLanes
             ? (workInProgress.stateNode = renderLanes)
-            : ((workInProgress.stateNode = newProps),
+            : (markCloned(workInProgress),
+              (workInProgress.stateNode = newProps),
               current
                 ? passChildrenWhenCloningPersistedNodes ||
                   appendAllChildren(newProps, workInProgress, !1, !1)
-                : (workInProgress.flags |= 4));
+                : enablePersistedModeClonedFlag || (workInProgress.flags |= 4));
         } else workInProgress.stateNode = renderLanes;
       } else {
         if (!newProps) {
@@ -7664,6 +7675,7 @@ function completeWork(current, workInProgress, renderLanes) {
             publicInstance: newChildSet
           }
         };
+        markCloned(workInProgress);
         appendAllChildren(current, workInProgress, !1, !1);
         workInProgress.stateNode = current;
       }
@@ -7673,23 +7685,29 @@ function completeWork(current, workInProgress, renderLanes) {
     case 6:
       if (current && null != workInProgress.stateNode)
         current.memoizedProps !== newProps
-          ? ((workInProgress.stateNode = createTextInstance(
+          ? ((current = rootInstanceStackCursor.current),
+            (renderLanes = contextStackCursor.current),
+            markCloned(workInProgress),
+            (workInProgress.stateNode = createTextInstance(
               newProps,
-              rootInstanceStackCursor.current,
-              contextStackCursor.current,
+              current,
+              renderLanes,
               workInProgress
             )),
-            (workInProgress.flags |= 4))
+            enablePersistedModeClonedFlag || (workInProgress.flags |= 4))
           : (workInProgress.stateNode = current.stateNode);
       else {
         if ("string" !== typeof newProps && null === workInProgress.stateNode)
           throw Error(
             "We must have new props for new mounts. This error is likely caused by a bug in React. Please file an issue."
           );
+        current = rootInstanceStackCursor.current;
+        renderLanes = contextStackCursor.current;
+        markCloned(workInProgress);
         workInProgress.stateNode = createTextInstance(
           newProps,
-          rootInstanceStackCursor.current,
-          contextStackCursor.current,
+          current,
+          renderLanes,
           workInProgress
         );
       }
@@ -8716,7 +8734,9 @@ function recursivelyTraverseMutationEffects(root, parentFiber) {
         captureCommitPhaseError(childToDelete, parentFiber, error);
       }
     }
-  if (parentFiber.subtreeFlags & 13878)
+  if (
+    parentFiber.subtreeFlags & (enablePersistedModeClonedFlag ? 13886 : 13878)
+  )
     for (parentFiber = parentFiber.child; null !== parentFiber; )
       commitMutationEffectsOnFiber(parentFiber, root),
         (parentFiber = parentFiber.sibling);
@@ -11499,11 +11519,11 @@ batchedUpdatesImpl = function (fn, a) {
 var roots = new Map(),
   internals$jscomp$inline_1226 = {
     bundleType: 0,
-    version: "19.0.0-native-fb-88ee14ff-20240801",
+    version: "19.0.0-native-fb-5fb67fa2-20240801",
     rendererPackageName: "react-native-renderer",
     currentDispatcherRef: ReactSharedInternals,
     findFiberByHostInstance: getInstanceFromNode,
-    reconcilerVersion: "19.0.0-native-fb-88ee14ff-20240801"
+    reconcilerVersion: "19.0.0-native-fb-5fb67fa2-20240801"
   };
 null !== extraDevToolsConfig &&
   (internals$jscomp$inline_1226.rendererConfig = extraDevToolsConfig);
@@ -11523,16 +11543,16 @@ internals$jscomp$inline_1226.injectProfilingHooks = function (profilingHooks) {
   injectedProfilingHooks = profilingHooks;
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1472 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1474 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1472.isDisabled &&
-    hook$jscomp$inline_1472.supportsFiber
+    !hook$jscomp$inline_1474.isDisabled &&
+    hook$jscomp$inline_1474.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1472.inject(
+      (rendererID = hook$jscomp$inline_1474.inject(
         internals$jscomp$inline_1226
       )),
-        (injectedHook = hook$jscomp$inline_1472);
+        (injectedHook = hook$jscomp$inline_1474);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
