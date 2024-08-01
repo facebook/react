@@ -915,8 +915,8 @@ module.exports = function ($$$config) {
     hostTransitionProviderCursor.current === fiber &&
       (pop(hostTransitionProviderCursor),
       isPrimaryRenderer
-        ? (HostTransitionContext._currentValue = null)
-        : (HostTransitionContext._currentValue2 = null));
+        ? (HostTransitionContext._currentValue = NotPendingTransition)
+        : (HostTransitionContext._currentValue2 = NotPendingTransition));
   }
   function throwOnHydrationMismatch(fiber) {
     var error = Error(formatProdErrorMessage(418, ""));
@@ -3372,8 +3372,7 @@ module.exports = function ($$$config) {
     return existingStateHook;
   }
   function useHostTransitionStatus() {
-    var status = readContext(HostTransitionContext);
-    return null !== status ? status : NotPendingTransition;
+    return readContext(HostTransitionContext);
   }
   function updateId() {
     return updateWorkInProgressHook().memoizedState;
@@ -11589,6 +11588,7 @@ module.exports = function ($$$config) {
     suspendInstance = $$$config.suspendInstance,
     waitForCommitToBeReady = $$$config.waitForCommitToBeReady,
     NotPendingTransition = $$$config.NotPendingTransition,
+    HostTransitionContext = $$$config.HostTransitionContext,
     resetFormInstance = $$$config.resetFormInstance;
   $$$config.bindToConsole;
   var supportsMicrotasks = $$$config.supportsMicrotasks,
@@ -11715,14 +11715,6 @@ module.exports = function ($$$config) {
     contextFiberStackCursor = createCursor(null),
     rootInstanceStackCursor = createCursor(null),
     hostTransitionProviderCursor = createCursor(null),
-    HostTransitionContext = {
-      $$typeof: REACT_CONTEXT_TYPE,
-      Provider: null,
-      Consumer: null,
-      _currentValue: null,
-      _currentValue2: null,
-      _threadCount: 0
-    },
     hydrationParentFiber = null,
     nextHydratableInstance = null,
     isHydrating = !1,
@@ -12661,7 +12653,7 @@ module.exports = function ($$$config) {
       rendererPackageName: rendererPackageName,
       currentDispatcherRef: ReactSharedInternals,
       findFiberByHostInstance: getInstanceFromNode,
-      reconcilerVersion: "19.0.0-www-classic-a7d1240c-20240731"
+      reconcilerVersion: "19.0.0-www-classic-88ee14ff-20240801"
     };
     null !== extraDevToolsConfig &&
       (internals.rendererConfig = extraDevToolsConfig);
