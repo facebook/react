@@ -100,7 +100,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
           isSetStateType(instr.value.property.identifier);
         name = this.getName(instr.value.property.identifier) ?? name;
       }
-      if (instr.lvalue === null && !isException && allowedNames.has(name)) {
+      if (instr.lvalue === null && !isException && !allowedNames.has(name)) {
         let allReads = true;
         for (const operand of eachReactiveValueOperand(instr.value)) {
           allReads &&= operand.effect === Effect.Read;
