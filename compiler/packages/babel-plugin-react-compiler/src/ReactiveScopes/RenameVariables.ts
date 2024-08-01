@@ -7,6 +7,7 @@
 
 import {CompilerError} from '../CompilerError';
 import {
+  DeclarationId,
   Identifier,
   IdentifierId,
   IdentifierName,
@@ -121,8 +122,8 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
 }
 
 class Scopes {
-  #seen: Map<IdentifierId, IdentifierName> = new Map();
-  #stack: Array<Map<string, IdentifierId>> = [new Map()];
+  #seen: Map<DeclarationId, IdentifierName> = new Map();
+  #stack: Array<Map<string, DeclarationId>> = [new Map()];
   #globals: Set<string>;
   names: Set<ValidIdentifierName> = new Set();
 
@@ -135,7 +136,7 @@ class Scopes {
     if (originalName === null) {
       return;
     }
-    const mappedName = this.#seen.get(identifier.id);
+    const mappedName = this.#seen.get(identifier.declarationId);
     if (mappedName !== undefined) {
       identifier.name = mappedName;
       return;
@@ -158,12 +159,12 @@ class Scopes {
     }
     const identifierName = makeIdentifierName(name);
     identifier.name = identifierName;
-    this.#seen.set(identifier.id, identifierName);
-    this.#stack.at(-1)!.set(identifierName.value, identifier.id);
+    this.#seen.set(identifier.declarationId, identifierName);
+    this.#stack.at(-1)!.set(identifierName.value, identifier.declarationId);
     this.names.add(identifierName.value);
   }
 
-  #lookup(name: string): IdentifierId | null {
+  #lookup(name: string): DeclarationId | null {
     for (let i = this.#stack.length - 1; i >= 0; i--) {
       const scope = this.#stack[i]!;
       const entry = scope.get(name);

@@ -9,6 +9,7 @@ import {CompilerError} from '../CompilerError';
 import {
   BasicBlock,
   BlockId,
+  DeclarationId,
   HIRFunction,
   Identifier,
   InstructionKind,
@@ -26,6 +27,118 @@ import {
   eachTerminalSuccessor,
   terminalFallthrough,
 } from '../HIR/visitors';
+
+export function leaveSSA(fn: HIRFunction): void {
+  const declarations = new Map<DeclarationId, LValue | LValuePattern>();
+  for (const param of fn.params) {
+    let place: Place = param.kind === 'Identifier' ? param : param.place;
+    if (place.identifier.name !== null) {
+      declarations.set(place.identifier.declarationId, {
+        kind: InstructionKind.Let,
+        place,
+      });
+    }
+  }
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      const {value} = instr;
+      switch (value.kind) {
+        case 'DeclareContext':
+        case 'DeclareLocal': {
+          const lvalue = value.lvalue;
+          CompilerError.invariant(
+            !declarations.has(lvalue.place.identifier.declarationId),
+            {
+              reason: `Expected variable not to be defined prior to declaration`,
+              description: `${printPlace(lvalue.place)} was already defined`,
+              loc: lvalue.place.loc,
+            },
+          );
+          declarations.set(lvalue.place.identifier.declarationId, lvalue);
+          if (lvalue.kind === InstructionKind.Let) {
+            lvalue.kind = InstructionKind.Const;
+          }
+          break;
+        }
+        case 'StoreContext':
+        case 'StoreLocal': {
+          const lvalue = value.lvalue;
+          if (lvalue.place.identifier.name !== null) {
+            if (lvalue.kind === InstructionKind.Reassign) {
+              const declaration = declarations.get(
+                lvalue.place.identifier.declarationId,
+              );
+              CompilerError.invariant(declaration !== undefined, {
+                reason: `Expected variable to have been defined`,
+                description: `No declaration for ${printPlace(lvalue.place)}`,
+                loc: lvalue.place.loc,
+              });
+              declaration.kind = InstructionKind.Let;
+            } else {
+              CompilerError.invariant(
+                !declarations.has(lvalue.place.identifier.declarationId),
+                {
+                  reason: `Expected variable not to be defined prior to declaration`,
+                  description: `${printPlace(lvalue.place)} was already defined`,
+                  loc: lvalue.place.loc,
+                },
+              );
+              declarations.set(lvalue.place.identifier.declarationId, lvalue);
+              if (lvalue.kind === InstructionKind.Let) {
+                lvalue.kind = InstructionKind.Const;
+              }
+            }
+          }
+          break;
+        }
+        case 'Destructure': {
+          const lvalue = value.lvalue;
+          if (lvalue.kind === InstructionKind.Reassign) {
+            for (const place of eachPatternOperand(lvalue.pattern)) {
+              const declaration = declarations.get(
+                place.identifier.declarationId,
+              );
+              CompilerError.invariant(declaration !== undefined, {
+                reason: `Expected variable to have been defined`,
+                description: `No declaration for ${printPlace(place)}`,
+                loc: place.loc,
+              });
+              declaration.kind = InstructionKind.Let;
+            }
+          } else {
+            for (const place of eachPatternOperand(lvalue.pattern)) {
+              CompilerError.invariant(
+                !declarations.has(place.identifier.declarationId),
+                {
+                  reason: `Expected variable not to be defined prior to declaration`,
+                  description: `${printPlace(place)} was already defined`,
+                  loc: place.loc,
+                },
+              );
+              declarations.set(place.identifier.declarationId, lvalue);
+            }
+            if (lvalue.kind === InstructionKind.Let) {
+              lvalue.kind = InstructionKind.Const;
+            }
+          }
+          break;
+        }
+        case 'PostfixUpdate':
+        case 'PrefixUpdate': {
+          const lvalue = value.lvalue;
+          const declaration = declarations.get(lvalue.identifier.declarationId);
+          CompilerError.invariant(declaration !== undefined, {
+            reason: `Expected variable to have been defined`,
+            description: `No declaration for ${printPlace(lvalue)}`,
+            loc: lvalue.loc,
+          });
+          declaration.kind = InstructionKind.Let;
+          break;
+        }
+      }
+    }
+  }
+}
 
 /*
  * Removes SSA form by converting all phis into explicit bindings and assignments. There are two main categories
@@ -89,7 +202,7 @@ import {
  * )
  * ```
  */
-export function leaveSSA(fn: HIRFunction): void {
+export function _leaveSSA(fn: HIRFunction): void {
   // Maps identifier names to their original declaration.
   const declarations: Map<
     string,
