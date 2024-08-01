@@ -8,6 +8,7 @@
 import {CompilerError} from '../CompilerError';
 import {
   BlockId,
+  DeclarationId,
   GeneratedSource,
   Identifier,
   IdentifierId,
@@ -76,9 +77,9 @@ type TemporariesUsedOutsideDefiningScope = {
    * tracks all relevant temporary declarations (currently LoadLocal and PropertyLoad)
    * and the scope where they are defined
    */
-  declarations: Map<IdentifierId, ScopeId>;
+  declarations: Map<DeclarationId, ScopeId>;
   // temporaries used outside of their defining scope
-  usedOutsideDeclaringScope: Set<IdentifierId>;
+  usedOutsideDeclaringScope: Set<DeclarationId>;
 };
 class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOutsideDefiningScope> {
   scopes: Array<ScopeId> = [];
@@ -107,7 +108,10 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
       case 'LoadLocal':
       case 'LoadContext':
       case 'PropertyLoad': {
-        state.declarations.set(instruction.lvalue.identifier.id, scope);
+        state.declarations.set(
+          instruction.lvalue.identifier.declarationId,
+          scope,
+        );
         break;
       }
       default: {
@@ -121,18 +125,20 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
     place: Place,
     state: TemporariesUsedOutsideDefiningScope,
   ): void {
-    const declaringScope = state.declarations.get(place.identifier.id);
+    const declaringScope = state.declarations.get(
+      place.identifier.declarationId,
+    );
     if (declaringScope === undefined) {
       return;
     }
     if (this.scopes.indexOf(declaringScope) === -1) {
       // Declaring scope is not active === used outside declaring scope
-      state.usedOutsideDeclaringScope.add(place.identifier.id);
+      state.usedOutsideDeclaringScope.add(place.identifier.declarationId);
     }
   }
 }
 
-type DeclMap = Map<IdentifierId, Decl>;
+type DeclMap = Map<DeclarationId, Decl>;
 type Decl = {
   id: InstructionId;
   scope: Stack<ScopeTraversalState>;
@@ -280,7 +286,7 @@ class PoisonState {
 }
 
 class Context {
-  #temporariesUsedOutsideScope: Set<IdentifierId>;
+  #temporariesUsedOutsideScope: Set<DeclarationId>;
   #declarations: DeclMap = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
   // Reactive dependencies used in the current reactive scope.
@@ -307,7 +313,7 @@ class Context {
   #scopes: Stack<ScopeTraversalState> = empty();
   poisonState: PoisonState = new PoisonState(new Set(), new Set(), false);
 
-  constructor(temporariesUsedOutsideScope: Set<IdentifierId>) {
+  constructor(temporariesUsedOutsideScope: Set<DeclarationId>) {
     this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
   }
 
@@ -377,7 +383,9 @@ class Context {
   }
 
   isUsedOutsideDeclaringScope(place: Place): boolean {
-    return this.#temporariesUsedOutsideScope.has(place.identifier.id);
+    return this.#temporariesUsedOutsideScope.has(
+      place.identifier.declarationId,
+    );
   }
 
   /*
@@ -440,8 +448,8 @@ class Context {
    * on itself.
    */
   declare(identifier: Identifier, decl: Decl): void {
-    if (!this.#declarations.has(identifier.id)) {
-      this.#declarations.set(identifier.id, decl);
+    if (!this.#declarations.has(identifier.declarationId)) {
+      this.#declarations.set(identifier.declarationId, decl);
     }
     this.#reassignments.set(identifier, decl);
   }
@@ -533,7 +541,7 @@ class Context {
      */
     const currentDeclaration =
       this.#reassignments.get(identifier) ??
-      this.#declarations.get(identifier.id);
+      this.#declarations.get(identifier.declarationId);
     const currentScope = this.currentScope.value?.value;
     return (
       currentScope != null &&
@@ -599,7 +607,7 @@ class Context {
      *  (all other decls e.g. `let x;` should be initialized in BuildHIR)
      */
     const originalDeclaration = this.#declarations.get(
-      maybeDependency.identifier.id,
+      maybeDependency.identifier.declarationId,
     );
     if (
       originalDeclaration !== undefined &&
