@@ -11,22 +11,26 @@ import {
   Effect,
   Identifier,
   IdentifierId,
+  InstructionId,
+  Place,
   ReactiveFunction,
   ReactiveInstruction,
   getHookKind,
   isSetStateType,
 } from '../HIR/HIR';
+import { eachInstructionValueLValue } from '../HIR/visitors';
 import {
   ReactiveFunctionVisitor,
   eachReactiveValueOperand,
   visitReactiveFunction,
 } from './visitors';
 
-const allowedNames = new Set(['invariant']);
+const allowedNames = new Set(['invariant', 'recoverableViolation']);
 
 class Visitor extends ReactiveFunctionVisitor<CompilerError> {
   #env: Environment;
-  #names: Map<IdentifierId, string> = new Map();
+  #names = new Map<IdentifierId, string>();
+  #functions = new Map<IdentifierId, CompilerError>()
 
   constructor(env: Environment) {
     super();
@@ -47,6 +51,10 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
     }
   }
 
+  override visitReactiveFunctionValue(): void {
+    CompilerError.invariant(false, { reason: 'visitReactiveFunctionValue should not be called', loc: null })
+  }
+
   override visitInstruction(
     instr: ReactiveInstruction,
     state: CompilerError,
@@ -55,6 +63,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
       switch (instr.value.kind) {
         case 'LoadGlobal':
           this.setName(instr.lvalue.identifier, instr.value.binding.name);
+          super.visitInstruction(instr, state);
           break;
         case 'LoadLocal':
         case 'LoadContext':
@@ -62,6 +71,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
             instr.lvalue.identifier,
             this.getName(instr.value.place.identifier),
           );
+          super.visitInstruction(instr, state);
           break;
         case 'PropertyLoad': {
           const name = this.getName(instr.value.object.identifier);
@@ -71,6 +81,7 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
               name + '.' + instr.value.property,
             );
           }
+          super.visitInstruction(instr, state);
           break;
         }
         case 'ComputedLoad': {
@@ -78,28 +89,69 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
           if (name != null) {
             this.setName(instr.lvalue.identifier, name + '[...]');
           }
+          super.visitInstruction(instr, state);
+          break;
+        }
+        case 'FunctionExpression': {
+          this.setName(instr.lvalue.identifier, instr.value.name ?? undefined);
+          const state = new CompilerError();
+          this.visitHirFunction(instr.value.loweredFunc.func, state);
+          if (state.hasErrors()) {
+            this.#functions.set(instr.lvalue.identifier.id, state);
+          }
+          break;
+        }
+        case 'ReactiveFunctionValue': {
+          this.setName(instr.lvalue.identifier, instr.value.fn.id ?? undefined);
+          const state = new CompilerError();
+          this.visitBlock(instr.value.fn.body, state);
+          if (state.hasErrors()) {
+            this.#functions.set(instr.lvalue.identifier.id, state);
+          }
+          break;
+        }
+        default: {
+          super.visitInstruction(instr, state);
           break;
         }
       }
     }
 
+    let hookKind = null;
+    let callee = null;
     if (
       instr.value.kind === 'CallExpression' ||
       instr.value.kind === 'MethodCall'
     ) {
-      let isException = false;
-      let name = '(unknown)';
       if (instr.value.kind === 'CallExpression') {
-        isException =
-          getHookKind(this.#env, instr.value.callee.identifier) != null ||
-          isSetStateType(instr.value.callee.identifier);
-        name = this.getName(instr.value.callee.identifier) ?? name;
+        callee = instr.value.callee;
       } else {
-        isException =
-          getHookKind(this.#env, instr.value.property.identifier) != null ||
-          isSetStateType(instr.value.property.identifier);
-        name = this.getName(instr.value.property.identifier) ?? name;
+        callee = instr.value.property;
       }
+      hookKind = getHookKind(this.#env, callee.identifier);
+    }
+
+    if (hookKind !== 'useEffect' && hookKind !== 'useLayoutEffect' && hookKind !== 'useInsertionEffect' && instr.value.kind !== "JsxExpression") {
+      for (const operand of eachReactiveValueOperand(instr.value)) {
+        const errors = this.#functions.get(operand.identifier.id);
+        if (errors != null) {
+          for (const lval of eachInstructionValueLValue(instr.value)) {
+            const existing = this.#functions.get(lval.identifier.id) ?? new CompilerError();
+            errors.details.forEach(detail => existing.pushErrorDetail(detail));
+            this.#functions.set(lval.identifier.id, existing);
+          }
+        }
+      }
+    }
+
+    if (callee != null) {
+      const isException =
+        hookKind != null ||
+        isSetStateType(callee.identifier);
+      const name = this.getName(callee.identifier) ?? "(unknown)";
+
+      this.#functions.get(callee.identifier.id)?.details?.forEach(detail => state.pushErrorDetail(detail));
+
       if (instr.lvalue === null && !isException && !allowedNames.has(name)) {
         let allReads = true;
         for (const operand of eachReactiveValueOperand(instr.value)) {
@@ -114,7 +166,6 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
         }
       }
     }
-    super.visitInstruction(instr, state);
   }
 }
 
