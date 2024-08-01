@@ -62,9 +62,6 @@ export function leaveSSA(fn: HIRFunction): void {
             },
           );
           declarations.set(lvalue.place.identifier.declarationId, lvalue);
-          if (lvalue.kind === InstructionKind.Let) {
-            lvalue.kind = InstructionKind.Const;
-          }
           break;
         }
         case 'StoreLocal': {
@@ -99,34 +96,69 @@ export function leaveSSA(fn: HIRFunction): void {
         }
         case 'Destructure': {
           const lvalue = value.lvalue;
-          if (lvalue.kind === InstructionKind.Reassign) {
-            for (const place of eachPatternOperand(lvalue.pattern)) {
+          let kind: InstructionKind | null = null;
+          for (const place of eachPatternOperand(lvalue.pattern)) {
+            if (place.identifier.name === null) {
+              CompilerError.invariant(
+                kind === null || kind === InstructionKind.Const,
+                {
+                  reason: `Expected consistent kind for destructuring`,
+                  description: `other places were \`${kind}\` but '${printPlace(
+                    place,
+                  )}' is const`,
+                  loc: place.loc,
+                  suggestions: null,
+                },
+              );
+              kind = InstructionKind.Const;
+            } else {
               const declaration = declarations.get(
                 place.identifier.declarationId,
               );
-              CompilerError.invariant(declaration !== undefined, {
-                reason: `Expected variable to have been defined`,
-                description: `No declaration for ${printPlace(place)}`,
-                loc: place.loc,
-              });
-              declaration.kind = InstructionKind.Let;
-            }
-          } else {
-            for (const place of eachPatternOperand(lvalue.pattern)) {
-              CompilerError.invariant(
-                !declarations.has(place.identifier.declarationId),
-                {
-                  reason: `Expected variable not to be defined prior to declaration`,
-                  description: `${printPlace(place)} was already defined`,
+              if (declaration === undefined) {
+                CompilerError.invariant(block.kind !== 'value', {
+                  reason: `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
+                  description: null,
                   loc: place.loc,
-                },
-              );
-              declarations.set(place.identifier.declarationId, lvalue);
-            }
-            if (lvalue.kind === InstructionKind.Let) {
-              lvalue.kind = InstructionKind.Const;
+                  suggestions: null,
+                });
+                declarations.set(place.identifier.declarationId, lvalue);
+                CompilerError.invariant(
+                  kind === null || kind === InstructionKind.Const,
+                  {
+                    reason: `Expected consistent kind for destructuring`,
+                    description: `Other places were \`${kind}\` but '${printPlace(
+                      place,
+                    )}' is const`,
+                    loc: place.loc,
+                    suggestions: null,
+                  },
+                );
+                kind = InstructionKind.Const;
+              } else {
+                CompilerError.invariant(
+                  kind === null || kind === InstructionKind.Reassign,
+                  {
+                    reason: `Expected consistent kind for destructuring`,
+                    description: `Other places were \`${kind}\` but '${printPlace(
+                      place,
+                    )}' is reassigned`,
+                    loc: place.loc,
+                    suggestions: null,
+                  },
+                );
+                kind = InstructionKind.Reassign;
+                declaration.kind = InstructionKind.Let;
+              }
             }
           }
+          CompilerError.invariant(kind !== null, {
+            reason: 'Expected at least one operand',
+            description: null,
+            loc: null,
+            suggestions: null,
+          });
+          lvalue.kind = kind;
           break;
         }
         case 'PostfixUpdate':
