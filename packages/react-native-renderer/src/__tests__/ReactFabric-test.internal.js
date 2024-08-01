@@ -279,6 +279,130 @@ describe('ReactFabric', () => {
     expect(nativeFabricUIManager.completeRoot).toBeCalled();
   });
 
+  // @gate enablePersistedModeClonedFlag
+  it('should not clone nodes when layout effects are used', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ComponentWithEffect = () => {
+      React.useLayoutEffect(() => {});
+      return null;
+    };
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithEffect />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
+    jest.clearAllMocks();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithEffect />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).not.toBeCalled();
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).not.toBeCalled();
+    expect(nativeFabricUIManager.completeRoot).not.toBeCalled();
+  });
+
+  // @gate enablePersistedModeClonedFlag
+  it('should not clone nodes when insertion effects are used', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ComponentWithRef = () => {
+      React.useInsertionEffect(() => {});
+      return null;
+    };
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithRef />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
+    jest.clearAllMocks();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithRef />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).not.toBeCalled();
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).not.toBeCalled();
+    expect(nativeFabricUIManager.completeRoot).not.toBeCalled();
+  });
+
+  // @gate enablePersistedModeClonedFlag
+  it('should not clone nodes when useImperativeHandle is used', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ComponentWithImperativeHandle = props => {
+      React.useImperativeHandle(props.ref, () => ({greet: () => 'hello'}));
+      return null;
+    };
+
+    const ref = React.createRef();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithImperativeHandle ref={ref} />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
+    expect(ref.current.greet()).toBe('hello');
+    jest.clearAllMocks();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithImperativeHandle ref={ref} />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).not.toBeCalled();
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).not.toBeCalled();
+    expect(nativeFabricUIManager.completeRoot).not.toBeCalled();
+    expect(ref.current.greet()).toBe('hello');
+  });
+
   it('should call dispatchCommand for native refs', async () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},

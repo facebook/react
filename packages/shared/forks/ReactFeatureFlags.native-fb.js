@@ -23,6 +23,7 @@ export const {
   enableAddPropertiesFastPath,
   enableFabricCompleteRootInCommitPhase,
   enableObjectFiber,
+  enablePersistedModeClonedFlag,
   enableShallowPropDiffing,
   passChildrenWhenCloningPersistedNodes,
   enableLazyContextPropagation,
