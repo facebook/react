@@ -67,17 +67,10 @@ export function leaveSSA(fn: HIRFunction): void {
         case 'StoreLocal': {
           const lvalue = value.lvalue;
           if (lvalue.place.identifier.name !== null) {
-            if (lvalue.kind === InstructionKind.Reassign) {
-              const declaration = declarations.get(
-                lvalue.place.identifier.declarationId,
-              );
-              CompilerError.invariant(declaration !== undefined, {
-                reason: `Expected variable to have been defined`,
-                description: `No declaration for ${printPlace(lvalue.place)}`,
-                loc: lvalue.place.loc,
-              });
-              declaration.kind = InstructionKind.Let;
-            } else {
+            const declaration = declarations.get(
+              lvalue.place.identifier.declarationId,
+            );
+            if (declaration === undefined) {
               CompilerError.invariant(
                 !declarations.has(lvalue.place.identifier.declarationId),
                 {
@@ -90,6 +83,9 @@ export function leaveSSA(fn: HIRFunction): void {
               if (lvalue.kind === InstructionKind.Let) {
                 lvalue.kind = InstructionKind.Const;
               }
+            } else {
+              declaration.kind = InstructionKind.Let;
+              lvalue.kind = InstructionKind.Reassign;
             }
           }
           break;
