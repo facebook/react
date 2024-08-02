@@ -8,7 +8,7 @@ parameters:
 jobs:
   run_replay_job:
     docker:
-      - image: cimg/base:stable
+      - image: cimg/python:3.12
     resource_class: small
     steps:
       - checkout
@@ -22,7 +22,7 @@ jobs:
           command: pip install -r requirements.txt
       - run:
           name: Run Replay Script
-          command: python replay_commits_benchmark.py \
+          command: python3 replay_commits_benchmark.py \
                     --upstream-repo-url $UPSTREAM_REPO \
                     --config-path $CONFIG_PATH \
                     --circleci-project-slug $CIRCLECI_PROJECT_SLUG \
@@ -30,6 +30,10 @@ jobs:
                     --google-sheet-id $GOOGLE_SHEETS_ID \
                     --github-token $GITHUB_TOKEN \
                     --circleci-token $CIRCLECI_TOKEN
+      - store_artifacts:
+          path: benchmark-computed.json
+      - store_artifacts:
+          path: benchmark-raw.json
 
 workflows:
   daily_replay_workflow:
