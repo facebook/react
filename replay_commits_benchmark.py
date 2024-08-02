@@ -328,10 +328,10 @@ def push_commits_one_by_one(args, repo, commits):
 
     return branch
 
-def export_blob(blob, dst_path):
+def export_blob(data, dst_path):
     os.makedirs(os.path.dirname(dst_path), exist_ok=True)
     with open(dst_path, 'wb') as file:
-        file.write(BytesIO(blob.data_stream.read()).getvalue())
+        file.write(data)
 
 
 def get_all_build_ids(args):
