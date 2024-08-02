@@ -465,7 +465,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case 'DeclareContext': {
-      value = `DeclareContext (${instrValue.lvalue.kind}) ${instrValue.lvalue.kind} ${printPlace(
+      value = `DeclareContext ${instrValue.lvalue.kind} ${printPlace(
         instrValue.lvalue.place,
       )}`;
       break;
@@ -833,7 +833,6 @@ export function printPlace(place: Place): string {
 }
 
 export function printIdentifier(id: Identifier): string {
-  // return `${printName(id.name)}\$${id.id}${Number(id.declarationId) !== id.id ? `_d${id.declarationId}` : ''}${printScope(id.scope)}`;
   return `${printName(id.name)}\$${id.id}${printScope(id.scope)}`;
 }
 
