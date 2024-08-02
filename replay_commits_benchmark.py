@@ -295,6 +295,8 @@ def push_commits_one_by_one(args, repo, commits):
 
     if branch not in repo.heads:
         repo.git.checkout('-B', branch, 'main')
+    
+    config_path = args['config_path']
 
     main_tree = repo.heads.main.commit.tree
     config_folders = [item.path for item in main_tree.traverse() if item.path.startswith(config_path) and isinstance(item, git.Blob) and item.name != '.DS_Store']
