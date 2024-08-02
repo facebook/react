@@ -493,12 +493,15 @@ const skipFilter = new Set([
 
   // 'react-compiler-runtime' not yet supported
   'flag-enable-emit-hook-guards',
-
   'fast-refresh-refresh-on-const-changes-dev',
   'useState-pruned-dependency-change-detect',
   'useState-unpruned-dependency',
   'useState-and-other-hook-unpruned-dependency',
   'change-detect-reassign',
+
+  // Depends on external functions
+  'idx-method-no-outlining-wildcard',
+  'idx-method-no-outlining',
 
   // needs to be executed as a module
   'meta-property',
