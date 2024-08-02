@@ -316,12 +316,7 @@ def push_commits_one_by_one(args, repo, commits):
         repo.head.reset(commit=commit, index=True, working_tree=True)
 
         for path, data in folders_from_main.items():
-            if path.startswith(config_path):
-                dest_path = path
-            elif path.startswith(".circleci"):
-                dest_path = os.path.join(repo.working_tree_dir, path.replace(".circleci", "", 1))
-            elif path.startswith(".github"):
-                dest_path = os.path.join(repo.working_tree_dir, path.replace(".github", "", 1))
+            dest_path = path.replace(config_path, "", 1)
             if os.path.exists(dest_path):
               os.remove(dest_path)
             export_blob(data, dest_path)
