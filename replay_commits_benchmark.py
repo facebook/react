@@ -331,8 +331,7 @@ def export_blob(data, dst_path):
     try:
         os.makedirs(directory, exist_ok=True)
     except FileExistsError:
-        logging.error(f"FileExistsError occurred when creating {directory}. Directory exists: {os.path.exists(directory)}")
-        raise
+        print(f"Directory {directory} already exists.")
     with open(dst_path, 'wb') as file:
         file.write(data)
 
