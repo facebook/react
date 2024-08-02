@@ -30,7 +30,7 @@ export function describeBuiltInComponentFrame(name: string): string {
     }
   }
   let suffix = '';
-  if (__IS_CHROME__ || __IS_EDGE__) {
+  if (__IS_CHROME__ || __IS_EDGE__ || __IS_NATIVE__) {
     suffix = ' (<anonymous>)';
   } else if (__IS_FIREFOX__) {
     suffix = '@unknown:0:0';
