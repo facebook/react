@@ -52,5 +52,5 @@ const Home: NextPage = () => {
     </div>
   );
 };
-
+// hello react
 export default Home;
