@@ -264,8 +264,6 @@ def run(parsed_args):
 def replay_commits(args):
 
     repo = Repo(args['working_repo_dir'])
-    git_cmd = Git(args['working_repo_dir'])
-    git_cmd.update_environment(GIT_ASKPASS="echo $GITHUB_TOKEN")
     branch = ""
 
     try:
@@ -294,6 +292,8 @@ def push_commits_one_by_one(args, repo, commits):
       branch = f"replay-{current_date}"
       args['branch'] = branch
 
+    git_cmd_with_token = Git(args['working_repo_dir'], update_environment={'GIT_ASKPASS': "/bin/echo", 'GIT_USERNAME': 'replay-bot', 'GIT_PASSWORD': os.getenv('GITHUB_TOKEN')})
+
     if branch not in repo.heads:
         repo.git.checkout('-B', branch, 'main')
 
@@ -318,7 +318,7 @@ def push_commits_one_by_one(args, repo, commits):
         repo.index.commit(f"Committing {commit.hexsha}")
 
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
-        repo.git.push("--force", "origin", branch)
+        git_cmd_with_token.push("--force", "origin", branch)
         time.sleep(args['commit_delay'])
 
     # Delete the branch after all commits have been pushed
