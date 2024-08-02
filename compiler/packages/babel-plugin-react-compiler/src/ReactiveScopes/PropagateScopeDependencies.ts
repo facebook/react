@@ -11,7 +11,6 @@ import {
   DeclarationId,
   GeneratedSource,
   Identifier,
-  IdentifierId,
   InstructionId,
   InstructionKind,
   isObjectMethodType,
@@ -29,7 +28,6 @@ import {
   ReactiveValue,
   ScopeId,
 } from '../HIR/HIR';
-import {printIdentifier} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand, eachPatternOperand} from '../HIR/visitors';
 import {empty, Stack} from '../Utils/Stack';
 import {assertExhaustive} from '../Utils/utils';
@@ -37,7 +35,7 @@ import {
   ReactiveScopeDependencyTree,
   ReactiveScopePropertyDependency,
 } from './DeriveMinimalDependencies';
-import {printReactiveScopeSummary} from './PrintReactiveFunction';
+import {areEqualPaths} from './MergeReactiveScopesThatInvalidateTogether';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
@@ -706,26 +704,28 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
           existingDep =>
             existingDep.identifier.declarationId ===
               candidateDep.identifier.declarationId &&
-            pathsEqual(existingDep.path, candidateDep.path),
+            areEqualPaths(existingDep.path, candidateDep.path),
         )
       ) {
         scope.scope.dependencies.add(candidateDep);
       }
     }
-    // TODO LeaveSSA: fix existing bug with duplicate deps and reassignments
-    // see fixture ssa-cascading-eliminated-phis, note that we cache `x`
-    // twice because its both a dep and a reassignment.
-    //
-    // for (const reassignment of scope.scope.reassignments) {
-    //   if (
-    //     Array.from(scope.scope.dependencies.values()).some(
-    //       dep => dep.identifier.declarationId === reassignment.declarationId &&
-    //       dep.path.length === 0,
-    //     )
-    //   ) {
-    //     scope.scope.reassignments.delete(reassignment);
-    //   }
-    // }
+    /*
+     * TODO LeaveSSA: fix existing bug with duplicate deps and reassignments
+     * see fixture ssa-cascading-eliminated-phis, note that we cache `x`
+     * twice because its both a dep and a reassignment.
+     * 
+     * for (const reassignment of scope.scope.reassignments) {
+     *   if (
+     *     Array.from(scope.scope.dependencies.values()).some(
+     *       dep => dep.identifier.declarationId === reassignment.declarationId &&
+     *       dep.path.length === 0,
+     *     )
+     *   ) {
+     *     scope.scope.reassignments.delete(reassignment);
+     *   }
+     * }
+     */
   }
 
   override visitPrunedScope(
@@ -1088,11 +1088,4 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     }
     this.exitTerminal(stmt, context);
   }
-}
-
-function pathsEqual<T>(path1: Array<T>, path2: Array<T>): boolean {
-  return (
-    path1.length === path2.length &&
-    path1.every((item, index) => path2[index] === item)
-  );
 }

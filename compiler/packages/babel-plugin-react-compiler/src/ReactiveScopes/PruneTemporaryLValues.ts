@@ -7,8 +7,6 @@
 
 import {
   DeclarationId,
-  Identifier,
-  IdentifierId,
   InstructionId,
   Place,
   ReactiveFunction,

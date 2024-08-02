@@ -7,7 +7,6 @@
 
 import {
   DeclarationId,
-  Identifier,
   InstructionKind,
   ReactiveFunction,
   ReactiveInstruction,

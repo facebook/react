@@ -9,7 +9,6 @@ import {CompilerError} from '../CompilerError';
 import {
   DeclarationId,
   Environment,
-  IdentifierId,
   InstructionId,
   Pattern,
   Place,
