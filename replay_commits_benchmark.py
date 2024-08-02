@@ -295,26 +295,27 @@ def push_commits_one_by_one(args, repo, commits):
 
     if branch not in repo.heads:
         repo.git.checkout('-B', branch, 'main')
-    
+
     config_path = args['config_path']
 
+    files_in_config_path = {}
     main_tree = repo.heads.main.commit.tree
-    config_folders = [item.path for item in main_tree.traverse() if item.path.startswith(config_path) and isinstance(item, git.Blob) and item.name != '.DS_Store']
+    for item in main_tree.traverse():
+        if item.path.startswith(config_path):
+            files_in_config_path[item.path] = BytesIO(item.data_stream.read()).getvalue()
 
     for commit in commits:
-        repo.git.checkout(commit)
+        repo.git.checkout(commit.hexsha)
 
-        for config_folder in config_folders:
-            folder_name_in_current_branch = config_folder.replace(config_path+'/', '')
+        for path in files_in_config_path:
+            folder = path.replace(config_path+'/', '')
+            if os.path.isdir(folder):
+                shutil.rmtree(folder, ignore_errors=True)
 
-            if os.path.exists(folder_name_in_current_branch):
-                shutil.rmtree(folder_name_in_current_branch, ignore_errors=True)
+        for path, data in files_in_config_path.items():
+            export_blob(data, path.replace(config_path+'/', ''))
 
-            item = main_tree[config_folder]
-            export_blob(item, folder_name_in_current_branch)
-
-            repo.git.add(folder_name_in_current_branch)
-
+        repo.git.add('.')
         repo.index.commit(f"-m 'Committing {commit.hexsha}'")
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
         repo.git.push("--force", "origin", branch)
