@@ -296,13 +296,22 @@ def push_commits_one_by_one(args, repo, commits):
     if branch not in repo.heads:
         repo.git.checkout('-B', branch, 'main')
 
+    main_tree = repo.heads.main.commit.tree
+    config_folders = [item.path for item in main_tree.traverse() if item.path.startswith(config_path) and isinstance(item, git.Blob) and item.name != '.DS_Store']
+
     for commit in commits:
         repo.git.checkout(commit)
 
-        main_tree = repo.heads.main.commit.tree
-        for item in main_tree.traverse():
-            if item.path.startswith('.circleci') or item.path.startswith('.github'):
-                export_blob(item, item.path)
+        for config_folder in config_folders:
+            folder_name_in_current_branch = config_folder.replace(config_path+'/', '')
+
+            if os.path.exists(folder_name_in_current_branch):
+                shutil.rmtree(folder_name_in_current_branch, ignore_errors=True)
+
+            item = main_tree[config_folder]
+            export_blob(item, folder_name_in_current_branch)
+
+            repo.git.add(folder_name_in_current_branch)
 
         repo.index.commit(f"-m 'Committing {commit.hexsha}'")
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
