@@ -120,7 +120,6 @@ function getContextKeys(value: Destructure): Array<string> | null {
 
     case 'ObjectPattern': {
       for (const place of pattern.properties) {
-        debugger;
         if (
           place.kind !== 'ObjectProperty' ||
           place.type !== 'property' ||
