@@ -7,6 +7,11 @@ export default hook useFoo(bar: number) {
   return [bar];
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useFoo,
+  params: [42],
+};
+
 ```
 
 ## Code
@@ -26,5 +31,12 @@ export default function useFoo(bar) {
   return t0;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: useFoo,
+  params: [42],
+};
+
 ```
       
+### Eval output
+(kind: ok) [42]

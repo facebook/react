@@ -390,11 +390,12 @@ const skipFilter = new Set([
   'template-literal',
   'multi-arrow-expr-export-default-gating-test',
 
-  // TODO: we should be able to support these
-  'component-declaration-basic.flow',
-  'hook-declaration-basic.flow',
+  // works, but appears differently when printing
+  // due to optional function argument
   'nested-function-with-param-as-captured-dep',
   'deeply-nested-function-expressions-with-params',
+
+  // TODO: we should be able to support these
   'readonly-object-method-calls',
   'readonly-object-method-calls-mutable-lambda',
   'preserve-memo-validation/useMemo-with-refs.flow',
@@ -483,7 +484,6 @@ const skipFilter = new Set([
   'rules-of-hooks/rules-of-hooks-69521d94fa03',
 
   // bugs
-  'bug-renaming-jsx-tag-lowercase',
   'fbt/bug-fbt-plural-multiple-function-calls',
   'fbt/bug-fbt-plural-multiple-mixed-call-tag',
   'bug-invalid-hoisting-functionexpr',
