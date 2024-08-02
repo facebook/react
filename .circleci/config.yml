@@ -42,4 +42,4 @@ workflows:
     jobs:
       - run_replay_job:
           context:
-            - react-benchmark
+            - react-benchmarking
