@@ -1,14 +1,18 @@
-// @ts-check
-
 import {test, expect} from '@playwright/test';
 
 test('action returning client component with deduped references', async ({
   page,
 }) => {
-  const pageErrors = [];
+  const errors = [];
+
+  page.on('console', msg => {
+    if (msg.type() === 'error') {
+      errors.push(msg.text());
+    }
+  });
 
   page.on('pageerror', error => {
-    pageErrors.push(error.stack);
+    errors.push(error.stack);
   });
 
   await page.goto('/');
@@ -19,17 +23,13 @@ test('action returning client component with deduped references', async ({
 
   await button.click();
 
-  await expect(
-    page.getByTestId('temporary-references-action-result')
-  ).toHaveText('Hello');
+  await expect(page.getByTestId('form')).toContainText('Hello');
 
   // Click the button one more time to send the previous result (i.e. the
   // returned element) back to the server.
   await button.click();
 
-  await expect(pageErrors).toEqual([]);
+  await expect(errors).toEqual([]);
 
-  await expect(
-    page.getByTestId('temporary-references-action-result')
-  ).toHaveText('HelloHello');
+  await expect(page.getByTestId('form')).toContainText('HelloHello');
 });

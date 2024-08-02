@@ -6,9 +6,9 @@ export function TemporaryReferences({action}) {
   const [result, formAction] = React.useActionState(action, null);
 
   return (
-    <form action={formAction}>
+    <form action={formAction} data-testid="form">
       <button>Return element from action</button>
-      <div data-testid="temporary-references-action-result">{result}</div>
+      {result}
     </form>
   );
 }
