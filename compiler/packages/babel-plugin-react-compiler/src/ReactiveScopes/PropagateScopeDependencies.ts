@@ -714,7 +714,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
      * TODO LeaveSSA: fix existing bug with duplicate deps and reassignments
      * see fixture ssa-cascading-eliminated-phis, note that we cache `x`
      * twice because its both a dep and a reassignment.
-     * 
+     *
      * for (const reassignment of scope.scope.reassignments) {
      *   if (
      *     Array.from(scope.scope.dependencies.values()).some(
