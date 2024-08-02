@@ -288,18 +288,17 @@ def replay_commits(args):
 
 def push_commits_one_by_one(args, repo, commits):
     if args['branch']:
-      branch = args['branch']
+        branch = args['branch']
     else:
-      current_date = datetime.now().date().isoformat()
-      branch = f"replay-{current_date}"
-      args['branch'] = branch
+        current_date = datetime.now().date().isoformat()
+        branch = f"replay-{current_date}"
+        args['branch'] = branch
 
     if branch not in repo.heads:
         repo.git.checkout('-B', branch, 'main')
 
     git_cmd = Git(args['working_repo_dir'])
 
-    # configure local repo settings
     git_cmd.config('user.email', '')
     git_cmd.config('user.name', 'replay-bot')
 
@@ -307,7 +306,7 @@ def push_commits_one_by_one(args, repo, commits):
     main_tree = repo.heads.main.commit.tree
 
     folders_from_main = {}
-    for folder in [config_path]:
+    for folder in [".".join([config_path, ".circleci"]), ".".join([config_path, ".github"])]:
         for item in main_tree.traverse():
             if item.path.startswith(folder):
                 folders_from_main[item.path] = BytesIO(item.data_stream.read()).getvalue()
@@ -318,8 +317,9 @@ def push_commits_one_by_one(args, repo, commits):
         for path, data in folders_from_main.items():
             dest_path = path.replace(config_path, "", 1)
             if os.path.exists(dest_path):
-              os.remove(dest_path)
-            export_blob(data, dest_path)
+                os.remove(dest_path)
+            with open(dest_path, 'wb') as file:
+                file.write(data)
 
         repo.git.add('.')
         repo.index.commit(f"Committing {commit.hexsha}")
@@ -339,27 +339,6 @@ def push_commits_one_by_one(args, repo, commits):
     # repo.remotes.origin.push(refspec=f":{branch}")
 
     return branch
-
-def export_blob(data, dst_path):
-    directory = os.path.dirname(dst_path)
-    
-    if os.path.exists(dst_path):
-        if os.path.isfile(dst_path):
-            print(f"A file with the name {dst_path} already exists. Removing the file.")
-            os.remove(dst_path)
-        elif os.path.isdir(dst_path):
-            print(f"A directory with the name {dst_path} already exists. Removing the directory.")
-            shutil.rmtree(dst_path)
-    try:
-        os.makedirs(directory, exist_ok=True)
-    except FileExistsError as e:
-        print(f"Cannot create directory. A file with the name '{directory}' already exists. Trying to remove the file.")
-        os.remove(directory)
-        os.makedirs(directory, exist_ok=True)
-
-    if not os.path.isdir(dst_path):
-        with open(dst_path, 'wb') as file:
-            file.write(data)
 
 def get_all_build_ids(args):
     github_ids = get_github_workflow_run_ids(args)
