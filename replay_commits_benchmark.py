@@ -8,6 +8,7 @@ import gspread
 import random
 import shutil
 import time
+from io import BytesIO
 from git import Repo
 from logging import config
 from datetime import datetime, timedelta, timezone
@@ -295,17 +296,13 @@ def push_commits_one_by_one(args, repo, commits):
     if branch not in repo.heads:
         repo.git.checkout('-B', branch, 'main')
 
-    config_path = args['config_path']
-
     for commit in commits:
         repo.git.checkout(commit)
 
-        config_path = args['config_path']
-        circleci_config = os.path.join(os.getcwd(), f"{config_path}/.circleci")
-        github_config = os.path.join(os.getcwd(), f"{config_path}/.github")
-
-        repo.git.checkout("main", circleci_config)
-        repo.git.checkout("main", github_config)
+        main_tree = repo.heads.main.commit.tree
+        for item in main_tree.traverse():
+            if item.path.startswith('.circleci') or item.path.startswith('.github'):
+                export_blob(item, item.path)
 
         repo.index.commit(f"-m 'Committing {commit.hexsha}'")
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
@@ -318,6 +315,12 @@ def push_commits_one_by_one(args, repo, commits):
     # repo.remotes.origin.push(refspec=f":{branch}")
 
     return branch
+
+def export_blob(blob, dst_path):
+    os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+    with open(dst_path, 'wb') as file:
+        file.write(BytesIO(blob.data_stream.read()).getvalue())
+
 
 def get_all_build_ids(args):
     github_ids = get_github_workflow_run_ids(args)
