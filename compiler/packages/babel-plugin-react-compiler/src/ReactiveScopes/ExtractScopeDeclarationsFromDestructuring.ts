@@ -18,7 +18,7 @@ import {
   ReactiveStatement,
   promoteTemporary,
 } from '../HIR';
-import {createTemporaryPlace} from '../HIR/HIRBuilder';
+import {clonePlaceToTemporary, createTemporaryPlace} from '../HIR/HIRBuilder';
 import {eachPatternOperand, mapPatternOperands} from '../HIR/visitors';
 import {
   ReactiveFunctionTransform,
@@ -152,8 +152,7 @@ function transformDestructuring(
     if (!reassigned.has(place.identifier.id)) {
       return place;
     }
-    const temporary = createTemporaryPlace(state.env, place.loc);
-    temporary.identifier.type = place.identifier.type;
+    const temporary = clonePlaceToTemporary(state.env, place);
     promoteTemporary(temporary.identifier);
     renamed.set(place, temporary);
     return temporary;
