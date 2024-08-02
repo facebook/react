@@ -222,7 +222,7 @@ def run(parsed_args):
     LOGGER.info(f"Triggered commits on branch: {branch}")
 
     # Gather all Pipeline IDs
-    build_ids = get_all_build_ids(parsed_args, branch)
+    build_ids = get_all_build_ids(parsed_args)
 
     # Wait for builds to complete
     wait_for_builds_to_complete(parsed_args, build_ids)    
