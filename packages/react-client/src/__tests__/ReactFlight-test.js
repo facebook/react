@@ -1632,6 +1632,25 @@ describe('ReactFlight', () => {
     }).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
+  // @gate !__DEV__ || enableOwnerStacks
+  it('should warn in DEV a child is missing keys on a fragment', () => {
+    expect(() => {
+      // While we're on the server we need to have the Server version active to track component stacks.
+      jest.resetModules();
+      jest.mock('react', () => ReactServer);
+      const transport = ReactNoopFlightServer.render(
+        ReactServer.createElement(
+          'div',
+          null,
+          Array(6).fill(ReactServer.createElement(ReactServer.Fragment)),
+        ),
+      );
+      jest.resetModules();
+      jest.mock('react', () => React);
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev('Each child in a list should have a unique "key" prop.');
+  });
+
   it('should warn in DEV a child is missing keys in client component', async () => {
     function ParentClient({children}) {
       return children;
