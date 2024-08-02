@@ -1,4 +1,4 @@
-// @validateRefAccessDuringRender
+// @validateRefAccessDuringRender @validateNoSetStateInRender:false
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 function Component() {
