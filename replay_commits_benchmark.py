@@ -308,8 +308,7 @@ def push_commits_one_by_one(args, repo, commits):
     config_path = args['config_path']
 
     for commit in commits:
-        # Cherry-pick the commit.
-        repo.git.cherry_pick(commit)
+        repo.git.checkout(commit)
 
         # Overwrite .circleci and .github directories with saved state.
         shutil.rmtree('.circleci', ignore_errors=True)
