@@ -295,6 +295,13 @@ export type HIRFunction = {
 
 export type FunctionEffect =
   | {
+      kind: 'ImmutableFunctionCall';
+      loc: SourceLocation;
+      lvalue: IdentifierId;
+      callee: IdentifierId;
+      global: boolean;
+    }
+  | {
       kind: 'GlobalMutation';
       error: CompilerErrorDetailOptions;
     }
