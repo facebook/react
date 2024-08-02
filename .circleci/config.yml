@@ -1,0 +1,40 @@
+version: 2.1
+
+parameters:
+  run_daily_replay:
+    type: boolean
+    default: false
+
+jobs:
+  run_replay_job:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Decode Google Service Account File
+          command: |
+            mkdir -p ~/.config/gspread/
+            echo -n ${GOOGLE_SERVICE_ACCOUNT} | base64 --decode > ~/.config/gspread/service_account.json
+      - run:
+          name: Install Python Requirements
+          command: pip install -r requirements.txt
+      - run:
+          name: Run Replay Script
+          command: python replay_commits_benchmark.py \
+                    --upstream-repo-url $UPSTREAM_REPO \
+                    --config-path $CONFIG_PATH \
+                    --circleci-project-slug $CIRCLECI_PROJECT_SLUG \
+                    --github-repo-slug $GITHUB_REPO_SLUG \
+                    --google-sheet-id $GOOGLE_SHEETS_ID \
+                    --github-token $GITHUB_TOKEN \
+                    --circleci-token $CIRCLECI_TOKEN
+
+workflows:
+  daily_replay_workflow:
+    when: << pipeline.parameters.run_daily_replay >>
+    jobs:
+      - run_replay_job:
+          context:
+            - react-benchmark
