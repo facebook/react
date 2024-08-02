@@ -329,10 +329,15 @@ def push_commits_one_by_one(args, repo, commits):
     return branch
 
 def export_blob(data, dst_path):
-    os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+    directory = os.path.dirname(dst_path)
+    check_and_remove_dir(directory)
+    os.makedirs(directory, exist_ok=True)
     with open(dst_path, 'wb') as file:
         file.write(data)
 
+def check_and_remove_dir(directory):
+    if os.path.exists(directory):
+        shutil.rmtree(directory, ignore_errors=True)
 
 def get_all_build_ids(args):
     github_ids = get_github_workflow_run_ids(args)
