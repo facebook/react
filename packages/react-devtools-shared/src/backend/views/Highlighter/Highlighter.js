@@ -38,12 +38,15 @@ export function hideOverlay(agent: Agent): void {
     : hideOverlayWeb();
 }
 
-function showOverlayNative(elements: Array<HostInstance>, agent: Agent): void {
+function showOverlayNative(
+  elements: $ReadOnlyArray<HostInstance>,
+  agent: Agent,
+): void {
   agent.emit('showNativeHighlight', elements);
 }
 
 function showOverlayWeb(
-  elements: Array<HTMLElement>,
+  elements: $ReadOnlyArray<HTMLElement>,
   componentName: string | null,
   agent: Agent,
   hideAfterTimeout: boolean,
@@ -64,12 +67,17 @@ function showOverlayWeb(
 }
 
 export function showOverlay(
-  elements: Array<HostInstance>,
+  elements: $ReadOnlyArray<HostInstance>,
   componentName: string | null,
   agent: Agent,
   hideAfterTimeout: boolean,
 ): void {
   return isReactNativeEnvironment()
     ? showOverlayNative(elements, agent)
-    : showOverlayWeb((elements: any), componentName, agent, hideAfterTimeout);
+    : showOverlayWeb(
+        (elements: $ReadOnlyArray<any>),
+        componentName,
+        agent,
+        hideAfterTimeout,
+      );
 }
