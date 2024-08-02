@@ -292,11 +292,13 @@ def push_commits_one_by_one(args, repo, commits):
       branch = f"replay-{current_date}"
       args['branch'] = branch
 
-    repo.git.checkout("-B", branch, commit)
+    repo.git.checkout("-B", branch)
 
     config_path = args['config_path']
 
     for commit in commits:
+        repo.git.checkout(commit)
+
         repo.git.checkout("main", config_path)
         original_directory = os.path.join(os.getcwd(), f"{config_path}/.circleci")
         target_directory = os.path.join(os.getcwd(), ".circleci")
