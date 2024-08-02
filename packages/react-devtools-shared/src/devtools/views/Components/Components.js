@@ -8,14 +8,7 @@
  */
 
 import * as React from 'react';
-import {
-  Fragment,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useReducer,
-  useRef,
-} from 'react';
+import {Fragment, useEffect, useLayoutEffect, useReducer, useRef} from 'react';
 import Tree from './Tree';
 import {OwnersListContextController} from './OwnersListContext';
 import portaledContent from '../portaledContent';
@@ -169,11 +162,9 @@ function Components(_: {}) {
             <div className={styles.InspectedElementWrapper}>
               <NativeStyleContextController>
                 <InspectedElementErrorBoundary>
-                  <Suspense fallback={<Loading />}>
-                    <InspectedElementContextController>
-                      <InspectedElement />
-                    </InspectedElementContextController>
-                  </Suspense>
+                  <InspectedElementContextController>
+                    <InspectedElement />
+                  </InspectedElementContextController>
                 </InspectedElementErrorBoundary>
               </NativeStyleContextController>
             </div>
@@ -184,10 +175,6 @@ function Components(_: {}) {
       </OwnersListContextController>
     </SettingsModalContextController>
   );
-}
-
-function Loading() {
-  return <div className={styles.Loading}>Loading...</div>;
 }
 
 const LOCAL_STORAGE_KEY = 'React::DevTools::createResizeReducer';

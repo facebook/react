@@ -16,7 +16,6 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
-  ReactiveTerminalStatement,
   ReactiveValue,
   ScopeId,
   SpreadPattern,
@@ -160,7 +159,11 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
   /*
    * Unpromoted temporaries will be emitted at their use sites rather than as separate
    * declarations. However, this causes errors if an interposing temporary has been
-   * promoted, or if an interposing instruction has had its lvalues
+   * promoted, or if an interposing instruction has had its lvalues deleted, because such
+   * temporaries will be emitted as separate statements, which can effectively cause
+   * code to be reordered, and when that code has side effects that changes program behavior.
+   * This visitor promotes temporarties that have such interposing instructions to preserve
+   * source ordering.
    */
   constructor(promotable: State, params: Array<Place | SpreadPattern>) {
     super();
@@ -226,13 +229,6 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
       case 'StoreContext':
       case 'StoreGlobal':
       case 'Destructure': {
-        /*
-         * Copy current state entries so that we can iterate over it
-         * later without hitting the entries added by visiting this
-         * instruction.
-         */
-        const preEntries = [...state.entries()];
-
         let constStore = false;
 
         if (
@@ -264,14 +260,6 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
         }
 
         super.visitInstruction(instruction, state);
-
-        if (instruction.lvalue && instruction.lvalue.identifier.name === null) {
-          // Add this instruction's lvalue to the state, initially not marked as needing promotion
-          state.set(instruction.lvalue.identifier.id, [
-            instruction.lvalue.identifier,
-            false,
-          ]);
-        }
         if (
           !constStore &&
           (instruction.lvalue == null ||
@@ -287,9 +275,16 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
            * the definition of those temporaries to after this instruction. Mark all those temporaries
            * as needing promotion, but don't promote them until we actually see them being used.
            */
-          for (const [key, [ident, _]] of preEntries) {
+          for (const [key, [ident, _]] of state.entries()) {
             state.set(key, [ident, true]);
           }
+        }
+        if (instruction.lvalue && instruction.lvalue.identifier.name === null) {
+          // Add this instruction's lvalue to the state, initially not marked as needing promotion
+          state.set(instruction.lvalue.identifier.id, [
+            instruction.lvalue.identifier,
+            false,
+          ]);
         }
         break;
       }
@@ -331,59 +326,6 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
       }
       default: {
         super.visitInstruction(instruction, state);
-      }
-    }
-  }
-
-  override traverseTerminal(
-    stmt: ReactiveTerminalStatement,
-    state: InterState,
-  ): void {
-    function copyState(): InterState {
-      const map: InterState = new Map();
-      state.forEach(([id, promo], key) => map.set(key, [id, promo]));
-      return map;
-    }
-    function mergeFrom(state2: InterState): void {
-      for (const [key, [ident, promo1]] of state2.entries()) {
-        const promo2 = state.get(key)?.[1] ?? false;
-        state.set(key, [ident, promo1 || promo2]);
-      }
-    }
-
-    const {terminal} = stmt;
-    if (terminal.id !== null) {
-      this.visitID(terminal.id, state);
-    }
-    switch (terminal.kind) {
-      case 'if': {
-        /*
-         * Visit if branches separately -- we don't want
-         * to promote a use in the alternate branch because
-         * of an interposing instruction in the consequent branch,
-         * because it's not actually interposing at runtime.
-         * After finishing the branches, merge their states.
-         */
-        this.visitPlace(terminal.id, terminal.test, state);
-        const state1 = copyState();
-        this.visitBlock(terminal.consequent, state1);
-        if (terminal.alternate !== null) {
-          const state2 = copyState();
-          this.visitBlock(terminal.alternate, state2);
-          mergeFrom(state2);
-        }
-        mergeFrom(state1);
-        break;
-      }
-      default: {
-        /*
-         * No special case for switch, try, etc because
-         * we don't know when running a later branch that
-         * any particular earlier branch will definitely not
-         * have executed. This means we err on the side of
-         * promotion.
-         */
-        super.traverseTerminal(stmt, state);
       }
     }
   }
