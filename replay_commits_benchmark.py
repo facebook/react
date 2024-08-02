@@ -6,10 +6,9 @@ import json
 import uuid
 import gspread
 import random
-import shutil
 import time
 from io import BytesIO
-from git import Repo
+from git import Repo, Git
 from logging import config
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
