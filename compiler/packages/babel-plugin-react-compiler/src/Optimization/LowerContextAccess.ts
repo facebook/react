@@ -21,17 +21,16 @@ import {
   PropertyLoad,
   isUseContextHookType,
   makeBlockId,
-  makeIdentifierId,
-  makeIdentifierName,
   makeInstructionId,
   makeTemporary,
-  makeType,
   markInstructionIds,
   mergeConsecutiveBlocks,
+  promoteTemporary,
   removeUnnecessaryTryCatch,
   reversePostorderBlocks,
 } from '../HIR';
 import {
+  createTemporaryPlace,
   removeDeadDoWhileStatements,
   removeUnreachableForUpdates,
 } from '../HIR/HIRBuilder';
@@ -66,7 +65,7 @@ export function lowerContextAccess(fn: HIRFunction): void {
 
       const keys = getContextKeys(value);
       if (keys === null) {
-        continue;
+        return;
       }
 
       if (contextKeys.has(destructureId)) {
@@ -83,8 +82,10 @@ export function lowerContextAccess(fn: HIRFunction): void {
 
   if (contextAccess.size > 0) {
     for (const [, block] of fn.body.blocks) {
-      const nextInstructions: Array<Instruction> = [];
-      for (const instr of block.instructions) {
+      let nextInstructions: Array<Instruction> | null = null;
+
+      for (let i = 0; i < block.instructions.length; i++) {
+        const instr = block.instructions[i];
         const {lvalue, value} = instr;
         if (
           value.kind === 'CallExpression' &&
@@ -93,15 +94,22 @@ export function lowerContextAccess(fn: HIRFunction): void {
         ) {
           const keys = contextKeys.get(lvalue.identifier.id)!;
           const selectorFnInstr = emitSelectorFn(fn.env, keys);
+          if (nextInstructions === null) {
+            nextInstructions = block.instructions.slice(0, i);
+          }
           nextInstructions.push(selectorFnInstr);
 
           const selectorFn = selectorFnInstr.lvalue;
           value.args.push(selectorFn);
         }
 
-        nextInstructions.push(instr);
+        if (nextInstructions) {
+          nextInstructions.push(instr);
+        }
       }
-      block.instructions = nextInstructions;
+      if (nextInstructions) {
+        block.instructions = nextInstructions;
+      }
     }
     markInstructionIds(fn.body);
   }
@@ -113,26 +121,18 @@ function getContextKeys(value: Destructure): Array<string> | null {
 
   switch (pattern.kind) {
     case 'ArrayPattern': {
-      for (const place of pattern.items) {
-        if (place.kind !== 'Identifier') {
-          return null;
-        }
-
-        if (place.identifier.name === null) {
-          return null;
-        }
-
-        keys.push(place.identifier.name.value);
-      }
-      return keys;
+      return null;
     }
 
     case 'ObjectPattern': {
       for (const place of pattern.properties) {
+        debugger;
         if (
           place.kind !== 'ObjectProperty' ||
           place.type !== 'property' ||
-          place.key.kind !== 'identifier'
+          place.key.kind !== 'identifier' ||
+          place.place.identifier.name === null ||
+          place.place.identifier.name.kind !== 'named'
         ) {
           return null;
         }
@@ -153,13 +153,7 @@ function emitPropertyLoad(
     place: obj,
     loc: GeneratedSource,
   };
-  const object: Place = {
-    kind: 'Identifier',
-    identifier: makeTemporary(env.nextIdentifierId, GeneratedSource),
-    effect: Effect.Unknown,
-    reactive: false,
-    loc: GeneratedSource,
-  };
+  const object: Place = createTemporaryPlace(env, GeneratedSource);
   const loadLocalInstr: Instruction = {
     lvalue: object,
     value: loadObj,
@@ -173,13 +167,7 @@ function emitPropertyLoad(
     property,
     loc: GeneratedSource,
   };
-  const element: Place = {
-    kind: 'Identifier',
-    identifier: makeTemporary(env.nextIdentifierId, GeneratedSource),
-    effect: Effect.Unknown,
-    reactive: false,
-    loc: GeneratedSource,
-  };
+  const element: Place = createTemporaryPlace(env, GeneratedSource);
   const loadPropInstr: Instruction = {
     lvalue: element,
     value: loadProp,
@@ -193,20 +181,8 @@ function emitPropertyLoad(
 }
 
 function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
-  const obj: Place = {
-    kind: 'Identifier',
-    identifier: {
-      id: makeIdentifierId(env.nextIdentifierId),
-      name: makeIdentifierName('c'),
-      mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
-      scope: null,
-      type: makeType(),
-      loc: GeneratedSource,
-    },
-    effect: Effect.Unknown,
-    reactive: false,
-    loc: GeneratedSource,
-  };
+  const obj: Place = createTemporaryPlace(env, GeneratedSource);
+  promoteTemporary(obj.identifier);
   const instr: Array<Instruction> = [];
   const elements = [];
   for (const key of keys) {
@@ -251,11 +227,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
   };
 
   reversePostorderBlocks(fn.body);
-  removeUnreachableForUpdates(fn.body);
-  removeDeadDoWhileStatements(fn.body);
-  removeUnnecessaryTryCatch(fn.body);
   markInstructionIds(fn.body);
-  mergeConsecutiveBlocks(fn);
   enterSSA(fn);
   inferTypes(fn);
 

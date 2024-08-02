@@ -117,12 +117,11 @@ describe('InspectedElement', () => {
         <SettingsContextController>
           <TreeContextController
             defaultSelectedElementID={defaultSelectedElementID}
-            defaultSelectedElementIndex={defaultSelectedElementIndex}>
-            <React.Suspense fallback="Loading...">
-              <InspectedElementContextController>
-                {children}
-              </InspectedElementContextController>
-            </React.Suspense>
+            defaultSelectedElementIndex={defaultSelectedElementIndex}
+            defaultInspectedElementID={defaultSelectedElementID}>
+            <InspectedElementContextController>
+              {children}
+            </InspectedElementContextController>
           </TreeContextController>
         </SettingsContextController>
       </StoreContext.Provider>

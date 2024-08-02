@@ -28,8 +28,8 @@ function App() {
   }
   return t0;
 }
-function _temp(c) {
-  return [c.foo, c.bar];
+function _temp(t0) {
+  return [t0.foo, t0.bar];
 }
 
 ```

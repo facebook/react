@@ -134,6 +134,12 @@ export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableServerComponentLogs = __EXPERIMENTAL__;
 
+/**
+ * Enables a new Fiber flag used in persisted mode to reduce the number
+ * of cloned host components.
+ */
+export const enablePersistedModeClonedFlag = false;
+
 export const enableAddPropertiesFastPath = false;
 
 export const enableOwnerStacks = __EXPERIMENTAL__;

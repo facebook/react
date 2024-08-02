@@ -83,6 +83,7 @@ export const startSuspendingCommit = $$$config.startSuspendingCommit;
 export const suspendInstance = $$$config.suspendInstance;
 export const waitForCommitToBeReady = $$$config.waitForCommitToBeReady;
 export const NotPendingTransition = $$$config.NotPendingTransition;
+export const HostTransitionContext = $$$config.HostTransitionContext;
 export const resetFormInstance = $$$config.resetFormInstance;
 export const bindToConsole = $$$config.bindToConsole;
 

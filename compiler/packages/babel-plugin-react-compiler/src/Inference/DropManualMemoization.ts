@@ -335,6 +335,7 @@ function extractManualMemoizationArgs(
 export function dropManualMemoization(func: HIRFunction): void {
   const isValidationEnabled =
     func.env.config.validatePreserveExistingMemoizationGuarantees ||
+    func.env.config.validateNoSetStateInRender ||
     func.env.config.enablePreserveExistingMemoizationGuarantees;
   const sidemap: IdentifierSidemap = {
     functions: new Map(),

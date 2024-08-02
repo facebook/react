@@ -3794,12 +3794,22 @@ function abortTask(task: Task, request: Request, error: mixed): void {
           error.$$typeof === REACT_POSTPONE_TYPE
         ) {
           const postponeInstance: Postpone = (error: any);
-          const fatal = new Error(
-            'The render was aborted with postpone when the shell is incomplete. Reason: ' +
-              postponeInstance.message,
-          );
-          logRecoverableError(request, fatal, errorInfo, null);
-          fatalError(request, fatal, errorInfo, null);
+          const trackedPostpones = request.trackedPostpones;
+
+          if (trackedPostpones !== null && segment !== null) {
+            // We are prerendering. We don't want to fatal when the shell postpones
+            // we just need to mark it as postponed.
+            logPostpone(request, postponeInstance.message, errorInfo, null);
+            trackPostpone(request, trackedPostpones, task, segment);
+            finishedTask(request, null, segment);
+          } else {
+            const fatal = new Error(
+              'The render was aborted with postpone when the shell is incomplete. Reason: ' +
+                postponeInstance.message,
+            );
+            logRecoverableError(request, fatal, errorInfo, null);
+            fatalError(request, fatal, errorInfo, null);
+          }
         } else {
           logRecoverableError(request, error, errorInfo, null);
           fatalError(request, error, errorInfo, null);
@@ -4102,7 +4112,7 @@ function retryRenderTask(
     task.abortSet.delete(task);
     segment.status = COMPLETED;
     finishedTask(request, task.blockedBoundary, segment);
-  } catch (thrownValue) {
+  } catch (thrownValue: mixed) {
     resetHooksState();
 
     // Reset the write pointers to where we started.
@@ -4117,7 +4127,9 @@ function retryRenderTask(
           // (unstable) API for suspending. This implementation detail can change
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
-        : thrownValue;
+        : thrownValue === AbortSigil
+          ? request.fatalError
+          : thrownValue;
 
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
@@ -4126,7 +4138,8 @@ function retryRenderTask(
         segment.status = PENDING;
         task.thenableState = getThenableStateAfterSuspending();
         const ping = task.ping;
-        x.then(ping, ping);
+        // We've asserted that x is a thenable above
+        (x: any).then(ping, ping);
         return;
       } else if (
         enablePostpone &&
@@ -4156,25 +4169,14 @@ function retryRenderTask(
     const errorInfo = getThrownInfo(task.componentStack);
     task.abortSet.delete(task);
 
-    if (x === AbortSigil) {
-      segment.status = ABORTED;
-      erroredTask(
-        request,
-        task.blockedBoundary,
-        request.fatalError,
-        errorInfo,
-        __DEV__ && enableOwnerStacks ? task.debugTask : null,
-      );
-    } else {
-      segment.status = ERRORED;
-      erroredTask(
-        request,
-        task.blockedBoundary,
-        x,
-        errorInfo,
-        __DEV__ && enableOwnerStacks ? task.debugTask : null,
-      );
-    }
+    segment.status = ERRORED;
+    erroredTask(
+      request,
+      task.blockedBoundary,
+      x,
+      errorInfo,
+      __DEV__ && enableOwnerStacks ? task.debugTask : null,
+    );
     return;
   } finally {
     if (__DEV__) {
