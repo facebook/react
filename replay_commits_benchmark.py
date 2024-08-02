@@ -297,22 +297,21 @@ def push_commits_one_by_one(args, repo, commits):
         repo.git.checkout('-B', branch, 'main')
 
     config_path = args['config_path']
-
-    files_in_config_path = {}
     main_tree = repo.heads.main.commit.tree
-    for item in main_tree.traverse():
-        if item.path.startswith(config_path):
-            files_in_config_path[item.path] = BytesIO(item.data_stream.read()).getvalue()
+
+    folders_from_main = {}
+    for folder in [config_path+'.circleci', config_path+'.github']:
+        for item in main_tree.traverse():
+            if item.path.startswith(folder):
+                folders_from_main[item.path] = BytesIO(item.data_stream.read()).getvalue()
 
     for commit in commits:
         repo.git.checkout(commit.hexsha)
 
-        for folder in ['.circleci', '.github']:
-            if os.path.isdir(folder):
-                shutil.rmtree(folder, ignore_errors=True)
-
-        for path, data in files_in_config_path.items():
-            export_blob(data, path.replace(config_path+'/', ''))
+        for path, data in folders_from_main.items():
+            if os.path.exists(path):
+                os.remove(path)
+            export_blob(data, path)
 
         repo.git.add('.')
         repo.index.commit(f"-m 'Committing {commit.hexsha}'")
@@ -328,7 +327,12 @@ def push_commits_one_by_one(args, repo, commits):
     return branch
 
 def export_blob(data, dst_path):
-    os.makedirs(os.path.dirname(dst_path), exist_ok=True)
+    directory = os.path.dirname(dst_path)
+    try:
+        os.makedirs(directory, exist_ok=True)
+    except FileExistsError:
+        logging.error(f"FileExistsError occurred when creating {directory}. Directory exists: {os.path.exists(directory)}")
+        raise
     with open(dst_path, 'wb') as file:
         file.write(data)
 
