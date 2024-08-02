@@ -315,11 +315,16 @@ def push_commits_one_by_one(args, repo, commits):
         repo.head.reset(commit=commit, index=True, working_tree=True)
 
         for path, data in folders_from_main.items():
-            dest_path = path.replace(config_path, "", 1)
+            dest_path = os.path.join(repo.working_tree_dir, path)
             if os.path.exists(dest_path):
-                os.remove(dest_path)
-            with open(dest_path, 'wb') as file:
-                file.write(data)
+              os.remove(dest_path)
+            export_blob(data, dest_path)
+        
+            if path.startswith(".circleci") or path.startswith(".github"):
+                dest_path = os.path.join(repo.working_tree_dir, path.replace(config_path, "", 1))
+                if os.path.exists(dest_path):
+                    os.remove(dest_path)
+                export_blob(data, dest_path)
 
         repo.git.add('.')
         repo.index.commit(f"Committing {commit.hexsha}")
@@ -339,6 +344,27 @@ def push_commits_one_by_one(args, repo, commits):
     # repo.remotes.origin.push(refspec=f":{branch}")
 
     return branch
+
+def export_blob(data, dst_path):
+    directory = os.path.dirname(dst_path)
+    
+    if os.path.exists(dst_path):
+        if os.path.isfile(dst_path):
+            print(f"A file with the name {dst_path} already exists. Removing the file.")
+            os.remove(dst_path)
+        elif os.path.isdir(dst_path):
+            print(f"A directory with the name {dst_path} already exists. Removing the directory.")
+            shutil.rmtree(dst_path)
+    try:
+        os.makedirs(directory, exist_ok=True)
+    except FileExistsError as e:
+        print(f"Cannot create directory. A file with the name '{directory}' already exists. Trying to remove the file.")
+        os.remove(directory)
+        os.makedirs(directory, exist_ok=True)
+
+    if not os.path.isdir(dst_path):
+        with open(dst_path, 'wb') as file:
+            file.write(data)
 
 def get_all_build_ids(args):
     github_ids = get_github_workflow_run_ids(args)
