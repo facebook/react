@@ -296,26 +296,16 @@ def push_commits_one_by_one(args, repo, commits):
         repo.git.checkout('-B', branch, 'main')
 
     config_path = args['config_path']
-    original_dir_circleci = os.path.join(os.getcwd(), f"{config_path}/.circleci")
-    original_dir_github = os.path.join(os.getcwd(), f"{config_path}/.github")
-
-    repo.git.checkout('main')  
-    shutil.copytree(original_dir_circleci, '.circleci', dirs_exist_ok=True)
-    shutil.copytree(original_dir_github, '.github', dirs_exist_ok=True)
-
-    repo.git.checkout(branch)
-    repo.git.restore('.')
-
-    config_path = args['config_path']
 
     for commit in commits:
         repo.git.checkout(commit)
 
-        # Overwrite .circleci and .github directories with saved state.
-        shutil.rmtree('.circleci', ignore_errors=True)
-        shutil.rmtree('.github', ignore_errors=True)
-        shutil.copytree(original_dir_circleci, '.circleci')
-        shutil.copytree(original_dir_github, '.github')
+        config_path = args['config_path']
+        circleci_config = os.path.join(os.getcwd(), f"{config_path}/.circleci")
+        github_config = os.path.join(os.getcwd(), f"{config_path}/.github")
+
+        repo.git.checkout("main", circleci_config)
+        repo.git.checkout("main", github_config)
 
         # Add the directories to the index and commit.
         repo.git.add('.circleci', '.github')
