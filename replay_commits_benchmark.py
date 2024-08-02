@@ -316,9 +316,15 @@ def push_commits_one_by_one(args, repo, commits):
         repo.head.reset(commit=commit, index=True, working_tree=True)
 
         for path, data in folders_from_main.items():
-            if os.path.exists(path):
-                os.remove(path)
-            export_blob(data, path)
+            if path.startswith(f"{config_path}/.circleci") or path.startswith(f"{config_path}/.github"):
+                new_path = path.replace(f"{config_path}/", "")
+            else:
+                new_path = path
+
+            if os.path.exists(new_path):
+                os.remove(new_path)
+
+            export_blob(data, new_path)
 
         repo.git.add('.')
         repo.index.commit(f"Committing {commit.hexsha}")
