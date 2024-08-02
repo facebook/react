@@ -328,10 +328,10 @@ def push_commits_one_by_one(args, repo, commits):
 
 def export_blob(data, dst_path):
     directory = os.path.dirname(dst_path)
-    try:
-        os.makedirs(directory, exist_ok=True)
-    except FileExistsError:
-        print(f"Directory {directory} already exists.")
+    if os.path.isfile(directory):
+        print(f"A file with the name {directory} already exists.")
+        os.remove(directory)
+    os.makedirs(directory, exist_ok=True)
     with open(dst_path, 'wb') as file:
         file.write(data)
 
