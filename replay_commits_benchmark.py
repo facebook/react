@@ -321,12 +321,14 @@ def push_commits_one_by_one(args, repo, commits):
             export_blob(data, path)
 
         for folder in [".circleci", ".github"]:
-          dst_dir = os.path.join(args['working_repo_dir'], folder)
-          src_dir = os.path.join(args['working_repo_dir'], config_path, folder)
-          if os.path.exists(dst_dir):
-              shutil.rmtree(dst_dir)
-          if os.path.exists(src_dir):
-              shutil.move(src_dir, dst_dir)
+            source_dir = os.path.join(args['working_repo_dir'], config_path, folder)
+            destination_dir = os.path.join(args['working_repo_dir'], folder)
+
+            if os.path.isdir(source_dir):
+                if os.path.isdir(destination_dir):
+                    shutil.rmtree(destination_dir)
+        
+                shutil.copytree(source_dir, destination_dir)
 
         repo.git.add('.')
         repo.index.commit(f"Committing {commit.hexsha}")
