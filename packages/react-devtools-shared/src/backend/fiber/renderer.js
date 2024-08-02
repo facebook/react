@@ -2337,9 +2337,9 @@ export function attach(
 
   // We use this to simulate unmounting for Suspense trees
   // when we switch from primary to fallback.
-  function unmountFiberChildrenRecursively(fiber: Fiber) {
+  function unmountFiberRecursively(fiber: Fiber) {
     if (__DEBUG__) {
-      debug('unmountFiberChildrenRecursively()', fiber, null);
+      debug('unmountFiberRecursively()', fiber, null);
     }
 
     // We might meet a nested Suspense on our way.
@@ -2358,11 +2358,16 @@ export function attach(
       child = fallbackChildFragment ? fallbackChildFragment.child : null;
     }
 
+    unmountChildrenRecursively(child);
+  }
+
+  function unmountChildrenRecursively(firstChild: null | Fiber) {
+    let child: null | Fiber = firstChild;
     while (child !== null) {
       // Record simulated unmounts children-first.
       // We skip nodes without return because those are real unmounts.
       if (child.return !== null) {
-        unmountFiberChildrenRecursively(child);
+        unmountFiberRecursively(child);
         recordUnmount(child, true);
       }
       child = child.sibling;
@@ -2685,7 +2690,7 @@ export function attach(
       // 1. Hide primary set
       // This is not a real unmount, so it won't get reported by React.
       // We need to manually walk the previous tree and record unmounts.
-      unmountFiberChildrenRecursively(prevFiber);
+      unmountFiberRecursively(prevFiber);
       // 2. Mount fallback set
       const nextFiberChild = nextFiber.child;
       const nextFallbackChildSet = nextFiberChild
