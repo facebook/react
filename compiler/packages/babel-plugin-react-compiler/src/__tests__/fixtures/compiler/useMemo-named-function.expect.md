@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateNoSetStateInRender:false
 import {useMemo} from 'react';
 import {makeArray} from 'shared-runtime';
 
@@ -20,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @validateNoSetStateInRender:false
 import { useMemo } from "react";
 import { makeArray } from "shared-runtime";
 
