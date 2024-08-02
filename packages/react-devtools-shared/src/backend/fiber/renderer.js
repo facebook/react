@@ -2495,6 +2495,68 @@ export function attach(
   }
 
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
+  function updateChildrenRecursively(
+    nextFirstChild: null | Fiber,
+    prevFirstChild: null | Fiber,
+    parentInstance: DevToolsInstance | null,
+    traceNearestHostComponentUpdate: boolean,
+  ): boolean {
+    let shouldResetChildren = false;
+    // If the first child is different, we need to traverse them.
+    // Each next child will be either a new child (mount) or an alternate (update).
+    let nextChild = nextFirstChild;
+    let prevChildAtSameIndex = prevFirstChild;
+    while (nextChild) {
+      // We already know children will be referentially different because
+      // they are either new mounts or alternates of previous children.
+      // Schedule updates and mounts depending on whether alternates exist.
+      // We don't track deletions here because they are reported separately.
+      if (nextChild.alternate) {
+        const prevChild = nextChild.alternate;
+        if (
+          updateFiberRecursively(
+            nextChild,
+            prevChild,
+            parentInstance,
+            traceNearestHostComponentUpdate,
+          )
+        ) {
+          // If a nested tree child order changed but it can't handle its own
+          // child order invalidation (e.g. because it's filtered out like host nodes),
+          // propagate the need to reset child order upwards to this Fiber.
+          shouldResetChildren = true;
+        }
+        // However we also keep track if the order of the children matches
+        // the previous order. They are always different referentially, but
+        // if the instances line up conceptually we'll want to know that.
+        if (prevChild !== prevChildAtSameIndex) {
+          shouldResetChildren = true;
+        }
+      } else {
+        mountChildrenRecursively(
+          nextChild,
+          parentInstance,
+          false,
+          traceNearestHostComponentUpdate,
+        );
+        shouldResetChildren = true;
+      }
+      // Try the next child.
+      nextChild = nextChild.sibling;
+      // Advance the pointer in the previous list so that we can
+      // keep comparing if they line up.
+      if (!shouldResetChildren && prevChildAtSameIndex !== null) {
+        prevChildAtSameIndex = prevChildAtSameIndex.sibling;
+      }
+    }
+    // If we have no more children, but used to, they don't line up.
+    if (prevChildAtSameIndex !== null) {
+      shouldResetChildren = true;
+    }
+    return shouldResetChildren;
+  }
+
+  // Returns whether closest unfiltered fiber parent needs to reset its child list.
   function updateFiberRecursively(
     nextFiber: Fiber,
     prevFiber: Fiber,
@@ -2638,55 +2700,14 @@ export function attach(
       // Common case: Primary -> Primary.
       // This is the same code path as for non-Suspense fibers.
       if (nextFiber.child !== prevFiber.child) {
-        // If the first child is different, we need to traverse them.
-        // Each next child will be either a new child (mount) or an alternate (update).
-        let nextChild = nextFiber.child;
-        let prevChildAtSameIndex = prevFiber.child;
-        while (nextChild) {
-          // We already know children will be referentially different because
-          // they are either new mounts or alternates of previous children.
-          // Schedule updates and mounts depending on whether alternates exist.
-          // We don't track deletions here because they are reported separately.
-          if (nextChild.alternate) {
-            const prevChild = nextChild.alternate;
-            if (
-              updateFiberRecursively(
-                nextChild,
-                prevChild,
-                newParentInstance,
-                traceNearestHostComponentUpdate,
-              )
-            ) {
-              // If a nested tree child order changed but it can't handle its own
-              // child order invalidation (e.g. because it's filtered out like host nodes),
-              // propagate the need to reset child order upwards to this Fiber.
-              shouldResetChildren = true;
-            }
-            // However we also keep track if the order of the children matches
-            // the previous order. They are always different referentially, but
-            // if the instances line up conceptually we'll want to know that.
-            if (prevChild !== prevChildAtSameIndex) {
-              shouldResetChildren = true;
-            }
-          } else {
-            mountChildrenRecursively(
-              nextChild,
-              newParentInstance,
-              false,
-              traceNearestHostComponentUpdate,
-            );
-            shouldResetChildren = true;
-          }
-          // Try the next child.
-          nextChild = nextChild.sibling;
-          // Advance the pointer in the previous list so that we can
-          // keep comparing if they line up.
-          if (!shouldResetChildren && prevChildAtSameIndex !== null) {
-            prevChildAtSameIndex = prevChildAtSameIndex.sibling;
-          }
-        }
-        // If we have no more children, but used to, they don't line up.
-        if (prevChildAtSameIndex !== null) {
+        if (
+          updateChildrenRecursively(
+            nextFiber.child,
+            prevFiber.child,
+            newParentInstance,
+            traceNearestHostComponentUpdate,
+          )
+        ) {
           shouldResetChildren = true;
         }
       } else {
