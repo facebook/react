@@ -58,6 +58,7 @@ export const enableLegacyHidden = false;
 export const enableNoCloningMemoCache = false;
 export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
+export const enablePersistedModeClonedFlag = false;
 export const enablePostpone = false;
 export const enableReactTestRendererWarning = false;
 export const enableRefAsProp = true;

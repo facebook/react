@@ -94,7 +94,7 @@ export type GetElementIDForHostInstance = (
 ) => number | null;
 export type FindHostInstancesForElementID = (
   id: number,
-) => ?Array<HostInstance>;
+) => null | $ReadOnlyArray<HostInstance>;
 
 export type ReactProviderType<T> = {
   $$typeof: symbol | number,

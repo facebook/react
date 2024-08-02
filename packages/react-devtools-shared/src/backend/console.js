@@ -294,7 +294,7 @@ export function patch({
                     // formatting. Otherwise it is left alone. So we prefix it. Otherwise we just override it
                     // to our own stack.
                     fakeError.stack =
-                      __IS_CHROME__ || __IS_EDGE__
+                      __IS_CHROME__ || __IS_EDGE__ || __IS_NATIVE__
                         ? (enableOwnerStacks
                             ? 'Error Stack:'
                             : 'Error Component Stack:') + componentStack
