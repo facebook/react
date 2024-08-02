@@ -24,16 +24,10 @@ import {
   makeInstructionId,
   makeTemporary,
   markInstructionIds,
-  mergeConsecutiveBlocks,
   promoteTemporary,
-  removeUnnecessaryTryCatch,
   reversePostorderBlocks,
 } from '../HIR';
-import {
-  createTemporaryPlace,
-  removeDeadDoWhileStatements,
-  removeUnreachableForUpdates,
-} from '../HIR/HIRBuilder';
+import {createTemporaryPlace} from '../HIR/HIRBuilder';
 import {enterSSA} from '../SSA';
 import {inferTypes} from '../TypeInference';
 
