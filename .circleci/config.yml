@@ -24,7 +24,7 @@ jobs:
           name: Run Replay Script
           command: |
                   python3 replay_commits_benchmark.py \
-                    --upstream-repo-url $UPSTREAM_REPO \
+                    --upstream-repo-url "${UPSTREAM_REPO}" \
                     --config-path $CONFIG_PATH \
                     --circleci-project-slug $CIRCLECI_PROJECT_SLUG \
                     --github-repo-slug $GITHUB_REPO_SLUG \
