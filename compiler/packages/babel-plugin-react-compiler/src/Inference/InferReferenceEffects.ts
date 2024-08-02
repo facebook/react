@@ -26,6 +26,7 @@ import {
   Type,
   ValueKind,
   ValueReason,
+  getHookKind,
   isArrayType,
   isMutableEffect,
   isObjectType,
@@ -49,7 +50,6 @@ import {
   eachTerminalSuccessor,
 } from '../HIR/visitors';
 import {assertExhaustive} from '../Utils/utils';
-import {isEffectHook} from '../Validation/ValidateMemoizedEffectDependencies';
 
 const UndefinedValue: InstructionValue = {
   kind: 'Primitive',
@@ -1272,9 +1272,7 @@ function inferBlock(
             );
             functionEffects.push(
               ...propEffects.filter(
-                propEffect =>
-                  propEffect.kind !== 'GlobalMutation' &&
-                  propEffect.kind !== 'ImmutableFunctionCall',
+                effect => !isEffectSafeOutsideRender(effect),
               ),
             );
           }
@@ -1453,7 +1451,7 @@ function inferBlock(
                 context: new Set(),
               };
         let hasCaptureArgument = false;
-        let isUseEffect = isEffectHook(instrValue.callee.identifier);
+        let isHook = getHookKind(env, instrValue.callee.identifier) != null;
         for (let i = 0; i < instrValue.args.length; i++) {
           const argumentEffects: Array<FunctionEffect> = [];
           const arg = instrValue.args[i];
@@ -1479,11 +1477,7 @@ function inferBlock(
            */
           functionEffects.push(
             ...argumentEffects.filter(
-              argEffect =>
-                !isUseEffect ||
-                i !== 0 ||
-                (argEffect.kind !== 'GlobalMutation' &&
-                  argEffect.kind !== 'ImmutableFunctionCall'),
+              argEffect => !isHook || !isEffectSafeOutsideRender(argEffect),
             ),
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
@@ -1607,7 +1601,7 @@ function inferBlock(
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
         let hasCaptureArgument = false;
-        let isUseEffect = isEffectHook(instrValue.property.identifier);
+        let isHook = getHookKind(env, instrValue.property.identifier) != null;
         for (let i = 0; i < instrValue.args.length; i++) {
           const argumentEffects: Array<FunctionEffect> = [];
           const arg = instrValue.args[i];
@@ -1637,11 +1631,7 @@ function inferBlock(
            */
           functionEffects.push(
             ...argumentEffects.filter(
-              argEffect =>
-                !isUseEffect ||
-                i !== 0 ||
-                (argEffect.kind !== 'GlobalMutation' &&
-                  argEffect.kind !== 'ImmutableFunctionCall'),
+              argEffect => !isHook || !isEffectSafeOutsideRender(argEffect),
             ),
           );
           hasCaptureArgument ||= place.effect === Effect.Capture;
@@ -2192,11 +2182,15 @@ function inferBlock(
     } else {
       effect = Effect.Read;
     }
+    const propEffects: Array<FunctionEffect> = [];
     state.referenceAndRecordEffects(
       operand,
       effect,
       ValueReason.Other,
-      functionEffects,
+      propEffects,
+    );
+    functionEffects.push(
+      ...propEffects.filter(effect => !isEffectSafeOutsideRender(effect)),
     );
   }
 }
@@ -2308,6 +2302,12 @@ function areArgumentsImmutableAndNonMutating(
     }
   }
   return true;
+}
+
+function isEffectSafeOutsideRender(effect: FunctionEffect): boolean {
+  return (
+    effect.kind === 'GlobalMutation' || effect.kind === 'ImmutableFunctionCall'
+  );
 }
 
 function getWriteErrorReason(abstractValue: AbstractValue): string {
