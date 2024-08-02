@@ -307,7 +307,7 @@ def push_commits_one_by_one(args, repo, commits):
         repo.git.checkout("main", circleci_config)
         repo.git.checkout("main", github_config)
 
-        repo.index.commit("-m", f"Committing {commit.hexsha}")
+        repo.index.commit(f"-m 'Committing {commit.hexsha}'")
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
         repo.git.push("--force", "origin", branch)
         time.sleep(args['commit_delay'])
