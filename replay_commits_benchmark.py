@@ -7,6 +7,7 @@ import uuid
 import gspread
 import random
 import time
+from urllib.parse import quote
 from io import BytesIO
 from git import Repo, Git
 from logging import config
