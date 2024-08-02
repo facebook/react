@@ -22,7 +22,8 @@ jobs:
           command: pip install -r requirements.txt
       - run:
           name: Run Replay Script
-          command: python3 replay_commits_benchmark.py \
+          command: |
+                  python3 replay_commits_benchmark.py \
                     --upstream-repo-url $UPSTREAM_REPO \
                     --config-path $CONFIG_PATH \
                     --circleci-project-slug $CIRCLECI_PROJECT_SLUG \
