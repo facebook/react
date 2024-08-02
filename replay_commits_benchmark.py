@@ -273,7 +273,7 @@ def replay_commits(args):
     repo.remotes.upstream.fetch("main")
     commits = []
     for commit in repo.iter_commits("upstream/main"):
-        if commit.committed_datetime.date() < (datetime.now(timezone.utc) - timedelta(day=args['replay_days'])).date():
+        if commit.committed_datetime.date() < (datetime.now(timezone.utc) - timedelta(days=args['replay_days'])).date():
             break
         commits.append(commit)
     commits.reverse()
