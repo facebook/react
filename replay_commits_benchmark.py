@@ -300,7 +300,7 @@ def push_commits_one_by_one(args, repo, commits):
     main_tree = repo.heads.main.commit.tree
 
     folders_from_main = {}
-    for folder in [config_path+'.circleci', config_path+'.github']:
+    for folder in [config_path]:
         for item in main_tree.traverse():
             if item.path.startswith(folder):
                 folders_from_main[item.path] = BytesIO(item.data_stream.read()).getvalue()
