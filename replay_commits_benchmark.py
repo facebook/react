@@ -340,12 +340,19 @@ def push_commits_one_by_one(args, repo, commits):
 
 def export_blob(data, dst_path):
     directory = os.path.dirname(dst_path)
-    if os.path.isfile(directory):
-        print(f"A file with the name {directory} already exists.")
-        os.remove(directory)
-    os.makedirs(directory, exist_ok=True)
-    with open(dst_path, 'wb') as file:
-        file.write(data)
+    
+    if os.path.exists(dst_path):
+        if os.path.isfile(dst_path):
+            print(f"A file with the name {dst_path} already exists.")
+            os.remove(dst_path)
+        elif os.path.isdir(dst_path):
+            print(f"A directory with the name {dst_path} already exists.")
+    else:
+        os.makedirs(directory, exist_ok=True)
+
+    if not os.path.isdir(dst_path):
+        with open(dst_path, 'wb') as file:
+            file.write(data)
 
 def get_all_build_ids(args):
     github_ids = get_github_workflow_run_ids(args)
