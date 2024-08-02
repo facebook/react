@@ -154,7 +154,7 @@ def get_args():
     parser.add_argument("--working-repo-dir",
                         help="The directory of the forked repo",
                         type=str,
-                        default=os.environ.get('.'),
+                        default="./",
                         required=False)
     parser.add_argument("--branch",
                        help="Name of the branch that will be used to run CI/CD pipelines",
@@ -323,7 +323,6 @@ def push_commits_one_by_one(args, repo, commits):
         for folder in [".circleci", ".github"]:
             
             print(f"{folder}")
-            print(f"{args['working_repo_dir']}")
             print(f"{config_path}")
 
             source_dir = os.path.join(args['working_repo_dir'], "/", config_path, folder)
