@@ -127,11 +127,11 @@ export function* run(
     code,
     useMemoCacheIdentifier,
   );
-  yield {
+  yield log({
     kind: 'debug',
     name: 'EnvironmentConfig',
     value: prettyFormat(env.config),
-  };
+  });
   const ast = yield* runWithEnvironment(func, env);
   return ast;
 }

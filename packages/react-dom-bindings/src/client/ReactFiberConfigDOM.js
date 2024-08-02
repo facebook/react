@@ -14,7 +14,7 @@ import type {
   IntersectionObserverOptions,
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
-import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {ReactContext, ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import type {
@@ -32,6 +32,7 @@ import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostCo
 
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 export {
   setCurrentUpdatePriority,
@@ -3564,6 +3565,14 @@ function insertStylesheetIntoRoot(
 }
 
 export const NotPendingTransition: TransitionStatus = NotPending;
+export const HostTransitionContext: ReactContext<TransitionStatus> = {
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: (null: any),
+  Consumer: (null: any),
+  _currentValue: NotPendingTransition,
+  _currentValue2: NotPendingTransition,
+  _threadCount: 0,
+};
 
 export type FormInstance = HTMLFormElement;
 export function resetFormInstance(form: FormInstance): void {
