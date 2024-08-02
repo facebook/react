@@ -343,13 +343,18 @@ def export_blob(data, dst_path):
     
     if os.path.exists(dst_path):
         if os.path.isfile(dst_path):
-            print(f"A file with the name {dst_path} already exists.")
+            print(f"A file with the name {dst_path} already exists. Removing the file.")
             os.remove(dst_path)
-        elif os.path.isdir(dst_path):
+        else:
             print(f"A directory with the name {dst_path} already exists.")
     else:
-        os.makedirs(directory, exist_ok=True)
-
+        try:
+            os.makedirs(directory, exist_ok=True)
+        except FileExistsError as e:
+            print(f"Cannot create directory. A file with the name '{directory}' already exists. Trying to remove the file.")
+            os.remove(directory)
+            os.makedirs(directory, exist_ok=True)
+            
     if not os.path.isdir(dst_path):
         with open(dst_path, 'wb') as file:
             file.write(data)
