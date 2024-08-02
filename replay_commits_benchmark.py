@@ -321,8 +321,8 @@ def push_commits_one_by_one(args, repo, commits):
             export_blob(data, path)
 
         for folder in [".circleci", ".github"]:
-            source_dir = os.path.join(args['working_repo_dir'], config_path, folder)
-            destination_dir = os.path.join(args['working_repo_dir'], folder)
+            source_dir = os.path.join(args['working_repo_dir'], "/", config_path, folder)
+            destination_dir = os.path.join(args['working_repo_dir'], "/", folder)
 
             if os.path.isdir(source_dir):
                 if os.path.isdir(destination_dir):
