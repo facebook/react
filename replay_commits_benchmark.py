@@ -293,7 +293,7 @@ def push_commits_one_by_one(args, repo, commits):
       args['branch'] = branch
 
     if branch not in repo.heads:
-        repo.git.checkout('B', branch, 'main')
+        repo.git.checkout('-B', branch, 'main')
 
     config_path = args['config_path']
     original_dir_circleci = os.path.join(os.getcwd(), f"{config_path}/.circleci")
