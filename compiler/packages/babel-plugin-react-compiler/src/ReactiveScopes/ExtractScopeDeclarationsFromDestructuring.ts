@@ -153,6 +153,7 @@ function transformDestructuring(
       return place;
     }
     const temporary = createTemporaryPlace(state.env, place.loc);
+    temporary.identifier.type = place.identifier.type;
     promoteTemporary(temporary.identifier);
     renamed.set(place, temporary);
     return temporary;
