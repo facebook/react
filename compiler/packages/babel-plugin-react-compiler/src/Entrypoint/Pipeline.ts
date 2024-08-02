@@ -77,7 +77,11 @@ import {flattenScopesWithHooksOrUseHIR} from '../ReactiveScopes/FlattenScopesWit
 import {pruneAlwaysInvalidatingScopes} from '../ReactiveScopes/PruneAlwaysInvalidatingScopes';
 import pruneInitializationDependencies from '../ReactiveScopes/PruneInitializationDependencies';
 import {stabilizeBlockIds} from '../ReactiveScopes/StabilizeBlockIds';
-import {eliminateRedundantPhi, enterSSA, leaveSSA} from '../SSA';
+import {
+  eliminateRedundantPhi,
+  enterSSA,
+  rewriteInstructionKindsBasedOnReassignment,
+} from '../SSA';
 import {inferTypes} from '../TypeInference';
 import {
   logCodegenFunction,
@@ -237,8 +241,12 @@ function* runWithEnvironment(
   inferReactivePlaces(hir);
   yield log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
-  leaveSSA(hir);
-  yield log({kind: 'hir', name: 'LeaveSSA', value: hir});
+  rewriteInstructionKindsBasedOnReassignment(hir);
+  yield log({
+    kind: 'hir',
+    name: 'RewriteInstructionKindsBasedOnReassignment',
+    value: hir,
+  });
 
   inferReactiveScopeVariables(hir);
   yield log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
