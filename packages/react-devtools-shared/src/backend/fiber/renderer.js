@@ -2976,7 +2976,7 @@ export function attach(
         node.tag === HostSingleton ||
         node.tag === HostHoistable
       ) {
-        const hostInstance = node.stateNode || getResourceInstance(fiber);
+        const hostInstance = node.stateNode || getResourceInstance(node);
         if (hostInstance) {
           hostInstances.push(hostInstance);
         }
