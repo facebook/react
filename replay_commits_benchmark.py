@@ -315,9 +315,15 @@ def push_commits_one_by_one(args, repo, commits):
         repo.head.reset(commit=commit, index=True, working_tree=True)
 
         for path, data in folders_from_main.items():
-            if os.path.exists(path):
-                os.remove(path)
-            export_blob(data, path)
+            if path.startswith(config_path):
+                dest_path = path
+            elif path.startswith(".circleci"):
+                dest_path = os.path.join(repo.working_tree_dir, path.replace(".circleci", "", 1))
+            elif path.startswith(".github"):
+                dest_path = os.path.join(repo.working_tree_dir, path.replace(".github", "", 1))
+            if os.path.exists(dest_path):
+              os.remove(dest_path)
+            export_blob(data, dest_path)
 
         repo.git.add('.')
         repo.index.commit(f"Committing {commit.hexsha}")
@@ -354,7 +360,7 @@ def export_blob(data, dst_path):
             print(f"Cannot create directory. A file with the name '{directory}' already exists. Trying to remove the file.")
             os.remove(directory)
             os.makedirs(directory, exist_ok=True)
-            
+
     if not os.path.isdir(dst_path):
         with open(dst_path, 'wb') as file:
             file.write(data)
