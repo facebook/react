@@ -1094,7 +1094,7 @@ export function attach(
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getOrGenerateFiberInstance(root.current).id;
       setRootPseudoKey(currentRootID, root.current);
-      mountFiberRecursively(root.current, null, false, false);
+      mountChildrenRecursively(root.current, null, false, false);
       flushPendingEvents(root);
       currentRootID = -1;
     });
@@ -2228,7 +2228,7 @@ export function attach(
     }
   }
 
-  function mountFiberRecursively(
+  function mountChildrenRecursively(
     firstChild: Fiber,
     parentInstance: DevToolsInstance | null,
     traverseSiblings: boolean,
@@ -2243,7 +2243,7 @@ export function attach(
       getOrGenerateFiberInstance(fiber);
 
       if (__DEBUG__) {
-        debug('mountFiberRecursively()', fiber, parentInstance);
+        debug('mountChildrenRecursively()', fiber, parentInstance);
       }
 
       // If we have the tree selection from previous reload, try to match this Fiber.
@@ -2270,8 +2270,7 @@ export function attach(
         // because we don't want to highlight every host node inside of a newly mounted subtree.
       }
 
-      const isSuspense = fiber.tag === ReactTypeOfWork.SuspenseComponent;
-      if (isSuspense) {
+      if (fiber.tag === SuspenseComponent) {
         const isTimedOut = fiber.memoizedState !== null;
         if (isTimedOut) {
           // Special case: if Suspense mounts in a timed-out state,
@@ -2285,7 +2284,7 @@ export function attach(
             ? fallbackChildFragment.child
             : null;
           if (fallbackChild !== null) {
-            mountFiberRecursively(
+            mountChildrenRecursively(
               fallbackChild,
               newParentInstance,
               true,
@@ -2302,7 +2301,7 @@ export function attach(
             primaryChild = fiber.child.child;
           }
           if (primaryChild !== null) {
-            mountFiberRecursively(
+            mountChildrenRecursively(
               primaryChild,
               newParentInstance,
               true,
@@ -2312,7 +2311,7 @@ export function attach(
         }
       } else {
         if (fiber.child !== null) {
-          mountFiberRecursively(
+          mountChildrenRecursively(
             fiber.child,
             newParentInstance,
             true,
@@ -2578,7 +2577,7 @@ export function attach(
         : null;
 
       if (prevFallbackChildSet == null && nextFallbackChildSet != null) {
-        mountFiberRecursively(
+        mountChildrenRecursively(
           nextFallbackChildSet,
           newParentInstance,
           true,
@@ -2607,7 +2606,7 @@ export function attach(
       // 2. Mount primary set
       const nextPrimaryChildSet = nextFiber.child;
       if (nextPrimaryChildSet !== null) {
-        mountFiberRecursively(
+        mountChildrenRecursively(
           nextPrimaryChildSet,
           newParentInstance,
           true,
@@ -2627,7 +2626,7 @@ export function attach(
         ? nextFiberChild.sibling
         : null;
       if (nextFallbackChildSet != null) {
-        mountFiberRecursively(
+        mountChildrenRecursively(
           nextFallbackChildSet,
           newParentInstance,
           true,
@@ -2670,7 +2669,7 @@ export function attach(
               shouldResetChildren = true;
             }
           } else {
-            mountFiberRecursively(
+            mountChildrenRecursively(
               nextChild,
               newParentInstance,
               false,
@@ -2799,7 +2798,7 @@ export function attach(
           };
         }
 
-        mountFiberRecursively(root.current, null, false, false);
+        mountChildrenRecursively(root.current, null, false, false);
         flushPendingEvents(root);
         currentRootID = -1;
       });
@@ -2898,7 +2897,7 @@ export function attach(
       if (!wasMounted && isMounted) {
         // Mount a new root.
         setRootPseudoKey(currentRootID, current);
-        mountFiberRecursively(current, null, false, false);
+        mountChildrenRecursively(current, null, false, false);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
         updateFiberRecursively(current, alternate, null, false);
@@ -2910,7 +2909,7 @@ export function attach(
     } else {
       // Mount a new root.
       setRootPseudoKey(currentRootID, current);
-      mountFiberRecursively(current, null, false, false);
+      mountChildrenRecursively(current, null, false, false);
     }
 
     if (isProfiling && isProfilingSupported) {
