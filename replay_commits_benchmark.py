@@ -8,6 +8,7 @@ import gspread
 import random
 import shutil
 import time
+from git import Repo
 from logging import config
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
