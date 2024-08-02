@@ -13,7 +13,6 @@ import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
-import type {HostInstance} from '../../types';
 
 // This plug-in provides in-page highlighting of the selected element.
 // It is used by the browser extension and the standalone DevTools shell (when connected to a browser).
@@ -113,8 +112,7 @@ export default function setupHighlighter(
       return;
     }
 
-    const nodes: ?Array<HostInstance> =
-      renderer.findHostInstancesForElementID(id);
+    const nodes = renderer.findHostInstancesForElementID(id);
 
     if (nodes != null && nodes[0] != null) {
       const node = nodes[0];

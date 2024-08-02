@@ -28,6 +28,7 @@ import {
   makeDeclarationId,
   makeIdentifierName,
   makeInstructionId,
+  makeTemporary,
   makeType,
 } from './HIR';
 import {printInstruction} from './PrintHIR';
@@ -183,15 +184,7 @@ export default class HIRBuilder {
 
   makeTemporary(loc: SourceLocation): Identifier {
     const id = this.nextIdentifierId;
-    return {
-      id,
-      declarationId: makeDeclarationId(id),
-      name: null,
-      mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
-      scope: null,
-      type: makeType(),
-      loc,
-    };
+    return makeTemporary(id, loc);
   }
 
   #resolveBabelBinding(

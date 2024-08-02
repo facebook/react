@@ -187,7 +187,7 @@ export default class Overlay {
     }
   }
 
-  inspect(nodes: Array<HTMLElement>, name?: ?string) {
+  inspect(nodes: $ReadOnlyArray<HTMLElement>, name?: ?string) {
     // We can't get the size of text nodes or comment nodes. React as of v15
     // heavily uses comment nodes to delimit text.
     const elements = nodes.filter(node => node.nodeType === Node.ELEMENT_NODE);

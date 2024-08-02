@@ -2695,11 +2695,11 @@ export function attach(
           // If we're tracing updates and we've bailed out before reaching a host node,
           // we should fall back to recursively marking the nearest host descendants for highlight.
           if (traceNearestHostComponentUpdate) {
-            const hostFibers = findAllCurrentHostFibers(
+            const hostInstances = findAllCurrentHostInstances(
               getFiberInstanceThrows(nextFiber),
             );
-            hostFibers.forEach(hostFiber => {
-              traceUpdatesForNodes.add(hostFiber.stateNode);
+            hostInstances.forEach(hostInstance => {
+              traceUpdatesForNodes.add(hostInstance);
             });
           }
         }
@@ -2943,31 +2943,54 @@ export function attach(
     currentRootID = -1;
   }
 
-  function findAllCurrentHostFibers(
+  function getResourceInstance(fiber: Fiber): HostInstance | null {
+    if (fiber.tag === HostHoistable) {
+      const resource = fiber.memoizedState;
+      // Feature Detect a DOM Specific Instance of a Resource
+      if (
+        typeof resource === 'object' &&
+        resource !== null &&
+        resource.instance != null
+      ) {
+        return resource.instance;
+      }
+    }
+    return null;
+  }
+
+  function findAllCurrentHostInstances(
     fiberInstance: FiberInstance,
-  ): $ReadOnlyArray<Fiber> {
-    const fibers = [];
+  ): $ReadOnlyArray<HostInstance> {
+    const hostInstances = [];
     const fiber = findCurrentFiberUsingSlowPathByFiberInstance(fiberInstance);
     if (!fiber) {
-      return fibers;
+      return hostInstances;
     }
 
     // Next we'll drill down this component to find all HostComponent/Text.
     let node: Fiber = fiber;
     while (true) {
-      if (node.tag === HostComponent || node.tag === HostText) {
-        fibers.push(node);
+      if (
+        node.tag === HostComponent ||
+        node.tag === HostText ||
+        node.tag === HostSingleton ||
+        node.tag === HostHoistable
+      ) {
+        const hostInstance = node.stateNode || getResourceInstance(node);
+        if (hostInstance) {
+          hostInstances.push(hostInstance);
+        }
       } else if (node.child) {
         node.child.return = node;
         node = node.child;
         continue;
       }
       if (node === fiber) {
-        return fibers;
+        return hostInstances;
       }
       while (!node.sibling) {
         if (!node.return || node.return === fiber) {
-          return fibers;
+          return hostInstances;
         }
         node = node.return;
       }
@@ -2976,7 +2999,7 @@ export function attach(
     }
     // Flow needs the return here, but ESLint complains about it.
     // eslint-disable-next-line no-unreachable
-    return fibers;
+    return hostInstances;
   }
 
   function findHostInstancesForElementID(id: number) {
@@ -2996,8 +3019,8 @@ export function attach(
         return null;
       }
 
-      const hostFibers = findAllCurrentHostFibers(devtoolsInstance);
-      return hostFibers.map(hostFiber => hostFiber.stateNode).filter(Boolean);
+      const hostInstances = findAllCurrentHostInstances(devtoolsInstance);
+      return hostInstances;
     } catch (err) {
       // The fiber might have unmounted by now.
       return null;
