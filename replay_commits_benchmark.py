@@ -292,23 +292,35 @@ def push_commits_one_by_one(args, repo, commits):
       branch = f"replay-{current_date}"
       args['branch'] = branch
 
-    repo.git.checkout("-B", branch)
+    if branch not in repo.heads:
+        repo.git.checkout('B', branch, 'main')
+
+    config_path = args['config_path']
+    original_dir_circleci = os.path.join(os.getcwd(), f"{config_path}/.circleci")
+    original_dir_github = os.path.join(os.getcwd(), f"{config_path}/.github")
+
+    repo.git.checkout('main')  
+    shutil.copytree(original_dir_circleci, '.circleci', dirs_exist_ok=True)
+    shutil.copytree(original_dir_github, '.github', dirs_exist_ok=True)
+
+    repo.git.checkout(branch)
 
     config_path = args['config_path']
 
     for commit in commits:
-        repo.git.checkout(commit)
+        # Cherry-pick the commit.
+        repo.git.cherry_pick(commit)
 
-        repo.git.checkout("main", config_path)
-        original_directory = os.path.join(os.getcwd(), f"{config_path}/.circleci")
-        target_directory = os.path.join(os.getcwd(), ".circleci")
-        shutil.move(original_directory, target_directory)
-        original_directory = os.path.join(os.getcwd(), f"{config_path}/.github")
-        target_directory = os.path.join(os.getcwd(), ".github")
-        shutil.move(original_directory, target_directory)
-        repo.git.add(".github", ".circleci")
+        # Overwrite .circleci and .github directories with saved state.
+        shutil.rmtree('.circleci', ignore_errors=True)
+        shutil.rmtree('.github', ignore_errors=True)
+        shutil.copytree(original_dir_circleci, '.circleci')
+        shutil.copytree(original_dir_github, '.github')
 
-        repo.index.commit(f"Committing {commit.hexsha}")
+        # Add the directories to the index and commit.
+        repo.git.add('.circleci', '.github')
+
+        repo.index.commit("-m", f"Committing {commit.hexsha}")
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
         repo.git.push("--force", "origin", branch)
         time.sleep(args['commit_delay'])
