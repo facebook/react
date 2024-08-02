@@ -304,6 +304,7 @@ def push_commits_one_by_one(args, repo, commits):
     shutil.copytree(original_dir_github, '.github', dirs_exist_ok=True)
 
     repo.git.checkout(branch)
+    repo.git.restore('.')
 
     config_path = args['config_path']
 
