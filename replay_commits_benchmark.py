@@ -315,16 +315,23 @@ def push_commits_one_by_one(args, repo, commits):
         repo.head.reset(commit=commit, index=True, working_tree=True)
 
         for path, data in folders_from_main.items():
-            dest_path = os.path.join(repo.working_tree_dir, path)
-            if os.path.exists(dest_path):
-              os.remove(dest_path)
-            export_blob(data, dest_path)
-        
-            if path.startswith(".circleci") or path.startswith(".github"):
-                dest_path = os.path.join(repo.working_tree_dir, path.replace(config_path, "", 1))
-                if os.path.exists(dest_path):
-                    os.remove(dest_path)
-                export_blob(data, dest_path)
+            dest_path_ci = os.path.join(repo.working_tree_dir, path.replace(f"{config_path}/.circleci", ".circleci", 1))
+            dest_path_gh = os.path.join(repo.working_tree_dir, path.replace(f"{config_path}/.github", ".github", 1))
+            
+            if path.startswith(f"{config_path}/.circleci"):
+                if os.path.exists(dest_path_ci):
+                    if os.path.isfile(dest_path_ci):
+                        os.remove(dest_path_ci)
+                    elif os.path.isdir(dest_path_ci):
+                        shutil.rmtree(dest_path_ci)
+                export_blob(data, dest_path_ci)
+            elif path.startswith(f"{config_path}/.github"):
+                if os.path.exists(dest_path_gh):
+                    if os.path.isfile(dest_path_gh):
+                        os.remove(dest_path_gh)
+                    elif os.path.isdir(dest_path_gh):
+                        shutil.rmtree(dest_path_gh)
+                export_blob(data, dest_path_gh)
 
         repo.git.add('.')
         repo.index.commit(f"Committing {commit.hexsha}")
