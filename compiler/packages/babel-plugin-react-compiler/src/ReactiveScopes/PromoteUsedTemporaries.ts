@@ -155,6 +155,7 @@ type InterState = Map<IdentifierId, [Identifier, boolean]>;
 class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
   #promotable: State;
   #consts: Set<IdentifierId> = new Set();
+  #globals: Set<IdentifierId> = new Set();
 
   /*
    * Unpromoted temporaries will be emitted at their use sites rather than as separate
@@ -315,12 +316,24 @@ class PromoteInterposedTemporaries extends ReactiveFunctionVisitor<InterState> {
       }
       case 'PropertyLoad':
       case 'ComputedLoad': {
-        if (instruction.lvalue && instruction.lvalue.identifier.name === null) {
-          state.set(instruction.lvalue.identifier.id, [
-            instruction.lvalue.identifier,
-            false,
-          ]);
+        if (instruction.lvalue) {
+          if (this.#globals.has(instruction.value.object.identifier.id)) {
+            this.#globals.add(instruction.lvalue.identifier.id);
+            this.#consts.add(instruction.lvalue.identifier.id);
+          }
+          if (instruction.lvalue.identifier.name === null) {
+            state.set(instruction.lvalue.identifier.id, [
+              instruction.lvalue.identifier,
+              false,
+            ]);
+          }
         }
+        super.visitInstruction(instruction, state);
+        break;
+      }
+      case 'LoadGlobal': {
+        instruction.lvalue &&
+          this.#globals.add(instruction.lvalue.identifier.id);
         super.visitInstruction(instruction, state);
         break;
       }

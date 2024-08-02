@@ -10,6 +10,7 @@ import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
   BuiltInUseActionStateId,
+  BuiltInUseContextHookId,
   BuiltInUseEffectHookId,
   BuiltInUseInsertionEffectHookId,
   BuiltInUseLayoutEffectHookId,
@@ -245,15 +246,19 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
 const REACT_APIS: Array<[string, BuiltInType]> = [
   [
     'useContext',
-    addHook(DEFAULT_SHAPES, {
-      positionalParams: [],
-      restParam: Effect.Read,
-      returnType: {kind: 'Poly'},
-      calleeEffect: Effect.Read,
-      hookKind: 'useContext',
-      returnValueKind: ValueKind.Frozen,
-      returnValueReason: ValueReason.Context,
-    }),
+    addHook(
+      DEFAULT_SHAPES,
+      {
+        positionalParams: [],
+        restParam: Effect.Read,
+        returnType: {kind: 'Poly'},
+        calleeEffect: Effect.Read,
+        hookKind: 'useContext',
+        returnValueKind: ValueKind.Frozen,
+        returnValueReason: ValueReason.Context,
+      },
+      BuiltInUseContextHookId,
+    ),
   ],
   [
     'useState',
