@@ -25,12 +25,12 @@ jobs:
           command: |
                   python3 replay_commits_benchmark.py \
                     --upstream-repo-url "${UPSTREAM_REPO}" \
-                    --config-path $CONFIG_PATH \
-                    --circleci-project-slug $CIRCLECI_PROJECT_SLUG \
-                    --github-repo-slug $GITHUB_REPO_SLUG \
-                    --google-sheet-id $GOOGLE_SHEETS_ID \
-                    --github-token $GITHUB_TOKEN \
-                    --circleci-token $CIRCLECI_TOKEN
+                    --config-path "${CONFIG_PATH}" \
+                    --circleci-project-slug "${CIRCLECI_PROJECT_SLUG}" \
+                    --github-repo-slug "${GITHUB_REPO_SLUG}" \
+                    --google-sheet-id "${GOOGLE_SHEETS_ID}" \
+                    --github-token "${GITHUB_TOKEN}" \
+                    --circleci-token "${CIRCLECI_TOKEN}"
       - store_artifacts:
           path: benchmark-computed.json
       - store_artifacts:
