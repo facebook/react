@@ -276,6 +276,8 @@ class InferenceState {
    */
   #variables: Map<IdentifierId, Set<InstructionValue>>;
 
+  #functionEffects: Map<InstructionValue, Array<FunctionEffect>> = new Map();
+
   constructor(
     env: Environment,
     values: Map<InstructionValue, AbstractValue>,
@@ -300,6 +302,19 @@ class InferenceState {
       suggestions: null,
     });
     this.#values.set(value, kind);
+  }
+
+  setFunctionEffects(value: InstructionValue, effect: Array<FunctionEffect>): void {
+    CompilerError.invariant(value.kind !== 'LoadLocal', {
+      reason:
+        'Expected all top-level identifiers to be defined as variables, not values',
+      description: null,
+      loc: value.loc,
+      suggestions: null,
+    });
+    const curEffects = this.#functionEffects.get(value) ?? [];
+    curEffects.push(...effect);
+    this.#functionEffects.set(value, curEffects);
   }
 
   values(place: Place): Array<InstructionValue> {
@@ -400,50 +415,57 @@ class InferenceState {
     }
 
     // Propagate effects of function expressions to the outer (ie current) effect context
+    const dependentEffects = [];
     for (const value of values) {
       if (
         (value.kind === 'FunctionExpression' ||
-          value.kind === 'ObjectMethod') &&
-        value.loweredFunc.func.effects != null
+          value.kind === 'ObjectMethod')
       ) {
-        for (const effect of value.loweredFunc.func.effects) {
-          if (
-            effect.kind === 'GlobalMutation' ||
-            effect.kind === 'ReactMutation'
-          ) {
-            // Known effects are always propagated upwards
-            functionEffects.push(effect);
-          } else {
-            /**
-             * Contextual effects need to be replayed against the current inference
-             * state, which may know more about the value to which the effect applied.
-             * The main cases are:
-             * 1. The mutated context value is _still_ a context value in the current scope,
-             *    so we have to continue propagating the original context mutation.
-             * 2. The mutated context value is a mutable value in the current scope,
-             *    so the context mutation was fine and we can skip propagating the effect.
-             * 3. The mutated context value  is an immutable value in the current scope,
-             *    resulting in a non-ContextMutation FunctionEffect. We propagate that new,
-             *    more detailed effect to the current function context.
-             */
-            for (const place of effect.places) {
-              if (this.isDefined(place)) {
-                const replayedEffect = this.reference(
-                  {...place, loc: effect.loc},
-                  effect.effect,
-                  reason,
-                );
-                if (replayedEffect != null) {
-                  if (replayedEffect.kind === 'ContextMutation') {
-                    // Case 1, still a context value so propagate the original effect
-                    functionEffects.push(effect);
-                  } else {
-                    // Case 3, immutable value so propagate the more precise effect
-                    functionEffects.push(replayedEffect);
-                  }
-                } // else case 2, local mutable value so this effect was fine
+        dependentEffects.push(...value.loweredFunc.func.effects ?? []);
+      }
+      const knownEffects = this.#functionEffects.get(value);
+      if (knownEffects != null) {
+        dependentEffects.push(...knownEffects)
+      }
+    }
+
+
+    for (const effect of dependentEffects) {
+      if (
+        effect.kind === 'GlobalMutation' ||
+        effect.kind === 'ReactMutation'
+      ) {
+        // Known effects are always propagated upwards
+        functionEffects.push(effect);
+      } else {
+        /**
+         * Contextual effects need to be replayed against the current inference
+         * state, which may know more about the value to which the effect applied.
+         * The main cases are:
+         * 1. The mutated context value is _still_ a context value in the current scope,
+         *    so we have to continue propagating the original context mutation.
+         * 2. The mutated context value is a mutable value in the current scope,
+         *    so the context mutation was fine and we can skip propagating the effect.
+         * 3. The mutated context value  is an immutable value in the current scope,
+         *    resulting in a non-ContextMutation FunctionEffect. We propagate that new,
+         *    more detailed effect to the current function context.
+         */
+        for (const place of effect.places) {
+          if (this.isDefined(place)) {
+            const replayedEffect = this.reference(
+              {...place, loc: effect.loc},
+              effect.effect,
+              reason,
+            );
+            if (replayedEffect != null) {
+              if (replayedEffect.kind === 'ContextMutation') {
+                // Case 1, still a context value so propagate the original effect
+                functionEffects.push(effect);
+              } else {
+                // Case 3, immutable value so propagate the more precise effect
+                functionEffects.push(replayedEffect);
               }
-            }
+            } // else case 2, local mutable value so this effect was fine
           }
         }
       }
@@ -995,8 +1017,22 @@ function inferBlock(
               context: new Set(),
             };
         effect = {kind: Effect.Capture, reason: ValueReason.Other};
-        lvalueEffect = Effect.Store;
-        break;
+
+        const arrEffects: Array<FunctionEffect> = [];
+        for (const operand of eachInstructionOperand(instr)) {
+          state.referenceAndRecordEffects(
+            operand,
+            effect.kind,
+            effect.reason,
+            arrEffects,
+          );
+        }
+
+        state.initialize(instrValue, valueKind);
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Store;
+        state.setFunctionEffects(instrValue, arrEffects);
+        continue;
       }
       case 'NewExpression': {
         /**
@@ -1039,6 +1075,7 @@ function inferBlock(
         continue;
       }
       case 'ObjectExpression': {
+        const objEffects: Array<FunctionEffect> = [];
         valueKind = hasContextRefOperand(state, instrValue)
           ? {
               kind: ValueKind.Context,
@@ -1060,7 +1097,7 @@ function inferBlock(
                   property.key.name,
                   Effect.Freeze,
                   ValueReason.Other,
-                  functionEffects,
+                  objEffects,
                 );
               }
               // Object construction captures but does not modify the key/property values
@@ -1068,7 +1105,7 @@ function inferBlock(
                 property.place,
                 Effect.Capture,
                 ValueReason.Other,
-                functionEffects,
+                objEffects,
               );
               break;
             }
@@ -1078,7 +1115,7 @@ function inferBlock(
                 property.place,
                 Effect.Capture,
                 ValueReason.Other,
-                functionEffects,
+                objEffects,
               );
               break;
             }
@@ -1092,6 +1129,7 @@ function inferBlock(
         }
 
         state.initialize(instrValue, valueKind);
+        state.setFunctionEffects(instrValue, objEffects);
         state.define(instr.lvalue, instrValue);
         instr.lvalue.effect = Effect.Store;
         continue;
@@ -1547,14 +1585,16 @@ function inferBlock(
         break;
       }
       case 'PropertyLoad': {
+        const loadEffects: Array<FunctionEffect> = [];
         state.referenceAndRecordEffects(
           instrValue.object,
           Effect.Read,
           ValueReason.Other,
-          functionEffects,
+          loadEffects,
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
+        state.setFunctionEffects(instrValue, loadEffects);
         state.initialize(instrValue, state.kind(instrValue.object));
         state.define(lvalue, instrValue);
         continue;
@@ -1611,22 +1651,24 @@ function inferBlock(
         continue;
       }
       case 'ComputedLoad': {
+        const loadEffects: Array<FunctionEffect> = [];
         state.referenceAndRecordEffects(
           instrValue.object,
           Effect.Read,
           ValueReason.Other,
-          functionEffects,
+          loadEffects,
         );
         state.referenceAndRecordEffects(
           instrValue.property,
           Effect.Read,
           ValueReason.Other,
-          functionEffects,
+          loadEffects,
         );
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
         state.initialize(instrValue, state.kind(instrValue.object));
         state.define(lvalue, instrValue);
+        state.setFunctionEffects(instrValue, loadEffects);
         continue;
       }
       case 'Await': {
