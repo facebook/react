@@ -586,7 +586,10 @@ function InnerElementType({children, style}) {
   // A lot of options were considered; this seemed the one that requires the least code.
   // See https://github.com/bvaughn/react-devtools-experimental/issues/9
   return (
-    <div className={styles.InnerElementType} ref={divRef} style={style}>
+    <div
+      className={styles.InnerElementType}
+      ref={divRef}
+      style={{...style, pointerEvents: null}}>
       <SelectedTreeHighlight />
       {children}
     </div>
