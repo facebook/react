@@ -287,11 +287,11 @@ def replay_commits(args):
 
 def push_commits_one_by_one(args, repo, commits):
     if args['branch']:
-      branch = args['branch']
+        branch = args['branch']
     else:
-      current_date = datetime.now().date().isoformat()
-      branch = f"replay-{current_date}"
-      args['branch'] = branch
+        current_date = datetime.now().date().isoformat()
+        branch = f"replay-{current_date}"
+        args['branch'] = branch
 
     if branch not in repo.heads:
         repo.git.checkout('-B', branch, 'main')
@@ -306,18 +306,24 @@ def push_commits_one_by_one(args, repo, commits):
                 folders_from_main[item.path] = BytesIO(item.data_stream.read()).getvalue()
 
     for commit in commits:
+        print(f"Checking out commit {commit.hexsha}")
         repo.git.checkout(commit)
+        print(f"Successfully checked out commit {commit.hexsha}")
 
         for path, data in folders_from_main.items():
             if os.path.exists(path):
                 os.remove(path)
+            print(f"Exporting blob to {path}")
             export_blob(data, path)
+            print(f"Successfully exported blob to {path}")
 
         repo.git.add('.')
-        repo.index.commit(f"Committing {commit.hexsha}")
+        new_commit = repo.index.commit(f"Committing {commit.hexsha}")
+        print(f"Successfully created new commit {new_commit.hexsha}")
 
-        print(f"Pushing commit {commit.hexsha} to branch {branch}")
-        repo.git.push("origin", branch)
+        print(f"Pushing commit {new_commit.hexsha} to branch {branch}")
+        repo.git.push("origin", f"{branch}:{branch}")
+        print(f"Successfully pushed commit {new_commit.hexsha}")
         time.sleep(args['commit_delay'])
 
     # Delete the branch after all commits have been pushed
