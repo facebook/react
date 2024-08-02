@@ -7,6 +7,7 @@ import uuid
 import gspread
 import random
 import time
+import shutil
 from urllib.parse import quote
 from io import BytesIO
 from git import Repo, Git
@@ -351,15 +352,15 @@ def export_blob(data, dst_path):
         if os.path.isfile(dst_path):
             print(f"A file with the name {dst_path} already exists. Removing the file.")
             os.remove(dst_path)
-        else:
-            print(f"A directory with the name {dst_path} already exists.")
-    else:
-        try:
-            os.makedirs(directory, exist_ok=True)
-        except FileExistsError as e:
-            print(f"Cannot create directory. A file with the name '{directory}' already exists. Trying to remove the file.")
-            os.remove(directory)
-            os.makedirs(directory, exist_ok=True)
+        elif os.path.isdir(dst_path):
+            print(f"A directory with the name {dst_path} already exists. Removing the directory.")
+            shutil.rmtree(dst_path)
+    try:
+        os.makedirs(directory, exist_ok=True)
+    except FileExistsError as e:
+        print(f"Cannot create directory. A file with the name '{directory}' already exists. Trying to remove the file.")
+        os.remove(directory)
+        os.makedirs(directory, exist_ok=True)
 
     if not os.path.isdir(dst_path):
         with open(dst_path, 'wb') as file:
