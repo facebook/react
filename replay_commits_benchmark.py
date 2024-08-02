@@ -292,10 +292,14 @@ def push_commits_one_by_one(args, repo, commits):
       branch = f"replay-{current_date}"
       args['branch'] = branch
 
-    git_cmd_with_token = Git(args['working_repo_dir'], update_environment={'GIT_ASKPASS': "/bin/echo", 'GIT_USERNAME': 'replay-bot', 'GIT_PASSWORD': os.getenv('GITHUB_TOKEN')})
-
     if branch not in repo.heads:
         repo.git.checkout('-B', branch, 'main')
+
+    git_cmd = Git(args['working_repo_dir'])
+
+    # configure local repo settings
+    git_cmd.config('user.email', '')
+    git_cmd.config('user.name', 'replay-bot')
 
     config_path = args['config_path']
     main_tree = repo.heads.main.commit.tree
@@ -317,8 +321,13 @@ def push_commits_one_by_one(args, repo, commits):
         repo.git.add('.')
         repo.index.commit(f"Committing {commit.hexsha}")
 
+        url = repo.remotes.origin.url
+        token = os.getenv('GITHUB_TOKEN') 
+        repo.remotes.origin.set_url(f'https://{quote(token)}:x-oauth-basic@github.com/efficientengineering/react')
+
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
-        git_cmd_with_token.push("--force", "origin", branch)
+        repo.git.push("--force", "origin", branch)
+        repo.remotes.origin.set_url(url)
         time.sleep(args['commit_delay'])
 
     # Delete the branch after all commits have been pushed
