@@ -265,6 +265,8 @@ def run(parsed_args):
 def replay_commits(args):
 
     repo = Repo(args['working_repo_dir'])
+    git_cmd = Git(args['working_repo_dir'])
+    git_cmd.update_environment(GIT_ASKPASS="echo $GITHUB_TOKEN")
     branch = ""
 
     try:
