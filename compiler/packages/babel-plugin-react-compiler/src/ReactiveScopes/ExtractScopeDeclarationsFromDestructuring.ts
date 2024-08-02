@@ -18,7 +18,7 @@ import {
   ReactiveStatement,
   promoteTemporary,
 } from '../HIR';
-import {clonePlaceToTemporary, createTemporaryPlace} from '../HIR/HIRBuilder';
+import {clonePlaceToTemporary} from '../HIR/HIRBuilder';
 import {eachPatternOperand, mapPatternOperands} from '../HIR/visitors';
 import {
   ReactiveFunctionTransform,
