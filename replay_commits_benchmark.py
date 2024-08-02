@@ -307,9 +307,6 @@ def push_commits_one_by_one(args, repo, commits):
         repo.git.checkout("main", circleci_config)
         repo.git.checkout("main", github_config)
 
-        # Add the directories to the index and commit.
-        repo.git.add('.circleci', '.github')
-
         repo.index.commit("-m", f"Committing {commit.hexsha}")
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
         repo.git.push("--force", "origin", branch)
