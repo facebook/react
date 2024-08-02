@@ -21,9 +21,6 @@ jobs:
           name: Install Python Requirements
           command: pip install -r requirements.txt
       - run:
-          name: Setting Upstream
-          command: git remote add upstream "${UPSTREAM_REPO}"
-      - run:
           name: Run Replay Script
           command: |
                   python3 replay_commits_benchmark.py \
