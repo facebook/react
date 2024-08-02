@@ -316,11 +316,8 @@ def push_commits_one_by_one(args, repo, commits):
         repo.git.add('.')
         repo.index.commit(f"Committing {commit.hexsha}")
 
-        repo.git.reset("--hard")
-        repo.git.clean("-fd")
-
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
-        repo.git.push("--force", "origin", branch)
+        repo.git.push("origin", branch)
         time.sleep(args['commit_delay'])
 
     # Delete the branch after all commits have been pushed
