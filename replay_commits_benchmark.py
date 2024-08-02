@@ -314,7 +314,7 @@ def push_commits_one_by_one(args, repo, commits):
             export_blob(data, path)
 
         repo.git.add('.')
-        repo.index.commit(f"-m 'Committing {commit.hexsha}'")
+        repo.index.commit(f"Committing {commit.hexsha}")
 
         repo.git.reset("--hard")
         repo.git.clean("-fd")
