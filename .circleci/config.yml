@@ -43,3 +43,6 @@ workflows:
       - run_replay_job:
           context:
             - react-benchmarking
+          filters:
+            branches:
+              only: main
