@@ -696,6 +696,40 @@ const fiberToFiberInstanceMap: Map<Fiber, FiberInstance> = new Map();
 // operations that should be the same whether the current and work-in-progress Fiber is used.
 const idToDevToolsInstanceMap: Map<number, DevToolsInstance> = new Map();
 
+// Map of resource DOM nodes to all the Fibers that depend on it.
+const hostResourceToFiberMap: Map<HostInstance, Set<Fiber>> = new Map();
+
+function aquireHostResource(
+  fiber: Fiber,
+  resource: ?{instance?: HostInstance},
+): void {
+  const hostInstance = resource && resource.instance;
+  if (hostInstance) {
+    let resourceFibers = hostResourceToFiberMap.get(hostInstance);
+    if (resourceFibers === undefined) {
+      resourceFibers = new Set();
+      hostResourceToFiberMap.set(hostInstance, resourceFibers);
+    }
+    resourceFibers.add(fiber);
+  }
+}
+
+function releaseHostResource(
+  fiber: Fiber,
+  resource: ?{instance?: HostInstance},
+): void {
+  const hostInstance = resource && resource.instance;
+  if (hostInstance) {
+    const resourceFibers = hostResourceToFiberMap.get(hostInstance);
+    if (resourceFibers !== undefined) {
+      resourceFibers.delete(fiber);
+      if (resourceFibers.size === 0) {
+        hostResourceToFiberMap.delete(hostInstance);
+      }
+    }
+  }
+}
+
 export function attach(
   hook: DevToolsHook,
   rendererID: number,
@@ -2283,6 +2317,10 @@ export function attach(
       // because we don't want to highlight every host node inside of a newly mounted subtree.
     }
 
+    if (fiber.tag === HostHoistable) {
+      aquireHostResource(fiber, fiber.memoizedState);
+    }
+
     if (fiber.tag === SuspenseComponent) {
       const isTimedOut = fiber.memoizedState !== null;
       if (isTimedOut) {
@@ -2344,8 +2382,11 @@ export function attach(
 
     // We might meet a nested Suspense on our way.
     const isTimedOutSuspense =
-      fiber.tag === ReactTypeOfWork.SuspenseComponent &&
-      fiber.memoizedState !== null;
+      fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+
+    if (fiber.tag === HostHoistable) {
+      releaseHostResource(fiber, fiber.memoizedState);
+    }
 
     let child = fiber.child;
     if (isTimedOutSuspense) {
@@ -2621,6 +2662,12 @@ export function attach(
     const newParentInstance = shouldIncludeInTree
       ? fiberInstance
       : parentInstance;
+
+    if (nextFiber.tag === HostHoistable) {
+      releaseHostResource(prevFiber, prevFiber.memoizedState);
+      aquireHostResource(nextFiber, nextFiber.memoizedState);
+    }
+
     const isSuspense = nextFiber.tag === SuspenseComponent;
     let shouldResetChildren = false;
     // The behavior of timed-out Suspense trees is unique.
@@ -3070,9 +3117,55 @@ export function attach(
   function getNearestMountedHostInstance(
     hostInstance: HostInstance,
   ): null | HostInstance {
-    const mountedHostInstance = renderer.findFiberByHostInstance(hostInstance);
-    if (mountedHostInstance != null) {
-      return mountedHostInstance.stateNode;
+    const mountedFiber = renderer.findFiberByHostInstance(hostInstance);
+    if (mountedFiber != null) {
+      if (mountedFiber.stateNode !== hostInstance) {
+        // If it's not a perfect match the specific one might be a resource.
+        // We don't need to look at any parents because host resources don't have
+        // children so it won't be in any parent if it's not this one.
+        if (hostResourceToFiberMap.has(hostInstance)) {
+          return hostInstance;
+        }
+      }
+      return mountedFiber.stateNode;
+    }
+    if (hostResourceToFiberMap.has(hostInstance)) {
+      return hostInstance;
+    }
+    return null;
+  }
+
+  function findNearestUnfilteredElementID(searchFiber: Fiber) {
+    let fiber: null | Fiber = searchFiber;
+    while (fiber !== null) {
+      const fiberInstance = getFiberInstanceUnsafe(fiber);
+      if (fiberInstance !== null) {
+        // TODO: Ideally we would not have any filtered FiberInstances which
+        // would make this logic much simpler. Unfortunately, we sometimes
+        // eagerly add to the map and some times don't eagerly clean it up.
+        // TODO: If the fiber is filtered, the FiberInstance wouldn't really
+        // exist which would mean that we also don't have a way to get to the
+        // VirtualInstances.
+        if (!shouldFilterFiber(fiberInstance.data)) {
+          return fiberInstance.id;
+        }
+        // We couldn't use this Fiber but we might have a VirtualInstance
+        // that is the nearest unfiltered instance.
+        let parentInstance = fiberInstance.parent;
+        while (parentInstance !== null) {
+          if (parentInstance.kind === FIBER_INSTANCE) {
+            // If we find a parent Fiber, it might not be the nearest parent
+            // so we break out and continue walking the Fiber tree instead.
+            break;
+          } else {
+            if (!shouldFilterVirtual(parentInstance.data)) {
+              return parentInstance.id;
+            }
+          }
+          parentInstance = parentInstance.parent;
+        }
+      }
+      fiber = fiber.return;
     }
     return null;
   }
@@ -3081,42 +3174,25 @@ export function attach(
     hostInstance: HostInstance,
     findNearestUnfilteredAncestor: boolean = false,
   ): number | null {
-    let fiber = renderer.findFiberByHostInstance(hostInstance);
+    const resourceFibers = hostResourceToFiberMap.get(hostInstance);
+    if (resourceFibers !== undefined) {
+      // This is a resource. Find the first unfiltered instance.
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const resourceFiber of resourceFibers) {
+        const elementID = findNearestUnfilteredElementID(resourceFiber);
+        if (elementID !== null) {
+          return elementID;
+        }
+      }
+      // If we don't find one, fallthrough to select the parent instead.
+    }
+    const fiber = renderer.findFiberByHostInstance(hostInstance);
     if (fiber != null) {
       if (!findNearestUnfilteredAncestor) {
         // TODO: Remove this option. It's not used.
         return getFiberIDThrows(fiber);
       }
-      while (fiber !== null) {
-        const fiberInstance = getFiberInstanceUnsafe(fiber);
-        if (fiberInstance !== null) {
-          // TODO: Ideally we would not have any filtered FiberInstances which
-          // would make this logic much simpler. Unfortunately, we sometimes
-          // eagerly add to the map and some times don't eagerly clean it up.
-          // TODO: If the fiber is filtered, the FiberInstance wouldn't really
-          // exist which would mean that we also don't have a way to get to the
-          // VirtualInstances.
-          if (!shouldFilterFiber(fiberInstance.data)) {
-            return fiberInstance.id;
-          }
-          // We couldn't use this Fiber but we might have a VirtualInstance
-          // that is the nearest unfiltered instance.
-          let parentInstance = fiberInstance.parent;
-          while (parentInstance !== null) {
-            if (parentInstance.kind === FIBER_INSTANCE) {
-              // If we find a parent Fiber, it might not be the nearest parent
-              // so we break out and continue walking the Fiber tree instead.
-              break;
-            } else {
-              if (!shouldFilterVirtual(parentInstance.data)) {
-                return parentInstance.id;
-              }
-            }
-            parentInstance = parentInstance.parent;
-          }
-        }
-        fiber = fiber.return;
-      }
+      return findNearestUnfilteredElementID(fiber);
     }
     return null;
   }
