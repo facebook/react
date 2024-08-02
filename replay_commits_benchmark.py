@@ -306,7 +306,7 @@ def push_commits_one_by_one(args, repo, commits):
                 folders_from_main[item.path] = BytesIO(item.data_stream.read()).getvalue()
 
     for commit in commits:
-        repo.git.checkout(commit.hexsha)
+        repo.git.checkout(commit)
 
         for path, data in folders_from_main.items():
             if os.path.exists(path):
