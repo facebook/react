@@ -1094,7 +1094,7 @@ export function attach(
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getOrGenerateFiberInstance(root.current).id;
       setRootPseudoKey(currentRootID, root.current);
-      mountChildrenRecursively(root.current, null, false, false);
+      mountFiberRecursively(root.current, null, false);
       flushPendingEvents(root);
       currentRootID = -1;
     });
@@ -2231,101 +2231,108 @@ export function attach(
   function mountChildrenRecursively(
     firstChild: Fiber,
     parentInstance: DevToolsInstance | null,
-    traverseSiblings: boolean,
     traceNearestHostComponentUpdate: boolean,
-  ) {
+  ): void {
     // Iterate over siblings rather than recursing.
     // This reduces the chance of stack overflow for wide trees (e.g. lists with many items).
     let fiber: Fiber | null = firstChild;
     while (fiber !== null) {
-      // Generate an ID even for filtered Fibers, in case it's needed later (e.g. for Profiling).
-      // TODO: Do we really need to do this eagerly?
-      getOrGenerateFiberInstance(fiber);
+      mountFiberRecursively(
+        fiber,
+        parentInstance,
+        traceNearestHostComponentUpdate,
+      );
+      fiber = fiber.sibling;
+    }
+  }
 
-      if (__DEBUG__) {
-        debug('mountChildrenRecursively()', fiber, parentInstance);
-      }
+  function mountFiberRecursively(
+    fiber: Fiber,
+    parentInstance: DevToolsInstance | null,
+    traceNearestHostComponentUpdate: boolean,
+  ): void {
+    // Generate an ID even for filtered Fibers, in case it's needed later (e.g. for Profiling).
+    // TODO: Do we really need to do this eagerly?
+    getOrGenerateFiberInstance(fiber);
 
-      // If we have the tree selection from previous reload, try to match this Fiber.
-      // Also remember whether to do the same for siblings.
-      const mightSiblingsBeOnTrackedPath =
-        updateTrackedPathStateBeforeMount(fiber);
+    if (__DEBUG__) {
+      debug('mountFiberRecursively()', fiber, parentInstance);
+    }
 
-      const shouldIncludeInTree = !shouldFilterFiber(fiber);
-      const newParentInstance = shouldIncludeInTree
-        ? recordMount(fiber, parentInstance)
-        : parentInstance;
+    // If we have the tree selection from previous reload, try to match this Fiber.
+    // Also remember whether to do the same for siblings.
+    const mightSiblingsBeOnTrackedPath =
+      updateTrackedPathStateBeforeMount(fiber);
 
-      if (traceUpdatesEnabled) {
-        if (traceNearestHostComponentUpdate) {
-          const elementType = getElementTypeForFiber(fiber);
-          // If an ancestor updated, we should mark the nearest host nodes for highlighting.
-          if (elementType === ElementTypeHostComponent) {
-            traceUpdatesForNodes.add(fiber.stateNode);
-            traceNearestHostComponentUpdate = false;
-          }
+    const shouldIncludeInTree = !shouldFilterFiber(fiber);
+    const newParentInstance = shouldIncludeInTree
+      ? recordMount(fiber, parentInstance)
+      : parentInstance;
+
+    if (traceUpdatesEnabled) {
+      if (traceNearestHostComponentUpdate) {
+        const elementType = getElementTypeForFiber(fiber);
+        // If an ancestor updated, we should mark the nearest host nodes for highlighting.
+        if (elementType === ElementTypeHostComponent) {
+          traceUpdatesForNodes.add(fiber.stateNode);
+          traceNearestHostComponentUpdate = false;
         }
-
-        // We intentionally do not re-enable the traceNearestHostComponentUpdate flag in this branch,
-        // because we don't want to highlight every host node inside of a newly mounted subtree.
       }
 
-      if (fiber.tag === SuspenseComponent) {
-        const isTimedOut = fiber.memoizedState !== null;
-        if (isTimedOut) {
-          // Special case: if Suspense mounts in a timed-out state,
-          // get the fallback child from the inner fragment and mount
-          // it as if it was our own child. Updates handle this too.
-          const primaryChildFragment = fiber.child;
-          const fallbackChildFragment = primaryChildFragment
-            ? primaryChildFragment.sibling
-            : null;
-          const fallbackChild = fallbackChildFragment
-            ? fallbackChildFragment.child
-            : null;
-          if (fallbackChild !== null) {
-            mountChildrenRecursively(
-              fallbackChild,
-              newParentInstance,
-              true,
-              traceNearestHostComponentUpdate,
-            );
-          }
-        } else {
-          let primaryChild: Fiber | null = null;
-          const areSuspenseChildrenConditionallyWrapped =
-            OffscreenComponent === -1;
-          if (areSuspenseChildrenConditionallyWrapped) {
-            primaryChild = fiber.child;
-          } else if (fiber.child !== null) {
-            primaryChild = fiber.child.child;
-          }
-          if (primaryChild !== null) {
-            mountChildrenRecursively(
-              primaryChild,
-              newParentInstance,
-              true,
-              traceNearestHostComponentUpdate,
-            );
-          }
+      // We intentionally do not re-enable the traceNearestHostComponentUpdate flag in this branch,
+      // because we don't want to highlight every host node inside of a newly mounted subtree.
+    }
+
+    if (fiber.tag === SuspenseComponent) {
+      const isTimedOut = fiber.memoizedState !== null;
+      if (isTimedOut) {
+        // Special case: if Suspense mounts in a timed-out state,
+        // get the fallback child from the inner fragment and mount
+        // it as if it was our own child. Updates handle this too.
+        const primaryChildFragment = fiber.child;
+        const fallbackChildFragment = primaryChildFragment
+          ? primaryChildFragment.sibling
+          : null;
+        const fallbackChild = fallbackChildFragment
+          ? fallbackChildFragment.child
+          : null;
+        if (fallbackChild !== null) {
+          mountChildrenRecursively(
+            fallbackChild,
+            newParentInstance,
+            traceNearestHostComponentUpdate,
+          );
         }
       } else {
-        if (fiber.child !== null) {
+        let primaryChild: Fiber | null = null;
+        const areSuspenseChildrenConditionallyWrapped =
+          OffscreenComponent === -1;
+        if (areSuspenseChildrenConditionallyWrapped) {
+          primaryChild = fiber.child;
+        } else if (fiber.child !== null) {
+          primaryChild = fiber.child.child;
+        }
+        if (primaryChild !== null) {
           mountChildrenRecursively(
-            fiber.child,
+            primaryChild,
             newParentInstance,
-            true,
             traceNearestHostComponentUpdate,
           );
         }
       }
-
-      // We're exiting this Fiber now, and entering its siblings.
-      // If we have selection to restore, we might need to re-activate tracking.
-      updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
-
-      fiber = traverseSiblings ? fiber.sibling : null;
+    } else {
+      if (fiber.child !== null) {
+        mountChildrenRecursively(
+          fiber.child,
+          newParentInstance,
+          traceNearestHostComponentUpdate,
+        );
+      }
     }
+
+    // We're exiting this Fiber now, and entering its siblings.
+    // If we have selection to restore, we might need to re-activate tracking.
+    updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
   }
 
   // We use this to simulate unmounting for Suspense trees
@@ -2533,10 +2540,9 @@ export function attach(
           shouldResetChildren = true;
         }
       } else {
-        mountChildrenRecursively(
+        mountFiberRecursively(
           nextChild,
           parentInstance,
-          false,
           traceNearestHostComponentUpdate,
         );
         shouldResetChildren = true;
@@ -2642,7 +2648,6 @@ export function attach(
         mountChildrenRecursively(
           nextFallbackChildSet,
           newParentInstance,
-          true,
           traceNearestHostComponentUpdate,
         );
 
@@ -2671,7 +2676,6 @@ export function attach(
         mountChildrenRecursively(
           nextPrimaryChildSet,
           newParentInstance,
-          true,
           traceNearestHostComponentUpdate,
         );
       }
@@ -2691,7 +2695,6 @@ export function attach(
         mountChildrenRecursively(
           nextFallbackChildSet,
           newParentInstance,
-          true,
           traceNearestHostComponentUpdate,
         );
         shouldResetChildren = true;
@@ -2819,7 +2822,7 @@ export function attach(
           };
         }
 
-        mountChildrenRecursively(root.current, null, false, false);
+        mountFiberRecursively(root.current, null, false);
         flushPendingEvents(root);
         currentRootID = -1;
       });
@@ -2918,7 +2921,7 @@ export function attach(
       if (!wasMounted && isMounted) {
         // Mount a new root.
         setRootPseudoKey(currentRootID, current);
-        mountChildrenRecursively(current, null, false, false);
+        mountFiberRecursively(current, null, false);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
         updateFiberRecursively(current, alternate, null, false);
@@ -2930,7 +2933,7 @@ export function attach(
     } else {
       // Mount a new root.
       setRootPseudoKey(currentRootID, current);
-      mountChildrenRecursively(current, null, false, false);
+      mountFiberRecursively(current, null, false);
     }
 
     if (isProfiling && isProfilingSupported) {
