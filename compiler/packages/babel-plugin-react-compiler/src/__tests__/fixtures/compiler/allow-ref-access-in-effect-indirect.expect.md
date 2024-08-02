@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender
+// @validateRefAccessDuringRender @validateNoSetStateInRender:false
 import {useCallback, useEffect, useRef, useState} from 'react';
 
 function Component() {
@@ -42,7 +42,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender
+import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender @validateNoSetStateInRender:false
 import { useCallback, useEffect, useRef, useState } from "react";
 
 function Component() {

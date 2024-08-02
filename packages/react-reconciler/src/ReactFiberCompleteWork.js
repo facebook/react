@@ -35,6 +35,7 @@ import {
   enableLegacyHidden,
   enableSuspenseCallback,
   enableScopeAPI,
+  enablePersistedModeClonedFlag,
   enableProfilerTimer,
   enableCache,
   enableTransitionTracing,
@@ -90,6 +91,7 @@ import {
   MaySuspendCommit,
   ScheduleRetry,
   ShouldSuspendCommit,
+  Cloned,
 } from './ReactFiberFlags';
 
 import {
@@ -183,6 +185,16 @@ function markUpdate(workInProgress: Fiber) {
 }
 
 /**
+ * Tag the fiber with Cloned in persistent mode to signal that
+ * it received an update that requires a clone of the tree above.
+ */
+function markCloned(workInProgress: Fiber) {
+  if (supportsPersistence && enablePersistedModeClonedFlag) {
+    workInProgress.flags |= Cloned;
+  }
+}
+
+/**
  * In persistent mode, return whether this update needs to clone the subtree.
  */
 function doesRequireClone(current: null | Fiber, completedWork: Fiber) {
@@ -199,9 +211,12 @@ function doesRequireClone(current: null | Fiber, completedWork: Fiber) {
   // then we only have to check the `completedWork.subtreeFlags`.
   let child = completedWork.child;
   while (child !== null) {
+    const checkedFlags = enablePersistedModeClonedFlag
+      ? Cloned | Visibility | Placement | ChildDeletion
+      : MutationMask;
     if (
-      (child.flags & MutationMask) !== NoFlags ||
-      (child.subtreeFlags & MutationMask) !== NoFlags
+      (child.flags & checkedFlags) !== NoFlags ||
+      (child.subtreeFlags & checkedFlags) !== NoFlags
     ) {
       return true;
     }
@@ -450,6 +465,7 @@ function updateHostComponent(
 
     let newChildSet = null;
     if (requiresClone && passChildrenWhenCloningPersistedNodes) {
+      markCloned(workInProgress);
       newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
       appendAllChildrenToContainer(
@@ -473,6 +489,8 @@ function updateHostComponent(
       // Note that this might release a previous clone.
       workInProgress.stateNode = currentInstance;
       return;
+    } else {
+      markCloned(workInProgress);
     }
 
     // Certain renderers require commit-time effects for initial mount.
@@ -485,12 +503,14 @@ function updateHostComponent(
     }
     workInProgress.stateNode = newInstance;
     if (!requiresClone) {
-      // If there are no other effects in this tree, we need to flag this node as having one.
-      // Even though we're not going to use it for anything.
-      // Otherwise parents won't know that there are new children to propagate upwards.
-      markUpdate(workInProgress);
+      if (!enablePersistedModeClonedFlag) {
+        // If there are no other effects in this tree, we need to flag this node as having one.
+        // Even though we're not going to use it for anything.
+        // Otherwise parents won't know that there are new children to propagate upwards.
+        markUpdate(workInProgress);
+      }
     } else if (!passChildrenWhenCloningPersistedNodes) {
-      // If children might have changed, we have to add them all to the set.
+      // If children have changed, we have to add them all to the set.
       appendAllChildren(
         newInstance,
         workInProgress,
@@ -618,15 +638,18 @@ function updateHostText(
       // If the text content differs, we'll create a new text instance for it.
       const rootContainerInstance = getRootHostContainer();
       const currentHostContext = getHostContext();
+      markCloned(workInProgress);
       workInProgress.stateNode = createTextInstance(
         newText,
         rootContainerInstance,
         currentHostContext,
         workInProgress,
       );
-      // We'll have to mark it as having an effect, even though we won't use the effect for anything.
-      // This lets the parents know that at least one of their children has changed.
-      markUpdate(workInProgress);
+      if (!enablePersistedModeClonedFlag) {
+        // We'll have to mark it as having an effect, even though we won't use the effect for anything.
+        // This lets the parents know that at least one of their children has changed.
+        markUpdate(workInProgress);
+      }
     } else {
       workInProgress.stateNode = current.stateNode;
     }
@@ -1229,6 +1252,7 @@ function completeWork(
           );
           // TODO: For persistent renderers, we should pass children as part
           // of the initial instance creation
+          markCloned(workInProgress);
           appendAllChildren(instance, workInProgress, false, false);
           workInProgress.stateNode = instance;
 
@@ -1284,6 +1308,7 @@ function completeWork(
         if (wasHydrated) {
           prepareToHydrateHostTextInstance(workInProgress);
         } else {
+          markCloned(workInProgress);
           workInProgress.stateNode = createTextInstance(
             newText,
             rootContainerInstance,

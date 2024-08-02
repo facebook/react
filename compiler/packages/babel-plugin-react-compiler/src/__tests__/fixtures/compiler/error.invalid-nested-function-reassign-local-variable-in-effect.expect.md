@@ -42,60 +42,17 @@ function Component() {
 
 ```
 
-## Code
 
-```javascript
-import { c as _c } from "react/compiler-runtime";
-import { useEffect } from "react";
-function Component() {
-  const $ = _c(4);
-  let local;
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const mk_reassignlocal = () => {
-      const reassignLocal = (newValue) => {
-        local = newValue;
-      };
-      return reassignLocal;
-    };
-
-    t0 = mk_reassignlocal();
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  const reassignLocal_0 = t0;
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (newValue_0) => {
-      reassignLocal_0("hello");
-      if (local === newValue_0) {
-        console.log("`local` was updated!");
-      } else {
-        throw new Error("`local` not updated!");
-      }
-    };
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  const onMount = t1;
-  let t2;
-  let t3;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = () => {
-      onMount();
-    };
-    t3 = [onMount];
-    $[2] = t2;
-    $[3] = t3;
-  } else {
-    t2 = $[2];
-    t3 = $[3];
-  }
-  useEffect(t2, t3);
-  return "ok";
-}
+## Error
 
 ```
+   5 |     // Create the reassignment function inside another function, then return it
+   6 |     const reassignLocal = newValue => {
+>  7 |       local = newValue;
+     |       ^^^^^ InvalidReact: Reassigning a variable after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead. Variable `local` cannot be reassigned after render (7:7)
+   8 |     };
+   9 |     return reassignLocal;
+  10 |   };
+```
+          
       
