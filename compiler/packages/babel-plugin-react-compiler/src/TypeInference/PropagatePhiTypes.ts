@@ -25,9 +25,11 @@ import {HIRFunction, Type, typeEquals} from '../HIR';
 export function propagatePhiTypes(fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
-      // We replicate the previous LeaveSSA behavior and only propagate types for
-      // unnamed variables. LeaveSSA would have chosen one of the operands as the
-      // canonical id and taken its type as the type of all identifiers
+      /*
+       * We replicate the previous LeaveSSA behavior and only propagate types for
+       * unnamed variables. LeaveSSA would have chosen one of the operands as the
+       * canonical id and taken its type as the type of all identifiers
+       */
       if (phi.id.type.kind !== 'Type' || phi.id.name !== null) {
         continue;
       }
