@@ -26,6 +26,7 @@ import {
   ElementTypeSuspense,
   ElementTypeSuspenseList,
   ElementTypeTracingMarker,
+  ElementTypeVirtual,
   StrictMode,
 } from 'react-devtools-shared/src/frontend/types';
 import {
@@ -134,7 +135,7 @@ import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
 // Kinds
 const FIBER_INSTANCE = 0;
-// const VIRTUAL_INSTANCE = 1;
+const VIRTUAL_INSTANCE = 1;
 
 // Flags
 const FORCE_SUSPENSE_FALLBACK = /*    */ 0b001;
@@ -196,6 +197,24 @@ type VirtualInstance = {
   // same info can appear in more than once ServerComponentInstance.
   data: ReactComponentInfo,
 };
+
+function createVirtualInstance(
+  debugEntry: ReactComponentInfo,
+): VirtualInstance {
+  return {
+    kind: VIRTUAL_INSTANCE,
+    id: getUID(),
+    parent: null,
+    firstChild: null,
+    previousSibling: null,
+    nextSibling: null,
+    flags: 0,
+    componentStack: null,
+    errors: null,
+    warnings: null,
+    data: debugEntry,
+  };
+}
 
 type DevToolsInstance = FiberInstance | VirtualInstance;
 
@@ -2081,20 +2100,21 @@ export function attach(
       debug('recordMount()', fiber, parentInstance);
     }
 
-    const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
 
-    // Adding a new field here would require a bridge protocol version bump (a backwads breaking change).
-    // Instead let's re-purpose a pre-existing field to carry more information.
-    let profilingFlags = 0;
-    if (isProfilingSupported) {
-      profilingFlags = PROFILING_FLAG_BASIC_SUPPORT;
-      if (typeof injectProfilingHooks === 'function') {
-        profilingFlags |= PROFILING_FLAG_TIMELINE_SUPPORT;
-      }
-    }
-
     if (isRoot) {
+      const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
+
+      // Adding a new field here would require a bridge protocol version bump (a backwads breaking change).
+      // Instead let's re-purpose a pre-existing field to carry more information.
+      let profilingFlags = 0;
+      if (isProfilingSupported) {
+        profilingFlags = PROFILING_FLAG_BASIC_SUPPORT;
+        if (typeof injectProfilingHooks === 'function') {
+          profilingFlags |= PROFILING_FLAG_TIMELINE_SUPPORT;
+        }
+      }
+
       // Set supportsStrictMode to false for production renderer builds
       const isProductionBuildOfRenderer = renderer.bundleType === 0;
 
@@ -2182,6 +2202,48 @@ export function attach(
       recordProfilingDurations(fiber);
     }
     return fiberInstance;
+  }
+
+  function recordVirtualMount(
+    instance: VirtualInstance,
+    parentInstance: DevToolsInstance | null,
+  ): void {
+    const id = instance.id;
+
+    idToDevToolsInstanceMap.set(id, instance);
+
+    const isProfilingSupported = false; // TODO: Support Tree Base Duration Based on Children.
+
+    const key = null; // TODO: Track keys on ReactComponentInfo;
+    const displayName = instance.data.name || '';
+    const elementType = ElementTypeVirtual;
+    // TODO: Support Virtual Owners. To do this we need to find a matching
+    // virtual instance which is not a super cheap parent traversal and so
+    // we should ideally only do that lazily. We should maybe change the
+    // frontend to get it lazily.
+    const ownerID: number = 0;
+    const parentID = parentInstance ? parentInstance.id : 0;
+
+    const displayNameStringID = getStringID(displayName);
+
+    // This check is a guard to handle a React element that has been modified
+    // in such a way as to bypass the default stringification of the "key" property.
+    const keyString = key === null ? null : String(key);
+    const keyStringID = getStringID(keyString);
+
+    pushOperation(TREE_OPERATION_ADD);
+    pushOperation(id);
+    pushOperation(elementType);
+    pushOperation(parentID);
+    pushOperation(ownerID);
+    pushOperation(displayNameStringID);
+    pushOperation(keyStringID);
+
+    if (isProfilingSupported) {
+      idToRootMap.set(id, currentRootID);
+      // TODO: Include tree base duration of children somehow.
+      // recordProfilingDurations(...);
+    }
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
@@ -2302,17 +2364,126 @@ export function attach(
     }
   }
 
-  function mountChildrenRecursively(
+  function mountVirtualInstanceRecursively(
+    virtualInstance: VirtualInstance,
     firstChild: Fiber,
+    lastChild: null | Fiber, // non-inclusive
     traceNearestHostComponentUpdate: boolean,
+    virtualLevel: number, // the nth level of virtual instances
+  ): void {
+    const stashedParent = reconcilingParent;
+    const stashedPrevious = previouslyReconciledSibling;
+    const stashedRemaining = remainingReconcilingChildren;
+    // Push a new DevTools instance parent while reconciling this subtree.
+    reconcilingParent = virtualInstance;
+    previouslyReconciledSibling = null;
+    remainingReconcilingChildren = null;
+    try {
+      mountVirtualChildrenRecursively(
+        firstChild,
+        lastChild,
+        traceNearestHostComponentUpdate,
+        virtualLevel + 1,
+      );
+    } finally {
+      reconcilingParent = stashedParent;
+      previouslyReconciledSibling = stashedPrevious;
+      remainingReconcilingChildren = stashedRemaining;
+    }
+  }
+
+  function mountVirtualChildrenRecursively(
+    firstChild: Fiber,
+    lastChild: null | Fiber, // non-inclusive
+    traceNearestHostComponentUpdate: boolean,
+    virtualLevel: number, // the nth level of virtual instances
   ): void {
     // Iterate over siblings rather than recursing.
     // This reduces the chance of stack overflow for wide trees (e.g. lists with many items).
     let fiber: Fiber | null = firstChild;
-    while (fiber !== null) {
-      mountFiberRecursively(fiber, traceNearestHostComponentUpdate);
+    let previousVirtualInstance: null | VirtualInstance = null;
+    let previousVirtualInstanceFirstFiber: Fiber = firstChild;
+    while (fiber !== null && fiber !== lastChild) {
+      let level = 0;
+      if (fiber._debugInfo) {
+        for (let i = 0; i < fiber._debugInfo.length; i++) {
+          const debugEntry = fiber._debugInfo[i];
+          if (typeof debugEntry.name !== 'string') {
+            // Not a Component. Some other Debug Info.
+            continue;
+          }
+          const componentInfo: ReactComponentInfo = (debugEntry: any);
+          if (level === virtualLevel) {
+            if (
+              previousVirtualInstance === null ||
+              // Consecutive children with the same debug entry as a parent gets
+              // treated as if they share the same virtual instance.
+              previousVirtualInstance.data !== debugEntry
+            ) {
+              if (previousVirtualInstance !== null) {
+                // Mount any previous children that should go into the previous parent.
+                mountVirtualInstanceRecursively(
+                  previousVirtualInstance,
+                  previousVirtualInstanceFirstFiber,
+                  fiber,
+                  traceNearestHostComponentUpdate,
+                  virtualLevel,
+                );
+              }
+              previousVirtualInstance = createVirtualInstance(componentInfo);
+              recordVirtualMount(previousVirtualInstance, reconcilingParent);
+              insertChild(previousVirtualInstance);
+              previousVirtualInstanceFirstFiber = fiber;
+            }
+            level++;
+            break;
+          } else {
+            level++;
+          }
+        }
+      }
+      if (level === virtualLevel) {
+        if (previousVirtualInstance !== null) {
+          // If we were working on a virtual instance and this is not a virtual
+          // instance, then we end the sequence and mount any previous children
+          // that should go into the previous virtual instance.
+          mountVirtualInstanceRecursively(
+            previousVirtualInstance,
+            previousVirtualInstanceFirstFiber,
+            fiber,
+            traceNearestHostComponentUpdate,
+            virtualLevel,
+          );
+          previousVirtualInstance = null;
+        }
+        // We've reached the end of the virtual levels, but not beyond,
+        // and now continue with the regular fiber.
+        mountFiberRecursively(fiber, traceNearestHostComponentUpdate);
+      }
       fiber = fiber.sibling;
     }
+    if (previousVirtualInstance !== null) {
+      // Mount any previous children that should go into the previous parent.
+      mountVirtualInstanceRecursively(
+        previousVirtualInstance,
+        previousVirtualInstanceFirstFiber,
+        null,
+        traceNearestHostComponentUpdate,
+        virtualLevel,
+      );
+    }
+  }
+
+  function mountChildrenRecursively(
+    firstChild: Fiber,
+    traceNearestHostComponentUpdate: boolean,
+  ): void {
+    mountVirtualChildrenRecursively(
+      firstChild,
+      null,
+      traceNearestHostComponentUpdate,
+      0, // first level
+    );
   }
 
   function mountFiberRecursively(
