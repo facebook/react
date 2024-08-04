@@ -1258,7 +1258,7 @@ export function promoteTemporary(identifier: Identifier): void {
   });
   identifier.name = {
     kind: 'promoted',
-    value: `#t${identifier.id}`,
+    value: `#t${identifier.declarationId}`,
   };
 }
 
@@ -1279,7 +1279,7 @@ export function promoteTemporaryJsxTag(identifier: Identifier): void {
   });
   identifier.name = {
     kind: 'promoted',
-    value: `#T${identifier.id}`,
+    value: `#T${identifier.declarationId}`,
   };
 }
 

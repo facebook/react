@@ -14,6 +14,7 @@ import {
   Place,
   PrunedReactiveScopeBlock,
   ReactiveFunction,
+  ReactiveScope,
   ReactiveScopeBlock,
   ReactiveValue,
   ScopeId,
@@ -109,6 +110,43 @@ class Visitor2 extends ReactiveFunctionVisitor<State> {
     _state: State,
   ): void {
     this.visitPlace(_id, _lvalue, _state);
+  }
+  traverseScopeIdentifiers(scope: ReactiveScope, state: State): void {
+    for (const [, decl] of scope.declarations) {
+      if (
+        decl.identifier.name === null &&
+        state.promoted.has(decl.identifier.declarationId)
+      ) {
+        promoteIdentifier(decl.identifier, state);
+      }
+    }
+    for (const dep of scope.dependencies) {
+      if (
+        dep.identifier.name === null &&
+        state.promoted.has(dep.identifier.declarationId)
+      ) {
+        promoteIdentifier(dep.identifier, state);
+      }
+    }
+    for (const reassignment of scope.reassignments) {
+      if (
+        reassignment.name === null &&
+        state.promoted.has(reassignment.declarationId)
+      ) {
+        promoteIdentifier(reassignment, state);
+      }
+    }
+  }
+  override visitScope(scope: ReactiveScopeBlock, state: State): void {
+    this.traverseScope(scope, state);
+    this.traverseScopeIdentifiers(scope.scope, state);
+  }
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: State,
+  ): void {
+    this.traversePrunedScope(scopeBlock, state);
+    this.traverseScopeIdentifiers(scopeBlock.scope, state);
   }
   override visitReactiveFunctionValue(
     _id: InstructionId,
