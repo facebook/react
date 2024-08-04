@@ -2631,6 +2631,7 @@ export function attach(
     previouslyReconciledSibling = null;
     // Move all the children of this instance to the remaining set.
     remainingReconcilingChildren = instance.firstChild;
+    instance.firstChild = null;
     try {
       // Unmount the remaining set.
       unmountRemainingChildren();
@@ -2751,57 +2752,195 @@ export function attach(
     }
   }
 
-  // Returns whether closest unfiltered fiber parent needs to reset its child list.
-  function updateChildrenRecursively(
-    nextFirstChild: null | Fiber,
+  function updateVirtualInstanceRecursively(
+    virtualInstance: VirtualInstance,
+    nextFirstChild: Fiber,
+    nextLastChild: null | Fiber, // non-inclusive
     prevFirstChild: null | Fiber,
     traceNearestHostComponentUpdate: boolean,
+    virtualLevel: number, // the nth level of virtual instances
+  ): void {
+    const stashedParent = reconcilingParent;
+    const stashedPrevious = previouslyReconciledSibling;
+    const stashedRemaining = remainingReconcilingChildren;
+    // Push a new DevTools instance parent while reconciling this subtree.
+    reconcilingParent = virtualInstance;
+    previouslyReconciledSibling = null;
+    // Move all the children of this instance to the remaining set.
+    // We'll move them back one by one, and anything that remains is deleted.
+    remainingReconcilingChildren = virtualInstance.firstChild;
+    virtualInstance.firstChild = null;
+    try {
+      if (
+        updateVirtualChildrenRecursively(
+          nextFirstChild,
+          nextLastChild,
+          prevFirstChild,
+          traceNearestHostComponentUpdate,
+          virtualLevel + 1,
+        )
+      ) {
+        recordResetChildren(virtualInstance);
+      }
+    } finally {
+      unmountRemainingChildren();
+      reconcilingParent = stashedParent;
+      previouslyReconciledSibling = stashedPrevious;
+      remainingReconcilingChildren = stashedRemaining;
+    }
+  }
+
+  function updateVirtualChildrenRecursively(
+    nextFirstChild: Fiber,
+    nextLastChild: null | Fiber, // non-inclusive
+    prevFirstChild: null | Fiber,
+    traceNearestHostComponentUpdate: boolean,
+    virtualLevel: number, // the nth level of virtual instances
   ): boolean {
     let shouldResetChildren = false;
     // If the first child is different, we need to traverse them.
     // Each next child will be either a new child (mount) or an alternate (update).
-    let nextChild = nextFirstChild;
+    let nextChild: null | Fiber = nextFirstChild;
     let prevChildAtSameIndex = prevFirstChild;
-    while (nextChild) {
-      // We already know children will be referentially different because
-      // they are either new mounts or alternates of previous children.
-      // Schedule updates and mounts depending on whether alternates exist.
-      // We don't track deletions here because they are reported separately.
-      if (prevChildAtSameIndex === nextChild) {
-        // This set is unchanged. We're just going through it to place all the
-        // children again.
-        if (
-          updateFiberRecursively(
-            nextChild,
-            nextChild,
-            traceNearestHostComponentUpdate,
-          )
-        ) {
-          throw new Error('Updating the same fiber should not cause reorder');
+    let previousVirtualInstance: null | VirtualInstance = null;
+    let previousVirtualInstanceWasMount: boolean = false;
+    let previousVirtualInstanceNextFirstFiber: Fiber = nextFirstChild;
+    let previousVirtualInstancePrevFirstFiber: null | Fiber = prevFirstChild;
+    while (nextChild !== null && nextChild !== nextLastChild) {
+      let level = 0;
+      if (nextChild._debugInfo) {
+        for (let i = 0; i < nextChild._debugInfo.length; i++) {
+          const debugEntry = nextChild._debugInfo[i];
+          if (typeof debugEntry.name !== 'string') {
+            // Not a Component. Some other Debug Info.
+            continue;
+          }
+          const componentInfo: ReactComponentInfo = (debugEntry: any);
+          if (level === virtualLevel) {
+            if (
+              previousVirtualInstance === null ||
+              // Consecutive children with the same debug entry as a parent gets
+              // treated as if they share the same virtual instance.
+              previousVirtualInstance.data !== componentInfo
+            ) {
+              if (previousVirtualInstance !== null) {
+                // Mount any previous children that should go into the previous parent.
+                if (previousVirtualInstanceWasMount) {
+                  mountVirtualInstanceRecursively(
+                    previousVirtualInstance,
+                    previousVirtualInstanceNextFirstFiber,
+                    nextChild,
+                    traceNearestHostComponentUpdate,
+                    virtualLevel,
+                  );
+                } else {
+                  updateVirtualInstanceRecursively(
+                    previousVirtualInstance,
+                    previousVirtualInstanceNextFirstFiber,
+                    nextChild,
+                    previousVirtualInstancePrevFirstFiber,
+                    traceNearestHostComponentUpdate,
+                    virtualLevel,
+                  );
+                }
+              }
+              const firstRemainingChild = remainingReconcilingChildren;
+              if (
+                firstRemainingChild !== null &&
+                firstRemainingChild.kind === VIRTUAL_INSTANCE &&
+                firstRemainingChild.data.name === componentInfo.name
+              ) {
+                // If the previous children had a virtual instance in the same slot
+                // with the same name, then we claim it and reuse it for this update.
+                // Update it with the latest entry.
+                firstRemainingChild.data = componentInfo;
+                moveChild(firstRemainingChild);
+                previousVirtualInstance = firstRemainingChild;
+                previousVirtualInstanceWasMount = false;
+              } else {
+                // Otherwise we create a new instance.
+                const newVirtualInstance = createVirtualInstance(componentInfo);
+                recordVirtualMount(newVirtualInstance, reconcilingParent);
+                insertChild(newVirtualInstance);
+                previousVirtualInstance = newVirtualInstance;
+                previousVirtualInstanceWasMount = true;
+                shouldResetChildren = true;
+              }
+              // Existing children might be reparented into this new virtual instance.
+              // TODO: This will cause the front end to error which needs to be fixed.
+              previousVirtualInstanceNextFirstFiber = nextChild;
+              previousVirtualInstancePrevFirstFiber = prevChildAtSameIndex;
+            }
+            level++;
+            break;
+          } else {
+            level++;
+          }
         }
-      } else if (nextChild.alternate) {
-        const prevChild = nextChild.alternate;
-        if (
-          updateFiberRecursively(
-            nextChild,
-            prevChild,
-            traceNearestHostComponentUpdate,
-          )
-        ) {
-          // If a nested tree child order changed but it can't handle its own
-          // child order invalidation (e.g. because it's filtered out like host nodes),
-          // propagate the need to reset child order upwards to this Fiber.
+      }
+      if (level === virtualLevel) {
+        if (previousVirtualInstance !== null) {
+          // If we were working on a virtual instance and this is not a virtual
+          // instance, then we end the sequence and update any previous children
+          // that should go into the previous virtual instance.
+          if (previousVirtualInstanceWasMount) {
+            mountVirtualInstanceRecursively(
+              previousVirtualInstance,
+              previousVirtualInstanceNextFirstFiber,
+              nextChild,
+              traceNearestHostComponentUpdate,
+              virtualLevel,
+            );
+          } else {
+            updateVirtualInstanceRecursively(
+              previousVirtualInstance,
+              previousVirtualInstanceNextFirstFiber,
+              nextChild,
+              previousVirtualInstancePrevFirstFiber,
+              traceNearestHostComponentUpdate,
+              virtualLevel,
+            );
+          }
+          previousVirtualInstance = null;
+        }
+        // We've reached the end of the virtual levels, but not beyond,
+        // and now continue with the regular fiber.
+        if (prevChildAtSameIndex === nextChild) {
+          // This set is unchanged. We're just going through it to place all the
+          // children again.
+          if (
+            updateFiberRecursively(
+              nextChild,
+              nextChild,
+              traceNearestHostComponentUpdate,
+            )
+          ) {
+            throw new Error('Updating the same fiber should not cause reorder');
+          }
+        } else if (nextChild.alternate) {
+          const prevChild = nextChild.alternate;
+          if (
+            updateFiberRecursively(
+              nextChild,
+              prevChild,
+              traceNearestHostComponentUpdate,
+            )
+          ) {
+            // If a nested tree child order changed but it can't handle its own
+            // child order invalidation (e.g. because it's filtered out like host nodes),
+            // propagate the need to reset child order upwards to this Fiber.
+            shouldResetChildren = true;
+          }
+          // However we also keep track if the order of the children matches
+          // the previous order. They are always different referentially, but
+          // if the instances line up conceptually we'll want to know that.
+          if (prevChild !== prevChildAtSameIndex) {
+            shouldResetChildren = true;
+          }
+        } else {
+          mountFiberRecursively(nextChild, traceNearestHostComponentUpdate);
           shouldResetChildren = true;
         }
-        // However we also keep track if the order of the children matches
-        // the previous order. They are always different referentially, but
-        // if the instances line up conceptually we'll want to know that.
-        if (prevChild !== prevChildAtSameIndex) {
-          shouldResetChildren = true;
-        }
-      } else {
-        mountFiberRecursively(nextChild, traceNearestHostComponentUpdate);
-        shouldResetChildren = true;
       }
       // Try the next child.
       nextChild = nextChild.sibling;
@@ -2811,11 +2950,49 @@ export function attach(
         prevChildAtSameIndex = prevChildAtSameIndex.sibling;
       }
     }
+    if (previousVirtualInstance !== null) {
+      if (previousVirtualInstanceWasMount) {
+        mountVirtualInstanceRecursively(
+          previousVirtualInstance,
+          previousVirtualInstanceNextFirstFiber,
+          null,
+          traceNearestHostComponentUpdate,
+          virtualLevel,
+        );
+      } else {
+        updateVirtualInstanceRecursively(
+          previousVirtualInstance,
+          previousVirtualInstanceNextFirstFiber,
+          null,
+          previousVirtualInstancePrevFirstFiber,
+          traceNearestHostComponentUpdate,
+          virtualLevel,
+        );
+      }
+    }
     // If we have no more children, but used to, they don't line up.
     if (prevChildAtSameIndex !== null) {
       shouldResetChildren = true;
     }
     return shouldResetChildren;
+  }
+
+  // Returns whether closest unfiltered fiber parent needs to reset its child list.
+  function updateChildrenRecursively(
+    nextFirstChild: null | Fiber,
+    prevFirstChild: null | Fiber,
+    traceNearestHostComponentUpdate: boolean,
+  ): boolean {
+    if (nextFirstChild === null) {
+      return prevFirstChild !== null;
+    }
+    return updateVirtualChildrenRecursively(
+      nextFirstChild,
+      null,
+      prevFirstChild,
+      traceNearestHostComponentUpdate,
+      0,
+    );
   }
 
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
