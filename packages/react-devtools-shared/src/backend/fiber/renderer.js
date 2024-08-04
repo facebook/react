@@ -2323,6 +2323,15 @@ export function attach(
 
   function removeChild(instance: DevToolsInstance): void {
     if (instance.parent === null) {
+      if (remainingReconcilingChildren === instance) {
+        throw new Error(
+          'Remaining children should not have items with no parent',
+        );
+      } else if (instance.nextSibling !== null) {
+        throw new Error('A deleted instance should not have previous siblings');
+      } else if (instance.previousSibling !== null) {
+        throw new Error('A deleted instance should not have previous siblings');
+      }
       // Already deleted.
       return;
     }
@@ -2389,6 +2398,22 @@ export function attach(
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
       remainingReconcilingChildren = stashedRemaining;
+    }
+  }
+
+  function recordVirtualUnmount(instance: VirtualInstance) {
+    if (trackedPathMatchFiber !== null) {
+      // We're in the process of trying to restore previous selection.
+      // TODO: Handle virtual instances on the tracked path.
+    }
+
+    const id = instance.id;
+    pendingRealUnmountedIDs.push(id);
+
+    const isProfilingSupported = false; // TODO: Profiling support.
+    if (isProfilingSupported) {
+      idToRootMap.delete(id);
+      idToTreeBaseDurationMap.delete(id);
     }
   }
 
@@ -2616,6 +2641,8 @@ export function attach(
     }
     if (instance.kind === FIBER_INSTANCE) {
       recordUnmount(instance);
+    } else {
+      recordVirtualUnmount(instance);
     }
     removeChild(instance);
   }
