@@ -41,7 +41,7 @@ import {
   createResumableState,
   createRenderState,
   createRootFormatContext,
-} from './ReactFizzConfigHTML';
+} from './ReactFizzConfigMarkup';
 
 type ReactMarkupNodeList =
   // This is the intersection of ReactNodeList and ReactClientValue minus

@@ -1,17 +1,17 @@
-# `react-html`
+# `react-markup`
 
 This package provides the ability to render standalone HTML from Server Components for use in embedded contexts such as e-mails and RSS/Atom feeds. It cannot use Client Components and does not hydrate. It is intended to be paired with the generic React package, which is shipped as `react` to npm.
 
 ## Installation
 
 ```sh
-npm install react react-html
+npm install react react-markup
 ```
 
 ## Usage
 
 ```js
-import { renderToMarkup } from 'react-html';
+import { renderToMarkup } from 'react-markup';
 import EmailTemplate from './my-email-template-component.js'
 
 async function action(email, name) {
@@ -27,6 +27,6 @@ Note that this is an async function that needs to be awaited - unlike the legacy
 
 ## API
 
-### `react-html`
+### `react-markup`
 
-See https://react.dev/reference/react-html
+See https://react.dev/reference/react-markup
