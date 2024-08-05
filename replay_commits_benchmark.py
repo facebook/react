@@ -706,6 +706,8 @@ def compute_metrics(sanitized_metrics):
     """
     computed = {}
 
+    print(f"Vendors in sanitized metrics: {sanitized_metrics.keys()}")  # Debug
+
     with ThreadPoolExecutor() as executor:
         futures = {}
         if 'circleci' in sanitized_metrics:
@@ -750,6 +752,7 @@ def compute_github_metrics(github_metrics):
     :param github_metrics: Dict of GitHub sanitized metrics
     :return: Dict of computed GitHub metrics
     """
+    print(f'Processing GitHub metrics: {github_metrics}')  # Debug
     workflow = github_metrics['workflow']
     jobs = github_metrics['jobs']
 
