@@ -98,6 +98,7 @@ import {
 } from '../Validation';
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
+import {validateUseEffectDependencies} from '../Validation/ValidateUseEffectDependencies';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -483,6 +484,8 @@ function* runWithEnvironment(
   ) {
     validatePreservedManualMemoization(reactiveFunction);
   }
+
+  validateUseEffectDependencies(reactiveFunction);
 
   const ast = codegenFunction(reactiveFunction, {
     uniqueIdentifiers,
