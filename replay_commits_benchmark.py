@@ -713,11 +713,12 @@ def compute_metrics(sanitized_metrics):
         if 'github' in sanitized_metrics:
             futures["github"] = [executor.submit(compute_github_metrics, item) for item in sanitized_metrics.get('github')]
         for vendor, futures_list in futures.items():
-            computed[vendor] = []
+            computed[vendor] = {'workflow': {}, 'jobs': []}
             for future in futures_list:
                 try:
                     computed_result = future.result()
-                    computed[vendor].append(computed_result)
+                    computed[vendor]['workflow'].update(computed_result['workflow'])
+                    computed[vendor]['jobs'].extend(computed_result['jobs'])
                 except Exception as e:
                     LOGGER.error(f"Error computing {vendor} metrics: {e}")
 
