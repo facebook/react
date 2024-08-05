@@ -487,6 +487,8 @@ def collect_circleci_metrics(args, pipeline_id):
     LOGGER.info("Collecting CircleCI metrics...")
     pipeline_url =f"https://circleci.com/api/v2/pipeline/{pipeline_id}"
     headers = {"Circle-Token": args['circleci_token']}
+    params = {"branch": args['branch']}
+
     response = requests.get(pipeline_url, headers=headers)
     response.raise_for_status()
     pipeline = response.json()
@@ -544,6 +546,7 @@ def collect_github_metrics(args, workflow_run_id):
     LOGGER.info("Collecting GitHub metrics...")
     workflow_url = f"https://api.github.com/repos/{args['github_repo_slug']}/actions/runs/{workflow_run_id}"
     headers = {"Authorization": f"token {args['github_token']}"}
+    params = {"branch": args['branch']}
     
     # Collect workflow details
     response = requests.get(workflow_url, headers=headers)
