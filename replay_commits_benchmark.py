@@ -592,11 +592,15 @@ def sanitize_metrics(metrics):
 
 def sanitize_circleci_metrics(circleci_metrics_list):
     result = []
+
+    print(type(circleci_metrics_list))  # Debug: should print <class 'list'> 
+    print(len(circleci_metrics_list))   # Debug: should print the number of dictionaries in the list
+    print(type(circleci_metrics_list[0]))  # Debug: should print <class 'dict'>
     
     for circleci_metrics in circleci_metrics_list:
       print(type(circleci_metrics)) # Debug
       print(circleci_metrics) # Debug
-      print("Workflow Metrics:)")
+      print("Workflow Metrics:")
       print(circleci_metrics['workflow'])
       sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
       workflow = circleci_metrics['workflow']
