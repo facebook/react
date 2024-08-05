@@ -25,7 +25,8 @@ import {
   ANSI_STYLE_DIMMING_TEMPLATE,
   ANSI_STYLE_DIMMING_TEMPLATE_WITH_COMPONENT_STACK,
 } from 'react-devtools-shared/src/constants';
-import {getInternalReactConstants, getDispatcherRef} from './fiber/renderer';
+import getDispatcherRef from 'react-devtools-shared/src/backend/fiber/getDispatcherRef';
+import {getInternalReactConstants} from './fiber/renderer';
 import {
   getStackByFiberInDevAndProd,
   getOwnerStackByFiberInDev,
@@ -227,9 +228,13 @@ export function patch({
           // Search for the first renderer that has a current Fiber.
           // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
           // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-          for (const renderer of injectedRenderers.values()) {
+          for (const [
+            renderer,
+            injectedRendererInterface,
+          ] of injectedRenderers.entries()) {
             const currentDispatcherRef = getDispatcherRef(renderer);
-            const {getCurrentFiber, onErrorOrWarning, workTagMap} = renderer;
+            const {getCurrentFiber, onErrorOrWarning, workTagMap} =
+              injectedRendererInterface;
             const current: ?Fiber = getCurrentFiber();
             if (current != null) {
               try {

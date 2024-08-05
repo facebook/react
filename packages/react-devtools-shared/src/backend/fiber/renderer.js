@@ -122,8 +122,6 @@ import type {
   RendererInterface,
   SerializedElement,
   WorkTagMap,
-  CurrentDispatcherRef,
-  LegacyDispatcherRef,
 } from '../types';
 import type {
   ComponentFilter,
@@ -133,6 +131,7 @@ import type {
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 import getWorkTagMap from 'react-devtools-shared/src/backend/fiber/getWorkTagMap';
+import getDispatcherRef from 'react-devtools-shared/src/backend/fiber/getDispatcherRef';
 
 // Kinds
 const FIBER_INSTANCE = 0;
@@ -203,31 +202,6 @@ type ReactPriorityLevelsType = {
   IdlePriority: number,
   NoPriority: number,
 };
-
-export function getDispatcherRef(renderer: {
-  +currentDispatcherRef?: LegacyDispatcherRef | CurrentDispatcherRef,
-  ...
-}): void | CurrentDispatcherRef {
-  if (renderer.currentDispatcherRef === undefined) {
-    return undefined;
-  }
-  const injectedRef = renderer.currentDispatcherRef;
-  if (
-    typeof injectedRef.H === 'undefined' &&
-    typeof injectedRef.current !== 'undefined'
-  ) {
-    // We got a legacy dispatcher injected, let's create a wrapper proxy to translate.
-    return {
-      get H() {
-        return (injectedRef: any).current;
-      },
-      set H(value) {
-        (injectedRef: any).current = value;
-      },
-    };
-  }
-  return (injectedRef: any);
-}
 
 function getFiberFlags(fiber: Fiber): number {
   // The name of this field changed from "effectTag" to "flags"
