@@ -666,9 +666,9 @@ def sanitize_circleci_metrics(circleci_metrics_list):
             })
             sanitized_jobs.append(sanitized_job)
             
-            result.append({
-              "workflow": sanitized_workflow,
-              "jobs": sanitized_jobs
+        result.append({
+          "workflow": sanitized_workflow,
+          "jobs": sanitized_jobs
           })
     return result
 
@@ -711,9 +711,9 @@ def sanitize_github_metrics(github_metrics_list):
               "job_url": job['html_url'],
               "runner_info": job["labels"][0]
           })
-          result.append({
-            "workflow": sanitized_workflow,
-            "jobs": sanitized_jobs
+      result.append({
+        "workflow": sanitized_workflow,
+        "jobs": sanitized_jobs
         })
     return result
 
