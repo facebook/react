@@ -16,4 +16,4 @@ workflows:
           filters:
             branches: 
               only: 
-                - ^replay-.*
+                - '^replay-.*'
