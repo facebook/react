@@ -573,11 +573,6 @@ def collect_github_metrics(args, workflow_run_id):
         
         # Check if there's a next page
         jobs_url = jobs_response.links.get('next', {}).get('url')
-
-    if jobs:
-        LOGGER.info(f"Collected {len(jobs)} jobs for run ID {workflow_run_id}.")
-    else:
-        LOGGER.warning(f"No jobs were collected for run ID {workflow_run_id}. Check if this is expected.")
     
     return {
         "workflow": workflow,
@@ -721,8 +716,6 @@ def compute_metrics(sanitized_metrics):
     """
     computed = {}
 
-    print(f"Vendors in sanitized metrics: {sanitized_metrics.keys()}")  # Debug
-
     with ThreadPoolExecutor() as executor:
         futures = {}
         if 'circleci' in sanitized_metrics:
@@ -771,7 +764,6 @@ def compute_github_metrics(github_metrics):
     :param github_metrics: Dict of GitHub sanitized metrics
     :return: Dict of computed GitHub metrics
     """
-    print(f'Processing GitHub metrics: {github_metrics}')  # Debug
     workflow = github_metrics['workflow']
     jobs = github_metrics['jobs']
 
