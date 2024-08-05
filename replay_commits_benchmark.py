@@ -457,7 +457,16 @@ def wait_for_github_build(args, workflow_run_id):
     LOGGER.info("GitHub build completed")
 
 def collect_metrics(args, build_ids):
-    metrics = {}
+    metrics = {
+        "circleci": {
+            "workflows": [],
+            "jobs": []
+        },
+        "github": {
+            "workflows": [],
+            "jobs": []
+        }
+    }
   
     if args['circleci_project_slug']:
         metrics["circleci"] = []
@@ -805,9 +814,9 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
     for vendor, metrics in computed_metrics.items():
-        workflow = metrics.get('workflow')
-        values = [workflow.get(header) for header in workflow_headers]
-        append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
+        for workflow in metrics["workflows"]:
+            values = [workflow.get(header) for header in workflow_headers]
+            append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
 
     LOGGER.info("Exported workflow metrics to raw_workflow_data worksheet")
 
@@ -816,8 +825,7 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
     job_headers = list(JOB_TEMPLATE.keys())
 
     for vendor, metrics in computed_metrics.items():
-        jobs = metrics.get('jobs')
-        for job in jobs:
+        for job in metrics["jobs"]:
             values = [job.get(header) for header in job_headers]
             append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
 
