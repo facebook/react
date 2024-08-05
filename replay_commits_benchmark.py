@@ -464,7 +464,7 @@ def collect_metrics(args, build_ids):
         futures = {}
         if args['circleci_project_slug']:
             futures["circleci"] = executor.submit(collect_circleci_metrics, args, build_ids['circleci'])
-        if args['circleci_project_slug'] and args['github_workflow']:
+        if args['circleci_project_slug'] and args['github_repo_slug']:
             futures["github"] = executor.submit(collect_github_metrics, args, build_ids['github'])
 
         for vendor, future in futures.items():
