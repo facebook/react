@@ -2221,7 +2221,12 @@ export function attach(
     const isProfilingSupported = false; // TODO: Support Tree Base Duration Based on Children.
 
     const key = null; // TODO: Track keys on ReactComponentInfo;
-    const displayName = instance.data.name || '';
+    const env = instance.data.env;
+    let displayName = instance.data.name || '';
+    if (typeof env === 'string') {
+      // We model environment as an HoC name for now.
+      displayName = env + '(' + displayName + ')';
+    }
     const elementType = ElementTypeVirtual;
     // TODO: Support Virtual Owners. To do this we need to find a matching
     // virtual instance which is not a super cheap parent traversal and so
