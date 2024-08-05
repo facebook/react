@@ -10,7 +10,7 @@
 'use strict';
 
 let React;
-let ReactHTML;
+let ReactMarkup;
 
 function normalizeCodeLocInfo(str) {
   return (
@@ -24,18 +24,18 @@ function normalizeCodeLocInfo(str) {
 if (!__EXPERIMENTAL__) {
   it('should not be built in stable', () => {
     try {
-      require('react-html');
+      require('react-markup');
     } catch (x) {
       return;
     }
-    throw new Error('Expected react-html not to exist in stable.');
+    throw new Error('Expected react-markup not to exist in stable.');
   });
 } else {
-  describe('ReactHTML', () => {
+  describe('ReactMarkup', () => {
     beforeEach(() => {
       jest.resetModules();
       React = require('react');
-      ReactHTML = require('react-html');
+      ReactMarkup = require('react-markup');
     });
 
     it('should be able to render a simple component', async () => {
@@ -43,7 +43,7 @@ if (!__EXPERIMENTAL__) {
         return <div>hello world</div>;
       }
 
-      const html = await ReactHTML.renderToMarkup(<Component />);
+      const html = await ReactMarkup.renderToMarkup(<Component />);
       expect(html).toBe('<div>hello world</div>');
     });
 
@@ -52,14 +52,14 @@ if (!__EXPERIMENTAL__) {
         return <div>{'hello '.repeat(200)}world</div>;
       }
 
-      const html = await ReactHTML.renderToMarkup(
+      const html = await ReactMarkup.renderToMarkup(
         React.createElement(Component),
       );
       expect(html).toBe('<div>' + ('hello '.repeat(200) + 'world') + '</div>');
     });
 
     it('should prefix html tags with a doctype', async () => {
-      const html = await ReactHTML.renderToMarkup(
+      const html = await ReactMarkup.renderToMarkup(
         <html>
           <body>hello</body>
         </html>,
@@ -76,7 +76,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactHTML.renderToMarkup(<Component />);
+        await ReactMarkup.renderToMarkup(<Component />);
       }).rejects.toThrow();
     });
 
@@ -87,7 +87,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactHTML.renderToMarkup(<Component />);
+        await ReactMarkup.renderToMarkup(<Component />);
       }).rejects.toThrow();
     });
 
@@ -100,7 +100,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactHTML.renderToMarkup(<Component />);
+        await ReactMarkup.renderToMarkup(<Component />);
       }).rejects.toThrow();
     });
 
@@ -142,7 +142,7 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const html = await ReactHTML.renderToMarkup(<Component />);
+      const html = await ReactMarkup.renderToMarkup(<Component />);
       const container = document.createElement('div');
       container.innerHTML = html;
 
@@ -176,7 +176,7 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const html = await ReactHTML.renderToMarkup(<Component />);
+      const html = await ReactMarkup.renderToMarkup(<Component />);
       expect(html).toBe('<div>01</div>');
     });
 
@@ -199,7 +199,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactHTML.renderToMarkup(
+        await ReactMarkup.renderToMarkup(
           <div>
             <Foo />
           </div>,

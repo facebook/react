@@ -23,7 +23,7 @@ import {
   createResumableState,
   createRenderState,
   createRootFormatContext,
-} from './ReactFizzConfigHTML';
+} from './ReactFizzConfigMarkup';
 
 type MarkupOptions = {
   identifierPrefix?: string,

@@ -444,14 +444,14 @@ module.exports = [
   {
     shortName: 'markup',
     entryPoints: [
-      'react-html/src/ReactHTMLClient.js', // react-html
-      'react-html/src/ReactHTMLServer.js', // react-html/react-html.react-server
+      'react-markup/src/ReactMarkupClient.js', // react-markup
+      'react-markup/src/ReactMarkupServer.js', // react-markup/react-markup.react-server
     ],
     paths: [
       'react-dom',
       'react-dom/src/ReactDOMReactServer.js',
       'react-dom-bindings',
-      'react-html',
+      'react-markup',
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,

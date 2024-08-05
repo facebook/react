@@ -13,7 +13,7 @@ global.TextDecoder = require('util').TextDecoder;
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
-let ReactHTML;
+let ReactMarkup;
 
 function normalizeCodeLocInfo(str) {
   return (
@@ -27,34 +27,34 @@ function normalizeCodeLocInfo(str) {
 if (!__EXPERIMENTAL__) {
   it('should not be built in stable', () => {
     try {
-      require('react-html');
+      require('react-markup');
     } catch (x) {
       return;
     }
-    throw new Error('Expected react-html not to exist in stable.');
+    throw new Error('Expected react-markup not to exist in stable.');
   });
 } else {
-  describe('ReactHTML', () => {
+  describe('ReactMarkup', () => {
     beforeEach(() => {
       jest.resetModules();
       // We run in the react-server condition.
       jest.mock('react', () => require('react/react.react-server'));
       if (__EXPERIMENTAL__) {
-        jest.mock('react-html', () =>
-          require('react-html/react-html.react-server'),
+        jest.mock('react-markup', () =>
+          require('react-markup/react-markup.react-server'),
         );
       }
 
       React = require('react');
       if (__EXPERIMENTAL__) {
-        ReactHTML = require('react-html');
+        ReactMarkup = require('react-markup');
       } else {
         try {
-          require('react-html/react-html.react-server');
+          require('react-markup/react-markup.react-server');
         } catch (x) {
           return;
         }
-        throw new Error('Expected react-html not to exist in stable.');
+        throw new Error('Expected react-markup not to exist in stable.');
       }
     });
 
@@ -64,7 +64,7 @@ if (!__EXPERIMENTAL__) {
         return React.createElement('div', null, 'hello world');
       }
 
-      const html = await ReactHTML.renderToMarkup(
+      const html = await ReactMarkup.renderToMarkup(
         React.createElement(Component),
       );
       expect(html).toBe('<div>hello world</div>');
@@ -76,14 +76,14 @@ if (!__EXPERIMENTAL__) {
         return React.createElement('div', null, 'hello '.repeat(200) + 'world');
       }
 
-      const html = await ReactHTML.renderToMarkup(
+      const html = await ReactMarkup.renderToMarkup(
         React.createElement(Component),
       );
       expect(html).toBe('<div>' + ('hello '.repeat(200) + 'world') + '</div>');
     });
 
     it('should prefix html tags with a doctype', async () => {
-      const html = await ReactHTML.renderToMarkup(
+      const html = await ReactMarkup.renderToMarkup(
         // We can't use JSX because that's client-JSX in our tests.
         React.createElement(
           'html',
@@ -104,7 +104,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactHTML.renderToMarkup(React.createElement(Component));
+        await ReactMarkup.renderToMarkup(React.createElement(Component));
       }).rejects.toThrow();
     });
 
@@ -116,7 +116,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactHTML.renderToMarkup(React.createElement(Component));
+        await ReactMarkup.renderToMarkup(React.createElement(Component));
       }).rejects.toThrow();
     });
 
@@ -130,7 +130,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactHTML.renderToMarkup(React.createElement(Component));
+        await ReactMarkup.renderToMarkup(React.createElement(Component));
       }).rejects.toThrow();
     });
 
@@ -173,7 +173,7 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const html = await ReactHTML.renderToMarkup(
+      const html = await ReactMarkup.renderToMarkup(
         React.createElement(Component),
       );
       const container = document.createElement('div');
@@ -204,7 +204,7 @@ if (!__EXPERIMENTAL__) {
         return React.createElement('div', null, a, b);
       }
 
-      const html = await ReactHTML.renderToMarkup(
+      const html = await ReactMarkup.renderToMarkup(
         React.createElement(Component),
       );
       expect(html).toBe('<div>00</div>');
@@ -225,7 +225,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactHTML.renderToMarkup(
+        await ReactMarkup.renderToMarkup(
           React.createElement('div', null, React.createElement(Foo)),
           {
             onError(error, errorInfo) {
