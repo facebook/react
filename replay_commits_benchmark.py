@@ -347,9 +347,9 @@ def push_commits_one_by_one(args, repo, commits):
         time.sleep(args['commit_delay'])
 
     # Delete the branch after all commits have been pushed
-    # repo.git.checkout("main")
-    # repo.git.branch("-D", branch)
-    # repo.remotes.origin.push(refspec=f":{branch}")
+    repo.git.checkout("main")
+    repo.git.branch("-D", branch)
+    repo.remotes.origin.push(refspec=f":{branch}")
 
     return branch
 
