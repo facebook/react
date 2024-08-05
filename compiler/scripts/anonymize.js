@@ -14,6 +14,7 @@ const BabelCore = require('@babel/core');
 const invariant = require('invariant');
 const {argv, stdin} = require('process');
 const prettier = require('prettier');
+const {JSXText} = require('hermes-parser/dist/generated/ESTreeVisitorKeys');
 
 function runPlugin(text, file, language) {
   let ast;
@@ -103,9 +104,26 @@ function AnonymizePlugin(_babel) {
             name.slice(0, 1).toUpperCase() === name.slice(0, 1);
           const prefix = isCapitalized ? 'V' : 'v';
           nextName = `${prefix}${(index++).toString(16)}`;
+          if (name.startsWith('use')) {
+            nextName =
+              'use' + nextName.slice(0, 1).toUpperCase() + nextName.slice(1);
+          }
           identifiers.set(name, nextName);
         }
         path.node.name = nextName;
+      },
+      JSXText(path) {
+        const value = path.node.value;
+        let nextValue = literals.get(value);
+        if (nextValue == null) {
+          let string = '';
+          while (string.length < value.length) {
+            string += String.fromCharCode(Math.round(Math.random() * 25) + 97);
+          }
+          nextValue = string;
+          literals.set(value, nextValue);
+        }
+        path.node.value = nextValue;
       },
       StringLiteral(path) {
         const value = path.node.value;
