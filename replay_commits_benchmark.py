@@ -764,6 +764,8 @@ def compute_github_metrics(github_metrics):
         job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
         computed_jobs.append(job)
 
+        print(f'Computed {len(computed_jobs)} GitHub jobs.')  # Debug
+
     return {'workflow': workflow, 'jobs': computed_jobs}
 
 def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64):
@@ -786,24 +788,27 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
     gc = gspread.service_account()
     sh = gc.open_by_key(google_sheet_id)
 
+    # Export workflow metrics to raw_workflow_data worksheet
     raw_workflow_data = sh.worksheet("raw_workflow_data")
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
+    for vendor, metrics in computed_metrics.items():
+        workflow = metrics.get('workflow')
+        values = [workflow.get(header) for header in workflow_headers]
+        append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
+
+    LOGGER.info("Exported workflow metrics to raw_workflow_data worksheet")
+
+    # Export job metrics to raw_job_data worksheet
     raw_job_data = sh.worksheet("raw_job_data")
     job_headers = list(JOB_TEMPLATE.keys())
 
-    for vendor, metrics_list in computed_metrics.items():
-        for metrics in metrics_list:
-            workflow = metrics.get('workflow')
-            values = [workflow.get(header) for header in workflow_headers]
-            append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
+    for vendor, metrics in computed_metrics.items():
+        jobs = metrics.get('jobs')
+        for job in jobs:
+            values = [job.get(header) for header in job_headers]
+            append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
 
-            jobs = metrics.get('jobs')
-            for job in jobs:
-                values = [job.get(header) for header in job_headers]
-                append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
-
-    LOGGER.info("Exported workflow metrics to raw_workflow_data worksheet")
     LOGGER.info("Exported job metrics to raw_job_data worksheet")
 
 def convert_epoch_to_timestamp(epoch_time):
