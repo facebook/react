@@ -709,15 +709,18 @@ def compute_metrics(sanitized_metrics):
 
     with ThreadPoolExecutor() as executor:
         futures = {}
-        if 'circleci' in sanitized_metrics:
-            futures["circleci"] = executor.submit(compute_circleci_metrics, sanitized_metrics.get('circleci'))
-        if 'github' in sanitized_metrics:
-            futures["github"] = executor.submit(compute_github_metrics, sanitized_metrics.get('github'))
-        for vendor, future in futures.items():
-            try:
-                computed[vendor] = future.result()
-            except Exception as e:
-                LOGGER.error(f"Error computing {vendor} metrics: {e}")
+        if 'circleci' in metrics:
+            futures["circleci"] = [executor.submit(compute_circleci_metrics, item) for item in metrics.get('circleci')]
+        if 'github' in metrics:
+            futures["github"] = [executor.submit(compute_github_metrics, item) for item in metrics.get('github')]
+        for vendor, futures_list in futures.items():
+            computed[vendor] = []
+            for future in futures_list:
+                try:
+                    computed_result = future.result()
+                    computed[vendor].append(computed_result)
+                except Exception as e:
+                    LOGGER.error(f"Error computing {vendor} metrics: {e}")
 
     return computed
 
