@@ -409,7 +409,7 @@ def get_github_workflow_run_ids(args):
     response.raise_for_status()
     runs = response.json()["workflow_runs"]
 
-    return {"github": [run["run_id"] for run in runs if run["head_branch"] == branch]}
+    return {"github": [run["id"] for run in runs if run["head_branch"] == branch]}
 
 def wait_for_builds_to_complete(args, build_ids):
     with ThreadPoolExecutor() as executor:
