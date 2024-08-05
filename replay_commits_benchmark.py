@@ -735,7 +735,7 @@ def compute_metrics(sanitized_metrics):
         if 'github' in sanitized_metrics:
             futures["github"] = [executor.submit(compute_github_metrics, item) for item in sanitized_metrics.get('github')]
         for vendor, futures_list in futures.items():
-            computed[vendor] = {'workflow': {}, 'jobs': []}
+            computed[vendor] = {'workflow': [], 'jobs': []}
             for future in futures_list:
                 try:
                     computed_result = future.result()
