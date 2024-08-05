@@ -672,71 +672,6 @@ def sanitize_circleci_metrics(circleci_metrics_list):
           })
     return result
 
-def sanitize_circleci_metrics(circleci_metrics_list):
-    result = []
-    
-    for inner_list in circleci_metrics_list:
-        for circleci_metrics in inner_list:
-            
-            sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
-            workflow = circleci_metrics['workflow']
-
-        # Extract VCS URL from project data in one of the jobs
-        vcs_url = None
-        if circleci_metrics['jobs']:
-            project_data = circleci_metrics['jobs'][0].get('project', {})
-            vcs_url = project_data.get('external_url')
-
-        sanitized_workflow.update({
-            "commit": workflow['commit'],
-            "vendor": "CircleCI",
-            "workflow_id": workflow['id'],
-            "workflow_name": workflow['name'],
-            "workflow_status": workflow['status'],
-            "created_at": workflow['created_at'],
-            "started_at": None,
-            "stopped_at": workflow['stopped_at'],
-            "workflow_url": f"https://app.circleci.com/pipelines/workflows/{workflow['id']}",
-            "vcs_url": vcs_url,
-            "reported_duration": None,
-            "reported_queued_duration": None
-        })
-
-        sanitized_jobs = []
-        for job in circleci_metrics['jobs']:
-
-            sanitized_job = deepcopy(JOB_TEMPLATE)
-
-            # Grab executor info
-            executor = job["executor"]
-            runner_info = f"{executor["type"]}-{executor['resource_class']}"
-
-            # Convert from milliseconds to seconds
-            reported_duration = int(job['duration'])/1000
-
-            sanitized_job.update({
-                "commit": job['commit'],
-                "vendor": "CircleCI",
-                "job_id": job['number'],
-                "job_name": job['name'],
-                "job_status": job['status'],
-                "created_at": job['created_at'],
-                "started_at": job['started_at'],
-                "stopped_at": job['stopped_at'],
-                "queued_at": job['queued_at'],
-                "reported_duration": reported_duration,
-                "reported_queued_duration": None,
-                "job_url": job['web_url'],
-                "runner_info": runner_info
-            })
-            sanitized_jobs.append(sanitized_job)
-            
-            result.append({
-              "workflow": sanitized_workflow,
-              "jobs": sanitized_jobs
-          })
-    return result
-
 def sanitize_github_metrics(github_metrics_list):
     result = []
 
@@ -881,7 +816,6 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
     for vendor, vendor_metrics in computed_metrics.items():
-        print(vendor_metrics["workflow"]) # Debug
         for workflow in vendor_metrics["workflow"]:
             values = [workflow.get(header) for header in workflow_headers]
             append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
