@@ -817,7 +817,8 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
     for vendor, metrics_data_list in computed_metrics.items():
-        for metrics_data in metrics_data_list:  # process each workflow separately
+        print(vendor, type(metrics_data_list), metrics_data_list) # Debug
+        for metrics_data in metrics_data_list:
             workflow = metrics_data["workflow"]
             values = [workflow.get(header) for header in workflow_headers]
             append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
