@@ -45,7 +45,6 @@ import {
   enableLegacyCache,
   debugRenderPhaseSideEffectsForStrictMode,
   enableAsyncActions,
-  enableUseDeferredValueInitialArg,
   disableLegacyMode,
   enableNoCloningMemoCache,
   enableContextProfiling,
@@ -2879,7 +2878,6 @@ function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
 
 function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
   if (
-    enableUseDeferredValueInitialArg &&
     // When `initialValue` is provided, we defer the initial render even if the
     // current render is not synchronous.
     initialValue !== undefined &&

@@ -74,7 +74,6 @@ export const enableSuspenseCallback = false;
 export const enableTaint = true;
 export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
-export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
 export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;

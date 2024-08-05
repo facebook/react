@@ -56,7 +56,7 @@ import {
   flattenReactiveLoops,
   flattenScopesWithHooksOrUse,
   inferReactiveScopeVariables,
-  memoizeFbtOperandsInSameScope,
+  memoizeFbtAndMacroOperandsInSameScope,
   mergeOverlappingReactiveScopes,
   mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
@@ -259,8 +259,15 @@ function* runWithEnvironment(
   inferReactiveScopeVariables(hir);
   yield log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
 
+  const fbtOperands = memoizeFbtAndMacroOperandsInSameScope(hir);
+  yield log({
+    kind: 'hir',
+    name: 'MemoizeFbtAndMacroOperandsInSameScope',
+    value: hir,
+  });
+
   if (env.config.enableFunctionOutlining) {
-    outlineFunctions(hir);
+    outlineFunctions(hir, fbtOperands);
     yield log({kind: 'hir', name: 'OutlineFunctions', value: hir});
   }
 
@@ -275,13 +282,6 @@ function* runWithEnvironment(
   yield log({
     kind: 'hir',
     name: 'AlignObjectMethodScopes',
-    value: hir,
-  });
-
-  const fbtOperands = memoizeFbtOperandsInSameScope(hir);
-  yield log({
-    kind: 'hir',
-    name: 'MemoizeFbtAndMacroOperandsInSameScope',
     value: hir,
   });
 
