@@ -30,7 +30,7 @@ import {
 } from '../HIR/HIR';
 import {eachInstructionValueOperand, eachPatternOperand} from '../HIR/visitors';
 import {empty, Stack} from '../Utils/Stack';
-import {assertExhaustive} from '../Utils/utils';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 import {
   ReactiveScopeDependencyTree,
   ReactiveScopePropertyDependency,
@@ -617,7 +617,8 @@ class Context {
         if (
           !this.#isScopeActive(scope.value) &&
           // TODO LeaveSSA: key scope.declarations by DeclarationId
-          !Array.from(scope.value.declarations.values()).some(
+          !Iterable_some(
+            scope.value.declarations.values(),
             decl =>
               decl.identifier.declarationId ===
               maybeDependency.identifier.declarationId,
@@ -653,7 +654,8 @@ class Context {
     const currentScope = this.currentScope.value?.value;
     if (
       currentScope != null &&
-      !Array.from(currentScope.reassignments).some(
+      !Iterable_some(
+        currentScope.reassignments,
         identifier =>
           identifier.declarationId === place.identifier.declarationId,
       ) &&
@@ -700,7 +702,8 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     });
     for (const candidateDep of scopeDependencies) {
       if (
-        !Array.from(scope.scope.dependencies).some(
+        !Iterable_some(
+          scope.scope.dependencies,
           existingDep =>
             existingDep.identifier.declarationId ===
               candidateDep.identifier.declarationId &&
@@ -717,9 +720,11 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
      *
      * for (const reassignment of scope.scope.reassignments) {
      *   if (
-     *     Array.from(scope.scope.dependencies.values()).some(
-     *       dep => dep.identifier.declarationId === reassignment.declarationId &&
-     *       dep.path.length === 0,
+     *     Iterable_some(
+     *       scope.scope.dependencies.values(),
+     *       dep =>
+     *         dep.identifier.declarationId === reassignment.declarationId &&
+     *         dep.path.length === 0,
      *     )
      *   ) {
      *     scope.scope.reassignments.delete(reassignment);

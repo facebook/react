@@ -209,7 +209,17 @@ class State {
   env: Environment;
   /*
    * Maps lvalues for LoadLocal to the identifier being loaded, to resolve indirections
-   * in subsequent lvalues/rvalues
+   * in subsequent lvalues/rvalues.
+   *
+   * NOTE: this pass uses DeclarationId rather than IdentifierId because the pass is not
+   * aware of control-flow, only data flow via mutation. Instead of precisely modeling
+   * control flow, we analyze all values that may flow into a particular program variable,
+   * and then whether that program variable may escape (if so, the values flowing in may
+   * escape too). Thus we use DeclarationId to captures all values that may flow into
+   * a particular program variable, regardless of control flow paths.
+   *
+   * In the future when we convert to HIR everywhere this pass can account for control
+   * flow and use SSA ids.
    */
   definitions: Map<DeclarationId, DeclarationId> = new Map();
 

@@ -84,6 +84,10 @@ export function extractScopeDeclarationsFromDestructuring(
 
 class State {
   env: Environment;
+  /**
+   * We need to track which program variables are already declared to convert
+   * declarations into reassignments, so we use DeclarationId
+   */
   declared: Set<DeclarationId> = new Set();
 
   constructor(env: Environment) {

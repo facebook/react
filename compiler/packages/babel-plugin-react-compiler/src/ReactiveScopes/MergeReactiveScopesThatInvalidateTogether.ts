@@ -28,7 +28,7 @@ import {
   BuiltInObjectId,
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue} from '../HIR/visitors';
-import {assertExhaustive} from '../Utils/utils';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 import {printReactiveScopeSummary} from './PrintReactiveFunction';
 import {
   ReactiveFunctionTransform,
@@ -463,8 +463,12 @@ function canMergeScopes(
     (next.scope.dependencies.size !== 0 &&
       [...next.scope.dependencies].every(
         dep =>
-          current.scope.declarations.has(dep.identifier.id) &&
-          isAlwaysInvalidatingType(dep.identifier.type),
+          isAlwaysInvalidatingType(dep.identifier.type) &&
+          Iterable_some(
+            current.scope.declarations.values(),
+            decl =>
+              decl.identifier.declarationId === dep.identifier.declarationId,
+          ),
       ))
   ) {
     log(`  outputs of prev are input to current`);
@@ -501,7 +505,7 @@ function areEqualDependencies(
     let found = false;
     for (const bValue of b) {
       if (
-        aValue.identifier.id === bValue.identifier.id &&
+        aValue.identifier.declarationId === bValue.identifier.declarationId &&
         areEqualPaths(aValue.path, bValue.path)
       ) {
         found = true;

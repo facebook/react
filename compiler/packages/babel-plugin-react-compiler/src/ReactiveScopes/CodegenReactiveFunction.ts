@@ -393,6 +393,10 @@ class Context {
   env: Environment;
   fnName: string;
   #nextCacheIndex: number = 0;
+  /**
+   * Tracks which named variables have been declared to dedupe declarations,
+   * so this uses DeclarationId instead of IdentifierId
+   */
   #declarations: Set<DeclarationId> = new Set();
   temp: Temporaries;
   errors: CompilerError = new CompilerError();

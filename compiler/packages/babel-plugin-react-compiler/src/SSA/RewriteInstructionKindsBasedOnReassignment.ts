@@ -20,7 +20,10 @@ import {eachPatternOperand} from '../HIR/visitors';
 /**
  * This pass rewrites the InstructionKind of instructions which declare/assign variables,
  * converting the first declaration to a Const/Let depending on whether it is subsequently
- * reassigned, and ensuring that subsequent reassignments are marked as a Reassign.
+ * reassigned, and ensuring that subsequent reassignments are marked as a Reassign. Note
+ * that declarations which were const in the original program cannot become `let`, but the
+ * inverse is not true: a `let` which was reassigned in the source may be converted to a
+ * `const` if the reassignment is not used and was removed by dead code elimination.
  *
  * NOTE: this is a subset of the operations previously performed by the LeaveSSA pass.
  */

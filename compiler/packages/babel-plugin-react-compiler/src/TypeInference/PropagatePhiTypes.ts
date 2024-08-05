@@ -34,13 +34,33 @@ import {HIRFunction, IdentifierId, Type, typeEquals} from '../HIR';
  * type if all operands have the same type, it's its more correct.
  */
 export function propagatePhiTypes(fn: HIRFunction): void {
+  /**
+   * We track which SSA ids have had their types propagated to handle nested ternaries,
+   * see the StoreLocal handling below
+   */
   const propagated = new Set<IdentifierId>();
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
       /*
        * We replicate the previous LeaveSSA behavior and only propagate types for
        * unnamed variables. LeaveSSA would have chosen one of the operands as the
-       * canonical id and taken its type as the type of all identifiers
+       * canonical id and taken its type as the type of all identifiers. We're
+       * more conservative and only propagate if the types are the same and the
+       * phi didn't have a type inferred.
+       *
+       * Note that this can change output slightly in cases such as
+       * `cond ? <div /> : null`.
+       *
+       * Previously the first operand's type (BuiltInJsx) would have been propagated,
+       * and this expression may have been merged with subsequent reactive scopes
+       * since it appears (based on that type) to always invalidate.
+       *
+       * But the correct type is `BuiltInJsx | null`, which we can't express and
+       * so leave as a generic `Type`, which does not always invalidate and therefore
+       * does not merge with subsequent scopes.
+       *
+       * We also don't propagate scopes for named variables, to preserve compatibility
+       * with previous LeaveSSA behavior.
        */
       if (phi.id.type.kind !== 'Type' || phi.id.name !== null) {
         continue;
@@ -64,6 +84,14 @@ export function propagatePhiTypes(fn: HIRFunction): void {
       const {value} = instr;
       switch (value.kind) {
         case 'StoreLocal': {
+          /**
+           * Nested ternaries can lower to a form with an intermediate StoreLocal where
+           * the value.lvalue is the temporary of the outer ternary, and the value.value
+           * is the result of the inner ternary.
+           *
+           * This is a common pattern in practice and easy enough to support. Again, the
+           * long-term approach is to update InferTypes and InferMutableRanges.
+           */
           const lvalue = value.lvalue.place;
           if (
             propagated.has(value.value.identifier.id) &&

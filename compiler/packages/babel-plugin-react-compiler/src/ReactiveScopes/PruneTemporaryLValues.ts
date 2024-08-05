@@ -26,6 +26,14 @@ export function pruneUnusedLValues(fn: ReactiveFunction): void {
   }
 }
 
+/**
+ * This pass uses DeclarationIds because the lvalue IdentifierId of a compound expression
+ * (ternary, logical, optional) in ReactiveFunction may not be the same as the IdentifierId
+ * of the phi, and which is referenced later. Keying by DeclarationId ensures we don't
+ * delete lvalues for identifiers that are used.
+ *
+ * TODO LeaveSSA: once we use HIR everywhere, this can likely move back to using IdentifierId
+ */
 type LValues = Map<DeclarationId, ReactiveInstruction>;
 
 class Visitor extends ReactiveFunctionVisitor<LValues> {
