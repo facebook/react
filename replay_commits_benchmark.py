@@ -465,6 +465,7 @@ def collect_metrics(args, build_ids):
         metrics["circleci"] = []
         for pipeline_id in build_ids['circleci']:
             try:
+                print(f"Gathering CircleCI metrics for {pipeline_id}")
                 metrics_result = collect_circleci_metrics(args, pipeline_id)
                 metrics["circleci"].append(metrics_result)
             except Exception as e:
@@ -474,6 +475,7 @@ def collect_metrics(args, build_ids):
         metrics["github"] = []
         for workflow_run_id in build_ids['github']:
             try:
+                print(f"Gathering Github Actions metrics for {workflow_run_id}")
                 metrics_result = collect_github_metrics(args, workflow_run_id)
                 metrics["github"].append(metrics_result)
             except Exception as e:
