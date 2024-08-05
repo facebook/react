@@ -784,7 +784,11 @@ def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64
     raise Exception("Max retries exceeded")
 
 def append_row_with_backoff(worksheet, values, max_retries):
-    exponential_backoff_request(worksheet.append_row, values, max_retries=max_retries)
+    try:
+        exponential_backoff_request(worksheet.append_row, values, max_retries=max_retries)
+        LOGGER.info(f"Successfully appended row with values: {values}")
+    except Exception as e:
+        LOGGER.error(f"Failed to append row with values: {values}. Error: {e}")
 
 def export_metrics(computed_metrics, google_sheet_id, max_retries):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '~/.config/gspread/service_account.json'
