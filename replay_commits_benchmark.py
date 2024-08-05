@@ -711,6 +711,7 @@ def sanitize_github_metrics(github_metrics_list):
               "job_url": job['html_url'],
               "runner_info": job["labels"][0]
           })
+          sanitized_jobs.append(sanitized_job)
       result.append({
         "workflow": sanitized_workflow,
         "jobs": sanitized_jobs
@@ -815,24 +816,20 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
     raw_workflow_data = sh.worksheet("raw_workflow_data")
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
-    for vendor, vendor_metrics in computed_metrics.items():
-        print(type(vendor_metrics["workflow"]))  # Debug
-        print(vendor_metrics["workflow"])  # Debug
-        for workflow in vendor_metrics["workflow"]:
+    for vendor, metrics_data_list in computed_metrics.items():
+        for metrics_data in metrics_data_list:  # process each workflow separately
+            workflow = metrics_data["workflow"]
             values = [workflow.get(header) for header in workflow_headers]
             append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
+            
+            raw_job_data = sh.worksheet("raw_job_data")
+            job_headers = list(JOB_TEMPLATE.keys())
+
+            for job in metrics_data["jobs"]:
+                values = [job.get(header) for header in job_headers]
+                append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
 
     LOGGER.info("Exported workflow metrics to raw_workflow_data worksheet")
-
-    # Export job metrics to raw_job_data worksheet
-    raw_job_data = sh.worksheet("raw_job_data")
-    job_headers = list(JOB_TEMPLATE.keys())
-
-    for vendor, metrics in computed_metrics.items():
-        for job in metrics["jobs"]:
-            values = [job.get(header) for header in job_headers]
-            append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
-
     LOGGER.info("Exported job metrics to raw_job_data worksheet")
 
 def convert_epoch_to_timestamp(epoch_time):
