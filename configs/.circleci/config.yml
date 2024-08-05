@@ -12,8 +12,4 @@ jobs:
 workflows:
   test_cci:
     jobs:
-      - test_job_cci:
-          filters:
-            branches: 
-              only: 
-                - '^replay-.*'
+      - test_job_cci
