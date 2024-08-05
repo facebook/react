@@ -498,6 +498,7 @@ def collect_circleci_metrics(args, pipeline_id):
     response = requests.get(workflow_url, headers=headers)
     response.raise_for_status()
     workflows = response.json()['items']
+    commit = pipeline['vcs']['revision']
 
     all_metric_data = []
     for workflow in workflows:
@@ -528,12 +529,12 @@ def collect_circleci_metrics(args, pipeline_id):
             job_details = job_details_response.json()
 
             # Add commit to job metrics
-            job_details['commit'] = pipeline['vcs']['revision']
+            job_details['commit'] = commit
 
             enriched_jobs.append(job_details)
         
         # Add commit to workflow metrics
-        workflow['commit'] = pipeline['vcs']['revision']
+        workflow['commit'] = commit
 
         all_metric_data.append({
             "workflow": workflow,
@@ -709,9 +710,9 @@ def compute_metrics(sanitized_metrics):
 
     with ThreadPoolExecutor() as executor:
         futures = {}
-        if 'circleci' in metrics:
+        if 'circleci' in sanitized_metrics:
             futures["circleci"] = [executor.submit(compute_circleci_metrics, item) for item in metrics.get('circleci')]
-        if 'github' in metrics:
+        if 'github' in sanitized_metrics:
             futures["github"] = [executor.submit(compute_github_metrics, item) for item in metrics.get('github')]
         for vendor, futures_list in futures.items():
             computed[vendor] = []
