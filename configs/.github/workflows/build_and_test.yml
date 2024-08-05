@@ -8,5 +8,4 @@ jobs:
   test_job:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - run: echo "Hello John"

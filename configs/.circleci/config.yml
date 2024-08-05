@@ -6,7 +6,6 @@ jobs:
       - image: cimg/base:stable
     resource_class: small
     steps:
-      - checkout
       - run: echo "Hello John"
 
 workflows:
