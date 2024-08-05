@@ -561,9 +561,18 @@ def collect_github_metrics(args, workflow_run_id):
         jobs_response.raise_for_status()
         jobs_data = jobs_response.json()
         jobs.extend(jobs_data['jobs'])
+        LOGGER.info(f"Fetched {len(jobs_data['jobs'])} jobs for this request.") # Debug
+
+        for job in jobs_data['jobs']: # Debug
+            LOGGER.info(f"Job data: {job}") # Debug
         
         # Check if there's a next page
         jobs_url = jobs_response.links.get('next', {}).get('url')
+
+    if jobs:
+        LOGGER.info(f"Collected {len(jobs)} jobs for run ID {workflow_run_id}.")
+    else:
+        LOGGER.warning(f"No jobs were collected for run ID {workflow_run_id}. Check if this is expected.")
     
     return {
         "workflow": workflow,
@@ -784,11 +793,7 @@ def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64
     raise Exception("Max retries exceeded")
 
 def append_row_with_backoff(worksheet, values, max_retries):
-    try:
-        exponential_backoff_request(worksheet.append_row, values, max_retries=max_retries)
-        LOGGER.info(f"Successfully appended row with values: {values}")
-    except Exception as e:
-        LOGGER.error(f"Failed to append row with values: {values}. Error: {e}")
+    exponential_backoff_request(worksheet.append_row, values, max_retries=max_retries)
 
 def export_metrics(computed_metrics, google_sheet_id, max_retries):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '~/.config/gspread/service_account.json'
