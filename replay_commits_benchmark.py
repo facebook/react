@@ -374,8 +374,6 @@ def get_all_build_ids(args):
     github_ids = get_github_workflow_run_ids(args)
     circleci_ids = get_circleci_pipeline_ids(args)
 
-    #TODO:need to account for other CI tools
-
     all_ids = {**github_ids, **circleci_ids}
 
     return all_ids
@@ -487,22 +485,25 @@ def collect_circleci_metrics(args, pipeline_id):
     LOGGER.info("Collecting CircleCI metrics...")
     pipeline_url =f"https://circleci.com/api/v2/pipeline/{pipeline_id}"
     headers = {"Circle-Token": args['circleci_token']}
-    params = {"branch": args['branch']}
 
     response = requests.get(pipeline_url, headers=headers)
     response.raise_for_status()
     pipeline = response.json()
+    commit = pipeline['vcs']['revision']
+
+    LOGGER.info(f"Collecting CircleCI Workflow Metrics for Pipeline: {pipeline_id}...")
 
     workflow_url = f"https://circleci.com/api/v2/pipeline/{pipeline_id}/workflow"
     headers = {"Circle-Token": args['circleci_token']}
     response = requests.get(workflow_url, headers=headers)
     response.raise_for_status()
     workflows = response.json()['items']
-    commit = pipeline['vcs']['revision']
 
     all_metric_data = []
     for workflow in workflows:
         workflow_id = workflow['id']
+
+        LOGGER.info(f"Collecting CircleCI Job Metrics for workflow: {workflow_id}...")
 
         # Collect all job details with pagination
         jobs = []
@@ -580,10 +581,6 @@ def sanitize_metrics(metrics):
             futures["circleci"] = executor.submit(sanitize_circleci_metrics, metrics.get('circleci'))
         if 'github' in metrics:
             futures["github"] = executor.submit(sanitize_github_metrics, metrics.get('github'))
-        if 'gitlab' in metrics:
-            futures["gitlab"] = executor.submit(sanitize_gitlab_metrics, metrics.get('gitlab'))
-        if 'harness' in metrics:
-            futures["harness"] = executor.submit(sanitize_harness_metrics, metrics.get('harness'))
 
         for vendor, future in futures.items():
             try:
@@ -711,9 +708,9 @@ def compute_metrics(sanitized_metrics):
     with ThreadPoolExecutor() as executor:
         futures = {}
         if 'circleci' in sanitized_metrics:
-            futures["circleci"] = [executor.submit(compute_circleci_metrics, item) for item in metrics.get('circleci')]
+            futures["circleci"] = [executor.submit(compute_circleci_metrics, item) for item in sanitized_metrics.get('circleci')]
         if 'github' in sanitized_metrics:
-            futures["github"] = [executor.submit(compute_github_metrics, item) for item in metrics.get('github')]
+            futures["github"] = [executor.submit(compute_github_metrics, item) for item in sanitized_metrics.get('github')]
         for vendor, futures_list in futures.items():
             computed[vendor] = []
             for future in futures_list:
