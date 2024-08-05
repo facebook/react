@@ -734,16 +734,17 @@ def compute_metrics(sanitized_metrics):
             futures["circleci"] = [executor.submit(compute_circleci_metrics, item) for item in sanitized_metrics.get('circleci')]
         if 'github' in sanitized_metrics:
             futures["github"] = [executor.submit(compute_github_metrics, item) for item in sanitized_metrics.get('github')]
-        if vendor not in computed:
-          computed[vendor] = {'workflows': [], 'jobs': []}  # Create the lists once per vendor
-          for future in futures_list:
-              try:
-                  computed_result = future.result()
-                  print(f'computed_result = {computed_result}')  # Debug
-                  computed[vendor]['workflows'].append(computed_result['workflow'])
-                  computed[vendor]['jobs'].extend(computed_result['jobs'])
-              except Exception as e:
-                  LOGGER.error(f"Error computing {vendor} metrics: {e}")
+        for vendor, futures_list in futures.items():
+            if vendor not in computed:
+                computed[vendor] = {'workflows': [], 'jobs': []}
+            for future in futures_list:
+                try:
+                    computed_result = future.result()
+                    print(f'computed_result = {computed_result}')  # Debug
+                    computed[vendor]['workflows'].append(computed_result['workflow'])
+                    computed[vendor]['jobs'].extend(computed_result['jobs'])
+                except Exception as e:
+                    LOGGER.error(f"Error computing {vendor} metrics: {e}")
 
     return computed
 
