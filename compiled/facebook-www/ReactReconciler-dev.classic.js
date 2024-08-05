@@ -5242,15 +5242,13 @@ __DEV__ &&
           );
     }
     function mountDeferredValueImpl(hook, value, initialValue) {
-      return enableUseDeferredValueInitialArg &&
-        void 0 !== initialValue &&
-        0 === (renderLanes & 1073741824)
-        ? ((hook.memoizedState = initialValue),
-          (hook = requestDeferredLane()),
-          (currentlyRenderingFiber$1.lanes |= hook),
-          (workInProgressRootSkippedLanes |= hook),
-          initialValue)
-        : (hook.memoizedState = value);
+      if (void 0 === initialValue || 0 !== (renderLanes & 1073741824))
+        return (hook.memoizedState = value);
+      hook.memoizedState = initialValue;
+      hook = requestDeferredLane();
+      currentlyRenderingFiber$1.lanes |= hook;
+      workInProgressRootSkippedLanes |= hook;
+      return initialValue;
     }
     function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
       if (objectIs(value, prevValue)) return value;
@@ -16296,8 +16294,6 @@ __DEV__ &&
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       favorSafetyOverHydrationPerf =
         dynamicFeatureFlags.favorSafetyOverHydrationPerf,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -19015,7 +19011,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-88ee14ff-20240801"
+        reconcilerVersion: "19.0.0-www-classic-65903583-20240805"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);

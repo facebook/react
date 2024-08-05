@@ -6763,8 +6763,6 @@ __DEV__ &&
         dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
       REACT_ELEMENT_TYPE = renameElementSymbol
@@ -8001,11 +7999,7 @@ __DEV__ &&
         useDebugValue: noop$1,
         useDeferredValue: function (value, initialValue) {
           resolveCurrentlyRenderingComponent();
-          return enableUseDeferredValueInitialArg
-            ? void 0 !== initialValue
-              ? initialValue
-              : value
-            : value;
+          return void 0 !== initialValue ? initialValue : value;
         },
         useTransition: function () {
           resolveCurrentlyRenderingComponent();

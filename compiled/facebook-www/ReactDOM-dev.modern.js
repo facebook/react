@@ -6749,15 +6749,13 @@ __DEV__ &&
           );
     }
     function mountDeferredValueImpl(hook, value, initialValue) {
-      return enableUseDeferredValueInitialArg &&
-        void 0 !== initialValue &&
-        0 === (renderLanes & 1073741824)
-        ? ((hook.memoizedState = initialValue),
-          (hook = requestDeferredLane()),
-          (currentlyRenderingFiber$1.lanes |= hook),
-          (workInProgressRootSkippedLanes |= hook),
-          initialValue)
-        : (hook.memoizedState = value);
+      if (void 0 === initialValue || 0 !== (renderLanes & 1073741824))
+        return (hook.memoizedState = value);
+      hook.memoizedState = initialValue;
+      hook = requestDeferredLane();
+      currentlyRenderingFiber$1.lanes |= hook;
+      workInProgressRootSkippedLanes |= hook;
+      return initialValue;
     }
     function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
       if (objectIs(value, prevValue)) return value;
@@ -22898,8 +22896,6 @@ __DEV__ &&
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableTrustedTypesIntegration =
         dynamicFeatureFlags.enableTrustedTypesIntegration,
-      enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       favorSafetyOverHydrationPerf =
         dynamicFeatureFlags.favorSafetyOverHydrationPerf,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
@@ -26619,11 +26615,11 @@ __DEV__ &&
       return_targetInst = null;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-modern-88ee14ff-20240801" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-modern-65903583-20240805" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-modern-88ee14ff-20240801\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-modern-65903583-20240805\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -26666,11 +26662,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-modern-88ee14ff-20240801",
+          version: "19.0.0-www-modern-65903583-20240805",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-modern-88ee14ff-20240801"
+          reconcilerVersion: "19.0.0-www-modern-65903583-20240805"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -27275,7 +27271,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-modern-88ee14ff-20240801";
+    exports.version = "19.0.0-www-modern-65903583-20240805";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

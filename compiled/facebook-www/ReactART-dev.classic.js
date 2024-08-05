@@ -5021,15 +5021,13 @@ __DEV__ &&
           );
     }
     function mountDeferredValueImpl(hook, value, initialValue) {
-      return enableUseDeferredValueInitialArg &&
-        void 0 !== initialValue &&
-        0 === (renderLanes & 1073741824)
-        ? ((hook.memoizedState = initialValue),
-          (hook = requestDeferredLane()),
-          (currentlyRenderingFiber$1.lanes |= hook),
-          (workInProgressRootSkippedLanes |= hook),
-          initialValue)
-        : (hook.memoizedState = value);
+      if (void 0 === initialValue || 0 !== (renderLanes & 1073741824))
+        return (hook.memoizedState = value);
+      hook.memoizedState = initialValue;
+      hook = requestDeferredLane();
+      currentlyRenderingFiber$1.lanes |= hook;
+      workInProgressRootSkippedLanes |= hook;
+      return initialValue;
     }
     function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
       if (objectIs(value, prevValue)) return value;
@@ -14583,8 +14581,6 @@ __DEV__ &&
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
       enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
       retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
       syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
@@ -16782,11 +16778,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-classic-88ee14ff-20240801",
+        version: "19.0.0-www-classic-65903583-20240805",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-88ee14ff-20240801"
+        reconcilerVersion: "19.0.0-www-classic-65903583-20240805"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16820,7 +16816,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-classic-88ee14ff-20240801";
+    exports.version = "19.0.0-www-classic-65903583-20240805";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

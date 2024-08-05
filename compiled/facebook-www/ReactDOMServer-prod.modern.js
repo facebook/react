@@ -57,8 +57,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
     dynamicFeatureFlags.disableDefaultPropsExceptForClasses,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableUseDeferredValueInitialArg =
-    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_ELEMENT_TYPE = renameElementSymbol
@@ -3303,11 +3301,7 @@ var HooksDispatcher = {
   useDebugValue: noop$1,
   useDeferredValue: function (value, initialValue) {
     resolveCurrentlyRenderingComponent();
-    return enableUseDeferredValueInitialArg
-      ? void 0 !== initialValue
-        ? initialValue
-        : value
-      : value;
+    return void 0 !== initialValue ? initialValue : value;
   },
   useTransition: function () {
     resolveCurrentlyRenderingComponent();
@@ -5797,4 +5791,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-88ee14ff-20240801";
+exports.version = "19.0.0-www-modern-65903583-20240805";

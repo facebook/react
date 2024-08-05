@@ -79,8 +79,6 @@ var dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableUseDeferredValueInitialArg =
-    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   renameElementSymbol = dynamicFeatureFlags.renameElementSymbol,
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
@@ -3291,15 +3289,13 @@ function updateMemo(nextCreate, deps) {
   return prevState;
 }
 function mountDeferredValueImpl(hook, value, initialValue) {
-  return enableUseDeferredValueInitialArg &&
-    void 0 !== initialValue &&
-    0 === (renderLanes & 1073741824)
-    ? ((hook.memoizedState = initialValue),
-      (hook = requestDeferredLane()),
-      (currentlyRenderingFiber$1.lanes |= hook),
-      (workInProgressRootSkippedLanes |= hook),
-      initialValue)
-    : (hook.memoizedState = value);
+  if (void 0 === initialValue || 0 !== (renderLanes & 1073741824))
+    return (hook.memoizedState = value);
+  hook.memoizedState = initialValue;
+  hook = requestDeferredLane();
+  currentlyRenderingFiber$1.lanes |= hook;
+  workInProgressRootSkippedLanes |= hook;
+  return initialValue;
 }
 function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
   if (objectIs(value, prevValue)) return value;
@@ -10622,13 +10618,13 @@ var slice = Array.prototype.slice,
   })(React.Component);
 var internals$jscomp$inline_1361 = {
   bundleType: 0,
-  version: "19.0.0-www-classic-88ee14ff-20240801",
+  version: "19.0.0-www-classic-65903583-20240805",
   rendererPackageName: "react-art",
   currentDispatcherRef: ReactSharedInternals,
   findFiberByHostInstance: function () {
     return null;
   },
-  reconcilerVersion: "19.0.0-www-classic-88ee14ff-20240801"
+  reconcilerVersion: "19.0.0-www-classic-65903583-20240805"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1362 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -10654,4 +10650,4 @@ exports.RadialGradient = RadialGradient;
 exports.Shape = TYPES.SHAPE;
 exports.Surface = Surface;
 exports.Text = Text;
-exports.version = "19.0.0-www-classic-88ee14ff-20240801";
+exports.version = "19.0.0-www-classic-65903583-20240805";
