@@ -417,7 +417,7 @@ def wait_for_builds_to_complete(args, build_ids):
         if args['circleci_project_slug']:
             for id in build_ids['circleci']:
                 futures[f"circleci_{id}"] = executor.submit(wait_for_circleci_build, args, id)
-        if args['circleci_project_slug'] and args['github_workflow']:
+        if args['circleci_project_slug'] and args['github_repo_slug']:
             for id in build_ids['github']:
                 futures[f"github_{id}"] = executor.submit(wait_for_github_build, args, id)
         if args['gitlab_project_id']:
