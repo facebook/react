@@ -4013,12 +4013,16 @@ export function attach(
       console.warn(`Could not find DevToolsInstance with id "${id}"`);
       return null;
     }
-    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
-      // TODO: Handle VirtualInstance.
-      return null;
+    if (devtoolsInstance.kind === VIRTUAL_INSTANCE) {
+      return inspectVirtualInstanceRaw(devtoolsInstance);
     }
-    const fiber =
-      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
+    return inspectFiberInstanceRaw(devtoolsInstance);
+  }
+
+  function inspectFiberInstanceRaw(
+    fiberInstance: FiberInstance,
+  ): InspectedElement | null {
+    const fiber = findCurrentFiberUsingSlowPathByFiberInstance(fiberInstance);
     if (fiber == null) {
       return null;
     }
@@ -4221,8 +4225,10 @@ export function attach(
       const DidCapture = 0b000000000000000000010000000;
       isErrored =
         (fiber.flags & DidCapture) !== 0 ||
-        (devtoolsInstance.flags & FORCE_ERROR) !== 0;
-      targetErrorBoundaryID = isErrored ? id : getNearestErrorBoundaryID(fiber);
+        (fiberInstance.flags & FORCE_ERROR) !== 0;
+      targetErrorBoundaryID = isErrored
+        ? fiberInstance.id
+        : getNearestErrorBoundaryID(fiber);
     } else {
       targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
     }
@@ -4243,7 +4249,7 @@ export function attach(
     }
 
     return {
-      id,
+      id: fiberInstance.id,
 
       // Does the current renderer support editable hooks and function props?
       canEditHooks: typeof overrideHookState === 'function',
@@ -4270,7 +4276,7 @@ export function attach(
         (!isTimedOutSuspense ||
           // If it's showing fallback because we previously forced it to,
           // allow toggling it back to remove the fallback override.
-          (devtoolsInstance.flags & FORCE_SUSPENSE_FALLBACK) !== 0),
+          (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) !== 0),
 
       // Can view component source location.
       canViewSource,
@@ -4291,13 +4297,112 @@ export function attach(
       props: memoizedProps,
       state: showState ? memoizedState : null,
       errors:
-        devtoolsInstance.errors === null
+        fiberInstance.errors === null
           ? []
-          : Array.from(devtoolsInstance.errors.entries()),
+          : Array.from(fiberInstance.errors.entries()),
       warnings:
-        devtoolsInstance.warnings === null
+        fiberInstance.warnings === null
           ? []
-          : Array.from(devtoolsInstance.warnings.entries()),
+          : Array.from(fiberInstance.warnings.entries()),
+
+      // List of owners
+      owners,
+
+      rootType,
+      rendererPackageName: renderer.rendererPackageName,
+      rendererVersion: renderer.version,
+
+      plugins,
+    };
+  }
+
+  function inspectVirtualInstanceRaw(
+    virtualInstance: VirtualInstance,
+  ): InspectedElement | null {
+    const canViewSource = false;
+
+    const key = null; // TODO: Track keys on ReactComponentInfo;
+    const props = null; // TODO: Track props on ReactComponentInfo;
+
+    const env = virtualInstance.data.env;
+    let displayName = virtualInstance.data.name || '';
+    if (typeof env === 'string') {
+      // We model environment as an HoC name for now.
+      displayName = env + '(' + displayName + ')';
+    }
+
+    // TODO: Support Virtual Owners.
+    const owners: null | Array<SerializedElement> = null;
+
+    let rootType = null;
+    let targetErrorBoundaryID = null;
+    let parent = virtualInstance.parent;
+    while (parent !== null) {
+      if (parent.kind === FIBER_INSTANCE) {
+        targetErrorBoundaryID = getNearestErrorBoundaryID(parent.data);
+        let current = parent.data;
+        while (current.return !== null) {
+          current = current.return;
+        }
+        const fiberRoot = current.stateNode;
+        if (fiberRoot != null && fiberRoot._debugRootType !== null) {
+          rootType = fiberRoot._debugRootType;
+        }
+        break;
+      }
+      parent = parent.parent;
+    }
+
+    const plugins: Plugins = {
+      stylex: null,
+    };
+
+    // TODO: Support getting the source location from the owner stack.
+    const source = null;
+
+    return {
+      id: virtualInstance.id,
+
+      canEditHooks: false,
+      canEditFunctionProps: false,
+
+      canEditHooksAndDeletePaths: false,
+      canEditHooksAndRenamePaths: false,
+      canEditFunctionPropsDeletePaths: false,
+      canEditFunctionPropsRenamePaths: false,
+
+      canToggleError: supportsTogglingError && targetErrorBoundaryID != null,
+      isErrored: false,
+      targetErrorBoundaryID,
+
+      canToggleSuspense: supportsTogglingSuspense,
+
+      // Can view component source location.
+      canViewSource,
+      source,
+
+      // Does the component have legacy context attached to it.
+      hasLegacyContext: false,
+
+      key: key != null ? key : null,
+
+      displayName: displayName,
+      type: ElementTypeVirtual,
+
+      // Inspectable properties.
+      // TODO Review sanitization approach for the below inspectable values.
+      context: null,
+      hooks: null,
+      props: props,
+      state: null,
+      errors:
+        virtualInstance.errors === null
+          ? []
+          : Array.from(virtualInstance.errors.entries()),
+      warnings:
+        virtualInstance.warnings === null
+          ? []
+          : Array.from(virtualInstance.warnings.entries()),
 
       // List of owners
       owners,
