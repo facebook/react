@@ -760,6 +760,7 @@ def append_row_with_backoff(worksheet, values, max_retries):
     exponential_backoff_request(worksheet.append_row, values, max_retries=max_retries)
 
 def export_metrics(computed_metrics, google_sheet_id, max_retries):
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '~/.config/gspread/service_account.json'
     gc = gspread.service_account()
     sh = gc.open_by_key(google_sheet_id)
 
