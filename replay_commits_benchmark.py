@@ -737,6 +737,7 @@ def compute_metrics(sanitized_metrics):
             for future in futures_list:
                 try:
                     computed_result = future.result()
+                    print(f'computed_result = {computed_result}') # Debug
                     computed[vendor]['workflow'].update(computed_result['workflow'])
                     computed[vendor]['jobs'].extend(computed_result['jobs'])
                 except Exception as e:
