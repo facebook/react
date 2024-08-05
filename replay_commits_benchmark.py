@@ -488,6 +488,7 @@ def collect_metrics(args, build_ids):
             except Exception as e:
                 LOGGER.error(f"Error collecting Github metrics for workflow_run_id={workflow_run_id}: {e}")
     
+    LOGGER.debug(f"Final metrics: {metrics}") # Debug
     return metrics
 
 def collect_circleci_metrics(args, pipeline_id):
