@@ -740,7 +740,7 @@ def compute_metrics(sanitized_metrics):
                 try:
                     computed_result = future.result()
                     print(f'computed_result = {computed_result}') # Debug
-                    computed[vendor]['workflow'].update(computed_result['workflow'])
+                    computed[vendor]['workflow'].append(computed_result['workflow'])
                     computed[vendor]['jobs'].extend(computed_result['jobs'])
                 except Exception as e:
                     LOGGER.error(f"Error computing {vendor} metrics: {e}")
@@ -818,9 +818,9 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
 
     for vendor, metrics_data in computed_metrics.items():
         print(vendor, type(metrics_data), metrics_data) # Debug
-        workflow = metrics_data["workflow"]
-        values = [workflow.get(header) for header in workflow_headers]
-        append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
+        for workflow in metrics_data["workflows"]:
+            values = [workflow.get(header) for header in workflow_headers]
+            append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
         
         raw_job_data = sh.worksheet("raw_job_data")
         job_headers = list(JOB_TEMPLATE.keys())
