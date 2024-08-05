@@ -395,7 +395,7 @@ def get_circleci_pipeline_ids(args):
     if not pipelines:
         raise ValueError(f"No pipelines found for branch {branch}")
 
-    return {"circleci": [pipeline["pipeline"] for pipeline in pipelines]}
+    return {"circleci": [pipeline["id"] for pipeline in pipelines]}
 
 def get_github_workflow_run_ids(args):
     branch = args['branch']
