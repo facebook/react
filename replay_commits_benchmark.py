@@ -529,12 +529,10 @@ def collect_circleci_metrics(args, pipeline_id):
             job_details_response.raise_for_status()
             job_details = job_details_response.json()
 
-            # Add commit to job metrics
             job_details['commit'] = commit
 
             enriched_jobs.append(job_details)
         
-        # Add commit to workflow metrics
         workflow['commit'] = commit
 
         all_metric_data.append({
@@ -587,6 +585,7 @@ def sanitize_metrics(metrics):
                 sanitized[vendor] = future.result()
             except Exception as e:
                 LOGGER.error(f"Error sanitizing {vendor} metrics: {e}")
+                traceback.print_exc() # Debug
 
     return sanitized
 
