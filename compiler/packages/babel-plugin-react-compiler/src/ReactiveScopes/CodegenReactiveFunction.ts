@@ -143,9 +143,14 @@ export function codegenFunction(
   }
   const compiled = compileResult.unwrap();
 
+  const freezes = fn.params
+    .map(param => (param.kind === 'Spread' ? param.place : param))
+    .map(param => codegenFreeze(convertIdentifier(param.identifier)))
+    .map(freeze => t.expressionStatement(freeze));
   const hookGuard = fn.env.config.enableEmitHookGuards;
   if (hookGuard != null) {
     compiled.body = t.blockStatement([
+      ...freezes,
       createHookGuard(
         hookGuard,
         compiled.body.body,
@@ -153,6 +158,8 @@ export function codegenFunction(
         GuardKind.PopHookGuard,
       ),
     ]);
+  } else {
+    compiled.body = t.blockStatement([...freezes, ...compiled.body.body]);
   }
 
   const cacheCount = compiled.memoSlotsUsed;
@@ -778,7 +785,7 @@ function codegenReactiveScope(
               t.numericLiteral(index),
               true,
             ),
-            value,
+            codegenFreeze(value),
           ),
         ),
       );
@@ -1114,7 +1121,7 @@ function codegenTerminal(
         // Use implicit undefined
         return t.returnStatement();
       }
-      return t.returnStatement(value);
+      return t.returnStatement(codegenFreeze(value));
     }
     case 'switch': {
       return t.switchStatement(
@@ -1417,7 +1424,7 @@ function codegenDependency(
       object = t.memberExpression(object, t.identifier(path));
     }
   }
-  return object;
+  return codegenFreeze(object);
 }
 
 function withLoc<T extends (...args: Array<any>) => t.Node>(
@@ -1505,12 +1512,23 @@ function createCallExpression(
   loc: SourceLocation | null,
   isHook: boolean,
 ): t.CallExpression {
-  const callExpr = t.callExpression(callee, args);
+  let maybeFreezeArgs = args;
+  if (isHook) {
+    maybeFreezeArgs = args.map(arg =>
+      arg.type === 'SpreadElement'
+        ? t.spreadElement(codegenFreeze(arg.argument))
+        : codegenFreeze(arg),
+    );
+  }
+  let callExpr = t.callExpression(callee, maybeFreezeArgs);
   if (loc != null && loc != GeneratedSource) {
     callExpr.loc = loc;
   }
 
   const hookGuard = config.enableEmitHookGuards;
+  if (isHook) {
+    callExpr = codegenFreeze(callExpr);
+  }
   if (hookGuard != null && isHook) {
     const iife = t.functionExpression(
       null,
@@ -2239,7 +2257,7 @@ function codegenJsxAttribute(
         );
       }
       const innerValue = codegenPlaceToExpression(cx, attribute.place);
-      let value;
+      let value: t.StringLiteral | t.JSXExpressionContainer;
       switch (innerValue.type) {
         case 'StringLiteral': {
           value = innerValue;
@@ -2262,9 +2280,19 @@ function codegenJsxAttribute(
           break;
         }
       }
+      if (
+        t.isJSXExpressionContainer(value) &&
+        t.isExpression(value.expression) &&
+        !t.isLiteral(value.expression)
+      ) {
+        value.expression = codegenFreeze(value.expression);
+      }
       return createJsxAttribute(attribute.place.loc, propName, value);
     }
     case 'JsxSpreadAttribute': {
+      let value = codegenPlaceToExpression(cx, attribute.argument);
+      value = codegenFreeze(value);
+
       return t.jsxSpreadAttribute(
         codegenPlaceToExpression(cx, attribute.argument),
       );
@@ -2513,6 +2541,13 @@ function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
   const identifier = convertIdentifier(place.identifier);
   identifier.loc = place.loc as any;
   return identifier;
+}
+
+function codegenFreeze(exp: t.Expression) {
+  return t.callExpression(
+    t.memberExpression(t.identifier('Object'), t.identifier('freeze')),
+    [exp],
+  );
 }
 
 function convertIdentifier(identifier: Identifier): t.Identifier {
