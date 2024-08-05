@@ -420,13 +420,7 @@ def wait_for_builds_to_complete(args, build_ids):
         if args['circleci_project_slug'] and args['github_repo_slug']:
             for id in build_ids['github']:
                 futures[f"github_{id}"] = executor.submit(wait_for_github_build, args, id)
-        if args['gitlab_project_id']:
-            for id in build_ids['gitlab']:
-                futures[f"gitlab_{id}"] = executor.submit(wait_for_gitlab_build, args, id)
-        if args['harness_org_id'] and args['harness_project_id'] and args['harness_pipeline_id'] and args['harness_account_id']:
-            for id in build_ids['harness']:
-                futures[f"harness_{id}"] = executor.submit(wait_for_harness_build, args, id)
-
+        
         for vendor, future in futures.items():
             try:
                 future.result()
@@ -472,10 +466,6 @@ def collect_metrics(args, build_ids):
             futures["circleci"] = executor.submit(collect_circleci_metrics, args, build_ids['circleci'])
         if args['circleci_project_slug'] and args['github_workflow']:
             futures["github"] = executor.submit(collect_github_metrics, args, build_ids['github'])
-        if args['gitlab_project_id']:
-            futures["gitlab"] = executor.submit(collect_gitlab_metrics, args, build_ids['gitlab'])
-        if args['harness_org_id'] and args['harness_project_id'] and args['harness_pipeline_id'] and args['harness_account_id']:
-            futures["harness"] = executor.submit(collect_harness_metrics, args, build_ids['harness'])
 
         for vendor, future in futures.items():
             try:
@@ -706,11 +696,6 @@ def compute_metrics(sanitized_metrics):
             futures["circleci"] = executor.submit(compute_circleci_metrics, sanitized_metrics.get('circleci'))
         if 'github' in sanitized_metrics:
             futures["github"] = executor.submit(compute_github_metrics, sanitized_metrics.get('github'))
-        # if 'gitlab' in sanitized_metrics:
-        #     futures["gitlab"] = executor.submit(compute_gitlab_metrics, sanitized_metrics.get('gitlab'))
-        # if 'harness' in sanitized_metrics:
-        #     futures["harness"] = executor.submit(compute_harness_metrics, sanitized_metrics.get('harness'))
-
         for vendor, future in futures.items():
             try:
                 computed[vendor] = future.result()
