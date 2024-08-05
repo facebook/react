@@ -5,13 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  HIRFunction,
-  IdentifierId,
-  printFunction,
-  Type,
-  typeEquals,
-} from '../HIR';
+import {HIRFunction, IdentifierId, Type, typeEquals} from '../HIR';
 
 /**
  * Temporary workaround for InferTypes not propagating the types of phis.

@@ -29,10 +29,7 @@ import {
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue} from '../HIR/visitors';
 import {assertExhaustive} from '../Utils/utils';
-import {
-  printReactiveFunction,
-  printReactiveScopeSummary,
-} from './PrintReactiveFunction';
+import {printReactiveScopeSummary} from './PrintReactiveFunction';
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
