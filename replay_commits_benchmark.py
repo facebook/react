@@ -734,16 +734,16 @@ def compute_metrics(sanitized_metrics):
             futures["circleci"] = [executor.submit(compute_circleci_metrics, item) for item in sanitized_metrics.get('circleci')]
         if 'github' in sanitized_metrics:
             futures["github"] = [executor.submit(compute_github_metrics, item) for item in sanitized_metrics.get('github')]
-        for vendor, futures_list in futures.items():
-            computed[vendor] = {'workflow': [], 'jobs': []}
-            for future in futures_list:
-                try:
-                    computed_result = future.result()
-                    print(f'computed_result = {computed_result}') # Debug
-                    computed[vendor]['workflow'].append(computed_result['workflow'])
-                    computed[vendor]['jobs'].extend(computed_result['jobs'])
-                except Exception as e:
-                    LOGGER.error(f"Error computing {vendor} metrics: {e}")
+        if vendor not in computed:
+          computed[vendor] = {'workflows': [], 'jobs': []}  # Create the lists once per vendor
+          for future in futures_list:
+              try:
+                  computed_result = future.result()
+                  print(f'computed_result = {computed_result}')  # Debug
+                  computed[vendor]['workflows'].append(computed_result['workflow'])
+                  computed[vendor]['jobs'].extend(computed_result['jobs'])
+              except Exception as e:
+                  LOGGER.error(f"Error computing {vendor} metrics: {e}")
 
     return computed
 
@@ -753,6 +753,8 @@ def compute_circleci_metrics(circleci_metrics):
     :param circleci_metrics: Dict of CircleCI sanitized metrics
     :return: Dict of computed CircleCI metrics
     """
+    workflows = []
+
     workflow = circleci_metrics['workflow']
     jobs = circleci_metrics['jobs']
 
@@ -764,7 +766,8 @@ def compute_circleci_metrics(circleci_metrics):
         job['computed_total_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
         job['computed_queued_time'] = (datetime.fromisoformat(job['started_at'][:-1]) - datetime.fromisoformat(job['queued_at'][:-1])).total_seconds()
         job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
-
+    
+    workflows.append(circleci_metrics)
     return circleci_metrics
 
 def compute_github_metrics(github_metrics):
