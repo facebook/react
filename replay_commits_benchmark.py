@@ -592,79 +592,76 @@ def sanitize_metrics(metrics):
 
 def sanitize_circleci_metrics(circleci_metrics_list):
     result = []
-
-    print(type(circleci_metrics_list))  # Debug: should print <class 'list'> 
-    print(len(circleci_metrics_list))   # Debug: should print the number of dictionaries in the list
-    print(type(circleci_metrics_list[0]))  # Debug: should print <class 'dict'>
     
-    for circleci_metrics in circleci_metrics_list:
-      print(type(circleci_metrics)) # Debug
-      print(circleci_metrics) # Debug
-      print("Workflow Metrics:")
-      print(circleci_metrics['workflow'])
-      sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
-      workflow = circleci_metrics['workflow']
+    for inner_list in circleci_metrics_list:
+        for circleci_metrics in inner_list:
+            print(type(circleci_metrics))  # Debug
+            print(circleci_metrics)  # Debug
+            
+            sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
+            workflow = circleci_metrics['workflow']
+            
 
-      print(type(circleci_metrics['jobs'])) # Debug
+        print(type(circleci_metrics['jobs'])) # Debug
 
-      # Extract VCS URL from project data in one of the jobs
-      vcs_url = None
-      if circleci_metrics['jobs']:
-          project_data = circleci_metrics['jobs'][0].get('project', {})
-          vcs_url = project_data.get('external_url')
+        # Extract VCS URL from project data in one of the jobs
+        vcs_url = None
+        if circleci_metrics['jobs']:
+            project_data = circleci_metrics['jobs'][0].get('project', {})
+            vcs_url = project_data.get('external_url')
 
-      sanitized_workflow.update({
-          "commit": workflow['commit'],
-          "vendor": "CircleCI",
-          "workflow_id": workflow['id'],
-          "workflow_name": workflow['name'],
-          "workflow_status": workflow['status'],
-          "created_at": workflow['created_at'],
-          "started_at": None,
-          "stopped_at": workflow['stopped_at'],
-          "workflow_url": f"https://app.circleci.com/pipelines/workflows/{workflow['id']}",
-          "vcs_url": vcs_url,
-          "reported_duration": None,
-          "reported_queued_duration": None
-      })
-
-      sanitized_jobs = []
-      for job in circleci_metrics['jobs']:
-          print(type(job)) # Debug
-          print(job) # Debug
-
-          sanitized_job = deepcopy(JOB_TEMPLATE)
-
-          print(type(job['executor'])) # Debug
-
-          # Grab executor info
-          executor = job["executor"]
-          runner_info = f"{executor["type"]}-{executor['resource_class']}"
-
-          # Convert from milliseconds to seconds
-          reported_duration = int(job['duration'])/1000
-
-          sanitized_job.update({
-              "commit": job['commit'],
-              "vendor": "CircleCI",
-              "job_id": job['number'],
-              "job_name": job['name'],
-              "job_status": job['status'],
-              "created_at": job['created_at'],
-              "started_at": job['started_at'],
-              "stopped_at": job['stopped_at'],
-              "queued_at": job['queued_at'],
-              "reported_duration": reported_duration,
-              "reported_queued_duration": None,
-              "job_url": job['web_url'],
-              "runner_info": runner_info
-          })
-          sanitized_jobs.append(sanitized_job)
-          
-          result.append({
-            "workflow": sanitized_workflow,
-            "jobs": sanitized_jobs
+        sanitized_workflow.update({
+            "commit": workflow['commit'],
+            "vendor": "CircleCI",
+            "workflow_id": workflow['id'],
+            "workflow_name": workflow['name'],
+            "workflow_status": workflow['status'],
+            "created_at": workflow['created_at'],
+            "started_at": None,
+            "stopped_at": workflow['stopped_at'],
+            "workflow_url": f"https://app.circleci.com/pipelines/workflows/{workflow['id']}",
+            "vcs_url": vcs_url,
+            "reported_duration": None,
+            "reported_queued_duration": None
         })
+
+        sanitized_jobs = []
+        for job in circleci_metrics['jobs']:
+            print(type(job)) # Debug
+            print(job) # Debug
+
+            sanitized_job = deepcopy(JOB_TEMPLATE)
+
+            print(type(job['executor'])) # Debug
+
+            # Grab executor info
+            executor = job["executor"]
+            runner_info = f"{executor["type"]}-{executor['resource_class']}"
+
+            # Convert from milliseconds to seconds
+            reported_duration = int(job['duration'])/1000
+
+            sanitized_job.update({
+                "commit": job['commit'],
+                "vendor": "CircleCI",
+                "job_id": job['number'],
+                "job_name": job['name'],
+                "job_status": job['status'],
+                "created_at": job['created_at'],
+                "started_at": job['started_at'],
+                "stopped_at": job['stopped_at'],
+                "queued_at": job['queued_at'],
+                "reported_duration": reported_duration,
+                "reported_queued_duration": None,
+                "job_url": job['web_url'],
+                "runner_info": runner_info
+            })
+            sanitized_jobs.append(sanitized_job)
+            
+            result.append({
+              "workflow": sanitized_workflow,
+              "jobs": sanitized_jobs
+          })
     return result
 
 def sanitize_github_metrics(github_metrics_list):
