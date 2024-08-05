@@ -71,7 +71,6 @@ export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enablePersistedModeClonedFlag = false;
-export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 export const disableClientCache = true;
 
 export const enableServerComponentLogs = true;
