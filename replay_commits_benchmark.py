@@ -362,7 +362,7 @@ def export_blob(data, dst_path):
         try:
             os.makedirs(directory, exist_ok=True)
         except FileExistsError as e:
-            print(f"Cannot create directory. A file with the name '{directory}' already exists. Trying to remove the file.")
+            print(f"Attempted to create directory, but a directory with the name '{directory}' already exists. Removing the directory.")
             os.remove(directory)
             os.makedirs(directory, exist_ok=True)
             
@@ -488,7 +488,6 @@ def collect_metrics(args, build_ids):
             except Exception as e:
                 LOGGER.error(f"Error collecting Github metrics for workflow_run_id={workflow_run_id}: {e}")
     
-    LOGGER.debug(f"Final metrics: {metrics}") # Debug
     return metrics
 
 def collect_circleci_metrics(args, pipeline_id):
@@ -571,10 +570,6 @@ def collect_github_metrics(args, workflow_run_id):
         jobs_response.raise_for_status()
         jobs_data = jobs_response.json()
         jobs.extend(jobs_data['jobs'])
-        LOGGER.info(f"Fetched {len(jobs_data['jobs'])} jobs for this request.") # Debug
-
-        for job in jobs_data['jobs']: # Debug
-            LOGGER.info(f"Job data: {job}") # Debug
         
         # Check if there's a next page
         jobs_url = jobs_response.links.get('next', {}).get('url')
@@ -740,7 +735,6 @@ def compute_metrics(sanitized_metrics):
             for future in futures_list:
                 try:
                     computed_result = future.result()
-                    print(f'computed_result = {computed_result}')  # Debug
                     computed[vendor]['workflows'].append(computed_result['workflow'])
                     computed[vendor]['jobs'].extend(computed_result['jobs'])
                 except Exception as e:
@@ -792,8 +786,6 @@ def compute_github_metrics(github_metrics):
         job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
         computed_jobs.append(job)
 
-        print(f'Computed {len(computed_jobs)} GitHub jobs.')  # Debug
-
     return {'workflow': workflow, 'jobs': computed_jobs}
 
 def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64):
@@ -821,7 +813,6 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
     for vendor, metrics_data in computed_metrics.items():
-        print(vendor, type(metrics_data), metrics_data) # Debug
         for workflow in metrics_data["workflows"]:
             values = [workflow.get(header) for header in workflow_headers]
             append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
