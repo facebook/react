@@ -595,6 +595,7 @@ def sanitize_metrics(metrics):
 def sanitize_circleci_metrics(circleci_metrics):
     sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
     workflow = circleci_metrics['workflow']
+    sanitized_metrics_list = []
 
     # Extract VCS URL from project data in one of the jobs
     vcs_url = None
@@ -644,15 +645,19 @@ def sanitize_circleci_metrics(circleci_metrics):
             "runner_info": runner_info
         })
         sanitized_jobs.append(sanitized_job)
-
-    return {
+        
+    sanitized_metrics_list.append({
         "workflow": sanitized_workflow,
         "jobs": sanitized_jobs
-    }
+    })
+    
+    return sanitized_metrics_list
 
 def sanitize_github_metrics(github_metrics):
     sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
     workflow = github_metrics['workflow']
+    sanitized_metrics_list = []
+
     sanitized_workflow.update({
         "commit": workflow['head_sha'],
         "vendor": "GitHub",
@@ -688,10 +693,11 @@ def sanitize_github_metrics(github_metrics):
         })
         sanitized_jobs.append(sanitized_job)
 
-    return {
-        "workflow": sanitized_workflow,
-        "jobs": sanitized_jobs
-    }
+    sanitized_metrics_list.append({
+            "workflow": sanitized_workflow,
+            "jobs": sanitized_jobs
+        })
+    return sanitized_metrics_list
 
 def compute_metrics(sanitized_metrics):
     """
