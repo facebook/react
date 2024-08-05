@@ -8,7 +8,6 @@
 import {
   BasicBlock,
   BlockId,
-  Effect,
   Environment,
   FunctionExpression,
   GeneratedSource,
@@ -19,7 +18,6 @@ import {
   LabelTerminal,
   Place,
   makeInstructionId,
-  makeType,
   promoteTemporary,
   reversePostorderBlocks,
 } from '../HIR';
