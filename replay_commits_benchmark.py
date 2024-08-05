@@ -594,13 +594,13 @@ def sanitize_circleci_metrics(circleci_metrics_list):
     result = []
     
     for circleci_metrics in circleci_metrics_list:
+      print(circleci_metrics)
       sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
       workflow = circleci_metrics['workflow']
 
       # Extract VCS URL from project data in one of the jobs
       vcs_url = None
       if circleci_metrics['jobs']:
-          print(circleci_metrics)
           project_data = circleci_metrics['jobs'][0].get('project', {})
           vcs_url = project_data.get('external_url')
 
