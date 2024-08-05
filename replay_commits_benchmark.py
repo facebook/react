@@ -600,6 +600,7 @@ def sanitize_circleci_metrics(circleci_metrics_list):
       # Extract VCS URL from project data in one of the jobs
       vcs_url = None
       if circleci_metrics['jobs']:
+          print(circleci_metrics)
           project_data = circleci_metrics['jobs'][0].get('project', {})
           vcs_url = project_data.get('external_url')
 
