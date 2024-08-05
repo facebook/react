@@ -757,12 +757,14 @@ def compute_github_metrics(github_metrics):
     workflow['computed_queued_time'] = (datetime.fromisoformat(workflow['started_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds()
     workflow['computed_run_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['started_at'][:-1])).total_seconds()
 
+    computed_jobs = []
     for job in jobs:
         job['computed_total_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
         job['computed_queued_time'] = (datetime.fromisoformat(job['started_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
         job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
+        computed_jobs.append(job)
 
-    return github_metrics
+    return {'workflow': workflow, 'jobs': computed_jobs}
 
 def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64):
     retries = 0
