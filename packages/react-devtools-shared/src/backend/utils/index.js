@@ -9,11 +9,14 @@
  */
 
 import {compareVersions} from 'compare-versions';
-import {dehydrate} from '../hydration';
+import {dehydrate} from 'react-devtools-shared/src/hydration';
 import isArray from 'shared/isArray';
 
 import type {Source} from 'react-devtools-shared/src/shared/types';
 import type {DehydratedData} from 'react-devtools-shared/src/frontend/types';
+
+export {default as formatWithStyles} from './formatWithStyles';
+export {default as formatConsoleArguments} from './formatConsoleArguments';
 
 // TODO: update this to the first React version that has a corresponding DevTools backend
 const FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER = '999.9.9';
@@ -162,125 +165,6 @@ export function serializeToString(data: any): string {
     },
     2,
   );
-}
-
-// NOTE: KEEP IN SYNC with src/hook.js
-// Formats an array of args with a style for console methods, using
-// the following algorithm:
-//     1. The first param is a string that contains %c
-//          - Bail out and return the args without modifying the styles.
-//            We don't want to affect styles that the developer deliberately set.
-//     2. The first param is a string that doesn't contain %c but contains
-//        string formatting
-//          - [`%c${args[0]}`, style, ...args.slice(1)]
-//          - Note: we assume that the string formatting that the developer uses
-//            is correct.
-//     3. The first param is a string that doesn't contain string formatting
-//        OR is not a string
-//          - Create a formatting string where:
-//                 boolean, string, symbol -> %s
-//                 number -> %f OR %i depending on if it's an int or float
-//                 default -> %o
-export function formatWithStyles(
-  inputArgs: $ReadOnlyArray<any>,
-  style?: string,
-): $ReadOnlyArray<any> {
-  if (
-    inputArgs === undefined ||
-    inputArgs === null ||
-    inputArgs.length === 0 ||
-    // Matches any of %c but not %%c
-    (typeof inputArgs[0] === 'string' && inputArgs[0].match(/([^%]|^)(%c)/g)) ||
-    style === undefined
-  ) {
-    return inputArgs;
-  }
-
-  // Matches any of %(o|O|d|i|s|f), but not %%(o|O|d|i|s|f)
-  const REGEXP = /([^%]|^)((%%)*)(%([oOdisf]))/g;
-  if (typeof inputArgs[0] === 'string' && inputArgs[0].match(REGEXP)) {
-    return [`%c${inputArgs[0]}`, style, ...inputArgs.slice(1)];
-  } else {
-    const firstArg = inputArgs.reduce((formatStr, elem, i) => {
-      if (i > 0) {
-        formatStr += ' ';
-      }
-      switch (typeof elem) {
-        case 'string':
-        case 'boolean':
-        case 'symbol':
-          return (formatStr += '%s');
-        case 'number':
-          const formatting = Number.isInteger(elem) ? '%i' : '%f';
-          return (formatStr += formatting);
-        default:
-          return (formatStr += '%o');
-      }
-    }, '%c');
-    return [firstArg, style, ...inputArgs];
-  }
-}
-
-// NOTE: KEEP IN SYNC with src/hook.js
-// Skips CSS and object arguments, inlines other in the first argument as a template string
-export function formatConsoleArguments(
-  maybeMessage: any,
-  ...inputArgs: $ReadOnlyArray<any>
-): $ReadOnlyArray<any> {
-  if (inputArgs.length === 0 || typeof maybeMessage !== 'string') {
-    return [maybeMessage, ...inputArgs];
-  }
-
-  const args = inputArgs.slice();
-
-  let template = '';
-  let argumentsPointer = 0;
-  for (let i = 0; i < maybeMessage.length; ++i) {
-    const currentChar = maybeMessage[i];
-    if (currentChar !== '%') {
-      template += currentChar;
-      continue;
-    }
-
-    const nextChar = maybeMessage[i + 1];
-    ++i;
-
-    // Only keep CSS and objects, inline other arguments
-    switch (nextChar) {
-      case 'c':
-      case 'O':
-      case 'o': {
-        ++argumentsPointer;
-        template += `%${nextChar}`;
-
-        break;
-      }
-      case 'd':
-      case 'i': {
-        const [arg] = args.splice(argumentsPointer, 1);
-        template += parseInt(arg, 10).toString();
-
-        break;
-      }
-      case 'f': {
-        const [arg] = args.splice(argumentsPointer, 1);
-        template += parseFloat(arg).toString();
-
-        break;
-      }
-      case 's': {
-        const [arg] = args.splice(argumentsPointer, 1);
-        template += arg.toString();
-
-        break;
-      }
-
-      default:
-        template += `%${nextChar}`;
-    }
-  }
-
-  return [template, ...args];
 }
 
 // based on https://github.com/tmpfs/format-util/blob/0e62d430efb0a1c51448709abd3e2406c14d8401/format.js#L1
