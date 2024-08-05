@@ -489,7 +489,7 @@ def collect_circleci_metrics(args, pipeline_id):
     response = requests.get(pipeline_url, headers=headers)
     response.raise_for_status()
     pipeline = response.json()
-    commit = pipeline['items']['vcs']['revision']
+    commit = pipeline['git']['checkout_sha']
 
     LOGGER.info(f"Collecting CircleCI Workflow Metrics for Pipeline: {pipeline_id}...")
 
