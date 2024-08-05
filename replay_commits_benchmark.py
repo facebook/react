@@ -594,9 +594,12 @@ def sanitize_circleci_metrics(circleci_metrics_list):
     result = []
     
     for circleci_metrics in circleci_metrics_list:
-      print(circleci_metrics)
+      print(type(circleci_metrics)) # Debug
+      print(circleci_metrics) # Debug
       sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
       workflow = circleci_metrics['workflow']
+
+      print(type(circleci_metrics['jobs'])) # Debug
 
       # Extract VCS URL from project data in one of the jobs
       vcs_url = None
@@ -621,7 +624,12 @@ def sanitize_circleci_metrics(circleci_metrics_list):
 
       sanitized_jobs = []
       for job in circleci_metrics['jobs']:
+          print(type(job)) # Debug
+          print(job) # Debug
+
           sanitized_job = deepcopy(JOB_TEMPLATE)
+
+          print(type(job['executor'])) # Debug
 
           # Grab executor info
           executor = job["executor"]
