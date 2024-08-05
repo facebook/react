@@ -460,19 +460,25 @@ def wait_for_github_build(args, workflow_run_id):
 
 def collect_metrics(args, build_ids):
     metrics = {}
-    with ThreadPoolExecutor() as executor:
-        futures = {}
-        if args['circleci_project_slug']:
-            futures["circleci"] = executor.submit(collect_circleci_metrics, args, build_ids['circleci'])
-        if args['circleci_project_slug'] and args['github_repo_slug']:
-            futures["github"] = executor.submit(collect_github_metrics, args, build_ids['github'])
-
-        for vendor, future in futures.items():
+  
+    if args['circleci_project_slug']:
+        metrics["circleci"] = []
+        for pipeline_id in build_ids['circleci']:
             try:
-                metrics[vendor] = future.result()
+                metrics_result = collect_circleci_metrics(args, pipeline_id)
+                metrics["circleci"].append(metrics_result)
             except Exception as e:
-                LOGGER.error(f"Error collecting {vendor} metrics: {e}")
+                LOGGER.error(f"Error collecting CircleCI metrics for pipeline_id={pipeline_id}: {e}")
 
+    if args['circleci_project_slug'] and args['github_repo_slug']:
+        metrics["github"] = []
+        for workflow_run_id in build_ids['github']:
+            try:
+                metrics_result = collect_github_metrics(args, workflow_run_id)
+                metrics["github"].append(metrics_result)
+            except Exception as e:
+                LOGGER.error(f"Error collecting Github metrics for workflow_run_id={workflow_run_id}: {e}")
+    
     return metrics
 
 def collect_circleci_metrics(args, pipeline_id):
