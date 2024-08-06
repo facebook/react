@@ -61,9 +61,8 @@ async function main() {
     })
     .option('tags', {
       description: 'Tags to publish to npm',
-      type: 'choices',
-      choices: ['experimental'],
-      default: ['experimental'],
+      type: 'string',
+      default: 'experimental',
     })
     .help('help')
     .parseSync();
@@ -178,7 +177,7 @@ async function main() {
       spinner.succeed(`Successfully published ${pkgName} to npm`);
 
       spinner.start('Pushing tags to npm');
-      for (const tag of argv.tags) {
+      for (const tag of argv.tags.split(',')) {
         try {
           let opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
           if (otp != null) {
