@@ -315,7 +315,7 @@ def push_commits_one_by_one(args, repo, commits):
                 folders_from_main[item.path] = BytesIO(item.data_stream.read()).getvalue()
 
     for commit in commits:
-        repo.git.cherry_pick(commit.hexsha)
+        repo.head.reset(commit=commit, index=True, working_tree=True)
 
         for path, data in folders_from_main.items():
             if os.path.exists(path):
@@ -340,7 +340,7 @@ def push_commits_one_by_one(args, repo, commits):
         repo.remotes.origin.set_url(f'https://{quote(token)}:x-oauth-basic@github.com/efficientengineering/react')
 
         print(f"Pushing commit {commit.hexsha} to branch {branch}")
-        repo.git.push("--force", "origin", f"HEAD")
+        repo.git.push("--force", "origin", branch)
         repo.remotes.origin.set_url(url)
         time.sleep(args['commit_delay'])
 
