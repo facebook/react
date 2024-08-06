@@ -26,9 +26,11 @@ import ProfilerSettings from './ProfilerSettings';
 
 import styles from './SettingsModal.css';
 
-type TabID = 'general' | 'components' | 'profiler';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
-export default function SettingsModal(_: {}): React.Node {
+type TabID = 'general' | 'debugging' | 'components' | 'profiler';
+
+export default function SettingsModal(): React.Node {
   const {isModalShowing, setIsModalShowing} = useContext(SettingsModalContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;
@@ -54,11 +56,13 @@ export default function SettingsModal(_: {}): React.Node {
     return null;
   }
 
-  return <SettingsModalImpl />;
+  return <SettingsModalImpl store={store} />;
 }
 
-function SettingsModalImpl(_: {}) {
-  const {setIsModalShowing, environmentNames} =
+type ImplProps = {store: Store};
+
+function SettingsModalImpl({store}: ImplProps) {
+  const {setIsModalShowing, environmentNames, hookSettings} =
     useContext(SettingsModalContext);
   const dismissModal = useCallback(
     () => setIsModalShowing(false),
@@ -84,9 +88,8 @@ function SettingsModalImpl(_: {}) {
     case 'components':
       view = <ComponentsSettings environmentNames={environmentNames} />;
       break;
-    // $FlowFixMe[incompatible-type] is this missing in TabID?
     case 'debugging':
-      view = <DebuggingSettings />;
+      view = <DebuggingSettings hookSettings={hookSettings} store={store} />;
       break;
     case 'general':
       view = <GeneralSettings />;

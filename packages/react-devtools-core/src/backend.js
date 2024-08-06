@@ -162,7 +162,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     );
 
     if (devToolsSettingsManager != null && bridge != null) {
-      bridge.addListener('updateConsolePatchSettings', consolePatchSettings =>
+      bridge.addListener('updateHookSettings', consolePatchSettings =>
         cacheConsolePatchSettings(
           devToolsSettingsManager,
           consolePatchSettings,
@@ -368,7 +368,7 @@ export function connectWithCustomMessagingProtocol({
   );
 
   if (settingsManager != null) {
-    bridge.addListener('updateConsolePatchSettings', consolePatchSettings =>
+    bridge.addListener('updateHookSettings', consolePatchSettings =>
       cacheConsolePatchSettings(settingsManager, consolePatchSettings),
     );
   }

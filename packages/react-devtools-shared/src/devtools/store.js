@@ -49,6 +49,7 @@ import type {
   BridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
+import type {DevToolsHookSettings} from '../backend/types';
 
 const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
@@ -94,6 +95,7 @@ export default class Store extends EventEmitter<{
   collapseNodesByDefault: [],
   componentFilters: [],
   error: [Error],
+  hookSettings: [$ReadOnly<DevToolsHookSettings>],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
@@ -192,6 +194,7 @@ export default class Store extends EventEmitter<{
   _weightAcrossRoots: number = 0;
 
   _shouldCheckBridgeProtocolCompatibility: boolean = false;
+  _hookSettings: $ReadOnly<DevToolsHookSettings> | null = null;
 
   constructor(bridge: FrontendBridge, config?: Config) {
     super();
@@ -270,6 +273,7 @@ export default class Store extends EventEmitter<{
 
     bridge.addListener('backendVersion', this.onBridgeBackendVersion);
     bridge.addListener('saveToClipboard', this.onSaveToClipboard);
+    bridge.addListener('hookSettings', this.onHookSettings);
     bridge.addListener('backendInitialized', this.onBackendInitialized);
   }
 
@@ -1501,7 +1505,28 @@ export default class Store extends EventEmitter<{
 
     this._bridge.send('getBackendVersion');
     this._bridge.send('getIfHasUnsupportedRendererVersion');
+    this._bridge.send('getHookSettings'); // Warm up cached hook settings
   };
+
+  getHookSettings: () => void = () => {
+    if (this._hookSettings != null) {
+      this.emit('hookSettings', this._hookSettings);
+    } else {
+      this._bridge.send('getHookSettings');
+    }
+  };
+
+  updateHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
+    settings => {
+      this._hookSettings = settings;
+      this._bridge.send('updateHookSettings', settings);
+    };
+
+  onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
+    settings => {
+      this._hookSettings = settings;
+      this.emit('hookSettings', settings);
+    };
 
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,

@@ -150,6 +150,7 @@ export default class Agent extends EventEmitter<{
   disableTraceUpdates: [],
   getIfHasUnsupportedRendererVersion: [],
   updateHookSettings: [DevToolsHookSettings],
+  getHookSettings: [],
 }> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
@@ -213,10 +214,10 @@ export default class Agent extends EventEmitter<{
       this.syncSelectionFromBuiltinElementsPanel,
     );
     bridge.addListener('shutdown', this.shutdown);
-    bridge.addListener(
-      'updateConsolePatchSettings',
-      this.updateConsolePatchSettings,
-    );
+
+    bridge.addListener('updateHookSettings', this.updateHookSettings);
+    bridge.addListener('getHookSettings', this.getHookSettings);
+
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
     bridge.addListener('getEnvironmentNames', this.getEnvironmentNames);
     bridge.addListener(
@@ -802,17 +803,25 @@ export default class Agent extends EventEmitter<{
     }
   };
 
-  updateConsolePatchSettings: (
-    settings: $ReadOnly<DevToolsHookSettings>,
-  ) => void = settings => {
-    // Propagate the settings, so Backend can subscribe to it and modify hook
-    this.emit('updateHookSettings', {
-      appendComponentStack: settings.appendComponentStack,
-      breakOnConsoleErrors: settings.breakOnConsoleErrors,
-      showInlineWarningsAndErrors: settings.showInlineWarningsAndErrors,
-      hideConsoleLogsInStrictMode: settings.hideConsoleLogsInStrictMode,
-    });
+  updateHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
+    settings => {
+      // Propagate the settings, so Backend can subscribe to it and modify hook
+      this.emit('updateHookSettings', {
+        appendComponentStack: settings.appendComponentStack,
+        breakOnConsoleErrors: settings.breakOnConsoleErrors,
+        showInlineWarningsAndErrors: settings.showInlineWarningsAndErrors,
+        hideConsoleLogsInStrictMode: settings.hideConsoleLogsInStrictMode,
+      });
+    };
+
+  getHookSettings: () => void = () => {
+    this.emit('getHookSettings');
   };
+
+  onHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
+    settings => {
+      this._bridge.send('hookSettings', settings);
+    };
 
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void =
     componentFilters => {
