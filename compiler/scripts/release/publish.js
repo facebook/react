@@ -180,22 +180,17 @@ async function main() {
       spinner.start('Pushing tags to npm');
       for (const tag of argv.tags) {
         try {
-          let opts;
+          let opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
           if (otp != null) {
-            opts = [
-              'dist-tag',
-              'add',
-              `${pkgName}@${newVersion}`,
-              tag,
-              `--otp=${otp}`,
-            ];
-          } else {
-            opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
+            opts.push(`--otp=${otp}`);
           }
           if (argv.debug === true) {
             spinner.info(`dry-run: npm ${opts.join(' ')}`);
           } else {
-            await spawnHelper('npm', opts);
+            await spawnHelper('npm', opts, {
+              cwd: pkgDir,
+              stdio: 'inherit',
+            });
           }
         } catch (e) {
           spinner.fail(e.toString());
