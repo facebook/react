@@ -58,17 +58,92 @@ async function format(code, language) {
 }
 
 const TAG_NAMES = new Set([
-  'div',
-  'span',
-  'input',
-  'button',
   'a',
-  'form',
-  'select',
-  'textarea',
   'body',
+  'button',
+  'div',
+  'form',
   'head',
   'html',
+  'input',
+  'label',
+  'select',
+  'span',
+  'textarea',
+
+  // property/attribute names
+  'value',
+  'checked',
+  'onClick',
+  'onSubmit',
+  'name',
+]);
+
+const BUILTIN_HOOKS = new Set([
+  'useContext',
+  'useEffect',
+  'useInsertionEffect',
+  'useLayoutEffect',
+  'useReducer',
+  'useState',
+]);
+
+const GLOBALS = new Set([
+  'String',
+  'Object',
+  'Function',
+  'Number',
+  'RegExp',
+  'Date',
+  'Error',
+  'Function',
+  'TypeError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'URIError',
+  'EvalError',
+  'Boolean',
+  'DataView',
+  'Float32Array',
+  'Float64Array',
+  'Int8Array',
+  'Int16Array',
+  'Int32Array',
+  'Map',
+  'Set',
+  'WeakMap',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Uint16Array',
+  'Uint32Array',
+  'ArrayBuffer',
+  'JSON',
+  'parseFloat',
+  'parseInt',
+  'console',
+  'isNaN',
+  'eval',
+  'isFinite',
+  'encodeURI',
+  'decodeURI',
+  'encodeURIComponent',
+  'decodeURIComponent',
+
+  // common method/property names of globals
+  'map',
+  'push',
+  'at',
+  'filter',
+  'slice',
+  'splice',
+  'add',
+  'get',
+  'set',
+  'has',
+  'size',
+  'length',
+  'toString',
 ]);
 
 function AnonymizePlugin(_babel) {
@@ -83,21 +158,25 @@ function AnonymizePlugin(_babel) {
       },
       JSXIdentifier(path) {
         const name = path.node.name;
+        if (TAG_NAMES.has(name)) {
+          return;
+        }
         let nextName = identifiers.get(name);
         if (nextName == null) {
           const isCapitalized =
             name.slice(0, 1).toUpperCase() === name.slice(0, 1);
           nextName = isCapitalized
             ? `Component${(index++).toString(16).toUpperCase()}`
-            : TAG_NAMES.has(name)
-              ? name
-              : `c${(index++).toString(16)}`;
+            : `c${(index++).toString(16)}`;
           identifiers.set(name, nextName);
         }
         path.node.name = nextName;
       },
       Identifier(path) {
         const name = path.node.name;
+        if (BUILTIN_HOOKS.has(name) || GLOBALS.has(name)) {
+          return;
+        }
         let nextName = identifiers.get(name);
         if (nextName == null) {
           const isCapitalized =
