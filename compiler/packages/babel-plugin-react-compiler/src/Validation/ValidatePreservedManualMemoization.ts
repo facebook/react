@@ -464,8 +464,8 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       }
       CompilerError.invariant(state.manualMemoState == null, {
         reason: 'Unexpected nested StartMemoize instructions',
-        description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${instruction.value.manualMemoId}`,
-        loc: instruction.value.loc,
+        description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${value.manualMemoId}`,
+        loc: value.loc,
         suggestions: null,
       });
 
@@ -478,7 +478,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       };
 
       for (const {identifier, loc} of eachInstructionValueOperand(
-        instruction.value as InstructionValue,
+        value as InstructionValue,
       )) {
         if (
           identifier.scope != null &&
@@ -499,11 +499,11 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
     if (value.kind === 'FinishMemoize') {
       CompilerError.invariant(
         state.manualMemoState != null &&
-          state.manualMemoState.manualMemoId === instruction.value.manualMemoId,
+          state.manualMemoState.manualMemoId === value.manualMemoId,
         {
           reason: 'Unexpected mismatch between StartMemoize and FinishMemoize',
-          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${instruction.value.manualMemoId}`,
-          loc: instruction.value.loc,
+          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
+          loc: value.loc,
           suggestions: null,
         },
       );
@@ -511,7 +511,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       state.manualMemoState = null;
       if (!value.pruned) {
         for (const {identifier, loc} of eachInstructionValueOperand(
-          instruction.value as InstructionValue,
+          value as InstructionValue,
         )) {
           let decls;
           if (identifier.scope == null) {
