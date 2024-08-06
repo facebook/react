@@ -433,15 +433,16 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
      * recursively visits ReactiveValues and instructions
      */
     this.recordTemporaries(instruction, state);
-    if (instruction.value.kind === 'StartMemoize') {
+    const value = instruction.value;
+    if (value.kind === 'StartMemoize') {
       let depsFromSource: Array<ManualMemoDependency> | null = null;
-      if (instruction.value.deps != null) {
-        depsFromSource = instruction.value.deps;
+      if (value.deps != null) {
+        depsFromSource = value.deps;
       }
       CompilerError.invariant(state.manualMemoState == null, {
         reason: 'Unexpected nested StartMemoize instructions',
-        description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${instruction.value.manualMemoId}`,
-        loc: instruction.value.loc,
+        description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${value.manualMemoId}`,
+        loc: value.loc,
         suggestions: null,
       });
 
@@ -449,11 +450,11 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         loc: instruction.loc,
         decls: new Set(),
         depsFromSource,
-        manualMemoId: instruction.value.manualMemoId,
+        manualMemoId: value.manualMemoId,
       };
 
       for (const {identifier, loc} of eachInstructionValueOperand(
-        instruction.value as InstructionValue,
+        value as InstructionValue,
       )) {
         if (
           identifier.scope != null &&
@@ -471,21 +472,21 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         }
       }
     }
-    if (instruction.value.kind === 'FinishMemoize') {
+    if (value.kind === 'FinishMemoize') {
       CompilerError.invariant(
         state.manualMemoState != null &&
-          state.manualMemoState.manualMemoId === instruction.value.manualMemoId,
+          state.manualMemoState.manualMemoId === value.manualMemoId,
         {
           reason: 'Unexpected mismatch between StartMemoize and FinishMemoize',
-          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${instruction.value.manualMemoId}`,
-          loc: instruction.value.loc,
+          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
+          loc: value.loc,
           suggestions: null,
         },
       );
       state.manualMemoState = null;
-      if (!instruction.value.pruned) {
+      if (!value.pruned) {
         for (const {identifier, loc} of eachInstructionValueOperand(
-          instruction.value as InstructionValue,
+          value as InstructionValue,
         )) {
           if (isUnmemoized(identifier, this.scopes)) {
             state.errors.push({
