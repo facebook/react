@@ -39,5 +39,3 @@ function _temp(t0) {
 
 ```
       
-### Eval output
-(kind: exception) Fixture not implemented
