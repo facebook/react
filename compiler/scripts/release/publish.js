@@ -1,3 +1,7 @@
+#!/usr/bin/env node
+
+'use strict';
+
 const ora = require('ora');
 const path = require('path');
 const yargs = require('yargs');
