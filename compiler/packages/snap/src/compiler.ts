@@ -154,12 +154,6 @@ function makePluginOptions(
       .map(s => s.trim())
       .filter(s => s.length > 0);
   }
-  if (firstLine.includes('@enableEmitFreeze')) {
-    enableEmitFreeze = {
-      source: 'react-compiler-runtime',
-      importSpecifierName: 'makeReadOnly',
-    };
-  }
 
   let lowerContextAccess = null;
   if (firstLine.includes('@lowerContextAccess')) {
