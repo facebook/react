@@ -43,6 +43,8 @@ WORKFLOW_TEMPLATE = {
 JOB_TEMPLATE = {
     "commit": None,
     "vendor": None,
+    "workflow_id": None,
+    "workflow_name": None,
     "job_id": None,
     "job_name": None,
     "job_status": None,
@@ -642,6 +644,8 @@ def sanitize_circleci_metrics(circleci_metrics_list):
             sanitized_job.update({
                 "commit": job['commit'],
                 "vendor": "CircleCI",
+                "workflow_id": workflow['id'],
+                "workflow_name": workflow['name'],
                 "job_id": job['number'],
                 "job_name": job['name'],
                 "job_status": job['status'],
@@ -689,6 +693,8 @@ def sanitize_github_metrics(github_metrics_list):
           sanitized_job.update({
               "commit": job['head_sha'],
               "vendor": "GitHub",
+              "workflow_id": workflow['id'],
+              "workflow_name": workflow['name'],
               "job_id": job['id'],
               "job_name": job['name'],
               "job_status": job['conclusion'],

@@ -1,0 +1,24 @@
+name: test_fuzz_cloud
+on:
+  push:
+    branches: [replay-*]
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  test_fuzz_cloud:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+    - uses: ./.github/actions/setup-workflow
+      with:
+        node-version-file: '.nvmrc'
+        skip-electron-download: "1"
+      shell: bash
+    - name: Run fuzz tests
+      run: |-
+        FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci=github
+        FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci=github

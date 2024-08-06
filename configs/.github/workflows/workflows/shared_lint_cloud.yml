@@ -1,0 +1,45 @@
+name: shared_lint_cloud
+
+on:
+  push:
+    branches: [replay-*]
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  prettier_cloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/setup-workflow
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: '**/yarn.lock'
+      - run: yarn prettier-check
+
+  eslint_cloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/setup-workflow
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+      - run: node ./scripts/tasks/eslint
+
+  check_license_cloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/setup-workflow
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+      - run: ./scripts/circleci/check_license.sh
+
+  test_print_warnings_cloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/setup-workflow
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+      - run: ./scripts/circleci/test_print_warnings.sh
