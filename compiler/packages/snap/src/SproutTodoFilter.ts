@@ -502,6 +502,14 @@ const skipFilter = new Set([
 
   // needs to be executed as a module
   'meta-property',
+
+  // needs context lowering support in React
+  'todo.lower-context-access-property-load',
+  'todo.lower-context-access-nested-destructuring',
+  'todo.lower-context-access-mixed-array-obj',
+  'todo.lower-context-access-destructure-multiple',
+  'todo.lower-context-access-array-destructuring',
+  'lower-context-selector-simple',
 ]);
 
 export default skipFilter;
