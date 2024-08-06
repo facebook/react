@@ -10,7 +10,6 @@ import {
   BasicBlock,
   CallExpression,
   Destructure,
-  Effect,
   Environment,
   GeneratedSource,
   HIRFunction,
