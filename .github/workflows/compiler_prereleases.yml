@@ -46,6 +46,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: |
+      - name: Publish packages to npm
+        run: |
           cp ./scripts/release/ci-npmrc ~/.npmrc
-          scripts/release/publish.js --ci --tags ${{ inputs.dist_tag }}
+          scripts/release/publish.js --frfr --ci --tags ${{ inputs.dist_tag }}
