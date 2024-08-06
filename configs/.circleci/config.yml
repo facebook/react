@@ -1,8 +1,8 @@
 version: 2.1
 
 # aliases
-
-TZ: &tz /usr/share/zoneinfo/America/Los_Angeles
+alias: &tz
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
 
 executors:
   rust-executor:
@@ -67,10 +67,9 @@ jobs:
     working_directory: ~/project/compiler
     resource_class: large
     environment:
-      <<:
-        - *tz
-        - CARGO_TERM_COLOR: always
-        - RUSTFLAGS: -Dwarnings
+      <<: *tz
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -Dwarnings
 
     steps:
       - checkout:
@@ -93,10 +92,9 @@ jobs:
     working_directory: ~/project/compiler
     resource_class: large
     environment:
-      <<:
-        - *tz
-        - CARGO_TERM_COLOR: always
-        - RUSTFLAGS: -Dwarnings
+      <<: *tz
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -Dwarnings
     steps:
       - checkout:
           path: ~/project
@@ -113,10 +111,9 @@ jobs:
     working_directory: ~/project/compiler
     resource_class: large
     environment:
-      <<:
-        - *tz
-        - CARGO_TERM_COLOR: always
-        - RUSTFLAGS: -Dwarnings
+      <<: *tz
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -Dwarnings
     steps:
       - checkout:
           path: ~/project
@@ -162,7 +159,7 @@ jobs:
       - checkout:
           path: ~/project
       - setup_node_modules
-      - run: yarn workspace << parameters.workspace_name >> test
+      - run: yarn workspace << matrix.workspace_name >> test
 
 # test_fuzz Jobs
   test_fuzz_cloud:
@@ -227,7 +224,7 @@ jobs:
     steps:
       - checkout
       - setup_node_modules
-      - run: node ./scripts/tasks/flow-ci << parameters.flow_inline_config_shortname >> 
+      - run: node ./scripts/tasks/flow-ci << matrix.flow_inline_config_shortname >> 
   
   check_generated_fizz_runtime_cloud:
     docker:
@@ -260,7 +257,7 @@ jobs:
       - checkout
       - setup_node_modules
       - run: | 
-          yarn test << parameters.params >> --ci=github --shard=<< parameters.shard >>
+          yarn test << matrix.params >> --ci=github --shard=<< matrix.shard >>
   
   build_and_lint_cloud:
     docker:
@@ -271,20 +268,20 @@ jobs:
       - checkout
       - setup_node_modules
       - run: 
-          command: yarn build --index=<< parameters.worker_id >> --total=20 --r=<< parameters.release_channel >> --ci=circleci
+          command: yarn build --index=<< matrix.worker_id >> --total=20 --r=<< matrix.release_channel >> --ci=circleci
           environment:
             CI: circleci
-            RELEASE_CHANNEL: << parameters.release_channel >>
-            NODE_INDEX: << parameters.worker_id >>
+            RELEASE_CHANNEL: << matrix.release_channel >>
+            NODE_INDEX: << matrix.worker_id >>
       - run: yarn lint-build
       - run: ls -R build
       - run: |
-              mkdir -p /tmp/artifacts/_build_<< parameters.worker_id >>_<< parameters.release_channel >>
-              cp -R build/* /tmp/artifacts/_build_<< parameters.worker_id >>_<< parameters.release_channel >>
+              mkdir -p /tmp/artifacts/_build_<< matrix.worker_id >>_<< matrix.release_channel >>
+              cp -R build/* /tmp/artifacts/_build_<< matrix.worker_id >>_<< matrix.release_channel >>
       - persist_to_workspace:
           root: /tmp/artifacts
           paths:
-            - _build_<< parameters.worker_id >>_<< parameters.release_channel >>
+            - _build_<< matrix.worker_id >>_<< matrix.release_channel >>
   
   test_build_cloud:
     docker:
@@ -297,7 +294,7 @@ jobs:
       - attach_workspace:
           at: /tmp/artifacts
       - run: ls -R /tmp/artifacts
-      - run: yarn test --build=<< parameters.test_params >> --shard=<< parameters.shard >> --ci=circleci
+      - run: yarn test --build=<< matrix.test_params >> --shard=<< matrix.shard >> --ci=circleci
   
   run_fixtures_flight_tests_cloud:
     docker:
