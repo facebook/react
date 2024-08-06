@@ -52,8 +52,7 @@ jobs:
       - image: cimg/node:18.20.1-browsers
     working_directory: ~/project/compiler
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout:
           path: ~/project
@@ -68,9 +67,11 @@ jobs:
     working_directory: ~/project/compiler
     resource_class: large
     environment:
-      CARGO_TERM_COLOR: always
-      RUSTFLAGS: -Dwarnings
-      <<: *tz
+      <<:
+        - *tz
+        - CARGO_TERM_COLOR: always
+        - RUSTFLAGS: -Dwarnings
+
     steps:
       - checkout:
           path: ~/project
@@ -92,9 +93,10 @@ jobs:
     working_directory: ~/project/compiler
     resource_class: large
     environment:
-      CARGO_TERM_COLOR: always
-      RUSTFLAGS: -Dwarnings
-      <<: *tz
+      <<:
+        - *tz
+        - CARGO_TERM_COLOR: always
+        - RUSTFLAGS: -Dwarnings
     steps:
       - checkout:
           path: ~/project
@@ -111,9 +113,10 @@ jobs:
     working_directory: ~/project/compiler
     resource_class: large
     environment:
-      CARGO_TERM_COLOR: always
-      RUSTFLAGS: -Dwarnings
-      <<: *tz
+      <<:
+        - *tz
+        - CARGO_TERM_COLOR: always
+        - RUSTFLAGS: -Dwarnings
     steps:
       - checkout:
           path: ~/project
@@ -130,8 +133,7 @@ jobs:
       - image: cimg/node:18.20.1-browsers
     working_directory: ~/project/compiler
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout:
           path: ~/project
@@ -143,8 +145,7 @@ jobs:
       - image: cimg/node:18.20.1-browsers
     working_directory: ~/project/compiler
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout:
           path: ~/project
@@ -156,8 +157,7 @@ jobs:
       - image: cimg/node:18.20.1-browsers
     working_directory: ~/project/compiler
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout:
           path: ~/project
@@ -169,8 +169,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -183,8 +182,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -194,8 +192,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -205,8 +202,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -216,8 +212,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -228,8 +223,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -239,8 +233,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -252,8 +245,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -263,8 +255,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -275,8 +266,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -300,8 +290,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps:
       - checkout
       - setup_node_modules
@@ -314,8 +303,7 @@ jobs:
     docker:
       - image: cimg/node:18.20.1-browsers
     resource_class: large
-    environment:
-      <<: *tz
+    environment: *tz
     steps: 
       - checkout
       - attach_workspace:
