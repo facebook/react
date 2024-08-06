@@ -689,7 +689,7 @@ function isHookName(s: string, hookPattern: string | null): boolean {
   if (hookPattern !== null) {
     return new RegExp(hookPattern).test(s);
   }
-  return /^use[A-Z0-9]/.test(s);
+  return /^use([A-Z0-9].*)?$/.test(s);
 }
 
 /*
