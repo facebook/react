@@ -1,49 +1,16 @@
-const cp = require('child_process');
 const ora = require('ora');
 const path = require('path');
 const yargs = require('yargs');
-const util = require('util');
 const {hashElement} = require('folder-hash');
 const promptForOTP = require('./prompt-for-otp');
-
-const PUBLISHABLE_PACKAGES = [
-  'babel-plugin-react-compiler',
-  'eslint-plugin-react-compiler',
-  'react-compiler-healthcheck',
-];
-
-function _spawn(command, args, options, cb) {
-  const child = cp.spawn(command, args, options);
-  child.on('close', exitCode => {
-    cb(null, exitCode);
-  });
-  return child;
-}
-const spawnHelper = util.promisify(_spawn);
-
-function execHelper(command, options, streamStdout = false) {
-  return new Promise((resolve, reject) => {
-    const proc = cp.exec(command, options, (error, stdout) =>
-      error ? reject(error) : resolve(stdout.trim())
-    );
-    if (streamStdout) {
-      proc.stdout.pipe(process.stdout);
-    }
-  });
-}
-
-async function getDateStringForCommit(commit) {
-  let dateString = await execHelper(
-    `git show -s --no-show-signature --format=%cd --date=format:%Y%m%d ${commit}`
-  );
-
-  // On CI environment, this string is wrapped with quotes '...'s
-  if (dateString.startsWith("'")) {
-    dateString = dateString.slice(1, 9);
-  }
-
-  return dateString;
-}
+const {PUBLISHABLE_PACKAGES} = require('./shared/packages');
+const {
+  execHelper,
+  getDateStringForCommit,
+  spawnHelper,
+} = require('./shared/utils');
+const {buildPackages} = require('./shared/build-packages');
+const {readJson, writeJson} = require('fs-extra');
 
 /**
  * Script for publishing PUBLISHABLE_PACKAGES to npm. By default, this runs in tarball mode, meaning
@@ -83,12 +50,21 @@ async function main() {
       type: 'boolean',
       default: false,
     })
+    .option('ci', {
+      description: 'Publish packages via CI',
+      type: 'boolean',
+      default: false,
+    })
+    .option('tags', {
+      description: 'Tags to publish to npm',
+      type: 'choices',
+      choices: ['experimental'],
+      default: ['experimental'],
+    })
     .help('help')
     .parseSync();
 
-  const {packages, forReal, debug} = argv;
-
-  if (debug === false) {
+  if (argv.debug === false) {
     const currBranchName = await execHelper('git rev-parse --abbrev-ref HEAD');
     const isPristine = (await execHelper('git status --porcelain')) === '';
     if (currBranchName !== 'main' || isPristine === false) {
@@ -98,31 +74,19 @@ async function main() {
     }
   }
 
-  let pkgNames = packages;
-  if (Array.isArray(packages) === false) {
-    pkgNames = [packages];
+  let pkgNames = argv.packages;
+  if (Array.isArray(argv.packages) === false) {
+    pkgNames = [argv.packages];
   }
   const spinner = ora(
     `Preparing to publish ${
-      forReal === true ? '(for real)' : '(dry run)'
-    } [debug=${debug}]`
+      argv.forReal === true ? '(for real)' : '(dry run)'
+    } [debug=${argv.debug}]`
   ).info();
 
-  spinner.info('Building packages');
-  for (const pkgName of pkgNames) {
-    const command = `yarn workspace ${pkgName} run build`;
-    spinner.start(`Running: ${command}\n`);
-    try {
-      await execHelper(command);
-    } catch (e) {
-      spinner.fail(e.toString());
-      throw e;
-    }
-    spinner.succeed(`Successfully built ${pkgName}`);
-  }
-  spinner.stop();
+  await buildPackages(pkgNames);
 
-  if (forReal === false) {
+  if (argv.forReal === false) {
     spinner.info('Dry run: Report tarball contents');
     for (const pkgName of pkgNames) {
       console.log(`\n========== ${pkgName} ==========\n`);
@@ -143,8 +107,7 @@ async function main() {
     );
   }
 
-  if (forReal === true) {
-    const otp = await promptForOTP();
+  if (argv.forReal === true) {
     const commit = await execHelper(
       'git show -s --no-show-signature --format=%h',
       {
@@ -152,9 +115,14 @@ async function main() {
       }
     );
     const dateString = await getDateStringForCommit(commit);
+    const otp = argv.ci === false ? await promptForOTP() : null;
 
     for (const pkgName of pkgNames) {
       const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
+      const pkgJsonPath = path.resolve(
+        __dirname,
+        `../../packages/${pkgName}/package.json`
+      );
       const {hash} = await hashElement(pkgDir, {
         encoding: 'hex',
         folders: {exclude: ['node_modules']},
@@ -163,39 +131,36 @@ async function main() {
       const truncatedHash = hash.slice(0, 7);
       const newVersion = `0.0.0-experimental-${truncatedHash}-${dateString}`;
 
-      spinner.start(`Bumping version: ${pkgName}`);
-      try {
-        await execHelper(
-          `yarn version --new-version ${newVersion} --no-git-tag-version`,
-          {
-            cwd: pkgDir,
-          }
-        );
-        await execHelper(
-          `git add package.json && git commit -m "Bump version to ${newVersion}"`,
-          {
-            cwd: pkgDir,
-          }
-        );
-      } catch (e) {
-        spinner.fail(e.toString());
-        throw e;
-      }
-      spinner.succeed(
-        `Bumped ${pkgName} to ${newVersion} and added a git commit`
+      spinner.start(`Writing package.json for ${pkgName}@${newVersion}`);
+      await writeJson(
+        pkgJsonPath,
+        {
+          ...(await readJson(pkgJsonPath)),
+          version: newVersion,
+        },
+        {spaces: 2}
       );
-    }
+      spinner.succeed(`Wrote package.json for ${pkgName}@${newVersion}`);
 
-    for (const pkgName of pkgNames) {
-      const pkgDir = path.resolve(__dirname, `../../packages/${pkgName}`);
       console.log(`\n========== ${pkgName} ==========\n`);
-      spinner.start(`Publishing ${pkgName} to npm\n`);
+      spinner.start(`Publishing ${pkgName}@${newVersion} to npm\n`);
 
-      const opts = debug === true ? ['publish', '--dry-run'] : ['publish'];
+      let opts = [];
+      if (argv.debug === true) {
+        opts.push('--dry-run');
+      }
+      if (otp != null) {
+        opts.push(`--otp=${otp}`);
+      }
       try {
         await spawnHelper(
           'npm',
-          [...opts, '--registry=https://registry.npmjs.org', `--otp=${otp}`],
+          [
+            'publish',
+            ...opts,
+            '--registry=https://registry.npmjs.org',
+            '--tag=experimental',
+          ],
           {
             cwd: pkgDir,
             stdio: 'inherit',
@@ -207,9 +172,38 @@ async function main() {
         throw e;
       }
       spinner.succeed(`Successfully published ${pkgName} to npm`);
+
+      spinner.start('Pushing tags to npm');
+      for (const tag of argv.tags) {
+        try {
+          let opts;
+          if (otp != null) {
+            opts = [
+              'dist-tag',
+              'add',
+              `${pkgName}@${newVersion}`,
+              tag,
+              `--otp=${otp}`,
+            ];
+          } else {
+            opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
+          }
+          if (argv.debug === true) {
+            spinner.info(`dry-run: npm ${opts.join(' ')}`);
+          } else {
+            await spawnHelper('npm', opts);
+          }
+        } catch (e) {
+          spinner.fail(e.toString());
+          throw e;
+        }
+        spinner.succeed(
+          `Successfully pushed dist-tag ${tag} for ${pkgName} to npm`
+        );
+      }
     }
 
-    console.log('\n\n✅ All done, please push version bump commits to GitHub');
+    console.log('\n\n✅ All done');
   }
 }
 
