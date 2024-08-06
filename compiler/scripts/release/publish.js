@@ -61,9 +61,8 @@ async function main() {
     })
     .option('tags', {
       description: 'Tags to publish to npm',
-      type: 'choices',
-      choices: ['experimental'],
-      default: ['experimental'],
+      type: 'string',
+      default: 'experimental',
     })
     .help('help')
     .parseSync();
@@ -178,27 +177,29 @@ async function main() {
       spinner.succeed(`Successfully published ${pkgName} to npm`);
 
       spinner.start('Pushing tags to npm');
-      for (const tag of argv.tags) {
-        try {
-          let opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
-          if (otp != null) {
-            opts.push(`--otp=${otp}`);
+      if (typeof argv.tags === 'string') {
+        for (const tag of argv.tags.split(',')) {
+          try {
+            let opts = ['dist-tag', 'add', `${pkgName}@${newVersion}`, tag];
+            if (otp != null) {
+              opts.push(`--otp=${otp}`);
+            }
+            if (argv.debug === true) {
+              spinner.info(`dry-run: npm ${opts.join(' ')}`);
+            } else {
+              await spawnHelper('npm', opts, {
+                cwd: pkgDir,
+                stdio: 'inherit',
+              });
+            }
+          } catch (e) {
+            spinner.fail(e.toString());
+            throw e;
           }
-          if (argv.debug === true) {
-            spinner.info(`dry-run: npm ${opts.join(' ')}`);
-          } else {
-            await spawnHelper('npm', opts, {
-              cwd: pkgDir,
-              stdio: 'inherit',
-            });
-          }
-        } catch (e) {
-          spinner.fail(e.toString());
-          throw e;
+          spinner.succeed(
+            `Successfully pushed dist-tag ${tag} for ${pkgName} to npm`
+          );
         }
-        spinner.succeed(
-          `Successfully pushed dist-tag ${tag} for ${pkgName} to npm`
-        );
       }
     }
 
