@@ -485,6 +485,11 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
       continue;
     }
 
+    if (key === 'customMacros' && val) {
+      maybeConfig[key] = [val];
+      continue;
+    }
+
     if (typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean') {
       // skip parsing non-boolean properties
       continue;

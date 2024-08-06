@@ -5,27 +5,30 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction} from '../HIR';
+import {HIRFunction, IdentifierId} from '../HIR';
 
-export function outlineFunctions(fn: HIRFunction): void {
+export function outlineFunctions(
+  fn: HIRFunction,
+  fbtOperands: Set<IdentifierId>,
+): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      const {value} = instr;
+      const {value, lvalue} = instr;
 
       if (
         value.kind === 'FunctionExpression' ||
         value.kind === 'ObjectMethod'
       ) {
         // Recurse in case there are inner functions which can be outlined
-        outlineFunctions(value.loweredFunc.func);
+        outlineFunctions(value.loweredFunc.func, fbtOperands);
       }
-
       if (
         value.kind === 'FunctionExpression' &&
         value.loweredFunc.dependencies.length === 0 &&
         value.loweredFunc.func.context.length === 0 &&
         // TODO: handle outlining named functions
-        value.loweredFunc.func.id === null
+        value.loweredFunc.func.id === null &&
+        !fbtOperands.has(lvalue.identifier.id)
       ) {
         const loweredFunc = value.loweredFunc.func;
 
