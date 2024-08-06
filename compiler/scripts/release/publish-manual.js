@@ -11,7 +11,6 @@ const PUBLISHABLE_PACKAGES = [
   'eslint-plugin-react-compiler',
   'react-compiler-healthcheck',
 ];
-const TIME_TO_RECONSIDER = 3_000;
 
 function _spawn(command, args, options, cb) {
   const child = cp.spawn(command, args, options);
@@ -31,10 +30,6 @@ function execHelper(command, options, streamStdout = false) {
       proc.stdout.pipe(process.stdout);
     }
   });
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function getDateStringForCommit(commit) {
@@ -189,15 +184,6 @@ async function main() {
       spinner.succeed(
         `Bumped ${pkgName} to ${newVersion} and added a git commit`
       );
-    }
-
-    if (debug === false) {
-      spinner.info(
-        `🚨🚨🚨 About to publish to npm in ${
-          TIME_TO_RECONSIDER / 1000
-        } seconds. You still have time to kill this script!`
-      );
-      await sleep(TIME_TO_RECONSIDER);
     }
 
     for (const pkgName of pkgNames) {
