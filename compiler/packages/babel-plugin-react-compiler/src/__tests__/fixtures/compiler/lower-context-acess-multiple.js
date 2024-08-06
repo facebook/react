@@ -1,4 +1,4 @@
-// @enableLowerContextAccess
+// @lowerContextAccess
 function App() {
   const {foo} = useContext(MyContext);
   const {bar} = useContext(MyContext);

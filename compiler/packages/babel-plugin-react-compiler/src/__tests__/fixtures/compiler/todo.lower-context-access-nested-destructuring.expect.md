@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableLowerContextAccess
+// @lowerContextAccess
 function App() {
   const {
     joe: {foo},
@@ -16,7 +16,8 @@ function App() {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @enableLowerContextAccess
+import { useContext_withSelector } from "react-compiler-runtime";
+import { c as _c } from "react/compiler-runtime"; // @lowerContextAccess
 function App() {
   const $ = _c(3);
   const { joe: t0, bar } = useContext(MyContext);

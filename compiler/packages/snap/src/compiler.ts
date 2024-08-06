@@ -154,6 +154,20 @@ function makePluginOptions(
       .map(s => s.trim())
       .filter(s => s.length > 0);
   }
+  if (firstLine.includes('@enableEmitFreeze')) {
+    enableEmitFreeze = {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'makeReadOnly',
+    };
+  }
+
+  let lowerContextAccess = null;
+  if (firstLine.includes('@lowerContextAccess')) {
+    lowerContextAccess = {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'useContext_withSelector',
+    };
+  }
 
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   let logger: Logger | null = null;
@@ -207,6 +221,7 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       enableChangeDetectionForDebugging,
+      lowerContextAccess,
     },
     compilationMode,
     logger,

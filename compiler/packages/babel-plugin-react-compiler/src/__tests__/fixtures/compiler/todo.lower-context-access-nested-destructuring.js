@@ -1,4 +1,4 @@
-// @enableLowerContextAccess
+// @lowerContextAccess
 function App() {
   const {
     joe: {foo},
