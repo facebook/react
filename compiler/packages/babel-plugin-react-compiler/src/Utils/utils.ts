@@ -93,6 +93,18 @@ export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
   return union;
 }
 
+export function Iterable_some<T>(
+  iter: Iterable<T>,
+  pred: (item: T) => boolean,
+): boolean {
+  for (const item of iter) {
+    if (pred(item)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function nonNull<T extends NonNullable<U>, U>(
   value: T | null | undefined,
 ): value is T {

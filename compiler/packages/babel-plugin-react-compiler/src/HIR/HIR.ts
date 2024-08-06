@@ -1248,6 +1248,9 @@ export function makeIdentifierName(name: string): ValidatedIdentifier {
 
 /**
  * Given an unnamed identifier, promote it to a named identifier.
+ *
+ * Note: this uses the identifier's DeclarationId to ensure that all
+ * instances of the same declaration will have the same name.
  */
 export function promoteTemporary(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
@@ -1258,7 +1261,7 @@ export function promoteTemporary(identifier: Identifier): void {
   });
   identifier.name = {
     kind: 'promoted',
-    value: `#t${identifier.id}`,
+    value: `#t${identifier.declarationId}`,
   };
 }
 
@@ -1269,6 +1272,9 @@ export function isPromotedTemporary(name: string): boolean {
 /**
  * Given an unnamed identifier, promote it to a named identifier, distinguishing
  * it as a value that needs to be capitalized since it appears in JSX element tag position
+ *
+ * Note: this uses the identifier's DeclarationId to ensure that all
+ * instances of the same declaration will have the same name.
  */
 export function promoteTemporaryJsxTag(identifier: Identifier): void {
   CompilerError.invariant(identifier.name === null, {
@@ -1279,7 +1285,7 @@ export function promoteTemporaryJsxTag(identifier: Identifier): void {
   });
   identifier.name = {
     kind: 'promoted',
-    value: `#T${identifier.id}`,
+    value: `#T${identifier.declarationId}`,
   };
 }
 

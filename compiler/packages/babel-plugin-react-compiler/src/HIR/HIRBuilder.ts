@@ -899,3 +899,16 @@ export function createTemporaryPlace(
     loc: GeneratedSource,
   };
 }
+
+/**
+ * Clones an existing Place, returning a new temporary Place that shares the
+ * same metadata properties as the original place (effect, reactive flag, type)
+ * but has a new, temporary Identifier.
+ */
+export function clonePlaceToTemporary(env: Environment, place: Place): Place {
+  const temp = createTemporaryPlace(env, place.loc);
+  temp.effect = place.effect;
+  temp.identifier.type = place.identifier.type;
+  temp.reactive = place.reactive;
+  return temp;
+}

@@ -7,6 +7,7 @@
 
 import {CompilerError, Effect, ErrorSeverity} from '..';
 import {
+  DeclarationId,
   GeneratedSource,
   Identifier,
   IdentifierId,
@@ -82,7 +83,7 @@ type ManualMemoBlockState = {
    * } else { ... }
    * ```
    */
-  decls: Set<IdentifierId>;
+  decls: Set<DeclarationId>;
 
   /*
    * normalized depslist from useMemo/useCallback
@@ -204,7 +205,7 @@ function compareDeps(
 function validateInferredDep(
   dep: ReactiveScopeDependency,
   temporaries: Map<IdentifierId, ManualMemoDependency>,
-  declsWithinMemoBlock: Set<IdentifierId>,
+  declsWithinMemoBlock: Set<DeclarationId>,
   validDepsInMemoBlock: Array<ManualMemoDependency>,
   errorState: CompilerError,
   memoLocation: SourceLocation,
@@ -240,7 +241,7 @@ function validateInferredDep(
   for (const decl of declsWithinMemoBlock) {
     if (
       normalizedDep.root.kind === 'NamedLocal' &&
-      decl === normalizedDep.root.value.identifier.id
+      decl === normalizedDep.root.value.identifier.declarationId
     ) {
       return;
     }
@@ -323,7 +324,9 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         const dep = collectMaybeMemoDependencies(value, this.temporaries);
         if (value.kind === 'StoreLocal' || value.kind === 'StoreContext') {
           const storeTarget = value.lvalue.place;
-          state.manualMemoState?.decls.add(storeTarget.identifier.id);
+          state.manualMemoState?.decls.add(
+            storeTarget.identifier.declarationId,
+          );
           if (storeTarget.identifier.name?.kind === 'named' && dep == null) {
             const dep: ManualMemoDependency = {
               root: {
@@ -343,15 +346,14 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
   recordTemporaries(instr: ReactiveInstruction, state: VisitorState): void {
     const temporaries = this.temporaries;
-    const {value} = instr;
-    const lvalId = instr.lvalue?.identifier.id;
+    const {lvalue, value} = instr;
+    const lvalId = lvalue?.identifier.id;
     if (lvalId != null && temporaries.has(lvalId)) {
       return;
     }
-    const isNamedLocal =
-      lvalId != null && instr.lvalue?.identifier.name?.kind === 'named';
-    if (isNamedLocal && state.manualMemoState != null) {
-      state.manualMemoState.decls.add(lvalId);
+    const isNamedLocal = lvalue?.identifier.name?.kind === 'named';
+    if (lvalue !== null && isNamedLocal && state.manualMemoState != null) {
+      state.manualMemoState.decls.add(lvalue.identifier.declarationId);
     }
 
     const maybeDep = this.recordDepsInValue(value, state);

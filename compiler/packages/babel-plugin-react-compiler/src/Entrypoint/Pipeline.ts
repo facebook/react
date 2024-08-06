@@ -77,7 +77,11 @@ import {flattenScopesWithHooksOrUseHIR} from '../ReactiveScopes/FlattenScopesWit
 import {pruneAlwaysInvalidatingScopes} from '../ReactiveScopes/PruneAlwaysInvalidatingScopes';
 import pruneInitializationDependencies from '../ReactiveScopes/PruneInitializationDependencies';
 import {stabilizeBlockIds} from '../ReactiveScopes/StabilizeBlockIds';
-import {eliminateRedundantPhi, enterSSA, leaveSSA} from '../SSA';
+import {
+  eliminateRedundantPhi,
+  enterSSA,
+  rewriteInstructionKindsBasedOnReassignment,
+} from '../SSA';
 import {inferTypes} from '../TypeInference';
 import {
   logCodegenFunction,
@@ -98,6 +102,7 @@ import {
 } from '../Validation';
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
+import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -237,8 +242,19 @@ function* runWithEnvironment(
   inferReactivePlaces(hir);
   yield log({kind: 'hir', name: 'InferReactivePlaces', value: hir});
 
-  leaveSSA(hir);
-  yield log({kind: 'hir', name: 'LeaveSSA', value: hir});
+  rewriteInstructionKindsBasedOnReassignment(hir);
+  yield log({
+    kind: 'hir',
+    name: 'RewriteInstructionKindsBasedOnReassignment',
+    value: hir,
+  });
+
+  propagatePhiTypes(hir);
+  yield log({
+    kind: 'hir',
+    name: 'PropagatePhiTypes',
+    value: hir,
+  });
 
   inferReactiveScopeVariables(hir);
   yield log({kind: 'hir', name: 'InferReactiveScopeVariables', value: hir});
