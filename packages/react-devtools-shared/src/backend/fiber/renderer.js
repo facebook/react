@@ -147,7 +147,9 @@ const FORCE_ERROR_RESET = /*          */ 0b100;
 type FiberInstance = {
   kind: 0,
   id: number,
-  parent: null | DevToolsInstance, // virtual parent
+  parent: null | DevToolsInstance, // filtered parent, including virtual
+  child: null | DevToolsInstance, // filtered first child, including virtual
+  sibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number, // Force Error/Suspense
   componentStack: null | string,
   errors: null | Map<string, number>, // error messages and count
@@ -157,9 +159,11 @@ type FiberInstance = {
 
 function createFiberInstance(fiber: Fiber): FiberInstance {
   return {
-    kind: 0,
+    kind: FIBER_INSTANCE,
     id: getUID(),
     parent: null,
+    child: null,
+    sibling: null,
     flags: 0,
     componentStack: null,
     errors: null,
@@ -176,7 +180,9 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
 type VirtualInstance = {
   kind: 1,
   id: number,
-  parent: null | DevToolsInstance, // virtual parent
+  parent: null | DevToolsInstance, // filtered parent, including virtual
+  child: null | DevToolsInstance, // filtered first child, including virtual
+  sibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number,
   componentStack: null | string,
   // Errors and Warnings happen per ReactComponentInfo which can appear in
