@@ -22,7 +22,6 @@ import {
   isUseContextHookType,
   makeBlockId,
   makeInstructionId,
-  makeTemporary,
   markInstructionIds,
   promoteTemporary,
   reversePostorderBlocks,
@@ -236,13 +235,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
       type: 'ArrowFunctionExpression',
       loc: GeneratedSource,
     },
-    lvalue: {
-      kind: 'Identifier',
-      identifier: makeTemporary(env.nextIdentifierId, GeneratedSource),
-      effect: Effect.Unknown,
-      reactive: false,
-      loc: GeneratedSource,
-    },
+    lvalue: createTemporaryPlace(env, GeneratedSource),
     loc: GeneratedSource,
   };
   return fnInstr;
@@ -254,13 +247,7 @@ function emitArrayInstr(elements: Array<Place>, env: Environment): Instruction {
     elements,
     loc: GeneratedSource,
   };
-  const arrayLvalue: Place = {
-    kind: 'Identifier',
-    identifier: makeTemporary(env.nextIdentifierId, GeneratedSource),
-    effect: Effect.Unknown,
-    reactive: false,
-    loc: GeneratedSource,
-  };
+  const arrayLvalue: Place = createTemporaryPlace(env, GeneratedSource);
   const arrayInstr: Instruction = {
     id: makeInstructionId(0),
     value: array,
