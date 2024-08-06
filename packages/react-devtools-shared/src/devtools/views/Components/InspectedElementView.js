@@ -71,12 +71,10 @@ export default function InspectedElementView({
   return (
     <Fragment>
       <div className={styles.InspectedElement}>
-        <div className={styles.InspectedElementBadgesContainer}>
-          <InspectedElementBadges
-            hocDisplayNames={element.hocDisplayNames}
-            compiledWithForget={element.compiledWithForget}
-          />
-        </div>
+        <InspectedElementBadges
+          hocDisplayNames={element.hocDisplayNames}
+          compiledWithForget={element.compiledWithForget}
+        />
 
         <InspectedElementPropsTree
           bridge={bridge}

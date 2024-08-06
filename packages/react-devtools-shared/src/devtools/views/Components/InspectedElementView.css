@@ -25,11 +25,6 @@
   line-height: var(--line-height-data);
 }
 
-.InspectedElementBadgesContainer:not(:empty) {
-  padding: 0.25rem;
-  border-bottom: 1px solid var(--color-border);
-}
-
 .Owner {
   border-radius: 0.25rem;
   padding: 0.125rem 0.25rem;

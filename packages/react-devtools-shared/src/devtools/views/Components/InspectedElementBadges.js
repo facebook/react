@@ -31,13 +31,15 @@ export default function InspectedElementBadges({
   }
 
   return (
-    <div className={styles.Root}>
-      {compiledWithForget && <ForgetBadge indexable={false} />}
+    <div className={styles.InspectedElementBadgesContainer}>
+      <div className={styles.Root}>
+        {compiledWithForget && <ForgetBadge indexable={false} />}
 
-      {hocDisplayNames !== null &&
-        hocDisplayNames.map(hocDisplayName => (
-          <Badge key={hocDisplayName}>{hocDisplayName}</Badge>
-        ))}
+        {hocDisplayNames !== null &&
+          hocDisplayNames.map(hocDisplayName => (
+            <Badge key={hocDisplayName}>{hocDisplayName}</Badge>
+          ))}
+      </div>
     </div>
   );
 }
