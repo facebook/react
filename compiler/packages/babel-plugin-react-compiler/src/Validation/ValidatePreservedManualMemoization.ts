@@ -457,10 +457,10 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       );
       ids.add(value.value.identifier);
     }
-    if (instruction.value.kind === 'StartMemoize') {
+    if (value.kind === 'StartMemoize') {
       let depsFromSource: Array<ManualMemoDependency> | null = null;
-      if (instruction.value.deps != null) {
-        depsFromSource = instruction.value.deps;
+      if (value.deps != null) {
+        depsFromSource = value.deps;
       }
       CompilerError.invariant(state.manualMemoState == null, {
         reason: 'Unexpected nested StartMemoize instructions',
@@ -473,7 +473,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         loc: instruction.loc,
         decls: new Set(),
         depsFromSource,
-        manualMemoId: instruction.value.manualMemoId,
+        manualMemoId: value.manualMemoId,
         reassignments: new Map(),
       };
 
@@ -496,7 +496,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         }
       }
     }
-    if (instruction.value.kind === 'FinishMemoize') {
+    if (value.kind === 'FinishMemoize') {
       CompilerError.invariant(
         state.manualMemoState != null &&
           state.manualMemoState.manualMemoId === instruction.value.manualMemoId,
@@ -509,22 +509,22 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       );
       const reassignments = state.manualMemoState.reassignments;
       state.manualMemoState = null;
-      if (!instruction.value.pruned) {
+      if (!value.pruned) {
         for (const {identifier, loc} of eachInstructionValueOperand(
           instruction.value as InstructionValue,
         )) {
-          let manualMemoRvals;
+          let decls;
           if (identifier.scope == null) {
-            // If the manual memo was a useMemo that got inlined, iterate through
-            // all reassignments to the iife temporary to ensure they're memoized.
-            manualMemoRvals = reassignments.get(identifier.declarationId) ?? [
-              identifier,
-            ];
+            /**
+             * If the manual memo was a useMemo that got inlined, iterate through
+             * all reassignments to the iife temporary to ensure they're memoized.
+             */
+            decls = reassignments.get(identifier.declarationId) ?? [identifier];
           } else {
-            manualMemoRvals = [identifier];
+            decls = [identifier];
           }
 
-          for (const identifier of manualMemoRvals) {
+          for (const identifier of decls) {
             if (isUnmemoized(identifier, this.scopes)) {
               state.errors.push({
                 reason:
