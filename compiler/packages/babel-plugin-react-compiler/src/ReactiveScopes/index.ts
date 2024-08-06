@@ -16,7 +16,7 @@ export {extractScopeDeclarationsFromDestructuring} from './ExtractScopeDeclarati
 export {flattenReactiveLoops} from './FlattenReactiveLoops';
 export {flattenScopesWithHooksOrUse} from './FlattenScopesWithHooksOrUse';
 export {inferReactiveScopeVariables} from './InferReactiveScopeVariables';
-export {memoizeFbtAndMacroOperandsInSameScope as memoizeFbtOperandsInSameScope} from './MemoizeFbtAndMacroOperandsInSameScope';
+export {memoizeFbtAndMacroOperandsInSameScope} from './MemoizeFbtAndMacroOperandsInSameScope';
 export {mergeOverlappingReactiveScopes} from './MergeOverlappingReactiveScopes';
 export {mergeReactiveScopesThatInvalidateTogether} from './MergeReactiveScopesThatInvalidateTogether';
 export {printReactiveFunction} from './PrintReactiveFunction';

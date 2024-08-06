@@ -221,9 +221,6 @@ export const disableLegacyMode = true;
 // Make <Context> equivalent to <Context.Provider> instead of <Context.Consumer>
 export const enableRenderableContext = true;
 
-// Enables the `initialValue` option for `useDeferredValue`
-export const enableUseDeferredValueInitialArg = true;
-
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

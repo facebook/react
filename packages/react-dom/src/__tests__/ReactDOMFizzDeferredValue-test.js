@@ -83,7 +83,6 @@ describe('ReactDOMFizzForm', () => {
     return text;
   }
 
-  // @gate enableUseDeferredValueInitialArg
   it('returns initialValue argument, if provided', async () => {
     function App() {
       return useDeferredValue('Final', 'Initial');
@@ -100,7 +99,6 @@ describe('ReactDOMFizzForm', () => {
     expect(container.textContent).toEqual('Final');
   });
 
-  // @gate enableUseDeferredValueInitialArg
   // @gate enablePostpone
   it(
     'if initial value postpones during hydration, it will switch to the ' +
@@ -136,7 +134,6 @@ describe('ReactDOMFizzForm', () => {
     },
   );
 
-  // @gate enableUseDeferredValueInitialArg
   it(
     'useDeferredValue during hydration has higher priority than remaining ' +
       'incremental hydration',
