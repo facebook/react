@@ -151,6 +151,7 @@ impl MergedBlocks {
 
 #[derive(Debug, Error)]
 #[error("Expected predecessor {predecessor} to exist")]
+#[allow(dead_code)]
 pub struct ExpectedPredecessorToExist {
     predecessor: BlockId,
 }
