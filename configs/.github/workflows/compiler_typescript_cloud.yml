@@ -44,7 +44,7 @@ jobs:
 
   typescript_test_cloud:
     name: typescript_test-${{ matrix.workspace_name }}
-    needs: discover_yarn_workspaces
+    needs: discover_yarn_workspaces_cloud
     runs-on: ubuntu-latest
     continue-on-error: true
     strategy:

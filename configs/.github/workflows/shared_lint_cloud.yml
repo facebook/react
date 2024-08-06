@@ -11,6 +11,7 @@ jobs:
   prettier_cloud:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workflow
         with:
           node-version: '18.20.1'
@@ -20,6 +21,7 @@ jobs:
   eslint_cloud:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workflow
         with:
           node-version: '18.20.1'
@@ -29,6 +31,7 @@ jobs:
   check_license_cloud:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workflow
         with:
           node-version: '18.20.1'
@@ -38,6 +41,7 @@ jobs:
   test_print_warnings_cloud:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-workflow
         with:
           node-version: '18.20.1'

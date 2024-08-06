@@ -10,7 +10,6 @@ env:
 jobs:
   # ----- FLOW -----
   discover_flow_inline_configs_cloud:
-    name: Discover flow inline configs
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.result }}
@@ -25,7 +24,7 @@ jobs:
 
   flow_cloud:
     name: flow-${{ matrix.flow_inline_config_shortname }}
-    needs: discover_flow_inline_configs
+    needs: discover_flow_inline_configs_cloud
     runs-on: ubuntu-latest
     continue-on-error: true
     strategy:
@@ -132,7 +131,7 @@ jobs:
           path: build
 
   test_build_cloud:
-    needs: build_and_lint
+    needs: build_and_lint_cloud
     strategy:
       matrix:
         test_params: [
@@ -188,7 +187,7 @@ jobs:
 
   # ----- FLIGHT -----
   run_fixtures_flight_tests_cloud:
-    needs: build_and_lint
+    needs: build_and_lint_cloud
     runs-on: ubuntu-latest
     steps:
       # Fixture copies some built packages from the workroot after install.

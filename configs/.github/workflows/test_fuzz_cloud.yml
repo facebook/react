@@ -17,7 +17,6 @@ jobs:
       with:
         node-version-file: '.nvmrc'
         skip-electron-download: "1"
-      shell: bash
     - name: Run fuzz tests
       run: |-
         FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci=github
