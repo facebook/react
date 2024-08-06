@@ -1174,11 +1174,19 @@ export type NonLocalBinding =
 
 // Represents a user-defined variable (has a name) or a temporary variable (no name).
 export type Identifier = {
-  /*
-   * unique value to distinguish a variable, since name is not guaranteed to
-   * exist or be unique
+  /**
+   * After EnterSSA, `id` uniquely identifies an SSA instance of a variable.
+   * Before EnterSSA, `id` matches `declarationId`.
    */
   id: IdentifierId;
+
+  /**
+   * Uniquely identifies a given variable in the original program. If a value is
+   * reassigned in the original program each reassigned value will have a distinct
+   * `id` (after EnterSSA), but they will still have the same `declarationId`.
+   */
+  declarationId: DeclarationId;
+
   // null for temporaries. name is primarily used for debugging.
   name: IdentifierName | null;
   // The range for which this variable is mutable
@@ -1212,6 +1220,7 @@ export function makeTemporaryIdentifier(
   return {
     id,
     name: null,
+    declarationId: makeDeclarationId(id),
     mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
     scope: null,
     type: makeType(),
@@ -1506,6 +1515,23 @@ export function makeIdentifierId(id: number): IdentifierId {
     suggestions: null,
   });
   return id as IdentifierId;
+}
+
+/*
+ * Simulated opaque type for IdentifierId to prevent using normal numbers as ids
+ * accidentally.
+ */
+const opageDeclarationId = Symbol();
+export type DeclarationId = number & {[opageDeclarationId]: 'DeclarationId'};
+
+export function makeDeclarationId(id: number): DeclarationId {
+  CompilerError.invariant(id >= 0 && Number.isInteger(id), {
+    reason: 'Expected declaration id to be a non-negative integer',
+    description: null,
+    loc: null,
+    suggestions: null,
+  });
+  return id as DeclarationId;
 }
 
 /*

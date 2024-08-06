@@ -25,6 +25,7 @@ import {
   Terminal,
   VariableBinding,
   makeBlockId,
+  makeDeclarationId,
   makeIdentifierName,
   makeInstructionId,
   makeTemporaryIdentifier,
@@ -320,6 +321,7 @@ export default class HIRBuilder {
         const id = this.nextIdentifierId;
         const identifier: Identifier = {
           id,
+          declarationId: makeDeclarationId(id),
           name: makeIdentifierName(name),
           mutableRange: {
             start: makeInstructionId(0),
