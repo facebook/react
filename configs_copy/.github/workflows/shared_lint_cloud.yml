@@ -1,8 +1,6 @@
 name: shared_lint_cloud
 
-on:
-  push:
-    branches: [replay-*]
+on: push
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles

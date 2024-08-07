@@ -369,28 +369,16 @@ jobs:
 workflows:
 
   compiler_playground_cloud:
-    when:
-      matches:
-        pattern: "^replay.*"
-        value: << pipeline.git.branch >>
     jobs:
       - test_playground_cloud
   
   compiler_rust_cloud:
-    when:
-      matches:
-        pattern: "^replay.*"
-        value: << pipeline.git.branch >>
     jobs:
       - rust_test_cloud
       - rust_lint_cloud
       - rust_build_cloud
   
   compiler_typescript_cloud:
-    when:
-      matches:
-        pattern: "^replay.*"
-        value: << pipeline.git.branch >>
     jobs:
      - typescript_lint_cloud
      - typescript_jest_cloud
@@ -437,18 +425,10 @@ workflows:
                 - react-devtools-shared
 
   test_fuzz_cloud:
-    when:
-      matches:
-        pattern: "^replay.*"
-        value: << pipeline.git.branch >>
     jobs:
       - test_fuzz_cloud
 
   shared_lint_cloud:
-    when:
-      matches:
-        pattern: "^replay.*"
-        value: << pipeline.git.branch >>
     jobs:
       - prettier_cloud
       - eslint_cloud
@@ -456,10 +436,6 @@ workflows:
       - test_print_warnings_cloud
   
   runtime_build_and_test_cloud:
-    when:
-      matches:
-        pattern: "^replay.*"
-        value: << pipeline.git.branch >>
     jobs:
       - flow_cloud:
           # Need to generate via dynamic config

@@ -1,8 +1,7 @@
 name: compiler_rust_cloud
 
-on:
-  push:
-    branches: [replay-*]
+on: push
+
 
 env:
   CARGO_TERM_COLOR: always

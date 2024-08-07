@@ -1,24 +1,9 @@
-name: compiler_playground_cloud
+name: test_gha
 
-on:
-  push:
-    branches: [replay-*]
-
-env:
-  TZ: /usr/share/zoneinfo/America/Los_Angeles
-
-defaults:
-  run:
-    working-directory: compiler
+on: push
 
 jobs:
-  test_playground_cloud:
+  test_job:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup_node_modules
-        with:
-          node-version: '18.20.1'
-          cache-dependency-path: 'compiler/**/yarn.lock'
-      - run: npx playwright install --with-deps chromium
-      - run: yarn workspace playground test
+      - run: echo "Hello John"

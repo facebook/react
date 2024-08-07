@@ -1,8 +1,6 @@
 name: compiler_playground_cloud
 
-on:
-  push:
-    branches: [replay-*]
+on: push
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles

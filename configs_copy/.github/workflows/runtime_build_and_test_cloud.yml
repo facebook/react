@@ -1,8 +1,6 @@
 name: runtime_build_and_test_cloud
 
-on:
-  push:
-    branches: [replay-*]
+on: push
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles

@@ -1,7 +1,5 @@
 name: test_fuzz_cloud
-on:
-  push:
-    branches: [replay-*]
+on: push
 
 env:
   TZ: /usr/share/zoneinfo/America/Los_Angeles
