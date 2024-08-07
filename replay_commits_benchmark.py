@@ -222,7 +222,7 @@ def run(parsed_args):
     :param parsed_args: Dict of command line arguments
     """
     # Replay Commits In a Replay Branch
-    branch = replay_commits(parsed_args)
+    branches, repo = replay_commits(parsed_args)
     LOGGER.info(f"Triggered commits on branch: {branch}")
 
     # Gather all Pipeline IDs
@@ -231,6 +231,10 @@ def run(parsed_args):
     # Wait for builds to complete
     wait_for_builds_to_complete(parsed_args, build_ids)    
     LOGGER.info("All builds completed!")
+
+    # Delete all replay branches
+    delete_branches(repo, branches)
+    LOGGER.info("Deleted all replay branches!")
 
     # Collects metrics
     metrics = collect_metrics(parsed_args, build_ids)
@@ -268,7 +272,6 @@ def run(parsed_args):
 def replay_commits(args):
 
     repo = Repo(args['working_repo_dir'])
-    branch = ""
 
     try:
         repo.create_remote('upstream', url=args['upstream_repo_url'])
@@ -284,72 +287,70 @@ def replay_commits(args):
     print(f"The following commits will be processed:")
     print(f"{commits}", sep="\n")
 
-    push_commits_one_by_one(args, repo, commits)
-
-    return branch
+    branches = push_commits_one_by_one(args, repo, commits)
+    
+    return branches, repo
 
 def push_commits_one_by_one(args, repo, commits):
-    if args['branch']:
-      branch = args['branch']
-    else:
-      current_date = datetime.now().date().isoformat()
-      branch = f"replay-{current_date}"
-      args['branch'] = branch
-
-    if branch not in repo.heads:
-        repo.git.checkout('-B', branch, 'main')
-
-    git_cmd = Git(args['working_repo_dir'])
-
-    # configure local repo settings
-    git_cmd.config('user.email', '')
-    git_cmd.config('user.name', 'replay-bot')
-
-    config_path = args['config_path']
-    main_tree = repo.heads.main.commit.tree
-
-    folders_from_main = {}
-    for folder in [config_path]:
-        for item in main_tree.traverse():
-            if item.path.startswith(folder):
-                folders_from_main[item.path] = BytesIO(item.data_stream.read()).getvalue()
+    branches = []
 
     for commit in commits:
-        repo.head.reset(commit=commit, index=True, working_tree=True)
+      if args['branch']:
+        branch = args['branch']
+      else:
+        current_date = datetime.now().date().isoformat()
+        branch = f"replay-{current_date}-{commit.hexsha}"
 
-        for path, data in folders_from_main.items():
-            if os.path.exists(path):
-                os.remove(path)
-            export_blob(data, path)
+      if branch not in repo.heads:
+          repo.git.checkout('-B', branch, 'main')
 
-        for folder in [".circleci", ".github"]:
-            source_dir = os.path.join(args['working_repo_dir'], config_path, folder)
-            destination_dir = os.path.join(args['working_repo_dir'], folder)
+      git_cmd = Git(args['working_repo_dir'])
 
-            if os.path.isdir(source_dir):
-                if os.path.isdir(destination_dir):
-                    shutil.rmtree(destination_dir)
-        
-                shutil.copytree(source_dir, destination_dir)
+      # configure local repo settings
+      git_cmd.config('user.email', '')
+      git_cmd.config('user.name', 'replay-bot')
 
-        repo.git.add('.')
-        repo.index.commit(f"Committing {commit.hexsha}")
+      config_path = args['config_path']
+      main_tree = repo.heads.main.commit.tree
 
-        url = repo.remotes.origin.url
-        token = os.getenv('GITHUB_TOKEN') 
-        repo.remotes.origin.set_url(f'https://{quote(token)}:x-oauth-basic@github.com/efficientengineering/react')
+      folders_from_main = {}
+      for folder in [config_path]:
+          for item in main_tree.traverse():
+              if item.path.startswith(folder):
+                  folders_from_main[item.path] = BytesIO(item.data_stream.read()).getvalue()
 
-        print(f"Pushing commit {commit.hexsha} to branch {branch}")
-        repo.git.push("--force", "origin", branch)
-        repo.remotes.origin.set_url(url)
-        time.sleep(args['commit_delay'])
+      repo.head.reset(commit=commit, index=True, working_tree=True)
 
-    # Delete the branch after all commits have been pushed
-    repo.git.checkout("main")
-    repo.git.branch("-D", branch)
-    repo.remotes.origin.push(refspec=f":{branch}")
+      for path, data in folders_from_main.items():
+          if os.path.exists(path):
+              os.remove(path)
+          export_blob(data, path)
 
-    return branch
+      for folder in [".circleci", ".github"]:
+          source_dir = os.path.join(args['working_repo_dir'], config_path, folder)
+          destination_dir = os.path.join(args['working_repo_dir'], folder)
+
+          if os.path.isdir(source_dir):
+              if os.path.isdir(destination_dir):
+                  shutil.rmtree(destination_dir)
+      
+              shutil.copytree(source_dir, destination_dir)
+
+      repo.git.add('.')
+      repo.index.commit(f"Committing {commit.hexsha}")
+
+      url = repo.remotes.origin.url
+      token = os.getenv('GITHUB_TOKEN') 
+      repo.remotes.origin.set_url(f'https://{quote(token)}:x-oauth-basic@github.com/efficientengineering/react')
+
+      print(f"Pushing commit {commit.hexsha} to branch {branch}")
+      repo.git.push("--force", "origin", branch)
+      repo.remotes.origin.set_url(url)
+      time.sleep(args['commit_delay'])
+
+      branches.append(branch)
+
+    return branches
 
 def export_blob(data, dst_path):
     directory = os.path.dirname(dst_path)
@@ -372,16 +373,15 @@ def export_blob(data, dst_path):
         with open(dst_path, 'wb') as file:
             file.write(data)
 
-def get_all_build_ids(args):
-    github_ids = get_github_workflow_run_ids(args)
-    circleci_ids = get_circleci_pipeline_ids(args)
-
-    all_ids = {**github_ids, **circleci_ids}
-
+def get_all_build_ids(args, branches):
+    all_ids = {}
+    for branch in branches:
+        github_ids = get_github_workflow_run_ids(args, branch)
+        circleci_ids = get_circleci_pipeline_ids(args, branch)
+        all_ids[branch] = {**github_ids, **circleci_ids}
     return all_ids
 
-def get_circleci_pipeline_ids(args):
-    branch = args['branch']
+def get_circleci_pipeline_ids(args, branch):
 
     LOGGER.info("Fetching CircleCI workflows...")
     url = f"https://circleci.com/api/v2/project/{args['circleci_project_slug']}/pipeline"
@@ -397,8 +397,7 @@ def get_circleci_pipeline_ids(args):
 
     return {"circleci": [pipeline["id"] for pipeline in pipelines]}
 
-def get_github_workflow_run_ids(args):
-    branch = args['branch']
+def get_github_workflow_run_ids(args, branch):
 
     LOGGER.info("Fetching GitHub workflows...")
     url = f"https://api.github.com/repos/{args['github_repo_slug']}/actions/runs"
@@ -457,6 +456,12 @@ def wait_for_github_build(args, workflow_run_id):
         LOGGER.debug("GitHub build still in progress...")
         sleep(args['poll_interval'])
     LOGGER.info("GitHub build completed")
+
+def delete_branches(repo, branches):
+    for branch in branches:
+        repo.git.checkout("main")
+        repo.git.branch("-D", branch)
+        repo.remotes.origin.push(refspec=f":{branch}")
 
 def collect_metrics(args, build_ids):
     metrics = {
