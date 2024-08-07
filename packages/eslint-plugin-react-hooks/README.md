@@ -50,6 +50,8 @@ If you want more fine-grained configuration, you can instead add a snippet like 
 
 ## Advanced Configuration
 
+### additionalHooks option
+
 `exhaustive-deps` can be configured to validate dependencies of custom Hooks with the `additionalHooks` option.
 This option accepts a regex to match the names of custom Hooks that have dependencies.
 
@@ -65,6 +67,21 @@ This option accepts a regex to match the names of custom Hooks that have depende
 ```
 
 We suggest to use this option **very sparingly, if at all**. Generally saying, we recommend most custom Hooks to not use the dependencies argument, and instead provide a higher-level API that is more focused around a specific use case.
+
+### requireUseEffectDependencyArray option
+
+`exhaustive-deps` can be configured to disallow calling `useEffect()` without a dependency array. When this option is enabled, to make `useEffect()` re-run on every render you must explicitly pass `undefined` as the second argument. 
+
+```js
+{
+  "rules": {
+    // ...
+    "react-hooks/exhaustive-deps": ["warn", {
+      "requireUseEffectDependencyArray": true
+    }]
+  }
+}
+```
 
 ## Valid and Invalid Examples
 

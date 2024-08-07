@@ -25,11 +25,15 @@ export default {
         type: 'object',
         additionalProperties: false,
         enableDangerousAutofixThisMayCauseInfiniteLoops: false,
+        requireUseEffectDependencyArray: false,
         properties: {
           additionalHooks: {
             type: 'string',
           },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
+            type: 'boolean',
+          },
+          requireUseEffectDependencyArray: {
             type: 'boolean',
           },
         },
@@ -51,9 +55,16 @@ export default {
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
+    const requireUseEffectDependencyArray =
+      (context.options &&
+        context.options[0] &&
+        context.options[0].requireUseEffectDependencyArray) ||
+      false;
+
     const options = {
       additionalHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      requireUseEffectDependencyArray,
     };
 
     function reportProblem(problem) {
@@ -1205,6 +1216,8 @@ export default {
         !(maybeNode.type === 'Identifier' && maybeNode.name === 'undefined')
           ? maybeNode
           : undefined;
+      const dependencyNodeIsUndefined =
+        maybeNode && maybeNode.name === 'undefined';
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Check whether a callback is supplied. If there is no callback supplied
@@ -1220,9 +1233,24 @@ export default {
         return;
       }
 
-      // Check the declared dependencies for this reactive hook. If there is no
-      // second argument then the reactive callback will re-run on every render.
-      // So no need to check for dependency inclusion.
+      // Check the declared dependencies for useEffect hook.
+      if (!declaredDependenciesNode && isEffect) {
+        // If there is no second argument then the reactive callback
+        // will re-run on every render. Only need to check if option
+        // requireUseEffectDependencyArray is enabled.
+        if (requireUseEffectDependencyArray && !dependencyNodeIsUndefined) {
+          reportProblem({
+            node: reactiveHook,
+            message:
+              `React Hook ${reactiveHookName} will re-run on every render. ` +
+              `Did you forget to pass an array of dependencies? ` +
+              `Explicitly pass 'undefined' if this is the intented behaviour.`,
+          });
+          return;
+        }
+      }
+
+      // Check the declared dependencies for non-useEffect hook.
       if (!declaredDependenciesNode && !isEffect) {
         // These are only used for optimization.
         if (
