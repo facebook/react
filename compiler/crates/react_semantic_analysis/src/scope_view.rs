@@ -159,6 +159,7 @@ impl<'m> std::fmt::Debug for ScopeView<'m> {
 }
 
 #[derive(Clone, Copy)]
+#[allow(dead_code)]
 pub struct LabelView<'m> {
     #[allow(dead_code)]
     pub(crate) manager: &'m ScopeManager,
