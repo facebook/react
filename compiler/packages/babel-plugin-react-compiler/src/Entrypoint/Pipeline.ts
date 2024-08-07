@@ -103,6 +103,7 @@ import {
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
 import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
+import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -202,6 +203,10 @@ function* runWithEnvironment(
 
   if (env.config.validateNoCapitalizedCalls) {
     validateNoCapitalizedCalls(hir);
+  }
+
+  if (env.config.enableLowerContextAccess) {
+    lowerContextAccess(hir);
   }
 
   analyseFunctions(hir);
