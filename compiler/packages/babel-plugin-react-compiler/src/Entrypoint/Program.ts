@@ -502,6 +502,9 @@ export function compileProgram(
     }
   }
 
+  const hasLoweredContextAccess = compiledFns.some(
+    c => c.compiledFn.hasLoweredContextAccess,
+  );
   const externalFunctions: Array<ExternalFunction> = [];
   let gating: null | ExternalFunction = null;
   try {
@@ -512,7 +515,7 @@ export function compileProgram(
     }
 
     const lowerContextAccess = pass.opts.environment?.lowerContextAccess;
-    if (lowerContextAccess) {
+    if (lowerContextAccess && hasLoweredContextAccess) {
       externalFunctions.push(tryParseExternalFunction(lowerContextAccess));
     }
 
