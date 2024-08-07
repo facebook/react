@@ -1213,7 +1213,7 @@ export type ValidIdentifierName = string & {
   [opaqueValidIdentifierName]: 'ValidIdentifierName';
 };
 
-export function makeTemporary(
+export function makeTemporaryIdentifier(
   id: IdentifierId,
   loc: SourceLocation,
 ): Identifier {

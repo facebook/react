@@ -194,7 +194,7 @@ export const defaultOptions: PluginOptions = {
   noEmit: false,
   runtimeModule: null,
   eslintSuppressionRules: null,
-  flowSuppressions: false,
+  flowSuppressions: true,
   ignoreUseNoForget: false,
   sources: filename => {
     return filename.indexOf('node_modules') === -1;
