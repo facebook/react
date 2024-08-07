@@ -467,32 +467,27 @@ def delete_branches(repo, branches):
 
 def collect_metrics(args, build_ids):
     metrics = {
-        "circleci": {
-            "workflows": [],
-            "jobs": []
-        },
-        "github": {
-            "workflows": [],
-            "jobs": []
-        }
+        "circleci": [],
+        "github": []
     }
-
-    for branch, ids in build_ids.items():
-        if args['circleci_project_slug'] and 'circleci' in ids:
-            for pipeline_id in ids['circleci']:
+  
+    if args['circleci_project_slug']:
+        for branch in build_ids.values():
+            for pipeline_id in branch.get('circleci', []):
                 try:
                     print(f"Gathering CircleCI metrics for {pipeline_id}")
                     metrics_result = collect_circleci_metrics(args, pipeline_id)
-                    metrics["circleci"]["workflows"].append(metrics_result)  # Modify accordingly if the type of metrics_result is not dict
+                    metrics["circleci"].append(metrics_result)
                 except Exception as e:
                     LOGGER.error(f"Error collecting CircleCI metrics for pipeline_id={pipeline_id}: {e}")
 
-        if args['circleci_project_slug'] and args['github_repo_slug'] and 'github' in ids:
-            for workflow_run_id in ids['github']:
+    if args['circleci_project_slug'] and args['github_repo_slug']:
+        for branch in build_ids.values():
+            for workflow_run_id in branch.get('github', []):
                 try:
                     print(f"Gathering Github Actions metrics for {workflow_run_id}")
                     metrics_result = collect_github_metrics(args, workflow_run_id)
-                    metrics["github"]["workflows"].append(metrics_result)  # Modify accordingly if the type of metrics_result is not dict
+                    metrics["github"].append(metrics_result)
                 except Exception as e:
                     LOGGER.error(f"Error collecting Github metrics for workflow_run_id={workflow_run_id}: {e}")
     
