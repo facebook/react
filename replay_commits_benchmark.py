@@ -357,7 +357,7 @@ def export_blob(data, dst_path):
     
     if os.path.exists(dst_path):
         if os.path.isfile(dst_path):
-            print(f"A file with the name {dst_path} already exists. Removing the file.")
+            # Remove file if it has the same name
             os.remove(dst_path)
         else:
             print(f"A directory with the name {dst_path} already exists.")
@@ -365,7 +365,7 @@ def export_blob(data, dst_path):
         try:
             os.makedirs(directory, exist_ok=True)
         except FileExistsError as e:
-            print(f"Attempted to create directory, but a directory with the name '{directory}' already exists. Removing the directory.")
+            # Remove directory if it has the same name
             os.remove(directory)
             os.makedirs(directory, exist_ok=True)
             
@@ -411,9 +411,6 @@ def get_github_workflow_run_ids(args, branch):
     return [run["id"] for run in runs if run["head_branch"] == branch]
 
 def wait_for_builds_to_complete(args, build_ids):
-    
-    print(f"Waiting for the following builds IDs:\n")
-    print(*build_ids, sep="\n")
 
     with ThreadPoolExecutor() as executor:
         futures = {}
@@ -446,7 +443,7 @@ def wait_for_circleci_build(args, pipeline_id):
 
         LOGGER.debug(f"CircleCI build {pipeline_id} still in progress...")
         sleep(args['poll_interval'])
-    LOGGER.info("CircleCI build completed")
+    LOGGER.info(f"CircleCI build {pipeline_id} completed")
 
 def wait_for_github_build(args, workflow_run_id):
     LOGGER.info("Waiting for GitHub build to complete...")
@@ -460,7 +457,7 @@ def wait_for_github_build(args, workflow_run_id):
             break
         LOGGER.debug(f"GitHub build {workflow_run_id} still in progress...")
         sleep(args['poll_interval'])
-    LOGGER.info("GitHub build completed")
+    LOGGER.info(f"GitHub build {workflow_run_id} completed")
 
 def delete_branches(repo, branches):
     for branch in branches:
