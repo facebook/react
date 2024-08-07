@@ -194,7 +194,7 @@ def get_args():
     parser.add_argument("--poll-interval",
                         help="Polling interval in seconds when waiting for builds to complete",
                         type=int,
-                        default=10)
+                        default=30)
     parser.add_argument("--max-retries",
                         help="Maximum number of retries for inputting data into Google Sheets",
                         type=int,
@@ -437,7 +437,7 @@ def wait_for_circleci_build(args, pipeline_id):
         workflows = response.json()['items']
 
         statuses = [workflow['status'] for workflow in workflows]
-        if all(status in ['success', 'failed'] for status in statuses):
+        if all(status in ['success', 'failed', 'canceled'] for status in statuses):
             break
 
         LOGGER.debug(f"CircleCI build {pipeline_id} still in progress...")
@@ -460,9 +460,9 @@ def wait_for_github_build(args, workflow_run_id):
 def get_response_with_rate_limit_handling(url, headers):
     while True:
         response = requests.get(url, headers=headers)
-        if response.status_code == 429:  # CircleCI rate limit exceeded
+        if response.status_code == 429:
             LOGGER.warning("Rate limit exceeded. Sleeping for a while...")
-            time.sleep(60)  # Sleep for a minute
+            time.sleep(60)
             continue
         elif response.status_code == 403 and 'X-RateLimit-Remaining' in response.headers and response.headers['X-RateLimit-Remaining'] == '0':  # GitHub rate limit exceeded
             reset_time = response.headers['X-RateLimit-Reset']
