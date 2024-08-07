@@ -9,6 +9,7 @@ import {
   HIRFunction,
   IdentifierId,
   makeInstructionId,
+  MutableRange,
   Place,
   ReactiveValue,
 } from '../HIR';
@@ -110,12 +111,7 @@ function visit(
           operand.identifier.scope = fbtScope;
 
           // Expand the jsx element's range to account for its operands
-          fbtScope.range.start = makeInstructionId(
-            Math.min(
-              fbtScope.range.start,
-              operand.identifier.mutableRange.start,
-            ),
-          );
+          expandFbtScopeRange(fbtScope.range, operand.identifier.mutableRange);
           fbtValues.add(operand.identifier.id);
         }
       } else if (
@@ -136,12 +132,7 @@ function visit(
           operand.identifier.scope = fbtScope;
 
           // Expand the jsx element's range to account for its operands
-          fbtScope.range.start = makeInstructionId(
-            Math.min(
-              fbtScope.range.start,
-              operand.identifier.mutableRange.start,
-            ),
-          );
+          expandFbtScopeRange(fbtScope.range, operand.identifier.mutableRange);
 
           /*
            * NOTE: we add the operands as fbt values so that they are also
@@ -169,12 +160,7 @@ function visit(
           operand.identifier.scope = fbtScope;
 
           // Expand the jsx element's range to account for its operands
-          fbtScope.range.start = makeInstructionId(
-            Math.min(
-              fbtScope.range.start,
-              operand.identifier.mutableRange.start,
-            ),
-          );
+          expandFbtScopeRange(fbtScope.range, operand.identifier.mutableRange);
         }
       }
     }
@@ -213,4 +199,15 @@ function isFbtJsxChild(
     lvalue !== null &&
     fbtValues.has(lvalue.identifier.id)
   );
+}
+
+function expandFbtScopeRange(
+  fbtRange: MutableRange,
+  extendWith: MutableRange,
+): void {
+  if (extendWith.start !== 0) {
+    fbtRange.start = makeInstructionId(
+      Math.min(fbtRange.start, extendWith.start),
+    );
+  }
 }
