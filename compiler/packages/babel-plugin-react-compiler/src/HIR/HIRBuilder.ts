@@ -28,7 +28,7 @@ import {
   makeDeclarationId,
   makeIdentifierName,
   makeInstructionId,
-  makeTemporary,
+  makeTemporaryIdentifier,
   makeType,
 } from './HIR';
 import {printInstruction} from './PrintHIR';
@@ -184,7 +184,7 @@ export default class HIRBuilder {
 
   makeTemporary(loc: SourceLocation): Identifier {
     const id = this.nextIdentifierId;
-    return makeTemporary(id, loc);
+    return makeTemporaryIdentifier(id, loc);
   }
 
   #resolveBabelBinding(
@@ -891,18 +891,9 @@ export function createTemporaryPlace(
   env: Environment,
   loc: SourceLocation,
 ): Place {
-  const id = env.nextIdentifierId;
   return {
     kind: 'Identifier',
-    identifier: {
-      id,
-      declarationId: makeDeclarationId(id),
-      mutableRange: {start: makeInstructionId(0), end: makeInstructionId(0)},
-      name: null,
-      scope: null,
-      type: makeType(),
-      loc,
-    },
+    identifier: makeTemporaryIdentifier(env.nextIdentifierId, loc),
     reactive: false,
     effect: Effect.Unknown,
     loc: GeneratedSource,

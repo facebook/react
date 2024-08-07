@@ -276,9 +276,16 @@ function validateInferredDep(
 }
 
 class Visitor extends ReactiveFunctionVisitor<VisitorState> {
+  /**
+   * Records all completed scopes (regardless of transitive memoization
+   * of scope dependencies)
+   *
+   * Both @scopes and @prunedScopes are live sets. We rely on iterating
+   * the reactive-ir in evaluation order, as they are used to determine
+   * whether scope dependencies / declarations have completed mutation.
+   */
   scopes: Set<ScopeId> = new Set();
   prunedScopes: Set<ScopeId> = new Set();
-  scopeMapping = new Map();
   temporaries: Map<IdentifierId, ManualMemoDependency> = new Map();
 
   /**
@@ -394,25 +401,9 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
       }
     }
 
-    /*
-     * Record scopes that exist in the AST so we can later check to see if
-     * effect dependencies which should be memoized (have a scope assigned)
-     * actually are memoized (that scope exists).
-     * However, we only record scopes if *their* dependencies are also
-     * memoized, allowing a transitive memoization check.
-     */
-    let areDependenciesMemoized = true;
-    for (const dep of scopeBlock.scope.dependencies) {
-      if (isUnmemoized(dep.identifier, this.scopes)) {
-        areDependenciesMemoized = false;
-        break;
-      }
-    }
-    if (areDependenciesMemoized) {
-      this.scopes.add(scopeBlock.scope.id);
-      for (const id of scopeBlock.scope.merged) {
-        this.scopes.add(id);
-      }
+    this.scopes.add(scopeBlock.scope.id);
+    for (const id of scopeBlock.scope.merged) {
+      this.scopes.add(id);
     }
   }
 
@@ -453,6 +444,23 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         manualMemoId: value.manualMemoId,
       };
 
+      /**
+       * We check that each scope dependency is either:
+       * (1) Not scoped
+       *     Checking `identifier.scope == null` is a proxy for whether the dep
+       *     is a primitive, global, or other guaranteed non-allocating value.
+       *     Non-allocating values do not need memoization.
+       *     Note that this is a conservative estimate as some primitive-typed
+       *     variables do receive scopes.
+       * (2) Scoped (a maybe newly-allocated value with a mutable range)
+       *     Here, we check that the dependency's scope has completed before
+       *     the manual useMemo as a proxy for mutable-range checking. This
+       *     validates that there are no potential rule-of-react violations
+       *     in source.
+       *     Note that scope range is an overly conservative proxy as we merge
+       *     overlapping ranges.
+       *     See fixture `error.false-positive-useMemo-overlap-scopes`
+       */
       for (const {identifier, loc} of eachInstructionValueOperand(
         value as InstructionValue,
       )) {
