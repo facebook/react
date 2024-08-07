@@ -411,6 +411,7 @@ def get_github_workflow_run_ids(args, branch):
     return [run["id"] for run in runs if run["head_branch"] == branch]
 
 def wait_for_builds_to_complete(args, build_ids):
+    timeout = args.get('timeout', 300)
 
     with ThreadPoolExecutor() as executor:
         futures = {}
@@ -422,11 +423,16 @@ def wait_for_builds_to_complete(args, build_ids):
                 for id in ids['github']:
                     futures[f"github_{id}"] = executor.submit(wait_for_github_build, args, id)
         
-        for vendor, future in futures.items():
-            try:
-                future.result()
-            except Exception as e:
-                LOGGER.error(f"Error waiting for {vendor} build: {e}")
+        while futures:
+            for vendor, future in list(futures.items()):
+                try:
+                    future.result(timeout=timeout)
+                    del futures[vendor]
+                except TimeoutError:
+                    LOGGER.warning(f"Waiting for {vendor} build timed out, will keep polling...")
+                except Exception as e:
+                    LOGGER.error(f"Error waiting for {vendor} build: {e}")
+                    del futures[vendor]
 
 def wait_for_circleci_build(args, pipeline_id):
     LOGGER.info("Waiting for CircleCI build to complete...")
