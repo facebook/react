@@ -97,6 +97,11 @@ export type CodegenFunction = {
     fn: CodegenFunction;
     type: ReactFunctionType | null;
   }>;
+
+  /**
+   * This is true if the compiler has the lowered useContext calls.
+   */
+  hasLoweredContextAccess: boolean;
 };
 
 export function codegenFunction(
@@ -348,6 +353,7 @@ function codegenReactiveFunction(
     prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
+    hasLoweredContextAccess: fn.env.hasLoweredContextAccess,
   });
 }
 

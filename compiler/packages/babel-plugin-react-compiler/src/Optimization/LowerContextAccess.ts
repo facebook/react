@@ -77,7 +77,7 @@ export function lowerContextAccess(
     }
   }
 
-  if (contextAccess.size > 0) {
+  if (contextAccess.size > 0 && contextKeys.size > 0) {
     for (const [, block] of fn.body.blocks) {
       let nextInstructions: Array<Instruction> | null = null;
 
@@ -120,6 +120,7 @@ export function lowerContextAccess(
     }
     markInstructionIds(fn.body);
     inferTypes(fn);
+    fn.env.hasLoweredContextAccess = true;
   }
 }
 
