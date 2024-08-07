@@ -411,17 +411,15 @@ def get_github_workflow_run_ids(args, branch):
     return [run["id"] for run in runs if run["head_branch"] == branch]
 
 def wait_for_builds_to_complete(args, build_ids):
-    
-    print(build_ids)
-
     with ThreadPoolExecutor() as executor:
         futures = {}
-        if args['circleci_project_slug']:
-            for id in build_ids['circleci']:
-                futures[f"circleci_{id}"] = executor.submit(wait_for_circleci_build, args, id)
-        if args['circleci_project_slug'] and args['github_repo_slug']:
-            for id in build_ids['github']:
-                futures[f"github_{id}"] = executor.submit(wait_for_github_build, args, id)
+        for branch, ids in build_ids.items():
+            if 'circleci' in ids and args['circleci_project_slug']:
+                for id in ids['circleci']:
+                    futures[f"circleci_{id}"] = executor.submit(wait_for_circleci_build, args, id)
+            if 'github' in ids and args['circleci_project_slug'] and args['github_repo_slug']:
+                for id in ids['github']:
+                    futures[f"github_{id}"] = executor.submit(wait_for_github_build, args, id)
         
         for vendor, future in futures.items():
             try:
