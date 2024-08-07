@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: .github/actions/setup-workflow
+      - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'compiler/**/yarn.lock'

@@ -26,7 +26,7 @@ jobs:
   typescript_lint_cloud:
     runs-on: ubuntu-latest
     steps:
-      - uses: .github/actions/setup-workflow
+      - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'compiler/**/yarn.lock'
@@ -36,7 +36,7 @@ jobs:
   typescript_jest_cloud:
     runs-on: ubuntu-latest
     steps:
-      - uses: .github/actions/setup-workflow
+      - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'compiler/**/yarn.lock'
@@ -51,7 +51,7 @@ jobs:
       matrix:
         workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
     steps:
-      - uses: .github/actions/setup-workflow
+      - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'compiler/**/yarn.lock'
