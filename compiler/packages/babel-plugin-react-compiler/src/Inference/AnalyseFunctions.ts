@@ -20,7 +20,7 @@ import {
 } from '../HIR';
 import {deadCodeElimination} from '../Optimization';
 import {inferReactiveScopeVariables} from '../ReactiveScopes';
-import {leaveSSA} from '../SSA';
+import {rewriteInstructionKindsBasedOnReassignment} from '../SSA';
 import {logHIRFunction} from '../Utils/logger';
 import {inferMutableContextVariables} from './InferMutableContextVariables';
 import {inferMutableRanges} from './InferMutableRanges';
@@ -108,7 +108,7 @@ function lower(func: HIRFunction): void {
   inferReferenceEffects(func, {isFunctionExpression: true});
   deadCodeElimination(func);
   inferMutableRanges(func);
-  leaveSSA(func);
+  rewriteInstructionKindsBasedOnReassignment(func);
   inferReactiveScopeVariables(func);
   inferMutableContextVariables(func);
   logHIRFunction('AnalyseFunction (inner)', func);

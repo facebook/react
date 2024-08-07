@@ -25,6 +25,7 @@ import {
   Terminal,
   VariableBinding,
   makeBlockId,
+  makeDeclarationId,
   makeIdentifierName,
   makeInstructionId,
   makeTemporaryIdentifier,
@@ -320,6 +321,7 @@ export default class HIRBuilder {
         const id = this.nextIdentifierId;
         const identifier: Identifier = {
           id,
+          declarationId: makeDeclarationId(id),
           name: makeIdentifierName(name),
           mutableRange: {
             start: makeInstructionId(0),
@@ -896,4 +898,17 @@ export function createTemporaryPlace(
     effect: Effect.Unknown,
     loc: GeneratedSource,
   };
+}
+
+/**
+ * Clones an existing Place, returning a new temporary Place that shares the
+ * same metadata properties as the original place (effect, reactive flag, type)
+ * but has a new, temporary Identifier.
+ */
+export function clonePlaceToTemporary(env: Environment, place: Place): Place {
+  const temp = createTemporaryPlace(env, place.loc);
+  temp.effect = place.effect;
+  temp.identifier.type = place.identifier.type;
+  temp.reactive = place.reactive;
+  return temp;
 }
