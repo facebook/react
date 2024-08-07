@@ -395,7 +395,7 @@ def get_circleci_pipeline_ids(args, branch):
     if not pipelines:
         raise ValueError(f"No pipelines found for branch {branch}")
 
-    return [pipeline["id"] for pipeline in pipelines]
+    return {'circleci': [pipeline["id"] for pipeline in pipelines]}
 
 def get_github_workflow_run_ids(args, branch):
 
@@ -408,7 +408,7 @@ def get_github_workflow_run_ids(args, branch):
     response.raise_for_status()
     runs = response.json()["workflow_runs"]
 
-    return [run["id"] for run in runs if run["head_branch"] == branch]
+    return {'github': [run["id"] for run in runs if run["head_branch"] == branch]}
 
 def wait_for_builds_to_complete(args, build_ids):
     with ThreadPoolExecutor() as executor:
