@@ -296,7 +296,7 @@ def push_commits_one_by_one(args, repo, commits):
 
     for commit in commits:
       if args['branch']:
-        branch = args['branch']
+        branch = f"{args['branch']}-{commit.hexsha}"
       else:
         current_date = datetime.now().date().isoformat()
         branch = f"replay-{current_date}-{commit.hexsha}"
@@ -440,7 +440,7 @@ def wait_for_circleci_build(args, pipeline_id):
         if all(status in ['success', 'failed'] for status in statuses):
             break
 
-        LOGGER.debug("CircleCI build still in progress...")
+        LOGGER.debug(f"CircleCI build {pipeline_id} still in progress...")
         sleep(args['poll_interval'])
     LOGGER.info("CircleCI build completed")
 
@@ -454,7 +454,7 @@ def wait_for_github_build(args, workflow_run_id):
         status = response.json()['status']
         if status == 'completed':
             break
-        LOGGER.debug("GitHub build still in progress...")
+        LOGGER.debug(f"GitHub build {workflow_run_id} still in progress...")
         sleep(args['poll_interval'])
     LOGGER.info("GitHub build completed")
 
