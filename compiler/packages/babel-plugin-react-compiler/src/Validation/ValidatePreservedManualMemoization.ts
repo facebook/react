@@ -30,6 +30,7 @@ import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
 } from '../ReactiveScopes/visitors';
+import {getOrInsertDefault} from '../Utils/utils';
 
 /**
  * Validates that all explicit manual memoization (useMemo/useCallback) was accurately
@@ -52,6 +53,16 @@ export function validatePreservedManualMemoization(fn: ReactiveFunction): void {
 const DEBUG = false;
 
 type ManualMemoBlockState = {
+  /**
+   * Tracks reassigned temporaries.
+   * This is necessary because useMemo calls are usually inlined.
+   * Inlining produces a `let` declaration, followed by reassignments
+   * to the newly declared variable (one per return statement).
+   * Since InferReactiveScopes does not merge scopes across reassigned
+   * variables (except in the case of a mutate-after-phi), we need to
+   * track reassignments to validate we're retaining manual memo.
+   */
+  reassignments: Map<DeclarationId, Set<Identifier>>;
   // The source of the original memoization, used when reporting errors
   loc: SourceLocation;
 
@@ -425,6 +436,18 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
      */
     this.recordTemporaries(instruction, state);
     const value = instruction.value;
+    if (
+      value.kind === 'StoreLocal' &&
+      value.lvalue.kind === 'Reassign' &&
+      state.manualMemoState != null
+    ) {
+      const ids = getOrInsertDefault(
+        state.manualMemoState.reassignments,
+        value.lvalue.place.identifier.declarationId,
+        new Set(),
+      );
+      ids.add(value.value.identifier);
+    }
     if (value.kind === 'StartMemoize') {
       let depsFromSource: Array<ManualMemoDependency> | null = null;
       if (value.deps != null) {
@@ -442,6 +465,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         decls: new Set(),
         depsFromSource,
         manualMemoId: value.manualMemoId,
+        reassignments: new Map(),
       };
 
       /**
@@ -491,20 +515,34 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           suggestions: null,
         },
       );
+      const reassignments = state.manualMemoState.reassignments;
       state.manualMemoState = null;
       if (!value.pruned) {
         for (const {identifier, loc} of eachInstructionValueOperand(
           value as InstructionValue,
         )) {
-          if (isUnmemoized(identifier, this.scopes)) {
-            state.errors.push({
-              reason:
-                'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.',
-              description: null,
-              severity: ErrorSeverity.CannotPreserveMemoization,
-              loc,
-              suggestions: null,
-            });
+          let decls;
+          if (identifier.scope == null) {
+            /**
+             * If the manual memo was a useMemo that got inlined, iterate through
+             * all reassignments to the iife temporary to ensure they're memoized.
+             */
+            decls = reassignments.get(identifier.declarationId) ?? [identifier];
+          } else {
+            decls = [identifier];
+          }
+
+          for (const identifier of decls) {
+            if (isUnmemoized(identifier, this.scopes)) {
+              state.errors.push({
+                reason:
+                  'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.',
+                description: null,
+                severity: ErrorSeverity.CannotPreserveMemoization,
+                loc,
+                suggestions: null,
+              });
+            }
           }
         }
       }
