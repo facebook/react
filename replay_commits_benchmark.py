@@ -285,7 +285,7 @@ def replay_commits(args):
         commits.append(commit)
     commits.reverse()
     print(f"The following commits will be processed:")
-    print(f"{commits}", sep="\n")
+    print(*commits, sep="\n")
 
     branches = push_commits_one_by_one(args, repo, commits)
     
@@ -395,7 +395,7 @@ def get_circleci_pipeline_ids(args, branch):
     if not pipelines:
         raise ValueError(f"No pipelines found for branch {branch}")
 
-    return {'circleci': [pipeline["id"] for pipeline in pipelines]}
+    return [pipeline["id"] for pipeline in pipelines]
 
 def get_github_workflow_run_ids(args, branch):
 
@@ -408,9 +408,12 @@ def get_github_workflow_run_ids(args, branch):
     response.raise_for_status()
     runs = response.json()["workflow_runs"]
 
-    return {'github': [run["id"] for run in runs if run["head_branch"] == branch]}
+    return [run["id"] for run in runs if run["head_branch"] == branch]
 
 def wait_for_builds_to_complete(args, build_ids):
+    
+    print(*build_ids, sep="\n")
+
     with ThreadPoolExecutor() as executor:
         futures = {}
         if args['circleci_project_slug']:
