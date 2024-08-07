@@ -31,7 +31,7 @@ jobs:
       matrix:
         flow_inline_config_shortname: ${{ fromJSON(needs.discover_flow_inline_configs.outputs.matrix) }}
     steps:
-      - uses: ./.github/actions/setup-workflow
+      - uses: .github/actions/setup-workflow
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
@@ -42,7 +42,7 @@ jobs:
     name: Confirm generated inline Fizz runtime is up to date
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-workflow
+      - uses: .github/actions/setup-workflow
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
@@ -55,7 +55,7 @@ jobs:
     name: Check flags
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-workflow
+      - uses: .github/actions/setup-workflow
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
@@ -95,7 +95,7 @@ jobs:
           - 5/5
     continue-on-error: true
     steps:
-      - uses: ./.github/actions/setup-workflow
+      - uses: .github/actions/setup-workflow
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
@@ -111,7 +111,7 @@ jobs:
         worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
         release_channel: [stable, experimental]
     steps:
-      - uses: ./.github/actions/setup-workflow
+      - uses: .github/actions/setup-workflow
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
@@ -171,7 +171,7 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-workflow
+      - uses: .github/actions/setup-workflow
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
@@ -193,7 +193,7 @@ jobs:
       # Fixture copies some built packages from the workroot after install.
       # That means dependencies of the built packages are not installed.
       # We need to install dependencies of the workroot to fulfill all dependency constraints
-      - uses: ./.github/actions/setup-workflow
+      - uses: .github/actions/setup-workflow
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'

@@ -223,7 +223,7 @@ def run(parsed_args):
     """
     # Replay Commits In a Replay Branch
     branches, repo = replay_commits(parsed_args)
-    LOGGER.info(f"Triggered commits on branch: {branch}")
+    LOGGER.info(f"Triggered commits on branch: {branches}")
 
     # Gather all Pipeline IDs
     build_ids = get_all_build_ids(parsed_args)
