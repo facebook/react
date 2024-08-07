@@ -149,7 +149,7 @@ export default class Agent extends EventEmitter<{
   drawTraceUpdates: [Array<HostInstance>],
   disableTraceUpdates: [],
   getIfHasUnsupportedRendererVersion: [],
-  updateHookSettings: [DevToolsHookSettings],
+  updateHookSettings: [$ReadOnly<DevToolsHookSettings>],
   getHookSettings: [],
 }> {
   _bridge: BackendBridge;
@@ -806,12 +806,7 @@ export default class Agent extends EventEmitter<{
   updateHookSettings: (settings: $ReadOnly<DevToolsHookSettings>) => void =
     settings => {
       // Propagate the settings, so Backend can subscribe to it and modify hook
-      this.emit('updateHookSettings', {
-        appendComponentStack: settings.appendComponentStack,
-        breakOnConsoleErrors: settings.breakOnConsoleErrors,
-        showInlineWarningsAndErrors: settings.showInlineWarningsAndErrors,
-        hideConsoleLogsInStrictMode: settings.hideConsoleLogsInStrictMode,
-      });
+      this.emit('updateHookSettings', settings);
     };
 
   getHookSettings: () => void = () => {
