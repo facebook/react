@@ -284,7 +284,7 @@ def replay_commits(args):
             break
         commits.append(commit)
     commits.reverse()
-    print(f"The following commits will be processed:")
+    print(f"The following commits will be processed:\n")
     print(*commits, sep="\n")
 
     branches = push_commits_one_by_one(args, repo, commits)
@@ -411,6 +411,10 @@ def get_github_workflow_run_ids(args, branch):
     return [run["id"] for run in runs if run["head_branch"] == branch]
 
 def wait_for_builds_to_complete(args, build_ids):
+    
+    print(f"Waiting for the following builds IDs:\n")
+    print(*build_ids, sep="\n")
+
     with ThreadPoolExecutor() as executor:
         futures = {}
         for branch, ids in build_ids.items():
