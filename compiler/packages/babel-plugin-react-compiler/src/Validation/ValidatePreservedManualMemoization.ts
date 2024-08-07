@@ -433,15 +433,16 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
      * recursively visits ReactiveValues and instructions
      */
     this.recordTemporaries(instruction, state);
-    if (instruction.value.kind === 'StartMemoize') {
+    const value = instruction.value;
+    if (value.kind === 'StartMemoize') {
       let depsFromSource: Array<ManualMemoDependency> | null = null;
-      if (instruction.value.deps != null) {
-        depsFromSource = instruction.value.deps;
+      if (value.deps != null) {
+        depsFromSource = value.deps;
       }
       CompilerError.invariant(state.manualMemoState == null, {
         reason: 'Unexpected nested StartMemoize instructions',
-        description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${instruction.value.manualMemoId}`,
-        loc: instruction.value.loc,
+        description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${value.manualMemoId}`,
+        loc: value.loc,
         suggestions: null,
       });
 
@@ -449,45 +450,54 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         loc: instruction.loc,
         decls: new Set(),
         depsFromSource,
-        manualMemoId: instruction.value.manualMemoId,
+        manualMemoId: value.manualMemoId,
       };
+
+      for (const {identifier, loc} of eachInstructionValueOperand(
+        value as InstructionValue,
+      )) {
+        if (
+          identifier.scope != null &&
+          !this.scopes.has(identifier.scope.id) &&
+          !this.prunedScopes.has(identifier.scope.id)
+        ) {
+          state.errors.push({
+            reason:
+              'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly',
+            description: null,
+            severity: ErrorSeverity.CannotPreserveMemoization,
+            loc,
+            suggestions: null,
+          });
+        }
+      }
     }
-    if (instruction.value.kind === 'FinishMemoize') {
+    if (value.kind === 'FinishMemoize') {
       CompilerError.invariant(
         state.manualMemoState != null &&
-          state.manualMemoState.manualMemoId === instruction.value.manualMemoId,
+          state.manualMemoState.manualMemoId === value.manualMemoId,
         {
           reason: 'Unexpected mismatch between StartMemoize and FinishMemoize',
-          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${instruction.value.manualMemoId}`,
-          loc: instruction.value.loc,
+          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
+          loc: value.loc,
           suggestions: null,
         },
       );
       state.manualMemoState = null;
-    }
-
-    const isDep = instruction.value.kind === 'StartMemoize';
-    const isDecl =
-      instruction.value.kind === 'FinishMemoize' && !instruction.value.pruned;
-    if (isDep || isDecl) {
-      for (const value of eachInstructionValueOperand(
-        instruction.value as InstructionValue,
-      )) {
-        if (
-          (isDep &&
-            value.identifier.scope != null &&
-            !this.scopes.has(value.identifier.scope.id) &&
-            !this.prunedScopes.has(value.identifier.scope.id)) ||
-          (isDecl && isUnmemoized(value.identifier, this.scopes))
-        ) {
-          state.errors.push({
-            reason:
-              'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly',
-            description: null,
-            severity: ErrorSeverity.CannotPreserveMemoization,
-            loc: typeof instruction.loc !== 'symbol' ? instruction.loc : null,
-            suggestions: null,
-          });
+      if (!value.pruned) {
+        for (const {identifier, loc} of eachInstructionValueOperand(
+          value as InstructionValue,
+        )) {
+          if (isUnmemoized(identifier, this.scopes)) {
+            state.errors.push({
+              reason:
+                'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.',
+              description: null,
+              severity: ErrorSeverity.CannotPreserveMemoization,
+              loc,
+              suggestions: null,
+            });
+          }
         }
       }
     }
