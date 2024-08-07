@@ -436,8 +436,11 @@ const EnvironmentConfigSchema = z.object({
   enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
 
   /*
-   * If enabled, this lowers any calls to `useContext` hook to use a selector
-   * function.
+   * If specified a value, the compiler lowers any calls to `useContext` to use
+   * this value as the callee.
+   *
+   * A selector function is compiled and passed as an argument along with the
+   * context to this function call.
    *
    * The compiler automatically figures out the keys by looking for the immediate
    * destructuring of the return value from the useContext call. In the future,
@@ -449,10 +452,10 @@ const EnvironmentConfigSchema = z.object({
    * const {foo, bar} = useContext(MyContext);
    *
    * // output
-   * const {foo, bar} = useContext(MyContext, (c) => [c.foo, c.bar]);
+   * const {foo, bar} = useCompiledContext(MyContext, (c) => [c.foo, c.bar]);
    * ```
    */
-  enableLowerContextAccess: z.boolean().nullable().default(false),
+  lowerContextAccess: ExternalFunctionSchema.nullish(),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;

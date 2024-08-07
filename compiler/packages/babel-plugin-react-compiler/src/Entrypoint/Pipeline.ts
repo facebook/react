@@ -205,8 +205,8 @@ function* runWithEnvironment(
     validateNoCapitalizedCalls(hir);
   }
 
-  if (env.config.enableLowerContextAccess) {
-    lowerContextAccess(hir);
+  if (env.config.lowerContextAccess) {
+    lowerContextAccess(hir, env.config.lowerContextAccess);
   }
 
   analyseFunctions(hir);

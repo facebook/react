@@ -11,10 +11,12 @@ import {
   CallExpression,
   Destructure,
   Environment,
+  ExternalFunction,
   GeneratedSource,
   HIRFunction,
   IdentifierId,
   Instruction,
+  LoadGlobal,
   LoadLocal,
   Place,
   PropertyLoad,
@@ -29,7 +31,10 @@ import {createTemporaryPlace} from '../HIR/HIRBuilder';
 import {enterSSA} from '../SSA';
 import {inferTypes} from '../TypeInference';
 
-export function lowerContextAccess(fn: HIRFunction): void {
+export function lowerContextAccess(
+  fn: HIRFunction,
+  loweredContextCallee: ExternalFunction,
+): void {
   const contextAccess: Map<IdentifierId, CallExpression> = new Map();
   const contextKeys: Map<IdentifierId, Array<string>> = new Map();
 
@@ -84,12 +89,22 @@ export function lowerContextAccess(fn: HIRFunction): void {
           isUseContextHookType(value.callee.identifier) &&
           contextKeys.has(lvalue.identifier.id)
         ) {
-          const keys = contextKeys.get(lvalue.identifier.id)!;
-          const selectorFnInstr = emitSelectorFn(fn.env, keys);
+          const loweredContextCalleeInstr = emitLoadLoweredContextCallee(
+            fn.env,
+            loweredContextCallee,
+          );
+
           if (nextInstructions === null) {
             nextInstructions = block.instructions.slice(0, i);
           }
+          nextInstructions.push(loweredContextCalleeInstr);
+
+          const keys = contextKeys.get(lvalue.identifier.id)!;
+          const selectorFnInstr = emitSelectorFn(fn.env, keys);
           nextInstructions.push(selectorFnInstr);
+
+          const lowerContextCallId = loweredContextCalleeInstr.lvalue;
+          value.callee = lowerContextCallId;
 
           const selectorFn = selectorFnInstr.lvalue;
           value.args.push(selectorFn);
@@ -104,7 +119,30 @@ export function lowerContextAccess(fn: HIRFunction): void {
       }
     }
     markInstructionIds(fn.body);
+    inferTypes(fn);
   }
+}
+
+function emitLoadLoweredContextCallee(
+  env: Environment,
+  loweredContextCallee: ExternalFunction,
+): Instruction {
+  const loadGlobal: LoadGlobal = {
+    kind: 'LoadGlobal',
+    binding: {
+      kind: 'ImportNamespace',
+      module: loweredContextCallee.source,
+      name: loweredContextCallee.importSpecifierName,
+    },
+    loc: GeneratedSource,
+  };
+
+  return {
+    id: makeInstructionId(0),
+    loc: GeneratedSource,
+    lvalue: createTemporaryPlace(env, GeneratedSource),
+    value: loadGlobal,
+  };
 }
 
 function getContextKeys(value: Destructure): Array<string> | null {

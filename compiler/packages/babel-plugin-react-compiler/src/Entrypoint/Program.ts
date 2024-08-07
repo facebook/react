@@ -511,6 +511,11 @@ export function compileProgram(
       externalFunctions.push(gating);
     }
 
+    const lowerContextAccess = pass.opts.environment?.lowerContextAccess;
+    if (lowerContextAccess) {
+      externalFunctions.push(tryParseExternalFunction(lowerContextAccess));
+    }
+
     const enableEmitInstrumentForget =
       pass.opts.environment?.enableEmitInstrumentForget;
     if (enableEmitInstrumentForget != null) {
