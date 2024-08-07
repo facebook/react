@@ -11,9 +11,5 @@ jobs:
 workflows:
 
   test:
-    when:
-      matches:
-        pattern: "^replay.*"
-        value: << pipeline.git.branch >>
     jobs:
       - test
