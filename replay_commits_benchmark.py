@@ -412,7 +412,7 @@ def get_github_workflow_run_ids(args, branch):
 
 def wait_for_builds_to_complete(args, build_ids):
     
-    print(*build_ids, sep="\n")
+    print(build_ids)
 
     with ThreadPoolExecutor() as executor:
         futures = {}
