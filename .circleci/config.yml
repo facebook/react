@@ -31,7 +31,7 @@ jobs:
                     --google-sheet-id $GOOGLE_SHEETS_ID \
                     --github-token $GITHUB_TOKEN \
                     --circleci-token $CIRCLECI_TOKEN \
-                    --branch test2
+                    --branch test3
       - store_artifacts:
           path: benchmark-computed.json
       - store_artifacts:

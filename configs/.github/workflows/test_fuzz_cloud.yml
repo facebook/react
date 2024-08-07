@@ -11,11 +11,12 @@ jobs:
     env:
       TZ: "/usr/share/zoneinfo/America/Los_Angeles"
     steps:
-    - uses: ./.github/actions/setup_node_modules
-      with:
-        node-version-file: '.nvmrc'
-        skip-electron-download: "1"
-    - name: Run fuzz tests
-      run: |-
-        FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci=github
-        FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci=github
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version-file: '.nvmrc'
+          skip-electron-download: "1"
+      - name: Run fuzz tests
+        run: |-
+          FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci=github
+          FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci=github

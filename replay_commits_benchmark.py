@@ -433,8 +433,7 @@ def wait_for_circleci_build(args, pipeline_id):
     url = f"https://circleci.com/api/v2/pipeline/{pipeline_id}/workflow"
     headers = {"Circle-Token": args['circleci_token']}
     while True:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+        response = get_response_with_rate_limit_handling(url, headers)
         workflows = response.json()['items']
 
         statuses = [workflow['status'] for workflow in workflows]
@@ -450,14 +449,29 @@ def wait_for_github_build(args, workflow_run_id):
     url = f"https://api.github.com/repos/{args['github_repo_slug']}/actions/runs/{workflow_run_id}"
     headers = {"Authorization": f"token {args['github_token']}"}
     while True:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
+        response = get_response_with_rate_limit_handling(url, headers)
         status = response.json()['status']
         if status == 'completed':
             break
         LOGGER.debug(f"GitHub build {workflow_run_id} still in progress...")
         sleep(args['poll_interval'])
     LOGGER.info(f"GitHub build {workflow_run_id} completed")
+
+def get_response_with_rate_limit_handling(url, headers):
+    while True:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 429:  # CircleCI rate limit exceeded
+            LOGGER.warning("Rate limit exceeded. Sleeping for a while...")
+            time.sleep(60)  # Sleep for a minute
+            continue
+        elif response.status_code == 403 and 'X-RateLimit-Remaining' in response.headers and response.headers['X-RateLimit-Remaining'] == '0':  # GitHub rate limit exceeded
+            reset_time = response.headers['X-RateLimit-Reset']
+            sleep_time = int(reset_time) - int(time.time())
+            LOGGER.warning(f"Rate limit exceeded. Sleeping for {sleep_time} seconds...")
+            time.sleep(sleep_time)
+            continue
+        response.raise_for_status()
+        return response
 
 def delete_branches(repo, branches):
     for branch in branches:
@@ -498,8 +512,7 @@ def collect_circleci_metrics(args, pipeline_id):
     pipeline_url =f"https://circleci.com/api/v2/pipeline/{pipeline_id}"
     headers = {"Circle-Token": args['circleci_token']}
 
-    response = requests.get(pipeline_url, headers=headers)
-    response.raise_for_status()
+    response = get_response_with_rate_limit_handling(pipeline_url, headers)
     pipeline = response.json()
     commit = pipeline['trigger_parameters']['git']['checkout_sha']
 
@@ -561,8 +574,7 @@ def collect_github_metrics(args, workflow_run_id):
     params = {"branch": args['branch']}
     
     # Collect workflow details
-    response = requests.get(workflow_url, headers=headers)
-    response.raise_for_status()
+    response = get_response_with_rate_limit_handling(workflow_url, headers)
     workflow = response.json()
     
     # Collect all job details with pagination
