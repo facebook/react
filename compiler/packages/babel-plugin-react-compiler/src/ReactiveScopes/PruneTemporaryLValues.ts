@@ -6,7 +6,7 @@
  */
 
 import {
-  Identifier,
+  DeclarationId,
   InstructionId,
   Place,
   ReactiveFunction,
@@ -18,19 +18,27 @@ import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
  * Nulls out lvalues for temporary variables that are never accessed later. This only
  * nulls out the lvalue itself, it does not remove the corresponding instructions.
  */
-export function pruneTemporaryLValues(fn: ReactiveFunction): void {
-  const lvalues = new Map<Identifier, ReactiveInstruction>();
+export function pruneUnusedLValues(fn: ReactiveFunction): void {
+  const lvalues = new Map<DeclarationId, ReactiveInstruction>();
   visitReactiveFunction(fn, new Visitor(), lvalues);
   for (const [, instr] of lvalues) {
     instr.lvalue = null;
   }
 }
 
-type LValues = Map<Identifier, ReactiveInstruction>;
+/**
+ * This pass uses DeclarationIds because the lvalue IdentifierId of a compound expression
+ * (ternary, logical, optional) in ReactiveFunction may not be the same as the IdentifierId
+ * of the phi, and which is referenced later. Keying by DeclarationId ensures we don't
+ * delete lvalues for identifiers that are used.
+ *
+ * TODO LeaveSSA: once we use HIR everywhere, this can likely move back to using IdentifierId
+ */
+type LValues = Map<DeclarationId, ReactiveInstruction>;
 
 class Visitor extends ReactiveFunctionVisitor<LValues> {
   override visitPlace(id: InstructionId, place: Place, state: LValues): void {
-    state.delete(place.identifier);
+    state.delete(place.identifier.declarationId);
   }
   override visitInstruction(
     instruction: ReactiveInstruction,
@@ -41,7 +49,7 @@ class Visitor extends ReactiveFunctionVisitor<LValues> {
       instruction.lvalue !== null &&
       instruction.lvalue.identifier.name === null
     ) {
-      state.set(instruction.lvalue.identifier, instruction);
+      state.set(instruction.lvalue.identifier.declarationId, instruction);
     }
   }
 }

@@ -79,6 +79,7 @@ class SSABuilder {
   makeId(oldId: Identifier): Identifier {
     return {
       id: this.nextSsaId,
+      declarationId: oldId.declarationId,
       name: oldId.name,
       mutableRange: {
         start: makeInstructionId(0),

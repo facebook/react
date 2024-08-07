@@ -7,7 +7,7 @@
 
 import {CompilerError} from '..';
 import {
-  IdentifierId,
+  DeclarationId,
   InstructionId,
   InstructionKind,
   Place,
@@ -28,7 +28,7 @@ import {
   BuiltInObjectId,
 } from '../HIR/ObjectShape';
 import {eachInstructionLValue} from '../HIR/visitors';
-import {assertExhaustive} from '../Utils/utils';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 import {printReactiveScopeSummary} from './PrintReactiveFunction';
 import {
   ReactiveFunctionTransform,
@@ -97,22 +97,29 @@ function log(msg: string): void {
 }
 
 class FindLastUsageVisitor extends ReactiveFunctionVisitor<void> {
-  lastUsage: Map<IdentifierId, InstructionId> = new Map();
+  /*
+   * TODO LeaveSSA: use IdentifierId for more precise tracking
+   * Using DeclarationId is necessary for compatible output but produces suboptimal results
+   * in cases where a scope defines a variable, but that version is never read and always
+   * overwritten later.
+   * see reassignment-separate-scopes.js for example
+   */
+  lastUsage: Map<DeclarationId, InstructionId> = new Map();
 
   override visitPlace(id: InstructionId, place: Place, _state: void): void {
-    const previousUsage = this.lastUsage.get(place.identifier.id);
+    const previousUsage = this.lastUsage.get(place.identifier.declarationId);
     const lastUsage =
       previousUsage !== undefined
         ? makeInstructionId(Math.max(previousUsage, id))
         : id;
-    this.lastUsage.set(place.identifier.id, lastUsage);
+    this.lastUsage.set(place.identifier.declarationId, lastUsage);
   }
 }
 
 class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | null> {
-  lastUsage: Map<IdentifierId, InstructionId>;
+  lastUsage: Map<DeclarationId, InstructionId>;
 
-  constructor(lastUsage: Map<IdentifierId, InstructionId>) {
+  constructor(lastUsage: Map<DeclarationId, InstructionId>) {
     super();
     this.lastUsage = lastUsage;
   }
@@ -144,7 +151,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
       block: ReactiveScopeBlock;
       from: number;
       to: number;
-      lvalues: Set<IdentifierId>;
+      lvalues: Set<DeclarationId>;
     };
     let current: MergedScope | null = null;
     const merged: Array<MergedScope> = [];
@@ -204,7 +211,9 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
                *   subsequent code wo expanding the set of declarations, which we want to avoid
                */
               if (current !== null && instr.instruction.lvalue !== null) {
-                current.lvalues.add(instr.instruction.lvalue.identifier.id);
+                current.lvalues.add(
+                  instr.instruction.lvalue.identifier.declarationId,
+                );
               }
               break;
             }
@@ -224,7 +233,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
                   for (const lvalue of eachInstructionLValue(
                     instr.instruction,
                   )) {
-                    current.lvalues.add(lvalue.identifier.id);
+                    current.lvalues.add(lvalue.identifier.declarationId);
                   }
                 } else {
                   log(
@@ -383,12 +392,12 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
  */
 function updateScopeDeclarations(
   scope: ReactiveScope,
-  lastUsage: Map<IdentifierId, InstructionId>,
+  lastUsage: Map<DeclarationId, InstructionId>,
 ): void {
-  for (const [key] of scope.declarations) {
-    const lastUsedAt = lastUsage.get(key)!;
+  for (const [id, decl] of scope.declarations) {
+    const lastUsedAt = lastUsage.get(decl.identifier.declarationId)!;
     if (lastUsedAt < scope.range.end) {
-      scope.declarations.delete(key);
+      scope.declarations.delete(id);
     }
   }
 }
@@ -400,8 +409,8 @@ function updateScopeDeclarations(
  */
 function areLValuesLastUsedByScope(
   scope: ReactiveScope,
-  lvalues: Set<IdentifierId>,
-  lastUsage: Map<IdentifierId, InstructionId>,
+  lvalues: Set<DeclarationId>,
+  lastUsage: Map<DeclarationId, InstructionId>,
 ): boolean {
   for (const lvalue of lvalues) {
     const lastUsedAt = lastUsage.get(lvalue)!;
@@ -454,8 +463,12 @@ function canMergeScopes(
     (next.scope.dependencies.size !== 0 &&
       [...next.scope.dependencies].every(
         dep =>
-          current.scope.declarations.has(dep.identifier.id) &&
-          isAlwaysInvalidatingType(dep.identifier.type),
+          isAlwaysInvalidatingType(dep.identifier.type) &&
+          Iterable_some(
+            current.scope.declarations.values(),
+            decl =>
+              decl.identifier.declarationId === dep.identifier.declarationId,
+          ),
       ))
   ) {
     log(`  outputs of prev are input to current`);
@@ -492,7 +505,7 @@ function areEqualDependencies(
     let found = false;
     for (const bValue of b) {
       if (
-        aValue.identifier === bValue.identifier &&
+        aValue.identifier.declarationId === bValue.identifier.declarationId &&
         areEqualPaths(aValue.path, bValue.path)
       ) {
         found = true;
@@ -506,7 +519,7 @@ function areEqualDependencies(
   return true;
 }
 
-function areEqualPaths(a: Array<string>, b: Array<string>): boolean {
+export function areEqualPaths(a: Array<string>, b: Array<string>): boolean {
   return a.length === b.length && a.every((item, ix) => item === b[ix]);
 }
 
