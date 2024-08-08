@@ -24,7 +24,11 @@ import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
 import {isHookDeclaration} from '../Utils/HookDeclaration';
 import {assertExhaustive} from '../Utils/utils';
 import {insertGatedFunctionDeclaration} from './Gating';
-import {addImportsToProgram, updateMemoCacheFunctionImport} from './Imports';
+import {
+  addImportsToProgram,
+  updateMemoCacheFunctionImport,
+  validateRestrictedImports,
+} from './Imports';
 import {PluginOptions} from './Options';
 import {compileFn} from './Pipeline';
 import {
@@ -296,6 +300,7 @@ export function compileProgram(
     });
   }
   const environment = environmentResult.unwrap();
+  validateRestrictedImports(program, environment);
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
   const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
 

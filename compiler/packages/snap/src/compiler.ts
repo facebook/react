@@ -47,6 +47,7 @@ function makePluginOptions(
   let validatePreserveExistingMemoizationGuarantees = false;
   let enableChangeDetectionForDebugging = null;
   let customMacros = null;
+  let validateBlocklistedImports = null;
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -155,6 +156,19 @@ function makePluginOptions(
       .filter(s => s.length > 0);
   }
 
+  const validateBlocklistedImportsMatch =
+    /@validateBlocklistedImports\(([^)]+)\)/.exec(firstLine);
+  if (
+    validateBlocklistedImportsMatch &&
+    validateBlocklistedImportsMatch.length > 1 &&
+    validateBlocklistedImportsMatch[1].trim().length > 0
+  ) {
+    validateBlocklistedImports = validateBlocklistedImportsMatch[1]
+      .split(' ')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
   let lowerContextAccess = null;
   if (firstLine.includes('@lowerContextAccess')) {
     lowerContextAccess = {
@@ -216,6 +230,7 @@ function makePluginOptions(
       validatePreserveExistingMemoizationGuarantees,
       enableChangeDetectionForDebugging,
       lowerContextAccess,
+      validateBlocklistedImports,
     },
     compilationMode,
     logger,
