@@ -30,8 +30,7 @@ jobs:
                     --github-repo-slug $GITHUB_REPO_SLUG \
                     --google-sheet-id $GOOGLE_SHEETS_ID \
                     --github-token $GITHUB_TOKEN \
-                    --circleci-token $CIRCLECI_TOKEN \
-                    --branch test3
+                    --circleci-token $CIRCLECI_TOKEN
       - store_artifacts:
           path: benchmark-computed.json
       - store_artifacts:

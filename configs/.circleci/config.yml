@@ -61,6 +61,33 @@ jobs:
       - run: yarn workspace playground test
   
 # compiler_rust Jobs
+  rust_build_cloud:
+      docker:
+        - image: cimg/rust:1.80.0
+      working_directory: ~/project/compiler
+      resource_class: large
+      environment:
+        <<: *tz
+        CARGO_TERM_COLOR: always
+        RUSTFLAGS: -Dwarnings
+      steps:
+        - checkout:
+            path: ~/project
+        - run:
+            name: Install libicu-dev
+            command: sudo apt-get update && sudo apt-get install -y libicu-dev
+        - restore_cache:
+            keys:
+              - cargo-cache-{{ checksum "Cargo.lock" }}
+        - run:
+            name: cargo build
+            command: cargo build --release
+        - save_cache:
+            key: cargo-cache-{{ checksum "Cargo.lock" }}
+            paths:
+              - ~/.cargo/registry
+              - target
+
   rust_test_cloud:
     docker:
       - image: cimg/rust:1.80.0
@@ -74,17 +101,15 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - run:
+          name: Install libicu-dev
+          command: sudo apt-get update && sudo apt-get install -y libicu-dev
       - restore_cache:
           keys:
             - cargo-cache-{{ checksum "Cargo.lock" }}
       - run:
           name: cargo test
           command: cargo test --manifest-path=Cargo.toml --locked
-      - save_cache:
-          key: cargo-cache-{{ checksum "Cargo.lock" }}
-          paths:
-            - ~/.cargo/registry
-            - target
   
   rust_lint_cloud:
     docker:
@@ -102,27 +127,11 @@ jobs:
           keys:
             - cargo-cache-{{ checksum "Cargo.lock" }}
       - run:
+          name: Install Rust nightly
+          command: rustup install nightly && rustup default nightly
+      - run:
           name: rustfmt
           command: grep -r --include "*.rs" --files-without-match "@generated" crates | xargs rustfmt --check --config="skip_children=true"
-  
-  rust_build_cloud:
-    docker:
-      - image: cimg/rust:1.80.0
-    working_directory: ~/project/compiler
-    resource_class: large
-    environment:
-      <<: *tz
-      CARGO_TERM_COLOR: always
-      RUSTFLAGS: -Dwarnings
-    steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - cargo-cache-{{ checksum "Cargo.lock" }}
-      - run:
-          name: cargo build
-          command: cargo build --release
 
 # compiler_typescript Jobs
   typescript_lint_cloud:
@@ -207,7 +216,7 @@ jobs:
     steps:
       - checkout
       - setup_node_modules
-      - run: ./scripts/circleci/check_license.sh
+      - run: ./scripts/ci/check_license.sh
   
   test_print_warnings_cloud:
     docker:
@@ -217,7 +226,7 @@ jobs:
     steps:
       - checkout
       - setup_node_modules
-      - run: ./scripts/circleci/test_print_warnings.sh
+      - run: ./scripts/ci/test_print_warnings.sh
 
 # runtime_build_and_test Jobs
   flow_cloud:
@@ -259,7 +268,7 @@ jobs:
   yarn_test_cloud:
     docker:
       - image: cimg/node:18.20.1-browsers
-    resource_class: large
+    resource_class: xlarge
     environment: *tz
     parameters:
       params: 
@@ -374,9 +383,13 @@ workflows:
   
   compiler_rust_cloud:
     jobs:
-      - rust_test_cloud
-      - rust_lint_cloud
       - rust_build_cloud
+      - rust_test_cloud:
+          requires:
+            - rust_build_cloud
+      - rust_lint_cloud:
+          requires:
+            - rust_build_cloud
   
   compiler_typescript_cloud:
     jobs:
@@ -387,42 +400,12 @@ workflows:
           matrix:
             parameters:
               workspace_name: 
-                - react-devtools-inline
-                - react-is
-                - dom-event-testing-library
-                - use-sync-external-store
-                - react-suspense-test-utils
-                - react-server-dom-turbopack
-                - scheduler
-                - eslint-plugin-react-hooks
-                - react-native-renderer
-                - react-server
-                - react-debug-tools
-                - react-html
-                - shared
-                - react-refresh
-                - react-art
-                - internal-test-utils
-                - react-test-renderer
-                - react-dom
-                - react-devtools-core
-                - react-server-dom-webpack
-                - react-devtools-timeline
-                - jest-react
-                - react-devtools
-                - react-dom-bindings
-                - react-noop-renderer
-                - react-devtools-extensions
-                - react-devtools-shell
-                - react-server-dom-fb
-                - react-cache
-                - react
-                - react-devtools-fusebox
-                - react-server-dom-esm
-                - react-reconciler
-                - react-client
-                - use-subscription
-                - react-devtools-shared
+                - babel-plugin-react-compiler
+                - eslint-plugin-react-compiler
+                - make-read-only-util
+                - react-compiler-healthcheck
+                - react-compiler-runtime
+                - snap
 
   test_fuzz_cloud:
     jobs:

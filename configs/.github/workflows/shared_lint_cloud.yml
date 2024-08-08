@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
-      - run: ./scripts/circleci/check_license.sh
+      - run: ./scripts/ci/check_license.sh
 
   test_print_warnings_cloud:
     runs-on: ubuntu-latest
@@ -44,4 +44,4 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
-      - run: ./scripts/circleci/test_print_warnings.sh
+      - run: ./scripts/ci/test_print_warnings.sh

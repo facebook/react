@@ -24,6 +24,7 @@ jobs:
   typescript_lint_cloud:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
@@ -34,6 +35,7 @@ jobs:
   typescript_jest_cloud:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
@@ -49,6 +51,7 @@ jobs:
       matrix:
         workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
