@@ -8,7 +8,7 @@ import gspread
 import random
 import time
 import shutil
-from urllib.parse import quote, urlparse
+from urllib.parse import quote
 from git.exc import GitCommandError
 from io import BytesIO
 from git import Repo, Git
@@ -480,8 +480,6 @@ def get_response_with_rate_limit_handling(url, headers):
         response.raise_for_status()
         return response
 
-from urllib.parse import quote
-
 def delete_branches(repo, branches):
     original_url = repo.remotes.origin.url
     token = os.getenv('GITHUB_TOKEN') 
@@ -538,15 +536,31 @@ def collect_circleci_metrics(args, pipeline_id):
 
     LOGGER.info(f"Collecting CircleCI Workflow Metrics for Pipeline: {pipeline_id}...")
 
-    workflow_url = f"https://circleci.com/api/v2/pipeline/{pipeline_id}/workflow"
-    headers = {"Circle-Token": args['circleci_token']}
-    response = requests.get(workflow_url, headers=headers)
-    response.raise_for_status()
-    workflows = response.json()['items']
+    workflows = []
+    workflows_url = f"https://circleci.com/api/v2/pipeline/{pipeline_id}/workflow"
+    while workflows_url:
+        workflows_response = requests.get(workflows_url, headers=headers)
+        workflows_response.raise_for_status()
+        workflows_data = workflows_response.json()
+        workflows.extend(workflows_data['items'])
+
+        # Check if there's a next page
+        next_page_token = workflows_data.get('next_page_token')
+        if next_page_token:
+            workflows_url = f"https://circleci.com/api/v2/pipeline/{pipeline_id}/workflow?next_page_token={next_page_token}"
+        else:
+            workflows_url = None
 
     all_metric_data = []
     for workflow in workflows:
         workflow_id = workflow['id']
+
+        LOGGER.info(f"Collecting CircleCI Workflow Metrics for workflow: {workflow_id}...")
+
+        workflow_url = f'https://circleci.com/api/v2/workflow/{workflow_id}'
+        workflow_response = requests.get(workflow_url, headers=headers)
+        workflow_details = workflow_response.json()
+        workflow_details['commit'] = commit
 
         LOGGER.info(f"Collecting CircleCI Job Metrics for workflow: {workflow_id}...")
 
@@ -577,11 +591,9 @@ def collect_circleci_metrics(args, pipeline_id):
             job_details['commit'] = commit
 
             enriched_jobs.append(job_details)
-        
-        workflow['commit'] = commit
 
         all_metric_data.append({
-            "workflow": workflow,
+            "workflow": workflow_details,
             "jobs": enriched_jobs
         })
 
