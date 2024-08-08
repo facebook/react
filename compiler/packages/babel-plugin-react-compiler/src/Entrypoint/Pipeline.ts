@@ -103,6 +103,7 @@ import {
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
 import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
+import { validateOnlySafeFunctionCalls } from '../Validation/ValidateOnlySafeFunctionCalls';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -333,6 +334,8 @@ function* runWithEnvironment(
     assertTerminalSuccessorsExist(hir);
     assertTerminalPredsExist(hir);
   }
+
+  validateOnlySafeFunctionCalls(hir);
 
   const reactiveFunction = buildReactiveFunction(hir);
   yield log({
