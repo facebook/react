@@ -480,10 +480,18 @@ def get_response_with_rate_limit_handling(url, headers):
         return response
 
 def delete_branches(repo, branches):
+    original_url = repo.remotes.origin.url 
+    token = os.getenv('GITHUB_TOKEN')  
+
+    repo_url_with_token = original_url.replace("https://", f"https://{quote(token)}:x-oauth-basic@")
+    repo.remotes.origin.set_url(repo_url_with_token)
+
     for branch in branches:
         repo.git.checkout("main")
         repo.git.branch("-D", branch)
         repo.remotes.origin.push(refspec=f":{branch}")
+
+    repo.remotes.origin.set_url(original_url)
 
 def collect_metrics(args, build_ids):
     metrics = {

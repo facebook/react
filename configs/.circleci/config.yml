@@ -128,7 +128,7 @@ jobs:
             - cargo-cache-{{ checksum "Cargo.lock" }}
       - run:
           name: Install Rust nightly
-          command: rustup install nightly && rustup default nightly
+          command: rustup install nightly && rustup override set nightly
       - run:
           name: rustfmt
           command: grep -r --include "*.rs" --files-without-match "@generated" crates | xargs rustfmt --check --config="skip_children=true"
@@ -268,7 +268,7 @@ jobs:
   yarn_test_cloud:
     docker:
       - image: cimg/node:18.20.1-browsers
-    resource_class: xlarge
+    resource_class: 2xlarge
     environment: *tz
     parameters:
       params: 
@@ -317,7 +317,7 @@ jobs:
   test_build_cloud:
     docker:
       - image: cimg/node:18.20.1-browsers
-    resource_class: large
+    resource_class: xlarge
     environment: *tz
     parameters:
       test_params:
