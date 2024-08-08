@@ -9,6 +9,7 @@ function Component(props) {
   console.error(x);
   console.trace(x);
   console.table(x);
+  global.console.log(x);
   return x;
 }
 
