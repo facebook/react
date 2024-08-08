@@ -23,7 +23,10 @@ import {
 } from '../HIR/HIR';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
-class Visitor extends ReactiveFunctionVisitor<State> {
+/**
+ * Phase 2: Promote identifiers which are used in a place that requires a named variable.
+ */
+class PromoteTemporaries extends ReactiveFunctionVisitor<State> {
   override visitScope(scopeBlock: ReactiveScopeBlock, state: State): void {
     for (const dep of scopeBlock.scope.dependencies) {
       const {identifier} = dep;
@@ -95,7 +98,11 @@ class Visitor extends ReactiveFunctionVisitor<State> {
   }
 }
 
-class Visitor2 extends ReactiveFunctionVisitor<State> {
+/**
+ * Phase 3: Now that identifiers which need promotion are promoted, find and promote
+ * all other Identifier instances of each promoted DeclarationId.
+ */
+class PromoteAllInstancedOfPromotedTemporaries extends ReactiveFunctionVisitor<State> {
   override visitPlace(_id: InstructionId, place: Place, state: State): void {
     if (
       place.identifier.name === null &&
@@ -168,6 +175,10 @@ type State = {
   >; // true if referenced within another scope, false if only accessed outside of scopes
 };
 
+/**
+ * Phase 1: checks for pruned variables which need to be promoted, as well as
+ * usage of identifiers as jsx tags, which need to be promoted differently
+ */
 class CollectPromotableTemporaries extends ReactiveFunctionVisitor<State> {
   activeScopes: Array<ScopeId> = [];
 
@@ -227,8 +238,12 @@ export function promoteUsedTemporaries(fn: ReactiveFunction): void {
       promoteIdentifier(place.identifier, state);
     }
   }
-  visitReactiveFunction(fn, new Visitor(), state);
-  visitReactiveFunction(fn, new Visitor2(), state);
+  visitReactiveFunction(fn, new PromoteTemporaries(), state);
+  visitReactiveFunction(
+    fn,
+    new PromoteAllInstancedOfPromotedTemporaries(),
+    state,
+  );
 }
 
 function promoteIdentifier(identifier: Identifier, state: State): void {
