@@ -2054,7 +2054,7 @@ export function attach(
       // Fill in the real unmounts in the reverse order.
       // They were inserted parents-first by React, but we want children-first.
       // So we traverse our array backwards.
-      for (let j = pendingRealUnmountedIDs.length - 1; j >= 0; j--) {
+      for (let j = 0; j < pendingRealUnmountedIDs.length; j++) {
         operations[i++] = pendingRealUnmountedIDs[j];
       }
       // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
@@ -2363,6 +2363,17 @@ export function attach(
     instance.parent = null;
   }
 
+  function unmountRemainingChildren() {
+    let child = remainingReconcilingChildren;
+    while (child !== null) {
+      if (child.kind === FIBER_INSTANCE) {
+        unmountFiberRecursively(child.data, false);
+      }
+      removeChild(child);
+      child = remainingReconcilingChildren;
+    }
+  }
+
   function mountChildrenRecursively(
     firstChild: Fiber,
     traceNearestHostComponentUpdate: boolean,
@@ -2484,8 +2495,8 @@ export function attach(
   }
 
   // We use this to simulate unmounting for Suspense trees
-  // when we switch from primary to fallback.
-  function unmountFiberRecursively(fiber: Fiber) {
+  // when we switch from primary to fallback, or deleting a subtree.
+  function unmountFiberRecursively(fiber: Fiber, isSimulated: boolean) {
     if (__DEBUG__) {
       debug('unmountFiberRecursively()', fiber, null);
     }
@@ -2526,7 +2537,7 @@ export function attach(
         child = fallbackChildFragment ? fallbackChildFragment.child : null;
       }
 
-      unmountChildrenRecursively(child);
+      unmountChildrenRecursively(child, isSimulated);
     } finally {
       if (shouldIncludeInTree) {
         reconcilingParent = stashedParent;
@@ -2535,19 +2546,20 @@ export function attach(
       }
     }
     if (fiberInstance !== null) {
-      recordUnmount(fiber, true);
+      recordUnmount(fiber, isSimulated);
       removeChild(fiberInstance);
     }
   }
 
-  function unmountChildrenRecursively(firstChild: null | Fiber) {
+  function unmountChildrenRecursively(
+    firstChild: null | Fiber,
+    isSimulated: boolean,
+  ) {
     let child: null | Fiber = firstChild;
     while (child !== null) {
       // Record simulated unmounts children-first.
       // We skip nodes without return because those are real unmounts.
-      if (child.return !== null) {
-        unmountFiberRecursively(child);
-      }
+      unmountFiberRecursively(child, isSimulated);
       child = child.sibling;
     }
   }
@@ -2890,7 +2902,7 @@ export function attach(
         // 1. Hide primary set
         // This is not a real unmount, so it won't get reported by React.
         // We need to manually walk the previous tree and record unmounts.
-        unmountChildrenRecursively(prevFiber.child);
+        unmountChildrenRecursively(prevFiber.child, true);
         // 2. Mount fallback set
         const nextFiberChild = nextFiber.child;
         const nextFallbackChildSet = nextFiberChild
@@ -2922,6 +2934,7 @@ export function attach(
             // All the remaining children will be children of this same fiber so we can just reuse them.
             // I.e. we just restore them by undoing what we did above.
             fiberInstance.firstChild = remainingReconcilingChildren;
+            remainingReconcilingChildren = null;
           } else {
             // If this fiber is filtered there might be changes to this set elsewhere so we have
             // to visit each child to place it back in the set. We let the child bail out instead.
@@ -2984,6 +2997,7 @@ export function attach(
       }
     } finally {
       if (shouldIncludeInTree) {
+        unmountRemainingChildren();
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
@@ -3068,15 +3082,8 @@ export function attach(
   }
 
   function handleCommitFiberUnmount(fiber: any) {
-    // If the untrackFiberSet already has the unmounted Fiber, this means we've already
-    // recordedUnmount, so we don't need to do it again. If we don't do this, we might
-    // end up double-deleting Fibers in some cases (like Legacy Suspense).
-    if (!untrackFibersSet.has(fiber)) {
-      // This is not recursive.
-      // We can't traverse fibers after unmounting so instead
-      // we rely on React telling us about each unmount.
-      recordUnmount(fiber, false);
-    }
+    // This Hook is no longer used. After having shipped DevTools everywhere it is
+    // safe to stop calling it from Fiber.
   }
 
   function handlePostCommitFiberRoot(root: any) {
@@ -3158,7 +3165,7 @@ export function attach(
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         removeRootPseudoKey(currentRootID);
-        recordUnmount(current, false);
+        unmountFiberRecursively(alternate, false);
       }
     } else {
       // Mount a new root.
