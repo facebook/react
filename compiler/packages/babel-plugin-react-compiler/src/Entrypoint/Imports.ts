@@ -14,7 +14,7 @@ import {getOrInsertDefault} from '../Utils/utils';
 export function validateRestrictedImports(
   path: NodePath<t.Program>,
   {validateBlocklistedImports}: EnvironmentConfig,
-) {
+): void {
   if (
     validateBlocklistedImports == null ||
     validateBlocklistedImports.length === 0
