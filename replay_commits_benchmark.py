@@ -480,16 +480,17 @@ def get_response_with_rate_limit_handling(url, headers):
         response.raise_for_status()
         return response
 
+from urllib.parse import quote
+
 def delete_branches(repo, branches):
     original_url = repo.remotes.origin.url
-    token = os.getenv('GITHUB_TOKEN')
- 
-    parsed_url = urlparse(original_url)
-    repourl = parsed_url._replace(netloc=f"{quote(token)}@{parsed_url.netloc}").geturl()
+    token = os.getenv('GITHUB_TOKEN') 
+    
+    new_url = f'https://{quote(token)}:x-oauth-basic@github.com/efficientengineering/react'
     
     for branch in branches:
         try:
-            repo.remotes.origin.set_url(repourl)
+            repo.remotes.origin.set_url(new_url)
             repo.git.checkout('main')
             repo.git.branch('-D', branch)
             repo.remotes.origin.push(refspec=f":{branch}")
