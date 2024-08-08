@@ -679,7 +679,7 @@ export class Environment {
         );
       }
       case 'ImportSpecifier': {
-        if (this.#isKnownReactModule(binding.module)) {
+        if (this.#isKnownTypedModule(binding.module)) {
           /**
            * For `import {imported as name} from "..."` form, we use the `imported`
            * name rather than the local alias. Because we don't have definitions for
@@ -707,7 +707,7 @@ export class Environment {
       }
       case 'ImportDefault':
       case 'ImportNamespace': {
-        if (this.#isKnownReactModule(binding.module)) {
+        if (this.#isKnownTypedModule(binding.module)) {
           // only resolve imports to modules we know about
           return (
             this.#globals.get(binding.name) ??
@@ -720,10 +720,11 @@ export class Environment {
     }
   }
 
-  #isKnownReactModule(moduleName: string): boolean {
+  #isKnownTypedModule(moduleName: string): boolean {
     return (
       moduleName.toLowerCase() === 'react' ||
       moduleName.toLowerCase() === 'react-dom' ||
+      moduleName.toLowerCase() === 'fbt' ||
       (this.config.enableSharedRuntime__testonly &&
         moduleName === 'shared-runtime')
     );

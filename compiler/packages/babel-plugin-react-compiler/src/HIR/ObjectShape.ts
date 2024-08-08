@@ -285,6 +285,16 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
     }),
   ],
   [
+    'fill',
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Store,
+      returnValueKind: ValueKind.Mutable,
+    }),
+  ],
+  [
     'slice',
     addFunction(BUILTIN_SHAPES, [], {
       positionalParams: [],

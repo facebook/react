@@ -83,7 +83,7 @@ const UNTYPED_GLOBALS: Set<string> = new Set([
 const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
   [
     'Array',
-    addObject(DEFAULT_SHAPES, 'Array', [
+    addFunction(DEFAULT_SHAPES, [
       [
         'isArray',
         // Array.isArray(value)
@@ -117,7 +117,12 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           returnValueKind: ValueKind.Mutable,
         }),
       ],
-    ]),
+    ], {positionalParams: [],
+      restParam: Effect.Read,
+      returnType: {kind: 'Object', shapeId: BuiltInArrayId},
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Mutable
+    } , 'Array'),
   ],
   [
     'Math',
@@ -390,6 +395,46 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
     ),
   ],
 ];
+
+const FBT_FUNCTION = {
+  positionalParams: [],
+  restParam: Effect.Read,
+  returnType: {kind: 'Primitive'} as const,
+  calleeEffect: Effect.Read,
+  returnValueKind: ValueKind.Primitive,
+}
+
+const FBT_APIS: Array<[string, BuiltInType]> = [
+  [
+    'param',
+    addFunction(DEFAULT_SHAPES, [], FBT_FUNCTION),
+  ],
+  [
+    'enum',
+    addFunction(DEFAULT_SHAPES, [], FBT_FUNCTION),
+  ],
+  [
+    'name',
+    addFunction(DEFAULT_SHAPES, [], FBT_FUNCTION),
+  ],
+  [
+    'plural',
+    addFunction(DEFAULT_SHAPES, [], FBT_FUNCTION),
+  ],
+  [
+    'pronoun',
+    addFunction(DEFAULT_SHAPES, [], FBT_FUNCTION),
+  ],
+  [
+    'isFbtInstance',
+    addFunction(DEFAULT_SHAPES, [], FBT_FUNCTION),
+  ],
+]
+
+TYPED_GLOBALS.push([
+  'fbt',
+  addFunction(DEFAULT_SHAPES, FBT_APIS, FBT_FUNCTION)
+]);
 
 TYPED_GLOBALS.push(
   [
