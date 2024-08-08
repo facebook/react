@@ -136,6 +136,17 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           returnValueKind: ValueKind.Primitive,
         }),
       ],
+      [
+        'min',
+        // Math.min(value0, ..., valueN)
+        addFunction(DEFAULT_SHAPES, [], {
+          positionalParams: [],
+          restParam: Effect.Read,
+          returnType: {kind: 'Primitive'},
+          calleeEffect: Effect.Read,
+          returnValueKind: ValueKind.Primitive,
+        }),
+      ],
     ]),
   ],
   ['Infinity', {kind: 'Primitive'}],
@@ -455,10 +466,14 @@ for (const [name, type_] of TYPED_GLOBALS) {
   DEFAULT_GLOBALS.set(name, type_);
 }
 
-// Recursive global type
+// Recursive global types
 DEFAULT_GLOBALS.set(
   'globalThis',
   addObject(DEFAULT_SHAPES, 'globalThis', TYPED_GLOBALS),
+);
+DEFAULT_GLOBALS.set(
+  'global',
+  addObject(DEFAULT_SHAPES, 'global', TYPED_GLOBALS),
 );
 
 export function installReAnimatedTypes(
