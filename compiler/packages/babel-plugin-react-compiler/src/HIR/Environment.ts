@@ -238,6 +238,7 @@ const EnvironmentConfigSchema = z.object({
    * this option to the empty array.
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
+  validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
