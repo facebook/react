@@ -1216,8 +1216,6 @@ export default {
         !(maybeNode.type === 'Identifier' && maybeNode.name === 'undefined')
           ? maybeNode
           : undefined;
-      const dependencyNodeIsUndefined =
-        maybeNode && maybeNode.name === 'undefined';
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Check whether a callback is supplied. If there is no callback supplied
@@ -1238,13 +1236,12 @@ export default {
         // If there is no second argument then the reactive callback
         // will re-run on every render. Only need to check if option
         // requireUseEffectDependencyArray is enabled.
-        if (requireUseEffectDependencyArray && !dependencyNodeIsUndefined) {
+        if (requireUseEffectDependencyArray) {
           reportProblem({
             node: reactiveHook,
             message:
               `React Hook ${reactiveHookName} will re-run on every render. ` +
-              `Did you forget to pass an array of dependencies? ` +
-              `Explicitly pass 'undefined' if this is the intented behaviour.`,
+              `Did you forget to pass an array of dependencies? `,
           });
           return;
         }

@@ -1473,16 +1473,6 @@ const tests = {
         function MyComponent(props) {
           useEffect(() => {
             console.log(props.foo);
-          }, undefined);
-        }
-      `,
-      options: [{requireUseEffectDependencyArray: true}],
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent(props) {
-          useEffect(() => {
-            console.log(props.foo);
           }, [props.foo]);
         }
       `,
@@ -7702,8 +7692,24 @@ const tests = {
       errors: [
         {
           message:
-            'React Hook useEffect will re-run on every render. Did you forget to pass an array of dependencies? ' +
-            "Explicitly pass 'undefined' if this is the intented behaviour.",
+            'React Hook useEffect will re-run on every render. Did you forget to pass an array of dependencies? ',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          }, undefined);
+        }
+      `,
+      options: [{requireUseEffectDependencyArray: true}],
+      errors: [
+        {
+          message:
+            'React Hook useEffect will re-run on every render. Did you forget to pass an array of dependencies? ',
           suggestions: undefined,
         },
       ],
