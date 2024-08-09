@@ -37,7 +37,6 @@ import {
   log,
   unstable_setDisableYieldValue,
 } from './Scheduler';
-import {setSuppressWarning} from 'shared/consoleWithStackDev';
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 declare const __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
@@ -194,7 +193,6 @@ export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
       // in SchedulerMock. To reduce the noise in strict mode tests,
       // suppress warnings and disable scheduler yielding during the double render
       unstable_setDisableYieldValue(newIsStrictMode);
-      setSuppressWarning(newIsStrictMode);
     }
 
     if (injectedHook && typeof injectedHook.setStrictMode === 'function') {
