@@ -513,13 +513,13 @@ def collect_metrics(args, build_ids):
                 except Exception as e:
                     LOGGER.error(f"Error collecting CircleCI metrics for pipeline_id={pipeline_id}: {e}")
 
-    if args['circleci_project_slug'] and args['github_repo_slug']:
+    if args['github_repo_slug']:
         for branch in build_ids.values():
             for workflow_run_id in branch.get('github', []):
                 try:
                     print(f"Gathering Github Actions metrics for {workflow_run_id}")
                     metrics_result = collect_github_metrics(args, workflow_run_id)
-                    metrics["github"].extend(metrics_result)
+                    metrics["github"].append(metrics_result)
                 except Exception as e:
                     LOGGER.error(f"Error collecting Github metrics for workflow_run_id={workflow_run_id}: {e}")
     
