@@ -1405,81 +1405,37 @@ export function attach(
 
   // Removes a Fiber (and its alternate) from the Maps used to track their id.
   // This method should always be called when a Fiber is unmounting.
-  function untrackFiberID(fiber: Fiber) {
+  function untrackFiber(fiberInstance: FiberInstance) {
     if (__DEBUG__) {
-      debug('untrackFiberID()', fiber, null, 'schedule after delay');
+      debug('untrackFiber()', fiberInstance.data, null);
     }
 
-    // Untrack Fibers after a slight delay in order to support a Fast Refresh edge case:
-    // 1. Component type is updated and Fast Refresh schedules an update+remount.
-    // 2. flushPendingErrorsAndWarningsAfterDelay() runs, sees the old Fiber is no longer mounted
-    //    (it's been disconnected by Fast Refresh), and calls untrackFiberID() to clear it from the Map.
-    // 3. React flushes pending passive effects before it runs the next render,
-    //    which logs an error or warning, which causes a new ID to be generated for this Fiber.
-    // 4. DevTools now tries to unmount the old Component with the new ID.
-    //
-    // The underlying problem here is the premature clearing of the Fiber ID,
-    // but DevTools has no way to detect that a given Fiber has been scheduled for Fast Refresh.
-    // (The "_debugNeedsRemount" flag won't necessarily be set.)
-    //
-    // The best we can do is to delay untracking by a small amount,
-    // and give React time to process the Fast Refresh delay.
+    idToDevToolsInstanceMap.delete(fiberInstance.id);
 
-    untrackFibersSet.add(fiber);
+    // Also clear any errors/warnings associated with this fiber.
+    clearErrorsForElementID(fiberInstance.id);
+    clearWarningsForElementID(fiberInstance.id);
+    if (fiberInstance.flags & FORCE_ERROR) {
+      fiberInstance.flags &= ~FORCE_ERROR;
+      forceErrorCount--;
+      if (forceErrorCount === 0 && setErrorHandler != null) {
+        setErrorHandler(shouldErrorFiberAlwaysNull);
+      }
+    }
+    if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
+      fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
+      forceFallbackCount--;
+      if (forceFallbackCount === 0 && setSuspenseHandler != null) {
+        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+      }
+    }
 
-    // React may detach alternate pointers during unmount;
-    // Since our untracking code is async, we should explicily track the pending alternate here as well.
-    const alternate = fiber.alternate;
+    const fiber = fiberInstance.data;
+    fiberToFiberInstanceMap.delete(fiber);
+    const {alternate} = fiber;
     if (alternate !== null) {
-      untrackFibersSet.add(alternate);
+      fiberToFiberInstanceMap.delete(alternate);
     }
-
-    if (untrackFibersTimeoutID === null) {
-      untrackFibersTimeoutID = setTimeout(untrackFibers, 1000);
-    }
-  }
-
-  const untrackFibersSet: Set<Fiber> = new Set();
-  let untrackFibersTimeoutID: TimeoutID | null = null;
-
-  function untrackFibers() {
-    if (untrackFibersTimeoutID !== null) {
-      clearTimeout(untrackFibersTimeoutID);
-      untrackFibersTimeoutID = null;
-    }
-
-    untrackFibersSet.forEach(fiber => {
-      const fiberInstance = fiberToFiberInstanceMap.get(fiber);
-      if (fiberInstance !== undefined) {
-        idToDevToolsInstanceMap.delete(fiberInstance.id);
-
-        // Also clear any errors/warnings associated with this fiber.
-        clearErrorsForElementID(fiberInstance.id);
-        clearWarningsForElementID(fiberInstance.id);
-        if (fiberInstance.flags & FORCE_ERROR) {
-          fiberInstance.flags &= ~FORCE_ERROR;
-          forceErrorCount--;
-          if (forceErrorCount === 0 && setErrorHandler != null) {
-            setErrorHandler(shouldErrorFiberAlwaysNull);
-          }
-        }
-        if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
-          fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
-          forceFallbackCount--;
-          if (forceFallbackCount === 0 && setSuspenseHandler != null) {
-            setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
-          }
-        }
-      }
-
-      fiberToFiberInstanceMap.delete(fiber);
-
-      const {alternate} = fiber;
-      if (alternate !== null) {
-        fiberToFiberInstanceMap.delete(alternate);
-      }
-    });
-    untrackFibersSet.clear();
   }
 
   function getChangeDescription(
@@ -2054,7 +2010,7 @@ export function attach(
       // Fill in the real unmounts in the reverse order.
       // They were inserted parents-first by React, but we want children-first.
       // So we traverse our array backwards.
-      for (let j = pendingRealUnmountedIDs.length - 1; j >= 0; j--) {
+      for (let j = 0; j < pendingRealUnmountedIDs.length; j++) {
         operations[i++] = pendingRealUnmountedIDs[j];
       }
       // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
@@ -2282,7 +2238,7 @@ export function attach(
     }
 
     if (!fiber._debugNeedsRemount) {
-      untrackFiberID(fiber);
+      untrackFiber(fiberInstance);
 
       const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
       if (isProfilingSupported) {
@@ -2361,6 +2317,17 @@ export function attach(
     instance.nextSibling = null;
     instance.previousSibling = null;
     instance.parent = null;
+  }
+
+  function unmountRemainingChildren() {
+    let child = remainingReconcilingChildren;
+    while (child !== null) {
+      if (child.kind === FIBER_INSTANCE) {
+        unmountFiberRecursively(child.data, false);
+      }
+      removeChild(child);
+      child = remainingReconcilingChildren;
+    }
   }
 
   function mountChildrenRecursively(
@@ -2484,8 +2451,8 @@ export function attach(
   }
 
   // We use this to simulate unmounting for Suspense trees
-  // when we switch from primary to fallback.
-  function unmountFiberRecursively(fiber: Fiber) {
+  // when we switch from primary to fallback, or deleting a subtree.
+  function unmountFiberRecursively(fiber: Fiber, isSimulated: boolean) {
     if (__DEBUG__) {
       debug('unmountFiberRecursively()', fiber, null);
     }
@@ -2526,7 +2493,7 @@ export function attach(
         child = fallbackChildFragment ? fallbackChildFragment.child : null;
       }
 
-      unmountChildrenRecursively(child);
+      unmountChildrenRecursively(child, isSimulated);
     } finally {
       if (shouldIncludeInTree) {
         reconcilingParent = stashedParent;
@@ -2535,19 +2502,20 @@ export function attach(
       }
     }
     if (fiberInstance !== null) {
-      recordUnmount(fiber, true);
+      recordUnmount(fiber, isSimulated);
       removeChild(fiberInstance);
     }
   }
 
-  function unmountChildrenRecursively(firstChild: null | Fiber) {
+  function unmountChildrenRecursively(
+    firstChild: null | Fiber,
+    isSimulated: boolean,
+  ) {
     let child: null | Fiber = firstChild;
     while (child !== null) {
       // Record simulated unmounts children-first.
       // We skip nodes without return because those are real unmounts.
-      if (child.return !== null) {
-        unmountFiberRecursively(child);
-      }
+      unmountFiberRecursively(child, isSimulated);
       child = child.sibling;
     }
   }
@@ -2890,7 +2858,7 @@ export function attach(
         // 1. Hide primary set
         // This is not a real unmount, so it won't get reported by React.
         // We need to manually walk the previous tree and record unmounts.
-        unmountChildrenRecursively(prevFiber.child);
+        unmountChildrenRecursively(prevFiber.child, true);
         // 2. Mount fallback set
         const nextFiberChild = nextFiber.child;
         const nextFallbackChildSet = nextFiberChild
@@ -2922,6 +2890,7 @@ export function attach(
             // All the remaining children will be children of this same fiber so we can just reuse them.
             // I.e. we just restore them by undoing what we did above.
             fiberInstance.firstChild = remainingReconcilingChildren;
+            remainingReconcilingChildren = null;
           } else {
             // If this fiber is filtered there might be changes to this set elsewhere so we have
             // to visit each child to place it back in the set. We let the child bail out instead.
@@ -2984,6 +2953,7 @@ export function attach(
       }
     } finally {
       if (shouldIncludeInTree) {
+        unmountRemainingChildren();
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
         remainingReconcilingChildren = stashedRemaining;
@@ -3068,15 +3038,8 @@ export function attach(
   }
 
   function handleCommitFiberUnmount(fiber: any) {
-    // If the untrackFiberSet already has the unmounted Fiber, this means we've already
-    // recordedUnmount, so we don't need to do it again. If we don't do this, we might
-    // end up double-deleting Fibers in some cases (like Legacy Suspense).
-    if (!untrackFibersSet.has(fiber)) {
-      // This is not recursive.
-      // We can't traverse fibers after unmounting so instead
-      // we rely on React telling us about each unmount.
-      recordUnmount(fiber, false);
-    }
+    // This Hook is no longer used. After having shipped DevTools everywhere it is
+    // safe to stop calling it from Fiber.
   }
 
   function handlePostCommitFiberRoot(root: any) {
@@ -3096,10 +3059,6 @@ export function attach(
   function handleCommitFiberRoot(root: any, priorityLevel: void | number) {
     const current = root.current;
     const alternate = current.alternate;
-
-    // Flush any pending Fibers that we are untracking before processing the new commit.
-    // If we don't do this, we might end up double-deleting Fibers in some cases (like Legacy Suspense).
-    untrackFibers();
 
     currentRootID = getOrGenerateFiberInstance(current).id;
 
@@ -3158,7 +3117,7 @@ export function attach(
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         removeRootPseudoKey(currentRootID);
-        recordUnmount(current, false);
+        unmountFiberRecursively(alternate, false);
       }
     } else {
       // Mount a new root.
