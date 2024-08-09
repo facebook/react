@@ -7,25 +7,27 @@
 
 import {NodePath} from '@babel/core';
 import * as t from '@babel/types';
-import {CompilerError} from '../CompilerError';
+import {CompilerError, ErrorSeverity} from '../CompilerError';
 import {EnvironmentConfig, ExternalFunction, GeneratedSource} from '../HIR';
 import {getOrInsertDefault} from '../Utils/utils';
 
 export function validateRestrictedImports(
   path: NodePath<t.Program>,
   {validateBlocklistedImports}: EnvironmentConfig,
-): void {
+): CompilerError | null {
   if (
     validateBlocklistedImports == null ||
     validateBlocklistedImports.length === 0
   ) {
-    return;
+    return null;
   }
+  const error = new CompilerError();
   const restrictedImports = new Set(validateBlocklistedImports);
   path.traverse({
     ImportDeclaration(importDeclPath) {
       if (restrictedImports.has(importDeclPath.node.source.value)) {
-        CompilerError.throwTodo({
+        error.push({
+          severity: ErrorSeverity.Todo,
           reason: 'Bailing out due to blocklisted import',
           description: `Import from module ${importDeclPath.node.source.value}`,
           loc: importDeclPath.node.loc ?? null,
@@ -33,6 +35,11 @@ export function validateRestrictedImports(
       }
     },
   });
+  if (error.hasErrors()) {
+    return error;
+  } else {
+    return null;
+  }
 }
 
 export function addImportsToProgram(

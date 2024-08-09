@@ -277,6 +277,17 @@ function isFilePartOfSources(
   return false;
 }
 
+/**
+ * `compileProgram` is directly invoked by the react-compiler babel plugin, so
+ * exceptions thrown by this function will fail the babel build.
+ * - call `handleError` if your error is recoverable.
+ *   Unless the error is a warning / info diagnostic, compilation of a function
+ *   / entire file should also be skipped.
+ * - throw an exception if the error is fatal / not recoverable.
+ *   Examples of this are invalid compiler configs or failure to codegen outlined
+ *   functions *after* already emitting optimized components / hooks that invoke
+ *   the outlined functions.
+ */
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass,
@@ -300,7 +311,11 @@ export function compileProgram(
     });
   }
   const environment = environmentResult.unwrap();
-  validateRestrictedImports(program, environment);
+  const restrictedImportsErr = validateRestrictedImports(program, environment);
+  if (restrictedImportsErr) {
+    handleError(restrictedImportsErr, pass, null);
+    return;
+  }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
   const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
 
