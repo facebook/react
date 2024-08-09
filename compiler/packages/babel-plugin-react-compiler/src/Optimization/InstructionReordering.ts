@@ -75,7 +75,6 @@ export function instructionReordering(fn: HIRFunction): void {
   // Shared nodes are emitted when they are first used
   const shared: Nodes = new Map();
   const references = findReferencedRangeOfTemporaries(fn);
-  DEBUG && console.log(prettyFormat(references));
   for (const [, block] of fn.body.blocks) {
     reorderBlock(fn.env, block, shared, references);
   }
@@ -175,14 +174,12 @@ function reorderBlock(
   shared: Nodes,
   references: References,
 ): void {
-  DEBUG && console.log(`bb${block.id}`);
   const locals: Nodes = new Map();
   let previous: IdentifierId | null = null;
   for (const instr of block.instructions) {
     const {lvalue, value} = instr;
     // Get or create a node for this lvalue
     const reorderability = getReorderability(instr, references);
-    DEBUG && console.log(`${reorderability}: ${printInstruction(instr)}`);
     const node = getOrInsertWith(
       locals,
       lvalue.identifier.id,
@@ -236,8 +233,6 @@ function reorderBlock(
 
   const nextInstructions: Array<Instruction> = [];
   const seen = new Set<IdentifierId>();
-
-  DEBUG && console.log(`bb${block.id}`);
 
   /**
    * The ideal order for emitting instructions may change the final instruction,
@@ -512,10 +507,6 @@ function getReorderability(
       ) {
         return Reorderability.Reorderable;
       }
-      DEBUG &&
-        console.log(
-          `LoadLocal: [${instr.id}] lastAssignment=[${lastAssignment}] singleUse=${references.singleUseIdentifiers.has(instr.lvalue.identifier.id)}`,
-        );
       return Reorderability.Nonreorderable;
     }
     case 'StoreLocal': {
@@ -538,10 +529,6 @@ function getReorderability(
       ) {
         return Reorderability.Reorderable;
       }
-      DEBUG &&
-        console.log(
-          `StoreLocal [${instr.id}] isRValueNoLongerReassigned=${isRValueNoLongerReassigned} isInstructionLvalueSingleUse=${isInstructionLvalueSingleUse} isAssignedVariableSingleUse=${isAssignedVariableSingleUse}`,
-        );
       return Reorderability.Nonreorderable;
     }
     default: {
