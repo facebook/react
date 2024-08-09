@@ -3520,7 +3520,7 @@ function insertStylesheetIntoRoot(
     for (let i = 0; i < nodes.length; i++) {
       const node = nodes[i];
       if (
-        node.nodeName === 'link' ||
+        node.nodeName === 'LINK' ||
         // We omit style tags with media="not all" because they are not in the right position
         // and will be hoisted by the Fizz runtime imminently.
         node.getAttribute('media') !== 'not all'
