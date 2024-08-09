@@ -155,6 +155,7 @@ import {
   getRenderTargetTime,
   getWorkInProgressTransitions,
   shouldRemainOnPreviousScreen,
+  renderDidSuspendWithDelay,
 } from './ReactFiberWorkLoop';
 import {
   OffscreenLane,
@@ -163,6 +164,7 @@ import {
   includesSomeLane,
   mergeLanes,
   claimNextRetryLane,
+  includesOnlyTransitions,
 } from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber';
 import {createScopeInstance} from './ReactFiberScope';
@@ -426,7 +428,12 @@ function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
       portalOrRoot.pendingChildren = newChildSet;
       // Schedule an update on the container to swap out the container.
       markUpdate(workInProgress);
-      finalizeContainerChildren(container, newChildSet);
+      const isSuspendedTransition =
+        renderDidSuspendWithDelay() &&
+        includesOnlyTransitions(workInProgress.lanes);
+      if (!isSuspendedTransition) {
+        finalizeContainerChildren(container, newChildSet);
+      }
     }
   }
 }
