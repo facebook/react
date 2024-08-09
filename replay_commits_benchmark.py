@@ -509,7 +509,7 @@ def collect_metrics(args, build_ids):
                 try:
                     print(f"Gathering CircleCI metrics for {pipeline_id}")
                     metrics_result = collect_circleci_metrics(args, pipeline_id)
-                    metrics["circleci"].append(metrics_result)
+                    metrics["circleci"].extend(metrics_result)
                 except Exception as e:
                     LOGGER.error(f"Error collecting CircleCI metrics for pipeline_id={pipeline_id}: {e}")
 
@@ -519,7 +519,7 @@ def collect_metrics(args, build_ids):
                 try:
                     print(f"Gathering Github Actions metrics for {workflow_run_id}")
                     metrics_result = collect_github_metrics(args, workflow_run_id)
-                    metrics["github"].append(metrics_result)
+                    metrics["github"].extend(metrics_result)
                 except Exception as e:
                     LOGGER.error(f"Error collecting Github metrics for workflow_run_id={workflow_run_id}: {e}")
     

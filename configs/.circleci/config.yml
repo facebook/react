@@ -131,7 +131,7 @@ jobs:
           command: rustup install nightly && rustup override set nightly
       - run:
           name: rustfmt
-          command: grep -r --include "*.rs" --files-without-match "@generated" crates | xargs rustfmt --check --config="skip_children=true"
+          command: grep -r --include "*.rs" --files-without-match "@generated" crates | xargs rustup run nightly-2023-08-01 rustfmt --check --config="skip_children=true"
 
 # compiler_typescript Jobs
   typescript_lint_cloud:
@@ -281,7 +281,7 @@ jobs:
       - checkout
       - setup_node_modules
       - run: | 
-          yarn test << parameters.params >> --ci=github --shard=<< parameters.shard >>
+          yarn test << parameters.params >> --ci=circleci --shard=<< parameters.shard >>
   
   build_and_lint_cloud:
     docker:
@@ -358,7 +358,6 @@ jobs:
           name: Playwright install deps
           working-directory: fixtures/flight
           command: |
-            sudo npm install -g npx
             npx playwright install
             sudo npx playwright install-deps
       - run:
