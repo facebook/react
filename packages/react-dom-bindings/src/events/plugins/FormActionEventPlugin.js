@@ -45,30 +45,6 @@ function coerceFormActionProp(
   }
 }
 
-function createFormDataWithSubmitter(
-  form: HTMLFormElement,
-  submitter: HTMLInputElement | HTMLButtonElement,
-) {
-  // The submitter's value should be included in the FormData.
-  // It should be in the document order in the form.
-  // Since the FormData constructor invokes the formdata event it also
-  // needs to be available before that happens so after construction it's too
-  // late. We use a temporary fake node for the duration of this event.
-  // TODO: FormData takes a second argument that it's the submitter but this
-  // is fairly new so not all browsers support it yet. Switch to that technique
-  // when available.
-  const temp = submitter.ownerDocument.createElement('input');
-  temp.name = submitter.name;
-  temp.value = submitter.value;
-  if (form.id) {
-    temp.setAttribute('form', form.id);
-  }
-  (submitter.parentNode: any).insertBefore(temp, submitter);
-  const formData = new FormData(form);
-  (temp.parentNode: any).removeChild(temp);
-  return formData;
-}
-
 /**
  * This plugin invokes action functions on forms, inputs and buttons if
  * the form doesn't prevent default.
@@ -129,9 +105,8 @@ function extractEvents(
       if (didCurrentEventScheduleTransition()) {
         // We're going to set the pending form status, but because the submission
         // was prevented, we should not fire the action function.
-        const formData = submitter
-          ? createFormDataWithSubmitter(form, submitter)
-          : new FormData(form);
+        // $FlowExpectedError[extra-arg]: flow doesn't know about the 'submitter' parameter yet
+        const formData = new FormData(form, submitter);
         const pendingState: FormStatus = {
           pending: true,
           data: formData,
@@ -160,9 +135,8 @@ function extractEvents(
       event.preventDefault();
 
       // Dispatch the action and set a pending form status.
-      const formData = submitter
-        ? createFormDataWithSubmitter(form, submitter)
-        : new FormData(form);
+      // $FlowExpectedError[extra-arg]: flow doesn't know about the 'submitter' parameter yet
+      const formData = new FormData(form, submitter);
       const pendingState: FormStatus = {
         pending: true,
         data: formData,
