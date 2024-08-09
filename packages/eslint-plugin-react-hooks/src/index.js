@@ -10,6 +10,11 @@
 import RulesOfHooks from './RulesOfHooks';
 import ExhaustiveDeps from './ExhaustiveDeps';
 
+export const rules = {
+  'rules-of-hooks': RulesOfHooks,
+  'exhaustive-deps': ExhaustiveDeps,
+};
+
 export const configs = {
   recommended: {
     plugins: ['react-hooks'],
@@ -18,9 +23,15 @@ export const configs = {
       'react-hooks/exhaustive-deps': 'warn',
     },
   },
-};
-
-export const rules = {
-  'rules-of-hooks': RulesOfHooks,
-  'exhaustive-deps': ExhaustiveDeps,
+  'flat/recommended': {
+    plugins: {
+      'react-hooks': {
+        rules,
+      },
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
 };
