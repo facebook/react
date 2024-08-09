@@ -33,10 +33,7 @@ function findForks(file) {
 }
 
 function addFork(forks, renderer, file) {
-  let basePath = forkedFiles.get(file);
-  if (!basePath) {
-    basePath = findForks(file);
-  }
+  let basePath = forkedFiles.get(file) || findForks(file);
 
   const baseFilename = file.slice(basePath.length + 1);
 

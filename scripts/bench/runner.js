@@ -39,10 +39,7 @@ async function runBenchmarks(reactPath) {
   for (let i = 0; i < benchmarkNames.length; i++) {
     const benchmarkName = benchmarkNames[i];
 
-    if (
-      !benchmarkFilter ||
-      (benchmarkFilter && benchmarkName.indexOf(benchmarkFilter) !== -1)
-    ) {
+    if (!benchmarkFilter || benchmarkName.includes(benchmarkFilter)) {
       console.log(
         chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`)
       );
