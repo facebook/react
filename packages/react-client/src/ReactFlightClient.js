@@ -907,26 +907,41 @@ function waitForReference<T>(
       }
       value = value[path[i]];
     }
-    parentObject[key] = map(response, value);
+    const mappedValue = map(response, value);
+    parentObject[key] = mappedValue;
 
     // If this is the root object for a model reference, where `handler.value`
     // is a stale `null`, the resolved value can be used directly.
     if (key === '' && handler.value === null) {
-      handler.value = parentObject[key];
+      handler.value = mappedValue;
     }
 
-    // If the parent object is an unparsed React element tuple and its outlined
-    // props have now been resolved, we also need to update the props of the
-    // parsed element object (i.e. handler.value).
+    // If the parent object is an unparsed React element tuple, we also need to
+    // update the props, owner, and stack of the parsed element object (i.e.
+    // handler.value).
     if (
       parentObject[0] === REACT_ELEMENT_TYPE &&
-      key === '3' &&
       typeof handler.value === 'object' &&
       handler.value !== null &&
-      handler.value.$$typeof === REACT_ELEMENT_TYPE &&
-      handler.value.props === null
+      handler.value.$$typeof === REACT_ELEMENT_TYPE
     ) {
-      handler.value.props = parentObject[key];
+      const element: any = handler.value;
+      switch (key) {
+        case '3':
+          element.props = mappedValue;
+          break;
+        case '4':
+          element._owner = mappedValue;
+          break;
+        case '5':
+          Object.defineProperty(element, '_debugStack', {
+            configurable: false,
+            enumerable: false,
+            writable: true,
+            value: mappedValue,
+          });
+          break;
+      }
     }
 
     handler.deps--;
