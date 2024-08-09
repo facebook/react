@@ -390,6 +390,10 @@ function updatePackageVersions(
       version = defaultVersionIfNotFound;
     }
     const packageJSONPath = path.join(modulesDir, moduleName, 'package.json');
+    if (!fs.existsSync(packageJSONPath)) {
+      console.warn(`Skipping missing package.json: ${packageJSONPath}`);
+      continue;
+    }
     const stats = fs.statSync(packageJSONPath);
     if (stats.isFile()) {
       const packageInfo = JSON.parse(fs.readFileSync(packageJSONPath));
