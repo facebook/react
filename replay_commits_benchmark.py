@@ -634,9 +634,9 @@ def sanitize_metrics(metrics):
     with ThreadPoolExecutor() as executor:
         futures = {}
         if 'circleci' in metrics:
-            futures["circleci"] = [executor.submit(sanitize_circleci_metrics, item) for item in metrics.get('circleci')]
+            futures["circleci"] = [executor.submit(compute_circleci_metrics, [item]) for item in metrics.get('circleci')]
         if 'github' in metrics:
-            futures["github"] = [executor.submit(sanitize_github_metrics, item) for item in metrics.get('github')]
+            futures["github"] = [executor.submit(compute_github_metrics, [item]) for item in metrics.get('github')]
 
         for vendor, futures_list in futures.items():
             if vendor not in sanitized:
