@@ -634,9 +634,9 @@ def sanitize_metrics(metrics):
     with ThreadPoolExecutor() as executor:
         futures = {}
         if 'circleci' in metrics:
-            futures["circleci"] = [executor.submit(compute_circleci_metrics, [item]) for item in metrics.get('circleci')]
+            futures["circleci"] = [executor.submit(sanitize_circleci_metrics, item) for item in metrics.get('circleci')]
         if 'github' in metrics:
-            futures["github"] = [executor.submit(compute_github_metrics, [item]) for item in metrics.get('github')]
+            futures["github"] = [executor.submit(sanitize_github_metrics, item) for item in metrics.get('github')]
 
         for vendor, futures_list in futures.items():
             if vendor not in sanitized:
@@ -776,19 +776,18 @@ def compute_metrics(sanitized_metrics):
     with ThreadPoolExecutor() as executor:
         futures = {}
         if 'circleci' in sanitized_metrics:
-            futures["circleci"] = [executor.submit(compute_circleci_metrics, item) for item in sanitized_metrics.get('circleci')]
+            futures["circleci"] = executor.submit(compute_circleci_metrics, sanitized_metrics.get('circleci'))
         if 'github' in sanitized_metrics:
-            futures["github"] = [executor.submit(compute_github_metrics, item) for item in sanitized_metrics.get('github')]
-        for vendor, futures_list in futures.items():
+            futures["github"] = executor.submit(compute_github_metrics, sanitized_metrics.get('github'))
+        for vendor, future in futures.items():
             if vendor not in computed:
                 computed[vendor] = {'workflows': [], 'jobs': []}
-            for future in futures_list:
-                try:
-                    computed_result = future.result()
-                    computed[vendor]['workflows'].append(computed_result['workflow'])
-                    computed[vendor]['jobs'].extend(computed_result['jobs'])
-                except Exception as e:
-                    LOGGER.error(f"Error computing {vendor} metrics: {e}")
+            try:
+                computed_result = future.result()
+                computed[vendor]['workflows'].extend(computed_result['workflows'])
+                computed[vendor]['jobs'].extend(computed_result['jobs'])
+            except Exception as e:
+                LOGGER.error(f"Error computing {vendor} metrics: {e}")
 
     print(f"{computed}")
 
