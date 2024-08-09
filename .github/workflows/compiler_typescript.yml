@@ -18,17 +18,6 @@ defaults:
     working-directory: compiler
 
 jobs:
-  discover_yarn_workspaces:
-    name: Discover yarn workspaces
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: set-matrix
-        run: echo "matrix=$(find packages -mindepth 1 -maxdepth 1 -type d | sed 's!packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
-
-  # Hardcoded to improve parallelism
   lint:
     name: Lint babel-plugin-react-compiler
     runs-on: ubuntu-latest
@@ -47,7 +36,6 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn workspace babel-plugin-react-compiler lint
 
-  # Hardcoded to improve parallelism
   jest:
     name: Jest babel-plugin-react-compiler
     runs-on: ubuntu-latest
@@ -68,13 +56,8 @@ jobs:
       - run: yarn workspace babel-plugin-react-compiler jest
 
   test:
-    name: Test ${{ matrix.workspace_name }}
-    needs: discover_yarn_workspaces
+    name: Test
     runs-on: ubuntu-latest
-    continue-on-error: true
-    strategy:
-      matrix:
-        workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -89,4 +72,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('compiler/**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
-      - run: yarn workspace ${{ matrix.workspace_name }} test
+      - run: yarn workspaces run test
