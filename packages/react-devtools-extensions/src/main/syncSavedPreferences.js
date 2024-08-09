@@ -7,7 +7,6 @@ import {
   getShowInlineWarningsAndErrors,
   getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
-import {getBrowserTheme} from 'react-devtools-extensions/src/utils';
 
 // The renderer interface can't read saved component filters directly,
 // because they are stored in localStorage within the context of the extension.
@@ -28,9 +27,6 @@ function syncSavedPreferences() {
     )};
     window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = ${JSON.stringify(
       getHideConsoleLogsInStrictMode(),
-    )};
-    window.__REACT_DEVTOOLS_BROWSER_THEME__ = ${JSON.stringify(
-      getBrowserTheme(),
     )};`,
   );
 }
