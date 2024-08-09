@@ -857,28 +857,25 @@ def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64
 def append_row_with_backoff(worksheet, values, max_retries):
     exponential_backoff_request(worksheet.append_row, values, max_retries=max_retries)
 
-def export_metrics(computed_metrics_list, google_sheet_id, max_retries):
+def export_metrics(computed_metrics, google_sheet_id, max_retries):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '~/.config/gspread/service_account.json'
     gc = gspread.service_account()
     sh = gc.open_by_key(google_sheet_id)
 
-    # Export workflow metrics to raw_workflow_data worksheet
     raw_workflow_data = sh.worksheet("raw_workflow_data")
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
-    # Export job metrics to raw_job_data worksheet
     raw_job_data = sh.worksheet("raw_job_data")
     job_headers = list(JOB_TEMPLATE.keys())
 
-    for computed_metrics in computed_metrics_list:
-        for vendor, metrics_data in computed_metrics.items():
-            for workflow in metrics_data["workflows"]:
-                values = [workflow.get(header) for header in workflow_headers]
-                append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
-            
-            for job in metrics_data["jobs"]:
-                values = [job.get(header) for header in job_headers]
-                append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
+    for vendor, metrics_data in computed_metrics.items():
+        for workflow in metrics_data["workflows"]:
+            values = [workflow.get(header) for header in workflow_headers]
+            append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
+
+        for job in metrics_data["jobs"]:
+            values = [job.get(header) for header in job_headers]
+            append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
 
     LOGGER.info("Exported workflow metrics to raw_workflow_data worksheet")
     LOGGER.info("Exported job metrics to raw_job_data worksheet")
