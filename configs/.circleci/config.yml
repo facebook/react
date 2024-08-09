@@ -1,7 +1,12 @@
 version: 2.1
 
 jobs:
-  test:
+  test1:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run: echo "hello John"
+  test2:
     docker:
       - image: cimg/base:stable
     steps:
@@ -12,13 +17,9 @@ workflows:
 
   test1:
     jobs:
-      - test
-          name: test1-1
-      - test
-          name: test1-2
+      - test1
+      - test2
   test2:
     jobs:
-      - test
-          name: test2-1
-      - test
-          name: test2-2
+      - test1
+      - test2
