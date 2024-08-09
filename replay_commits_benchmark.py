@@ -796,7 +796,7 @@ def compute_circleci_metrics(circleci_metrics_list):
     :param circleci_metrics: List of CircleCI sanitized metrics
     :return: Dict of computed CircleCI metrics
     """
-    result = []
+    result = {'workflows': [], 'jobs': []}
     
     for circleci_metrics in circleci_metrics_list:
         workflow = circleci_metrics['workflow']
@@ -806,12 +806,14 @@ def compute_circleci_metrics(circleci_metrics_list):
         workflow['computed_queued_time'] = None # CircleCI does not give us started_at time
         workflow['computed_run_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds() # Might be misleading here
 
+        result['workflows'].append(workflow)
+
         for job in jobs:
             job['computed_total_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
             job['computed_queued_time'] = (datetime.fromisoformat(job['started_at'][:-1]) - datetime.fromisoformat(job['queued_at'][:-1])).total_seconds()
             job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
         
-        result.append(circleci_metrics)
+            result['jobs'].append(job)
 
     return result
 
@@ -821,7 +823,7 @@ def compute_github_metrics(github_metrics_list):
     :param github_metrics_list: List of GitHub sanitized metrics
     :return: List of Dict of computed GitHub metrics
     """
-    result = []
+    result = {'workflows': [], 'jobs': []}
     
     for github_metrics in github_metrics_list:
         workflow = github_metrics['workflow']
@@ -831,12 +833,14 @@ def compute_github_metrics(github_metrics_list):
         workflow['computed_queued_time'] = (datetime.fromisoformat(workflow['started_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds()
         workflow['computed_run_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['started_at'][:-1])).total_seconds()
 
+        result['workflows'].append(workflow)
+
         for job in jobs:
             job['computed_total_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
             job['computed_queued_time'] = (datetime.fromisoformat(job['started_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
             job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
         
-        result.append(github_metrics)
+            result['jobs'].append(job)
 
     return result
 

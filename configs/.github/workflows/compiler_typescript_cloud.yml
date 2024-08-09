@@ -28,7 +28,7 @@ jobs:
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
-          cache-dependency-path: 'compiler/**/yarn.lock'
+          cache-dependency-path: 'compiler/yarn.lock'
       - run: yarn workspace babel-plugin-react-compiler lint
 
   # Hardcoded to improve parallelism
@@ -39,7 +39,7 @@ jobs:
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
-          cache-dependency-path: 'compiler/**/yarn.lock'
+          cache-dependency-path: 'compiler/yarn.lock'
       - run: yarn workspace babel-plugin-react-compiler jest
 
   typescript_test_cloud:
@@ -55,5 +55,5 @@ jobs:
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
-          cache-dependency-path: 'compiler/**/yarn.lock'
+          cache-dependency-path: 'compiler/yarn.lock'
       - run: yarn workspace ${{ matrix.workspace_name }} test
