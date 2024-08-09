@@ -3,7 +3,11 @@ name: test_gha
 on: push
 
 jobs:
-  test1_job:
+  test1-1_job:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Hello John"
+  test1-2_job:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Hello John"

@@ -13,6 +13,12 @@ workflows:
   test1:
     jobs:
       - test
+          name: test1-1
+      - test
+          name: test1-2
   test2:
     jobs:
       - test
+          name: test2-1
+      - test
+          name: test2-2
