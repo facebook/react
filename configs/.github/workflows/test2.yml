@@ -1,0 +1,9 @@
+name: test_gha
+
+on: push
+
+jobs:
+  test2_job:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Hello John"

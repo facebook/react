@@ -523,6 +523,8 @@ def collect_metrics(args, build_ids):
                 except Exception as e:
                     LOGGER.error(f"Error collecting Github metrics for workflow_run_id={workflow_run_id}: {e}")
     
+    print(f"{metrics}")
+
     return metrics
 
 def collect_circleci_metrics(args, pipeline_id):
@@ -645,6 +647,8 @@ def sanitize_metrics(metrics):
                     sanitized[vendor].extend(sanitized_result)
                 except Exception as e:
                     LOGGER.error(f"Error sanitizing {vendor} metrics: {e}")
+
+    print(f"{sanitized}")
 
     return sanitized
 
@@ -785,6 +789,8 @@ def compute_metrics(sanitized_metrics):
                     computed[vendor]['jobs'].extend(computed_result['jobs'])
                 except Exception as e:
                     LOGGER.error(f"Error computing {vendor} metrics: {e}")
+
+    print(f"{computed}")
 
     return computed
 
