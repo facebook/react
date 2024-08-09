@@ -50,7 +50,7 @@ const {readFile} = require('fs').promises;
 
 const React = require('react');
 
-async function renderApp(res, returnValue, formState) {
+async function renderApp(res, returnValue, formState, temporaryReferences) {
   const {renderToPipeableStream} = await import(
     'react-server-dom-webpack/server'
   );
@@ -101,7 +101,9 @@ async function renderApp(res, returnValue, formState) {
   );
   // For client-invoked server actions we refresh the tree and return a return value.
   const payload = {root, returnValue, formState};
-  const {pipe} = renderToPipeableStream(payload, moduleMap);
+  const {pipe} = renderToPipeableStream(payload, moduleMap, {
+    temporaryReferences,
+  });
   pipe(res);
 }
 
@@ -110,8 +112,13 @@ app.get('/', async function (req, res) {
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
-  const {decodeReply, decodeReplyFromBusboy, decodeAction, decodeFormState} =
-    await import('react-server-dom-webpack/server');
+  const {
+    decodeReply,
+    decodeReplyFromBusboy,
+    decodeAction,
+    decodeFormState,
+    createTemporaryReferenceSet,
+  } = await import('react-server-dom-webpack/server');
   const serverReference = req.get('rsc-action');
   if (serverReference) {
     // This is the client-side case
@@ -124,15 +131,17 @@ app.post('/', bodyParser.text(), async function (req, res) {
       throw new Error('Invalid action');
     }
 
+    const temporaryReferences = createTemporaryReferenceSet();
+
     let args;
     if (req.is('multipart/form-data')) {
       // Use busboy to streamingly parse the reply from form-data.
       const bb = busboy({headers: req.headers});
-      const reply = decodeReplyFromBusboy(bb);
+      const reply = decodeReplyFromBusboy(bb, {}, {temporaryReferences});
       req.pipe(bb);
       args = await reply;
     } else {
-      args = await decodeReply(req.body);
+      args = await decodeReply(req.body, {}, {temporaryReferences});
     }
     const result = action.apply(null, args);
     try {
@@ -142,7 +151,7 @@ app.post('/', bodyParser.text(), async function (req, res) {
       // We handle the error on the client
     }
     // Refresh the client and return the value
-    renderApp(res, result, null);
+    renderApp(res, result, null, temporaryReferences);
   } else {
     // This is the progressive enhancement case
     const UndiciRequest = require('undici').Request;
