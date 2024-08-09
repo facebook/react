@@ -23,7 +23,6 @@ import {
   SyntheticTouchEvent,
   SyntheticAnimationEvent,
   SyntheticTransitionEvent,
-  SyntheticUIEvent,
   SyntheticWheelEvent,
   SyntheticClipboardEvent,
   SyntheticPointerEvent,
@@ -139,10 +138,6 @@ function extractEvents(
       break;
     case TRANSITION_END:
       SyntheticEventCtor = SyntheticTransitionEvent;
-      break;
-    case 'scroll':
-    case 'scrollend':
-      SyntheticEventCtor = SyntheticUIEvent;
       break;
     case 'wheel':
       SyntheticEventCtor = SyntheticWheelEvent;
