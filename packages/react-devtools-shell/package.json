@@ -2,6 +2,11 @@
   "private": true,
   "name": "react-devtools-shell",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-devtools-shell"
+  },
   "scripts": {
     "start": "cross-env NODE_ENV=development node ./webpack-server.js"
   },
