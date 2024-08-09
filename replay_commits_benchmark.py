@@ -750,7 +750,7 @@ def sanitize_github_metrics(github_metrics_list):
               "reported_duration": None,
               "reported_queued_duration": None,
               "job_url": job['html_url'],
-              "runner_info": job["labels"][0]
+              "runner_info": job["labels"][0] if job["labels"] else None
           })
           sanitized_jobs.append(sanitized_job)
       result.append({
@@ -786,50 +786,55 @@ def compute_metrics(sanitized_metrics):
 
     return computed
 
-def compute_circleci_metrics(circleci_metrics):
+def compute_circleci_metrics(circleci_metrics_list):
     """
     Computes metrics for CircleCI based on sanitized metrics.
-    :param circleci_metrics: Dict of CircleCI sanitized metrics
+    :param circleci_metrics: List of CircleCI sanitized metrics
     :return: Dict of computed CircleCI metrics
     """
-    workflows = []
-
-    workflow = circleci_metrics['workflow']
-    jobs = circleci_metrics['jobs']
-
-    workflow['computed_total_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds()
-    workflow['computed_queued_time'] = None # CircleCI does not give us started_at time
-    workflow['computed_run_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds() # Might be misleading here
-
-    for job in jobs:
-        job['computed_total_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
-        job['computed_queued_time'] = (datetime.fromisoformat(job['started_at'][:-1]) - datetime.fromisoformat(job['queued_at'][:-1])).total_seconds()
-        job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
+    result = []
     
-    workflows.append(circleci_metrics)
-    return circleci_metrics
+    for circleci_metrics in circleci_metrics_list:
+        workflow = circleci_metrics['workflow']
+        jobs = circleci_metrics['jobs']
 
-def compute_github_metrics(github_metrics):
+        workflow['computed_total_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds()
+        workflow['computed_queued_time'] = None # CircleCI does not give us started_at time
+        workflow['computed_run_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds() # Might be misleading here
+
+        for job in jobs:
+            job['computed_total_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
+            job['computed_queued_time'] = (datetime.fromisoformat(job['started_at'][:-1]) - datetime.fromisoformat(job['queued_at'][:-1])).total_seconds()
+            job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
+        
+        result.append(circleci_metrics)
+
+    return result
+
+def compute_github_metrics(github_metrics_list):
     """
     Computes metrics for GitHub based on sanitized metrics.
-    :param github_metrics: Dict of GitHub sanitized metrics
-    :return: Dict of computed GitHub metrics
+    :param github_metrics_list: List of GitHub sanitized metrics
+    :return: List of Dict of computed GitHub metrics
     """
-    workflow = github_metrics['workflow']
-    jobs = github_metrics['jobs']
+    result = []
+    
+    for github_metrics in github_metrics_list:
+        workflow = github_metrics['workflow']
+        jobs = github_metrics['jobs']
 
-    workflow['computed_total_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds()
-    workflow['computed_queued_time'] = (datetime.fromisoformat(workflow['started_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds()
-    workflow['computed_run_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['started_at'][:-1])).total_seconds()
+        workflow['computed_total_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds()
+        workflow['computed_queued_time'] = (datetime.fromisoformat(workflow['started_at'][:-1]) - datetime.fromisoformat(workflow['created_at'][:-1])).total_seconds()
+        workflow['computed_run_time'] = (datetime.fromisoformat(workflow['stopped_at'][:-1]) - datetime.fromisoformat(workflow['started_at'][:-1])).total_seconds()
 
-    computed_jobs = []
-    for job in jobs:
-        job['computed_total_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
-        job['computed_queued_time'] = (datetime.fromisoformat(job['started_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
-        job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
-        computed_jobs.append(job)
+        for job in jobs:
+            job['computed_total_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
+            job['computed_queued_time'] = (datetime.fromisoformat(job['started_at'][:-1]) - datetime.fromisoformat(job['created_at'][:-1])).total_seconds()
+            job['computed_run_time'] = (datetime.fromisoformat(job['stopped_at'][:-1]) - datetime.fromisoformat(job['started_at'][:-1])).total_seconds()
+        
+        result.append(github_metrics)
 
-    return {'workflow': workflow, 'jobs': computed_jobs}
+    return result
 
 def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64):
     retries = 0
@@ -846,7 +851,7 @@ def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64
 def append_row_with_backoff(worksheet, values, max_retries):
     exponential_backoff_request(worksheet.append_row, values, max_retries=max_retries)
 
-def export_metrics(computed_metrics, google_sheet_id, max_retries):
+def export_metrics(computed_metrics_list, google_sheet_id, max_retries):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '~/.config/gspread/service_account.json'
     gc = gspread.service_account()
     sh = gc.open_by_key(google_sheet_id)
@@ -855,17 +860,19 @@ def export_metrics(computed_metrics, google_sheet_id, max_retries):
     raw_workflow_data = sh.worksheet("raw_workflow_data")
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
-    for vendor, metrics_data in computed_metrics.items():
-        for workflow in metrics_data["workflows"]:
-            values = [workflow.get(header) for header in workflow_headers]
-            append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
-        
-        raw_job_data = sh.worksheet("raw_job_data")
-        job_headers = list(JOB_TEMPLATE.keys())
+    # Export job metrics to raw_job_data worksheet
+    raw_job_data = sh.worksheet("raw_job_data")
+    job_headers = list(JOB_TEMPLATE.keys())
 
-        for job in metrics_data["jobs"]:
-            values = [job.get(header) for header in job_headers]
-            append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
+    for computed_metrics in computed_metrics_list:
+        for vendor, metrics_data in computed_metrics.items():
+            for workflow in metrics_data["workflows"]:
+                values = [workflow.get(header) for header in workflow_headers]
+                append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
+            
+            for job in metrics_data["jobs"]:
+                values = [job.get(header) for header in job_headers]
+                append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
 
     LOGGER.info("Exported workflow metrics to raw_workflow_data worksheet")
     LOGGER.info("Exported job metrics to raw_job_data worksheet")
