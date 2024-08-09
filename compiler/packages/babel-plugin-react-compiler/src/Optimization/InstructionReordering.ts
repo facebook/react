@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import prettyFormat from 'pretty-format';
 import {CompilerError} from '..';
 import {
   BasicBlock,
+  DeclarationId,
   Environment,
   GeneratedSource,
   HIRFunction,
@@ -19,7 +21,7 @@ import {
   makeInstructionId,
   markInstructionIds,
 } from '../HIR';
-import {printInstruction} from '../HIR/PrintHIR';
+import {printInstruction, printPlace} from '../HIR/PrintHIR';
 import {
   eachInstructionLValue,
   eachInstructionValueLValue,
@@ -101,7 +103,7 @@ type References = {
   singleUseIdentifiers: SingleUseIdentifiers;
   lastAssignments: LastAssignments;
 };
-type LastAssignments = Map<string, InstructionId>;
+type LastAssignments = Map<DeclarationId, InstructionId>;
 type SingleUseIdentifiers = Set<IdentifierId>;
 enum ReferenceKind {
   Read,
@@ -110,28 +112,34 @@ enum ReferenceKind {
 function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
   const singleUseIdentifiers = new Map<IdentifierId, number>();
   const lastAssignments: LastAssignments = new Map();
+
+  for (const param of fn.params) {
+    const place = param.kind === 'Identifier' ? param : param.place;
+    lastAssignments.set(place.identifier.declarationId, makeInstructionId(0));
+  }
+
   function reference(
     instr: InstructionId,
     place: Place,
     kind: ReferenceKind,
   ): void {
-    if (
-      place.identifier.name !== null &&
-      place.identifier.name.kind === 'named'
-    ) {
-      if (kind === ReferenceKind.Write) {
-        const name = place.identifier.name.value;
-        const previous = lastAssignments.get(name);
-        if (previous === undefined) {
-          lastAssignments.set(name, instr);
-        } else {
-          lastAssignments.set(
-            name,
-            makeInstructionId(Math.max(previous, instr)),
-          );
-        }
+    if (kind === ReferenceKind.Write) {
+      const declarationId = place.identifier.declarationId;
+      const previous = lastAssignments.get(declarationId);
+      if (previous === undefined) {
+        lastAssignments.set(declarationId, instr);
+      } else {
+        lastAssignments.set(
+          declarationId,
+          makeInstructionId(Math.max(previous, instr)),
+        );
       }
-      return;
+      CompilerError.invariant(!singleUseIdentifiers.has(place.identifier.id), {
+        reason: `Unexpected existing declaration for identifier`,
+        description: `[${instr}] ${printPlace(place)}`,
+        loc: place.loc,
+      });
+      singleUseIdentifiers.set(place.identifier.id, 0);
     } else if (kind === ReferenceKind.Read) {
       const previousCount = singleUseIdentifiers.get(place.identifier.id) ?? 0;
       singleUseIdentifiers.set(place.identifier.id, previousCount + 1);
@@ -139,7 +147,7 @@ function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
   }
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      for (const operand of eachInstructionValueLValue(instr.value)) {
+      for (const operand of eachInstructionValueOperand(instr.value)) {
         reference(instr.id, operand, ReferenceKind.Read);
       }
       for (const lvalue of eachInstructionLValue(instr)) {
@@ -153,7 +161,7 @@ function findReferencedRangeOfTemporaries(fn: HIRFunction): References {
   return {
     singleUseIdentifiers: new Set(
       [...singleUseIdentifiers]
-        .filter(([, count]) => count === 1)
+        .filter(([, count]) => count <= 1)
         .map(([id]) => id),
     ),
     lastAssignments,
@@ -167,7 +175,6 @@ function reorderBlock(
   references: References,
 ): void {
   const locals: Nodes = new Map();
-  const named: Map<string, IdentifierId> = new Map();
   let previous: IdentifierId | null = null;
   for (const instr of block.instructions) {
     const {lvalue, value} = instr;
@@ -198,15 +205,8 @@ function reorderBlock(
      * Establish dependencies on operands
      */
     for (const operand of eachInstructionValueOperand(value)) {
-      const {name, id} = operand.identifier;
-      if (name !== null && name.kind === 'named') {
-        // Serialize all accesses to named variables
-        const previous = named.get(name.value);
-        if (previous !== undefined) {
-          node.dependencies.add(previous);
-        }
-        named.set(name.value, lvalue.identifier.id);
-      } else if (locals.has(id) || shared.has(id)) {
+      const id = operand.identifier.id;
+      if (locals.has(id) || shared.has(id)) {
         node.dependencies.add(id);
       }
     }
@@ -228,21 +228,11 @@ function reorderBlock(
           }) as Node,
       );
       lvalueNode.dependencies.add(lvalue.identifier.id);
-      const name = lvalueOperand.identifier.name;
-      if (name !== null && name.kind === 'named') {
-        const previous = named.get(name.value);
-        if (previous !== undefined) {
-          node.dependencies.add(previous);
-        }
-        named.set(name.value, lvalue.identifier.id);
-      }
     }
   }
 
   const nextInstructions: Array<Instruction> = [];
   const seen = new Set<IdentifierId>();
-
-  DEBUG && console.log(`bb${block.id}`);
 
   /**
    * The ideal order for emitting instructions may change the final instruction,
@@ -464,14 +454,24 @@ function emit(
 }
 
 enum Reorderability {
-  Reorderable,
-  Nonreorderable,
+  Reorderable = 'Reorderable',
+  Nonreorderable = 'Nonreorderable',
 }
 function getReorderability(
   instr: Instruction,
   references: References,
 ): Reorderability {
   switch (instr.value.kind) {
+    case 'ArrayExpression': {
+      return instr.value.elements.length === 0
+        ? Reorderability.Reorderable
+        : Reorderability.Nonreorderable;
+    }
+    case 'ObjectExpression': {
+      return instr.value.properties.length === 0
+        ? Reorderability.Reorderable
+        : Reorderability.Nonreorderable;
+    }
     case 'JsxExpression':
     case 'JsxFragment':
     case 'JSXText':
@@ -482,17 +482,52 @@ function getReorderability(
     case 'UnaryExpression': {
       return Reorderability.Reorderable;
     }
+    case 'PropertyLoad': {
+      const object = instr.value.object.identifier;
+      if (
+        object.scope !== null &&
+        instr.id >= object.scope.range.start &&
+        instr.id < object.scope.range.end
+      ) {
+        return Reorderability.Nonreorderable;
+      }
+      if (!references.singleUseIdentifiers.has(object.id)) {
+        return Reorderability.Nonreorderable;
+      }
+      return Reorderability.Reorderable;
+    }
     case 'LoadLocal': {
-      const name = instr.value.place.identifier.name;
-      if (name !== null && name.kind === 'named') {
-        const lastAssignment = references.lastAssignments.get(name.value);
-        if (
-          lastAssignment !== undefined &&
-          lastAssignment < instr.id &&
-          references.singleUseIdentifiers.has(instr.lvalue.identifier.id)
-        ) {
-          return Reorderability.Reorderable;
-        }
+      const lastAssignment = references.lastAssignments.get(
+        instr.value.place.identifier.declarationId,
+      );
+      if (
+        lastAssignment !== undefined &&
+        lastAssignment < instr.id &&
+        references.singleUseIdentifiers.has(instr.lvalue.identifier.id)
+      ) {
+        return Reorderability.Reorderable;
+      }
+      return Reorderability.Nonreorderable;
+    }
+    case 'StoreLocal': {
+      const lastAssignmentOfRvalue = references.lastAssignments.get(
+        instr.value.value.identifier.declarationId,
+      );
+      const isRValueNoLongerReassigned =
+        lastAssignmentOfRvalue === undefined ||
+        lastAssignmentOfRvalue < instr.id;
+      const isInstructionLvalueSingleUse = references.singleUseIdentifiers.has(
+        instr.lvalue.identifier.id,
+      );
+      const isAssignedVariableSingleUse = references.singleUseIdentifiers.has(
+        instr.value.lvalue.place.identifier.id,
+      );
+      if (
+        isRValueNoLongerReassigned &&
+        isInstructionLvalueSingleUse &&
+        isAssignedVariableSingleUse
+      ) {
+        return Reorderability.Reorderable;
       }
       return Reorderability.Nonreorderable;
     }
