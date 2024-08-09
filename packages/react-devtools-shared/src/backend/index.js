@@ -130,6 +130,10 @@ export function initBackend(
     agent.removeListener('shutdown', onAgentShutdown);
   });
 
+  agent.addListener('updateHookSettings', settings => {
+    hook.settings = settings;
+  });
+
   return () => {
     subs.forEach(fn => fn());
   };
