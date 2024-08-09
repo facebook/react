@@ -648,119 +648,117 @@ def sanitize_metrics(metrics):
 
     return sanitized
 
-def sanitize_circleci_metrics(circleci_metrics_list):
+def sanitize_circleci_metrics(circleci_metrics):
     result = []
     
-    for inner_list in circleci_metrics_list:
-        for circleci_metrics in inner_list:
-            
-            sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
-            workflow = circleci_metrics['workflow']
+    sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
+    workflow = circleci_metrics['workflow']
 
-        # Extract VCS URL from project data in one of the jobs
-        vcs_url = None
-        if circleci_metrics['jobs']:
-            project_data = circleci_metrics['jobs'][0].get('project', {})
-            vcs_url = project_data.get('external_url')
+    # Extract VCS URL from project data in one of the jobs
+    vcs_url = None
+    if circleci_metrics['jobs']:
+        project_data = circleci_metrics['jobs'][0].get('project', {})
+        vcs_url = project_data.get('external_url')
 
-        sanitized_workflow.update({
-            "commit": workflow['commit'],
+    sanitized_workflow.update({
+        "commit": workflow['commit'],
+        "vendor": "CircleCI",
+        "workflow_id": workflow['id'],
+        "workflow_name": workflow['name'],
+        "workflow_status": workflow['status'],
+        "created_at": workflow['created_at'],
+        "started_at": None,
+        "stopped_at": workflow['stopped_at'],
+        "workflow_url": f"https://app.circleci.com/pipelines/workflows/{workflow['id']}",
+        "vcs_url": vcs_url,
+        "reported_duration": None,
+        "reported_queued_duration": None
+    })
+
+    sanitized_jobs = []
+    for job in circleci_metrics['jobs']:
+
+        sanitized_job = deepcopy(JOB_TEMPLATE)
+
+        # Grab executor info
+        executor = job["executor"]
+        runner_info = f"{executor["type"]}-{executor['resource_class']}"
+
+        # Convert from milliseconds to seconds
+        reported_duration = int(job['duration'])/1000
+
+        sanitized_job.update({
+            "commit": job['commit'],
             "vendor": "CircleCI",
             "workflow_id": workflow['id'],
             "workflow_name": workflow['name'],
-            "workflow_status": workflow['status'],
-            "created_at": workflow['created_at'],
-            "started_at": None,
-            "stopped_at": workflow['stopped_at'],
-            "workflow_url": f"https://app.circleci.com/pipelines/workflows/{workflow['id']}",
-            "vcs_url": vcs_url,
-            "reported_duration": None,
-            "reported_queued_duration": None
+            "job_id": job['number'],
+            "job_name": job['name'],
+            "job_status": job['status'],
+            "created_at": job['created_at'],
+            "started_at": job['started_at'],
+            "stopped_at": job['stopped_at'],
+            "queued_at": job['queued_at'],
+            "reported_duration": reported_duration,
+            "reported_queued_duration": None,
+            "job_url": job['web_url'],
+            "runner_info": runner_info
         })
-
-        sanitized_jobs = []
-        for job in circleci_metrics['jobs']:
-
-            sanitized_job = deepcopy(JOB_TEMPLATE)
-
-            # Grab executor info
-            executor = job["executor"]
-            runner_info = f"{executor["type"]}-{executor['resource_class']}"
-
-            # Convert from milliseconds to seconds
-            reported_duration = int(job['duration'])/1000
-
-            sanitized_job.update({
-                "commit": job['commit'],
-                "vendor": "CircleCI",
-                "workflow_id": workflow['id'],
-                "workflow_name": workflow['name'],
-                "job_id": job['number'],
-                "job_name": job['name'],
-                "job_status": job['status'],
-                "created_at": job['created_at'],
-                "started_at": job['started_at'],
-                "stopped_at": job['stopped_at'],
-                "queued_at": job['queued_at'],
-                "reported_duration": reported_duration,
-                "reported_queued_duration": None,
-                "job_url": job['web_url'],
-                "runner_info": runner_info
-            })
-            sanitized_jobs.append(sanitized_job)
-            
-        result.append({
-          "workflow": sanitized_workflow,
-          "jobs": sanitized_jobs
-          })
+        sanitized_jobs.append(sanitized_job)
+        
+    result.append({
+      "workflow": sanitized_workflow,
+      "jobs": sanitized_jobs
+      })
+    
     return result
 
-def sanitize_github_metrics(github_metrics_list):
+def sanitize_github_metrics(github_metrics):
     result = []
 
-    for github_metrics in github_metrics_list:
-      sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
-      workflow = github_metrics['workflow']
-      sanitized_workflow.update({
-          "commit": workflow['head_sha'],
-          "vendor": "GitHub",
-          "workflow_id": workflow['id'],
-          "workflow_name": workflow['name'],
-          "workflow_status": workflow['conclusion'],
-          "created_at": workflow['created_at'],
-          "started_at": workflow['run_started_at'],
-          "stopped_at": workflow['updated_at'],
-          "workflow_url": workflow['html_url'],
-          "vcs_url": workflow['repository']['html_url'],
-          "reported_duration": None,
-          "reported_queued_duration": None
-      })
+    sanitized_workflow = deepcopy(WORKFLOW_TEMPLATE)
+    workflow = github_metrics['workflow']
+    sanitized_workflow.update({
+        "commit": workflow['head_sha'],
+        "vendor": "GitHub",
+        "workflow_id": workflow['id'],
+        "workflow_name": workflow['name'],
+        "workflow_status": workflow['conclusion'],
+        "created_at": workflow['created_at'],
+        "started_at": workflow['run_started_at'],
+        "stopped_at": workflow['updated_at'],
+        "workflow_url": workflow['html_url'],
+        "vcs_url": workflow['repository']['html_url'],
+        "reported_duration": None,
+        "reported_queued_duration": None
+    })
 
-      sanitized_jobs = []
-      for job in github_metrics['jobs']:
-          sanitized_job = deepcopy(JOB_TEMPLATE)
-          sanitized_job.update({
-              "commit": job['head_sha'],
-              "vendor": "GitHub",
-              "workflow_id": workflow['id'],
-              "workflow_name": workflow['name'],
-              "job_id": job['id'],
-              "job_name": job['name'],
-              "job_status": job['conclusion'],
-              "created_at": job['created_at'],
-              "started_at": job['started_at'],
-              "stopped_at": job['completed_at'],
-              "queued_at": None,
-              "reported_duration": None,
-              "reported_queued_duration": None,
-              "job_url": job['html_url'],
-              "runner_info": job["labels"][0] if job["labels"] else None
-          })
-          sanitized_jobs.append(sanitized_job)
-      result.append({
-        "workflow": sanitized_workflow,
-        "jobs": sanitized_jobs
+    sanitized_jobs = []
+    for job in github_metrics['jobs']:
+        sanitized_job = deepcopy(JOB_TEMPLATE)
+        sanitized_job.update({
+            "commit": job['head_sha'],
+            "vendor": "GitHub",
+            "workflow_id": workflow['id'],
+            "workflow_name": workflow['name'],
+            "job_id": job['id'],
+            "job_name": job['name'],
+            "job_status": job['conclusion'],
+            "created_at": job['created_at'],
+            "started_at": job['started_at'],
+            "stopped_at": job['completed_at'],
+            "queued_at": None,
+            "reported_duration": None,
+            "reported_queued_duration": None,
+            "job_url": job['html_url'],
+            "runner_info": job["labels"][0] if job["labels"] else None
         })
+        sanitized_jobs.append(sanitized_job)
+    result.append({
+      "workflow": sanitized_workflow,
+      "jobs": sanitized_jobs
+      })
+    
     return result
 
 def compute_metrics(sanitized_metrics):
