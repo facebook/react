@@ -839,7 +839,7 @@ export function createElement(type, config, children) {
   let key = null;
   let ref = null;
 
-  if (config != null) {
+  if (typeof config === 'object' && config != null) {
     if (__DEV__) {
       if (
         !didWarnAboutOldJSXRuntime &&
