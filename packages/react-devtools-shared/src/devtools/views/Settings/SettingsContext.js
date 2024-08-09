@@ -202,7 +202,6 @@ function SettingsContextController({
       breakOnConsoleErrors,
       showInlineWarningsAndErrors,
       hideConsoleLogsInStrictMode,
-      browserTheme,
     });
   }, [
     bridge,
@@ -210,7 +209,6 @@ function SettingsContextController({
     breakOnConsoleErrors,
     showInlineWarningsAndErrors,
     hideConsoleLogsInStrictMode,
-    browserTheme,
   ]);
 
   useEffect(() => {
