@@ -163,18 +163,6 @@ const forks = Object.freeze({
               `Unexpected entry (${entry}) and bundleType (${bundleType})`
             );
         }
-      case 'react-test-renderer':
-        switch (bundleType) {
-          case RN_FB_DEV:
-          case RN_FB_PROD:
-          case RN_FB_PROFILING:
-            return './packages/shared/forks/ReactFeatureFlags.test-renderer.native-fb.js';
-          case FB_WWW_DEV:
-          case FB_WWW_PROD:
-          case FB_WWW_PROFILING:
-            return './packages/shared/forks/ReactFeatureFlags.test-renderer.www.js';
-        }
-        return './packages/shared/forks/ReactFeatureFlags.test-renderer.js';
       default:
         switch (bundleType) {
           case FB_WWW_DEV:
