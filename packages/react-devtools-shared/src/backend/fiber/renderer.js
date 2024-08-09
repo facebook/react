@@ -1405,81 +1405,37 @@ export function attach(
 
   // Removes a Fiber (and its alternate) from the Maps used to track their id.
   // This method should always be called when a Fiber is unmounting.
-  function untrackFiberID(fiber: Fiber) {
+  function untrackFiber(fiberInstance: FiberInstance) {
     if (__DEBUG__) {
-      debug('untrackFiberID()', fiber, null, 'schedule after delay');
+      debug('untrackFiber()', fiberInstance.data, null);
     }
 
-    // Untrack Fibers after a slight delay in order to support a Fast Refresh edge case:
-    // 1. Component type is updated and Fast Refresh schedules an update+remount.
-    // 2. flushPendingErrorsAndWarningsAfterDelay() runs, sees the old Fiber is no longer mounted
-    //    (it's been disconnected by Fast Refresh), and calls untrackFiberID() to clear it from the Map.
-    // 3. React flushes pending passive effects before it runs the next render,
-    //    which logs an error or warning, which causes a new ID to be generated for this Fiber.
-    // 4. DevTools now tries to unmount the old Component with the new ID.
-    //
-    // The underlying problem here is the premature clearing of the Fiber ID,
-    // but DevTools has no way to detect that a given Fiber has been scheduled for Fast Refresh.
-    // (The "_debugNeedsRemount" flag won't necessarily be set.)
-    //
-    // The best we can do is to delay untracking by a small amount,
-    // and give React time to process the Fast Refresh delay.
+    idToDevToolsInstanceMap.delete(fiberInstance.id);
 
-    untrackFibersSet.add(fiber);
+    // Also clear any errors/warnings associated with this fiber.
+    clearErrorsForElementID(fiberInstance.id);
+    clearWarningsForElementID(fiberInstance.id);
+    if (fiberInstance.flags & FORCE_ERROR) {
+      fiberInstance.flags &= ~FORCE_ERROR;
+      forceErrorCount--;
+      if (forceErrorCount === 0 && setErrorHandler != null) {
+        setErrorHandler(shouldErrorFiberAlwaysNull);
+      }
+    }
+    if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
+      fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
+      forceFallbackCount--;
+      if (forceFallbackCount === 0 && setSuspenseHandler != null) {
+        setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
+      }
+    }
 
-    // React may detach alternate pointers during unmount;
-    // Since our untracking code is async, we should explicily track the pending alternate here as well.
-    const alternate = fiber.alternate;
+    const fiber = fiberInstance.data;
+    fiberToFiberInstanceMap.delete(fiber);
+    const {alternate} = fiber;
     if (alternate !== null) {
-      untrackFibersSet.add(alternate);
+      fiberToFiberInstanceMap.delete(alternate);
     }
-
-    if (untrackFibersTimeoutID === null) {
-      untrackFibersTimeoutID = setTimeout(untrackFibers, 1000);
-    }
-  }
-
-  const untrackFibersSet: Set<Fiber> = new Set();
-  let untrackFibersTimeoutID: TimeoutID | null = null;
-
-  function untrackFibers() {
-    if (untrackFibersTimeoutID !== null) {
-      clearTimeout(untrackFibersTimeoutID);
-      untrackFibersTimeoutID = null;
-    }
-
-    untrackFibersSet.forEach(fiber => {
-      const fiberInstance = fiberToFiberInstanceMap.get(fiber);
-      if (fiberInstance !== undefined) {
-        idToDevToolsInstanceMap.delete(fiberInstance.id);
-
-        // Also clear any errors/warnings associated with this fiber.
-        clearErrorsForElementID(fiberInstance.id);
-        clearWarningsForElementID(fiberInstance.id);
-        if (fiberInstance.flags & FORCE_ERROR) {
-          fiberInstance.flags &= ~FORCE_ERROR;
-          forceErrorCount--;
-          if (forceErrorCount === 0 && setErrorHandler != null) {
-            setErrorHandler(shouldErrorFiberAlwaysNull);
-          }
-        }
-        if (fiberInstance.flags & FORCE_SUSPENSE_FALLBACK) {
-          fiberInstance.flags &= ~FORCE_SUSPENSE_FALLBACK;
-          forceFallbackCount--;
-          if (forceFallbackCount === 0 && setSuspenseHandler != null) {
-            setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
-          }
-        }
-      }
-
-      fiberToFiberInstanceMap.delete(fiber);
-
-      const {alternate} = fiber;
-      if (alternate !== null) {
-        fiberToFiberInstanceMap.delete(alternate);
-      }
-    });
-    untrackFibersSet.clear();
   }
 
   function getChangeDescription(
@@ -2282,7 +2238,7 @@ export function attach(
     }
 
     if (!fiber._debugNeedsRemount) {
-      untrackFiberID(fiber);
+      untrackFiber(fiberInstance);
 
       const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
       if (isProfilingSupported) {
@@ -3103,10 +3059,6 @@ export function attach(
   function handleCommitFiberRoot(root: any, priorityLevel: void | number) {
     const current = root.current;
     const alternate = current.alternate;
-
-    // Flush any pending Fibers that we are untracking before processing the new commit.
-    // If we don't do this, we might end up double-deleting Fibers in some cases (like Legacy Suspense).
-    untrackFibers();
 
     currentRootID = getOrGenerateFiberInstance(current).id;
 
