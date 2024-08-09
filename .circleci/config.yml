@@ -22,7 +22,6 @@ jobs:
           command: pip install -r requirements.txt
       - run:
           name: Run Replay Script
-          # config_test branch when done testing
           command: |
                   python3 replay_commits_benchmark.py \
                     --upstream-repo-url $UPSTREAM_REPO \
@@ -32,7 +31,7 @@ jobs:
                     --google-sheet-id $GOOGLE_SHEETS_ID \
                     --github-token $GITHUB_TOKEN \
                     --circleci-token $CIRCLECI_TOKEN \
-                    --branch test_configs
+                    --branch config_test
                     
       - store_artifacts:
           path: benchmark-computed.json
