@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/ReactCompilerRuntimeClient';
+export * from './src/ReactCompilerRuntimeServer';
