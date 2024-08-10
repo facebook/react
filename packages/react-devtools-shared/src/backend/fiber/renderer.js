@@ -3599,7 +3599,9 @@ export function attach(
     while (owner != null) {
       if (typeof owner.tag === 'number') {
         const ownerFiber: Fiber = (owner: any); // Refined
-        owners.unshift(fiberToSerializedElement(ownerFiber));
+        if (!shouldFilterFiber(ownerFiber)) {
+          owners.unshift(fiberToSerializedElement(ownerFiber));
+        }
         owner = ownerFiber._debugOwner;
       } else {
         // TODO: Track Server Component Owners.
