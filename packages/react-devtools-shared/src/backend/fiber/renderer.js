@@ -1708,7 +1708,6 @@ export function attach(
 
   const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<number> = [];
-  const pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
@@ -1739,7 +1738,6 @@ export function attach(
     return (
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
-      pendingSimulatedUnmountedIDs.length === 0 &&
       pendingUnmountedRootID === null
     );
   }
@@ -1923,7 +1921,6 @@ export function attach(
 
     const numUnmountIDs =
       pendingRealUnmountedIDs.length +
-      pendingSimulatedUnmountedIDs.length +
       (pendingUnmountedRootID === null ? 0 : 1);
 
     const operations = new Array<number>(
@@ -1976,15 +1973,6 @@ export function attach(
       for (let j = 0; j < pendingRealUnmountedIDs.length; j++) {
         operations[i++] = pendingRealUnmountedIDs[j];
       }
-      // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
-      // (We want children to go before parents.)
-      // They go *after* the real unmounts because we know for sure they won't be
-      // children of already pushed "real" IDs. If they were, we wouldn't be able
-      // to discover them during the traversal, as they would have been deleted.
-      for (let j = 0; j < pendingSimulatedUnmountedIDs.length; j++) {
-        operations[i + j] = pendingSimulatedUnmountedIDs[j];
-      }
-      i += pendingSimulatedUnmountedIDs.length;
       // The root ID should always be unmounted last.
       if (pendingUnmountedRootID !== null) {
         operations[i] = pendingUnmountedRootID;
@@ -2003,7 +1991,6 @@ export function attach(
     // Reset all of the pending state now that we've told the frontend about it.
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
-    pendingSimulatedUnmountedIDs.length = 0;
     pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
@@ -2168,17 +2155,9 @@ export function attach(
     return fiberInstance;
   }
 
-  function recordUnmount(
-    fiber: Fiber,
-    isSimulated: boolean,
-  ): null | FiberInstance {
+  function recordUnmount(fiber: Fiber): null | FiberInstance {
     if (__DEBUG__) {
-      debug(
-        'recordUnmount()',
-        fiber,
-        null,
-        isSimulated ? 'unmount is simulated' : '',
-      );
+      debug('recordUnmount()', fiber, null);
     }
 
     if (trackedPathMatchFiber !== null) {
@@ -2208,18 +2187,14 @@ export function attach(
     const id = fiberInstance.id;
     const isRoot = fiber.tag === HostRoot;
     if (isRoot) {
-      // Roots must be removed only after all children (pending and simulated) have been removed.
+      // Roots must be removed only after all children have been removed.
       // So we track it separately.
       pendingUnmountedRootID = id;
     } else if (!shouldFilterFiber(fiber)) {
       // To maintain child-first ordering,
       // we'll push it into one of these queues,
       // and later arrange them in the correct order.
-      if (isSimulated) {
-        pendingSimulatedUnmountedIDs.push(id);
-      } else {
-        pendingRealUnmountedIDs.push(id);
-      }
+      pendingRealUnmountedIDs.push(id);
     }
 
     untrackFiber(fiberInstance);
@@ -2306,7 +2281,7 @@ export function attach(
     let child = remainingReconcilingChildren;
     while (child !== null) {
       if (child.kind === FIBER_INSTANCE) {
-        unmountFiberRecursively(child.data, false);
+        unmountFiberRecursively(child.data);
       }
       removeChild(child);
       child = remainingReconcilingChildren;
@@ -2431,7 +2406,7 @@ export function attach(
 
   // We use this to simulate unmounting for Suspense trees
   // when we switch from primary to fallback, or deleting a subtree.
-  function unmountFiberRecursively(fiber: Fiber, isSimulated: boolean) {
+  function unmountFiberRecursively(fiber: Fiber) {
     if (__DEBUG__) {
       debug('unmountFiberRecursively()', fiber, null);
     }
@@ -2472,7 +2447,7 @@ export function attach(
         child = fallbackChildFragment ? fallbackChildFragment.child : null;
       }
 
-      unmountChildrenRecursively(child, isSimulated);
+      unmountChildrenRecursively(child);
     } finally {
       if (shouldIncludeInTree) {
         reconcilingParent = stashedParent;
@@ -2481,20 +2456,17 @@ export function attach(
       }
     }
     if (fiberInstance !== null) {
-      recordUnmount(fiber, isSimulated);
+      recordUnmount(fiber);
       removeChild(fiberInstance);
     }
   }
 
-  function unmountChildrenRecursively(
-    firstChild: null | Fiber,
-    isSimulated: boolean,
-  ) {
+  function unmountChildrenRecursively(firstChild: null | Fiber) {
     let child: null | Fiber = firstChild;
     while (child !== null) {
       // Record simulated unmounts children-first.
       // We skip nodes without return because those are real unmounts.
-      unmountFiberRecursively(child, isSimulated);
+      unmountFiberRecursively(child);
       child = child.sibling;
     }
   }
@@ -2843,9 +2815,7 @@ export function attach(
       } else if (!prevDidTimeout && nextDidTimeOut) {
         // Primary -> Fallback:
         // 1. Hide primary set
-        // This is not a real unmount, so it won't get reported by React.
-        // We need to manually walk the previous tree and record unmounts.
-        unmountChildrenRecursively(prevFiber.child, true);
+        unmountChildrenRecursively(prevFiber.child);
         // 2. Mount fallback set
         const nextFiberChild = nextFiber.child;
         const nextFallbackChildSet = nextFiberChild
@@ -3125,7 +3095,7 @@ export function attach(
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         removeRootPseudoKey(currentRootID);
-        unmountFiberRecursively(alternate, false);
+        unmountFiberRecursively(alternate);
       }
     } else {
       // Mount a new root.
