@@ -63,7 +63,6 @@ import {
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
@@ -1144,10 +1143,7 @@ export function attach(
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberInstanceThrows(root.current).id;
-      // The TREE_OPERATION_REMOVE_ROOT operation serves two purposes:
-      // 1. It avoids sending unnecessary bridge traffic to clear a root.
-      // 2. It preserves Fiber IDs when remounting (below) which in turn ID to error/warning mapping.
-      pushOperation(TREE_OPERATION_REMOVE_ROOT);
+      unmountFiberRecursively(root.current);
       flushPendingEvents(root);
       currentRootID = -1;
     });
@@ -1159,7 +1155,15 @@ export function attach(
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getFiberInstanceThrows(root.current).id;
+      const current = root.current;
+      const alternate = current.alternate;
+      const newRoot = createFiberInstance(current);
+      idToDevToolsInstanceMap.set(newRoot.id, newRoot);
+      fiberToFiberInstanceMap.set(current, newRoot);
+      if (alternate) {
+        fiberToFiberInstanceMap.set(alternate, newRoot);
+      }
+      currentRootID = newRoot.id;
       setRootPseudoKey(currentRootID, root.current);
       mountFiberRecursively(root.current, false);
       flushPendingEvents(root);
