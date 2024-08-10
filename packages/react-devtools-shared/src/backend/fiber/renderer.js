@@ -1143,7 +1143,7 @@ export function attach(
 
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getOrGenerateFiberInstance(root.current).id;
+      currentRootID = getFiberInstanceThrows(root.current).id;
       // The TREE_OPERATION_REMOVE_ROOT operation serves two purposes:
       // 1. It avoids sending unnecessary bridge traffic to clear a root.
       // 2. It preserves Fiber IDs when remounting (below) which in turn ID to error/warning mapping.
@@ -1159,7 +1159,7 @@ export function attach(
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getOrGenerateFiberInstance(root.current).id;
+      currentRootID = getFiberInstanceThrows(root.current).id;
       setRootPseudoKey(currentRootID, root.current);
       mountFiberRecursively(root.current, false);
       flushPendingEvents(root);
@@ -1321,43 +1321,6 @@ export function attach(
 
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
-
-  // Returns the unique ID for a Fiber or generates and caches a new one if the Fiber hasn't been seen before.
-  // Once this method has been called for a Fiber, untrackFiberID() should always be called later to avoid leaking.
-  function getOrGenerateFiberInstance(fiber: Fiber): FiberInstance {
-    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
-    if (fiberInstance === undefined) {
-      const {alternate} = fiber;
-      if (alternate !== null) {
-        fiberInstance = fiberToFiberInstanceMap.get(alternate);
-        if (fiberInstance !== undefined) {
-          // We found the other pair, so we need to make sure we track the other side.
-          fiberToFiberInstanceMap.set(fiber, fiberInstance);
-        }
-      }
-    }
-
-    let didGenerateID = false;
-    if (fiberInstance === undefined) {
-      didGenerateID = true;
-      fiberInstance = createFiberInstance(fiber);
-      fiberToFiberInstanceMap.set(fiber, fiberInstance);
-      idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
-    }
-
-    if (__DEBUG__) {
-      if (didGenerateID) {
-        debug(
-          'getOrGenerateFiberInstance()',
-          fiber,
-          fiberInstance.parent,
-          'Generated a new UID',
-        );
-      }
-    }
-
-    return fiberInstance;
-  }
 
   // Returns a FiberInstance if one has already been generated for the Fiber or throws.
   function getFiberInstanceThrows(fiber: Fiber): FiberInstance {
@@ -2078,7 +2041,24 @@ export function attach(
     parentInstance: DevToolsInstance | null,
   ): FiberInstance {
     const isRoot = fiber.tag === HostRoot;
-    const fiberInstance = getOrGenerateFiberInstance(fiber);
+    let fiberInstance;
+    if (isRoot) {
+      const entry = fiberToFiberInstanceMap.get(fiber);
+      if (entry === undefined) {
+        throw new Error('The root should have been registered at this point');
+      }
+      fiberInstance = entry;
+    } else if (
+      fiberToFiberInstanceMap.has(fiber) ||
+      (fiber.alternate !== null && fiberToFiberInstanceMap.has(fiber.alternate))
+    ) {
+      throw new Error('Did not expect to see this fiber being mounted twice.');
+    } else {
+      fiberInstance = createFiberInstance(fiber);
+    }
+    fiberToFiberInstanceMap.set(fiber, fiberInstance);
+    idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
+
     const id = fiberInstance.id;
 
     if (__DEBUG__) {
@@ -2131,7 +2111,12 @@ export function attach(
       let ownerID: number;
       if (debugOwner != null) {
         if (typeof debugOwner.tag === 'number') {
-          ownerID = getOrGenerateFiberInstance((debugOwner: any)).id;
+          const ownerFiberInstance = getFiberInstanceUnsafe((debugOwner: any));
+          if (ownerFiberInstance !== null) {
+            ownerID = ownerFiberInstance.id;
+          } else {
+            ownerID = 0;
+          }
         } else {
           // TODO: Track Server Component Owners.
           ownerID = 0;
@@ -2347,10 +2332,6 @@ export function attach(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): void {
-    // Generate an ID even for filtered Fibers, in case it's needed later (e.g. for Profiling).
-    // TODO: Do we really need to do this eagerly?
-    getOrGenerateFiberInstance(fiber);
-
     if (__DEBUG__) {
       debug('mountFiberRecursively()', fiber, reconcilingParent);
     }
@@ -2725,10 +2706,6 @@ export function attach(
     prevFiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): boolean {
-    // TODO: Do we really need to give this an instance eagerly if it's filtered?
-    const fiberInstance = getOrGenerateFiberInstance(nextFiber);
-    const id = fiberInstance.id;
-
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, reconcilingParent);
     }
@@ -2758,26 +2735,38 @@ export function attach(
       }
     }
 
-    if (
-      mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id === id &&
-      didFiberRender(prevFiber, nextFiber)
-    ) {
-      // If this Fiber has updated, clear cached inspected data.
-      // If it is inspected again, it may need to be re-run to obtain updated hooks values.
-      hasElementUpdatedSinceLastInspected = true;
-    }
-
+    let fiberInstance: null | FiberInstance = null;
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
     if (shouldIncludeInTree) {
+      const entry = fiberToFiberInstanceMap.get(prevFiber);
+      if (entry === undefined) {
+        throw new Error(
+          'The previous version of the fiber should have already been registered.',
+        );
+      }
+      fiberInstance = entry;
+      // Register the new alternate in case it's not already in.
+      fiberToFiberInstanceMap.set(nextFiber, fiberInstance);
+
       // Update the Fiber so we that we always keep the current Fiber on the data.
       fiberInstance.data = nextFiber;
       moveChild(fiberInstance);
+
+      if (
+        mostRecentlyInspectedElement !== null &&
+        mostRecentlyInspectedElement.id === fiberInstance.id &&
+        didFiberRender(prevFiber, nextFiber)
+      ) {
+        // If this Fiber has updated, clear cached inspected data.
+        // If it is inspected again, it may need to be re-run to obtain updated hooks values.
+        hasElementUpdatedSinceLastInspected = true;
+      }
     }
+
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
-    if (shouldIncludeInTree) {
+    if (fiberInstance !== null) {
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = fiberInstance;
       previouslyReconciledSibling = null;
@@ -2886,7 +2875,7 @@ export function attach(
           }
         } else {
           // Children are unchanged.
-          if (shouldIncludeInTree) {
+          if (fiberInstance !== null) {
             // All the remaining children will be children of this same fiber so we can just reuse them.
             // I.e. we just restore them by undoing what we did above.
             fiberInstance.firstChild = remainingReconcilingChildren;
@@ -3003,7 +2992,15 @@ export function attach(
       }
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
       hook.getFiberRoots(rendererID).forEach(root => {
-        currentRootID = getOrGenerateFiberInstance(root.current).id;
+        const current = root.current;
+        const alternate = current.alternate;
+        const newRoot = createFiberInstance(current);
+        idToDevToolsInstanceMap.set(newRoot.id, newRoot);
+        fiberToFiberInstanceMap.set(current, newRoot);
+        if (alternate) {
+          fiberToFiberInstanceMap.set(alternate, newRoot);
+        }
+        currentRootID = newRoot.id;
         setRootPseudoKey(currentRootID, root.current);
 
         // Handle multi-renderer edge-case where only some v16 renderers support profiling.
@@ -3060,7 +3057,20 @@ export function attach(
     const current = root.current;
     const alternate = current.alternate;
 
-    currentRootID = getOrGenerateFiberInstance(current).id;
+    const existingRoot =
+      fiberToFiberInstanceMap.get(current) ||
+      (alternate && fiberToFiberInstanceMap.get(alternate));
+    if (!existingRoot) {
+      const newRoot = createFiberInstance(current);
+      idToDevToolsInstanceMap.set(newRoot.id, newRoot);
+      fiberToFiberInstanceMap.set(current, newRoot);
+      if (alternate) {
+        fiberToFiberInstanceMap.set(alternate, newRoot);
+      }
+      currentRootID = newRoot.id;
+    } else {
+      currentRootID = existingRoot.id;
+    }
 
     // Before the traversals, remember to start tracking
     // our path in case we have selection to restore.
