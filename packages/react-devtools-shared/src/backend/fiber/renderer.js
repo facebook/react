@@ -2222,14 +2222,12 @@ export function attach(
       }
     }
 
-    if (!fiber._debugNeedsRemount) {
-      untrackFiber(fiberInstance);
+    untrackFiber(fiberInstance);
 
-      const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
-      if (isProfilingSupported) {
-        idToRootMap.delete(id);
-        idToTreeBaseDurationMap.delete(id);
-      }
+    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
+    if (isProfilingSupported) {
+      idToRootMap.delete(id);
+      idToTreeBaseDurationMap.delete(id);
     }
     return fiberInstance;
   }
