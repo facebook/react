@@ -855,8 +855,14 @@ export function attach(
   // (due to e.g. Suspense or error boundaries).
   // onErrorOrWarning() adds Fibers and recordPendingErrorsAndWarnings() later clears them.
   const fibersWithChangedErrorOrWarningCounts: Set<Fiber> = new Set();
-  const pendingFiberToErrorsMap: Map<Fiber, Map<string, number>> = new Map();
-  const pendingFiberToWarningsMap: Map<Fiber, Map<string, number>> = new Map();
+  const pendingFiberToErrorsMap: WeakMap<
+    Fiber,
+    Map<string, number>,
+  > = new WeakMap();
+  const pendingFiberToWarningsMap: WeakMap<
+    Fiber,
+    Map<string, number>,
+  > = new WeakMap();
 
   function clearErrorsAndWarnings() {
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
@@ -875,7 +881,7 @@ export function attach(
 
   function clearMessageCountHelper(
     instanceID: number,
-    pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
+    pendingFiberToMessageCountMap: WeakMap<Fiber, Map<string, number>>,
     forError: boolean,
   ) {
     const devtoolsInstance = idToDevToolsInstanceMap.get(instanceID);
@@ -901,7 +907,7 @@ export function attach(
       if (devtoolsInstance.kind === FIBER_INSTANCE) {
         const fiber = devtoolsInstance.data;
         // Throw out any pending changes.
-        pendingFiberToErrorsMap.delete(fiber);
+        pendingFiberToMessageCountMap.delete(fiber);
 
         if (changed) {
           // If previous flushed counts have changed, schedule an update too.
@@ -1379,9 +1385,21 @@ export function attach(
 
     idToDevToolsInstanceMap.delete(fiberInstance.id);
 
-    // Also clear any errors/warnings associated with this fiber.
-    clearErrorsForElementID(fiberInstance.id);
-    clearWarningsForElementID(fiberInstance.id);
+    const fiber = fiberInstance.data;
+
+    // Restore any errors/warnings associated with this fiber to the pending
+    // map. I.e. treat it as before we tracked the instances. This lets us
+    // restore them if we remount the same Fibers later. Otherwise we rely
+    // on the GC of the Fibers to clean them up.
+    if (fiberInstance.errors !== null) {
+      pendingFiberToErrorsMap.set(fiber, fiberInstance.errors);
+      fiberInstance.errors = null;
+    }
+    if (fiberInstance.warnings !== null) {
+      pendingFiberToWarningsMap.set(fiber, fiberInstance.warnings);
+      fiberInstance.warnings = null;
+    }
+
     if (fiberInstance.flags & FORCE_ERROR) {
       fiberInstance.flags &= ~FORCE_ERROR;
       forceErrorCount--;
@@ -1397,7 +1415,6 @@ export function attach(
       }
     }
 
-    const fiber = fiberInstance.data;
     fiberToFiberInstanceMap.delete(fiber);
     const {alternate} = fiber;
     if (alternate !== null) {
@@ -1821,7 +1838,7 @@ export function attach(
   function mergeMapsAndGetCountHelper(
     fiber: Fiber,
     fiberID: number,
-    pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
+    pendingFiberToMessageCountMap: WeakMap<Fiber, Map<string, number>>,
     forError: boolean,
   ): number {
     let newCount = 0;
@@ -1897,18 +1914,18 @@ export function attach(
         pushOperation(fiberID);
         pushOperation(errorCount);
         pushOperation(warningCount);
-      }
 
-      // Always clean up so that we don't leak.
-      pendingFiberToErrorsMap.delete(fiber);
-      pendingFiberToWarningsMap.delete(fiber);
+        // Only clear the ones that we've already shown. Leave others in case
+        // they mount later.
+        pendingFiberToErrorsMap.delete(fiber);
+        pendingFiberToWarningsMap.delete(fiber);
+      }
     });
     fibersWithChangedErrorOrWarningCounts.clear();
   }
 
   function flushPendingEvents(root: Object): void {
     // Add any pending errors and warnings to the operations array.
-    // We do this just before flushing, so we can ignore errors for no-longer-mounted Fibers.
     recordPendingErrorsAndWarnings();
 
     if (shouldBailoutWithPendingOperations()) {
