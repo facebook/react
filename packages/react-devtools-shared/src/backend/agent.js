@@ -795,10 +795,23 @@ export default class Agent extends EventEmitter<{
 
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void =
     componentFilters => {
-      for (const rendererID in this._rendererInterfaces) {
+      for (const rendererIDString in this._rendererInterfaces) {
+        const rendererID = +rendererIDString;
         const renderer = ((this._rendererInterfaces[
           (rendererID: any)
         ]: any): RendererInterface);
+        if (this._lastSelectedRendererID === rendererID) {
+          // Changing component filters will unmount and remount the DevTools tree.
+          // Track the last selection's path so we can restore the selection.
+          const path = renderer.getPathForElement(this._lastSelectedElementID);
+          if (path !== null) {
+            renderer.setTrackedPath(path);
+            this._persistedSelection = {
+              rendererID,
+              path,
+            };
+          }
+        }
         renderer.updateComponentFilters(componentFilters);
       }
     };

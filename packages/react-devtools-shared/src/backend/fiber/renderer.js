@@ -1169,6 +1169,13 @@ export function attach(
       if (alternate) {
         fiberToFiberInstanceMap.set(alternate, newRoot);
       }
+
+      // Before the traversals, remember to start tracking
+      // our path in case we have selection to restore.
+      if (trackedPath !== null) {
+        mightBeOnTrackedPath = true;
+      }
+
       currentRootID = newRoot.id;
       setRootPseudoKey(currentRootID, root.current);
       mountFiberRecursively(root.current, false);
