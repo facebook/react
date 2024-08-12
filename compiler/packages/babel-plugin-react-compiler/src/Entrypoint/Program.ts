@@ -13,6 +13,7 @@ import {
   ErrorSeverity,
 } from '../CompilerError';
 import {
+  EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
   parseEnvironmentConfig,
@@ -23,7 +24,11 @@ import {isComponentDeclaration} from '../Utils/ComponentDeclaration';
 import {isHookDeclaration} from '../Utils/HookDeclaration';
 import {assertExhaustive} from '../Utils/utils';
 import {insertGatedFunctionDeclaration} from './Gating';
-import {addImportsToProgram, updateMemoCacheFunctionImport} from './Imports';
+import {
+  addImportsToProgram,
+  updateMemoCacheFunctionImport,
+  validateRestrictedImports,
+} from './Imports';
 import {PluginOptions} from './Options';
 import {compileFn} from './Pipeline';
 import {
@@ -263,7 +268,7 @@ function isFilePartOfSources(
     return sources(filename);
   }
 
-  for (const prefix in sources) {
+  for (const prefix of sources) {
     if (filename.indexOf(prefix) !== -1) {
       return true;
     }
@@ -272,45 +277,47 @@ function isFilePartOfSources(
   return false;
 }
 
+/**
+ * `compileProgram` is directly invoked by the react-compiler babel plugin, so
+ * exceptions thrown by this function will fail the babel build.
+ * - call `handleError` if your error is recoverable.
+ *   Unless the error is a warning / info diagnostic, compilation of a function
+ *   / entire file should also be skipped.
+ * - throw an exception if the error is fatal / not recoverable.
+ *   Examples of this are invalid compiler configs or failure to codegen outlined
+ *   functions *after* already emitting optimized components / hooks that invoke
+ *   the outlined functions.
+ */
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass,
 ): void {
-  if (pass.opts.sources) {
-    if (pass.filename === null) {
-      const error = new CompilerError();
-      error.pushErrorDetail(
-        new CompilerErrorDetail({
-          reason: `Expected a filename but found none.`,
-          description:
-            "When the 'sources' config options is specified, the React compiler will only compile files with a name",
-          severity: ErrorSeverity.InvalidConfig,
-          loc: null,
-        }),
-      );
-      handleError(error, pass, null);
-      return;
-    }
-
-    if (!isFilePartOfSources(pass.opts.sources, pass.filename)) {
-      return;
-    }
-  }
-
-  // Top level "use no forget", skip this file entirely
-  if (
-    findDirectiveDisablingMemoization(program.node.directives, pass.opts) !=
-    null
-  ) {
+  if (shouldSkipCompilation(program, pass)) {
     return;
   }
 
-  const environment = parseEnvironmentConfig(pass.opts.environment ?? {});
+  /*
+   * TODO(lauren): Remove pass.opts.environment nullcheck once PluginOptions
+   * is validated
+   */
+  const environmentResult = parseEnvironmentConfig(pass.opts.environment ?? {});
+  if (environmentResult.isErr()) {
+    CompilerError.throwInvalidConfig({
+      reason:
+        'Error in validating environment config. This is an advanced setting and not meant to be used directly',
+      description: environmentResult.unwrapErr().toString(),
+      suggestions: null,
+      loc: null,
+    });
+  }
+  const environment = environmentResult.unwrap();
+  const restrictedImportsErr = validateRestrictedImports(program, environment);
+  if (restrictedImportsErr) {
+    handleError(restrictedImportsErr, pass, null);
+    return;
+  }
   const useMemoCacheIdentifier = program.scope.generateUidIdentifier('c');
   const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
-  if (hasMemoCacheFunctionImport(program, moduleName)) {
-    return;
-  }
 
   /*
    * Record lint errors and critical errors as depending on Forget's config,
@@ -332,7 +339,7 @@ export function compileProgram(
   const compiledFns: Array<CompileResult> = [];
 
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
-    const fnType = getReactFunctionType(fn, pass);
+    const fnType = getReactFunctionType(fn, pass, environment);
     if (fnType === null || ALREADY_COMPILED.has(fn.node)) {
       return;
     }
@@ -403,24 +410,9 @@ export function compileProgram(
 
     let compiledFn: CodegenFunction;
     try {
-      /*
-       * TODO(lauren): Remove pass.opts.environment nullcheck once PluginOptions
-       * is validated
-       */
-      if (environment.isErr()) {
-        CompilerError.throwInvalidConfig({
-          reason:
-            'Error in validating environment config. This is an advanced setting and not meant to be used directly',
-          description: environment.unwrapErr().toString(),
-          suggestions: null,
-          loc: null,
-        });
-      }
-      const config = environment.unwrap();
-
       compiledFn = compileFn(
         fn,
-        config,
+        environment,
         fnType,
         useMemoCacheIdentifier.name,
         pass.opts.logger,
@@ -502,6 +494,9 @@ export function compileProgram(
     }
   }
 
+  const hasLoweredContextAccess = compiledFns.some(
+    c => c.compiledFn.hasLoweredContextAccess,
+  );
   const externalFunctions: Array<ExternalFunction> = [];
   let gating: null | ExternalFunction = null;
   try {
@@ -511,38 +506,29 @@ export function compileProgram(
       externalFunctions.push(gating);
     }
 
-    const enableEmitInstrumentForget =
-      pass.opts.environment?.enableEmitInstrumentForget;
+    const lowerContextAccess = environment.lowerContextAccess;
+    if (lowerContextAccess && hasLoweredContextAccess) {
+      externalFunctions.push(lowerContextAccess);
+    }
+
+    const enableEmitInstrumentForget = environment.enableEmitInstrumentForget;
     if (enableEmitInstrumentForget != null) {
-      externalFunctions.push(
-        tryParseExternalFunction(enableEmitInstrumentForget.fn),
-      );
+      externalFunctions.push(enableEmitInstrumentForget.fn);
       if (enableEmitInstrumentForget.gating != null) {
-        externalFunctions.push(
-          tryParseExternalFunction(enableEmitInstrumentForget.gating),
-        );
+        externalFunctions.push(enableEmitInstrumentForget.gating);
       }
     }
 
-    if (pass.opts.environment?.enableEmitFreeze != null) {
-      const enableEmitFreeze = tryParseExternalFunction(
-        pass.opts.environment.enableEmitFreeze,
-      );
-      externalFunctions.push(enableEmitFreeze);
+    if (environment.enableEmitFreeze != null) {
+      externalFunctions.push(environment.enableEmitFreeze);
     }
 
-    if (pass.opts.environment?.enableEmitHookGuards != null) {
-      const enableEmitHookGuards = tryParseExternalFunction(
-        pass.opts.environment.enableEmitHookGuards,
-      );
-      externalFunctions.push(enableEmitHookGuards);
+    if (environment.enableEmitHookGuards != null) {
+      externalFunctions.push(environment.enableEmitHookGuards);
     }
 
-    if (pass.opts.environment?.enableChangeDetectionForDebugging != null) {
-      const enableChangeDetectionForDebugging = tryParseExternalFunction(
-        pass.opts.environment.enableChangeDetectionForDebugging,
-      );
-      externalFunctions.push(enableChangeDetectionForDebugging);
+    if (environment.enableChangeDetectionForDebugging != null) {
+      externalFunctions.push(environment.enableChangeDetectionForDebugging);
     }
   } catch (err) {
     handleError(err, pass, null);
@@ -585,11 +571,65 @@ export function compileProgram(
   }
 }
 
+function shouldSkipCompilation(
+  program: NodePath<t.Program>,
+  pass: CompilerPass,
+): boolean {
+  if (pass.opts.sources) {
+    if (pass.filename === null) {
+      const error = new CompilerError();
+      error.pushErrorDetail(
+        new CompilerErrorDetail({
+          reason: `Expected a filename but found none.`,
+          description:
+            "When the 'sources' config options is specified, the React compiler will only compile files with a name",
+          severity: ErrorSeverity.InvalidConfig,
+          loc: null,
+        }),
+      );
+      handleError(error, pass, null);
+      return true;
+    }
+
+    if (!isFilePartOfSources(pass.opts.sources, pass.filename)) {
+      return true;
+    }
+  }
+
+  // Top level "use no forget", skip this file entirely
+  const useNoForget = findDirectiveDisablingMemoization(
+    program.node.directives,
+    pass.opts,
+  );
+  if (useNoForget != null) {
+    pass.opts.logger?.logEvent(pass.filename, {
+      kind: 'CompileError',
+      fnLoc: null,
+      detail: {
+        severity: ErrorSeverity.Todo,
+        reason: 'Skipped due to "use no forget" directive.',
+        loc: useNoForget.loc ?? null,
+        suggestions: null,
+      },
+    });
+    return true;
+  }
+  const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
+  if (hasMemoCacheFunctionImport(program, moduleName)) {
+    return true;
+  }
+  return false;
+}
+
 function getReactFunctionType(
   fn: BabelFn,
   pass: CompilerPass,
+  /**
+   * TODO(mofeiZ): remove once we validate PluginOptions with Zod
+   */
+  environment: EnvironmentConfig,
 ): ReactFunctionType | null {
-  const hookPattern = pass.opts.environment?.hookPattern ?? null;
+  const hookPattern = environment.hookPattern;
   if (fn.node.body.type === 'BlockStatement') {
     // Opt-outs disable compilation regardless of mode
     const useNoForget = findDirectiveDisablingMemoization(

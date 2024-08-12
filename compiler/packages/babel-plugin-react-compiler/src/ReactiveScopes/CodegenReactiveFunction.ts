@@ -18,6 +18,7 @@ import {Environment, EnvironmentConfig, ExternalFunction} from '../HIR';
 import {
   ArrayPattern,
   BlockId,
+  DeclarationId,
   GeneratedSource,
   Identifier,
   IdentifierId,
@@ -96,6 +97,11 @@ export type CodegenFunction = {
     fn: CodegenFunction;
     type: ReactFunctionType | null;
   }>;
+
+  /**
+   * This is true if the compiler has the lowered useContext calls.
+   */
+  hasLoweredContextAccess: boolean;
 };
 
 export function codegenFunction(
@@ -309,9 +315,9 @@ function codegenReactiveFunction(
 ): Result<CodegenFunction, CompilerError> {
   for (const param of fn.params) {
     if (param.kind === 'Identifier') {
-      cx.temp.set(param.identifier.id, null);
+      cx.temp.set(param.identifier.declarationId, null);
     } else {
-      cx.temp.set(param.place.identifier.id, null);
+      cx.temp.set(param.place.identifier.declarationId, null);
     }
   }
 
@@ -347,6 +353,7 @@ function codegenReactiveFunction(
     prunedMemoBlocks: countMemoBlockVisitor.prunedMemoBlocks,
     prunedMemoValues: countMemoBlockVisitor.prunedMemoValues,
     outlined: [],
+    hasLoweredContextAccess: fn.env.hasLoweredContextAccess,
   });
 }
 
@@ -392,7 +399,11 @@ class Context {
   env: Environment;
   fnName: string;
   #nextCacheIndex: number = 0;
-  #declarations: Set<IdentifierId> = new Set();
+  /**
+   * Tracks which named variables have been declared to dedupe declarations,
+   * so this uses DeclarationId instead of IdentifierId
+   */
+  #declarations: Set<DeclarationId> = new Set();
   temp: Temporaries;
   errors: CompilerError = new CompilerError();
   objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
@@ -418,11 +429,11 @@ class Context {
   }
 
   declare(identifier: Identifier): void {
-    this.#declarations.add(identifier.id);
+    this.#declarations.add(identifier.declarationId);
   }
 
   hasDeclared(identifier: Identifier): boolean {
-    return this.#declarations.has(identifier.id);
+    return this.#declarations.has(identifier.declarationId);
   }
 
   synthesizeName(name: string): ValidIdentifierName {
@@ -1147,7 +1158,7 @@ function codegenTerminal(
       let catchParam = null;
       if (terminal.handlerBinding !== null) {
         catchParam = convertIdentifier(terminal.handlerBinding.identifier);
-        cx.temp.set(terminal.handlerBinding.identifier.id, null);
+        cx.temp.set(terminal.handlerBinding.identifier.declarationId, null);
       }
       return t.tryStatement(
         codegenBlock(cx, terminal.block),
@@ -1205,7 +1216,7 @@ function codegenInstructionNullable(
           kind !== InstructionKind.Reassign &&
           place.identifier.name === null
         ) {
-          cx.temp.set(place.identifier.id, null);
+          cx.temp.set(place.identifier.declarationId, null);
         }
         const isDeclared = cx.hasDeclared(place.identifier);
         hasReasign ||= isDeclared;
@@ -1261,7 +1272,7 @@ function codegenInstructionNullable(
         );
         if (instr.lvalue !== null) {
           if (instr.value.kind !== 'StoreContext') {
-            cx.temp.set(instr.lvalue.identifier.id, expr);
+            cx.temp.set(instr.lvalue.identifier.declarationId, expr);
             return null;
           } else {
             // Handle chained reassignments for context variables
@@ -1530,7 +1541,7 @@ function createCallExpression(
   }
 }
 
-type Temporaries = Map<IdentifierId, t.Expression | t.JSXText | null>;
+type Temporaries = Map<DeclarationId, t.Expression | t.JSXText | null>;
 
 function codegenLabel(id: BlockId): string {
   return `bb${id}`;
@@ -1549,7 +1560,7 @@ function codegenInstruction(
   }
   if (instr.lvalue.identifier.name === null) {
     // temporary
-    cx.temp.set(instr.lvalue.identifier.id, value);
+    cx.temp.set(instr.lvalue.identifier.declarationId, value);
     return t.emptyStatement();
   } else {
     const expressionValue = convertValueToExpression(value);
@@ -2498,7 +2509,7 @@ function codegenPlaceToExpression(cx: Context, place: Place): t.Expression {
 }
 
 function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
-  let tmp = cx.temp.get(place.identifier.id);
+  let tmp = cx.temp.get(place.identifier.declarationId);
   if (tmp != null) {
     return tmp;
   }
