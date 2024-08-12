@@ -1232,9 +1232,14 @@ function useMemoCache(size: number): Array<any> {
       data[i] = REACT_MEMO_CACHE_SENTINEL;
     }
   } else if (data.length !== size) {
-    // TODO: consider warning or throwing here
     if (__DEV__) {
-      console.error(
+      // reset cache for FastRefresh
+      data = memoCache.data[memoCache.index] = new Array(size);
+      for (let i = 0; i < size; i++) {
+        data[i] = REACT_MEMO_CACHE_SENTINEL;
+      }
+    } else {
+      throw new Error(
         'Expected a constant size argument for each invocation of useMemoCache. ' +
           'The previous cache was allocated with size %s but size %s was requested.',
         data.length,

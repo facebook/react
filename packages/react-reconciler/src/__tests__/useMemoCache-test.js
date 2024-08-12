@@ -621,4 +621,36 @@ describe('useMemoCache()', () => {
       </>,
     );
   });
+
+  // @gate enableUseMemoCacheHook
+  it('throws when cache size varies between renders in non-dev', async () => {
+    function Component(props) {
+      const cache = useMemoCache(props.cacheSize);
+      expect(Array.isArray(cache)).toBe(true);
+      expect(cache.length).toBe(props.cacheSize);
+      expect(cache[0]).toBe(MemoCacheSentinel);
+      return cache.length;
+    }
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<Component key="comp" cacheSize={1} />);
+    });
+    expect(root).toMatchRenderedOutput('1');
+
+    if (__DEV__) {
+      await act(() => {
+        root.render(<Component key="comp" cacheSize={2} />);
+      });
+      expect(root).toMatchRenderedOutput('2');
+    } else {
+      await expect(async () => {
+        await act(() => {
+          root.render(<Component key="comp" cacheSize={2} />);
+        });
+      }).rejects.toThrow(
+        'Expected a constant size argument for each invocation of useMemoCache. ' +
+          'The previous cache was allocated with size %s but size %s was requested.',
+      );
+    }
+  });
 });
