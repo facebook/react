@@ -1241,9 +1241,11 @@ function useMemoCache(size: number): Array<any> {
     } else {
       throw new Error(
         'Expected a constant size argument for each invocation of useMemoCache. ' +
-          'The previous cache was allocated with size %s but size %s was requested.',
-        data.length,
-        size,
+          'The previous cache was allocated with size ' +
+          data.length +
+          ' but size ' +
+          size +
+          ' was requested.',
       );
     }
   }
