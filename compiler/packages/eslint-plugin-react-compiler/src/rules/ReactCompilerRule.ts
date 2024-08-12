@@ -101,6 +101,8 @@ function makeSuggestions(
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
   panicThreshold: 'none',
+  // Don't emit errors on Flow suppressions--Flow already gave a signal
+  flowSuppressions: false,
 };
 
 const rule: Rule.RuleModule = {

@@ -121,8 +121,8 @@ module.exports = [
       'react-server-dom-turbopack/client.node.unbundled',
       'react-server-dom-turbopack/server',
       'react-server-dom-turbopack/server.node.unbundled',
-      'react-server-dom-turbopack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node.unbundled
-      'react-server-dom-turbopack/src/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node.unbundled
+      'react-server-dom-turbopack/src/ReactFlightDOMServerNode.js', // react-server-dom-turbopack/server.node.unbundled
+      'react-server-dom-turbopack/src/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node.unbundled
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerNode.js',
       'react-server-dom-turbopack/node-register',
       'react-server-dom-turbopack/src/ReactFlightTurbopackNodeRegister.js',
@@ -162,7 +162,7 @@ module.exports = [
       'react-server-dom-turbopack/server',
       'react-server-dom-turbopack/server.node',
       'react-server-dom-turbopack/src/ReactFlightDOMServerNode.js', // react-server-dom-turbopack/server.node
-      'react-server-dom-turbopack/src/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
+      'react-server-dom-turbopack/src/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackServer.js',
       'react-server-dom-turbopack/node-register',
@@ -371,8 +371,8 @@ module.exports = [
       'react-server-dom-turbopack',
       'react-server-dom-turbopack/client.edge',
       'react-server-dom-turbopack/server.edge',
-      'react-server-dom-turbopack/src/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
-      'react-server-dom-turbopack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
+      'react-server-dom-turbopack/src/ReactFlightDOMClientEdge.js', // react-server-dom-turbopack/client.edge
+      'react-server-dom-turbopack/src/ReactFlightDOMServerEdge.js', // react-server-dom-turbopack/server.edge
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackServer.js',
       'react-devtools',

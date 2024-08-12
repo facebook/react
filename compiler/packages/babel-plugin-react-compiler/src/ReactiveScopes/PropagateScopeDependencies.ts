@@ -8,9 +8,9 @@
 import {CompilerError} from '../CompilerError';
 import {
   BlockId,
+  DeclarationId,
   GeneratedSource,
   Identifier,
-  IdentifierId,
   InstructionId,
   InstructionKind,
   isObjectMethodType,
@@ -30,11 +30,12 @@ import {
 } from '../HIR/HIR';
 import {eachInstructionValueOperand, eachPatternOperand} from '../HIR/visitors';
 import {empty, Stack} from '../Utils/Stack';
-import {assertExhaustive} from '../Utils/utils';
+import {assertExhaustive, Iterable_some} from '../Utils/utils';
 import {
   ReactiveScopeDependencyTree,
   ReactiveScopePropertyDependency,
 } from './DeriveMinimalDependencies';
+import {areEqualPaths} from './MergeReactiveScopesThatInvalidateTogether';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
@@ -76,9 +77,9 @@ type TemporariesUsedOutsideDefiningScope = {
    * tracks all relevant temporary declarations (currently LoadLocal and PropertyLoad)
    * and the scope where they are defined
    */
-  declarations: Map<IdentifierId, ScopeId>;
+  declarations: Map<DeclarationId, ScopeId>;
   // temporaries used outside of their defining scope
-  usedOutsideDeclaringScope: Set<IdentifierId>;
+  usedOutsideDeclaringScope: Set<DeclarationId>;
 };
 class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOutsideDefiningScope> {
   scopes: Array<ScopeId> = [];
@@ -107,7 +108,10 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
       case 'LoadLocal':
       case 'LoadContext':
       case 'PropertyLoad': {
-        state.declarations.set(instruction.lvalue.identifier.id, scope);
+        state.declarations.set(
+          instruction.lvalue.identifier.declarationId,
+          scope,
+        );
         break;
       }
       default: {
@@ -121,18 +125,20 @@ class FindPromotedTemporaries extends ReactiveFunctionVisitor<TemporariesUsedOut
     place: Place,
     state: TemporariesUsedOutsideDefiningScope,
   ): void {
-    const declaringScope = state.declarations.get(place.identifier.id);
+    const declaringScope = state.declarations.get(
+      place.identifier.declarationId,
+    );
     if (declaringScope === undefined) {
       return;
     }
     if (this.scopes.indexOf(declaringScope) === -1) {
       // Declaring scope is not active === used outside declaring scope
-      state.usedOutsideDeclaringScope.add(place.identifier.id);
+      state.usedOutsideDeclaringScope.add(place.identifier.declarationId);
     }
   }
 }
 
-type DeclMap = Map<IdentifierId, Decl>;
+type DeclMap = Map<DeclarationId, Decl>;
 type Decl = {
   id: InstructionId;
   scope: Stack<ScopeTraversalState>;
@@ -280,7 +286,7 @@ class PoisonState {
 }
 
 class Context {
-  #temporariesUsedOutsideScope: Set<IdentifierId>;
+  #temporariesUsedOutsideScope: Set<DeclarationId>;
   #declarations: DeclMap = new Map();
   #reassignments: Map<Identifier, Decl> = new Map();
   // Reactive dependencies used in the current reactive scope.
@@ -307,7 +313,7 @@ class Context {
   #scopes: Stack<ScopeTraversalState> = empty();
   poisonState: PoisonState = new PoisonState(new Set(), new Set(), false);
 
-  constructor(temporariesUsedOutsideScope: Set<IdentifierId>) {
+  constructor(temporariesUsedOutsideScope: Set<DeclarationId>) {
     this.#temporariesUsedOutsideScope = temporariesUsedOutsideScope;
   }
 
@@ -377,7 +383,9 @@ class Context {
   }
 
   isUsedOutsideDeclaringScope(place: Place): boolean {
-    return this.#temporariesUsedOutsideScope.has(place.identifier.id);
+    return this.#temporariesUsedOutsideScope.has(
+      place.identifier.declarationId,
+    );
   }
 
   /*
@@ -440,8 +448,8 @@ class Context {
    * on itself.
    */
   declare(identifier: Identifier, decl: Decl): void {
-    if (!this.#declarations.has(identifier.id)) {
-      this.#declarations.set(identifier.id, decl);
+    if (!this.#declarations.has(identifier.declarationId)) {
+      this.#declarations.set(identifier.declarationId, decl);
     }
     this.#reassignments.set(identifier, decl);
   }
@@ -533,7 +541,7 @@ class Context {
      */
     const currentDeclaration =
       this.#reassignments.get(identifier) ??
-      this.#declarations.get(identifier.id);
+      this.#declarations.get(identifier.declarationId);
     const currentScope = this.currentScope.value?.value;
     return (
       currentScope != null &&
@@ -599,14 +607,23 @@ class Context {
      *  (all other decls e.g. `let x;` should be initialized in BuildHIR)
      */
     const originalDeclaration = this.#declarations.get(
-      maybeDependency.identifier.id,
+      maybeDependency.identifier.declarationId,
     );
     if (
       originalDeclaration !== undefined &&
       originalDeclaration.scope.value !== null
     ) {
       originalDeclaration.scope.each(scope => {
-        if (!this.#isScopeActive(scope.value)) {
+        if (
+          !this.#isScopeActive(scope.value) &&
+          // TODO LeaveSSA: key scope.declarations by DeclarationId
+          !Iterable_some(
+            scope.value.declarations.values(),
+            decl =>
+              decl.identifier.declarationId ===
+              maybeDependency.identifier.declarationId,
+          )
+        ) {
           scope.value.declarations.set(maybeDependency.identifier.id, {
             identifier: maybeDependency.identifier,
             scope: originalDeclaration.scope.value!.value,
@@ -637,11 +654,14 @@ class Context {
     const currentScope = this.currentScope.value?.value;
     if (
       currentScope != null &&
-      !Array.from(currentScope.reassignments).some(
-        identifier => identifier.id === place.identifier.id,
+      !Iterable_some(
+        currentScope.reassignments,
+        identifier =>
+          identifier.declarationId === place.identifier.declarationId,
       ) &&
       this.#checkValidDependency({identifier: place.identifier, path: []})
     ) {
+      // TODO LeaveSSA: scope.reassignments should be keyed by declarationid
       currentScope.reassignments.add(place.identifier);
     }
   }
@@ -680,7 +700,37 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     const scopeDependencies = context.enter(scope.scope, () => {
       this.visitBlock(scope.instructions, context);
     });
-    scope.scope.dependencies = scopeDependencies;
+    for (const candidateDep of scopeDependencies) {
+      if (
+        !Iterable_some(
+          scope.scope.dependencies,
+          existingDep =>
+            existingDep.identifier.declarationId ===
+              candidateDep.identifier.declarationId &&
+            areEqualPaths(existingDep.path, candidateDep.path),
+        )
+      ) {
+        scope.scope.dependencies.add(candidateDep);
+      }
+    }
+    /*
+     * TODO LeaveSSA: fix existing bug with duplicate deps and reassignments
+     * see fixture ssa-cascading-eliminated-phis, note that we cache `x`
+     * twice because its both a dep and a reassignment.
+     *
+     * for (const reassignment of scope.scope.reassignments) {
+     *   if (
+     *     Iterable_some(
+     *       scope.scope.dependencies.values(),
+     *       dep =>
+     *         dep.identifier.declarationId === reassignment.declarationId &&
+     *         dep.path.length === 0,
+     *     )
+     *   ) {
+     *     scope.scope.reassignments.delete(reassignment);
+     *   }
+     * }
+     */
   }
 
   override visitPrunedScope(

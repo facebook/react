@@ -7,8 +7,9 @@
 
 import {CompilerError} from '../CompilerError';
 import {
+  DeclarationId,
   Environment,
-  IdentifierId,
+  Identifier,
   InstructionId,
   Pattern,
   Place,
@@ -24,7 +25,7 @@ import {
   isMutableEffect,
 } from '../HIR';
 import {getFunctionCallSignature} from '../Inference/InferReferenceEffects';
-import {assertExhaustive} from '../Utils/utils';
+import {assertExhaustive, getOrInsertDefault} from '../Utils/utils';
 import {getPlaceScope} from './BuildReactiveBlocks';
 import {
   ReactiveFunctionTransform,
@@ -115,9 +116,9 @@ export function pruneNonEscapingScopes(fn: ReactiveFunction): void {
   const state = new State(fn.env);
   for (const param of fn.params) {
     if (param.kind === 'Identifier') {
-      state.declare(param.identifier.id);
+      state.declare(param.identifier.declarationId);
     } else {
-      state.declare(param.place.identifier.id);
+      state.declare(param.place.identifier.declarationId);
     }
   }
   visitReactiveFunction(fn, new CollectDependenciesVisitor(fn.env), state);
@@ -193,14 +194,14 @@ function joinAliases(
 type IdentifierNode = {
   level: MemoizationLevel;
   memoized: boolean;
-  dependencies: Set<IdentifierId>;
+  dependencies: Set<DeclarationId>;
   scopes: Set<ScopeId>;
   seen: boolean;
 };
 
 // A scope node describing its dependencies
 type ScopeNode = {
-  dependencies: Array<IdentifierId>;
+  dependencies: Array<DeclarationId>;
   seen: boolean;
 };
 
@@ -209,20 +210,30 @@ class State {
   env: Environment;
   /*
    * Maps lvalues for LoadLocal to the identifier being loaded, to resolve indirections
-   * in subsequent lvalues/rvalues
+   * in subsequent lvalues/rvalues.
+   *
+   * NOTE: this pass uses DeclarationId rather than IdentifierId because the pass is not
+   * aware of control-flow, only data flow via mutation. Instead of precisely modeling
+   * control flow, we analyze all values that may flow into a particular program variable,
+   * and then whether that program variable may escape (if so, the values flowing in may
+   * escape too). Thus we use DeclarationId to captures all values that may flow into
+   * a particular program variable, regardless of control flow paths.
+   *
+   * In the future when we convert to HIR everywhere this pass can account for control
+   * flow and use SSA ids.
    */
-  definitions: Map<IdentifierId, IdentifierId> = new Map();
+  definitions: Map<DeclarationId, DeclarationId> = new Map();
 
-  identifiers: Map<IdentifierId, IdentifierNode> = new Map();
+  identifiers: Map<DeclarationId, IdentifierNode> = new Map();
   scopes: Map<ScopeId, ScopeNode> = new Map();
-  escapingValues: Set<IdentifierId> = new Set();
+  escapingValues: Set<DeclarationId> = new Set();
 
   constructor(env: Environment) {
     this.env = env;
   }
 
   // Declare a new identifier, used for function id and params
-  declare(id: IdentifierId): void {
+  declare(id: DeclarationId): void {
     this.identifiers.set(id, {
       level: MemoizationLevel.Never,
       memoized: false,
@@ -240,14 +251,16 @@ class State {
   visitOperand(
     id: InstructionId,
     place: Place,
-    identifier: IdentifierId,
+    identifier: DeclarationId,
   ): void {
     const scope = getPlaceScope(id, place);
     if (scope !== null) {
       let node = this.scopes.get(scope.id);
       if (node === undefined) {
         node = {
-          dependencies: [...scope.dependencies].map(dep => dep.identifier.id),
+          dependencies: [...scope.dependencies].map(
+            dep => dep.identifier.declarationId,
+          ),
           seen: false,
         };
         this.scopes.set(scope.id, node);
@@ -269,11 +282,11 @@ class State {
  * to determine which other values should be memoized. Returns a set of all identifiers
  * that should be memoized.
  */
-function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
-  const memoized = new Set<IdentifierId>();
+function computeMemoizedIdentifiers(state: State): Set<DeclarationId> {
+  const memoized = new Set<DeclarationId>();
 
   // Visit an identifier, optionally forcing it to be memoized
-  function visit(id: IdentifierId, forceMemoize: boolean = false): boolean {
+  function visit(id: DeclarationId, forceMemoize: boolean = false): boolean {
     const node = state.identifiers.get(id);
     CompilerError.invariant(node !== undefined, {
       reason: `Expected a node for all identifiers, none found for \`${id}\``,
@@ -832,14 +845,16 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     // Associate all the rvalues with the instruction's scope if it has one
     for (const operand of aliasing.rvalues) {
       const operandId =
-        state.definitions.get(operand.identifier.id) ?? operand.identifier.id;
+        state.definitions.get(operand.identifier.declarationId) ??
+        operand.identifier.declarationId;
       state.visitOperand(instruction.id, operand, operandId);
     }
 
     // Add the operands as dependencies of all lvalues.
     for (const {place: lvalue, level} of aliasing.lvalues) {
       const lvalueId =
-        state.definitions.get(lvalue.identifier.id) ?? lvalue.identifier.id;
+        state.definitions.get(lvalue.identifier.declarationId) ??
+        lvalue.identifier.declarationId;
       let node = state.identifiers.get(lvalueId);
       if (node === undefined) {
         node = {
@@ -858,7 +873,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
        */
       for (const operand of aliasing.rvalues) {
         const operandId =
-          state.definitions.get(operand.identifier.id) ?? operand.identifier.id;
+          state.definitions.get(operand.identifier.declarationId) ??
+          operand.identifier.declarationId;
         if (operandId === lvalueId) {
           continue;
         }
@@ -870,8 +886,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
 
     if (instruction.value.kind === 'LoadLocal' && instruction.lvalue !== null) {
       state.definitions.set(
-        instruction.lvalue.identifier.id,
-        instruction.value.place.identifier.id,
+        instruction.lvalue.identifier.declarationId,
+        instruction.value.place.identifier.declarationId,
       );
     } else if (
       instruction.value.kind === 'CallExpression' ||
@@ -897,7 +913,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
         }
         for (const operand of instruction.value.args) {
           const place = operand.kind === 'Spread' ? operand.place : operand;
-          state.escapingValues.add(place.identifier.id);
+          state.escapingValues.add(place.identifier.declarationId);
         }
       }
     }
@@ -910,20 +926,25 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     this.traverseTerminal(stmt, state);
 
     if (stmt.terminal.kind === 'return') {
-      state.escapingValues.add(stmt.terminal.value.identifier.id);
+      state.escapingValues.add(stmt.terminal.value.identifier.declarationId);
     }
   }
 }
 
 // Prune reactive scopes that do not have any memoized outputs
 class PruneScopesTransform extends ReactiveFunctionTransform<
-  Set<IdentifierId>
+  Set<DeclarationId>
 > {
   prunedScopes: Set<ScopeId> = new Set();
+  /**
+   * Track reassignments so we can correctly set `pruned` flags for
+   * inlined useMemos.
+   */
+  reassignments: Map<DeclarationId, Set<Identifier>> = new Map();
 
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
-    state: Set<IdentifierId>,
+    state: Set<DeclarationId>,
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, state);
 
@@ -945,11 +966,11 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
     }
 
     const hasMemoizedOutput =
-      Array.from(scopeBlock.scope.declarations.keys()).some(id =>
-        state.has(id),
+      Array.from(scopeBlock.scope.declarations.values()).some(decl =>
+        state.has(decl.identifier.declarationId),
       ) ||
       Array.from(scopeBlock.scope.reassignments).some(identifier =>
-        state.has(identifier.id),
+        state.has(identifier.declarationId),
       );
     if (hasMemoizedOutput) {
       return {kind: 'keep'};
@@ -962,24 +983,45 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
     }
   }
 
+  /**
+   * If we pruned the scope for a non-escaping value, we know it doesn't
+   * need to be memoized. Remove associated `Memoize` instructions so that
+   * we don't report false positives on "missing" memoization of these values.
+   */
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: Set<IdentifierId>,
+    state: Set<DeclarationId>,
   ): Transformed<ReactiveStatement> {
     this.traverseInstruction(instruction, state);
 
-    /**
-     * If we pruned the scope for a non-escaping value, we know it doesn't
-     * need to be memoized. Remove associated `Memoize` instructions so that
-     * we don't report false positives on "missing" memoization of these values.
-     */
-    if (instruction.value.kind === 'FinishMemoize') {
-      const identifier = instruction.value.decl.identifier;
+    const value = instruction.value;
+    if (value.kind === 'StoreLocal' && value.lvalue.kind === 'Reassign') {
+      const ids = getOrInsertDefault(
+        this.reassignments,
+        value.lvalue.place.identifier.declarationId,
+        new Set(),
+      );
+      ids.add(value.value.identifier);
+    } else if (value.kind === 'FinishMemoize') {
+      let decls;
+      if (value.decl.identifier.scope == null) {
+        /**
+         * If the manual memo was a useMemo that got inlined, iterate through
+         * all reassignments to the iife temporary to ensure they're memoized.
+         */
+        decls = this.reassignments.get(value.decl.identifier.declarationId) ?? [
+          value.decl.identifier,
+        ];
+      } else {
+        decls = [value.decl.identifier];
+      }
+
       if (
-        identifier.scope !== null &&
-        this.prunedScopes.has(identifier.scope.id)
+        [...decls].every(
+          decl => decl.scope == null || this.prunedScopes.has(decl.scope.id),
+        )
       ) {
-        instruction.value.pruned = true;
+        value.pruned = true;
       }
     }
 
