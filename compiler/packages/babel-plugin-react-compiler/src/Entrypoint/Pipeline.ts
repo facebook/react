@@ -452,17 +452,17 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  promoteUsedTemporaries(reactiveFunction);
-  yield log({
-    kind: 'reactive',
-    name: 'PromoteUsedTemporaries',
-    value: reactiveFunction,
-  });
-
   pruneUnusedLValues(reactiveFunction);
   yield log({
     kind: 'reactive',
     name: 'PruneUnusedLValues',
+    value: reactiveFunction,
+  });
+
+  promoteUsedTemporaries(reactiveFunction);
+  yield log({
+    kind: 'reactive',
+    name: 'PromoteUsedTemporaries',
     value: reactiveFunction,
   });
 
