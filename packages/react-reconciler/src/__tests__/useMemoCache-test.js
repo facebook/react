@@ -649,7 +649,7 @@ describe('useMemoCache()', () => {
         });
       }).rejects.toThrow(
         'Expected a constant size argument for each invocation of useMemoCache. ' +
-          'The previous cache was allocated with size %s but size %s was requested.',
+          'The previous cache was allocated with size 1 but size 2 was requested.',
       );
     }
   });
