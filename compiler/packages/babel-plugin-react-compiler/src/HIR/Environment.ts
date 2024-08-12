@@ -238,6 +238,7 @@ const EnvironmentConfigSchema = z.object({
    * this option to the empty array.
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
+  validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -436,8 +437,11 @@ const EnvironmentConfigSchema = z.object({
   enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
 
   /*
-   * If enabled, this lowers any calls to `useContext` hook to use a selector
-   * function.
+   * If specified a value, the compiler lowers any calls to `useContext` to use
+   * this value as the callee.
+   *
+   * A selector function is compiled and passed as an argument along with the
+   * context to this function call.
    *
    * The compiler automatically figures out the keys by looking for the immediate
    * destructuring of the return value from the useContext call. In the future,
@@ -449,10 +453,10 @@ const EnvironmentConfigSchema = z.object({
    * const {foo, bar} = useContext(MyContext);
    *
    * // output
-   * const {foo, bar} = useContext(MyContext, (c) => [c.foo, c.bar]);
+   * const {foo, bar} = useCompiledContext(MyContext, (c) => [c.foo, c.bar]);
    * ```
    */
-  enableLowerContextAccess: z.boolean().nullable().default(false),
+  lowerContextAccess: ExternalFunctionSchema.nullish(),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
@@ -549,6 +553,7 @@ export class Environment {
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
   useMemoCacheIdentifier: string;
+  hasLoweredContextAccess: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -572,6 +577,7 @@ export class Environment {
     this.useMemoCacheIdentifier = useMemoCacheIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
+    this.hasLoweredContextAccess = false;
 
     if (
       config.disableMemoizationForDebugging &&
