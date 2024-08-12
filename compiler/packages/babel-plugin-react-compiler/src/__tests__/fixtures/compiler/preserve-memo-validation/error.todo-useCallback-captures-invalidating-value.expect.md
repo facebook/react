@@ -31,7 +31,7 @@ export const FIXTURE_ENTRYPOINT = {
   11 |   x.push(props);
   12 |
 > 13 |   return useCallback(() => [x], [x]);
-     |                      ^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly (13:13)
+     |                      ^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (13:13)
   14 | }
   15 |
   16 | export const FIXTURE_ENTRYPOINT = {

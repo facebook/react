@@ -6,7 +6,7 @@
  */
 
 import {
-  Identifier,
+  DeclarationId,
   InstructionKind,
   ReactiveFunction,
   ReactiveInstruction,
@@ -27,7 +27,7 @@ export function pruneHoistedContexts(fn: ReactiveFunction): void {
   visitReactiveFunction(fn, new Visitor(), hoistedIdentifiers);
 }
 
-type HoistedIdentifiers = Set<Identifier>;
+type HoistedIdentifiers = Set<DeclarationId>;
 
 class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
   override transformInstruction(
@@ -39,13 +39,13 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
       instruction.value.kind === 'DeclareContext' &&
       instruction.value.lvalue.kind === 'HoistedConst'
     ) {
-      state.add(instruction.value.lvalue.place.identifier);
+      state.add(instruction.value.lvalue.place.identifier.declarationId);
       return {kind: 'remove'};
     }
 
     if (
       instruction.value.kind === 'StoreContext' &&
-      state.has(instruction.value.lvalue.place.identifier)
+      state.has(instruction.value.lvalue.place.identifier.declarationId)
     ) {
       return {
         kind: 'replace',
