@@ -83,7 +83,6 @@ export const enableTaint = true;
 export const enableTransitionTracing = false;
 export const enableTrustedTypesIntegration = false;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableUseDeferredValueInitialArg = true;
 export const enableUseEffectEventHook = false;
 export const enableUseMemoCacheHook = true;
 export const favorSafetyOverHydrationPerf = true;

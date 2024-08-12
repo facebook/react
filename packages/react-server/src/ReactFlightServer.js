@@ -1029,7 +1029,7 @@ function renderFunctionComponent<Props>(
       const componentDebugID = debugID;
       const componentName =
         (Component: any).displayName || Component.name || '';
-      const componentEnv = request.environmentName();
+      const componentEnv = (0, request.environmentName)();
       request.pendingChunks++;
       componentDebugInfo = ({
         name: componentName,
@@ -1056,14 +1056,8 @@ function renderFunctionComponent<Props>(
       // We've emitted the latest environment for this task so we track that.
       task.environmentName = componentEnv;
 
-      if (enableOwnerStacks) {
-        warnForMissingKey(
-          request,
-          key,
-          validated,
-          componentDebugInfo,
-          task.debugTask,
-        );
+      if (enableOwnerStacks && validated === 2) {
+        warnForMissingKey(request, key, componentDebugInfo, task.debugTask);
       }
     }
     prepareToUseHooksForComponent(prevThenableState, componentDebugInfo);
@@ -1256,15 +1250,10 @@ function renderFunctionComponent<Props>(
 function warnForMissingKey(
   request: Request,
   key: null | string,
-  validated: number,
   componentDebugInfo: ReactComponentInfo,
   debugTask: null | ConsoleTask,
 ): void {
   if (__DEV__) {
-    if (validated !== 2) {
-      return;
-    }
-
     let didWarnForKey = request.didWarnForKey;
     if (didWarnForKey == null) {
       didWarnForKey = request.didWarnForKey = new WeakSet();
@@ -1573,6 +1562,21 @@ function renderElement(
   } else if (type === REACT_FRAGMENT_TYPE && key === null) {
     // For key-less fragments, we add a small optimization to avoid serializing
     // it as a wrapper.
+    if (__DEV__ && enableOwnerStacks && validated === 2) {
+      // Create a fake owner node for the error stack.
+      const componentDebugInfo: ReactComponentInfo = {
+        name: 'Fragment',
+        env: (0, request.environmentName)(),
+        owner: task.debugOwner,
+        stack:
+          task.debugStack === null
+            ? null
+            : filterStackTrace(request, task.debugStack, 1),
+        debugStack: task.debugStack,
+        debugTask: task.debugTask,
+      };
+      warnForMissingKey(request, key, componentDebugInfo, task.debugTask);
+    }
     const prevImplicitSlot = task.implicitSlot;
     if (task.keyPath === null) {
       task.implicitSlot = true;
@@ -2921,7 +2925,7 @@ function emitErrorChunk(
   if (__DEV__) {
     let message;
     let stack: ReactStackTrace;
-    let env = request.environmentName();
+    let env = (0, request.environmentName)();
     try {
       if (error instanceof Error) {
         // eslint-disable-next-line react-internal/safe-string-coercion
@@ -3442,7 +3446,7 @@ function emitConsoleChunk(
   }
 
   // TODO: Don't double badge if this log came from another Flight Client.
-  const env = request.environmentName();
+  const env = (0, request.environmentName)();
   const payload = [methodName, stackTrace, owner, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
@@ -3611,7 +3615,7 @@ function retryTask(request: Request, task: Task): void {
       request.writtenObjects.set(resolvedModel, serializeByValueID(task.id));
 
       if (__DEV__) {
-        const currentEnv = request.environmentName();
+        const currentEnv = (0, request.environmentName)();
         if (currentEnv !== task.environmentName) {
           // The environment changed since we last emitted any debug information for this
           // task. We emit an entry that just includes the environment name change.
@@ -3629,7 +3633,7 @@ function retryTask(request: Request, task: Task): void {
       const json: string = stringify(resolvedModel);
 
       if (__DEV__) {
-        const currentEnv = request.environmentName();
+        const currentEnv = (0, request.environmentName)();
         if (currentEnv !== task.environmentName) {
           // The environment changed since we last emitted any debug information for this
           // task. We emit an entry that just includes the environment name change.
