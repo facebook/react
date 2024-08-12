@@ -22,25 +22,15 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMemoizationGuarantees
+// @validatePreserveExistingMemoizationGuarantees
 
 import { useMemo } from "react";
 
 // It's correct to infer a useMemo value is non-allocating
 // and not provide it with a reactive scope
 function useFoo(num1, num2) {
-  const $ = _c(3);
   let t0;
-  let t1;
-  if ($[0] !== num1 || $[1] !== num2) {
-    t1 = Math.min(num1, num2);
-    $[0] = num1;
-    $[1] = num2;
-    $[2] = t1;
-  } else {
-    t1 = $[2];
-  }
-  t0 = t1;
+  t0 = Math.min(num1, num2);
   return t0;
 }
 

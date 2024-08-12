@@ -51,6 +51,7 @@ function makePluginOptions(
   let validatePreserveExistingMemoizationGuarantees = false;
   let enableChangeDetectionForDebugging = null;
   let customMacros: null | Array<Macro> = null;
+  let validateBlocklistedImports = null;
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(
@@ -176,6 +177,27 @@ function makePluginOptions(
     }
   }
 
+  const validateBlocklistedImportsMatch =
+    /@validateBlocklistedImports\(([^)]+)\)/.exec(firstLine);
+  if (
+    validateBlocklistedImportsMatch &&
+    validateBlocklistedImportsMatch.length > 1 &&
+    validateBlocklistedImportsMatch[1].trim().length > 0
+  ) {
+    validateBlocklistedImports = validateBlocklistedImportsMatch[1]
+      .split(' ')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
+  let lowerContextAccess = null;
+  if (firstLine.includes('@lowerContextAccess')) {
+    lowerContextAccess = {
+      source: 'react-compiler-runtime',
+      importSpecifierName: 'useContext_withSelector',
+    };
+  }
+
   let logs: Array<{filename: string | null; event: LoggerEvent}> = [];
   let logger: Logger | null = null;
   if (firstLine.includes('@logger')) {
@@ -228,6 +250,8 @@ function makePluginOptions(
       hookPattern,
       validatePreserveExistingMemoizationGuarantees,
       enableChangeDetectionForDebugging,
+      lowerContextAccess,
+      validateBlocklistedImports,
     },
     compilationMode,
     logger,
