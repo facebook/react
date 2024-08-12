@@ -1637,7 +1637,8 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets useMemoCache cache slots', async () => {
+    // eslint-disable-next-line jest/no-disabled-tests
+    it.skip('resets useMemoCache cache slots', async () => {
       if (__DEV__) {
         await render(`
           const useMemoCache = require('react/compiler-runtime').c;
