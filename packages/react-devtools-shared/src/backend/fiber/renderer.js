@@ -2184,7 +2184,8 @@ export function attach(
     return fiberInstance;
   }
 
-  function recordUnmount(fiber: Fiber): null | FiberInstance {
+  function recordUnmount(fiberInstance: FiberInstance): void {
+    const fiber = fiberInstance.data;
     if (__DEBUG__) {
       debug('recordUnmount()', fiber, null);
     }
@@ -2201,25 +2202,13 @@ export function attach(
       }
     }
 
-    const fiberInstance = getFiberInstanceUnsafe(fiber);
-    if (fiberInstance === null) {
-      // If we've never seen this Fiber, it might be inside of a legacy render Suspense fragment (so the store is not even aware of it).
-      // In that case we can just ignore it or it will cause errors later on.
-      // One example of this is a Lazy component that never resolves before being unmounted.
-      //
-      // This also might indicate a Fast Refresh force-remount scenario.
-      //
-      // TODO: This is fragile and can obscure actual bugs.
-      return null;
-    }
-
     const id = fiberInstance.id;
     const isRoot = fiber.tag === HostRoot;
     if (isRoot) {
       // Roots must be removed only after all children have been removed.
       // So we track it separately.
       pendingUnmountedRootID = id;
-    } else if (!shouldFilterFiber(fiber)) {
+    } else {
       // To maintain child-first ordering,
       // we'll push it into one of these queues,
       // and later arrange them in the correct order.
@@ -2233,7 +2222,6 @@ export function attach(
       idToRootMap.delete(id);
       idToTreeBaseDurationMap.delete(id);
     }
-    return fiberInstance;
   }
 
   // Running state of the remaining children from the previous version of this parent that
@@ -2456,7 +2444,7 @@ export function attach(
       remainingReconcilingChildren = stashedRemaining;
     }
     if (instance.kind === FIBER_INSTANCE) {
-      recordUnmount(instance.data);
+      recordUnmount(instance);
     }
     removeChild(instance);
   }
