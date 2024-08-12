@@ -200,8 +200,8 @@ function getProperty(object: any, property: string) {
 
 function registerRefreshUpdate(
   update: RefreshUpdate,
-  family,
-  shouldPreserveState,
+  family: Family,
+  shouldPreserveState: boolean,
 ) {
   if (shouldPreserveState) {
     update.updatedFamilies.add(family);
