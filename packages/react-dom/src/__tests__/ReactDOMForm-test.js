@@ -385,12 +385,16 @@ describe('ReactDOMForm', () => {
           </form>,
         );
       });
-    }).toErrorDev([
-      'Warning: In HTML, <form> cannot be a descendant of <form>.\n' +
-        'This will cause a hydration error.' +
+    }).toErrorDev(
+      'In HTML, <form> cannot be a descendant of <form>.\n' +
+        'This will cause a hydration error.\n' +
+        '\n' +
+        '> <form action={function outerAction}>\n' +
+        '    <input>\n' +
+        '>   <form action={function innerAction} ref={{current:null}}>\n' +
         '\n    in form (at **)' +
-        '\n    in form (at **)',
-    ]);
+        (gate(flags => flags.enableOwnerStacks) ? '' : '\n    in form (at **)'),
+    );
 
     await submit(ref.current);
 
@@ -989,7 +993,7 @@ describe('ReactDOMForm', () => {
   });
 
   // @gate enableAsyncActions
-  test('useActionState updates state asynchronously and queues multiple actions', async () => {
+  it('useActionState updates state asynchronously and queues multiple actions', async () => {
     let actionCounter = 0;
     async function action(state, type) {
       actionCounter++;
@@ -1020,15 +1024,15 @@ describe('ReactDOMForm', () => {
     assertLog(['0']);
     expect(container.textContent).toBe('0');
 
-    await act(() => dispatch('increment'));
+    await act(() => startTransition(() => dispatch('increment')));
     assertLog(['Async action started [1]', 'Pending 0']);
     expect(container.textContent).toBe('Pending 0');
 
     // Dispatch a few more actions. None of these will start until the previous
     // one finishes.
-    await act(() => dispatch('increment'));
-    await act(() => dispatch('decrement'));
-    await act(() => dispatch('increment'));
+    await act(() => startTransition(() => dispatch('increment')));
+    await act(() => startTransition(() => dispatch('decrement')));
+    await act(() => startTransition(() => dispatch('increment')));
     assertLog([]);
 
     // Each action starts as soon as the previous one finishes.
@@ -1049,7 +1053,7 @@ describe('ReactDOMForm', () => {
   });
 
   // @gate enableAsyncActions
-  test('useActionState supports inline actions', async () => {
+  it('useActionState supports inline actions', async () => {
     let increment;
     function App({stepSize}) {
       const [state, dispatch, isPending] = useActionState(async prevState => {
@@ -1067,7 +1071,7 @@ describe('ReactDOMForm', () => {
 
     // Perform an action. This will increase the state by 1, as defined by the
     // stepSize prop.
-    await act(() => increment());
+    await act(() => startTransition(() => increment()));
     assertLog(['Pending 0', '1']);
 
     // Now increase the stepSize prop to 10. Subsequent steps will increase
@@ -1076,12 +1080,12 @@ describe('ReactDOMForm', () => {
     assertLog(['1']);
 
     // Increment again. The state should increase by 10.
-    await act(() => increment());
+    await act(() => startTransition(() => increment()));
     assertLog(['Pending 1', '11']);
   });
 
   // @gate enableAsyncActions
-  test('useActionState: dispatch throws if called during render', async () => {
+  it('useActionState: dispatch throws if called during render', async () => {
     function App() {
       const [state, dispatch, isPending] = useActionState(async () => {}, 0);
       dispatch();
@@ -1097,7 +1101,7 @@ describe('ReactDOMForm', () => {
   });
 
   // @gate enableAsyncActions
-  test('useActionState: queues multiple actions and runs them in order', async () => {
+  it('useActionState: queues multiple actions and runs them in order', async () => {
     let action;
     function App() {
       const [state, dispatch, isPending] = useActionState(
@@ -1113,11 +1117,11 @@ describe('ReactDOMForm', () => {
     await act(() => root.render(<App />));
     assertLog(['A']);
 
-    await act(() => action('B'));
+    await act(() => startTransition(() => action('B')));
     // The first dispatch will update the pending state.
     assertLog(['Pending A']);
-    await act(() => action('C'));
-    await act(() => action('D'));
+    await act(() => startTransition(() => action('C')));
+    await act(() => startTransition(() => action('D')));
     assertLog([]);
 
     await act(() => resolveText('B'));
@@ -1129,7 +1133,7 @@ describe('ReactDOMForm', () => {
   });
 
   // @gate enableAsyncActions
-  test(
+  it(
     'useActionState: when calling a queued action, uses the implementation ' +
       'that was current at the time it was dispatched, not the most recent one',
     async () => {
@@ -1151,10 +1155,10 @@ describe('ReactDOMForm', () => {
 
       // Dispatch two actions. The first one is async, so it forces the second
       // one into an async queue.
-      await act(() => action('First action'));
+      await act(() => startTransition(() => action('First action')));
       assertLog(['Initial (pending)']);
       // This action won't run until the first one finishes.
-      await act(() => action('Second action'));
+      await act(() => startTransition(() => action('Second action')));
 
       // While the first action is still pending, update a prop. This causes the
       // inline action implementation to change, but it should not affect the
@@ -1169,12 +1173,14 @@ describe('ReactDOMForm', () => {
 
       // Confirm that if we dispatch yet another action, it uses the updated
       // action implementation.
-      await expect(act(() => action('Third action'))).rejects.toThrow('Oops!');
+      await expect(
+        act(() => startTransition(() => action('Third action'))),
+      ).rejects.toThrow('Oops!');
     },
   );
 
   // @gate enableAsyncActions
-  test('useActionState: works if action is sync', async () => {
+  it('useActionState: works if action is sync', async () => {
     let increment;
     function App({stepSize}) {
       const [state, dispatch, isPending] = useActionState(prevState => {
@@ -1192,7 +1198,7 @@ describe('ReactDOMForm', () => {
 
     // Perform an action. This will increase the state by 1, as defined by the
     // stepSize prop.
-    await act(() => increment());
+    await act(() => startTransition(() => increment()));
     assertLog(['Pending 0', '1']);
 
     // Now increase the stepSize prop to 10. Subsequent steps will increase
@@ -1201,12 +1207,12 @@ describe('ReactDOMForm', () => {
     assertLog(['1']);
 
     // Increment again. The state should increase by 10.
-    await act(() => increment());
+    await act(() => startTransition(() => increment()));
     assertLog(['Pending 1', '11']);
   });
 
   // @gate enableAsyncActions
-  test('useActionState: can mix sync and async actions', async () => {
+  it('useActionState: can mix sync and async actions', async () => {
     let action;
     function App() {
       const [state, dispatch, isPending] = useActionState((s, a) => a, 'A');
@@ -1219,12 +1225,12 @@ describe('ReactDOMForm', () => {
     await act(() => root.render(<App />));
     assertLog(['A']);
 
-    await act(() => action(getText('B')));
+    await act(() => startTransition(() => action(getText('B'))));
     // The first dispatch will update the pending state.
     assertLog(['Pending A']);
-    await act(() => action('C'));
-    await act(() => action(getText('D')));
-    await act(() => action('E'));
+    await act(() => startTransition(() => action('C')));
+    await act(() => startTransition(() => action(getText('D'))));
+    await act(() => startTransition(() => action('E')));
     assertLog([]);
 
     await act(() => resolveText('B'));
@@ -1234,15 +1240,13 @@ describe('ReactDOMForm', () => {
   });
 
   // @gate enableAsyncActions
-  test('useActionState: error handling (sync action)', async () => {
-    let resetErrorBoundary;
+  it('useActionState: error handling (sync action)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
         return {error};
       }
       render() {
-        resetErrorBoundary = () => this.setState({error: null});
         if (this.state.error !== null) {
           return <Text text={'Caught an error: ' + this.state.error.message} />;
         }
@@ -1273,7 +1277,7 @@ describe('ReactDOMForm', () => {
     );
     assertLog(['A']);
 
-    await act(() => action('Oops!'));
+    await act(() => startTransition(() => action('Oops!')));
     assertLog([
       // Action begins, error has not thrown yet.
       'Pending A',
@@ -1282,31 +1286,16 @@ describe('ReactDOMForm', () => {
       'Caught an error: Oops!',
     ]);
     expect(container.textContent).toBe('Caught an error: Oops!');
-
-    // Reset the error boundary
-    await act(() => resetErrorBoundary());
-    assertLog(['A']);
-
-    // Trigger an error again, but this time, perform another action that
-    // overrides the first one and fixes the error
-    await act(() => {
-      action('Oops!');
-      action('B');
-    });
-    assertLog(['Pending A', 'B']);
-    expect(container.textContent).toBe('B');
   });
 
   // @gate enableAsyncActions
-  test('useActionState: error handling (async action)', async () => {
-    let resetErrorBoundary;
+  it('useActionState: error handling (async action)', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
         return {error};
       }
       render() {
-        resetErrorBoundary = () => this.setState({error: null});
         if (this.state.error !== null) {
           return <Text text={'Caught an error: ' + this.state.error.message} />;
         }
@@ -1338,31 +1327,75 @@ describe('ReactDOMForm', () => {
     );
     assertLog(['A']);
 
-    await act(() => action('Oops!'));
+    await act(() => startTransition(() => action('Oops!')));
     // The first dispatch will update the pending state.
     assertLog(['Pending A']);
     await act(() => resolveText('Oops!'));
     assertLog(['Caught an error: Oops!', 'Caught an error: Oops!']);
     expect(container.textContent).toBe('Caught an error: Oops!');
+  });
 
-    // Reset the error boundary
-    await act(() => resetErrorBoundary());
+  it('useActionState: when an action errors, subsequent actions are canceled', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={'Caught an error: ' + this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    let action;
+    function App() {
+      const [state, dispatch, isPending] = useActionState(async (s, a) => {
+        Scheduler.log('Start action: ' + a);
+        const text = await getText(a);
+        if (text.endsWith('!')) {
+          throw new Error(text);
+        }
+        return text;
+      }, 'A');
+      action = dispatch;
+      const pending = isPending ? 'Pending ' : '';
+      return <Text text={pending + state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() =>
+      root.render(
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>,
+      ),
+    );
     assertLog(['A']);
 
-    // Trigger an error again, but this time, perform another action that
-    // overrides the first one and fixes the error
-    await act(() => {
-      action('Oops!');
-      action('B');
-    });
-    assertLog(['Pending A']);
-    await act(() => resolveText('B'));
-    assertLog(['B']);
-    expect(container.textContent).toBe('B');
+    await act(() => startTransition(() => action('Oops!')));
+    assertLog(['Start action: Oops!', 'Pending A']);
+
+    // Queue up another action after the one will error.
+    await act(() => startTransition(() => action('Should never run')));
+    assertLog([]);
+
+    // The first dispatch will update the pending state.
+    await act(() => resolveText('Oops!'));
+    assertLog(['Caught an error: Oops!', 'Caught an error: Oops!']);
+    expect(container.textContent).toBe('Caught an error: Oops!');
+
+    // Attempt to dispatch another action. This should not run either.
+    await act(() =>
+      startTransition(() => action('This also should never run')),
+    );
+    assertLog([]);
+    expect(container.textContent).toBe('Caught an error: Oops!');
   });
 
   // @gate enableAsyncActions
-  test('useActionState works in StrictMode', async () => {
+  it('useActionState works in StrictMode', async () => {
     let actionCounter = 0;
     async function action(state, type) {
       actionCounter++;
@@ -1399,7 +1432,7 @@ describe('ReactDOMForm', () => {
     assertLog(['0']);
     expect(container.textContent).toBe('0');
 
-    await act(() => dispatch('increment'));
+    await act(() => startTransition(() => dispatch('increment')));
     assertLog(['Async action started [1]', 'Pending 0']);
     expect(container.textContent).toBe('Pending 0');
 
@@ -1408,7 +1441,78 @@ describe('ReactDOMForm', () => {
     expect(container.textContent).toBe('1');
   });
 
-  test('uncontrolled form inputs are reset after the action completes', async () => {
+  it('useActionState does not wrap action in a transition unless dispatch is in a transition', async () => {
+    let dispatch;
+    function App() {
+      const [state, _dispatch] = useActionState(() => {
+        return state + 1;
+      }, 0);
+      dispatch = _dispatch;
+      return <AsyncText text={'Count: ' + state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() =>
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
+      ),
+    );
+    assertLog(['Suspend! [Count: 0]', 'Loading...']);
+    await act(() => resolveText('Count: 0'));
+    assertLog(['Count: 0']);
+
+    // Dispatch outside of a transition. This will trigger a loading state.
+    await act(() => dispatch());
+    assertLog(['Suspend! [Count: 1]', 'Loading...']);
+    expect(container.textContent).toBe('Loading...');
+
+    await act(() => resolveText('Count: 1'));
+    assertLog(['Count: 1']);
+    expect(container.textContent).toBe('Count: 1');
+
+    // Now dispatch inside of a transition. This one does not trigger a
+    // loading state.
+    await act(() => startTransition(() => dispatch()));
+    assertLog(['Count: 1', 'Suspend! [Count: 2]', 'Loading...']);
+    expect(container.textContent).toBe('Count: 1');
+
+    await act(() => resolveText('Count: 2'));
+    assertLog(['Count: 2']);
+    expect(container.textContent).toBe('Count: 2');
+  });
+
+  it('useActionState warns if async action is dispatched outside of a transition', async () => {
+    let dispatch;
+    function App() {
+      const [state, _dispatch] = useActionState(async () => {
+        return state + 1;
+      }, 0);
+      dispatch = _dispatch;
+      return <AsyncText text={'Count: ' + state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog(['Suspend! [Count: 0]']);
+    await act(() => resolveText('Count: 0'));
+    assertLog(['Count: 0']);
+
+    // Dispatch outside of a transition.
+    await act(() => dispatch());
+    assertConsoleErrorDev([
+      [
+        'An async function was passed to useActionState, but it was ' +
+          'dispatched outside of an action context',
+        {withoutStack: true},
+      ],
+    ]);
+    assertLog(['Suspend! [Count: 1]']);
+    expect(container.textContent).toBe('Count: 0');
+  });
+
+  it('uncontrolled form inputs are reset after the action completes', async () => {
     const formRef = React.createRef();
     const inputRef = React.createRef();
     const divRef = React.createRef();
@@ -1486,7 +1590,7 @@ describe('ReactDOMForm', () => {
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
   });
 
-  test('requestFormReset schedules a form reset after transition completes', async () => {
+  it('requestFormReset schedules a form reset after transition completes', async () => {
     // This is the same as the previous test, except the form is updated with
     // a userspace action instead of a built-in form action.
 
@@ -1571,7 +1675,7 @@ describe('ReactDOMForm', () => {
     expect(divRef.current.textContent).toEqual('Current username: acdlite');
   });
 
-  test(
+  it(
     'requestFormReset works with inputs that are not descendants ' +
       'of the form element',
     async () => {
@@ -1664,7 +1768,7 @@ describe('ReactDOMForm', () => {
     },
   );
 
-  test('reset multiple forms in the same transition', async () => {
+  it('reset multiple forms in the same transition', async () => {
     const formRefA = React.createRef();
     const formRefB = React.createRef();
 
@@ -1753,7 +1857,7 @@ describe('ReactDOMForm', () => {
     expect(formRefB.current.elements.inputName.value).toBe('B2');
   });
 
-  test('requestFormReset throws if the form is not managed by React', async () => {
+  it('requestFormReset throws if the form is not managed by React', async () => {
     container.innerHTML = `
       <form id="myform">
         <input id="input" type="text" name="greeting" />
@@ -1774,7 +1878,7 @@ describe('ReactDOMForm', () => {
     expect(input.value).toBe('');
   });
 
-  test('requestFormReset throws on a non-form DOM element', async () => {
+  it('requestFormReset throws on a non-form DOM element', async () => {
     const root = ReactDOMClient.createRoot(container);
     const ref = React.createRef();
     await act(() => root.render(<div ref={ref}>Hi</div>));
@@ -1784,7 +1888,7 @@ describe('ReactDOMForm', () => {
     expect(() => requestFormReset(div)).toThrow('Invalid form element.');
   });
 
-  test('warns if requestFormReset is called outside of a transition', async () => {
+  it('warns if requestFormReset is called outside of a transition', async () => {
     const formRef = React.createRef();
     const inputRef = React.createRef();
 
@@ -1833,7 +1937,7 @@ describe('ReactDOMForm', () => {
     expect(inputRef.current.value).toBe('Initial');
   });
 
-  test("regression: submitter's formAction prop is coerced correctly before checking if it exists", async () => {
+  it("regression: submitter's formAction prop is coerced correctly before checking if it exists", async () => {
     function App({submitterAction}) {
       return (
         <form action={() => Scheduler.log('Form action')}>
@@ -1877,7 +1981,7 @@ describe('ReactDOMForm', () => {
     );
   });
 
-  test(
+  it(
     'useFormStatus is activated if startTransition is called ' +
       'inside preventDefault-ed submit event',
     async () => {
@@ -1945,7 +2049,7 @@ describe('ReactDOMForm', () => {
     },
   );
 
-  test('useFormStatus is not activated if startTransition is not called', async () => {
+  it('useFormStatus is not activated if startTransition is not called', async () => {
     function Output({value}) {
       const {pending} = useFormStatus();
 
@@ -2016,7 +2120,7 @@ describe('ReactDOMForm', () => {
     expect(inputRef.current.value).toBe('Updated again after submission');
   });
 
-  test('useFormStatus is not activated if event is not preventDefault-ed ', async () => {
+  it('useFormStatus is not activated if event is not preventDefault-ed', async () => {
     function Output({value}) {
       const {pending} = useFormStatus();
       return <Text text={pending ? `${value} (pending...)` : value} />;
@@ -2071,7 +2175,7 @@ describe('ReactDOMForm', () => {
     expect(outputRef.current.textContent).toBe('Initial');
   });
 
-  test('useFormStatus coerces the value of the "action" prop', async () => {
+  it('useFormStatus coerces the value of the "action" prop', async () => {
     function Status() {
       const {pending, action} = useFormStatus();
 

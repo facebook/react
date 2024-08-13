@@ -1,6 +1,6 @@
 function foo(props) {
   let x, y;
-  ({ x, y } = { x: props.a, y: props.b });
+  ({x, y} = {x: props.a, y: props.b});
   console.log(x); // prevent DCE from eliminating `x` altogether
   x = props.c;
   return x + y;
@@ -8,6 +8,6 @@ function foo(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: foo,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };

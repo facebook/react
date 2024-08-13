@@ -60,13 +60,13 @@ function createDrainHandler(destination: Destination, request: Request) {
 function createCancelHandler(request: Request, reason: string) {
   return () => {
     stopFlowing(request);
-    // eslint-disable-next-line react-internal/prod-error-codes
     abort(request, new Error(reason));
   };
 }
 
 type Options = {
-  environmentName?: string,
+  environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
   identifierPrefix?: string,
@@ -89,8 +89,9 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
-    options ? options.environmentName : undefined,
     options ? options.temporaryReferences : undefined,
+    __DEV__ && options ? options.environmentName : undefined,
+    __DEV__ && options ? options.filterStackFrame : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);

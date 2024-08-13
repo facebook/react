@@ -5,15 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError, Effect, ErrorSeverity } from "..";
+import {CompilerError, Effect, ErrorSeverity} from '..';
 import {
+  DeclarationId,
   GeneratedSource,
   Identifier,
   IdentifierId,
-  Instruction,
   InstructionValue,
   ManualMemoDependency,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
@@ -21,15 +22,15 @@ import {
   ReactiveValue,
   ScopeId,
   SourceLocation,
-} from "../HIR";
-import { printManualMemoDependency } from "../HIR/PrintHIR";
-import { eachInstructionValueOperand } from "../HIR/visitors";
-import { collectMaybeMemoDependencies } from "../Inference/DropManualMemoization";
-import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
+} from '../HIR';
+import {printManualMemoDependency} from '../HIR/PrintHIR';
+import {eachInstructionValueOperand} from '../HIR/visitors';
+import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {
   ReactiveFunctionVisitor,
   visitReactiveFunction,
-} from "../ReactiveScopes/visitors";
+} from '../ReactiveScopes/visitors';
+import {getOrInsertDefault} from '../Utils/utils';
 
 /**
  * Validates that all explicit manual memoization (useMemo/useCallback) was accurately
@@ -52,6 +53,16 @@ export function validatePreservedManualMemoization(fn: ReactiveFunction): void {
 const DEBUG = false;
 
 type ManualMemoBlockState = {
+  /**
+   * Tracks reassigned temporaries.
+   * This is necessary because useMemo calls are usually inlined.
+   * Inlining produces a `let` declaration, followed by reassignments
+   * to the newly declared variable (one per return statement).
+   * Since InferReactiveScopes does not merge scopes across reassigned
+   * variables (except in the case of a mutate-after-phi), we need to
+   * track reassignments to validate we're retaining manual memo.
+   */
+  reassignments: Map<DeclarationId, Set<Identifier>>;
   // The source of the original memoization, used when reporting errors
   loc: SourceLocation;
 
@@ -83,7 +94,7 @@ type ManualMemoBlockState = {
    * } else { ... }
    * ```
    */
-  decls: Set<IdentifierId>;
+  decls: Set<DeclarationId>;
 
   /*
    * normalized depslist from useMemo/useCallback
@@ -100,12 +111,12 @@ type VisitorState = {
 
 function prettyPrintScopeDependency(val: ReactiveScopeDependency): string {
   let rootStr;
-  if (val.identifier.name?.kind === "named") {
+  if (val.identifier.name?.kind === 'named') {
     rootStr = val.identifier.name.value;
   } else {
-    rootStr = "[unnamed]";
+    rootStr = '[unnamed]';
   }
-  return `${rootStr}${val.path.length > 0 ? "." : ""}${val.path.join(".")}`;
+  return `${rootStr}${val.path.length > 0 ? '.' : ''}${val.path.join('.')}`;
 }
 
 enum CompareDependencyResult {
@@ -118,37 +129,37 @@ enum CompareDependencyResult {
 
 function merge(
   a: CompareDependencyResult,
-  b: CompareDependencyResult
+  b: CompareDependencyResult,
 ): CompareDependencyResult {
   return Math.max(a, b);
 }
 
 function getCompareDependencyResultDescription(
-  result: CompareDependencyResult
+  result: CompareDependencyResult,
 ): string {
   switch (result) {
     case CompareDependencyResult.Ok:
-      return "dependencies equal";
+      return 'dependencies equal';
     case CompareDependencyResult.RootDifference:
     case CompareDependencyResult.PathDifference:
-      return "inferred different dependency than source";
+      return 'inferred different dependency than source';
     case CompareDependencyResult.RefAccessDifference:
-      return "differences in ref.current access";
+      return 'differences in ref.current access';
     case CompareDependencyResult.Subpath:
-      return "inferred less specific property than source";
+      return 'inferred less specific property than source';
   }
 }
 
 function compareDeps(
   inferred: ManualMemoDependency,
-  source: ManualMemoDependency
+  source: ManualMemoDependency,
 ): CompareDependencyResult {
   const rootsEqual =
-    (inferred.root.kind === "Global" &&
-      source.root.kind === "Global" &&
+    (inferred.root.kind === 'Global' &&
+      source.root.kind === 'Global' &&
       inferred.root.identifierName === source.root.identifierName) ||
-    (inferred.root.kind === "NamedLocal" &&
-      source.root.kind === "NamedLocal" &&
+    (inferred.root.kind === 'NamedLocal' &&
+      source.root.kind === 'NamedLocal' &&
       inferred.root.value.identifier.id === source.root.value.identifier.id);
   if (!rootsEqual) {
     return CompareDependencyResult.RootDifference;
@@ -166,14 +177,14 @@ function compareDeps(
     isSubpath &&
     (source.path.length === inferred.path.length ||
       (inferred.path.length >= source.path.length &&
-        !inferred.path.includes("current")))
+        !inferred.path.includes('current')))
   ) {
     return CompareDependencyResult.Ok;
   } else {
     if (isSubpath) {
       if (
-        source.path.includes("current") ||
-        inferred.path.includes("current")
+        source.path.includes('current') ||
+        inferred.path.includes('current')
       ) {
         return CompareDependencyResult.RefAccessDifference;
       } else {
@@ -205,10 +216,10 @@ function compareDeps(
 function validateInferredDep(
   dep: ReactiveScopeDependency,
   temporaries: Map<IdentifierId, ManualMemoDependency>,
-  declsWithinMemoBlock: Set<IdentifierId>,
+  declsWithinMemoBlock: Set<DeclarationId>,
   validDepsInMemoBlock: Array<ManualMemoDependency>,
   errorState: CompilerError,
-  memoLocation: SourceLocation
+  memoLocation: SourceLocation,
 ): void {
   let normalizedDep: ManualMemoDependency;
   const maybeNormalizedRoot = temporaries.get(dep.identifier.id);
@@ -218,17 +229,17 @@ function validateInferredDep(
       path: [...maybeNormalizedRoot.path, ...dep.path],
     };
   } else {
-    CompilerError.invariant(dep.identifier.name?.kind === "named", {
+    CompilerError.invariant(dep.identifier.name?.kind === 'named', {
       reason:
-        "ValidatePreservedManualMemoization: expected scope dependency to be named",
+        'ValidatePreservedManualMemoization: expected scope dependency to be named',
       loc: GeneratedSource,
       suggestions: null,
     });
     normalizedDep = {
       root: {
-        kind: "NamedLocal",
+        kind: 'NamedLocal',
         value: {
-          kind: "Identifier",
+          kind: 'Identifier',
           identifier: dep.identifier,
           loc: GeneratedSource,
           effect: Effect.Read,
@@ -240,8 +251,8 @@ function validateInferredDep(
   }
   for (const decl of declsWithinMemoBlock) {
     if (
-      normalizedDep.root.kind === "NamedLocal" &&
-      decl === normalizedDep.root.value.identifier.id
+      normalizedDep.root.kind === 'NamedLocal' &&
+      decl === normalizedDep.root.value.identifier.declarationId
     ) {
       return;
     }
@@ -258,16 +269,16 @@ function validateInferredDep(
   errorState.push({
     severity: ErrorSeverity.CannotPreserveMemoization,
     reason:
-      "React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected",
+      'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected',
     description: DEBUG
       ? `The inferred dependency was \`${prettyPrintScopeDependency(
-          dep
+          dep,
         )}\`, but the source dependencies were [${validDepsInMemoBlock
-          .map((dep) => printManualMemoDependency(dep, true))
-          .join(", ")}]. Detail: ${
+          .map(dep => printManualMemoDependency(dep, true))
+          .join(', ')}]. Detail: ${
           errorDiagnostic
             ? getCompareDependencyResultDescription(errorDiagnostic)
-            : "none"
+            : 'none'
         }`
       : null,
     loc: memoLocation,
@@ -276,40 +287,68 @@ function validateInferredDep(
 }
 
 class Visitor extends ReactiveFunctionVisitor<VisitorState> {
+  /**
+   * Records all completed scopes (regardless of transitive memoization
+   * of scope dependencies)
+   *
+   * Both @scopes and @prunedScopes are live sets. We rely on iterating
+   * the reactive-ir in evaluation order, as they are used to determine
+   * whether scope dependencies / declarations have completed mutation.
+   */
   scopes: Set<ScopeId> = new Set();
-  scopeMapping = new Map();
+  prunedScopes: Set<ScopeId> = new Set();
   temporaries: Map<IdentifierId, ManualMemoDependency> = new Map();
 
-  collectMaybeMemoDependencies(
+  /**
+   * Recursively visit values and instructions to collect declarations
+   * and property loads.
+   * @returns a @{ManualMemoDependency} representing the variable +
+   * property reads represented by @value
+   */
+  recordDepsInValue(
     value: ReactiveValue,
-    state: VisitorState
+    state: VisitorState,
   ): ManualMemoDependency | null {
     switch (value.kind) {
-      case "SequenceExpression": {
+      case 'SequenceExpression': {
         for (const instr of value.instructions) {
           this.visitInstruction(instr, state);
         }
-        const result = this.collectMaybeMemoDependencies(value.value, state);
-
+        const result = this.recordDepsInValue(value.value, state);
         return result;
       }
-      case "OptionalExpression": {
-        return this.collectMaybeMemoDependencies(value.value, state);
+      case 'OptionalExpression': {
+        return this.recordDepsInValue(value.value, state);
       }
-      case "ReactiveFunctionValue":
-      case "ConditionalExpression":
-      case "LogicalExpression": {
+      case 'ReactiveFunctionValue': {
+        CompilerError.throwTodo({
+          reason:
+            'Handle ReactiveFunctionValue in ValidatePreserveManualMemoization',
+          loc: value.loc,
+        });
+      }
+      case 'ConditionalExpression': {
+        this.recordDepsInValue(value.test, state);
+        this.recordDepsInValue(value.consequent, state);
+        this.recordDepsInValue(value.alternate, state);
+        return null;
+      }
+      case 'LogicalExpression': {
+        this.recordDepsInValue(value.left, state);
+        this.recordDepsInValue(value.right, state);
         return null;
       }
       default: {
         const dep = collectMaybeMemoDependencies(value, this.temporaries);
-        if (value.kind === "StoreLocal" || value.kind === "StoreContext") {
+        if (value.kind === 'StoreLocal' || value.kind === 'StoreContext') {
           const storeTarget = value.lvalue.place;
-          state.manualMemoState?.decls.add(storeTarget.identifier.id);
-          if (storeTarget.identifier.name?.kind === "named" && dep == null) {
+          state.manualMemoState?.decls.add(
+            storeTarget.identifier.declarationId,
+          );
+          if (storeTarget.identifier.name?.kind === 'named' && dep == null) {
             const dep: ManualMemoDependency = {
               root: {
-                kind: "NamedLocal",
+                kind: 'NamedLocal',
                 value: storeTarget,
               },
               path: [],
@@ -325,26 +364,25 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
   recordTemporaries(instr: ReactiveInstruction, state: VisitorState): void {
     const temporaries = this.temporaries;
-    const { value } = instr;
-    const lvalId = instr.lvalue?.identifier.id;
+    const {lvalue, value} = instr;
+    const lvalId = lvalue?.identifier.id;
     if (lvalId != null && temporaries.has(lvalId)) {
       return;
     }
-    const isNamedLocal =
-      lvalId != null && instr.lvalue?.identifier.name?.kind === "named";
-    if (isNamedLocal && state.manualMemoState != null) {
-      state.manualMemoState.decls.add(lvalId);
+    const isNamedLocal = lvalue?.identifier.name?.kind === 'named';
+    if (lvalue !== null && isNamedLocal && state.manualMemoState != null) {
+      state.manualMemoState.decls.add(lvalue.identifier.declarationId);
     }
 
-    const maybeDep = this.collectMaybeMemoDependencies(value, state);
+    const maybeDep = this.recordDepsInValue(value, state);
     if (lvalId != null) {
       if (maybeDep != null) {
         temporaries.set(lvalId, maybeDep);
       } else if (isNamedLocal) {
         temporaries.set(lvalId, {
           root: {
-            kind: "NamedLocal",
-            value: { ...(instr.lvalue as Place) },
+            kind: 'NamedLocal',
+            value: {...(instr.lvalue as Place)},
           },
           path: [],
         });
@@ -354,7 +392,7 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
 
   override visitScope(
     scopeBlock: ReactiveScopeBlock,
-    state: VisitorState
+    state: VisitorState,
   ): void {
     this.traverseScope(scopeBlock, state);
 
@@ -369,48 +407,56 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
           state.manualMemoState.decls,
           state.manualMemoState.depsFromSource,
           state.errors,
-          state.manualMemoState.loc
+          state.manualMemoState.loc,
         );
       }
     }
 
-    /*
-     * Record scopes that exist in the AST so we can later check to see if
-     * effect dependencies which should be memoized (have a scope assigned)
-     * actually are memoized (that scope exists).
-     * However, we only record scopes if *their* dependencies are also
-     * memoized, allowing a transitive memoization check.
-     */
-    let areDependenciesMemoized = true;
-    for (const dep of scopeBlock.scope.dependencies) {
-      if (isUnmemoized(dep.identifier, this.scopes)) {
-        areDependenciesMemoized = false;
-        break;
-      }
+    this.scopes.add(scopeBlock.scope.id);
+    for (const id of scopeBlock.scope.merged) {
+      this.scopes.add(id);
     }
-    if (areDependenciesMemoized) {
-      this.scopes.add(scopeBlock.scope.id);
-      for (const id of scopeBlock.scope.merged) {
-        this.scopes.add(id);
-      }
-    }
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: VisitorState,
+  ): void {
+    this.traversePrunedScope(scopeBlock, state);
+    this.prunedScopes.add(scopeBlock.scope.id);
   }
 
   override visitInstruction(
     instruction: ReactiveInstruction,
-    state: VisitorState
+    state: VisitorState,
   ): void {
-    this.traverseInstruction(instruction, state);
+    /**
+     * We don't invoke traverseInstructions because `recordDepsInValue`
+     * recursively visits ReactiveValues and instructions
+     */
     this.recordTemporaries(instruction, state);
-    if (instruction.value.kind === "StartMemoize") {
+    const value = instruction.value;
+    if (
+      value.kind === 'StoreLocal' &&
+      value.lvalue.kind === 'Reassign' &&
+      state.manualMemoState != null
+    ) {
+      const ids = getOrInsertDefault(
+        state.manualMemoState.reassignments,
+        value.lvalue.place.identifier.declarationId,
+        new Set(),
+      );
+      ids.add(value.value.identifier);
+    }
+    if (value.kind === 'StartMemoize') {
       let depsFromSource: Array<ManualMemoDependency> | null = null;
-      if (instruction.value.deps != null) {
-        depsFromSource = instruction.value.deps;
+      if (value.deps != null) {
+        depsFromSource = value.deps;
       }
       CompilerError.invariant(state.manualMemoState == null, {
-        reason: "Unexpected nested StartMemoize instructions",
-        description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${instruction.value.manualMemoId}`,
-        loc: instruction.value.loc,
+        reason: 'Unexpected nested StartMemoize instructions',
+        description: `Bad manual memoization ids: ${state.manualMemoState?.manualMemoId}, ${value.manualMemoId}`,
+        loc: value.loc,
         suggestions: null,
       });
 
@@ -418,42 +464,86 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         loc: instruction.loc,
         decls: new Set(),
         depsFromSource,
-        manualMemoId: instruction.value.manualMemoId,
+        manualMemoId: value.manualMemoId,
+        reassignments: new Map(),
       };
-    }
-    if (instruction.value.kind === "FinishMemoize") {
-      CompilerError.invariant(
-        state.manualMemoState != null &&
-          state.manualMemoState.manualMemoId === instruction.value.manualMemoId,
-        {
-          reason: "Unexpected mismatch between StartMemoize and FinishMemoize",
-          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${instruction.value.manualMemoId}`,
-          loc: instruction.value.loc,
-          suggestions: null,
-        }
-      );
-      state.manualMemoState = null;
-    }
 
-    const isDep = instruction.value.kind === "StartMemoize";
-    const isDecl =
-      instruction.value.kind === "FinishMemoize" && !instruction.value.pruned;
-    if (isDep || isDecl) {
-      for (const value of eachInstructionValueOperand(
-        instruction.value as InstructionValue
+      /**
+       * We check that each scope dependency is either:
+       * (1) Not scoped
+       *     Checking `identifier.scope == null` is a proxy for whether the dep
+       *     is a primitive, global, or other guaranteed non-allocating value.
+       *     Non-allocating values do not need memoization.
+       *     Note that this is a conservative estimate as some primitive-typed
+       *     variables do receive scopes.
+       * (2) Scoped (a maybe newly-allocated value with a mutable range)
+       *     Here, we check that the dependency's scope has completed before
+       *     the manual useMemo as a proxy for mutable-range checking. This
+       *     validates that there are no potential rule-of-react violations
+       *     in source.
+       *     Note that scope range is an overly conservative proxy as we merge
+       *     overlapping ranges.
+       *     See fixture `error.false-positive-useMemo-overlap-scopes`
+       */
+      for (const {identifier, loc} of eachInstructionValueOperand(
+        value as InstructionValue,
       )) {
         if (
-          isMutable(instruction as Instruction, value) ||
-          (isDecl && isUnmemoized(value.identifier, this.scopes))
+          identifier.scope != null &&
+          !this.scopes.has(identifier.scope.id) &&
+          !this.prunedScopes.has(identifier.scope.id)
         ) {
           state.errors.push({
             reason:
-              "React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value may be mutated later, which could cause the value to change unexpectedly",
+              'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly',
             description: null,
             severity: ErrorSeverity.CannotPreserveMemoization,
-            loc: typeof instruction.loc !== "symbol" ? instruction.loc : null,
+            loc,
             suggestions: null,
           });
+        }
+      }
+    }
+    if (value.kind === 'FinishMemoize') {
+      CompilerError.invariant(
+        state.manualMemoState != null &&
+          state.manualMemoState.manualMemoId === value.manualMemoId,
+        {
+          reason: 'Unexpected mismatch between StartMemoize and FinishMemoize',
+          description: `Encountered StartMemoize id=${state.manualMemoState?.manualMemoId} followed by FinishMemoize id=${value.manualMemoId}`,
+          loc: value.loc,
+          suggestions: null,
+        },
+      );
+      const reassignments = state.manualMemoState.reassignments;
+      state.manualMemoState = null;
+      if (!value.pruned) {
+        for (const {identifier, loc} of eachInstructionValueOperand(
+          value as InstructionValue,
+        )) {
+          let decls;
+          if (identifier.scope == null) {
+            /**
+             * If the manual memo was a useMemo that got inlined, iterate through
+             * all reassignments to the iife temporary to ensure they're memoized.
+             */
+            decls = reassignments.get(identifier.declarationId) ?? [identifier];
+          } else {
+            decls = [identifier];
+          }
+
+          for (const identifier of decls) {
+            if (isUnmemoized(identifier, this.scopes)) {
+              state.errors.push({
+                reason:
+                  'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.',
+                description: null,
+                severity: ErrorSeverity.CannotPreserveMemoization,
+                loc,
+                suggestions: null,
+              });
+            }
+          }
         }
       }
     }

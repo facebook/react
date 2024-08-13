@@ -3,8 +3,15 @@
 
 ```javascript
 function Component(props) {
-  const item = useFragment(graphql`...`, props.item);
-  return item.items?.map((item) => renderItem(item)) ?? [];
+  const item = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.item
+  );
+  return item.items?.map(item => renderItem(item)) ?? [];
 }
 
 ```
@@ -15,16 +22,26 @@ function Component(props) {
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
   const $ = _c(2);
-  const item = useFragment(graphql`...`, props.item);
+  const item = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.item,
+  );
   let t0;
   if ($[0] !== item.items) {
-    t0 = item.items?.map((item_0) => renderItem(item_0)) ?? [];
+    t0 = item.items?.map(_temp) ?? [];
     $[0] = item.items;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
   return t0;
+}
+function _temp(item_0) {
+  return renderItem(item_0);
 }
 
 ```

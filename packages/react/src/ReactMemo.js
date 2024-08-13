@@ -51,6 +51,7 @@ export function memo<Props>(
           Object.defineProperty(type, 'name', {
             value: name,
           });
+          type.displayName = name;
         }
       },
     });

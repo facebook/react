@@ -7,6 +7,7 @@ let useState;
 let useEffect;
 let startTransition;
 let assertLog;
+let assertConsoleErrorDev;
 let waitForPaint;
 
 // TODO: Migrate tests to React DOM instead of React Noop
@@ -26,6 +27,7 @@ describe('ReactFlushSync', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+    assertConsoleErrorDev = InternalTestUtils.assertConsoleErrorDev;
     waitForPaint = InternalTestUtils.waitForPaint;
   });
 
@@ -72,13 +74,11 @@ describe('ReactFlushSync', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   it('changes priority of updates in useEffect', async () => {
-    spyOnDev(console, 'error').mockImplementation(() => {});
-
     function App() {
       const [syncState, setSyncState] = useState(0);
       const [state, setState] = useState(0);
@@ -102,30 +102,20 @@ describe('ReactFlushSync', () => {
 
       // The passive effect will schedule a sync update and a normal update.
       // They should commit in two separate batches. First the sync one.
-      await waitForPaint(
-        gate(flags => flags.enableUnifiedSyncLane) ? ['1, 1'] : ['1, 0'],
-      );
+      await waitForPaint(['1, 1']);
 
       // The remaining update is not sync
       ReactDOM.flushSync();
       assertLog([]);
-
-      if (gate(flags => flags.enableUnifiedSyncLane)) {
-        await waitForPaint([]);
-      } else {
-        // Now flush it.
-        await waitForPaint(['1, 1']);
-      }
-    });
-    expect(getVisibleChildren(container)).toEqual('1, 1');
-
-    if (__DEV__) {
-      expect(console.error.mock.calls[0][0]).toContain(
+      assertConsoleErrorDev([
         'flushSync was called from inside a lifecycle method. React ' +
           'cannot flush when React is already rendering. Consider moving this ' +
-          'call to a scheduler task or micro task.%s',
-      );
-    }
+          'call to a scheduler task or micro task.',
+      ]);
+
+      await waitForPaint([]);
+    });
+    expect(getVisibleChildren(container)).toEqual('1, 1');
   });
 
   it('supports nested flushSync with startTransition', async () => {

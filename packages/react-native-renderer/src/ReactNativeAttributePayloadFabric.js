@@ -14,7 +14,10 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import isArray from 'shared/isArray';
 
-import {enableAddPropertiesFastPath} from 'shared/ReactFeatureFlags';
+import {
+  enableAddPropertiesFastPath,
+  enableShallowPropDiffing,
+} from 'shared/ReactFeatureFlags';
 
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
@@ -342,7 +345,7 @@ function diffProperties(
     // Pattern match on: attributeConfig
     if (typeof attributeConfig !== 'object') {
       // case: !Object is the default case
-      if (defaultDiffer(prevProp, nextProp)) {
+      if (enableShallowPropDiffing || defaultDiffer(prevProp, nextProp)) {
         // a normal leaf has changed
         (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
           propKey
@@ -354,6 +357,7 @@ function diffProperties(
     ) {
       // case: CustomAttributeConfiguration
       const shouldUpdate =
+        enableShallowPropDiffing ||
         prevProp === undefined ||
         (typeof attributeConfig.diff === 'function'
           ? attributeConfig.diff(prevProp, nextProp)
@@ -449,17 +453,20 @@ function fastAddProperties(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  let attributeConfig;
-  let prop;
+  // Flatten nested style props.
+  if (isArray(props)) {
+    for (let i = 0; i < props.length; i++) {
+      payload = fastAddProperties(payload, props[i], validAttributes);
+    }
+    return payload;
+  }
 
   for (const propKey in props) {
-    prop = props[propKey];
+    const prop = props[propKey];
 
-    if (prop === undefined) {
-      continue;
-    }
-
-    attributeConfig = ((validAttributes[propKey]: any): AttributeConfiguration);
+    const attributeConfig = ((validAttributes[
+      propKey
+    ]: any): AttributeConfiguration);
 
     if (attributeConfig == null) {
       continue;
@@ -467,7 +474,14 @@ function fastAddProperties(
 
     let newValue;
 
-    if (typeof prop === 'function') {
+    if (prop === undefined) {
+      // Discard the prop if it was previously defined.
+      if (payload && payload[propKey] !== undefined) {
+        newValue = null;
+      } else {
+        continue;
+      }
+    } else if (typeof prop === 'function') {
       // A function prop. It represents an event handler. Pass it to native as 'true'.
       newValue = true;
     } else if (typeof attributeConfig !== 'object') {
@@ -477,7 +491,7 @@ function fastAddProperties(
       // An atomic prop with custom processing.
       newValue = attributeConfig.process(prop);
     } else if (typeof attributeConfig.diff === 'function') {
-      // An atomic prop with custom diffing. We don't do diffing here.
+      // An atomic prop with custom diffing. We don't need to do diffing when adding props.
       newValue = prop;
     }
 
@@ -489,17 +503,6 @@ function fastAddProperties(
       continue;
     }
 
-    // Not-atomic prop that needs to be flattened. Likely it's the 'style' prop.
-
-    // It can be an array.
-    if (isArray(prop)) {
-      for (let i = 0; i < prop.length; i++) {
-        payload = fastAddProperties(payload, prop[i], attributeConfig);
-      }
-      continue;
-    }
-
-    // Or it can be an object.
     payload = fastAddProperties(payload, prop, attributeConfig);
   }
 
@@ -514,11 +517,7 @@ function addProperties(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  if (enableAddPropertiesFastPath) {
-    return fastAddProperties(updatePayload, props, validAttributes);
-  } else {
-    return diffProperties(updatePayload, emptyObject, props, validAttributes);
-  }
+  return diffProperties(updatePayload, emptyObject, props, validAttributes);
 }
 
 /**
@@ -538,11 +537,11 @@ export function create(
   props: Object,
   validAttributes: AttributeConfiguration,
 ): null | Object {
-  return addProperties(
-    null, // updatePayload
-    props,
-    validAttributes,
-  );
+  if (enableAddPropertiesFastPath) {
+    return fastAddProperties(null, props, validAttributes);
+  } else {
+    return addProperties(null, props, validAttributes);
+  }
 }
 
 export function diff(

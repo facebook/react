@@ -44,6 +44,7 @@ export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
+export const enableFabricCompleteRootInCommitPhase = false;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
@@ -51,11 +52,9 @@ export const syncLaneExpirationMs = 250;
 export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableLazyContextPropagation = false;
+export const enableLazyContextPropagation = __EXPERIMENTAL__;
+export const enableContextProfiling = false;
 export const enableLegacyHidden = false;
-export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = __EXPERIMENTAL__;
-export const allowConcurrentByDefault = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
@@ -71,7 +70,7 @@ export const enableAsyncActions = true;
 export const alwaysThrottleRetries = true;
 
 export const passChildrenWhenCloningPersistedNodes = false;
-export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+export const enablePersistedModeClonedFlag = false;
 export const disableClientCache = true;
 
 export const enableServerComponentLogs = true;
@@ -79,6 +78,7 @@ export const enableInfiniteRenderLoopDetection = false;
 export const enableAddPropertiesFastPath = false;
 
 export const renameElementSymbol = true;
+export const enableShallowPropDiffing = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because
 // the Test Renderer's value must be the same as the one used by the
@@ -89,13 +89,14 @@ export const renameElementSymbol = true;
 // const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 export const enableRefAsProp = true;
 export const disableStringRefs = true;
-export const enableFastJSX = true;
 export const disableLegacyMode = true;
 export const disableLegacyContext = true;
+export const disableLegacyContextForFunctionComponents = true;
 export const enableRenderableContext = true;
 export const enableReactTestRendererWarning = true;
 export const disableDefaultPropsExceptForClasses = true;
 
+export const enableObjectFiber = false;
 export const enableOwnerStacks = false;
 
 // Flow magic to verify the exports of this file match the original version.

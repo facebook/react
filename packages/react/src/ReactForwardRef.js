@@ -71,6 +71,7 @@ export function forwardRef<Props, ElementType: React$ElementType>(
           Object.defineProperty(render, 'name', {
             value: name,
           });
+          render.displayName = name;
         }
       },
     });

@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { useEffect, useState } from "react";
+import {useEffect, useState} from 'react';
 
-let someGlobal = { value: null };
+let someGlobal = {value: null};
 
 function Component() {
   const [state, setState] = useState(someGlobal);
@@ -20,7 +20,7 @@ function Component() {
   // capture into a separate variable that is not a context variable.
   const y = x;
   useEffect(() => {
-    y.value = "hello";
+    y.value = 'hello';
   }, []);
 
   useEffect(() => {
@@ -70,19 +70,16 @@ function Component() {
   }
   useEffect(t0, t1);
   let t2;
+  let t3;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = () => {
       setState(someGlobal.value);
     };
-    $[2] = t2;
-  } else {
-    t2 = $[2];
-  }
-  let t3;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = [someGlobal];
+    $[2] = t2;
     $[3] = t3;
   } else {
+    t2 = $[2];
     t3 = $[3];
   }
   useEffect(t2, t3);

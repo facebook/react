@@ -19,18 +19,15 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import {
-  allowConcurrentByDefault,
   enableRetryLaneExpiration,
   enableSchedulingProfiler,
   enableTransitionTracing,
-  enableUnifiedSyncLane,
   enableUpdaterTracking,
   syncLaneExpirationMs,
   transitionLaneExpirationMs,
   retryLaneExpirationMs,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
-import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 import {clz32} from './clz32';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
@@ -51,9 +48,8 @@ export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000010000;
 export const DefaultLane: Lane = /*                     */ 0b0000000000000000000000000100000;
 
-export const SyncUpdateLanes: Lane = enableUnifiedSyncLane
-  ? SyncLane | InputContinuousLane | DefaultLane
-  : SyncLane;
+export const SyncUpdateLanes: Lane =
+  SyncLane | InputContinuousLane | DefaultLane;
 
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000001000000;
 const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111110000000;
@@ -151,11 +147,9 @@ let nextTransitionLane: Lane = TransitionLane1;
 let nextRetryLane: Lane = RetryLane1;
 
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
-  if (enableUnifiedSyncLane) {
-    const pendingSyncLanes = lanes & SyncUpdateLanes;
-    if (pendingSyncLanes !== 0) {
-      return pendingSyncLanes;
-    }
+  const pendingSyncLanes = lanes & SyncUpdateLanes;
+  if (pendingSyncLanes !== 0) {
+    return pendingSyncLanes;
   }
   switch (getHighestPriorityLane(lanes)) {
     case SyncHydrationLane:
@@ -291,12 +285,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
 export function getEntangledLanes(root: FiberRoot, renderLanes: Lanes): Lanes {
   let entangledLanes = renderLanes;
 
-  if (
-    allowConcurrentByDefault &&
-    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
-  ) {
-    // Do nothing, use the lanes as they were assigned.
-  } else if ((entangledLanes & InputContinuousLane) !== NoLanes) {
+  if ((entangledLanes & InputContinuousLane) !== NoLanes) {
     // When updates are sync by default, we entangle continuous priority updates
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
@@ -502,13 +491,6 @@ export function includesOnlyTransitions(lanes: Lanes): boolean {
 }
 
 export function includesBlockingLane(root: FiberRoot, lanes: Lanes): boolean {
-  if (
-    allowConcurrentByDefault &&
-    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
-  ) {
-    // Concurrent updates by default always use time slicing.
-    return false;
-  }
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
     InputContinuousLane |
@@ -826,7 +808,7 @@ export function getBumpedLaneForHydration(
   const renderLane = getHighestPriorityLane(renderLanes);
 
   let lane;
-  if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+  if ((renderLane & SyncUpdateLanes) !== NoLane) {
     lane = SyncHydrationLane;
   } else {
     switch (renderLane) {

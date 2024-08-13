@@ -184,7 +184,7 @@ describe('ProfilerStore', () => {
   });
 
   // @reactVersion >= 16.9
-  it('should not throw if state contains a property hasOwnProperty ', () => {
+  it('should not throw if state contains a property hasOwnProperty', () => {
     let setStateCallback;
     const ControlledInput = () => {
       const [state, setState] = React.useState({hasOwnProperty: true});

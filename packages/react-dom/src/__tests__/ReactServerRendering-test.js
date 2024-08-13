@@ -371,11 +371,17 @@ describe('ReactDOMServer', () => {
         text: PropTypes.string,
       };
 
-      const markup = ReactDOMServer.renderToStaticMarkup(
-        <ContextProvider>
-          <Component />
-        </ContextProvider>,
-      );
+      let markup;
+      expect(() => {
+        markup = ReactDOMServer.renderToStaticMarkup(
+          <ContextProvider>
+            <Component />
+          </ContextProvider>,
+        );
+      }).toErrorDev([
+        'ContextProvider uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+        'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+      ]);
       expect(markup).toContain('hello, world');
     });
 
@@ -592,7 +598,7 @@ describe('ReactDOMServer', () => {
 
     ReactDOMServer.renderToString(<Foo />);
     expect(() => jest.runOnlyPendingTimers()).toErrorDev(
-      'Warning: Can only update a mounting component.' +
+      'Can only update a mounting component.' +
         ' This usually means you called setState() outside componentWillMount() on the server.' +
         ' This is a no-op.\n\nPlease check the code for the Foo component.',
       {withoutStack: true},
@@ -620,7 +626,7 @@ describe('ReactDOMServer', () => {
 
     ReactDOMServer.renderToString(<Baz />);
     expect(() => jest.runOnlyPendingTimers()).toErrorDev(
-      'Warning: Can only update a mounting component. ' +
+      'Can only update a mounting component. ' +
         'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the Baz component.',
       {withoutStack: true},
@@ -732,11 +738,11 @@ describe('ReactDOMServer', () => {
         </div>,
       ),
     ).toErrorDev([
-      'Warning: <inPUT /> is using incorrect casing. ' +
+      '<inPUT /> is using incorrect casing. ' +
         'Use PascalCase for React components, ' +
         'or lowercase for HTML elements.',
       // linearGradient doesn't warn
-      'Warning: <iFrame /> is using incorrect casing. ' +
+      '<iFrame /> is using incorrect casing. ' +
         'Use PascalCase for React components, ' +
         'or lowercase for HTML elements.',
     ]);
@@ -746,7 +752,7 @@ describe('ReactDOMServer', () => {
     expect(() =>
       ReactDOMServer.renderToString(<div contentEditable={true} children="" />),
     ).toErrorDev(
-      'Warning: A component is `contentEditable` and contains `children` ' +
+      'A component is `contentEditable` and contains `children` ' +
         'managed by React. It is now your responsibility to guarantee that ' +
         'none of those nodes are unexpectedly modified or duplicated. This ' +
         'is probably not intentional.\n    in div (at **)',
@@ -765,7 +771,7 @@ describe('ReactDOMServer', () => {
         ReactDOMServer.renderToString(<ClassWithRenderNotExtended />),
       ).toThrow(TypeError);
     }).toErrorDev(
-      'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
+      'The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
         "but doesn't extend React.Component. This is likely to cause errors. " +
         'Change ClassWithRenderNotExtended to extend React.Component instead.',
     );
@@ -835,21 +841,30 @@ describe('ReactDOMServer', () => {
 
     expect(() => ReactDOMServer.renderToString(<App />)).toErrorDev([
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in span (at **)\n' +
-        '    in b (at **)\n' +
-        '    in C (at **)\n' +
-        '    in font (at **)\n' +
-        '    in B (at **)\n' +
-        '    in Child (at **)\n' +
-        '    in span (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in span (at **)\n' +
+            '    in B (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in App (at **)'
+          : '    in span (at **)\n' +
+            '    in b (at **)\n' +
+            '    in C (at **)\n' +
+            '    in font (at **)\n' +
+            '    in B (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in span (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
       'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in span (at **)\n' +
-        '    in Child (at **)\n' +
-        '    in span (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in span (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in App (at **)'
+          : '    in span (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in span (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
     ]);
   });
 
@@ -885,9 +900,11 @@ describe('ReactDOMServer', () => {
     expect(() => ReactDOMServer.renderToString(<App />)).toErrorDev([
       // ReactDOMServer(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in span (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in span (at **)\n' + '    in App (at **)'
+          : '    in span (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
       // ReactDOMServer(App > div > Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
       'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in blink (at **)',
@@ -898,15 +915,21 @@ describe('ReactDOMServer', () => {
         '    in App2 (at **)',
       // ReactDOMServer(App > div > Child > span)
       'Invalid ARIA attribute `ariaTypo4`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in span (at **)\n' +
-        '    in Child (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in span (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in App (at **)'
+          : '    in span (at **)\n' +
+            '    in Child (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
       // ReactDOMServer(App > div > font)
       'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
-        '    in font (at **)\n' +
-        '    in div (at **)\n' +
-        '    in App (at **)',
+        (gate(flags => flags.enableOwnerStacks)
+          ? '    in font (at **)\n' + '    in App (at **)'
+          : '    in font (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)'),
     ]);
   });
 
@@ -923,7 +946,7 @@ describe('ReactDOMServer', () => {
     expect(() => {
       ReactDOMServer.renderToString(<ComponentA />);
     }).toErrorDev(
-      'Warning: ComponentA defines an invalid contextType. ' +
+      'ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Consumer instead?',
     );

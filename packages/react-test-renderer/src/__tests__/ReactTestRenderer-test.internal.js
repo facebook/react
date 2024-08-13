@@ -43,7 +43,6 @@ function cleanNodeOrArray(node) {
     node.instance = null;
   }
   if (node && node.props && node.props.children) {
-    // eslint-disable-next-line no-unused-vars
     const {children, ...props} = node.props;
     node.props = props;
   }
@@ -67,7 +66,7 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer.create(<div />);
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error.mock.calls[0][0]).toContain(
-      'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
+      'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
     );
     console.error.mockRestore();
   });
@@ -94,7 +93,7 @@ describe('ReactTestRenderer', () => {
         tag,
         null,
         expect.anything(),
-        null,
+        false,
         expect.anything(),
         expect.anything(),
         expect.anything(),
@@ -412,7 +411,7 @@ describe('ReactTestRenderer', () => {
         ReactTestRenderer.create(<Foo />);
       });
     }).toErrorDev(
-      'Warning: Function components cannot be given refs. Attempts ' +
+      'Function components cannot be given refs. Attempts ' +
         'to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n' +
         '    in Bar (at **)\n' +

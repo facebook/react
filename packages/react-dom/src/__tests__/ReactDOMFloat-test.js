@@ -282,8 +282,8 @@ describe('ReactDOMFloat', () => {
     return children.length === 0
       ? undefined
       : children.length === 1
-      ? children[0]
-      : children;
+        ? children[0]
+        : children;
   }
 
   function BlockedOn({value, children}) {
@@ -524,7 +524,7 @@ describe('ReactDOMFloat', () => {
     }).toErrorDev(
       [
         'Cannot render <noscript> outside the main document. Try moving it into the root <head> tag.',
-        'Warning: In HTML, <noscript> cannot be a child of <#document>.',
+        'In HTML, <noscript> cannot be a child of <#document>.',
       ],
       {withoutStack: 1},
     );
@@ -539,7 +539,7 @@ describe('ReactDOMFloat', () => {
       await waitForAll([]);
     }).toErrorDev([
       'Cannot render <template> outside the main document. Try moving it into the root <head> tag.',
-      'Warning: In HTML, <template> cannot be a child of <html>.',
+      'In HTML, <template> cannot be a child of <html>.',
     ]);
 
     await expect(async () => {
@@ -552,7 +552,7 @@ describe('ReactDOMFloat', () => {
       await waitForAll([]);
     }).toErrorDev([
       'Cannot render a <style> outside the main document without knowing its precedence and a unique href key. React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that does not conflic with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  Note that hoisting <style> tags is considered an advanced feature that most will not use directly. Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`, or move the <style> to the <style> tag.',
-      'Warning: In HTML, <style> cannot be a child of <html>.',
+      'In HTML, <style> cannot be a child of <html>.',
     ]);
 
     await expect(async () => {
@@ -575,7 +575,7 @@ describe('ReactDOMFloat', () => {
     }).toErrorDev(
       [
         'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. Consider adding precedence="default" or moving it into the root <head> tag.',
-        'Warning: In HTML, <link> cannot be a child of <#document>.',
+        'In HTML, <link> cannot be a child of <#document>.',
       ],
       {withoutStack: 1},
     );
@@ -592,7 +592,7 @@ describe('ReactDOMFloat', () => {
       await waitForAll([]);
     }).toErrorDev([
       'Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag.',
-      'Warning: In HTML, <script> cannot be a child of <html>.',
+      'In HTML, <script> cannot be a child of <html>.',
     ]);
 
     await expect(async () => {
@@ -2951,7 +2951,8 @@ body {
     );
   });
 
-  xit('can delay commit until css resources error', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('can delay commit until css resources error', async () => {
     // TODO: This test fails and crashes jest. need to figure out why before unskipping.
     const root = ReactDOMClient.createRoot(container);
     expect(getMeaningfulChildren(container)).toBe(undefined);
@@ -3343,6 +3344,172 @@ body {
         </head>
         <body>
           <div style="">hello</div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will assume stylesheets already in the document have loaded if it cannot confirm it is not yet loaded', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <head>
+            <link rel="stylesheet" href="foo" data-precedence="default" />
+          </head>
+          <body>
+            <div id="foo" />
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    const root = ReactDOMClient.createRoot(document.querySelector('#foo'));
+
+    root.render(
+      <div>
+        <Suspense fallback="loading...">
+          <link rel="stylesheet" href="foo" precedence="default" />
+          hello world
+        </Suspense>
+      </div>,
+    );
+
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div id="foo">
+            <div>hello world</div>
+          </div>
+        </body>
+      </html>,
+    );
+  });
+
+  it('will assume wait for loading stylesheets to load before continuing', async () => {
+    let ssr = true;
+    function Component() {
+      if (ssr) {
+        return null;
+      } else {
+        return (
+          <>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            <div>hello client</div>
+          </>
+        );
+      }
+    }
+
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <div>
+              <Suspense fallback="loading...">
+                <BlockedOn value="reveal">
+                  <link rel="stylesheet" href="foo" precedence="default" />
+                  <div>hello world</div>
+                </BlockedOn>
+              </Suspense>
+            </div>
+            <div>
+              <Suspense fallback="loading 2...">
+                <Component />
+              </Suspense>
+            </div>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>loading...</div>
+          <div />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('reveal');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>loading...</div>
+          <div />
+          <link rel="preload" href="foo" as="style" />
+        </body>
+      </html>,
+    );
+
+    ssr = false;
+
+    ReactDOMClient.hydrateRoot(
+      document,
+      <html>
+        <body>
+          <div>
+            <Suspense fallback="loading...">
+              <BlockedOn value="reveal">
+                <link rel="stylesheet" href="foo" precedence="default" />
+                <div>hello world</div>
+              </BlockedOn>
+            </Suspense>
+          </div>
+          <div>
+            <Suspense fallback="loading 2...">
+              <Component />
+            </Suspense>
+          </div>
+        </body>
+      </html>,
+    );
+    await waitForAll([]);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>loading...</div>
+          <div />
+          <link rel="preload" href="foo" as="style" />
+        </body>
+      </html>,
+    );
+
+    await expect(async () => {
+      loadStylesheets();
+    }).toErrorDev([
+      "Hydration failed because the server rendered HTML didn't match the client.",
+    ]);
+    assertLog(['load stylesheet: foo']);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+        </head>
+        <body>
+          <div>
+            <div>hello world</div>
+          </div>
+          <div>
+            <div>hello client</div>
+          </div>
+          <link rel="preload" href="foo" as="style" />
         </body>
       </html>,
     );
@@ -6025,7 +6192,7 @@ body {
       );
     });
 
-    it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called outside of render on the client', async () => {
+    it('creates a stylesheet resource in the ownerDocument when ReactDOM.preinit(..., {as: "style" }) is called in shadowRoot', async () => {
       // This is testing behavior, but it shows that it is not a good idea to preinit inside a shadowRoot. The point is we are asserting a behavior
       // you would want to avoid in a real app.
       const shadow = document.body.attachShadow({mode: 'open'});

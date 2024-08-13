@@ -19,7 +19,7 @@ import {
   unionOfRects,
 } from '../geometry';
 
-describe(pointEqualToPoint, () => {
+describe('pointEqualToPoint', () => {
   it('should return true when 2 points have the same values', () => {
     expect(pointEqualToPoint({x: 1, y: 1}, {x: 1, y: 1})).toBe(true);
     expect(pointEqualToPoint({x: -1, y: 2}, {x: -1, y: 2})).toBe(true);
@@ -37,7 +37,7 @@ describe(pointEqualToPoint, () => {
   });
 });
 
-describe(sizeEqualToSize, () => {
+describe('sizeEqualToSize', () => {
   it('should return true when 2 sizes have the same values', () => {
     expect(sizeEqualToSize({width: 1, height: 1}, {width: 1, height: 1})).toBe(
       true,
@@ -69,7 +69,7 @@ describe(sizeEqualToSize, () => {
   });
 });
 
-describe(rectEqualToRect, () => {
+describe('rectEqualToRect', () => {
   it('should return true when 2 rects have the same values', () => {
     expect(
       rectEqualToRect(
@@ -101,7 +101,7 @@ describe(rectEqualToRect, () => {
   });
 });
 
-describe(sizeIsValid, () => {
+describe('sizeIsValid', () => {
   it('should return true when the size has non-negative width and height', () => {
     expect(sizeIsValid({width: 1, height: 1})).toBe(true);
     expect(sizeIsValid({width: 0, height: 0})).toBe(true);
@@ -114,7 +114,7 @@ describe(sizeIsValid, () => {
   });
 });
 
-describe(sizeIsEmpty, () => {
+describe('sizeIsEmpty', () => {
   it('should return true when the size has negative area', () => {
     expect(sizeIsEmpty({width: 1, height: -1})).toBe(true);
     expect(sizeIsEmpty({width: -1, height: -1})).toBe(true);
@@ -132,7 +132,7 @@ describe(sizeIsEmpty, () => {
   });
 });
 
-describe(rectIntersectsRect, () => {
+describe('rectIntersectsRect', () => {
   it('should return true when 2 rects intersect', () => {
     // Rects touch
     expect(
@@ -175,7 +175,7 @@ describe(rectIntersectsRect, () => {
   });
 });
 
-describe(intersectionOfRects, () => {
+describe('intersectionOfRects', () => {
   // NOTE: Undefined behavior if rects do not intersect
 
   it('should return intersection when 2 rects intersect', () => {
@@ -205,7 +205,7 @@ describe(intersectionOfRects, () => {
   });
 });
 
-describe(rectContainsPoint, () => {
+describe('rectContainsPoint', () => {
   it("should return true if point is on the rect's edge", () => {
     expect(
       rectContainsPoint(
@@ -246,7 +246,7 @@ describe(rectContainsPoint, () => {
   });
 });
 
-describe(unionOfRects, () => {
+describe('unionOfRects', () => {
   it('should return zero rect if no rects are provided', () => {
     expect(unionOfRects()).toEqual({
       origin: {x: 0, y: 0},

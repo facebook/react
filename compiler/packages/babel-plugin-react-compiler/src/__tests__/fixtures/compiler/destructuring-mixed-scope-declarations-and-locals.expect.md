@@ -3,7 +3,14 @@
 
 ```javascript
 function Component(props) {
-  const post = useFragment(graphql`...`, props.post);
+  const post = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.post
+  );
   const allUrls = [];
   // `media` and `urls` are exported from the scope that will wrap this code,
   // but `comments` is not (it doesn't need to be memoized, bc the callback
@@ -12,8 +19,8 @@ function Component(props) {
   // out of the scope, and the destructure statement ends up turning into
   // a reassignment, instead of a const declaration. this means we try to
   // reassign `comments` when there's no declaration for it.
-  const { media, comments, urls } = post;
-  const onClick = (e) => {
+  const {media, comments, urls} = post;
+  const onClick = e => {
     if (!comments.length) {
       return;
     }
@@ -30,17 +37,22 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(8);
-  const post = useFragment(graphql`...`, props.post);
-  let media;
-  let onClick;
+  const $ = _c(4);
+  const post = useFragment(
+    graphql`
+      fragment F on T {
+        id
+      }
+    `,
+    props.post,
+  );
+  let t0;
   if ($[0] !== post) {
     const allUrls = [];
 
-    const { media: t0, comments, urls } = post;
-    media = t0;
+    const { media, comments, urls } = post;
     let t1;
-    if ($[3] !== comments.length) {
+    if ($[2] !== comments.length) {
       t1 = (e) => {
         if (!comments.length) {
           return;
@@ -48,29 +60,19 @@ function Component(props) {
 
         console.log(comments.length);
       };
-      $[3] = comments.length;
-      $[4] = t1;
+      $[2] = comments.length;
+      $[3] = t1;
     } else {
-      t1 = $[4];
+      t1 = $[3];
     }
-    onClick = t1;
+    const onClick = t1;
 
     allUrls.push(...urls);
-    $[0] = post;
-    $[1] = media;
-    $[2] = onClick;
-  } else {
-    media = $[1];
-    onClick = $[2];
-  }
-  let t0;
-  if ($[5] !== media || $[6] !== onClick) {
     t0 = <Media media={media} onClick={onClick} />;
-    $[5] = media;
-    $[6] = onClick;
-    $[7] = t0;
+    $[0] = post;
+    $[1] = t0;
   } else {
-    t0 = $[7];
+    t0 = $[1];
   }
   return t0;
 }

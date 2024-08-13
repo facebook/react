@@ -1,21 +1,12 @@
 'use strict';
 
-const {resolve} = require('path');
+const {resolve, isAbsolute, relative} = require('path');
 const Webpack = require('webpack');
 
 const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 const SourceMapIgnoreListPlugin = require('react-devtools-shared/SourceMapIgnoreListPlugin');
 
-const {
-  DARK_MODE_DIMMED_WARNING_COLOR,
-  DARK_MODE_DIMMED_ERROR_COLOR,
-  DARK_MODE_DIMMED_LOG_COLOR,
-  LIGHT_MODE_DIMMED_WARNING_COLOR,
-  LIGHT_MODE_DIMMED_ERROR_COLOR,
-  LIGHT_MODE_DIMMED_LOG_COLOR,
-  GITHUB_URL,
-  getVersionString,
-} = require('./utils');
+const {GITHUB_URL, getVersionString} = require('./utils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -80,19 +71,28 @@ module.exports = {
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
-      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
-      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
       'process.env.IS_CHROME': IS_CHROME,
       'process.env.IS_FIREFOX': IS_FIREFOX,
       'process.env.IS_EDGE': IS_EDGE,
+      __IS_CHROME__: IS_CHROME,
+      __IS_FIREFOX__: IS_FIREFOX,
+      __IS_EDGE__: IS_EDGE,
+      __IS_NATIVE__: false,
     }),
     new Webpack.SourceMapDevToolPlugin({
       filename: '[file].map',
       noSources: !__DEV__,
+      // https://github.com/webpack/webpack/issues/3603#issuecomment-1743147144
+      moduleFilenameTemplate(info) {
+        const {absoluteResourcePath, namespace, resourcePath} = info;
+
+        if (isAbsolute(absoluteResourcePath)) {
+          return relative(__dirname + '/build', absoluteResourcePath);
+        }
+
+        // Mimic Webpack's default behavior:
+        return `webpack://${namespace}/${resourcePath}`;
+      },
     }),
     new SourceMapIgnoreListPlugin({
       shouldIgnoreSource: () => !__DEV__,

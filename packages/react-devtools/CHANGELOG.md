@@ -4,6 +4,33 @@
 
 ---
 
+### 5.3.1
+July 3, 2024
+
+* chore[react-devtools/renderer]: dont show strict mode warning for prod renderer builds ([hoxyq](https://github.com/hoxyq) in [#30158](https://github.com/facebook/react/pull/30158))
+* chore[react-devtools/ui]: fix strict mode badge styles ([hoxyq](https://github.com/hoxyq) in [#30159](https://github.com/facebook/react/pull/30159))
+* fix[react-devtools]: restore original args when recording errors ([hoxyq](https://github.com/hoxyq) in [#30091](https://github.com/facebook/react/pull/30091))
+* Read constructor name more carefully ([LoganDark](https://github.com/LoganDark) in [#29954](https://github.com/facebook/react/pull/29954))
+* refactor[react-devtools/extensions]: dont debounce cleanup logic on navigation ([hoxyq](https://github.com/hoxyq) in [#30027](https://github.com/facebook/react/pull/30027))
+
+---
+
+### 5.3.0
+June 17, 2024
+
+* chore[react-devtools]: improve console arguments formatting before passing it to original console ([hoxyq](https://github.com/hoxyq) in [#29873](https://github.com/facebook/react/pull/29873))
+* chore[react-devtools]: unify console patching and default to ansi escape symbols ([hoxyq](https://github.com/hoxyq) in [#29869](https://github.com/facebook/react/pull/29869))
+* chore[react-devtools/extensions]: make source maps url relative ([hoxyq](https://github.com/hoxyq) in [#29886](https://github.com/facebook/react/pull/29886))
+* fix[react-devtools] divided inspecting elements between inspecting do… ([vzaidman](https://github.com/vzaidman) in [#29885](https://github.com/facebook/react/pull/29885))
+* fix[react-devtools] component badge in light mode is now not invisible ([vzaidman](https://github.com/vzaidman) in [#29852](https://github.com/facebook/react/pull/29852))
+* fix[react-devtools] remove native inspection button when it can't be used ([vzaidman](https://github.com/vzaidman) in [#29779](https://github.com/facebook/react/pull/29779))
+* chore[react-devtools]: ip => internal-ip ([hoxyq](https://github.com/hoxyq) in [#29772](https://github.com/facebook/react/pull/29772))
+* Fix #29724: `ip` dependency update for CVE-2024-29415 ([Rekl0w](https://github.com/Rekl0w) in [#29725](https://github.com/facebook/react/pull/29725))
+* Dim `console` calls on additional Effect invocations due to `StrictMode` ([eps1lon](https://github.com/eps1lon) in [#29007](https://github.com/facebook/react/pull/29007))
+* refactor[react-devtools]: rewrite context menus ([hoxyq](https://github.com/hoxyq) in [#29049](https://github.com/facebook/react/pull/29049))
+
+---
+
 ### 5.2.0
 May 8, 2024
 

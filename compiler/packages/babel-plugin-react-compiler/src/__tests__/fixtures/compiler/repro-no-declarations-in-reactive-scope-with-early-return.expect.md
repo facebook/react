@@ -39,7 +39,7 @@ function Component() {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 function Component() {
-  const $ = _c(9);
+  const $ = _c(8);
   const items = useItems();
   let t0;
   let t1;
@@ -74,17 +74,8 @@ function Component() {
         t2 = t4;
         break bb0;
       }
-      let t4;
-      if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
-        t4 = (t5) => {
-          const [item_0] = t5;
-          return <Stringify item={item_0} />;
-        };
-        $[6] = t4;
-      } else {
-        t4 = $[6];
-      }
-      t1 = filteredItems.map(t4);
+
+      t1 = filteredItems.map(_temp);
     }
     $[0] = items;
     $[1] = t1;
@@ -99,14 +90,18 @@ function Component() {
     return t2;
   }
   let t3;
-  if ($[7] !== t1) {
+  if ($[6] !== t1) {
     t3 = <>{t1}</>;
-    $[7] = t1;
-    $[8] = t3;
+    $[6] = t1;
+    $[7] = t3;
   } else {
-    t3 = $[8];
+    t3 = $[7];
   }
   return t3;
+}
+function _temp(t0) {
+  const [item_0] = t0;
+  return <Stringify item={item_0} />;
 }
 
 ```

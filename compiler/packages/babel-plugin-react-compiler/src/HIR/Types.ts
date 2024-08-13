@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 
 export type BuiltInType = PrimitiveType | FunctionType | ObjectType;
 
@@ -16,7 +16,7 @@ export type Type =
   | PolyType
   | PropType
   | ObjectMethod;
-export type PrimitiveType = { kind: "Primitive" };
+export type PrimitiveType = {kind: 'Primitive'};
 
 /*
  * An {@link FunctionType} or {@link ObjectType} (also a JS object) may be associated with an
@@ -34,35 +34,36 @@ export type PrimitiveType = { kind: "Primitive" };
  */
 
 export type FunctionType = {
-  kind: "Function";
+  kind: 'Function';
   shapeId: string | null;
   return: Type;
 };
 
 export type ObjectType = {
-  kind: "Object";
+  kind: 'Object';
   shapeId: string | null;
 };
 
 export type TypeVar = {
-  kind: "Type";
+  kind: 'Type';
   id: TypeId;
 };
 export type PolyType = {
-  kind: "Poly";
+  kind: 'Poly';
 };
 export type PhiType = {
-  kind: "Phi";
+  kind: 'Phi';
   operands: Array<Type>;
 };
 export type PropType = {
-  kind: "Property";
-  object: Type;
+  kind: 'Property';
+  objectType: Type;
+  objectName: string;
   propertyName: string;
 };
 
 export type ObjectMethod = {
-  kind: "ObjectMethod";
+  kind: 'ObjectMethod';
 };
 
 /*
@@ -70,11 +71,11 @@ export type ObjectMethod = {
  * accidentally.
  */
 const opaqueTypeId = Symbol();
-export type TypeId = number & { [opaqueTypeId]: "IdentifierId" };
+export type TypeId = number & {[opaqueTypeId]: 'IdentifierId'};
 
 export function makeTypeId(id: number): TypeId {
   CompilerError.invariant(id >= 0 && Number.isInteger(id), {
-    reason: "Expected instruction id to be a non-negative integer",
+    reason: 'Expected instruction id to be a non-negative integer',
     description: null,
     loc: null,
     suggestions: null,
@@ -85,7 +86,7 @@ export function makeTypeId(id: number): TypeId {
 let typeCounter = 0;
 export function makeType(): TypeVar {
   return {
-    kind: "Type",
+    kind: 'Type',
     id: makeTypeId(typeCounter++),
   };
 }
@@ -96,39 +97,40 @@ export function makeType(): TypeVar {
  */
 export function duplicateType(type: Type): Type {
   switch (type.kind) {
-    case "Function": {
+    case 'Function': {
       return {
-        kind: "Function",
+        kind: 'Function',
         return: duplicateType(type.return),
         shapeId: type.shapeId,
       };
     }
-    case "Object": {
-      return { kind: "Object", shapeId: type.shapeId };
+    case 'Object': {
+      return {kind: 'Object', shapeId: type.shapeId};
     }
-    case "ObjectMethod": {
-      return { kind: "ObjectMethod" };
+    case 'ObjectMethod': {
+      return {kind: 'ObjectMethod'};
     }
-    case "Phi": {
+    case 'Phi': {
       return {
-        kind: "Phi",
-        operands: type.operands.map((operand) => duplicateType(operand)),
+        kind: 'Phi',
+        operands: type.operands.map(operand => duplicateType(operand)),
       };
     }
-    case "Poly": {
-      return { kind: "Poly" };
+    case 'Poly': {
+      return {kind: 'Poly'};
     }
-    case "Primitive": {
-      return { kind: "Primitive" };
+    case 'Primitive': {
+      return {kind: 'Primitive'};
     }
-    case "Property": {
+    case 'Property': {
       return {
-        kind: "Property",
-        object: duplicateType(type.object),
+        kind: 'Property',
+        objectType: duplicateType(type.objectType),
+        objectName: type.objectName,
         propertyName: type.propertyName,
       };
     }
-    case "Type": {
+    case 'Type': {
       return makeType();
     }
   }
@@ -149,7 +151,7 @@ export function typeEquals(tA: Type, tB: Type): boolean {
 }
 
 function typeVarEquals(tA: Type, tB: Type): boolean {
-  if (tA.kind === "Type" && tB.kind === "Type") {
+  if (tA.kind === 'Type' && tB.kind === 'Type') {
     return tA.id === tB.id;
   }
   return false;
@@ -160,31 +162,33 @@ function typeKindCheck(tA: Type, tb: Type, type: string): boolean {
 }
 
 function objectMethodTypeEquals(tA: Type, tB: Type): boolean {
-  return typeKindCheck(tA, tB, "ObjectMethod");
+  return typeKindCheck(tA, tB, 'ObjectMethod');
 }
 
 function propTypeEquals(tA: Type, tB: Type): boolean {
-  if (tA.kind === "Property" && tB.kind === "Property") {
-    if (!typeEquals(tA.object, tB.object)) {
+  if (tA.kind === 'Property' && tB.kind === 'Property') {
+    if (!typeEquals(tA.objectType, tB.objectType)) {
       return false;
     }
 
-    return tA.propertyName === tB.propertyName;
+    return (
+      tA.propertyName === tB.propertyName && tA.objectName === tB.objectName
+    );
   }
 
   return false;
 }
 
 function primitiveTypeEquals(tA: Type, tB: Type): boolean {
-  return typeKindCheck(tA, tB, "Primitive");
+  return typeKindCheck(tA, tB, 'Primitive');
 }
 
 function polyTypeEquals(tA: Type, tB: Type): boolean {
-  return typeKindCheck(tA, tB, "Poly");
+  return typeKindCheck(tA, tB, 'Poly');
 }
 
 function objectTypeEquals(tA: Type, tB: Type): boolean {
-  if (tA.kind === "Object" && tB.kind == "Object") {
+  if (tA.kind === 'Object' && tB.kind == 'Object') {
     return tA.shapeId === tB.shapeId;
   }
 
@@ -192,14 +196,14 @@ function objectTypeEquals(tA: Type, tB: Type): boolean {
 }
 
 function funcTypeEquals(tA: Type, tB: Type): boolean {
-  if (tA.kind !== "Function" || tB.kind !== "Function") {
+  if (tA.kind !== 'Function' || tB.kind !== 'Function') {
     return false;
   }
   return typeEquals(tA.return, tB.return);
 }
 
 function phiTypeEquals(tA: Type, tB: Type): boolean {
-  if (tA.kind === "Phi" && tB.kind === "Phi") {
+  if (tA.kind === 'Phi' && tB.kind === 'Phi') {
     if (tA.operands.length !== tB.operands.length) {
       return false;
     }

@@ -20,11 +20,11 @@ let ReactNativePrivateInterface;
 let act;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
-  "Warning: dispatchCommand was called with a ref that isn't a " +
+  "dispatchCommand was called with a ref that isn't a " +
   'native component. Use React.forwardRef to get access to the underlying native component';
 
 const SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT =
-  "Warning: sendAccessibilityEvent was called with a ref that isn't a " +
+  "sendAccessibilityEvent was called with a ref that isn't a " +
   'native component. Use React.forwardRef to get access to the underlying native component';
 
 describe('ReactNative', () => {
@@ -618,7 +618,7 @@ describe('ReactNative', () => {
     expect(
       () => (match = ReactNative.findHostInstance_DEPRECATED(parent)),
     ).toErrorDev([
-      'Warning: findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
+      'findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
@@ -656,7 +656,7 @@ describe('ReactNative', () => {
     expect(
       () => (match = ReactNative.findHostInstance_DEPRECATED(parent)),
     ).toErrorDev([
-      'Warning: findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
+      'findHostInstance_DEPRECATED is deprecated in StrictMode. ' +
         'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
@@ -691,7 +691,7 @@ describe('ReactNative', () => {
 
     let match;
     expect(() => (match = ReactNative.findNodeHandle(parent))).toErrorDev([
-      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+      'findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
@@ -727,7 +727,7 @@ describe('ReactNative', () => {
 
     let match;
     expect(() => (match = ReactNative.findNodeHandle(parent))).toErrorDev([
-      'Warning: findNodeHandle is deprecated in StrictMode. ' +
+      'findNodeHandle is deprecated in StrictMode. ' +
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +

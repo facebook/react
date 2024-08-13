@@ -3,10 +3,17 @@
 module.exports = function shouldIgnoreConsoleError(format, args) {
   if (__DEV__) {
     if (typeof format === 'string') {
+      if (format.startsWith('%c%s')) {
+        // Looks like a badged error message
+        args.splice(0, 3);
+      }
       if (
         args[0] != null &&
         ((typeof args[0] === 'object' &&
           typeof args[0].message === 'string' &&
+          // This specific log has the same signature as error logging.
+          // The trick is to get rid of this whole file.
+          !format.includes('Failed to serialize an action') &&
           typeof args[0].stack === 'string') ||
           (typeof args[0] === 'string' &&
             args[0].indexOf('An error occurred in ') === 0))

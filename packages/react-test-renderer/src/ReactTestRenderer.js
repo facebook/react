@@ -56,11 +56,11 @@ import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {getPublicInstance} from './ReactFiberConfigTestHost';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
-  allowConcurrentByDefault,
   enableReactTestRendererWarning,
   disableLegacyMode,
 } from 'shared/ReactFeatureFlags';
 
+// $FlowFixMe[prop-missing]: This is only in the development export.
 const act = React.act;
 
 // TODO: Remove from public bundle
@@ -69,7 +69,6 @@ type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isConcurrent: boolean,
   unstable_strictMode: boolean,
-  unstable_concurrentUpdatesByDefault: boolean,
   ...
 };
 
@@ -106,11 +105,9 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
     case 'TEXT':
       return inst.text;
     case 'INSTANCE': {
-      /* eslint-disable no-unused-vars */
       // We don't include the `children` prop in JSON.
       // Instead, we will include the actual rendered children.
       const {children, ...props} = inst.props;
-      /* eslint-enable */
       let renderedChildren = null;
       if (inst.children && inst.children.length) {
         for (let i = 0; i < inst.children.length; i++) {
@@ -487,7 +484,6 @@ function create(
     global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true;
   let isConcurrent = isConcurrentOnly;
   let isStrictMode = false;
-  let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
       // $FlowFixMe[incompatible-type] found when upgrading Flow
@@ -498,12 +494,6 @@ function create(
     }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
-    }
-    if (allowConcurrentByDefault) {
-      if (options.unstable_concurrentUpdatesByDefault !== undefined) {
-        concurrentUpdatesByDefault =
-          options.unstable_concurrentUpdatesByDefault;
-      }
     }
   }
   let container = {
@@ -516,7 +506,7 @@ function create(
     isConcurrent ? ConcurrentRoot : LegacyRoot,
     null,
     isStrictMode,
-    concurrentUpdatesByDefault,
+    false,
     '',
     defaultOnUncaughtError,
     defaultOnCaughtError,
@@ -643,19 +633,12 @@ function wrapFiber(fiber: Fiber): ReactTestInstance {
 }
 
 // Enable ReactTestRenderer to be used to test DevTools integration.
-injectIntoDevTools({
-  findFiberByHostInstance: (() => {
-    throw new Error('TestRenderer does not support findFiberByHostInstance()');
-  }: any),
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-test-renderer',
-});
+injectIntoDevTools();
 
 export {
   Scheduler as _Scheduler,
   create,
-  /* eslint-disable-next-line camelcase */
   batchedUpdates as unstable_batchedUpdates,
   act,
+  ReactVersion as version,
 };

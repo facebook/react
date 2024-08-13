@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type * as BabelCore from "@babel/core";
-import { compileProgram, parsePluginOptions } from "../Entrypoint";
+import type * as BabelCore from '@babel/core';
+import {compileProgram, parsePluginOptions} from '../Entrypoint';
 import {
   injectReanimatedFlag,
   pipelineUsesReanimatedPlugin,
-} from "../Entrypoint/Reanimated";
+} from '../Entrypoint/Reanimated';
 
 /*
  * The React Forget Babel Plugin
@@ -18,10 +18,10 @@ import {
  * @returns
  */
 export default function BabelPluginReactCompiler(
-  _babel: typeof BabelCore
+  _babel: typeof BabelCore,
 ): BabelCore.PluginObj {
   return {
-    name: "react-forget",
+    name: 'react-forget',
     visitor: {
       /*
        * Note: Babel does some "smart" merging of visitors across plugins, so even if A is inserted
@@ -30,10 +30,16 @@ export default function BabelPluginReactCompiler(
        */
       Program(prog, pass): void {
         let opts = parsePluginOptions(pass.opts);
-        if (pipelineUsesReanimatedPlugin(pass.file.opts.plugins)) {
+        const isDev =
+          (typeof __DEV__ !== 'undefined' && __DEV__ === true) ||
+          process.env['NODE_ENV'] === 'development';
+        if (
+          opts.enableReanimatedCheck === true &&
+          pipelineUsesReanimatedPlugin(pass.file.opts.plugins)
+        ) {
           opts = injectReanimatedFlag(opts);
         }
-        if (process.env["NODE_ENV"] === "development") {
+        if (isDev) {
           opts = {
             ...opts,
             environment: {

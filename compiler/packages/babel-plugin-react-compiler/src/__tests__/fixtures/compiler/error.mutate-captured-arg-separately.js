@@ -4,7 +4,7 @@ function component(a) {
     m(x);
   };
 
-  let x = { a };
+  let x = {a};
   m(x);
   return y;
 }

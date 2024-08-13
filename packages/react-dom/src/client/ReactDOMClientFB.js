@@ -29,7 +29,6 @@ import {ensureCorrectIsomorphicReactVersion} from '../shared/ensureCorrectIsomor
 ensureCorrectIsomorphicReactVersion();
 
 import {
-  getClosestInstanceFromNode,
   getInstanceFromNode,
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
@@ -90,9 +89,7 @@ function createPortal(
 // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
 declare function flushSyncFromReconciler<R>(fn: () => R): R;
-// eslint-disable-next-line no-redeclare
 declare function flushSyncFromReconciler(): void;
-// eslint-disable-next-line no-redeclare
 function flushSyncFromReconciler<R>(fn: (() => R) | void): R | void {
   if (__DEV__) {
     if (isAlreadyRendering()) {
@@ -149,12 +146,7 @@ Internals.Events /* Events */ = [
   unstable_batchedUpdates,
 ];
 
-const foundDevTools = injectIntoDevTools({
-  findFiberByHostInstance: getClosestInstanceFromNode,
-  bundleType: __DEV__ ? 1 : 0,
-  version: ReactVersion,
-  rendererPackageName: 'react-dom',
-});
+const foundDevTools = injectIntoDevTools();
 
 if (__DEV__) {
   if (!foundDevTools && canUseDOM && window.top === window.self) {

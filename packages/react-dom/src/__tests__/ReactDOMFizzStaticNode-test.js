@@ -111,9 +111,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
     const result = await resultPromise;
     const prelude = await readContent(result.prelude);
-    expect(prelude).toMatchInlineSnapshot(
-      `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
-    );
+    expect(prelude).toMatchInlineSnapshot(`"<div><!--$-->Done<!--/$--></div>"`);
   });
 
   // @gate experimental

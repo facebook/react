@@ -2,14 +2,14 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender
-import { useCallback, useEffect, useRef, useState } from "react";
+// @validateRefAccessDuringRender @validateNoSetStateInRender:false
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 function Component() {
   const ref = useRef(null);
   const [state, setState] = useState(false);
   const setRef = useCallback(() => {
-    ref.current = "Ok";
+    ref.current = 'Ok';
   }, []);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function Component() {
   return <Child key={String(state)} ref={ref} />;
 }
 
-function Child({ ref }) {
+function Child({ref}) {
   // This violates the rules of React, so we access the ref in a child
   // component
   return ref.current;
@@ -42,7 +42,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender
+import { c as _c } from "react/compiler-runtime"; // @validateRefAccessDuringRender @validateNoSetStateInRender:false
 import { useCallback, useEffect, useRef, useState } from "react";
 
 function Component() {

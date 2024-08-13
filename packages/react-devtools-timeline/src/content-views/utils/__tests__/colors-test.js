@@ -9,7 +9,7 @@
 
 import {hslaColorToString, dimmedColor, ColorGenerator} from '../colors';
 
-describe(hslaColorToString, () => {
+describe('hslaColorToString', () => {
   it('should transform colors to strings', () => {
     expect(hslaColorToString({h: 1, s: 2, l: 3, a: 4})).toEqual(
       'hsl(1deg 2% 3% / 4)',
@@ -20,7 +20,7 @@ describe(hslaColorToString, () => {
   });
 });
 
-describe(dimmedColor, () => {
+describe('dimmedColor', () => {
   it('should dim luminosity using delta', () => {
     expect(dimmedColor({h: 1, s: 2, l: 3, a: 4}, 3)).toEqual({
       h: 1,
@@ -37,8 +37,8 @@ describe(dimmedColor, () => {
   });
 });
 
-describe(ColorGenerator, () => {
-  describe(ColorGenerator.prototype.colorForID, () => {
+describe('ColorGenerator', () => {
+  describe('colorForID', () => {
     it('should generate a color for an ID', () => {
       expect(new ColorGenerator().colorForID('123')).toMatchInlineSnapshot(`
         {

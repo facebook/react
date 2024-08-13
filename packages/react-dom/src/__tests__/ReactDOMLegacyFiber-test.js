@@ -786,7 +786,12 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    ReactDOM.render(<Parent />, container);
+    expect(() => {
+      ReactDOM.render(<Parent />, container);
+    }).toErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(container.innerHTML).toBe('');
     expect(portalContainer.innerHTML).toBe('<div>bar</div>');
   });
@@ -829,7 +834,13 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    const instance = ReactDOM.render(<Parent />, container);
+    let instance;
+    expect(() => {
+      instance = ReactDOM.render(<Parent />, container);
+    }).toErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(portalContainer.innerHTML).toBe('<div>initial-initial</div>');
     expect(container.innerHTML).toBe('');
     instance.setState({bar: 'changed'});
@@ -871,7 +882,12 @@ describe('ReactDOMLegacyFiber', () => {
       }
     }
 
-    ReactDOM.render(<Parent bar="initial" />, container);
+    expect(() => {
+      ReactDOM.render(<Parent bar="initial" />, container);
+    }).toErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Component uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
     expect(portalContainer.innerHTML).toBe('<div>initial-initial</div>');
     expect(container.innerHTML).toBe('');
     ReactDOM.render(<Parent bar="changed" />, container);

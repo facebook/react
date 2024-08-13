@@ -6,6 +6,7 @@ describe('ErrorBoundaryReconciliation', () => {
   let ReactTestRenderer;
   let span;
   let act;
+  let assertConsoleErrorDev;
 
   beforeEach(() => {
     jest.resetModules();
@@ -13,6 +14,8 @@ describe('ErrorBoundaryReconciliation', () => {
     ReactTestRenderer = require('react-test-renderer');
     React = require('react');
     act = require('internal-test-utils').act;
+    assertConsoleErrorDev =
+      require('internal-test-utils').assertConsoleErrorDev;
     DidCatchErrorBoundary = class extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -58,15 +61,17 @@ describe('ErrorBoundaryReconciliation', () => {
       );
     });
     expect(renderer).toMatchRenderedOutput(<span prop="BrokenRender" />);
-    await expect(async () => {
-      await act(() => {
-        renderer.update(
-          <ErrorBoundary fallbackTagName={fallbackTagName}>
-            <BrokenRender fail={true} />
-          </ErrorBoundary>,
-        );
-      });
-    }).toErrorDev(['invalid', 'invalid']);
+    await act(() => {
+      renderer.update(
+        <ErrorBoundary fallbackTagName={fallbackTagName}>
+          <BrokenRender fail={true} />
+        </ErrorBoundary>,
+      );
+    });
+    if (gate(flags => !flags.enableOwnerStacks)) {
+      assertConsoleErrorDev(['invalid', 'invalid']);
+    }
+
     const Fallback = fallbackTagName;
     expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
   }

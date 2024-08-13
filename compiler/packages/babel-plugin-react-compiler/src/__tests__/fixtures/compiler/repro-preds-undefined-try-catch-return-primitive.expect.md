@@ -4,14 +4,14 @@
 ```javascript
 // @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
 
-import { useMemo } from "react";
+import {useMemo} from 'react';
 
 const checkforTouchEvents = true;
 function useSupportsTouchEvent() {
   return useMemo(() => {
     if (checkforTouchEvents) {
       try {
-        document.createEvent("TouchEvent");
+        document.createEvent('TouchEvent');
         return true;
       } catch {
         return false;

@@ -36,6 +36,7 @@ import type {
   Transition,
 } from './ReactFiberTracingMarkerComponent';
 import type {ConcurrentUpdate} from './ReactFiberConcurrentUpdates';
+import type {ComponentStackNode} from 'react-server/src/ReactFizzComponentStack';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -60,16 +61,26 @@ export type HookType =
   | 'useFormState'
   | 'useActionState';
 
-export type ContextDependency<T> = {
-  context: ReactContext<T>,
-  next: ContextDependency<mixed> | null,
-  memoizedValue: T,
-  ...
+export type ContextDependency<C> = {
+  context: ReactContext<C>,
+  next: ContextDependency<mixed> | ContextDependencyWithSelect<mixed> | null,
+  memoizedValue: C,
+};
+
+export type ContextDependencyWithSelect<C> = {
+  context: ReactContext<C>,
+  next: ContextDependency<mixed> | ContextDependencyWithSelect<mixed> | null,
+  memoizedValue: C,
+  select: C => Array<mixed>,
+  lastSelectedValue: ?Array<mixed>,
 };
 
 export type Dependencies = {
   lanes: Lanes,
-  firstContext: ContextDependency<mixed> | null,
+  firstContext:
+    | ContextDependency<mixed>
+    | ContextDependencyWithSelect<mixed>
+    | null,
   ...
 };
 
@@ -383,6 +394,10 @@ export type Dispatcher = {
     initialArg: I,
     init?: (I) => S,
   ): [S, Dispatch<A>],
+  unstable_useContextWithBailout?: <T>(
+    context: ReactContext<T>,
+    select: (T => Array<mixed>) | null,
+  ) => T,
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {current: T},
   useEffect(
@@ -439,5 +454,5 @@ export type Dispatcher = {
 export type AsyncDispatcher = {
   getCacheForType: <T>(resourceType: () => T) => T,
   // DEV-only (or !disableStringRefs)
-  getOwner: () => null | Fiber | ReactComponentInfo,
+  getOwner: () => null | Fiber | ReactComponentInfo | ComponentStackNode,
 };

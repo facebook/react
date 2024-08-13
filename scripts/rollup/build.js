@@ -84,11 +84,17 @@ function parseRequestedNames(names, toCase) {
   }
   return result;
 }
+const argvType = Array.isArray(argv.type) ? argv.type : [argv.type];
+const requestedBundleTypes = parseRequestedNames(
+  argv.type ? argvType : [],
+  'uppercase'
+);
 
-const requestedBundleTypes = argv.type
-  ? parseRequestedNames([argv.type], 'uppercase')
-  : [];
-const requestedBundleNames = parseRequestedNames(argv._, 'lowercase');
+const names = argv._;
+const requestedBundleNames = parseRequestedNames(
+  names ? names : [],
+  'lowercase'
+);
 const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
@@ -147,16 +153,22 @@ function getBabelConfig(
     sourcemap: false,
   };
   if (isDevelopment) {
-    options.plugins.push(
-      ...babelToES5Plugins,
-      // Turn console.error/warn() into a custom wrapper
-      [
-        require('../babel/transform-replace-console-calls'),
-        {
-          shouldError: !canAccessReactObject,
-        },
-      ]
-    );
+    options.plugins.push(...babelToES5Plugins);
+    if (
+      bundleType === FB_WWW_DEV ||
+      bundleType === RN_OSS_DEV ||
+      bundleType === RN_FB_DEV
+    ) {
+      options.plugins.push(
+        // Turn console.error/warn() into a custom wrapper
+        [
+          require('../babel/transform-replace-console-calls'),
+          {
+            shouldError: !canAccessReactObject,
+          },
+        ]
+      );
+    }
   }
   if (updateBabelOptions) {
     options = updateBabelOptions(options);
@@ -361,7 +373,8 @@ function getPlugins(
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
-    const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
+    const needsMinifiedByClosure =
+      bundleType !== ESM_PROD && bundleType !== ESM_DEV;
 
     return [
       // Keep dynamic imports as externals
@@ -450,8 +463,8 @@ function getPlugins(
             bundleType === NODE_ES2015
               ? 'ECMASCRIPT_2020'
               : bundleType === BROWSER_SCRIPT
-              ? 'ECMASCRIPT5'
-              : 'ECMASCRIPT5_STRICT',
+                ? 'ECMASCRIPT5'
+                : 'ECMASCRIPT5_STRICT',
           emit_use_strict:
             bundleType !== BROWSER_SCRIPT &&
             bundleType !== ESM_PROD &&
@@ -527,10 +540,10 @@ function shouldSkipBundle(bundle, bundleType) {
     return true;
   }
   if (requestedBundleTypes.length > 0) {
-    const isAskingForDifferentType = requestedBundleTypes.every(
-      requestedType => bundleType.indexOf(requestedType) === -1
+    const hasRequestedBundleType = requestedBundleTypes.some(requestedType =>
+      bundleType.includes(requestedType)
     );
-    if (isAskingForDifferentType) {
+    if (!hasRequestedBundleType) {
       return true;
     }
   }
@@ -566,16 +579,31 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   // .stable.js
   // .experimental.js
   // .js
+  // or any of those plus .development.js
 
   if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace(
       '.js',
       __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
     );
+    const developmentFBEntry = resolvedFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentFBEntry)) {
+      return developmentFBEntry;
+    }
     if (fs.existsSync(resolvedFBEntry)) {
       return resolvedFBEntry;
     }
     const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    const developmentGenericFBEntry = resolvedGenericFBEntry.replace(
+      '.js',
+      '.development.js'
+    );
+    if (fs.existsSync(developmentGenericFBEntry)) {
+      return developmentGenericFBEntry;
+    }
     if (fs.existsSync(resolvedGenericFBEntry)) {
       return resolvedGenericFBEntry;
     }
@@ -585,6 +613,10 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
     '.js',
     __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
   );
+  const devForkedEntry = resolvedForkedEntry.replace('.js', '.development.js');
+  if (fs.existsSync(devForkedEntry)) {
+    return devForkedEntry;
+  }
   if (fs.existsSync(resolvedForkedEntry)) {
     return resolvedForkedEntry;
   }
@@ -603,7 +635,8 @@ async function createBundle(bundle, bundleType) {
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
-    isFBWWWBundle || isFBRNBundle
+    isFBWWWBundle || isFBRNBundle,
+    !isProductionBundleType(bundleType)
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
@@ -817,10 +850,9 @@ async function buildEverything() {
     return !shouldSkipBundle(bundle, bundleType);
   });
 
-  if (process.env.CIRCLE_NODE_TOTAL) {
-    // In CI, parallelize bundles across multiple tasks.
-    const nodeTotal = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
-    const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
+  if (process.env.CI_TOTAL && process.env.CI_INDEX) {
+    const nodeTotal = parseInt(process.env.CI_TOTAL, 10);
+    const nodeIndex = parseInt(process.env.CI_INDEX, 10);
     bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
   }
 

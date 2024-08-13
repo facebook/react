@@ -13,6 +13,7 @@ let PropTypes;
 let React;
 let ReactDOMClient;
 let act;
+let assertConsoleErrorDev;
 
 function FunctionComponent(props) {
   return <div>{props.name}</div>;
@@ -24,7 +25,7 @@ describe('ReactFunctionComponent', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
   });
 
   it('should render stateless component', async () => {
@@ -108,6 +109,11 @@ describe('ReactFunctionComponent', () => {
     await act(() => {
       root.render(<GrandParent test="test" />);
     });
+
+    assertConsoleErrorDev([
+      'GrandParent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will soon be removed. Use React.createContext() with static contextType instead.',
+    ]);
 
     expect(el.textContent).toBe('test');
 
@@ -214,7 +220,7 @@ describe('ReactFunctionComponent', () => {
         root.render(<ParentUsingStringRef />);
       });
     }).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
+      'Function components cannot be given refs. ' +
         'Attempts to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n\n' +
         'Check the render method ' +
@@ -257,7 +263,7 @@ describe('ReactFunctionComponent', () => {
         root.render(<ParentUsingFunctionRef />);
       });
     }).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
+      'Function components cannot be given refs. ' +
         'Attempts to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n\n' +
         'Check the render method ' +
@@ -297,7 +303,7 @@ describe('ReactFunctionComponent', () => {
           <AnonymousParentUsingJSX ref={current => (instance1 = current)} />,
         );
       });
-    }).toErrorDev('Warning: Function components cannot be given refs.');
+    }).toErrorDev('Function components cannot be given refs.');
     // Should be deduped (offending element is on the same line):
     instance1.forceUpdate();
     // Should also be deduped (offending element is on the same line):
@@ -326,7 +332,7 @@ describe('ReactFunctionComponent', () => {
           <AnonymousParentNotUsingJSX ref={current => (instance2 = current)} />,
         );
       });
-    }).toErrorDev('Warning: Function components cannot be given refs.');
+    }).toErrorDev('Function components cannot be given refs.');
     // Should be deduped (same internal instance, no additional warnings)
     instance2.forceUpdate();
     // Could not be differentiated (since owner is anonymous and no source location)
@@ -354,7 +360,7 @@ describe('ReactFunctionComponent', () => {
           <NamedParentNotUsingJSX ref={current => (instance3 = current)} />,
         );
       });
-    }).toErrorDev('Warning: Function components cannot be given refs.');
+    }).toErrorDev('Function components cannot be given refs.');
     // Should be deduped (same owner name, no additional warnings):
     instance3.forceUpdate();
     // Should also be deduped (same owner name, no additional warnings):
@@ -398,7 +404,7 @@ describe('ReactFunctionComponent', () => {
         root.render(<Parent />);
       });
     }).toErrorDev(
-      'Warning: Function components cannot be given refs. ' +
+      'Function components cannot be given refs. ' +
         'Attempts to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n\n' +
         'Check the render method ' +
@@ -441,11 +447,11 @@ describe('ReactFunctionComponent', () => {
       });
       expect(container.textContent).toBe('2');
     }).toErrorDev([
-      'Warning: Child: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
+      'Child: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
     ]);
   });
 
-  // @gate !disableLegacyContext
+  // @gate !disableLegacyContext && !disableLegacyContextForFunctionComponents
   it('should receive context', async () => {
     class Parent extends React.Component {
       static childContextTypes = {
@@ -472,6 +478,10 @@ describe('ReactFunctionComponent', () => {
     await act(() => {
       root.render(<Parent />);
     });
+    assertConsoleErrorDev([
+      'Parent uses the legacy childContextTypes API which will soon be removed. Use React.createContext() instead.',
+      'Child uses the legacy contextTypes API which will be removed soon. Use React.createContext() with React.useContext() instead.',
+    ]);
     expect(el.textContent).toBe('en');
   });
 

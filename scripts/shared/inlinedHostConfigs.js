@@ -36,6 +36,9 @@ module.exports = [
       'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client.node.unbundled',
       'react-server-dom-webpack/server',
@@ -71,6 +74,9 @@ module.exports = [
       'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client.node',
       'react-server-dom-webpack/server',
@@ -108,12 +114,15 @@ module.exports = [
       'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-turbopack',
       'react-server-dom-turbopack/client.node.unbundled',
       'react-server-dom-turbopack/server',
       'react-server-dom-turbopack/server.node.unbundled',
-      'react-server-dom-turbopack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.node.unbundled
-      'react-server-dom-turbopack/src/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node.unbundled
+      'react-server-dom-turbopack/src/ReactFlightDOMServerNode.js', // react-server-dom-turbopack/server.node.unbundled
+      'react-server-dom-turbopack/src/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node.unbundled
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerNode.js',
       'react-server-dom-turbopack/node-register',
       'react-server-dom-turbopack/src/ReactFlightTurbopackNodeRegister.js',
@@ -145,12 +154,15 @@ module.exports = [
       'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-turbopack',
       'react-server-dom-turbopack/client.node',
       'react-server-dom-turbopack/server',
       'react-server-dom-turbopack/server.node',
       'react-server-dom-turbopack/src/ReactFlightDOMServerNode.js', // react-server-dom-turbopack/server.node
-      'react-server-dom-turbopack/src/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
+      'react-server-dom-turbopack/src/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackServer.js',
       'react-server-dom-turbopack/node-register',
@@ -182,6 +194,9 @@ module.exports = [
       'react-dom/src/server/react-dom-server.bun',
       'react-dom/src/server/ReactDOMFizzServerBun.js',
       'react-dom-bindings',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
@@ -212,6 +227,9 @@ module.exports = [
       'react-dom/src/server/react-dom-server.browser',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMFizzStaticBrowser.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client',
       'react-server-dom-webpack/client.browser',
@@ -240,6 +258,9 @@ module.exports = [
       'react-dom/server',
       'react-dom/server.node',
       'react-dom-bindings',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-esm',
       'react-server-dom-esm/client',
       'react-server-dom-esm/client.browser',
@@ -274,6 +295,9 @@ module.exports = [
       'react-server-dom-turbopack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-turbopack/server.browser
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackBrowser.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -303,6 +327,9 @@ module.exports = [
       'react-dom/src/server/react-dom-server.edge',
       'react-dom/src/server/ReactDOMFizzServerEdge.js', // react-dom/server.edge
       'react-dom/src/server/ReactDOMFizzStaticEdge.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-webpack',
       'react-server-dom-webpack/client.edge',
       'react-server-dom-webpack/server.edge',
@@ -338,11 +365,14 @@ module.exports = [
       'react-dom/src/server/react-dom-server.edge',
       'react-dom/src/server/ReactDOMFizzServerEdge.js', // react-dom/server.edge
       'react-dom/src/server/ReactDOMFizzStaticEdge.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-turbopack',
       'react-server-dom-turbopack/client.edge',
       'react-server-dom-turbopack/server.edge',
-      'react-server-dom-turbopack/src/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
-      'react-server-dom-turbopack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
+      'react-server-dom-turbopack/src/ReactFlightDOMClientEdge.js', // react-server-dom-turbopack/client.edge
+      'react-server-dom-turbopack/src/ReactFlightDOMServerEdge.js', // react-server-dom-turbopack/server.edge
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackServer.js',
       'react-devtools',
@@ -374,6 +404,9 @@ module.exports = [
       'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-dom-bindings/src/server/ReactDOMFlightServerHostDispatcher.js',
+      'react-dom-bindings/src/server/ReactFlightServerConfigDOM.js',
+      'react-dom-bindings/src/shared/ReactFlightClientConfigDOM.js',
       'react-server-dom-esm',
       'react-server-dom-esm/client.node',
       'react-server-dom-esm/server',
@@ -400,10 +433,25 @@ module.exports = [
       'react-dom',
       'react-dom/src/ReactDOMReactServer.js',
       'react-dom-bindings',
-      'react-server-dom-webpack',
       'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Browser and *Node files
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'markup',
+    entryPoints: [
+      'react-html/src/ReactHTMLClient.js', // react-html
+      'react-html/src/ReactHTMLServer.js', // react-html/react-html.react-server
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/src/ReactDOMReactServer.js',
+      'react-dom-bindings',
+      'react-html',
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,

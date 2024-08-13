@@ -122,7 +122,7 @@ describe('ReactAsyncActions', () => {
   }
 
   // @gate enableAsyncActions
-  test('isPending remains true until async action finishes', async () => {
+  it('isPending remains true until async action finishes', async () => {
     let startTransition;
     function App() {
       const [isPending, _start] = useTransition();
@@ -155,7 +155,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('multiple updates in an async action scope are entangled together', async () => {
+  it('multiple updates in an async action scope are entangled together', async () => {
     let startTransition;
     function App({text}) {
       const [isPending, _start] = useTransition();
@@ -211,7 +211,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('multiple async action updates in the same scope are entangled together', async () => {
+  it('multiple async action updates in the same scope are entangled together', async () => {
     let setStepA;
     function A() {
       const [step, setStep] = useState(0);
@@ -337,7 +337,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('urgent updates are not blocked during an async action', async () => {
+  it('urgent updates are not blocked during an async action', async () => {
     let setStepA;
     function A() {
       const [step, setStep] = useState(0);
@@ -418,7 +418,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test("if a sync action throws, it's rethrown from the `useTransition`", async () => {
+  it("if a sync action throws, it's rethrown from the `useTransition`", async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -460,7 +460,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test("if an async action throws, it's rethrown from the `useTransition`", async () => {
+  it("if an async action throws, it's rethrown from the `useTransition`", async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -508,7 +508,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate !enableAsyncActions
-  test('when enableAsyncActions is disabled, and a sync action throws, `isPending` is turned off', async () => {
+  it('when enableAsyncActions is disabled, and a sync action throws, `isPending` is turned off', async () => {
     let startTransition;
     function App() {
       const [isPending, _start] = useTransition();
@@ -535,7 +535,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('if there are multiple entangled actions, and one of them errors, it only affects that action', async () => {
+  it('if there are multiple entangled actions, and one of them errors, it only affects that action', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromError(error) {
@@ -652,7 +652,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimistic can be used to implement a pending state', async () => {
+  it('useOptimistic can be used to implement a pending state', async () => {
     const startTransition = React.startTransition;
 
     let setIsPending;
@@ -702,7 +702,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimistic rebases pending updates on top of passthrough value', async () => {
+  it('useOptimistic rebases pending updates on top of passthrough value', async () => {
     let serverCart = ['A'];
 
     async function submitNewItem(item) {
@@ -823,7 +823,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test(
+  it(
     'regression: when there are no pending transitions, useOptimistic should ' +
       'always return the passthrough value',
     async () => {
@@ -869,7 +869,7 @@ describe('ReactAsyncActions', () => {
   );
 
   // @gate enableAsyncActions
-  test('regression: useOptimistic during setState-in-render', async () => {
+  it('regression: useOptimistic during setState-in-render', async () => {
     // This is a regression test for a very specific case where useOptimistic is
     // the first hook in the component, it has a pending update, and a later
     // hook schedules a local (setState-in-render) update. Don't sweat about
@@ -907,7 +907,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimistic accepts a custom reducer', async () => {
+  it('useOptimistic accepts a custom reducer', async () => {
     let serverCart = ['A'];
 
     async function submitNewItem(item) {
@@ -1039,7 +1039,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimistic rebases if the passthrough is updated during a render phase update', async () => {
+  it('useOptimistic rebases if the passthrough is updated during a render phase update', async () => {
     // This is kind of an esoteric case where it's hard to come up with a
     // realistic real-world scenario but it should still work.
     let increment;
@@ -1124,7 +1124,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimistic rebases if the passthrough is updated during a render phase update (initial mount)', async () => {
+  it('useOptimistic rebases if the passthrough is updated during a render phase update (initial mount)', async () => {
     // This is kind of an esoteric case where it's hard to come up with a
     // realistic real-world scenario but it should still work.
     function App() {
@@ -1164,7 +1164,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimistic can update repeatedly in the same async action', async () => {
+  it('useOptimistic can update repeatedly in the same async action', async () => {
     let startTransition;
     let setLoadingProgress;
     let setText;
@@ -1228,7 +1228,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimistic warns if outside of a transition', async () => {
+  it('useOptimistic warns if outside of a transition', async () => {
     let startTransition;
     let setLoadingProgress;
     let setText;
@@ -1276,7 +1276,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test(
+  it(
     'optimistic state is not reverted until async action finishes, even if ' +
       'useTransition hook is unmounted',
     async () => {
@@ -1379,7 +1379,7 @@ describe('ReactAsyncActions', () => {
   );
 
   // @gate enableAsyncActions
-  test(
+  it(
     'updates in an async action are entangled even if useTransition hook ' +
       'is unmounted before it finishes',
     async () => {
@@ -1467,7 +1467,7 @@ describe('ReactAsyncActions', () => {
   );
 
   // @gate enableAsyncActions
-  test(
+  it(
     'updates in an async action are entangled even if useTransition hook ' +
       'is unmounted before it finishes (class component)',
     async () => {
@@ -1562,7 +1562,7 @@ describe('ReactAsyncActions', () => {
   );
 
   // @gate enableAsyncActions
-  test(
+  it(
     'updates in an async action are entangled even if useTransition hook ' +
       'is unmounted before it finishes (root update)',
     async () => {
@@ -1647,7 +1647,7 @@ describe('ReactAsyncActions', () => {
   );
 
   // @gate enableAsyncActions
-  test('React.startTransition supports async actions', async () => {
+  it('React.startTransition supports async actions', async () => {
     const startTransition = React.startTransition;
 
     function App({text}) {
@@ -1685,7 +1685,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('useOptimistic works with async actions passed to React.startTransition', async () => {
+  it('useOptimistic works with async actions passed to React.startTransition', async () => {
     const startTransition = React.startTransition;
 
     let setOptimisticText;
@@ -1732,7 +1732,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test(
+  it(
     'regression: updates in an action passed to React.startTransition are batched ' +
       'even if there were no updates before the first await',
     async () => {
@@ -1801,7 +1801,7 @@ describe('ReactAsyncActions', () => {
     },
   );
 
-  test('React.startTransition captures async errors and passes them to reportError', async () => {
+  it('React.startTransition captures async errors and passes them to reportError', async () => {
     // NOTE: This is gated here instead of using the pragma because the failure
     // happens asynchronously and the `gate` runtime doesn't capture it.
     if (gate(flags => flags.enableAsyncActions)) {
@@ -1815,7 +1815,7 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
-  test('React.startTransition captures sync errors and passes them to reportError', async () => {
+  it('React.startTransition captures sync errors and passes them to reportError', async () => {
     await act(() => {
       try {
         React.startTransition(() => {

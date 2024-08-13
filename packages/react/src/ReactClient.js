@@ -38,6 +38,7 @@ import {postpone} from './ReactPostpone';
 import {
   getCacheForType,
   useCallback,
+  unstable_useContextWithBailout,
   useContext,
   useEffect,
   useEffectEvent,
@@ -61,6 +62,7 @@ import {
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
+import {captureOwnerStack} from './ReactOwnerStack';
 
 const Children = {
   map,
@@ -82,6 +84,7 @@ export {
   cache,
   postpone as unstable_postpone,
   useCallback,
+  unstable_useContextWithBailout,
   useContext,
   useEffect,
   useEffectEvent as experimental_useEffectEvent,
@@ -121,5 +124,6 @@ export {
   // enableTransitionTracing
   REACT_TRACING_MARKER_TYPE as unstable_TracingMarker,
   useId,
-  act,
+  act, // DEV-only
+  captureOwnerStack, // DEV-only
 };

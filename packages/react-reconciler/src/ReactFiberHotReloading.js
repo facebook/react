@@ -11,7 +11,6 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Instance} from './ReactFiberConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
@@ -27,11 +26,6 @@ import {
   ClassComponent,
   FunctionComponent,
   ForwardRef,
-  HostComponent,
-  HostHoistable,
-  HostSingleton,
-  HostPortal,
-  HostRoot,
   MemoComponent,
   SimpleMemoComponent,
 } from './ReactWorkTags';
@@ -40,7 +34,6 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {supportsSingletons} from './ReactFiberConfig';
 
 export type Family = {
   current: any,
@@ -58,10 +51,6 @@ type RefreshHandler = any => Family | void;
 export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
 export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
 export type ScheduleRoot = (root: FiberRoot, element: ReactNodeList) => void;
-export type FindHostInstancesForRefresh = (
-  root: FiberRoot,
-  families: Array<Family>,
-) => Set<Instance>;
 
 let resolveFamily: RefreshHandler | null = null;
 let failedBoundaries: WeakSet<Fiber> | null = null;
@@ -342,152 +331,4 @@ function scheduleFibersWithFamiliesRecursively(
       );
     }
   }
-}
-
-export const findHostInstancesForRefresh: FindHostInstancesForRefresh = (
-  root: FiberRoot,
-  families: Array<Family>,
-): Set<Instance> => {
-  if (__DEV__) {
-    const hostInstances = new Set<Instance>();
-    const types = new Set(families.map(family => family.current));
-    findHostInstancesForMatchingFibersRecursively(
-      root.current,
-      types,
-      hostInstances,
-    );
-    return hostInstances;
-  } else {
-    throw new Error(
-      'Did not expect findHostInstancesForRefresh to be called in production.',
-    );
-  }
-};
-
-function findHostInstancesForMatchingFibersRecursively(
-  fiber: Fiber,
-  types: Set<any>,
-  hostInstances: Set<Instance>,
-) {
-  if (__DEV__) {
-    const {child, sibling, tag, type} = fiber;
-
-    let candidateType = null;
-    switch (tag) {
-      case FunctionComponent:
-      case SimpleMemoComponent:
-      case ClassComponent:
-        candidateType = type;
-        break;
-      case ForwardRef:
-        candidateType = type.render;
-        break;
-      default:
-        break;
-    }
-
-    let didMatch = false;
-    if (candidateType !== null) {
-      if (types.has(candidateType)) {
-        didMatch = true;
-      }
-    }
-
-    if (didMatch) {
-      // We have a match. This only drills down to the closest host components.
-      // There's no need to search deeper because for the purpose of giving
-      // visual feedback, "flashing" outermost parent rectangles is sufficient.
-      findHostInstancesForFiberShallowly(fiber, hostInstances);
-    } else {
-      // If there's no match, maybe there will be one further down in the child tree.
-      if (child !== null) {
-        findHostInstancesForMatchingFibersRecursively(
-          child,
-          types,
-          hostInstances,
-        );
-      }
-    }
-
-    if (sibling !== null) {
-      findHostInstancesForMatchingFibersRecursively(
-        sibling,
-        types,
-        hostInstances,
-      );
-    }
-  }
-}
-
-function findHostInstancesForFiberShallowly(
-  fiber: Fiber,
-  hostInstances: Set<Instance>,
-): void {
-  if (__DEV__) {
-    const foundHostInstances = findChildHostInstancesForFiberShallowly(
-      fiber,
-      hostInstances,
-    );
-    if (foundHostInstances) {
-      return;
-    }
-    // If we didn't find any host children, fallback to closest host parent.
-    let node = fiber;
-    while (true) {
-      switch (node.tag) {
-        case HostSingleton:
-        case HostComponent:
-          hostInstances.add(node.stateNode);
-          return;
-        case HostPortal:
-          hostInstances.add(node.stateNode.containerInfo);
-          return;
-        case HostRoot:
-          hostInstances.add(node.stateNode.containerInfo);
-          return;
-      }
-      if (node.return === null) {
-        throw new Error('Expected to reach root first.');
-      }
-      node = node.return;
-    }
-  }
-}
-
-function findChildHostInstancesForFiberShallowly(
-  fiber: Fiber,
-  hostInstances: Set<Instance>,
-): boolean {
-  if (__DEV__) {
-    let node: Fiber = fiber;
-    let foundHostInstances = false;
-    while (true) {
-      if (
-        node.tag === HostComponent ||
-        node.tag === HostHoistable ||
-        (supportsSingletons ? node.tag === HostSingleton : false)
-      ) {
-        // We got a match.
-        foundHostInstances = true;
-        hostInstances.add(node.stateNode);
-        // There may still be more, so keep searching.
-      } else if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-      if (node === fiber) {
-        return foundHostInstances;
-      }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === fiber) {
-          return foundHostInstances;
-        }
-        node = node.return;
-      }
-      node.sibling.return = node.return;
-      node = node.sibling;
-    }
-  }
-  return false;
 }

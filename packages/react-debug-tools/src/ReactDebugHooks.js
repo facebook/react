@@ -37,6 +37,7 @@ import {
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import type {ContextDependencyWithSelect} from '../../react-reconciler/src/ReactInternalTypes';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals;
 
@@ -155,7 +156,10 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
 
 let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
-let currentContextDependency: null | ContextDependency<mixed> = null;
+let currentContextDependency:
+  | null
+  | ContextDependency<mixed>
+  | ContextDependencyWithSelect<mixed> = null;
 
 function nextHook(): null | Hook {
   const hook = currentHook;
@@ -284,9 +288,9 @@ function useState<S>(
     hook !== null
       ? hook.memoizedState
       : typeof initialState === 'function'
-      ? // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
-        initialState()
-      : initialState;
+        ? // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+          initialState()
+        : initialState;
   hookLog.push({
     displayName: null,
     primitive: 'State',
@@ -774,6 +778,7 @@ const Dispatcher: DispatcherType = {
 const DispatcherProxyHandler = {
   get(target: DispatcherType, prop: string) {
     if (target.hasOwnProperty(prop)) {
+      // $FlowFixMe[invalid-computed-prop]
       return target[prop];
     }
     const error = new Error('Missing method in Dispatcher: ' + prop);
@@ -868,7 +873,12 @@ function findCommonAncestorIndex(rootStack: any, hookStack: any) {
 }
 
 function isReactWrapper(functionName: any, wrapperName: string) {
-  return parseHookName(functionName) === wrapperName;
+  const hookName = parseHookName(functionName);
+  if (wrapperName === 'HostTransitionStatus') {
+    return hookName === wrapperName || hookName === 'FormStatus';
+  }
+
+  return hookName === wrapperName;
 }
 
 function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
@@ -878,21 +888,24 @@ function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
     return -1;
   }
   for (let i = 0; i < primitiveStack.length && i < hookStack.length; i++) {
+    // Note: there is no guarantee that we will find the top-most primitive frame in the stack
+    // For React Native (uses Hermes), these source fields will be identical and skipped
     if (primitiveStack[i].source !== hookStack[i].source) {
-      // If the next frame is a method from the dispatcher, we
-      // assume that the next frame after that is the actual public API call.
-      // This prohibits nesting dispatcher calls in hooks.
+      // If the next two frames are functions called `useX` then we assume that they're part of the
+      // wrappers that the React package or other packages adds around the dispatcher.
       if (
         i < hookStack.length - 1 &&
         isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
       ) {
         i++;
-        // Guard against the dispatcher call being inlined.
-        // At this point we wouldn't be able to recover the actual React Hook name.
-        if (i < hookStack.length - 1) {
-          i++;
-        }
       }
+      if (
+        i < hookStack.length - 1 &&
+        isReactWrapper(hookStack[i].functionName, hook.dispatcherHookName)
+      ) {
+        i++;
+      }
+
       return i;
     }
   }
@@ -1040,7 +1053,7 @@ function buildTree(
     const levelChild: HooksNode = {
       id,
       isStateEditable,
-      name: name,
+      name,
       value: hook.value,
       subHooks: [],
       debugInfo: debugInfo,

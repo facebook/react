@@ -11,14 +11,14 @@ function Component(props) {
     x = 3;
   }
   label2: switch (props.c) {
-    case "a": {
+    case 'a': {
       x = 4;
       break;
     }
-    case "b": {
+    case 'b': {
       break label2;
     }
-    case "c": {
+    case 'c': {
       x = 5;
       // intentional fallthrough
     }
@@ -34,6 +34,6 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: ['TodoAdd'],
+  isComponent: 'TodoAdd',
 };

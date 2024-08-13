@@ -26,6 +26,8 @@ export function scheduleWork(callback: () => void) {
   setImmediate(callback);
 }
 
+export const scheduleMicrotask = queueMicrotask;
+
 export function flushBuffered(destination: Destination) {
   // If we don't have any more data to send right now.
   // Flush whatever is in the buffer to the wire.
@@ -61,7 +63,8 @@ function writeStringChunk(destination: Destination, stringChunk: string) {
       currentView = new Uint8Array(VIEW_SIZE);
       writtenBytes = 0;
     }
-    writeToDestination(destination, textEncoder.encode(stringChunk));
+    // Write the raw string chunk and let the consumer handle the encoding.
+    writeToDestination(destination, stringChunk);
     return;
   }
 

@@ -58,7 +58,7 @@ describe('memo', () => {
     }
     ReactNoop.render(<Outer />);
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: Function components cannot be given refs. Attempts to access ' +
+      'Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
   });
@@ -76,7 +76,7 @@ describe('memo', () => {
     }
     ReactNoop.render(<Outer />);
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: Function components cannot be given refs. Attempts to access ' +
+      'Function components cannot be given refs. Attempts to access ' +
         'this ref will fail.',
     ]);
   });

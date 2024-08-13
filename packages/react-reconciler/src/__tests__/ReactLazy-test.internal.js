@@ -213,14 +213,18 @@ describe('ReactLazy', () => {
       unstable_isConcurrent: true,
     });
 
+    function App() {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi" />
+        </Suspense>
+      );
+    }
+
     let error;
     try {
       await act(() => {
-        root.update(
-          <Suspense fallback={<Text text="Loading..." />}>
-            <LazyText text="Hi" />
-          </Suspense>,
-        );
+        root.update(<App />);
       });
     } catch (e) {
       error = e;
@@ -228,18 +232,10 @@ describe('ReactLazy', () => {
 
     expect(error.message).toMatch('Element type is invalid');
     assertLog(['Loading...']);
-    assertConsoleErrorDev(
-      [
-        'Expected the result of a dynamic import() call',
-        'Expected the result of a dynamic import() call',
-      ],
-      gate(flags => flags.enableOwnerStacks)
-        ? {
-            // There's no owner
-            withoutStack: true,
-          }
-        : undefined,
-    );
+    assertConsoleErrorDev([
+      'Expected the result of a dynamic import() call',
+      'Expected the result of a dynamic import() call',
+    ]);
     expect(root).not.toMatchRenderedOutput('Hi');
   });
 
@@ -711,7 +707,7 @@ describe('ReactLazy', () => {
       await act(() => resolveFakeImport(T));
       assertLog(['Hi Bye']);
     }).toErrorDev(
-      'Warning: T: Support for defaultProps ' +
+      'T: Support for defaultProps ' +
         'will be removed from function components in a future major ' +
         'release. Use JavaScript default parameters instead.',
     );
@@ -757,6 +753,32 @@ describe('ReactLazy', () => {
     );
     await waitForThrow(
       'Element type is invalid. Received a promise that resolves to: 42. ' +
+        'Lazy element type must resolve to a class or function.',
+    );
+  });
+
+  it('throws with a useful error when wrapping fragment with lazy()', async () => {
+    const BadLazy = lazy(() => fakeImport(React.Fragment));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(React.Fragment);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: Fragment. ' +
         'Lazy element type must resolve to a class or function.',
     );
   });
@@ -819,10 +841,10 @@ describe('ReactLazy', () => {
             'Add: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
           ]
         : shouldWarnAboutMemoDefaultProps
-        ? [
-            'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
-          ]
-        : [],
+          ? [
+              'Add: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+            ]
+          : [],
     );
     expect(root).toMatchRenderedOutput('22');
 

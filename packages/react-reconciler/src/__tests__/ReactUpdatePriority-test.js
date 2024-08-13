@@ -35,7 +35,7 @@ describe('ReactUpdatePriority', () => {
     return text;
   }
 
-  test('setState inside passive effect triggered by sync update should have default priority', async () => {
+  it('setState inside passive effect triggered by sync update should have default priority', async () => {
     const root = ReactNoop.createRoot();
 
     function App() {
@@ -56,7 +56,7 @@ describe('ReactUpdatePriority', () => {
     assertLog([2]);
   });
 
-  test('setState inside passive effect triggered by idle update should have idle priority', async () => {
+  it('setState inside passive effect triggered by idle update should have idle priority', async () => {
     const root = ReactNoop.createRoot();
 
     let setDefaultState;
@@ -94,7 +94,7 @@ describe('ReactUpdatePriority', () => {
     assertLog(['Idle: 2, Default: 2']);
   });
 
-  test('continuous updates should interrupt transitions', async () => {
+  it('continuous updates should interrupt transitions', async () => {
     const root = ReactNoop.createRoot();
 
     let setCounter;

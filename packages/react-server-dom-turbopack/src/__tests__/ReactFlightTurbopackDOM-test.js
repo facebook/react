@@ -9,15 +9,13 @@
 
 'use strict';
 
+import {patchSetImmediate} from '../../../../scripts/jest/patchSetImmediate';
+
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
-
-// Don't wait before processing work on the server.
-// TODO: we can replace this with FlightServer.act().
-global.setImmediate = cb => cb();
 
 let act;
 let use;
@@ -29,6 +27,8 @@ let ReactDOMClient;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Suspense;
+let ReactServerScheduler;
+let reactServerAct;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
@@ -36,6 +36,10 @@ describe('ReactFlightDOM', () => {
     // This can be thought of as essentially being the React Server Components scope with react-server
     // condition
     jest.resetModules();
+
+    ReactServerScheduler = require('scheduler');
+    patchSetImmediate(ReactServerScheduler);
+    reactServerAct = require('internal-test-utils').act;
 
     // Simulate the condition resolution
     jest.mock('react-server-dom-turbopack/server', () =>
@@ -60,6 +64,17 @@ describe('ReactFlightDOM', () => {
     ReactDOMClient = require('react-dom/client');
     ReactServerDOMClient = require('react-server-dom-turbopack/client');
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await reactServerAct(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   function getTestStream() {
     const writable = new Stream.PassThrough();
@@ -100,9 +115,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <App />,
-      turbopackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<App />, turbopackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -149,9 +163,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <RootModel />,
-      turbopackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(<RootModel />, turbopackMap),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);
@@ -191,9 +204,11 @@ describe('ReactFlightDOM', () => {
     const AsyncModuleRef2 = await clientExports(AsyncModule2);
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
-      <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
-      turbopackMap,
+    const {pipe} = await serverAct(() =>
+      ReactServerDOMServer.renderToPipeableStream(
+        <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
+        turbopackMap,
+      ),
     );
     pipe(writable);
     const response = ReactServerDOMClient.createFromReadableStream(readable);

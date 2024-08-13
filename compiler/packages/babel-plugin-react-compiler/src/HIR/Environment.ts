@@ -5,34 +5,37 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as t from "@babel/types";
-import { ZodError, z } from "zod";
-import { fromZodError } from "zod-validation-error";
-import { CompilerError } from "../CompilerError";
-import { Logger } from "../Entrypoint";
-import { Err, Ok, Result } from "../Utils/Result";
+import * as t from '@babel/types';
+import {ZodError, z} from 'zod';
+import {fromZodError} from 'zod-validation-error';
+import {CompilerError} from '../CompilerError';
+import {Logger} from '../Entrypoint';
+import {Err, Ok, Result} from '../Utils/Result';
 import {
   DEFAULT_GLOBALS,
   DEFAULT_SHAPES,
   Global,
   GlobalRegistry,
   installReAnimatedTypes,
-} from "./Globals";
+} from './Globals';
 import {
   BlockId,
   BuiltInType,
   Effect,
   FunctionType,
+  HIRFunction,
   IdentifierId,
   NonLocalBinding,
   PolyType,
   ScopeId,
   Type,
+  ValidatedIdentifier,
   ValueKind,
   makeBlockId,
   makeIdentifierId,
+  makeIdentifierName,
   makeScopeId,
-} from "./HIR";
+} from './HIR';
 import {
   BuiltInMixedReadonlyId,
   DefaultMutatingHook,
@@ -40,7 +43,8 @@ import {
   FunctionSignature,
   ShapeRegistry,
   addHook,
-} from "./ObjectShape";
+} from './ObjectShape';
+import {Scope as BabelScope} from '@babel/traverse';
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -57,11 +61,25 @@ export const InstrumentationSchema = z
     globalGating: z.string().nullish(),
   })
   .refine(
-    (opts) => opts.gating != null || opts.globalGating != null,
-    "Expected at least one of gating or globalGating"
+    opts => opts.gating != null || opts.globalGating != null,
+    'Expected at least one of gating or globalGating',
   );
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
+
+export const MacroMethodSchema = z.union([
+  z.object({type: z.literal('wildcard')}),
+  z.object({type: z.literal('name'), name: z.string()}),
+]);
+
+// Would like to change this to drop the string option, but breaks compatibility with existing configs
+export const MacroSchema = z.union([
+  z.string(),
+  z.tuple([z.string(), z.array(MacroMethodSchema)]),
+]);
+
+export type Macro = z.infer<typeof MacroSchema>;
+export type MacroMethod = z.infer<typeof MacroMethodSchema>;
 
 const HookSchema = z.object({
   /*
@@ -120,6 +138,18 @@ const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
 
   /**
+   * A list of functions which the application compiles as macros, where
+   * the compiler must ensure they are not compiled to rename the macro or separate the
+   * "function" from its argument.
+   *
+   * For example, Meta has some APIs such as `featureflag("name-of-feature-flag")` which
+   * are rewritten by a plugin. Assigning `featureflag` to a temporary would break the
+   * plugin since it looks specifically for the name of the function being invoked, not
+   * following aliases.
+   */
+  customMacros: z.nullable(z.array(MacroSchema)).default(null),
+
+  /**
    * Enable a check that resets the memoization cache when the source code of the file changes.
    * This is intended to support hot module reloading (HMR), where the same runtime component
    * instance will be reused across different versions of the component source.
@@ -164,6 +194,13 @@ const EnvironmentConfigSchema = z.object({
    * may change under Forget.
    */
   validatePreserveExistingMemoizationGuarantees: z.boolean().default(true),
+
+  /**
+   * When this is true, rather than pruning existing manual memoization but ensuring or validating
+   * that the memoized values remain memoized, the compiler will simply not prune existing calls to
+   * useMemo/useCallback.
+   */
+  enablePreserveExistingManualUseMemo: z.boolean().default(false),
 
   // 🌲
   enableForest: z.boolean().default(false),
@@ -215,6 +252,7 @@ const EnvironmentConfigSchema = z.object({
    * this option to the empty array.
    */
   validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
+  validateBlocklistedImports: z.nullable(z.array(z.string())).default(null),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -257,6 +295,18 @@ const EnvironmentConfigSchema = z.object({
   enableEmitFreeze: ExternalFunctionSchema.nullish(),
 
   enableEmitHookGuards: ExternalFunctionSchema.nullish(),
+
+  /**
+   * Enable instruction reordering. See InstructionReordering.ts for the details
+   * of the approach.
+   */
+  enableInstructionReordering: z.boolean().default(false),
+
+  /**
+   * Enables function outlinining, where anonymous functions that do not close over
+   * local variables can be extracted into top-level helper functions.
+   */
+  enableFunctionOutlining: z.boolean().default(true),
 
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
@@ -344,6 +394,23 @@ const EnvironmentConfigSchema = z.object({
   enableTreatFunctionDepsAsConditional: z.boolean().default(false),
 
   /**
+   * When true, always act as though the dependencies of a memoized value
+   * have changed. This makes the compiler not actually perform any optimizations,
+   * but is useful for debugging. Implicitly also sets
+   * @enablePreserveExistingManualUseMemo, because otherwise memoization in the
+   * original source will be disabled as well.
+   */
+  disableMemoizationForDebugging: z.boolean().default(false),
+
+  /**
+   * When true, rather using memoized values, the compiler will always re-compute
+   * values, and then use a heuristic to compare the memoized value to the newly
+   * computed one. This detects cases where rules of react violations may cause the
+   * compiled code to behave differently than the original.
+   */
+  enableChangeDetectionForDebugging: ExternalFunctionSchema.nullish(),
+
+  /**
    * The react native re-animated library uses custom Babel transforms that
    * requires the calls to library API remain unmodified.
    *
@@ -365,6 +432,45 @@ const EnvironmentConfigSchema = z.object({
    * and identifiers have been changed.
    */
   hookPattern: z.string().nullable().default(null),
+
+  /**
+   * If enabled, this will treat objects named as `ref` or if their names end with the substring `Ref`,
+   * and contain a property named `current`, as React refs.
+   *
+   * ```
+   * const ref = useMyRef();
+   * const myRef = useMyRef2();
+   * useEffect(() => {
+   *   ref.current = ...;
+   *   myRef.current = ...;
+   * })
+   * ```
+   *
+   * Here the variables `ref` and `myRef` will be typed as Refs.
+   */
+  enableTreatRefLikeIdentifiersAsRefs: z.boolean().nullable().default(false),
+
+  /*
+   * If specified a value, the compiler lowers any calls to `useContext` to use
+   * this value as the callee.
+   *
+   * A selector function is compiled and passed as an argument along with the
+   * context to this function call.
+   *
+   * The compiler automatically figures out the keys by looking for the immediate
+   * destructuring of the return value from the useContext call. In the future,
+   * this can be extended to different kinds of context access like property
+   * loads and accesses over multiple statements as well.
+   *
+   * ```
+   * // input
+   * const {foo, bar} = useContext(MyContext);
+   *
+   * // output
+   * const {foo, bar} = useCompiledContext(MyContext, (c) => [c.foo, c.bar]);
+   * ```
+   */
+  lowerContextAccess: ExternalFunctionSchema.nullish(),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
@@ -374,23 +480,51 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
   // Get the defaults to programmatically check for boolean properties
   const defaultConfig = EnvironmentConfigSchema.parse({});
 
-  for (const token of pragma.split(" ")) {
-    if (!token.startsWith("@")) {
+  for (const token of pragma.split(' ')) {
+    if (!token.startsWith('@')) {
       continue;
     }
     const keyVal = token.slice(1);
-    let [key, val]: any = keyVal.split(":");
+    let [key, val]: any = keyVal.split(':');
 
-    if (key === "validateNoCapitalizedCalls") {
+    if (key === 'validateNoCapitalizedCalls') {
       maybeConfig[key] = [];
       continue;
     }
 
-    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {
+    if (
+      key === 'enableChangeDetectionForDebugging' &&
+      (val === undefined || val === 'true')
+    ) {
+      maybeConfig[key] = {
+        source: 'react-compiler-runtime',
+        importSpecifierName: '$structuralCheck',
+      };
+      continue;
+    }
+
+    if (key === 'customMacros' && val) {
+      const valSplit = val.split('.');
+      if (valSplit.length > 0) {
+        const props = [];
+        for (const elt of valSplit.slice(1)) {
+          if (elt === '*') {
+            props.push({type: 'wildcard'});
+          } else if (elt.length > 0) {
+            props.push({type: 'name', name: elt});
+          }
+        }
+        console.log([valSplit[0], props.map(x => x.name ?? '*').join('.')]);
+        maybeConfig[key] = [[valSplit[0], props]];
+      }
+      continue;
+    }
+
+    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== 'boolean') {
       // skip parsing non-boolean properties
       continue;
     }
-    if (val === undefined || val === "true") {
+    if (val === undefined || val === 'true') {
       val = true;
     } else {
       val = false;
@@ -403,7 +537,7 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
     return config.data;
   }
   CompilerError.invariant(false, {
-    reason: "Internal error, could not parse config from pragma string",
+    reason: 'Internal error, could not parse config from pragma string',
     description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
@@ -412,18 +546,18 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
 
 export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
-export type ReactFunctionType = "Component" | "Hook" | "Other";
+export type ReactFunctionType = 'Component' | 'Hook' | 'Other';
 
 export function printFunctionType(type: ReactFunctionType): string {
   switch (type) {
-    case "Component": {
-      return "component";
+    case 'Component': {
+      return 'component';
     }
-    case "Hook": {
-      return "hook";
+    case 'Hook': {
+      return 'hook';
     }
     default: {
-      return "function";
+      return 'function';
     }
   }
 }
@@ -434,25 +568,33 @@ export class Environment {
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
+  #scope: BabelScope;
+  #outlinedFunctions: Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> = [];
   logger: Logger | null;
   filename: string | null;
   code: string | null;
   config: EnvironmentConfig;
   fnType: ReactFunctionType;
   useMemoCacheIdentifier: string;
+  hasLoweredContextAccess: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
 
   constructor(
+    scope: BabelScope,
     fnType: ReactFunctionType,
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>,
     logger: Logger | null,
     filename: string | null,
     code: string | null,
-    useMemoCacheIdentifier: string
+    useMemoCacheIdentifier: string,
   ) {
+    this.#scope = scope;
     this.fnType = fnType;
     this.config = config;
     this.filename = filename;
@@ -461,6 +603,19 @@ export class Environment {
     this.useMemoCacheIdentifier = useMemoCacheIdentifier;
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.#globals = new Map(DEFAULT_GLOBALS);
+    this.hasLoweredContextAccess = false;
+
+    if (
+      config.disableMemoizationForDebugging &&
+      config.enableChangeDetectionForDebugging != null
+    ) {
+      CompilerError.throwInvalidConfig({
+        reason: `Invalid environment config: the 'disableMemoizationForDebugging' and 'enableChangeDetectionForDebugging' options cannot be used together`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+    }
 
     for (const [hookName, hook] of this.config.customHooks) {
       CompilerError.invariant(!this.#globals.has(hookName), {
@@ -475,13 +630,13 @@ export class Environment {
           positionalParams: [],
           restParam: hook.effectKind,
           returnType: hook.transitiveMixedData
-            ? { kind: "Object", shapeId: BuiltInMixedReadonlyId }
-            : { kind: "Poly" },
+            ? {kind: 'Object', shapeId: BuiltInMixedReadonlyId}
+            : {kind: 'Poly'},
           returnValueKind: hook.valueKind,
           calleeEffect: Effect.Read,
-          hookKind: "Custom",
+          hookKind: 'Custom',
           noAlias: hook.noAlias,
-        })
+        }),
       );
     }
 
@@ -513,12 +668,30 @@ export class Environment {
     return this.#hoistedIdentifiers.has(node);
   }
 
+  generateGloballyUniqueIdentifierName(
+    name: string | null,
+  ): ValidatedIdentifier {
+    const identifierNode = this.#scope.generateUidIdentifier(name ?? undefined);
+    return makeIdentifierName(identifierNode.name);
+  }
+
+  outlineFunction(fn: HIRFunction, type: ReactFunctionType | null): void {
+    this.#outlinedFunctions.push({fn, type});
+  }
+
+  getOutlinedFunctions(): Array<{
+    fn: HIRFunction;
+    type: ReactFunctionType | null;
+  }> {
+    return this.#outlinedFunctions;
+  }
+
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
         match != null &&
-        typeof match[1] === "string" &&
+        typeof match[1] === 'string' &&
         isHookName(match[1])
       ) {
         const resolvedName = match[1];
@@ -527,17 +700,17 @@ export class Environment {
     }
 
     switch (binding.kind) {
-      case "ModuleLocal": {
+      case 'ModuleLocal': {
         // don't resolve module locals
         return isHookName(binding.name) ? this.#getCustomHookType() : null;
       }
-      case "Global": {
+      case 'Global': {
         return (
           this.#globals.get(binding.name) ??
           (isHookName(binding.name) ? this.#getCustomHookType() : null)
         );
       }
-      case "ImportSpecifier": {
+      case 'ImportSpecifier': {
         if (this.#isKnownReactModule(binding.module)) {
           /**
            * For `import {imported as name} from "..."` form, we use the `imported`
@@ -564,8 +737,8 @@ export class Environment {
             : null;
         }
       }
-      case "ImportDefault":
-      case "ImportNamespace": {
+      case 'ImportDefault':
+      case 'ImportNamespace': {
         if (this.#isKnownReactModule(binding.module)) {
           // only resolve imports to modules we know about
           return (
@@ -581,19 +754,19 @@ export class Environment {
 
   #isKnownReactModule(moduleName: string): boolean {
     return (
-      moduleName.toLowerCase() === "react" ||
-      moduleName.toLowerCase() === "react-dom" ||
+      moduleName.toLowerCase() === 'react' ||
+      moduleName.toLowerCase() === 'react-dom' ||
       (this.config.enableSharedRuntime__testonly &&
-        moduleName === "shared-runtime")
+        moduleName === 'shared-runtime')
     );
   }
 
   getPropertyType(
     receiver: Type,
-    property: string
+    property: string,
   ): BuiltInType | PolyType | null {
     let shapeId = null;
-    if (receiver.kind === "Object" || receiver.kind === "Function") {
+    if (receiver.kind === 'Object' || receiver.kind === 'Function') {
       shapeId = receiver.shapeId;
     }
     if (shapeId !== null) {
@@ -609,7 +782,7 @@ export class Environment {
         suggestions: null,
       });
       let value =
-        shape.properties.get(property) ?? shape.properties.get("*") ?? null;
+        shape.properties.get(property) ?? shape.properties.get('*') ?? null;
       if (value === null && isHookName(property)) {
         value = this.#getCustomHookType();
       }
@@ -622,7 +795,7 @@ export class Environment {
   }
 
   getFunctionSignature(type: FunctionType): FunctionSignature | null {
-    const { shapeId } = type;
+    const {shapeId} = type;
     if (shapeId !== null) {
       const shape = this.#shapes.get(shapeId);
       CompilerError.invariant(shape !== undefined, {
@@ -656,7 +829,7 @@ export function isHookName(name: string): boolean {
 }
 
 export function parseEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig
+  partialConfig: PartialEnvironmentConfig,
 ): Result<EnvironmentConfig, ZodError<PartialEnvironmentConfig>> {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
@@ -667,7 +840,7 @@ export function parseEnvironmentConfig(
 }
 
 export function validateEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig
+  partialConfig: PartialEnvironmentConfig,
 ): EnvironmentConfig {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
@@ -676,7 +849,7 @@ export function validateEnvironmentConfig(
 
   CompilerError.throwInvalidConfig({
     reason:
-      "Could not validate environment config. Update React Compiler config to fix the error",
+      'Could not validate environment config. Update React Compiler config to fix the error',
     description: `${fromZodError(config.error)}`,
     loc: null,
     suggestions: null,
@@ -684,10 +857,10 @@ export function validateEnvironmentConfig(
 }
 
 export function tryParseExternalFunction(
-  maybeExternalFunction: any
+  maybeExternalFunction: any,
 ): ExternalFunction {
   const externalFunction = ExternalFunctionSchema.safeParse(
-    maybeExternalFunction
+    maybeExternalFunction,
   );
   if (externalFunction.success) {
     return externalFunction.data;
@@ -695,7 +868,7 @@ export function tryParseExternalFunction(
 
   CompilerError.throwInvalidConfig({
     reason:
-      "Could not parse external function. Update React Compiler config to fix the error",
+      'Could not parse external function. Update React Compiler config to fix the error',
     description: `${fromZodError(externalFunction.error)}`,
     loc: null,
     suggestions: null,

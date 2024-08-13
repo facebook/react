@@ -9,6 +9,7 @@ const semver = require('semver');
 
 const ossConfig = './scripts/jest/config.source.js';
 const wwwConfig = './scripts/jest/config.source-www.js';
+const xplatConfig = './scripts/jest/config.source-xplat.js';
 const devToolsConfig = './scripts/jest/config.build-devtools.js';
 
 // TODO: These configs are separate but should be rolled into the configs above
@@ -46,7 +47,7 @@ const argv = yargs
       requiresArg: true,
       type: 'string',
       default: 'experimental',
-      choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
+      choices: ['experimental', 'stable', 'www-classic', 'www-modern', 'xplat'],
     },
     env: {
       alias: 'e',
@@ -124,6 +125,10 @@ function isWWWConfig() {
   );
 }
 
+function isXplatConfig() {
+  return argv.releaseChannel === 'xplat' && argv.project !== 'devtools';
+}
+
 function isOSSConfig() {
   return (
     argv.releaseChannel === 'stable' || argv.releaseChannel === 'experimental'
@@ -189,7 +194,7 @@ function validateOptions() {
     }
   }
 
-  if (isWWWConfig()) {
+  if (isWWWConfig() || isXplatConfig()) {
     if (argv.variant === undefined) {
       // Turn internal experiments on by default
       argv.variant = true;
@@ -220,6 +225,13 @@ function validateOptions() {
   if (argv.build && isWWWConfig()) {
     logError(
       'Build targets are only not supported for www release channels. Update these options to continue.'
+    );
+    success = false;
+  }
+
+  if (argv.build && isXplatConfig()) {
+    logError(
+      'Build targets are only not supported for xplat release channels. Update these options to continue.'
     );
     success = false;
   }
@@ -277,6 +289,8 @@ function getCommandArgs() {
     args.push(persistentConfig);
   } else if (isWWWConfig()) {
     args.push(wwwConfig);
+  } else if (isXplatConfig()) {
+    args.push(xplatConfig);
   } else if (isOSSConfig()) {
     args.push(ossConfig);
   } else {
@@ -294,9 +308,8 @@ function getCommandArgs() {
     args.push('--useStderr');
   }
 
-  // CI Environments have limited workers.
-  if (argv.ci) {
-    args.push('--maxWorkers=2');
+  if (argv.ci === true) {
+    args.push('--maxConcurrency=10');
   }
 
   // Push the remaining args onto the command.
@@ -350,16 +363,18 @@ function main() {
   const envars = getEnvars();
   const env = Object.entries(envars).map(([k, v]) => `${k}=${v}`);
 
-  // Print the full command we're actually running.
-  const command = `$ ${env.join(' ')} node ${args.join(' ')}`;
-  console.log(chalk.dim(command));
+  if (argv.ci !== true) {
+    // Print the full command we're actually running.
+    const command = `$ ${env.join(' ')} node ${args.join(' ')}`;
+    console.log(chalk.dim(command));
 
-  // Print the release channel and project we're running for quick confirmation.
-  console.log(
-    chalk.blue(
-      `\nRunning tests for ${argv.project} (${argv.releaseChannel})...`
-    )
-  );
+    // Print the release channel and project we're running for quick confirmation.
+    console.log(
+      chalk.blue(
+        `\nRunning tests for ${argv.project} (${argv.releaseChannel})...`
+      )
+    );
+  }
 
   // Print a message that the debugger is starting just
   // for some extra feedback when running the debugger.

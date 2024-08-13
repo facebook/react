@@ -34,6 +34,8 @@ describe('InspectedElement', () => {
   let SettingsContextController;
   let StoreContext;
   let TreeContextController;
+  let TreeStateContext;
+  let TreeDispatcherContext;
 
   let TestUtilsAct;
   let TestRendererAct;
@@ -73,6 +75,10 @@ describe('InspectedElement', () => {
       require('react-devtools-shared/src/devtools/views/context').StoreContext;
     TreeContextController =
       require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeContextController;
+    TreeStateContext =
+      require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeStateContext;
+    TreeDispatcherContext =
+      require('react-devtools-shared/src/devtools/views/Components/TreeContext').TreeDispatcherContext;
 
     // Used by inspectElementAtIndex() helper function
     utils.act(() => {
@@ -117,12 +123,11 @@ describe('InspectedElement', () => {
         <SettingsContextController>
           <TreeContextController
             defaultSelectedElementID={defaultSelectedElementID}
-            defaultSelectedElementIndex={defaultSelectedElementIndex}>
-            <React.Suspense fallback="Loading...">
-              <InspectedElementContextController>
-                {children}
-              </InspectedElementContextController>
-            </React.Suspense>
+            defaultSelectedElementIndex={defaultSelectedElementIndex}
+            defaultInspectedElementID={defaultSelectedElementID}>
+            <InspectedElementContextController>
+              {children}
+            </InspectedElementContextController>
           </TreeContextController>
         </SettingsContextController>
       </StoreContext.Provider>
@@ -181,7 +186,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('should inspect the currently selected element (legacy render)', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should inspect the currently selected element (legacy render)', async () => {
     const Example = () => {
       const [count] = React.useState(1);
       return count;
@@ -664,7 +670,6 @@ describe('InspectedElement', () => {
           anonymous_fn={instance.anonymousFunction}
           array_buffer={arrayBuffer}
           array_of_arrays={arrayOfArrays}
-          // eslint-disable-next-line no-undef
           big_int={BigInt(123)}
           bound_fn={exampleFunction.bind(this)}
           data_view={dataView}
@@ -1653,7 +1658,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('should inspect hooks for components that only use context (legacy render)', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should inspect hooks for components that only use context (legacy render)', async () => {
     const Context = React.createContext(true);
     const Example = () => {
       const value = React.useContext(Context);
@@ -1874,7 +1880,7 @@ describe('InspectedElement', () => {
         xyz: 1,
       },
     });
-    const bigInt = BigInt(123); // eslint-disable-line no-undef
+    const bigInt = BigInt(123);
 
     await utils.actAsync(() =>
       render(
@@ -2031,7 +2037,8 @@ describe('InspectedElement', () => {
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // Regression test for github.com/facebook/react/issues/22099
   // @reactVersion <= 18.2
-  xit('should not error when an unchanged component is re-inspected after component filters changed (legacy render)', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should not error when an unchanged component is re-inspected after component filters changed (legacy render)', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => legacyRender(<Example />));
@@ -2141,7 +2148,7 @@ describe('InspectedElement', () => {
         "context": null,
         "events": undefined,
         "hooks": null,
-        "id": 2,
+        "id": 4,
         "owners": null,
         "props": {},
         "rootType": "createRoot()",
@@ -2152,7 +2159,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('should display the root type for ReactDOM.hydrate', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should display the root type for ReactDOM.hydrate', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
@@ -2172,7 +2180,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('should display the root type for ReactDOM.render', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('should display the root type for ReactDOM.render', async () => {
     const Example = () => <div />;
 
     await utils.actAsync(() => {
@@ -2551,7 +2560,7 @@ describe('InspectedElement', () => {
       };
 
       await withErrorsOrWarningsIgnored(
-        ['Warning: Each child in a list should have a unique "key" prop.'],
+        ['Each child in a list should have a unique "key" prop.'],
         async () => {
           await utils.actAsync(() =>
             render(<Example repeatWarningCount={1} />),
@@ -2789,7 +2798,8 @@ describe('InspectedElement', () => {
 
   // TODO(hoxyq): Enable this test for versions ~18, currently broken
   // @reactVersion <= 18.2
-  xit('inspecting nested renderers should not throw (legacy render)', async () => {
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('inspecting nested renderers should not throw (legacy render)', async () => {
     // Ignoring react art warnings
     jest.spyOn(console, 'error').mockImplementation(() => {});
     const ReactArt = require('react-art');
@@ -2889,7 +2899,7 @@ describe('InspectedElement', () => {
           "compiledWithForget": false,
           "displayName": "Child",
           "hocDisplayNames": null,
-          "id": 5,
+          "id": 8,
           "key": null,
           "type": 5,
         },
@@ -2897,7 +2907,7 @@ describe('InspectedElement', () => {
           "compiledWithForget": false,
           "displayName": "App",
           "hocDisplayNames": null,
-          "id": 4,
+          "id": 7,
           "key": null,
           "type": 5,
         },
@@ -3011,5 +3021,133 @@ describe('InspectedElement', () => {
         targetErrorBoundaryID,
       );
     });
+  });
+
+  it('should properly handle when components filters are updated', async () => {
+    const Wrapper = ({children}) => children;
+
+    let state;
+    let dispatch;
+    const Capture = () => {
+      dispatch = React.useContext(TreeDispatcherContext);
+      state = React.useContext(TreeStateContext);
+      return null;
+    };
+
+    function Child({logError = false, logWarning = false}) {
+      if (logError === true) {
+        console.error('test-only: error');
+      }
+      if (logWarning === true) {
+        console.warn('test-only: warning');
+      }
+      return null;
+    }
+
+    async function selectNextErrorOrWarning() {
+      await utils.actAsync(
+        () =>
+          dispatch({type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'}),
+        false,
+      );
+    }
+
+    async function selectPreviousErrorOrWarning() {
+      await utils.actAsync(
+        () =>
+          dispatch({
+            type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
+          }),
+        false,
+      );
+    }
+
+    withErrorsOrWarningsIgnored(['test-only:'], () =>
+      utils.act(() =>
+        render(
+          <React.Fragment>
+            <Wrapper>
+              <Child logWarning={true} />
+            </Wrapper>
+            <Wrapper>
+              <Wrapper>
+                <Child logWarning={true} />
+              </Wrapper>
+            </Wrapper>
+          </React.Fragment>,
+        ),
+      ),
+    );
+
+    utils.act(() =>
+      TestRenderer.create(
+        <Contexts>
+          <Capture />
+        </Contexts>,
+      ),
+    );
+    expect(state).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 2
+      [root]
+         ▾ <Wrapper>
+             <Child> ⚠
+         ▾ <Wrapper>
+           ▾ <Wrapper>
+               <Child> ⚠
+    `);
+
+    await selectNextErrorOrWarning();
+    expect(state).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 2
+      [root]
+         ▾ <Wrapper>
+      →      <Child> ⚠
+         ▾ <Wrapper>
+           ▾ <Wrapper>
+               <Child> ⚠
+    `);
+
+    await utils.actAsync(() => {
+      store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
+    }, false);
+
+    expect(state).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 2
+      [root]
+      →    <Child> ⚠
+           <Child> ⚠
+    `);
+
+    await selectNextErrorOrWarning();
+    expect(state).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 2
+      [root]
+           <Child> ⚠
+      →    <Child> ⚠
+    `);
+
+    await utils.actAsync(() => {
+      store.componentFilters = [];
+    }, false);
+    expect(state).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 2
+      [root]
+         ▾ <Wrapper>
+             <Child> ⚠
+         ▾ <Wrapper>
+           ▾ <Wrapper>
+      →        <Child> ⚠
+    `);
+
+    await selectPreviousErrorOrWarning();
+    expect(state).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 2
+      [root]
+         ▾ <Wrapper>
+      →      <Child> ⚠
+         ▾ <Wrapper>
+           ▾ <Wrapper>
+               <Child> ⚠
+    `);
   });
 });

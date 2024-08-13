@@ -474,7 +474,7 @@ describe('ReactCompositeComponent-state', () => {
         root.render(<Test />);
       });
     }).toErrorDev(
-      'Warning: Test.componentWillReceiveProps(): Assigning directly to ' +
+      'Test.componentWillReceiveProps(): Assigning directly to ' +
         "this.state is deprecated (except inside a component's constructor). " +
         'Use setState instead.',
     );
@@ -523,7 +523,7 @@ describe('ReactCompositeComponent-state', () => {
         root.render(<Test />);
       });
     }).toErrorDev(
-      'Warning: Test.componentWillMount(): Assigning directly to ' +
+      'Test.componentWillMount(): Assigning directly to ' +
         "this.state is deprecated (except inside a component's constructor). " +
         'Use setState instead.',
     );
@@ -571,7 +571,7 @@ describe('ReactCompositeComponent-state', () => {
         root.render(<B />);
       });
     }).toErrorDev(
-      "Warning: Can't perform a React state update on a component that hasn't mounted yet",
+      "Can't perform a React state update on a component that hasn't mounted yet",
     );
   });
 

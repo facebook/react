@@ -14,9 +14,9 @@ import {
   ReactiveScope,
   ScopeId,
   makeInstructionId,
-} from "../HIR/HIR";
-import { getPlaceScope } from "./BuildReactiveBlocks";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR/HIR';
+import {getPlaceScope} from './BuildReactiveBlocks';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
  * Note: this is the 2nd of 4 passes that determine how to break a function into discrete
@@ -84,10 +84,10 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
 
   override visitInstruction(instr: ReactiveInstruction, state: Context): void {
     switch (instr.value.kind) {
-      case "OptionalExpression":
-      case "SequenceExpression":
-      case "ConditionalExpression":
-      case "LogicalExpression": {
+      case 'OptionalExpression':
+      case 'SequenceExpression':
+      case 'ConditionalExpression':
+      case 'LogicalExpression': {
         const prevScopeCount = state.currentScopes().length;
         this.traverseInstruction(instr, state);
 
@@ -105,7 +105,7 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
         for (let i = prevScopeCount; i < scopes.length; i++) {
           const scope = scopes[i];
           scope.scope.range.start = makeInstructionId(
-            Math.min(instr.id, scope.scope.range.start)
+            Math.min(instr.id, scope.scope.range.start),
           );
         }
         break;
@@ -123,7 +123,7 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
   }
 }
 
-type PendingReactiveScope = { active: boolean; scope: ReactiveScope };
+type PendingReactiveScope = {active: boolean; scope: ReactiveScope};
 
 class Context {
   /*

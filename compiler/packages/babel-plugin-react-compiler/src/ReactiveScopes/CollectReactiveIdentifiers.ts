@@ -9,9 +9,11 @@ import {
   IdentifierId,
   InstructionId,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveFunction,
-} from "../HIR/HIR";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+  isPrimitiveType,
+} from '../HIR/HIR';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
   /*
@@ -21,7 +23,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
   override visitLValue(
     id: InstructionId,
     lvalue: Place,
-    state: Set<IdentifierId>
+    state: Set<IdentifierId>,
   ): void {
     this.visitPlace(id, lvalue, state);
   }
@@ -34,10 +36,23 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
   override visitPlace(
     _id: InstructionId,
     place: Place,
-    state: Set<IdentifierId>
+    state: Set<IdentifierId>,
   ): void {
     if (place.reactive) {
       state.add(place.identifier.id);
+    }
+  }
+
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: Set<IdentifierId>,
+  ): void {
+    this.traversePrunedScope(scopeBlock, state);
+
+    for (const [id, decl] of scopeBlock.scope.declarations) {
+      if (!isPrimitiveType(decl.identifier)) {
+        state.add(id);
+      }
     }
   }
 }
@@ -47,7 +62,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
  * in `InferReactivePlaces`.
  */
 export function collectReactiveIdentifiers(
-  fn: ReactiveFunction
+  fn: ReactiveFunction,
 ): Set<IdentifierId> {
   const visitor = new Visitor();
   const state = new Set<IdentifierId>();

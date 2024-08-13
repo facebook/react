@@ -50,7 +50,7 @@ describe('ReactTestRenderer', () => {
     expect(errors[1].message.includes('indexOf is not a function')).toBe(true);
   });
 
-  test('find element by prop with suspended content', async () => {
+  it('find element by prop with suspended content', async () => {
     const neverResolve = new Promise(() => {});
 
     function TestComp({foo}) {

@@ -4,16 +4,9 @@
 ```javascript
 function component() {
   let t = graphql`
-    fragment List_viewer on Viewer
-    @argumentDefinitions(
-      count: {
-        type: "Int"
-        defaultValue: 10
-        directives: ["@int_max_value(logged_in: 10)"]
-      }
-      cursor: { type: "ID" }
-    )
-
+    fragment F on T {
+      id
+    }
   `;
 
   return t;
@@ -30,17 +23,10 @@ function component() {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = graphql`
-    fragment List_viewer on Viewer
-    @argumentDefinitions(
-      count: {
-        type: "Int"
-        defaultValue: 10
-        directives: ["@int_max_value(logged_in: 10)"]
+      fragment F on T {
+        id
       }
-      cursor: { type: "ID" }
-    )
-
-  `;
+    `;
     $[0] = t0;
   } else {
     t0 = $[0];

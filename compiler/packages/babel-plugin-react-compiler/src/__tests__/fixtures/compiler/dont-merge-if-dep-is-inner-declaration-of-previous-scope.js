@@ -1,9 +1,9 @@
-import { ValidateMemoization } from "shared-runtime";
+import {ValidateMemoization} from 'shared-runtime';
 
 // Achieving Forget's level of memoization precision in this example isn't possible with useMemo
 // without significantly altering the code, so disable the non-Forget evaluation of this fixture.
 // @disableNonForgetInSprout
-function Component({ a, b, c }) {
+function Component({a, b, c}) {
   const x = [];
   let y;
   if (a) {
@@ -26,11 +26,11 @@ function Component({ a, b, c }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: false, b: null, c: 0 }],
+  params: [{a: false, b: null, c: 0}],
   sequentialRenders: [
-    { a: false, b: null, c: 0 },
-    { a: false, b: null, c: 1 },
-    { a: true, b: 0, c: 1 },
-    { a: true, b: 1, c: 1 },
+    {a: false, b: null, c: 0},
+    {a: false, b: null, c: 1},
+    {a: true, b: 0, c: 1},
+    {a: true, b: 1, c: 1},
   ],
 };

@@ -1,6 +1,6 @@
-import { invoke } from "shared-runtime";
+import {invoke} from 'shared-runtime';
 
-function Component({ shouldReassign }) {
+function Component({shouldReassign}) {
   let x = null;
   const reassign = () => {
     if (shouldReassign) {
@@ -13,6 +13,6 @@ function Component({ shouldReassign }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ shouldReassign: true }],
-  sequentialRenders: [{ shouldReassign: false }, { shouldReassign: true }],
+  params: [{shouldReassign: true}],
+  sequentialRenders: [{shouldReassign: false}, {shouldReassign: true}],
 };

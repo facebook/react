@@ -10,6 +10,7 @@
 'use strict';
 
 import {insertNodesAndExecuteScripts} from '../test-utils/FizzTestUtils';
+import {patchMessageChannel} from '../../../../scripts/jest/patchMessageChannel';
 
 // Polyfills for test environment
 global.ReadableStream =
@@ -21,12 +22,16 @@ let ReactDOMServer;
 let Scheduler;
 let assertLog;
 let container;
+let act;
 
 describe('ReactClassComponentPropResolutionFizz', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('react');
     Scheduler = require('scheduler');
+    patchMessageChannel(Scheduler);
+    act = require('internal-test-utils').act;
+
+    React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     assertLog = require('internal-test-utils').assertLog;
     container = document.createElement('div');
@@ -36,6 +41,17 @@ describe('ReactClassComponentPropResolutionFizz', () => {
   afterEach(() => {
     document.body.removeChild(container);
   });
+
+  async function serverAct(callback) {
+    let maybePromise;
+    await act(() => {
+      maybePromise = callback();
+      if (maybePromise && typeof maybePromise.catch === 'function') {
+        maybePromise.catch(() => {});
+      }
+    });
+    return maybePromise;
+  }
 
   async function readIntoContainer(stream) {
     const reader = stream.getReader();
@@ -57,7 +73,7 @@ describe('ReactClassComponentPropResolutionFizz', () => {
     return text;
   }
 
-  test('resolves ref and default props before calling lifecycle methods', async () => {
+  it('resolves ref and default props before calling lifecycle methods', async () => {
     function getPropKeys(props) {
       return Object.keys(props).join(', ');
     }
@@ -80,11 +96,13 @@ describe('ReactClassComponentPropResolutionFizz', () => {
     };
 
     // `ref` should never appear as a prop. `default` always should.
+
     const ref = React.createRef();
-    const stream = await ReactDOMServer.renderToReadableStream(
-      <Component text="Yay" ref={ref} />,
+    const stream = await serverAct(() =>
+      ReactDOMServer.renderToReadableStream(<Component text="Yay" ref={ref} />),
     );
     await readIntoContainer(stream);
+
     assertLog([
       'constructor: text, default',
       'componentWillMount: text, default',

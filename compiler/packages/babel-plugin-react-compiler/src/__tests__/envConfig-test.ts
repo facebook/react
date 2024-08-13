@@ -5,35 +5,35 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Effect, validateEnvironmentConfig } from "..";
-import { ValueKind } from "../HIR";
+import {Effect, validateEnvironmentConfig} from '..';
+import {ValueKind} from '../HIR';
 
-describe("parseConfigPragma()", () => {
-  it("passing null throws", () => {
+describe('parseConfigPragma()', () => {
+  it('passing null throws', () => {
     expect(() => validateEnvironmentConfig(null as any)).toThrow();
   });
 
   // tests that the error message remains useful
-  it("passing incorrect value throws", () => {
+  it('passing incorrect value throws', () => {
     expect(() => {
       validateEnvironmentConfig({
         validateHooksUsage: 1,
       } as any);
     }).toThrowErrorMatchingInlineSnapshot(
-      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: Expected boolean, received number at "validateHooksUsage""`
+      `"InvalidConfig: Could not validate environment config. Update React Compiler config to fix the error. Validation error: Expected boolean, received number at "validateHooksUsage""`,
     );
   });
 
-  it("can parse stringy enums", () => {
+  it('can parse stringy enums', () => {
     const stringyHook = {
-      effectKind: "freeze",
-      valueKind: "frozen",
+      effectKind: 'freeze',
+      valueKind: 'frozen',
     };
     const env = {
-      customHooks: new Map([["useFoo", stringyHook]]),
+      customHooks: new Map([['useFoo', stringyHook]]),
     };
     const validatedEnv = validateEnvironmentConfig(env as any);
-    const validatedHook = validatedEnv.customHooks.get("useFoo");
+    const validatedHook = validatedEnv.customHooks.get('useFoo');
     expect(validatedHook?.effectKind).toBe(Effect.Freeze);
     expect(validatedHook?.valueKind).toBe(ValueKind.Frozen);
   });

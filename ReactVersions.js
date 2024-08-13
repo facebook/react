@@ -25,8 +25,12 @@ const ReactVersion = '19.0.0';
 // choose to change it to "alpha", "beta", "rc", etc.
 //
 // It only affects the label used in the version string. To customize the
-// npm dist tags used during publish, refer to .circleci/config.yml.
+// npm dist tags used during publish, refer to .github/workflows/runtime_prereleases_*.yml.
 const canaryChannelLabel = 'rc';
+
+// If the canaryChannelLabel is "rc", the build pipeline will use this to build
+// an RC version of the packages.
+const rcNumber = 0;
 
 const stablePackages = {
   'eslint-plugin-react-hooks': '5.1.0',
@@ -53,6 +57,7 @@ const experimentalPackages = [];
 module.exports = {
   ReactVersion,
   canaryChannelLabel,
+  rcNumber,
   stablePackages,
   experimentalPackages,
 };

@@ -14,12 +14,12 @@ import {
   ReactiveValue,
   getHookKind,
   isUseOperator,
-} from "../HIR";
+} from '../HIR';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /**
  * For simplicity the majority of compiler passes do not treat hooks specially. However, hooks are different
@@ -57,7 +57,7 @@ type State = {
 class Transform extends ReactiveFunctionTransform<State> {
   override transformScope(
     scope: ReactiveScopeBlock,
-    outerState: State
+    outerState: State,
   ): Transformed<ReactiveStatement> {
     const innerState: State = {
       env: outerState.env,
@@ -66,20 +66,41 @@ class Transform extends ReactiveFunctionTransform<State> {
     this.visitScope(scope, innerState);
     outerState.hasHook ||= innerState.hasHook;
     if (innerState.hasHook) {
-      return { kind: "replace-many", value: scope.instructions };
+      if (scope.instructions.length === 1) {
+        /*
+         * This was a scope just for a hook call, which doesn't need memoization.
+         * flatten it away
+         */
+        return {
+          kind: 'replace-many',
+          value: scope.instructions,
+        };
+      }
+      /*
+       * else this scope had multiple instructions and produced some other value:
+       * mark it as pruned
+       */
+      return {
+        kind: 'replace',
+        value: {
+          kind: 'pruned-scope',
+          scope: scope.scope,
+          instructions: scope.instructions,
+        },
+      };
     } else {
-      return { kind: "keep" };
+      return {kind: 'keep'};
     }
   }
 
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: State
+    state: State,
   ): void {
     this.traverseValue(id, value, state);
     switch (value.kind) {
-      case "CallExpression": {
+      case 'CallExpression': {
         if (
           getHookKind(state.env, value.callee.identifier) != null ||
           isUseOperator(value.callee.identifier)
@@ -88,7 +109,7 @@ class Transform extends ReactiveFunctionTransform<State> {
         }
         break;
       }
-      case "MethodCall": {
+      case 'MethodCall': {
         if (
           getHookKind(state.env, value.property.identifier) != null ||
           isUseOperator(value.property.identifier)

@@ -313,7 +313,7 @@ describe('ReactCompositeComponent', () => {
         root.render(<MyComponent />);
       });
     }).toErrorDev(
-      "Warning: Can't call forceUpdate on a component that is not yet mounted. " +
+      "Can't call forceUpdate on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
         'class property with the desired state in the MyComponent component.',
@@ -347,7 +347,7 @@ describe('ReactCompositeComponent', () => {
         root.render(<MyComponent />);
       });
     }).toErrorDev(
-      "Warning: Can't call setState on a component that is not yet mounted. " +
+      "Can't call setState on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
         'class property with the desired state in the MyComponent component.',
@@ -484,7 +484,7 @@ describe('ReactCompositeComponent', () => {
         });
       }).rejects.toThrow(TypeError);
     }).toErrorDev(
-      'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
+      'The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
         "but doesn't extend React.Component. This is likely to cause errors. " +
         'Change ClassWithRenderNotExtended to extend React.Component instead.',
     );
@@ -631,7 +631,7 @@ describe('ReactCompositeComponent', () => {
         instance.setState({bogus: true});
       });
     }).toErrorDev(
-      'Warning: ClassComponent.shouldComponentUpdate(): Returned undefined instead of a ' +
+      'ClassComponent.shouldComponentUpdate(): Returned undefined instead of a ' +
         'boolean value. Make sure to return true or false.',
     );
   });
@@ -651,7 +651,7 @@ describe('ReactCompositeComponent', () => {
         root.render(<Component />);
       });
     }).toErrorDev(
-      'Warning: Component has a method called ' +
+      'Component has a method called ' +
         'componentDidUnmount(). But there is no such lifecycle method. ' +
         'Did you mean componentWillUnmount()?',
     );
@@ -673,7 +673,7 @@ describe('ReactCompositeComponent', () => {
         root.render(<Component />);
       });
     }).toErrorDev(
-      'Warning: Component has a method called ' +
+      'Component has a method called ' +
         'componentDidReceiveProps(). But there is no such lifecycle method. ' +
         'If you meant to update the state in response to changing props, ' +
         'use componentWillReceiveProps(). If you meant to fetch data or ' +
@@ -699,7 +699,7 @@ describe('ReactCompositeComponent', () => {
         root.render(<Component />);
       });
     }).toErrorDev(
-      'Warning: Setting defaultProps as an instance property on Component is not supported ' +
+      'Setting defaultProps as an instance property on Component is not supported ' +
         'and will be ignored. Instead, define defaultProps as a static property on Component.',
     );
   });
@@ -1199,9 +1199,9 @@ describe('ReactCompositeComponent', () => {
         });
       }).rejects.toThrow();
     }).toErrorDev([
-      'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
+      'No `render` method found on the RenderTextInvalidConstructor instance: ' +
         'did you accidentally return an object from the constructor?',
-      'Warning: No `render` method found on the RenderTextInvalidConstructor instance: ' +
+      'No `render` method found on the RenderTextInvalidConstructor instance: ' +
         'did you accidentally return an object from the constructor?',
     ]);
   });
@@ -1239,9 +1239,9 @@ describe('ReactCompositeComponent', () => {
         });
       }).rejects.toThrow();
     }).toErrorDev([
-      'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
+      'No `render` method found on the RenderTestUndefinedRender instance: ' +
         'you may have forgotten to define `render`.',
-      'Warning: No `render` method found on the RenderTestUndefinedRender instance: ' +
+      'No `render` method found on the RenderTestUndefinedRender instance: ' +
         'you may have forgotten to define `render`.',
     ]);
   });

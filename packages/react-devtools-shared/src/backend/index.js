@@ -9,7 +9,7 @@
 
 import Agent from './agent';
 
-import {attach} from './renderer';
+import {attach} from './fiber/renderer';
 import {attach as attachLegacy} from './legacy/renderer';
 import {hasAssignedBackend} from './utils';
 

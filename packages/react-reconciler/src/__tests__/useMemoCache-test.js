@@ -57,7 +57,7 @@ describe('useMemoCache()', () => {
   });
 
   // @gate enableUseMemoCacheHook
-  test('render component using cache', async () => {
+  it('render component using cache', async () => {
     function Component(props) {
       const cache = useMemoCache(1);
       expect(Array.isArray(cache)).toBe(true);
@@ -74,7 +74,7 @@ describe('useMemoCache()', () => {
   });
 
   // @gate enableUseMemoCacheHook
-  test('update component using cache', async () => {
+  it('update component using cache', async () => {
     let setX;
     let forceUpdate;
     function Component(props) {
@@ -144,7 +144,7 @@ describe('useMemoCache()', () => {
   });
 
   // @gate enableUseMemoCacheHook
-  test('update component using cache with setstate during render', async () => {
+  it('update component using cache with setstate during render', async () => {
     let setN;
     function Component(props) {
       const cache = useMemoCache(5);
@@ -209,7 +209,7 @@ describe('useMemoCache()', () => {
   });
 
   // @gate enableUseMemoCacheHook
-  test('update component using cache with throw during render', async () => {
+  it('update component using cache with throw during render', async () => {
     let setN;
     let shouldFail = true;
     function Component(props) {
@@ -292,7 +292,7 @@ describe('useMemoCache()', () => {
   });
 
   // @gate enableUseMemoCacheHook
-  test('update component and custom hook with caches', async () => {
+  it('update component and custom hook with caches', async () => {
     let setX;
     let forceUpdate;
     function Component(props) {
@@ -369,7 +369,7 @@ describe('useMemoCache()', () => {
   });
 
   // @gate enableUseMemoCacheHook
-  test('reuses computations from suspended/interrupted render attempts during an update', async () => {
+  it('reuses computations from suspended/interrupted render attempts during an update', async () => {
     // This test demonstrates the benefit of a shared memo cache. By "shared" I
     // mean multiple concurrent render attempts of the same component/hook use
     // the same cache. (When the feature flag is off, we don't do this — the

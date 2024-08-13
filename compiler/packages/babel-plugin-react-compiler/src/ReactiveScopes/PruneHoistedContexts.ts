@@ -6,17 +6,17 @@
  */
 
 import {
-  Identifier,
+  DeclarationId,
   InstructionKind,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveStatement,
-} from "../HIR";
+} from '../HIR';
 import {
   ReactiveFunctionTransform,
   Transformed,
   visitReactiveFunction,
-} from "./visitors";
+} from './visitors';
 
 /*
  * Prunes DeclareContexts lowered for HoistedConsts, and transforms any references back to its
@@ -27,30 +27,30 @@ export function pruneHoistedContexts(fn: ReactiveFunction): void {
   visitReactiveFunction(fn, new Visitor(), hoistedIdentifiers);
 }
 
-type HoistedIdentifiers = Set<Identifier>;
+type HoistedIdentifiers = Set<DeclarationId>;
 
 class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
   override transformInstruction(
     instruction: ReactiveInstruction,
-    state: HoistedIdentifiers
+    state: HoistedIdentifiers,
   ): Transformed<ReactiveStatement> {
     this.visitInstruction(instruction, state);
     if (
-      instruction.value.kind === "DeclareContext" &&
-      instruction.value.lvalue.kind === "HoistedConst"
+      instruction.value.kind === 'DeclareContext' &&
+      instruction.value.lvalue.kind === 'HoistedConst'
     ) {
-      state.add(instruction.value.lvalue.place.identifier);
-      return { kind: "remove" };
+      state.add(instruction.value.lvalue.place.identifier.declarationId);
+      return {kind: 'remove'};
     }
 
     if (
-      instruction.value.kind === "StoreContext" &&
-      state.has(instruction.value.lvalue.place.identifier)
+      instruction.value.kind === 'StoreContext' &&
+      state.has(instruction.value.lvalue.place.identifier.declarationId)
     ) {
       return {
-        kind: "replace",
+        kind: 'replace',
         value: {
-          kind: "instruction",
+          kind: 'instruction',
           instruction: {
             ...instruction,
             value: {
@@ -60,13 +60,13 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
                 kind: InstructionKind.Const,
               },
               type: null,
-              kind: "StoreLocal",
+              kind: 'StoreLocal',
             },
           },
         },
       };
     }
 
-    return { kind: "keep" };
+    return {kind: 'keep'};
   }
 }

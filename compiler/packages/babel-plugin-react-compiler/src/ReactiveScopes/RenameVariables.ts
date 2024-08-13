@@ -5,13 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
+import {CompilerError} from '../CompilerError';
 import {
+  DeclarationId,
   Identifier,
-  IdentifierId,
   IdentifierName,
   InstructionId,
   Place,
+  PrunedReactiveScopeBlock,
   ReactiveBlock,
   ReactiveFunction,
   ReactiveScopeBlock,
@@ -20,9 +21,9 @@ import {
   isPromotedJsxTemporary,
   isPromotedTemporary,
   makeIdentifierName,
-} from "../HIR/HIR";
-import { collectReferencedGlobals } from "./CollectReferencedGlobals";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+} from '../HIR/HIR';
+import {collectReferencedGlobals} from './CollectReferencedGlobals';
+import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /**
  * Ensures that each named variable in the given function has a unique name
@@ -54,11 +55,11 @@ export function renameVariables(fn: ReactiveFunction): Set<string> {
 function renameVariablesImpl(
   fn: ReactiveFunction,
   visitor: Visitor,
-  scopes: Scopes
+  scopes: Scopes,
 ): void {
   scopes.enter(() => {
     for (const param of fn.params) {
-      if (param.kind === "Identifier") {
+      if (param.kind === 'Identifier') {
         scopes.visit(param.identifier);
       } else {
         scopes.visit(param.place.identifier);
@@ -84,6 +85,13 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
     });
   }
 
+  override visitPrunedScope(
+    scopeBlock: PrunedReactiveScopeBlock,
+    state: Scopes,
+  ): void {
+    this.traverseBlock(scopeBlock.instructions, state);
+  }
+
   override visitScope(scope: ReactiveScopeBlock, state: Scopes): void {
     for (const [_, declaration] of scope.scope.declarations) {
       state.visit(declaration.identifier);
@@ -94,10 +102,10 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
   override visitValue(
     id: InstructionId,
     value: ReactiveValue,
-    state: Scopes
+    state: Scopes,
   ): void {
     this.traverseValue(id, value, state);
-    if (value.kind === "FunctionExpression" || value.kind === "ObjectMethod") {
+    if (value.kind === 'FunctionExpression' || value.kind === 'ObjectMethod') {
       this.visitHirFunction(value.loweredFunc.func, state);
     }
   }
@@ -106,15 +114,15 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
     _id: InstructionId,
     _dependencies: Array<Place>,
     _fn: ReactiveFunction,
-    _state: Scopes
+    _state: Scopes,
   ): void {
     renameVariablesImpl(_fn, this, _state);
   }
 }
 
 class Scopes {
-  #seen: Map<IdentifierId, IdentifierName> = new Map();
-  #stack: Array<Map<string, IdentifierId>> = [new Map()];
+  #seen: Map<DeclarationId, IdentifierName> = new Map();
+  #stack: Array<Map<string, DeclarationId>> = [new Map()];
   #globals: Set<string>;
   names: Set<ValidIdentifierName> = new Set();
 
@@ -127,7 +135,7 @@ class Scopes {
     if (originalName === null) {
       return;
     }
-    const mappedName = this.#seen.get(identifier.id);
+    const mappedName = this.#seen.get(identifier.declarationId);
     if (mappedName !== undefined) {
       identifier.name = mappedName;
       return;
@@ -150,12 +158,12 @@ class Scopes {
     }
     const identifierName = makeIdentifierName(name);
     identifier.name = identifierName;
-    this.#seen.set(identifier.id, identifierName);
-    this.#stack.at(-1)!.set(identifierName.value, identifier.id);
+    this.#seen.set(identifier.declarationId, identifierName);
+    this.#stack.at(-1)!.set(identifierName.value, identifier.declarationId);
     this.names.add(identifierName.value);
   }
 
-  #lookup(name: string): IdentifierId | null {
+  #lookup(name: string): DeclarationId | null {
     for (let i = this.#stack.length - 1; i >= 0; i--) {
       const scope = this.#stack[i]!;
       const entry = scope.get(name);
@@ -172,7 +180,7 @@ class Scopes {
     fn();
     const last = this.#stack.pop();
     CompilerError.invariant(last === next, {
-      reason: "Mismatch push/pop calls",
+      reason: 'Mismatch push/pop calls',
       description: null,
       loc: null,
       suggestions: null,

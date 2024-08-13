@@ -89,7 +89,6 @@ export function createTemporaryReference<T>(
   const reference: TemporaryReference<any> = Object.defineProperties(
     (function () {
       throw new Error(
-        // eslint-disable-next-line react-internal/safe-string-coercion
         `Attempted to call a temporary Client Reference from the server but it is on the client. ` +
           `It's not possible to invoke a client function from the server, it can ` +
           `only be rendered as a Component or passed to props of a Client Component.`,

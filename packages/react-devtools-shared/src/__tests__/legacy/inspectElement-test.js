@@ -185,7 +185,6 @@ describe('InspectedElementContext', () => {
           anonymous_fn: instance.anonymousFunction,
           array_buffer: arrayBuffer,
           array_of_arrays: arrayOfArrays,
-          // eslint-disable-next-line no-undef
           big_int: BigInt(123),
           bound_fn: exampleFunction.bind(this),
           data_view: dataView,
@@ -888,7 +887,7 @@ describe('InspectedElementContext', () => {
         xyz: 1,
       },
     });
-    const bigInt = BigInt(123); // eslint-disable-line no-undef
+    const bigInt = BigInt(123);
 
     act(() =>
       ReactDOM.render(

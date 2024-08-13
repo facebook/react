@@ -18,6 +18,7 @@ let act;
 let useMemo;
 let useState;
 let useReducer;
+let assertConsoleErrorDev;
 
 const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
@@ -28,7 +29,7 @@ describe('ReactStrictMode', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    act = require('internal-test-utils').act;
+    ({act, assertConsoleErrorDev} = require('internal-test-utils'));
     useMemo = React.useMemo;
     useState = React.useState;
     useReducer = React.useReducer;
@@ -438,7 +439,7 @@ describe('ReactStrictMode', () => {
   });
 
   // @gate debugRenderPhaseSideEffectsForStrictMode
-  it('double invokes useMemo functions', async () => {
+  it('double invokes useMemo functions with first result', async () => {
     let log = [];
     function Uppercased({text}) {
       const memoizedResult = useMemo(() => {
@@ -625,24 +626,22 @@ describe('Concurrent Mode', () => {
       async () => await act(() => root.render(<StrictRoot />)),
     ).toErrorDev(
       [
-        /* eslint-disable max-len */
-        `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: App`,
-        `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 
 Please update the following components: Bar, Foo`,
-        `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 
 Please update the following components: App`,
-        /* eslint-enable max-len */
       ],
       {withoutStack: true},
     );
@@ -689,50 +688,46 @@ Please update the following components: App`,
         async () => await act(() => root.render(<StrictRoot />)),
       ).toErrorDev(
         [
-          /* eslint-disable max-len */
-          `Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+          `Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
 Please update the following components: App`,
-          `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+          `Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 
 Please update the following components: Child`,
-          `Warning: Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
+          `Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 
 Please update the following components: App`,
-          /* eslint-enable max-len */
         ],
         {withoutStack: true},
       );
     }).toWarnDev(
       [
-        /* eslint-disable max-len */
-        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `componentWillMount has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 * Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: Parent`,
-        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `componentWillReceiveProps has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state
 * Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: Parent`,
-        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
+        `componentWillUpdate has been renamed, and is not recommended for use. See https://react.dev/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
 * Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
 
 Please update the following components: Parent`,
-        /* eslint-enable max-len */
       ],
       {withoutStack: true},
     );
@@ -997,46 +992,7 @@ describe('string refs', () => {
         root.render(<OuterComponent />);
       });
     }).toErrorDev(
-      'Warning: Component "OuterComponent" contains the string ref "somestring". ' +
-        'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead. ' +
-        'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
-        '    in InnerComponent (at **)',
-    );
-
-    await act(() => {
-      root.render(<OuterComponent />);
-    });
-  });
-
-  // @gate !disableStringRefs
-  it('should warn within a strict tree', async () => {
-    const {StrictMode} = React;
-
-    class OuterComponent extends React.Component {
-      render() {
-        return (
-          <StrictMode>
-            <InnerComponent ref="somestring" />
-          </StrictMode>
-        );
-      }
-    }
-
-    class InnerComponent extends React.Component {
-      render() {
-        return null;
-      }
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<OuterComponent />);
-      });
-    }).toErrorDev(
-      'Warning: Component "OuterComponent" contains the string ref "somestring". ' +
+      'Component "OuterComponent" contains the string ref "somestring". ' +
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: https://react.dev/link/strict-mode-string-ref\n' +
@@ -1117,12 +1073,34 @@ describe('context legacy', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await expect(async () => {
-      await act(() => {
-        root.render(<Root />);
-      });
-    }).toErrorDev(
-      'Warning: Legacy context API has been detected within a strict-mode tree.' +
+    await act(() => {
+      root.render(<Root />);
+    });
+
+    assertConsoleErrorDev([
+      'LegacyContextProvider uses the legacy childContextTypes API ' +
+        'which will soon be removed. Use React.createContext() instead. ' +
+        '(https://react.dev/link/legacy-context)' +
+        '\n    in LegacyContextProvider (at **)' +
+        '\n    in div (at **)' +
+        '\n    in Root (at **)',
+      'LegacyContextConsumer uses the legacy contextTypes API which ' +
+        'will soon be removed. Use React.createContext() with static ' +
+        'contextType instead. (https://react.dev/link/legacy-context)' +
+        '\n    in LegacyContextConsumer (at **)' +
+        '\n    in div (at **)' +
+        '\n    in LegacyContextProvider (at **)' +
+        '\n    in div (at **)' +
+        '\n    in Root (at **)',
+      'FunctionalLegacyContextConsumer uses the legacy contextTypes ' +
+        'API which will be removed soon. Use React.createContext() ' +
+        'with React.useContext() instead. (https://react.dev/link/legacy-context)' +
+        '\n    in FunctionalLegacyContextConsumer (at **)' +
+        '\n    in div (at **)' +
+        '\n    in LegacyContextProvider (at **)' +
+        '\n    in div (at **)' +
+        '\n    in Root (at **)',
+      'Legacy context API has been detected within a strict-mode tree.' +
         '\n\nThe old API will be supported in all 16.x releases, but applications ' +
         'using it should migrate to the new version.' +
         '\n\nPlease update the following components: ' +
@@ -1132,7 +1110,7 @@ describe('context legacy', () => {
         '\n    in LegacyContextProvider (at **)' +
         '\n    in div (at **)' +
         '\n    in Root (at **)',
-    );
+    ]);
 
     // Dedupe
     await act(() => {

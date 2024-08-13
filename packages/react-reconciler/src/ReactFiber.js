@@ -31,13 +31,12 @@ import {
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
-  forceConcurrentByDefaultForTesting,
-  allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   enableRenderableContext,
   disableLegacyMode,
+  enableObjectFiber,
   enableOwnerStacks,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
@@ -67,6 +66,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   TracingMarkerComponent,
+  Throw,
 } from './ReactWorkTags';
 import {OffscreenVisible} from './ReactFiberActivityComponent';
 import {getComponentNameFromOwner} from 'react-reconciler/src/getComponentNameFromFiber';
@@ -84,7 +84,6 @@ import {
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  ConcurrentUpdatesByDefaultMode,
   NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
@@ -124,10 +123,10 @@ if (__DEV__) {
   hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
-    /* eslint-disable no-new */
+    // eslint-disable-next-line no-new
     new Map([[nonExtensibleObject, null]]);
+    // eslint-disable-next-line no-new
     new Set([nonExtensibleObject]);
-    /* eslint-enable no-new */
   } catch (e) {
     // TODO: Consider warning about bad polyfills
     hasBadMapPolyfill = true;
@@ -231,7 +230,7 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-function createFiber(
+function createFiberImplClass(
   tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
@@ -240,6 +239,79 @@ function createFiber(
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, pendingProps, key, mode);
 }
+
+function createFiberImplObject(
+  tag: WorkTag,
+  pendingProps: mixed,
+  key: null | string,
+  mode: TypeOfMode,
+): Fiber {
+  const fiber: Fiber = {
+    // Instance
+    // tag, key - defined at the bottom as dynamic properties
+    elementType: null,
+    type: null,
+    stateNode: null,
+
+    // Fiber
+    return: null,
+    child: null,
+    sibling: null,
+    index: 0,
+
+    ref: null,
+    refCleanup: null,
+
+    // pendingProps - defined at the bottom as dynamic properties
+    memoizedProps: null,
+    updateQueue: null,
+    memoizedState: null,
+    dependencies: null,
+
+    // Effects
+    flags: NoFlags,
+    subtreeFlags: NoFlags,
+    deletions: null,
+
+    lanes: NoLanes,
+    childLanes: NoLanes,
+
+    alternate: null,
+
+    // dynamic properties at the end for more efficient hermes bytecode
+    tag,
+    key,
+    pendingProps,
+    mode,
+  };
+
+  if (enableProfilerTimer) {
+    fiber.actualDuration = 0;
+    fiber.actualStartTime = -1;
+    fiber.selfBaseDuration = 0;
+    fiber.treeBaseDuration = 0;
+  }
+
+  if (__DEV__) {
+    // This isn't directly used but is handy for debugging internals:
+    fiber._debugInfo = null;
+    fiber._debugOwner = null;
+    if (enableOwnerStacks) {
+      fiber._debugStack = null;
+      fiber._debugTask = null;
+    }
+    fiber._debugNeedsRemount = false;
+    fiber._debugHookTypes = null;
+    if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(fiber);
+    }
+  }
+  return fiber;
+}
+
+const createFiber = enableObjectFiber
+  ? createFiberImplObject
+  : createFiberImplClass;
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
@@ -450,25 +522,12 @@ export function resetWorkInProgress(
 export function createHostRootFiber(
   tag: RootTag,
   isStrictMode: boolean,
-  concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
   if (disableLegacyMode || tag === ConcurrentRoot) {
     mode = ConcurrentMode;
     if (isStrictMode === true) {
       mode |= StrictLegacyMode | StrictEffectsMode;
-    }
-    if (
-      // We only use this flag for our repo tests to check both behaviors.
-      forceConcurrentByDefaultForTesting
-    ) {
-      mode |= ConcurrentUpdatesByDefaultMode;
-    } else if (
-      // Only for internal experiments.
-      allowConcurrentByDefault &&
-      concurrentUpdatesByDefaultOverride
-    ) {
-      mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
     mode = NoMode;
@@ -484,6 +543,7 @@ export function createHostRootFiber(
   return createFiber(HostRoot, null, null, mode);
 }
 
+// TODO: Get rid of this helper. Only createFiberFromElement should exist.
 export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
@@ -512,8 +572,8 @@ export function createFiberFromTypeAndProps(
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
         ? HostHoistable
         : isHostSingletonType(type)
-        ? HostSingleton
-        : HostComponent;
+          ? HostSingleton
+          : HostComponent;
     } else if (supportsResources) {
       const hostContext = getHostContext();
       fiberTag = isHostHoistableType(type, pendingProps, hostContext)
@@ -649,11 +709,18 @@ export function createFiberFromTypeAndProps(
           typeString = type === null ? 'null' : typeof type;
         }
 
-        throw new Error(
+        // The type is invalid but it's conceptually a child that errored and not the
+        // current component itself so we create a virtual child that throws in its
+        // begin phase. This is the same thing we do in ReactChildFiber if we throw
+        // but we do it here so that we can assign the debug owner and stack from the
+        // element itself. That way the error stack will point to the JSX callsite.
+        fiberTag = Throw;
+        pendingProps = new Error(
           'Element type is invalid: expected a string (for built-in ' +
             'components) or a class/function (for composite components) ' +
             `but got: ${typeString}.${info}`,
         );
+        resolvedType = null;
       }
     }
   }
@@ -877,5 +944,15 @@ export function createFiberFromPortal(
     pendingChildren: null, // Used by persistent updates
     implementation: portal.implementation,
   };
+  return fiber;
+}
+
+export function createFiberFromThrow(
+  error: mixed,
+  mode: TypeOfMode,
+  lanes: Lanes,
+): Fiber {
+  const fiber = createFiber(Throw, error, null, mode);
+  fiber.lanes = lanes;
   return fiber;
 }

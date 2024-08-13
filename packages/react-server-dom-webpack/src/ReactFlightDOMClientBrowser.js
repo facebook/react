@@ -9,7 +9,10 @@
 
 import type {Thenable} from 'shared/ReactTypes.js';
 
-import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
+import type {
+  Response as FlightResponse,
+  FindSourceMapURLCallback,
+} from 'react-client/src/ReactFlightClient';
 
 import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
 
@@ -37,6 +40,9 @@ type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 export type Options = {
   callServer?: CallServerCallback,
   temporaryReferences?: TemporaryReferenceSet,
+  findSourceMapURL?: FindSourceMapURLCallback,
+  replayConsoleLogs?: boolean,
+  environmentName?: string,
 };
 
 function createResponseFromOptions(options: void | Options) {
@@ -48,6 +54,13 @@ function createResponseFromOptions(options: void | Options) {
     undefined, // nonce
     options && options.temporaryReferences
       ? options.temporaryReferences
+      : undefined,
+    __DEV__ && options && options.findSourceMapURL
+      ? options.findSourceMapURL
+      : undefined,
+    __DEV__ ? (options ? options.replayConsoleLogs !== false : true) : false, // defaults to true
+    __DEV__ && options && options.environmentName
+      ? options.environmentName
       : undefined,
   );
 }

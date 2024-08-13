@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-import { mutate, useNoAlias } from "shared-runtime";
+import {mutate, useNoAlias} from 'shared-runtime';
 
 function Component(props) {
   // Here `x` cannot be memoized bc its mutable range spans a hook call:
@@ -17,7 +17,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{value: 42}],
 };
 
 ```
@@ -25,23 +25,13 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { c as _c } from "react/compiler-runtime";
 import { mutate, useNoAlias } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(1);
-
   const x = [];
   useNoAlias();
   mutate(x);
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div>{x}</div>;
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  return t0;
+  return <div>{x}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -2,23 +2,19 @@
 ## Input
 
 ```javascript
-import { useNoAlias } from "shared-runtime";
+import {useNoAlias} from 'shared-runtime';
 
 function Component(props) {
-  const item = { a: props.a };
-  const x = useNoAlias(
-    item,
-    () => {
-      console.log(props);
-    },
-    [props.a]
-  );
+  const item = {a: props.a};
+  const x = useNoAlias(item, () => {
+    console.log(props);
+  }, [props.a]);
   return [x, item];
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ a: { id: 42 } }],
+  params: [{a: {id: 42}}],
   isComponent: true,
 };
 
@@ -41,13 +37,9 @@ function Component(props) {
     t0 = $[1];
   }
   const item = t0;
-  const x = useNoAlias(
-    item,
-    () => {
-      console.log(props);
-    },
-    [props.a],
-  );
+  const x = useNoAlias(item, () => {
+    console.log(props);
+  }, [props.a]);
   let t1;
   if ($[2] !== x || $[3] !== item) {
     t1 = [x, item];

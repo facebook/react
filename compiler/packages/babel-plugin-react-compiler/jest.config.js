@@ -7,7 +7,7 @@
 
 /** @type {import('jest').Config} */
 const config = {
-  projects: ["<rootDir>/scripts/jest/*.config.js"],
+  projects: ['<rootDir>/scripts/jest/*.config.js'],
 };
 
 module.exports = config;
