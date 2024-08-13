@@ -2485,4 +2485,73 @@ describe('ReactFlightDOM', () => {
       </div>,
     );
   });
+
+  it('can error synchronously after aborting without an unhandled rejection error', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading...</p>}>
+            <ComponentThatAborts />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+
+    async function ComponentThatAborts() {
+      abortRef.current();
+      throw new Error('boom');
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading...</p>
+      </div>,
+    );
+  });
 });
