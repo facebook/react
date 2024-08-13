@@ -29,19 +29,18 @@ import { c as _c } from "react/compiler-runtime"; // @validatePreserveExistingMe
 import { useCallback, useRef } from "react";
 
 function useFoo() {
-  const $ = _c(2);
+  const $ = _c(1);
   const ref = useRef();
   let t0;
-  if ($[0] !== ref) {
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
       if (ref != null) {
         ref.current();
       }
     };
-    $[0] = ref;
-    $[1] = t0;
+    $[0] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[0];
   }
   return t0;
 }

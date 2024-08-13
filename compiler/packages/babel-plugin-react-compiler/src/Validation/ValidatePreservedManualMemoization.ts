@@ -262,6 +262,7 @@ function validateInferredDep(
   let errorDiagnostic: CompareDependencyResult | null = null;
   if (
     normalizedDep.root.kind === 'NamedLocal' &&
+    !normalizedDep.root.value.reactive &&
     (isRefValueType(normalizedDep.root.value.identifier) ||
       isUseRefType(normalizedDep.root.value.identifier))
   ) {

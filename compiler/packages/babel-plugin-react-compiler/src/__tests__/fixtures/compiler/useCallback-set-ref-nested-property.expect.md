@@ -34,7 +34,7 @@ import { useCallback, useRef } from "react";
 // Identical to useCallback-set-ref-nested-property-preserve-memoization,
 // but with a different set of compiler flags
 function Component(t0) {
-  const $ = _c(4);
+  const $ = _c(3);
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = { inner: null };
@@ -54,12 +54,11 @@ function Component(t0) {
   }
   const onChange = t2;
   let t3;
-  if ($[2] !== onChange) {
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = <input onChange={onChange} />;
-    $[2] = onChange;
-    $[3] = t3;
+    $[2] = t3;
   } else {
-    t3 = $[3];
+    t3 = $[2];
   }
   return t3;
 }

@@ -37,45 +37,42 @@ import { useRef } from "react";
 import { addOne } from "shared-runtime";
 
 function useKeyCommand() {
-  const $ = _c(7);
+  const $ = _c(6);
   const currentPosition = useRef(0);
   const handleKey = (direction) => () => {
     const position = currentPosition.current;
     const nextPosition = direction === "left" ? addOne(position) : position;
     currentPosition.current = nextPosition;
   };
-
-  const t0 = handleKey("left");
-  let t1;
-  if ($[0] !== t0) {
-    t1 = { handler: t0 };
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = { handler: handleKey("left") };
     $[0] = t0;
-    $[1] = t1;
   } else {
-    t1 = $[1];
+    t0 = $[0];
   }
-  const moveLeft = t1;
+  const moveLeft = t0;
 
-  const t2 = handleKey("right");
-  let t3;
-  if ($[2] !== t2) {
-    t3 = { handler: t2 };
+  const t1 = handleKey("right");
+  let t2;
+  if ($[1] !== t1) {
+    t2 = { handler: t1 };
+    $[1] = t1;
     $[2] = t2;
-    $[3] = t3;
   } else {
-    t3 = $[3];
+    t2 = $[2];
   }
-  const moveRight = t3;
-  let t4;
-  if ($[4] !== moveLeft || $[5] !== moveRight) {
-    t4 = [moveLeft, moveRight];
-    $[4] = moveLeft;
-    $[5] = moveRight;
-    $[6] = t4;
+  const moveRight = t2;
+  let t3;
+  if ($[3] !== moveLeft || $[4] !== moveRight) {
+    t3 = [moveLeft, moveRight];
+    $[3] = moveLeft;
+    $[4] = moveRight;
+    $[5] = t3;
   } else {
-    t4 = $[6];
+    t3 = $[5];
   }
-  return t4;
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {
