@@ -8,7 +8,6 @@
  */
 
 import EventEmitter from '../events';
-import throttle from 'lodash.throttle';
 import {
   SESSION_STORAGE_LAST_SELECTION_KEY,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -483,7 +482,13 @@ export default class Agent extends EventEmitter<{
         this._persistedSelection = null;
         this._persistedSelectionMatch = null;
         renderer.setTrackedPath(null);
-        this._throttledPersistSelection(rendererID, id);
+        // Throttle persisting the selection.
+        this._lastSelectedElementID = id;
+        this._lastSelectedRendererID = rendererID;
+        if (!this._persistSelectionTimerScheduled) {
+          this._persistSelectionTimerScheduled = true;
+          setTimeout(this._persistSelection, 1000);
+        }
       }
 
       // TODO: If there was a way to change the selected DOM element
@@ -790,10 +795,23 @@ export default class Agent extends EventEmitter<{
 
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void =
     componentFilters => {
-      for (const rendererID in this._rendererInterfaces) {
+      for (const rendererIDString in this._rendererInterfaces) {
+        const rendererID = +rendererIDString;
         const renderer = ((this._rendererInterfaces[
           (rendererID: any)
         ]: any): RendererInterface);
+        if (this._lastSelectedRendererID === rendererID) {
+          // Changing component filters will unmount and remount the DevTools tree.
+          // Track the last selection's path so we can restore the selection.
+          const path = renderer.getPathForElement(this._lastSelectedElementID);
+          if (path !== null) {
+            renderer.setTrackedPath(path);
+            this._persistedSelection = {
+              rendererID,
+              path,
+            };
+          }
+        }
         renderer.updateComponentFilters(componentFilters);
       }
     };
@@ -893,22 +911,25 @@ export default class Agent extends EventEmitter<{
     this._bridge.send('unsupportedRendererVersion', rendererID);
   }
 
-  _throttledPersistSelection: any = throttle(
-    (rendererID: number, id: number) => {
-      // This is throttled, so both renderer and selected ID
-      // might not be available by the time we read them.
-      // This is why we need the defensive checks here.
-      const renderer = this._rendererInterfaces[rendererID];
-      const path = renderer != null ? renderer.getPathForElement(id) : null;
-      if (path !== null) {
-        sessionStorageSetItem(
-          SESSION_STORAGE_LAST_SELECTION_KEY,
-          JSON.stringify(({rendererID, path}: PersistedSelection)),
-        );
-      } else {
-        sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);
-      }
-    },
-    1000,
-  );
+  _persistSelectionTimerScheduled: boolean = false;
+  _lastSelectedRendererID: number = -1;
+  _lastSelectedElementID: number = -1;
+  _persistSelection: any = () => {
+    this._persistSelectionTimerScheduled = false;
+    const rendererID = this._lastSelectedRendererID;
+    const id = this._lastSelectedElementID;
+    // This is throttled, so both renderer and selected ID
+    // might not be available by the time we read them.
+    // This is why we need the defensive checks here.
+    const renderer = this._rendererInterfaces[rendererID];
+    const path = renderer != null ? renderer.getPathForElement(id) : null;
+    if (path !== null) {
+      sessionStorageSetItem(
+        SESSION_STORAGE_LAST_SELECTION_KEY,
+        JSON.stringify(({rendererID, path}: PersistedSelection)),
+      );
+    } else {
+      sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);
+    }
+  };
 }

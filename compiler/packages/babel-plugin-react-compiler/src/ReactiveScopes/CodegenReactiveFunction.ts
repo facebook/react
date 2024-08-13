@@ -1209,7 +1209,7 @@ function codegenInstructionNullable(
       value = null;
     } else {
       lvalue = instr.value.lvalue.pattern;
-      let hasReasign = false;
+      let hasReassign = false;
       let hasDeclaration = false;
       for (const place of eachPatternOperand(lvalue)) {
         if (
@@ -1219,10 +1219,10 @@ function codegenInstructionNullable(
           cx.temp.set(place.identifier.declarationId, null);
         }
         const isDeclared = cx.hasDeclared(place.identifier);
-        hasReasign ||= isDeclared;
+        hasReassign ||= isDeclared;
         hasDeclaration ||= !isDeclared;
       }
-      if (hasReasign && hasDeclaration) {
+      if (hasReassign && hasDeclaration) {
         CompilerError.invariant(false, {
           reason:
             'Encountered a destructuring operation where some identifiers are already declared (reassignments) but others are not (declarations)',
@@ -1230,7 +1230,7 @@ function codegenInstructionNullable(
           loc: instr.loc,
           suggestions: null,
         });
-      } else if (hasReasign) {
+      } else if (hasReassign) {
         kind = InstructionKind.Reassign;
       }
       value = codegenPlaceToExpression(cx, instr.value.value);
