@@ -1442,10 +1442,14 @@ export function attach(
       }
     }
 
-    fiberToFiberInstanceMap.delete(fiber);
+    if (fiberToFiberInstanceMap.get(fiber) === fiberInstance) {
+      fiberToFiberInstanceMap.delete(fiber);
+    }
     const {alternate} = fiber;
     if (alternate !== null) {
-      fiberToFiberInstanceMap.delete(alternate);
+      if (fiberToFiberInstanceMap.get(alternate) === fiberInstance) {
+        fiberToFiberInstanceMap.delete(alternate);
+      }
     }
   }
 
@@ -2083,15 +2087,17 @@ export function attach(
         throw new Error('The root should have been registered at this point');
       }
       fiberInstance = entry;
-    } else if (
-      fiberToFiberInstanceMap.has(fiber) ||
-      (fiber.alternate !== null && fiberToFiberInstanceMap.has(fiber.alternate))
-    ) {
-      throw new Error('Did not expect to see this fiber being mounted twice.');
     } else {
       fiberInstance = createFiberInstance(fiber);
     }
+    // If this already exists behind a different FiberInstance, we intentionally
+    // override it here to claim the fiber as part of this new instance.
+    // E.g. if it was part of a reparenting.
     fiberToFiberInstanceMap.set(fiber, fiberInstance);
+    const alternate = fiber.alternate;
+    if (alternate !== null && fiberToFiberInstanceMap.has(alternate)) {
+      fiberToFiberInstanceMap.set(alternate, fiberInstance);
+    }
     idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
 
     const id = fiberInstance.id;
@@ -2848,7 +2854,8 @@ export function attach(
               if (
                 firstRemainingChild !== null &&
                 firstRemainingChild.kind === VIRTUAL_INSTANCE &&
-                firstRemainingChild.data.name === componentInfo.name
+                firstRemainingChild.data.name === componentInfo.name &&
+                firstRemainingChild.data.env === componentInfo.env
               ) {
                 // If the previous children had a virtual instance in the same slot
                 // with the same name, then we claim it and reuse it for this update.
@@ -3034,18 +3041,29 @@ export function attach(
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
     if (shouldIncludeInTree) {
       const entry = fiberToFiberInstanceMap.get(prevFiber);
-      if (entry === undefined) {
-        throw new Error(
-          'The previous version of the fiber should have already been registered.',
-        );
-      }
-      fiberInstance = entry;
-      // Register the new alternate in case it's not already in.
-      fiberToFiberInstanceMap.set(nextFiber, fiberInstance);
+      if (entry !== undefined && entry.parent === reconcilingParent) {
+        // Common case. Match in the same parent.
+        fiberInstance = entry;
+        // Register the new alternate in case it's not already in.
+        fiberToFiberInstanceMap.set(nextFiber, fiberInstance);
 
-      // Update the Fiber so we that we always keep the current Fiber on the data.
-      fiberInstance.data = nextFiber;
-      moveChild(fiberInstance);
+        // Update the Fiber so we that we always keep the current Fiber on the data.
+        fiberInstance.data = nextFiber;
+        moveChild(fiberInstance);
+      } else {
+        // It's possible for a FiberInstance to be reparented when virtual parents
+        // get their sequence split or change structure with the same render result.
+        // In this case we unmount the and remount the FiberInstances.
+        // This might cause us to lose the selection but it's an edge case.
+
+        // We let the previous instance remain in the "remaining queue" it is
+        // in to be deleted at the end since it'll have no match.
+
+        mountFiberRecursively(nextFiber, traceNearestHostComponentUpdate);
+
+        // Need to mark the parent set to remount the new instance.
+        return true;
+      }
 
       if (
         mostRecentlyInspectedElement !== null &&
