@@ -867,10 +867,10 @@ def export_metrics(computed_metrics, args):
     gc = gspread.service_account()
     sh = gc.open_by_key(args['google_sheet_id'])
 
-    raw_workflow_data = sh.worksheet(args['google-sheet-workflow-tab'])
+    raw_workflow_data = sh.worksheet(args['google_sheet_workflow_tab'])
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
-    raw_job_data = sh.worksheet(args['google-sheet-job-tab'])
+    raw_job_data = sh.worksheet(args['google_sheet_job_tab'])
     job_headers = list(JOB_TEMPLATE.keys())
 
     for vendor, metrics_data in computed_metrics.items():
