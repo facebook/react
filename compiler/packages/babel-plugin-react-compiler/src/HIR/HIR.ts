@@ -741,6 +741,9 @@ export enum InstructionKind {
 
   // hoisted const declarations
   HoistedConst = 'HoistedConst',
+
+  // hoisted const declarations
+  HoistedLet = 'HoistedLet',
 }
 
 function _staticInvariantInstructionValueHasLocation(
@@ -858,7 +861,10 @@ export type InstructionValue =
   | {
       kind: 'DeclareContext';
       lvalue: {
-        kind: InstructionKind.Let | InstructionKind.HoistedConst;
+        kind:
+          | InstructionKind.Let
+          | InstructionKind.HoistedConst
+          | InstructionKind.HoistedLet;
         place: Place;
       };
       loc: SourceLocation;

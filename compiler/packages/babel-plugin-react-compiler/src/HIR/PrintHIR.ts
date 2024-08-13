@@ -760,6 +760,9 @@ export function printLValue(lval: LValue): string {
     case InstructionKind.HoistedConst: {
       return `HoistedConst ${lvalue}$`;
     }
+    case InstructionKind.HoistedLet: {
+      return `HoistedLet ${lvalue}$`;
+    }
     default: {
       assertExhaustive(lval.kind, `Unexpected lvalue kind \`${lval.kind}\``);
     }
