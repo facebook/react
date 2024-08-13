@@ -1232,7 +1232,15 @@ function useMemoCache(size: number): Array<any> {
   // values from being reused. In prod environments this is never expected to happen. However, in
   // the unlikely case that it does vary between renders, we reset the cache anyway so behavior is
   // consistent in both environments.
-  if (data === undefined || data.length !== size) {
+  //
+  // The cache is also reset if the fiber is being rerendered as a result of Fast Refresh cycle,
+  // even if the cache size incidentally happens to be the same. This is to ensure that we don't
+  // see incorrect values after a refresh.
+  if (
+    data === undefined ||
+    data.length !== size ||
+    currentlyRenderingFiber._debugNeedsMemoCacheReset === true
+  ) {
     data = memoCache.data[memoCache.index] = new Array(size);
     for (let i = 0; i < size; i++) {
       data[i] = REACT_MEMO_CACHE_SENTINEL;

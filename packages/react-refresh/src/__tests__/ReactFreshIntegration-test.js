@@ -1637,7 +1637,69 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets useMemoCache cache slots', async () => {
+    it('resets useMemoCache cache slots in a refresh', async () => {
+      if (__DEV__) {
+        await render(`
+          const useMemoCache = require('react/compiler-runtime').c;
+          let cacheMisses = 0;
+          const cacheMiss = (id) => {
+            cacheMisses++;
+            return id;
+          };
+          export default function App(t0) {
+            const $ = useMemoCache(2);
+            const {reset1, reset2} = t0;
+            let t1;
+            if ($[0] !== reset1) {
+              $[0] = t1 = cacheMiss({reset1});
+            } else {
+              t1 = $[1];
+            }
+            let t2;
+            if ($[1] !== reset2) {
+              $[1] = t2 = cacheMiss({reset2});
+            } else {
+              t2 = $[1];
+            }
+            return <h1>{cacheMisses}</h1>;
+          }
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('2');
+        await patch(`
+          const useMemoCache = require('react/compiler-runtime').c;
+          let cacheMisses = 0;
+          const cacheMiss = (id) => {
+            cacheMisses++;
+            return id;
+          };
+          export default function App(t0) {
+            const $ = useMemoCache(2);
+            const {foo, bar} = t0;
+            let t1;
+            if ($[0] !== foo) {
+              $[0] = t1 = cacheMiss({foo});
+            } else {
+              t1 = $[1];
+            }
+            let t2;
+            if ($[1] !== bar) {
+              $[1] = t2 = cacheMiss({bar});
+            } else {
+              t2 = $[1];
+            }
+            return <h1>{cacheMisses}</h1>;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        // cache size is constant but the cache is cleared anyway as the component in question was
+        // fast refreshed. this can occur in the case where the cache size incidentally happens to
+        // stay constant even though the source code was changed.
+        expect(el.textContent).toBe('2');
+      }
+    });
+
+    it('resets useMemoCache cache slots when cache size changes', async () => {
       if (__DEV__) {
         await render(`
           const useMemoCache = require('react/compiler-runtime').c;

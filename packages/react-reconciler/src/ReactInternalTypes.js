@@ -210,6 +210,7 @@ export type Fiber = {
   _debugTask?: ConsoleTask | null,
   _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,
+  _debugNeedsMemoCacheReset?: boolean,
 
   // Used to verify that the order of hooks does not change between renders.
   _debugHookTypes?: Array<HookType> | null,

@@ -210,6 +210,7 @@ function FiberNode(
       this._debugTask = null;
     }
     this._debugNeedsRemount = false;
+    this._debugNeedsMemoCacheReset = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(this);
@@ -301,6 +302,7 @@ function createFiberImplObject(
       fiber._debugTask = null;
     }
     fiber._debugNeedsRemount = false;
+    fiber._debugNeedsMemoCacheReset = false;
     fiber._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(fiber);
@@ -423,6 +425,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   if (__DEV__) {
     workInProgress._debugInfo = current._debugInfo;
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
+    workInProgress._debugNeedsMemoCacheReset =
+      current._debugNeedsMemoCacheReset;
     switch (workInProgress.tag) {
       case FunctionComponent:
       case SimpleMemoComponent:

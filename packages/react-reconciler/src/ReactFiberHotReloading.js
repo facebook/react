@@ -307,6 +307,10 @@ function scheduleFibersWithFamiliesRecursively(
       }
     }
 
+    if (fiber.updateQueue != null && fiber.updateQueue.memoCache != null) {
+      fiber._debugNeedsMemoCacheReset = true;
+    }
+
     if (needsRemount) {
       fiber._debugNeedsRemount = true;
     }
