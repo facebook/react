@@ -2847,6 +2847,21 @@ function isReorderableExpression(
         allowLocalIdentifiers,
       );
     }
+    case 'LogicalExpression': {
+      const logical = expr as NodePath<t.LogicalExpression>;
+      return (
+        isReorderableExpression(
+          builder,
+          logical.get('left'),
+          allowLocalIdentifiers,
+        ) &&
+        isReorderableExpression(
+          builder,
+          logical.get('right'),
+          allowLocalIdentifiers,
+        )
+      );
+    }
     case 'ConditionalExpression': {
       const conditional = expr as NodePath<t.ConditionalExpression>;
       return (
