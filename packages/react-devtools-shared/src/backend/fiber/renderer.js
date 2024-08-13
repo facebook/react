@@ -2516,24 +2516,28 @@ export function attach(
     }
   }
 
-  function recordResetChildren(
-    parentInstance: DevToolsInstance,
-    childSet: Fiber,
-  ) {
+  function recordResetChildren(parentInstance: DevToolsInstance) {
     if (__DEBUG__) {
-      debug('recordResetChildren()', childSet, parentInstance);
+      if (
+        parentInstance.firstChild !== null &&
+        parentInstance.firstChild.kind === FIBER_INSTANCE
+      ) {
+        debug(
+          'recordResetChildren()',
+          parentInstance.firstChild.data,
+          parentInstance,
+        );
+      }
     }
     // The frontend only really cares about the displayName, key, and children.
     // The first two don't really change, so we are only concerned with the order of children here.
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
     const nextChildren: Array<number> = [];
 
-    // This is a naive implementation that shallowly recourses children.
-    // We might want to revisit this if it proves to be too inefficient.
-    let child: null | Fiber = childSet;
+    let child: null | DevToolsInstance = parentInstance.firstChild;
     while (child !== null) {
-      findReorderedChildrenRecursively(child, nextChildren);
-      child = child.sibling;
+      nextChildren.push(child.id);
+      child = child.nextSibling;
     }
 
     const numChildren = nextChildren.length;
@@ -2546,38 +2550,6 @@ export function attach(
     pushOperation(numChildren);
     for (let i = 0; i < nextChildren.length; i++) {
       pushOperation(nextChildren[i]);
-    }
-  }
-
-  function findReorderedChildrenRecursively(
-    fiber: Fiber,
-    nextChildren: Array<number>,
-  ) {
-    if (!shouldFilterFiber(fiber)) {
-      nextChildren.push(getFiberIDThrows(fiber));
-    } else {
-      let child = fiber.child;
-      const isTimedOutSuspense =
-        fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-      if (isTimedOutSuspense) {
-        // Special case: if Suspense mounts in a timed-out state,
-        // get the fallback child from the inner fragment,
-        // and skip over the primary child.
-        const primaryChildFragment = fiber.child;
-        const fallbackChildFragment = primaryChildFragment
-          ? primaryChildFragment.sibling
-          : null;
-        const fallbackChild = fallbackChildFragment
-          ? fallbackChildFragment.child
-          : null;
-        if (fallbackChild !== null) {
-          child = fallbackChild;
-        }
-      }
-      while (child !== null) {
-        findReorderedChildrenRecursively(child, nextChildren);
-        child = child.sibling;
-      }
     }
   }
 
@@ -2865,17 +2837,8 @@ export function attach(
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
         if (shouldIncludeInTree) {
-          // Normally, search for children from the rendered child.
-          let nextChildSet = nextFiber.child;
-          if (nextDidTimeOut) {
-            // Special case: timed-out Suspense renders the fallback set.
-            const nextFiberChild = nextFiber.child;
-            nextChildSet = nextFiberChild ? nextFiberChild.sibling : null;
-          }
-          if (nextChildSet != null) {
-            if (reconcilingParent !== null) {
-              recordResetChildren(reconcilingParent, nextChildSet);
-            }
+          if (reconcilingParent !== null) {
+            recordResetChildren(reconcilingParent);
           }
           // We've handled the child order change for this Fiber.
           // Since it's included, there's no need to invalidate parent child order.
