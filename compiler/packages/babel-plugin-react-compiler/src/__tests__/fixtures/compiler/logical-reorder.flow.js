@@ -2,11 +2,7 @@
 
 const foo = undefined;
 
-component C(
-  ...{
-    scope = foo ?? null,
-  }: any
-) {
+component C(...{scope = foo ?? null}: any) {
   return scope;
 }
 
