@@ -623,34 +623,35 @@ describe('useMemoCache()', () => {
   });
 
   // @gate enableUseMemoCacheHook
-  it('throws when cache size varies between renders in non-dev', async () => {
+  it('resets cache when cache size varies between renders', async () => {
+    const obj = {};
     function Component(props) {
-      const cache = useMemoCache(props.cacheSize);
-      expect(Array.isArray(cache)).toBe(true);
-      expect(cache.length).toBe(props.cacheSize);
-      expect(cache[0]).toBe(MemoCacheSentinel);
-      return cache.length;
+      const $ = useMemoCache(props.cacheSize);
+      let cacheHit = 0;
+      if ($[0] === obj) {
+        cacheHit = 1;
+      } else {
+        $[0] = obj;
+      }
+      return cacheHit;
     }
     const root = ReactNoop.createRoot();
     await act(() => {
       root.render(<Component key="comp" cacheSize={1} />);
     });
+    // Initial render, cache is empty
+    expect(root).toMatchRenderedOutput('0');
+
+    await act(() => {
+      root.render(<Component key="comp" cacheSize={1} />);
+    });
+    // Re-render, re-use cache since obj identity has not changed
     expect(root).toMatchRenderedOutput('1');
 
-    if (__DEV__) {
-      await act(() => {
-        root.render(<Component key="comp" cacheSize={2} />);
-      });
-      expect(root).toMatchRenderedOutput('2');
-    } else {
-      await expect(async () => {
-        await act(() => {
-          root.render(<Component key="comp" cacheSize={2} />);
-        });
-      }).rejects.toThrow(
-        'Expected a constant size argument for each invocation of useMemoCache. ' +
-          'The previous cache was allocated with size 1 but size 2 was requested.',
-      );
-    }
+    await act(() => {
+      root.render(<Component key="comp" cacheSize={10} />);
+    });
+    // Cache size changed b/w renders, reset the whole cache
+    expect(root).toMatchRenderedOutput('0');
   });
 });
