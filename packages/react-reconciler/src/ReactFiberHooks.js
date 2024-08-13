@@ -1233,9 +1233,9 @@ function useMemoCache(size: number): Array<any> {
   // the unlikely case that it does vary between renders, we reset the cache anyway so behavior is
   // consistent in both environments.
   //
-  // The cache is also reset if the fiber is being rerendered as a result of Fast Refresh cycle,
-  // even if the cache size incidentally happens to be the same. This is to ensure that we don't
-  // see incorrect values after a refresh.
+  // The cache is also reset if the fiber is being rerendered as a result of Fast Refresh run, even
+  // if the cache size incidentally happens to be the same. This is to ensure that we don't  see
+  // incorrect values after a refresh.
   if (
     data === undefined ||
     data.length !== size ||
