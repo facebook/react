@@ -13,7 +13,8 @@ jobs:
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
-          cache-dependency-path: '**/yarn.lock'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: '**/yarn.lock'
       - run: yarn prettier-check
 
   eslint_cloud:
@@ -24,6 +25,7 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: '**/yarn.lock'
       - run: node ./scripts/tasks/eslint
 
   check_license_cloud:
@@ -34,6 +36,7 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: '**/yarn.lock'
       - run: ./scripts/ci/check_license.sh
 
   test_print_warnings_cloud:
@@ -44,4 +47,5 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: '**/yarn.lock'
       - run: ./scripts/ci/test_print_warnings.sh

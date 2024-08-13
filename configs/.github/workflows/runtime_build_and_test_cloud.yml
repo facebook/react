@@ -21,24 +21,25 @@ jobs:
             return inlinedHostConfigs.map(config => config.shortName);
 
   flow_cloud:
-    name: flow-${{ matrix.flow_inline_config_shortname }}
+    name: flow_cloud-${{ matrix.flow_inline_config_shortname }}
     needs: discover_flow_inline_configs_cloud
     runs-on: ubuntu-latest
     continue-on-error: true
     strategy:
       matrix:
-        flow_inline_config_shortname: ${{ fromJSON(needs.discover_flow_inline_configs.outputs.matrix) }}
+        flow_inline_config_shortname: ${{ fromJSON(needs.discover_flow_inline_configs_cloud.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
       - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
 
   # ----- FIZZ -----
   check_generated_fizz_runtime_cloud:
-    name: Confirm generated inline Fizz runtime is up to date
+    name: check_generated_fizz_runtime_cloud
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,13 +47,14 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
       - run: |
           yarn generate-inline-fizz-runtime
           git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
 
   # ----- FEATURE FLAGS -----
   flags_cloud:
-    name: Check flags
+    name: flags_cloud
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,11 +62,12 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
       - run: yarn flags
 
   # ----- TESTS -----
   yarn_test_cloud:
-    name: yarn_test-${{ matrix.params }}-${{ matrix.shard }})
+    name: yarn_test_cloud-${{ matrix.params }}-${{ matrix.shard }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -101,11 +104,12 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
       - run: yarn test ${{ matrix.params }} --ci=github --shard=${{ matrix.shard }}
 
   # ----- BUILD -----
   build_and_lint_cloud:
-    name: build_and_lint-${{ matrix.worker_id }}-${{ matrix.release_channel }}
+    name: build_and_lint_cloud-${{ matrix.worker_id }}-${{ matrix.release_channel }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -118,6 +122,7 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
       - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci=github
         env:
           CI: github
@@ -134,6 +139,7 @@ jobs:
           path: build
 
   test_build_cloud:
+    name: test_build_cloud-${{ matrix.test_params }}-${{ matrix.shard }}
     needs: build_and_lint_cloud
     strategy:
       matrix:
@@ -179,6 +185,7 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:
@@ -202,6 +209,7 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
       - name: Restore archived build
         uses: actions/download-artifact@v4
         with:

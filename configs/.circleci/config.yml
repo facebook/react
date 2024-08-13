@@ -446,6 +446,7 @@ workflows:
       - check_generated_fizz_runtime_cloud
       - flags_cloud
       - yarn_test_cloud:
+          name: yarn_test_cloud-${{ matrix.params }}-${{ matrix.shard }}
           matrix:
             parameters:
               params:
@@ -474,11 +475,13 @@ workflows:
                 - 4/5
                 - 5/5
       - build_and_lint_cloud:
+          name: build_and_lint_cloud-${{ matrix.worker_id }}-${{ matrix.release_channel }}
           matrix:
             parameters:
               worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
               release_channel: [stable, experimental]
       - test_build_cloud:
+          name: test_build_cloud-${{ matrix.test_params }}-${{ matrix.shard }}
           requires:
             - build_and_lint_cloud
           matrix:

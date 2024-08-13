@@ -22,6 +22,7 @@ jobs:
           command: pip install -r requirements.txt
       - run:
           name: Run Replay Script
+          # Add --branch branch_name to customize the branch used
           command: |
                   python3 replay_commits_benchmark.py \
                     --upstream-repo-url $UPSTREAM_REPO \
@@ -29,9 +30,11 @@ jobs:
                     --circleci-project-slug $CIRCLECI_PROJECT_SLUG \
                     --github-repo-slug $GITHUB_REPO_SLUG \
                     --google-sheet-id $GOOGLE_SHEETS_ID \
+                    --google-sheet-workflow-tab $SHEETS_WORKFLOW_TAB \
+                    --google-sheet-job-tab $SHEETS_JOB_TAB \
                     --github-token $GITHUB_TOKEN \
                     --circleci-token $CIRCLECI_TOKEN \
-                    --branch config_test
+                    --dump-json True
                     
       - store_artifacts:
           path: benchmark-computed.json

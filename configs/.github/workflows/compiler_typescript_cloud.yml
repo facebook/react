@@ -11,7 +11,6 @@ defaults:
 
 jobs:
   discover_yarn_workspaces_cloud:
-    name: Discover yarn workspaces
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -29,6 +28,7 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'compiler/yarn.lock'
+          hashfile-path: 'compiler/**/yarn.lock'
       - run: yarn workspace babel-plugin-react-compiler lint
 
   # Hardcoded to improve parallelism
@@ -40,20 +40,22 @@ jobs:
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'compiler/yarn.lock'
+          hashfile-path: 'compiler/**/yarn.lock'
       - run: yarn workspace babel-plugin-react-compiler jest
 
   typescript_test_cloud:
-    name: typescript_test-${{ matrix.workspace_name }}
+    name: typescript_test_cloud-${{ matrix.workspace_name }}
     needs: discover_yarn_workspaces_cloud
     runs-on: ubuntu-latest
     continue-on-error: true
     strategy:
       matrix:
-        workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
+        workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces_cloud.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup_node_modules
         with:
           node-version: '18.20.1'
           cache-dependency-path: 'compiler/yarn.lock'
+          hashfile-path: 'compiler/**/yarn.lock'
       - run: yarn workspace ${{ matrix.workspace_name }} test

@@ -3,7 +3,6 @@ import os
 import argparse
 import logging
 import json
-import uuid
 import gspread
 import random
 import time
@@ -12,7 +11,6 @@ from urllib.parse import quote
 from git.exc import GitCommandError
 from io import BytesIO
 from git import Repo, Git
-from logging import config
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from time import sleep
@@ -20,8 +18,6 @@ from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor
 
 LOGGER = logging.getLogger(__name__)
-
-BENCHMARK_RUN_ID = str(uuid.uuid4())
 
 WORKFLOW_TEMPLATE = {
     "commit": None,
@@ -61,7 +57,6 @@ JOB_TEMPLATE = {
     "job_url": None,
     "runner_info": None
 }
-
 
 def main():
     # Parse the arguments passed in
@@ -192,6 +187,16 @@ def get_args():
                         type=str,
                         default=None,
                         required=True)
+    parser.add_argument("--google-sheet-workflow-tab",
+                        help="Name of the tab within the Google Sheet where workflow metrics will be exported",
+                        type=str,
+                        default=None,
+                        required=True)
+    parser.add_argument("--google-sheet-job-tab",
+                        help="Name of the tab within the Google Sheet where job metrics will be exported",
+                        type=str,
+                        default=None,
+                        required=True)
     parser.add_argument("--poll-interval",
                         help="Polling interval in seconds when waiting for builds to complete",
                         type=int,
@@ -267,7 +272,7 @@ def run(parsed_args):
         LOGGER.info("Dumped computed metrics to benchmark-computed.json")
 
     # Export computed metrics to Google Sheets
-    export_metrics(computed_metrics, parsed_args['google_sheet_id'], parsed_args['max_retries'])
+    export_metrics(computed_metrics, parsed_args)
     LOGGER.info(f"Exported metrics to Google Sheet ID: {parsed_args['google_sheet_id']}")
 
 def replay_commits(args):
@@ -522,8 +527,6 @@ def collect_metrics(args, build_ids):
                     metrics["github"].append(metrics_result)
                 except Exception as e:
                     LOGGER.error(f"Error collecting Github metrics for workflow_run_id={workflow_run_id}: {e}")
-    
-    print(f"{metrics}")
 
     return metrics
 
@@ -647,8 +650,6 @@ def sanitize_metrics(metrics):
                     sanitized[vendor].extend(sanitized_result)
                 except Exception as e:
                     LOGGER.error(f"Error sanitizing {vendor} metrics: {e}")
-
-    print(f"{sanitized}")
 
     return sanitized
 
@@ -789,8 +790,6 @@ def compute_metrics(sanitized_metrics):
             except Exception as e:
                 LOGGER.error(f"Error computing {vendor} metrics: {e}")
 
-    print(f"{computed}")
-
     return computed
 
 def compute_circleci_metrics(circleci_metrics_list):
@@ -862,25 +861,25 @@ def exponential_backoff_request(request_func, *args, max_retries, max_backoff=64
 def append_row_with_backoff(worksheet, values, max_retries):
     exponential_backoff_request(worksheet.append_row, values, max_retries=max_retries)
 
-def export_metrics(computed_metrics, google_sheet_id, max_retries):
+def export_metrics(computed_metrics, args):
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '~/.config/gspread/service_account.json'
     gc = gspread.service_account()
-    sh = gc.open_by_key(google_sheet_id)
+    sh = gc.open_by_key(args['google_sheet_id'])
 
-    raw_workflow_data = sh.worksheet("raw_workflow_data")
+    raw_workflow_data = sh.worksheet(args['google-sheet-workflow-tab'])
     workflow_headers = list(WORKFLOW_TEMPLATE.keys())
 
-    raw_job_data = sh.worksheet("raw_job_data")
+    raw_job_data = sh.worksheet(args['google-sheet-job-tab'])
     job_headers = list(JOB_TEMPLATE.keys())
 
     for vendor, metrics_data in computed_metrics.items():
         for workflow in metrics_data["workflows"]:
             values = [workflow.get(header) for header in workflow_headers]
-            append_row_with_backoff(raw_workflow_data, values, max_retries=max_retries)
+            append_row_with_backoff(raw_workflow_data, values, max_retries=args['max_retries'])
 
         for job in metrics_data["jobs"]:
             values = [job.get(header) for header in job_headers]
-            append_row_with_backoff(raw_job_data, values, max_retries=max_retries)
+            append_row_with_backoff(raw_job_data, values, max_retries=args['max_retries'])
 
     LOGGER.info("Exported workflow metrics to raw_workflow_data worksheet")
     LOGGER.info("Exported job metrics to raw_job_data worksheet")
