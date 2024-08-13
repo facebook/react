@@ -22,6 +22,8 @@ import {
   ReactiveValue,
   ScopeId,
   SourceLocation,
+  isRefValueType,
+  isUseRefType,
 } from '../HIR';
 import {printManualMemoDependency} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
@@ -258,6 +260,13 @@ function validateInferredDep(
     }
   }
   let errorDiagnostic: CompareDependencyResult | null = null;
+  if (
+    normalizedDep.root.kind === 'NamedLocal' &&
+    (isRefValueType(normalizedDep.root.value.identifier) ||
+      isUseRefType(normalizedDep.root.value.identifier))
+  ) {
+    return;
+  }
   for (const originalDep of validDepsInMemoBlock) {
     const compareResult = compareDeps(normalizedDep, originalDep);
     if (compareResult === CompareDependencyResult.Ok) {
