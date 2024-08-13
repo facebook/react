@@ -621,4 +621,37 @@ describe('useMemoCache()', () => {
       </>,
     );
   });
+
+  // @gate enableUseMemoCacheHook
+  it('resets cache when cache size varies between renders', async () => {
+    const obj = {};
+    function Component(props) {
+      const $ = useMemoCache(props.cacheSize);
+      let cacheHit = 0;
+      if ($[0] === obj) {
+        cacheHit = 1;
+      } else {
+        $[0] = obj;
+      }
+      return cacheHit;
+    }
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<Component key="comp" cacheSize={1} />);
+    });
+    // Initial render, cache is empty
+    expect(root).toMatchRenderedOutput('0');
+
+    await act(() => {
+      root.render(<Component key="comp" cacheSize={1} />);
+    });
+    // Re-render, re-use cache since obj identity has not changed
+    expect(root).toMatchRenderedOutput('1');
+
+    await act(() => {
+      root.render(<Component key="comp" cacheSize={10} />);
+    });
+    // Cache size changed b/w renders, reset the whole cache
+    expect(root).toMatchRenderedOutput('0');
+  });
 });

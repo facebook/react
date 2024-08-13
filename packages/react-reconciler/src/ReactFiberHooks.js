@@ -1226,20 +1226,16 @@ function useMemoCache(size: number): Array<any> {
   updateQueue.memoCache = memoCache;
 
   let data = memoCache.data[memoCache.index];
-  if (data === undefined) {
+  // We reset the cache on init, or indiscriminately even in the event that the cache size requested
+  // differs from the previous render. In dev environments this is typically due to FastRefresh,
+  // where editing the code can change the cache size and should reset entirely to prevent stale
+  // values from being reused. In prod environments this is never expected to happen. However, in
+  // the unlikely case that it does vary between renders, we reset the cache anyway so behavior is
+  // consistent in both environments.
+  if (data === undefined || data.length !== size) {
     data = memoCache.data[memoCache.index] = new Array(size);
     for (let i = 0; i < size; i++) {
       data[i] = REACT_MEMO_CACHE_SENTINEL;
-    }
-  } else if (data.length !== size) {
-    // TODO: consider warning or throwing here
-    if (__DEV__) {
-      console.error(
-        'Expected a constant size argument for each invocation of useMemoCache. ' +
-          'The previous cache was allocated with size %s but size %s was requested.',
-        data.length,
-        size,
-      );
     }
   }
   memoCache.index++;
