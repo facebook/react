@@ -7,6 +7,7 @@ import gspread
 import random
 import time
 import shutil
+from logging import config
 from urllib.parse import quote
 from git.exc import GitCommandError
 from io import BytesIO
