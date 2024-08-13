@@ -3,7 +3,7 @@
 React is a JavaScript library for building user interfaces.
 
 * **Declarative:** React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes. Declarative views make your code more predictable, simpler to understand, and easier to debug.
-* **Component-Based:** Build encapsulated components that manage their own state, then compose them to make complex UIs. Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep the state out of the DOM.
+* **Component-Based:** Build encapsulated components that manage their own state, then compose them to make complex UIs. Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep the state out of the DOM(Document Object Model).
 * **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code. React can also render on the server using [Node](https://nodejs.org/en) and power mobile apps using [React Native](https://reactnative.dev/).
 
 [Learn how to use React in your project](https://react.dev/learn).
@@ -56,6 +56,14 @@ root.render(<HelloMessage name="Taylor" />);
 This example will render "Hello Taylor" into a container on the page.
 
 You'll notice that we used an HTML-like syntax; [we call it JSX](https://react.dev/learn#writing-markup-with-jsx). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML.
+
+## Example
+
+```jsx
+
+const element = <h1>Hello, world!</h1>;
+```
+This simple code snippet is neither a string nor HTML. It is called JSX, which is a syntax extension to JavaScript. 
 
 ## Contributing
 
