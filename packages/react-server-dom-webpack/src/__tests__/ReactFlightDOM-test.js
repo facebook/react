@@ -2554,4 +2554,100 @@ describe('ReactFlightDOM', () => {
       </div>,
     );
   });
+
+  it('can error synchronously after aborting in a synchronous Component', async () => {
+    const rejectError = new Error('bam!');
+    const rejectedPromise = Promise.reject(rejectError);
+    rejectedPromise.catch(() => {});
+    rejectedPromise.status = 'rejected';
+    rejectedPromise.reason = rejectError;
+
+    const resolvedValue = <p>hello world</p>;
+    const resolvedPromise = Promise.resolve(resolvedValue);
+    resolvedPromise.status = 'fulfilled';
+    resolvedPromise.value = resolvedValue;
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading...</p>}>
+            <ComponentThatAborts />
+          </Suspense>
+          <Suspense fallback={<p>loading too...</p>}>
+            {rejectedPromise}
+          </Suspense>
+          <Suspense fallback={<p>loading three...</p>}>
+            {resolvedPromise}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const abortRef = {current: null};
+
+    // This test is specifically asserting that this works with Sync Server Component
+    function ComponentThatAborts() {
+      abortRef.current();
+      throw new Error('boom');
+    }
+
+    const {writable: flightWritable, readable: flightReadable} =
+      getTestStream();
+
+    await serverAct(() => {
+      const {pipe, abort} = ReactServerDOMServer.renderToPipeableStream(
+        <App />,
+        webpackMap,
+        {
+          onError(e) {
+            console.error(e);
+          },
+        },
+      );
+      abortRef.current = abort;
+      pipe(flightWritable);
+    });
+
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'bam!',
+    ]);
+
+    const response =
+      ReactServerDOMClient.createFromReadableStream(flightReadable);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const shellErrors = [];
+    await serverAct(async () => {
+      ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onShellError(error) {
+            shellErrors.push(error.message);
+          },
+        },
+      ).pipe(fizzWritable);
+    });
+    assertConsoleErrorDev([
+      'The render was aborted by the server without a reason.',
+      'bam!',
+    ]);
+
+    expect(shellErrors).toEqual([]);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        <p>loading...</p>
+        <p>loading too...</p>
+        <p>hello world</p>
+      </div>,
+    );
+  });
 });
