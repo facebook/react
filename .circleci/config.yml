@@ -34,7 +34,8 @@ jobs:
                     --google-sheet-job-tab $SHEETS_JOB_TAB \
                     --github-token $GITHUB_TOKEN \
                     --circleci-token $CIRCLECI_TOKEN \
-                    --dump-json
+                    --dump-json \
+                    --log-path .
                     
       - store_artifacts:
           path: benchmark-computed.json
