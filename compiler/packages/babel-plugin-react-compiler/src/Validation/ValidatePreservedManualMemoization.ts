@@ -22,8 +22,6 @@ import {
   ReactiveValue,
   ScopeId,
   SourceLocation,
-  isRefValueType,
-  isUseRefType,
 } from '../HIR';
 import {printManualMemoDependency} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
