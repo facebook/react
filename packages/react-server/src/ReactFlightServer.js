@@ -997,6 +997,8 @@ function callWithDebugContextInDEV<A, T>(
   }
 }
 
+const voidHandler = () => {};
+
 function renderFunctionComponent<Props>(
   request: Request,
   task: Task,
@@ -1101,6 +1103,14 @@ function renderFunctionComponent<Props>(
   }
 
   if (request.status === ABORTING) {
+    if (
+      typeof result === 'object' &&
+      result !== null &&
+      typeof result.then === 'function' &&
+      !isClientReference(result)
+    ) {
+      result.then(voidHandler, voidHandler);
+    }
     // If we aborted during rendering we should interrupt the render but
     // we don't need to provide an error because the renderer will encode
     // the abort error as the reason.
@@ -1120,18 +1130,15 @@ function renderFunctionComponent<Props>(
         // If the thenable resolves to an element, then it was in a static position,
         // the return value of a Server Component. That doesn't need further validation
         // of keys. The Server Component itself would have had a key.
-        thenable.then(
-          resolvedValue => {
-            if (
-              typeof resolvedValue === 'object' &&
-              resolvedValue !== null &&
-              resolvedValue.$$typeof === REACT_ELEMENT_TYPE
-            ) {
-              resolvedValue._store.validated = 1;
-            }
-          },
-          () => {},
-        );
+        thenable.then(resolvedValue => {
+          if (
+            typeof resolvedValue === 'object' &&
+            resolvedValue !== null &&
+            resolvedValue.$$typeof === REACT_ELEMENT_TYPE
+          ) {
+            resolvedValue._store.validated = 1;
+          }
+        }, voidHandler);
       }
       if (thenable.status === 'fulfilled') {
         return thenable.value;
