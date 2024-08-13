@@ -162,7 +162,9 @@ async function main() {
             'publish',
             ...opts,
             '--registry=https://registry.npmjs.org',
-            '--tag=experimental',
+            // For now, since the compiler is experimental only, to simplify installation we push
+            // to the `latest` tag
+            '--tag=latest',
           ],
           {
             cwd: pkgDir,

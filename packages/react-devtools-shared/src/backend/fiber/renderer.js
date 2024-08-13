@@ -63,7 +63,6 @@ import {
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
@@ -856,8 +855,14 @@ export function attach(
   // (due to e.g. Suspense or error boundaries).
   // onErrorOrWarning() adds Fibers and recordPendingErrorsAndWarnings() later clears them.
   const fibersWithChangedErrorOrWarningCounts: Set<Fiber> = new Set();
-  const pendingFiberToErrorsMap: Map<Fiber, Map<string, number>> = new Map();
-  const pendingFiberToWarningsMap: Map<Fiber, Map<string, number>> = new Map();
+  const pendingFiberToErrorsMap: WeakMap<
+    Fiber,
+    Map<string, number>,
+  > = new WeakMap();
+  const pendingFiberToWarningsMap: WeakMap<
+    Fiber,
+    Map<string, number>,
+  > = new WeakMap();
 
   function clearErrorsAndWarnings() {
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
@@ -876,7 +881,7 @@ export function attach(
 
   function clearMessageCountHelper(
     instanceID: number,
-    pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
+    pendingFiberToMessageCountMap: WeakMap<Fiber, Map<string, number>>,
     forError: boolean,
   ) {
     const devtoolsInstance = idToDevToolsInstanceMap.get(instanceID);
@@ -902,7 +907,7 @@ export function attach(
       if (devtoolsInstance.kind === FIBER_INSTANCE) {
         const fiber = devtoolsInstance.data;
         // Throw out any pending changes.
-        pendingFiberToErrorsMap.delete(fiber);
+        pendingFiberToMessageCountMap.delete(fiber);
 
         if (changed) {
           // If previous flushed counts have changed, schedule an update too.
@@ -1143,11 +1148,8 @@ export function attach(
 
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getOrGenerateFiberInstance(root.current).id;
-      // The TREE_OPERATION_REMOVE_ROOT operation serves two purposes:
-      // 1. It avoids sending unnecessary bridge traffic to clear a root.
-      // 2. It preserves Fiber IDs when remounting (below) which in turn ID to error/warning mapping.
-      pushOperation(TREE_OPERATION_REMOVE_ROOT);
+      currentRootID = getFiberInstanceThrows(root.current).id;
+      unmountFiberRecursively(root.current);
       flushPendingEvents(root);
       currentRootID = -1;
     });
@@ -1159,7 +1161,22 @@ export function attach(
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getOrGenerateFiberInstance(root.current).id;
+      const current = root.current;
+      const alternate = current.alternate;
+      const newRoot = createFiberInstance(current);
+      idToDevToolsInstanceMap.set(newRoot.id, newRoot);
+      fiberToFiberInstanceMap.set(current, newRoot);
+      if (alternate) {
+        fiberToFiberInstanceMap.set(alternate, newRoot);
+      }
+
+      // Before the traversals, remember to start tracking
+      // our path in case we have selection to restore.
+      if (trackedPath !== null) {
+        mightBeOnTrackedPath = true;
+      }
+
+      currentRootID = newRoot.id;
       setRootPseudoKey(currentRootID, root.current);
       mountFiberRecursively(root.current, false);
       flushPendingEvents(root);
@@ -1322,43 +1339,6 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
-  // Returns the unique ID for a Fiber or generates and caches a new one if the Fiber hasn't been seen before.
-  // Once this method has been called for a Fiber, untrackFiberID() should always be called later to avoid leaking.
-  function getOrGenerateFiberInstance(fiber: Fiber): FiberInstance {
-    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
-    if (fiberInstance === undefined) {
-      const {alternate} = fiber;
-      if (alternate !== null) {
-        fiberInstance = fiberToFiberInstanceMap.get(alternate);
-        if (fiberInstance !== undefined) {
-          // We found the other pair, so we need to make sure we track the other side.
-          fiberToFiberInstanceMap.set(fiber, fiberInstance);
-        }
-      }
-    }
-
-    let didGenerateID = false;
-    if (fiberInstance === undefined) {
-      didGenerateID = true;
-      fiberInstance = createFiberInstance(fiber);
-      fiberToFiberInstanceMap.set(fiber, fiberInstance);
-      idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
-    }
-
-    if (__DEBUG__) {
-      if (didGenerateID) {
-        debug(
-          'getOrGenerateFiberInstance()',
-          fiber,
-          fiberInstance.parent,
-          'Generated a new UID',
-        );
-      }
-    }
-
-    return fiberInstance;
-  }
-
   // Returns a FiberInstance if one has already been generated for the Fiber or throws.
   function getFiberInstanceThrows(fiber: Fiber): FiberInstance {
     const fiberInstance = getFiberInstanceUnsafe(fiber);
@@ -1412,9 +1392,21 @@ export function attach(
 
     idToDevToolsInstanceMap.delete(fiberInstance.id);
 
-    // Also clear any errors/warnings associated with this fiber.
-    clearErrorsForElementID(fiberInstance.id);
-    clearWarningsForElementID(fiberInstance.id);
+    const fiber = fiberInstance.data;
+
+    // Restore any errors/warnings associated with this fiber to the pending
+    // map. I.e. treat it as before we tracked the instances. This lets us
+    // restore them if we remount the same Fibers later. Otherwise we rely
+    // on the GC of the Fibers to clean them up.
+    if (fiberInstance.errors !== null) {
+      pendingFiberToErrorsMap.set(fiber, fiberInstance.errors);
+      fiberInstance.errors = null;
+    }
+    if (fiberInstance.warnings !== null) {
+      pendingFiberToWarningsMap.set(fiber, fiberInstance.warnings);
+      fiberInstance.warnings = null;
+    }
+
     if (fiberInstance.flags & FORCE_ERROR) {
       fiberInstance.flags &= ~FORCE_ERROR;
       forceErrorCount--;
@@ -1430,7 +1422,6 @@ export function attach(
       }
     }
 
-    const fiber = fiberInstance.data;
     fiberToFiberInstanceMap.delete(fiber);
     const {alternate} = fiber;
     if (alternate !== null) {
@@ -1745,7 +1736,6 @@ export function attach(
 
   const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<number> = [];
-  const pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
@@ -1776,7 +1766,6 @@ export function attach(
     return (
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
-      pendingSimulatedUnmountedIDs.length === 0 &&
       pendingUnmountedRootID === null
     );
   }
@@ -1856,7 +1845,7 @@ export function attach(
   function mergeMapsAndGetCountHelper(
     fiber: Fiber,
     fiberID: number,
-    pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
+    pendingFiberToMessageCountMap: WeakMap<Fiber, Map<string, number>>,
     forError: boolean,
   ): number {
     let newCount = 0;
@@ -1932,18 +1921,18 @@ export function attach(
         pushOperation(fiberID);
         pushOperation(errorCount);
         pushOperation(warningCount);
-      }
 
-      // Always clean up so that we don't leak.
-      pendingFiberToErrorsMap.delete(fiber);
-      pendingFiberToWarningsMap.delete(fiber);
+        // Only clear the ones that we've already shown. Leave others in case
+        // they mount later.
+        pendingFiberToErrorsMap.delete(fiber);
+        pendingFiberToWarningsMap.delete(fiber);
+      }
     });
     fibersWithChangedErrorOrWarningCounts.clear();
   }
 
   function flushPendingEvents(root: Object): void {
     // Add any pending errors and warnings to the operations array.
-    // We do this just before flushing, so we can ignore errors for no-longer-mounted Fibers.
     recordPendingErrorsAndWarnings();
 
     if (shouldBailoutWithPendingOperations()) {
@@ -1960,7 +1949,6 @@ export function attach(
 
     const numUnmountIDs =
       pendingRealUnmountedIDs.length +
-      pendingSimulatedUnmountedIDs.length +
       (pendingUnmountedRootID === null ? 0 : 1);
 
     const operations = new Array<number>(
@@ -2013,15 +2001,6 @@ export function attach(
       for (let j = 0; j < pendingRealUnmountedIDs.length; j++) {
         operations[i++] = pendingRealUnmountedIDs[j];
       }
-      // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
-      // (We want children to go before parents.)
-      // They go *after* the real unmounts because we know for sure they won't be
-      // children of already pushed "real" IDs. If they were, we wouldn't be able
-      // to discover them during the traversal, as they would have been deleted.
-      for (let j = 0; j < pendingSimulatedUnmountedIDs.length; j++) {
-        operations[i + j] = pendingSimulatedUnmountedIDs[j];
-      }
-      i += pendingSimulatedUnmountedIDs.length;
       // The root ID should always be unmounted last.
       if (pendingUnmountedRootID !== null) {
         operations[i] = pendingUnmountedRootID;
@@ -2040,7 +2019,6 @@ export function attach(
     // Reset all of the pending state now that we've told the frontend about it.
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
-    pendingSimulatedUnmountedIDs.length = 0;
     pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
@@ -2078,7 +2056,24 @@ export function attach(
     parentInstance: DevToolsInstance | null,
   ): FiberInstance {
     const isRoot = fiber.tag === HostRoot;
-    const fiberInstance = getOrGenerateFiberInstance(fiber);
+    let fiberInstance;
+    if (isRoot) {
+      const entry = fiberToFiberInstanceMap.get(fiber);
+      if (entry === undefined) {
+        throw new Error('The root should have been registered at this point');
+      }
+      fiberInstance = entry;
+    } else if (
+      fiberToFiberInstanceMap.has(fiber) ||
+      (fiber.alternate !== null && fiberToFiberInstanceMap.has(fiber.alternate))
+    ) {
+      throw new Error('Did not expect to see this fiber being mounted twice.');
+    } else {
+      fiberInstance = createFiberInstance(fiber);
+    }
+    fiberToFiberInstanceMap.set(fiber, fiberInstance);
+    idToDevToolsInstanceMap.set(fiberInstance.id, fiberInstance);
+
     const id = fiberInstance.id;
 
     if (__DEBUG__) {
@@ -2131,7 +2126,12 @@ export function attach(
       let ownerID: number;
       if (debugOwner != null) {
         if (typeof debugOwner.tag === 'number') {
-          ownerID = getOrGenerateFiberInstance((debugOwner: any)).id;
+          const ownerFiberInstance = getFiberInstanceUnsafe((debugOwner: any));
+          if (ownerFiberInstance !== null) {
+            ownerID = ownerFiberInstance.id;
+          } else {
+            ownerID = 0;
+          }
         } else {
           // TODO: Track Server Component Owners.
           ownerID = 0;
@@ -2183,17 +2183,9 @@ export function attach(
     return fiberInstance;
   }
 
-  function recordUnmount(
-    fiber: Fiber,
-    isSimulated: boolean,
-  ): null | FiberInstance {
+  function recordUnmount(fiber: Fiber): null | FiberInstance {
     if (__DEBUG__) {
-      debug(
-        'recordUnmount()',
-        fiber,
-        null,
-        isSimulated ? 'unmount is simulated' : '',
-      );
+      debug('recordUnmount()', fiber, null);
     }
 
     if (trackedPathMatchFiber !== null) {
@@ -2223,28 +2215,22 @@ export function attach(
     const id = fiberInstance.id;
     const isRoot = fiber.tag === HostRoot;
     if (isRoot) {
-      // Roots must be removed only after all children (pending and simulated) have been removed.
+      // Roots must be removed only after all children have been removed.
       // So we track it separately.
       pendingUnmountedRootID = id;
     } else if (!shouldFilterFiber(fiber)) {
       // To maintain child-first ordering,
       // we'll push it into one of these queues,
       // and later arrange them in the correct order.
-      if (isSimulated) {
-        pendingSimulatedUnmountedIDs.push(id);
-      } else {
-        pendingRealUnmountedIDs.push(id);
-      }
+      pendingRealUnmountedIDs.push(id);
     }
 
-    if (!fiber._debugNeedsRemount) {
-      untrackFiber(fiberInstance);
+    untrackFiber(fiberInstance);
 
-      const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
-      if (isProfilingSupported) {
-        idToRootMap.delete(id);
-        idToTreeBaseDurationMap.delete(id);
-      }
+    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
+    if (isProfilingSupported) {
+      idToRootMap.delete(id);
+      idToTreeBaseDurationMap.delete(id);
     }
     return fiberInstance;
   }
@@ -2323,7 +2309,7 @@ export function attach(
     let child = remainingReconcilingChildren;
     while (child !== null) {
       if (child.kind === FIBER_INSTANCE) {
-        unmountFiberRecursively(child.data, false);
+        unmountFiberRecursively(child.data);
       }
       removeChild(child);
       child = remainingReconcilingChildren;
@@ -2347,10 +2333,6 @@ export function attach(
     fiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): void {
-    // Generate an ID even for filtered Fibers, in case it's needed later (e.g. for Profiling).
-    // TODO: Do we really need to do this eagerly?
-    getOrGenerateFiberInstance(fiber);
-
     if (__DEBUG__) {
       debug('mountFiberRecursively()', fiber, reconcilingParent);
     }
@@ -2452,7 +2434,7 @@ export function attach(
 
   // We use this to simulate unmounting for Suspense trees
   // when we switch from primary to fallback, or deleting a subtree.
-  function unmountFiberRecursively(fiber: Fiber, isSimulated: boolean) {
+  function unmountFiberRecursively(fiber: Fiber) {
     if (__DEBUG__) {
       debug('unmountFiberRecursively()', fiber, null);
     }
@@ -2493,7 +2475,7 @@ export function attach(
         child = fallbackChildFragment ? fallbackChildFragment.child : null;
       }
 
-      unmountChildrenRecursively(child, isSimulated);
+      unmountChildrenRecursively(child);
     } finally {
       if (shouldIncludeInTree) {
         reconcilingParent = stashedParent;
@@ -2502,20 +2484,17 @@ export function attach(
       }
     }
     if (fiberInstance !== null) {
-      recordUnmount(fiber, isSimulated);
+      recordUnmount(fiber);
       removeChild(fiberInstance);
     }
   }
 
-  function unmountChildrenRecursively(
-    firstChild: null | Fiber,
-    isSimulated: boolean,
-  ) {
+  function unmountChildrenRecursively(firstChild: null | Fiber) {
     let child: null | Fiber = firstChild;
     while (child !== null) {
       // Record simulated unmounts children-first.
       // We skip nodes without return because those are real unmounts.
-      unmountFiberRecursively(child, isSimulated);
+      unmountFiberRecursively(child);
       child = child.sibling;
     }
   }
@@ -2725,10 +2704,6 @@ export function attach(
     prevFiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
   ): boolean {
-    // TODO: Do we really need to give this an instance eagerly if it's filtered?
-    const fiberInstance = getOrGenerateFiberInstance(nextFiber);
-    const id = fiberInstance.id;
-
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, reconcilingParent);
     }
@@ -2758,26 +2733,38 @@ export function attach(
       }
     }
 
-    if (
-      mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id === id &&
-      didFiberRender(prevFiber, nextFiber)
-    ) {
-      // If this Fiber has updated, clear cached inspected data.
-      // If it is inspected again, it may need to be re-run to obtain updated hooks values.
-      hasElementUpdatedSinceLastInspected = true;
-    }
-
+    let fiberInstance: null | FiberInstance = null;
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
     if (shouldIncludeInTree) {
+      const entry = fiberToFiberInstanceMap.get(prevFiber);
+      if (entry === undefined) {
+        throw new Error(
+          'The previous version of the fiber should have already been registered.',
+        );
+      }
+      fiberInstance = entry;
+      // Register the new alternate in case it's not already in.
+      fiberToFiberInstanceMap.set(nextFiber, fiberInstance);
+
       // Update the Fiber so we that we always keep the current Fiber on the data.
       fiberInstance.data = nextFiber;
       moveChild(fiberInstance);
+
+      if (
+        mostRecentlyInspectedElement !== null &&
+        mostRecentlyInspectedElement.id === fiberInstance.id &&
+        didFiberRender(prevFiber, nextFiber)
+      ) {
+        // If this Fiber has updated, clear cached inspected data.
+        // If it is inspected again, it may need to be re-run to obtain updated hooks values.
+        hasElementUpdatedSinceLastInspected = true;
+      }
     }
+
     const stashedParent = reconcilingParent;
     const stashedPrevious = previouslyReconciledSibling;
     const stashedRemaining = remainingReconcilingChildren;
-    if (shouldIncludeInTree) {
+    if (fiberInstance !== null) {
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = fiberInstance;
       previouslyReconciledSibling = null;
@@ -2856,9 +2843,7 @@ export function attach(
       } else if (!prevDidTimeout && nextDidTimeOut) {
         // Primary -> Fallback:
         // 1. Hide primary set
-        // This is not a real unmount, so it won't get reported by React.
-        // We need to manually walk the previous tree and record unmounts.
-        unmountChildrenRecursively(prevFiber.child, true);
+        unmountChildrenRecursively(prevFiber.child);
         // 2. Mount fallback set
         const nextFiberChild = nextFiber.child;
         const nextFallbackChildSet = nextFiberChild
@@ -2886,7 +2871,7 @@ export function attach(
           }
         } else {
           // Children are unchanged.
-          if (shouldIncludeInTree) {
+          if (fiberInstance !== null) {
             // All the remaining children will be children of this same fiber so we can just reuse them.
             // I.e. we just restore them by undoing what we did above.
             fiberInstance.firstChild = remainingReconcilingChildren;
@@ -3003,7 +2988,15 @@ export function attach(
       }
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
       hook.getFiberRoots(rendererID).forEach(root => {
-        currentRootID = getOrGenerateFiberInstance(root.current).id;
+        const current = root.current;
+        const alternate = current.alternate;
+        const newRoot = createFiberInstance(current);
+        idToDevToolsInstanceMap.set(newRoot.id, newRoot);
+        fiberToFiberInstanceMap.set(current, newRoot);
+        if (alternate) {
+          fiberToFiberInstanceMap.set(alternate, newRoot);
+        }
+        currentRootID = newRoot.id;
         setRootPseudoKey(currentRootID, root.current);
 
         // Handle multi-renderer edge-case where only some v16 renderers support profiling.
@@ -3060,7 +3053,20 @@ export function attach(
     const current = root.current;
     const alternate = current.alternate;
 
-    currentRootID = getOrGenerateFiberInstance(current).id;
+    const existingRoot =
+      fiberToFiberInstanceMap.get(current) ||
+      (alternate && fiberToFiberInstanceMap.get(alternate));
+    if (!existingRoot) {
+      const newRoot = createFiberInstance(current);
+      idToDevToolsInstanceMap.set(newRoot.id, newRoot);
+      fiberToFiberInstanceMap.set(current, newRoot);
+      if (alternate) {
+        fiberToFiberInstanceMap.set(alternate, newRoot);
+      }
+      currentRootID = newRoot.id;
+    } else {
+      currentRootID = existingRoot.id;
+    }
 
     // Before the traversals, remember to start tracking
     // our path in case we have selection to restore.
@@ -3117,7 +3123,7 @@ export function attach(
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         removeRootPseudoKey(currentRootID);
-        unmountFiberRecursively(alternate, false);
+        unmountFiberRecursively(alternate);
       }
     } else {
       // Mount a new root.
@@ -3617,7 +3623,9 @@ export function attach(
     while (owner != null) {
       if (typeof owner.tag === 'number') {
         const ownerFiber: Fiber = (owner: any); // Refined
-        owners.unshift(fiberToSerializedElement(ownerFiber));
+        if (!shouldFilterFiber(ownerFiber)) {
+          owners.unshift(fiberToSerializedElement(ownerFiber));
+        }
         owner = ownerFiber._debugOwner;
       } else {
         // TODO: Track Server Component Owners.

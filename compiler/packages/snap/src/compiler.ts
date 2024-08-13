@@ -20,7 +20,11 @@ import type {
   PluginOptions,
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
-import type {parseConfigPragma as ParseConfigPragma} from 'babel-plugin-react-compiler/src/HIR/Environment';
+import type {
+  Macro,
+  MacroMethod,
+  parseConfigPragma as ParseConfigPragma,
+} from 'babel-plugin-react-compiler/src/HIR/Environment';
 import * as HermesParser from 'hermes-parser';
 import invariant from 'invariant';
 import path from 'path';
@@ -46,7 +50,7 @@ function makePluginOptions(
   // TODO(@mofeiZ) rewrite snap fixtures to @validatePreserveExistingMemo:false
   let validatePreserveExistingMemoizationGuarantees = false;
   let enableChangeDetectionForDebugging = null;
-  let customMacros = null;
+  let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
@@ -150,10 +154,27 @@ function makePluginOptions(
     customMacrosMatch.length > 1 &&
     customMacrosMatch[1].trim().length > 0
   ) {
-    customMacros = customMacrosMatch[1]
+    const customMacrosStrs = customMacrosMatch[1]
       .split(' ')
       .map(s => s.trim())
       .filter(s => s.length > 0);
+    if (customMacrosStrs.length > 0) {
+      customMacros = [];
+      for (const customMacroStr of customMacrosStrs) {
+        const props: Array<MacroMethod> = [];
+        const customMacroSplit = customMacroStr.split('.');
+        if (customMacroSplit.length > 0) {
+          for (const elt of customMacroSplit.slice(1)) {
+            if (elt === '*') {
+              props.push({type: 'wildcard'});
+            } else if (elt.length > 0) {
+              props.push({type: 'name', name: elt});
+            }
+          }
+          customMacros.push([customMacroSplit[0], props]);
+        }
+      }
+    }
   }
 
   const validateBlocklistedImportsMatch =

@@ -67,6 +67,20 @@ export const InstrumentationSchema = z
 
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
 
+export const MacroMethodSchema = z.union([
+  z.object({type: z.literal('wildcard')}),
+  z.object({type: z.literal('name'), name: z.string()}),
+]);
+
+// Would like to change this to drop the string option, but breaks compatibility with existing configs
+export const MacroSchema = z.union([
+  z.string(),
+  z.tuple([z.string(), z.array(MacroMethodSchema)]),
+]);
+
+export type Macro = z.infer<typeof MacroSchema>;
+export type MacroMethod = z.infer<typeof MacroMethodSchema>;
+
 const HookSchema = z.object({
   /*
    * The effect of arguments to this hook. Describes whether the hook may or may
@@ -133,7 +147,7 @@ const EnvironmentConfigSchema = z.object({
    * plugin since it looks specifically for the name of the function being invoked, not
    * following aliases.
    */
-  customMacros: z.nullable(z.array(z.string())).default(null),
+  customMacros: z.nullable(z.array(MacroSchema)).default(null),
 
   /**
    * Enable a check that resets the memoization cache when the source code of the file changes.
@@ -490,7 +504,19 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
     }
 
     if (key === 'customMacros' && val) {
-      maybeConfig[key] = [val];
+      const valSplit = val.split('.');
+      if (valSplit.length > 0) {
+        const props = [];
+        for (const elt of valSplit.slice(1)) {
+          if (elt === '*') {
+            props.push({type: 'wildcard'});
+          } else if (elt.length > 0) {
+            props.push({type: 'name', name: elt});
+          }
+        }
+        console.log([valSplit[0], props.map(x => x.name ?? '*').join('.')]);
+        maybeConfig[key] = [[valSplit[0], props]];
+      }
       continue;
     }
 
