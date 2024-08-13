@@ -35,7 +35,8 @@ jobs:
                     --github-token $GITHUB_TOKEN \
                     --circleci-token $CIRCLECI_TOKEN \
                     --dump-json \
-                    --log-path .
+                    --log-path . \
+                    --branch 8-13-try-again
                     
       - store_artifacts:
           path: benchmark-computed.json
