@@ -28,7 +28,7 @@ function InspectedElementSourcePanel({
   symbolicatedSourcePromise,
 }: Props): React.Node {
   return (
-    <div className={styles.Source} data-testname="InspectedElementView-Source">
+    <div data-testname="InspectedElementView-Source">
       <div className={styles.SourceHeaderRow}>
         <div className={styles.SourceHeader}>source</div>
 
