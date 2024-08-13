@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {CompilerError} from '..';
+import {GlobalType} from './Environment';
 import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
@@ -18,6 +20,7 @@ import {
   BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
+  FunctionSignature,
   ShapeRegistry,
   addFunction,
   addHook,
@@ -515,6 +518,68 @@ DEFAULT_GLOBALS.set(
   'global',
   addObject(DEFAULT_SHAPES, 'global', TYPED_GLOBALS),
 );
+
+export function installCustomGlobals(
+  globals: GlobalRegistry,
+  registry: ShapeRegistry,
+  custom: Array<[string, GlobalType]>,
+): void {
+  const refMap: Map<number, BuiltInType> = new Map();
+  const toSet: Map<number, (ty: BuiltInType) => void> = new Map();
+  function installShape(name: string, type: GlobalType): BuiltInType {
+    const props: Array<[string, BuiltInType]> = type.properties.map(
+      ([name, type]) => [name, installShape(name, type)],
+    );
+
+    let ty;
+    if (type.fn == null) {
+      ty = addObject(registry, name, props);
+    } else {
+      const func: Omit<FunctionSignature, 'hookKind'> = {
+        positionalParams: type.fn.positionalParams,
+        restParam: type.fn.restParam,
+        calleeEffect: type.fn.calleeEffect,
+        returnValueKind: type.fn.returnValueKind,
+        returnType: {kind: 'Primitive'}, // Placeholder, mutated below
+      };
+
+      if (type.fn.returnType == null) {
+        func.returnType = {kind: 'Poly'};
+      } else if (type.fn.returnType === 'array') {
+        func.returnType = {kind: 'Object', shapeId: BuiltInArrayId};
+      } else if (refMap.has(type.fn.returnType)) {
+        func.returnType = refMap.get(type.fn.returnType)!;
+      } else {
+        const cur = toSet.get(type.fn.returnType);
+        toSet.set(type.fn.returnType, (ty: BuiltInType) => {
+          cur?.(ty);
+          func.returnType = ty;
+        });
+      }
+      ty = addFunction(registry, props, func, name);
+    }
+
+    if (type.id != null) {
+      CompilerError.invariant(refMap.get(type.id) == null, {
+        reason: 'Duplicate type id',
+        loc: null,
+      });
+      refMap.set(type.id, ty);
+      toSet.get(type.id)?.(ty);
+      toSet.delete(type.id);
+    }
+    return ty;
+  }
+
+  for (const [name, type] of custom) {
+    globals.set(name, installShape(name, type));
+  }
+
+  CompilerError.invariant(toSet.size === 0, {
+    reason: 'Unresolved type ids',
+    loc: null,
+  });
+}
 
 export function installReAnimatedTypes(
   globals: GlobalRegistry,

@@ -21,6 +21,7 @@ import type {
 } from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Effect, ValueKind} from 'babel-plugin-react-compiler/src/HIR';
 import type {
+  GlobalType,
   Macro,
   MacroMethod,
   parseConfigPragma as ParseConfigPragma,
@@ -52,6 +53,39 @@ function makePluginOptions(
   let enableChangeDetectionForDebugging = null;
   let customMacros: null | Array<Macro> = null;
   let validateBlocklistedImports = null;
+  let typedGlobals: Array<[string, GlobalType]> = [];
+
+  if (firstLine.indexOf('@customType') !== -1) {
+    typedGlobals.push([
+      'custom',
+      {
+        id: null,
+        fn: {
+          positionalParams: [],
+          restParam: 'read' as Effect.Read,
+          calleeEffect: 'read' as Effect.Read,
+          returnType: null,
+          returnValueKind: 'primitive' as ValueKind.Primitive,
+        },
+        properties: [
+          [
+            'prop',
+            {
+              id: null,
+              fn: {
+                positionalParams: [],
+                restParam: 'read' as Effect.Read,
+                calleeEffect: 'read' as Effect.Read,
+                returnType: null,
+                returnValueKind: 'primitive' as ValueKind.Primitive,
+              },
+              properties: [],
+            },
+          ],
+        ],
+      },
+    ]);
+  }
 
   if (firstLine.indexOf('@compilationMode(annotation)') !== -1) {
     assert(

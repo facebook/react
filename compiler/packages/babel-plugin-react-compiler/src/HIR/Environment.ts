@@ -16,6 +16,7 @@ import {
   DEFAULT_SHAPES,
   Global,
   GlobalRegistry,
+  installCustomGlobals,
   installReAnimatedTypes,
 } from './Globals';
 import {
@@ -125,17 +126,71 @@ const HookSchema = z.object({
 export type Hook = z.infer<typeof HookSchema>;
 
 /*
- * TODO(mofeiZ): User defined global types (with corresponding shapes).
- * User defined global types should have inline ObjectShapes instead of directly
- * using ObjectShapes.ShapeRegistry, as a user-provided ShapeRegistry may be
- * accidentally be not well formed.
- * i.e.
- *   missing required shapes (BuiltInArray for [] and BuiltInObject for {})
- *   missing some recursive Object / Function shapeIds
+ * Extremely hacky Zod typing in order to get recursive types working for
+ * external type schema definitions.
  */
+
+const EffectSchema = z.enum([
+  Effect.Read,
+  Effect.Mutate,
+  Effect.ConditionallyMutate,
+  Effect.Capture,
+  Effect.Store,
+  Effect.Freeze,
+]);
+
+const TypeIDSchema = z.number();
+
+const TypeReferenceSchema = z.union([TypeIDSchema, z.literal('array')]);
+
+const FunctionTypeSchema = z.object({
+  positionalParams: z.array(EffectSchema),
+  restParam: EffectSchema.nullable(),
+  calleeEffect: EffectSchema,
+  returnType: TypeReferenceSchema.nullable(),
+  returnValueKind: z.nativeEnum(ValueKind),
+});
+
+const baseTypeSchema = z.object({
+  id: TypeIDSchema.nullable().default(null),
+  fn: FunctionTypeSchema.nullable(),
+});
+
+export type ZodCompositeType<
+  T extends z.ZodTypeAny,
+  U extends {[K in keyof U]: z.ZodType<any, z.ZodTypeDef, any>},
+> = z.ZodType<
+  z.output<T> & {[K in keyof U]: z.output<U[K]>},
+  z.ZodTypeDef,
+  z.input<T> & {[K in keyof U]: z.input<U[K]>}
+>;
+
+export const TypeSchema: ZodCompositeType<
+  typeof baseTypeSchema,
+  {
+    properties: typeof propertiesField;
+  }
+> = baseTypeSchema.extend({
+  properties: z.lazy(() => propertiesField),
+});
+
+const propertiesField = z.array(z.tuple([z.string(), TypeSchema]));
+
+export type GlobalEffect = z.infer<typeof EffectSchema>;
+
+export type GlobalType = z.infer<typeof baseTypeSchema> & {
+  properties: Array<[string, GlobalType]>;
+};
+
+export type GlobalFunctionType = z.infer<typeof FunctionTypeSchema>;
 
 const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
+
+  typedGlobals: z
+    .array(z.tuple([z.string(), TypeSchema]))
+    .optional()
+    .default([]),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -514,9 +569,43 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
             props.push({type: 'name', name: elt});
           }
         }
-        console.log([valSplit[0], props.map(x => x.name ?? '*').join('.')]);
         maybeConfig[key] = [[valSplit[0], props]];
       }
+      continue;
+    }
+
+    if (key === 'customType') {
+      maybeConfig['typedGlobals'] = [
+        [
+          'custom',
+          {
+            id: null,
+            fn: {
+              positionalParams: [],
+              restParam: 'read' as Effect.Read,
+              calleeEffect: 'read' as Effect.Read,
+              returnType: null,
+              returnValueKind: 'primitive' as ValueKind.Primitive,
+            },
+            properties: [
+              [
+                'prop',
+                {
+                  id: null,
+                  fn: {
+                    positionalParams: [],
+                    restParam: 'read' as Effect.Read,
+                    calleeEffect: 'read' as Effect.Read,
+                    returnType: null,
+                    returnValueKind: 'primitive' as ValueKind.Primitive,
+                  },
+                  properties: [],
+                },
+              ],
+            ],
+          },
+        ],
+      ];
       continue;
     }
 
@@ -644,6 +733,8 @@ export class Environment {
       installReAnimatedTypes(this.#globals, this.#shapes);
     }
 
+    installCustomGlobals(this.#globals, this.#shapes, this.config.typedGlobals);
+
     this.#contextIdentifiers = contextIdentifiers;
     this.#hoistedIdentifiers = new Set();
   }
@@ -756,6 +847,7 @@ export class Environment {
     return (
       moduleName.toLowerCase() === 'react' ||
       moduleName.toLowerCase() === 'react-dom' ||
+      [...this.#globals.keys()].includes(moduleName) ||
       (this.config.enableSharedRuntime__testonly &&
         moduleName === 'shared-runtime')
     );
