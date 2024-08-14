@@ -60,7 +60,7 @@ export default function InspectedElementContextTree({
     return null;
   } else {
     return (
-      <div className={styles.InspectedElementTree}>
+      <div>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>
             {hasLegacyContext ? 'legacy context' : 'context'}

@@ -7,4 +7,5 @@
  * @flow
  */
 
-export * from './src/ReactHTMLServer';
+// eslint-disable-next-line react-internal/prod-error-codes
+throw new Error('react-markup should not get built in stable');

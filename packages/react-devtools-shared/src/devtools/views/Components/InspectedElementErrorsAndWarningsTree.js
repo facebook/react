@@ -136,7 +136,7 @@ function Tree({
     return null;
   }
   return (
-    <div className={`${sharedStyles.InspectedElementTree} ${className}`}>
+    <div className={className}>
       <div className={`${sharedStyles.HeaderRow} ${styles.HeaderRow}`}>
         <div className={sharedStyles.Header}>{label}</div>
         <Button
