@@ -25,7 +25,7 @@ export function prepareDestinationForModule(
   metadata: ClientReferenceMetadata,
 ) {
   throw new Error(
-    'renderToMarkup should not have emitted Client References. This is a bug in React.',
+    'renderToHTML should not have emitted Client References. This is a bug in React.',
   );
 }
 
@@ -34,7 +34,7 @@ export function resolveClientReference<T>(
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   throw new Error(
-    'renderToMarkup should not have emitted Client References. This is a bug in React.',
+    'renderToHTML should not have emitted Client References. This is a bug in React.',
   );
 }
 
@@ -43,7 +43,7 @@ export function resolveServerReference<T>(
   id: ServerReferenceId,
 ): ClientReference<T> {
   throw new Error(
-    'renderToMarkup should not have emitted Server References. This is a bug in React.',
+    'renderToHTML should not have emitted Server References. This is a bug in React.',
   );
 }
 
@@ -55,7 +55,7 @@ export function preloadModule<T>(
 
 export function requireModule<T>(metadata: ClientReference<T>): T {
   throw new Error(
-    'renderToMarkup should not have emitted Client References. This is a bug in React.',
+    'renderToHTML should not have emitted Client References. This is a bug in React.',
   );
 }
 

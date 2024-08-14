@@ -43,7 +43,7 @@ if (!__EXPERIMENTAL__) {
         return <div>hello world</div>;
       }
 
-      const html = await ReactMarkup.renderToMarkup(<Component />);
+      const html = await ReactMarkup.renderToHTML(<Component />);
       expect(html).toBe('<div>hello world</div>');
     });
 
@@ -52,14 +52,14 @@ if (!__EXPERIMENTAL__) {
         return <div>{'hello '.repeat(200)}world</div>;
       }
 
-      const html = await ReactMarkup.renderToMarkup(
+      const html = await ReactMarkup.renderToHTML(
         React.createElement(Component),
       );
       expect(html).toBe('<div>' + ('hello '.repeat(200) + 'world') + '</div>');
     });
 
     it('should prefix html tags with a doctype', async () => {
-      const html = await ReactMarkup.renderToMarkup(
+      const html = await ReactMarkup.renderToHTML(
         <html>
           <body>hello</body>
         </html>,
@@ -76,7 +76,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToMarkup(<Component />);
+        await ReactMarkup.renderToHTML(<Component />);
       }).rejects.toThrow();
     });
 
@@ -87,7 +87,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToMarkup(<Component />);
+        await ReactMarkup.renderToHTML(<Component />);
       }).rejects.toThrow();
     });
 
@@ -100,7 +100,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToMarkup(<Component />);
+        await ReactMarkup.renderToHTML(<Component />);
       }).rejects.toThrow();
     });
 
@@ -142,7 +142,7 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const html = await ReactMarkup.renderToMarkup(<Component />);
+      const html = await ReactMarkup.renderToHTML(<Component />);
       const container = document.createElement('div');
       container.innerHTML = html;
 
@@ -176,7 +176,7 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const html = await ReactMarkup.renderToMarkup(<Component />);
+      const html = await ReactMarkup.renderToHTML(<Component />);
       expect(html).toBe('<div>01</div>');
     });
 
@@ -199,7 +199,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToMarkup(
+        await ReactMarkup.renderToHTML(
           <div>
             <Foo />
           </div>,
