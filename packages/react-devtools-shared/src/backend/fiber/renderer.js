@@ -2339,7 +2339,7 @@ export function attach(
           'Remaining children should not have items with no parent',
         );
       } else if (instance.nextSibling !== null) {
-        throw new Error('A deleted instance should not have previous siblings');
+        throw new Error('A deleted instance should not have next siblings');
       } else if (instance.previousSibling !== null) {
         throw new Error('A deleted instance should not have previous siblings');
       }
