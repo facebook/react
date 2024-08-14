@@ -1637,6 +1637,61 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
+    // eslint-disable-next-line jest/no-disabled-tests
+    it.skip('resets useMemoCache cache slots', async () => {
+      if (__DEV__) {
+        await render(`
+          const useMemoCache = require('react/compiler-runtime').c;
+          let cacheMisses = 0;
+          const cacheMiss = (id) => {
+            cacheMisses++;
+            return id;
+          };
+          export default function App(t0) {
+            const $ = useMemoCache(1);
+            const {reset1} = t0;
+            let t1;
+            if ($[0] !== reset1) {
+              $[0] = t1 = cacheMiss({reset1});
+            } else {
+              t1 = $[1];
+            }
+            return <h1>{cacheMisses}</h1>;
+          }
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('1');
+        await patch(`
+          const useMemoCache = require('react/compiler-runtime').c;
+          let cacheMisses = 0;
+          const cacheMiss = (id) => {
+            cacheMisses++;
+            return id;
+          };
+          export default function App(t0) {
+            const $ = useMemoCache(2);
+            const {reset1, reset2} = t0;
+            let t1;
+            if ($[0] !== reset1) {
+              $[0] = t1 = cacheMiss({reset1});
+            } else {
+              t1 = $[1];
+            }
+            let t2;
+            if ($[1] !== reset2) {
+              $[1] = t2 = cacheMiss({reset2});
+            } else {
+              t2 = $[1];
+            }
+            return <h1>{cacheMisses}</h1>;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        // cache size changed between refreshes
+        expect(el.textContent).toBe('2');
+      }
+    });
+
     describe('with inline requires', () => {
       beforeEach(() => {
         global.FakeModuleSystem = {};
