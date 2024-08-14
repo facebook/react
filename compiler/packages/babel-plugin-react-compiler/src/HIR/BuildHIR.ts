@@ -428,17 +428,6 @@ function lowerStatement(
               loc: id.parentPath.node.loc ?? GeneratedSource,
             });
             continue;
-          } else if (!binding.path.get('id').isIdentifier()) {
-            builder.errors.push({
-              severity: ErrorSeverity.Todo,
-              reason: 'Unsupported variable declaration type for hoisting',
-              description: `variable "${
-                binding.identifier.name
-              }" declared with ${binding.path.get('id').type}`,
-              suggestions: null,
-              loc: id.parentPath.node.loc ?? GeneratedSource,
-            });
-            continue;
           } else if (
             binding.kind !== 'const' &&
             binding.kind !== 'var' &&
