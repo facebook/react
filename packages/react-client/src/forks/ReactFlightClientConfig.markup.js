@@ -9,7 +9,7 @@
 
 import type {Thenable} from 'shared/ReactTypes';
 
-export * from 'react-html/src/ReactHTMLLegacyClientStreamConfig.js';
+export * from 'react-markup/src/ReactMarkupLegacyClientStreamConfig.js';
 export * from 'react-client/src/ReactClientConsoleConfigPlain';
 
 export type ModuleLoading = null;
