@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {renderToHTML as experimental_renderToHTML} from './src/ReactMarkupServer';
+export * from './src/ReactMarkupServer';
