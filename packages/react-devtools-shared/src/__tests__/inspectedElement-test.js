@@ -3150,4 +3150,35 @@ describe('InspectedElement', () => {
                <Child> ⚠
     `);
   });
+
+  // @reactVersion > 18.2
+  it('should inspect server components', async () => {
+    const ChildPromise = Promise.resolve(<div />);
+    ChildPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const Parent = () => ChildPromise;
+
+    await utils.actAsync(() => {
+      modernRender(<Parent />);
+    });
+
+    const inspectedElement = await inspectElementAtIndex(1);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      {
+        "context": null,
+        "events": undefined,
+        "hooks": null,
+        "id": 3,
+        "owners": null,
+        "props": null,
+        "rootType": "createRoot()",
+        "state": null,
+      }
+    `);
+  });
 });
