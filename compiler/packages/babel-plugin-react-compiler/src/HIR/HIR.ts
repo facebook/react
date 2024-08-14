@@ -741,6 +741,9 @@ export enum InstructionKind {
 
   // hoisted const declarations
   HoistedConst = 'HoistedConst',
+
+  // hoisted const declarations
+  HoistedLet = 'HoistedLet',
 }
 
 function _staticInvariantInstructionValueHasLocation(
@@ -858,7 +861,10 @@ export type InstructionValue =
   | {
       kind: 'DeclareContext';
       lvalue: {
-        kind: InstructionKind.Let | InstructionKind.HoistedConst;
+        kind:
+          | InstructionKind.Let
+          | InstructionKind.HoistedConst
+          | InstructionKind.HoistedLet;
         place: Place;
       };
       loc: SourceLocation;
@@ -1595,6 +1601,12 @@ export function isUseActionStateType(id: Identifier): boolean {
   );
 }
 
+export function isStartTransitionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInStartTransition'
+  );
+}
+
 export function isSetActionStateType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState'
@@ -1610,7 +1622,13 @@ export function isDispatcherType(id: Identifier): boolean {
 }
 
 export function isStableType(id: Identifier): boolean {
-  return isSetStateType(id) || isSetActionStateType(id) || isDispatcherType(id);
+  return (
+    isSetStateType(id) ||
+    isSetActionStateType(id) ||
+    isDispatcherType(id) ||
+    isUseRefType(id) ||
+    isStartTransitionType(id)
+  );
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {

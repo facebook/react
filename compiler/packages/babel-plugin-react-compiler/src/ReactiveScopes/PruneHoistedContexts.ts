@@ -23,11 +23,11 @@ import {
  * original instruction kind.
  */
 export function pruneHoistedContexts(fn: ReactiveFunction): void {
-  const hoistedIdentifiers: HoistedIdentifiers = new Set();
+  const hoistedIdentifiers: HoistedIdentifiers = new Map();
   visitReactiveFunction(fn, new Visitor(), hoistedIdentifiers);
 }
 
-type HoistedIdentifiers = Set<DeclarationId>;
+type HoistedIdentifiers = Map<DeclarationId, InstructionKind>;
 
 class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
   override transformInstruction(
@@ -39,7 +39,21 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
       instruction.value.kind === 'DeclareContext' &&
       instruction.value.lvalue.kind === 'HoistedConst'
     ) {
-      state.add(instruction.value.lvalue.place.identifier.declarationId);
+      state.set(
+        instruction.value.lvalue.place.identifier.declarationId,
+        InstructionKind.Const,
+      );
+      return {kind: 'remove'};
+    }
+
+    if (
+      instruction.value.kind === 'DeclareContext' &&
+      instruction.value.lvalue.kind === 'HoistedLet'
+    ) {
+      state.set(
+        instruction.value.lvalue.place.identifier.declarationId,
+        InstructionKind.Let,
+      );
       return {kind: 'remove'};
     }
 
@@ -47,6 +61,9 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
       instruction.value.kind === 'StoreContext' &&
       state.has(instruction.value.lvalue.place.identifier.declarationId)
     ) {
+      const kind = state.get(
+        instruction.value.lvalue.place.identifier.declarationId,
+      )!;
       return {
         kind: 'replace',
         value: {
@@ -57,7 +74,7 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
               ...instruction.value,
               lvalue: {
                 ...instruction.value.lvalue,
-                kind: InstructionKind.Const,
+                kind,
               },
               type: null,
               kind: 'StoreLocal',

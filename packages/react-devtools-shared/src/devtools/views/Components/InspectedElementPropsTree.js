@@ -63,9 +63,7 @@ export default function InspectedElementPropsTree({
   const handleCopy = () => copy(serializeDataForCopy(((props: any): Object)));
 
   return (
-    <div
-      className={styles.InspectedElementTree}
-      data-testname="InspectedElementPropsTree">
+    <div data-testname="InspectedElementPropsTree">
       <div className={styles.HeaderRow}>
         <div className={styles.Header}>props</div>
         {!isEmpty && (

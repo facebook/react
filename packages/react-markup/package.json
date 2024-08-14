@@ -1,5 +1,5 @@
 {
-  "name": "react-html",
+  "name": "react-markup",
   "version": "19.0.0",
   "private": true,
   "description": "React package generating embedded HTML markup such as e-mails using Server Components.",
@@ -7,7 +7,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
-    "directory": "packages/react-html"
+    "directory": "packages/react-markup"
   },
   "keywords": [
     "react"
@@ -24,12 +24,12 @@
     "LICENSE",
     "README.md",
     "index.js",
-    "react-html.react-server.js",
+    "react-markup.react-server.js",
     "cjs/"
   ],
   "exports": {
     ".": {
-      "react-server": "./react-html.react-server.js",
+      "react-server": "./react-markup.react-server.js",
       "default": "./index.js"
     },
     "./src/*": "./src/*",
