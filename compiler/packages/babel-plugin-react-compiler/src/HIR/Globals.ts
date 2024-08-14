@@ -18,6 +18,7 @@ import {
   BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
+  BuiltInUseTransitionId,
   ShapeRegistry,
   addFunction,
   addHook,
@@ -424,6 +425,17 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
       },
       BuiltInUseInsertionEffectHookId,
     ),
+  ],
+  [
+    'useTransition',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInUseTransitionId},
+      calleeEffect: Effect.Read,
+      hookKind: 'useTransition',
+      returnValueKind: ValueKind.Frozen,
+    }),
   ],
   [
     'use',

@@ -1601,6 +1601,12 @@ export function isUseActionStateType(id: Identifier): boolean {
   );
 }
 
+export function isStartTransitionType(id: Identifier): boolean {
+  return (
+    id.type.kind === 'Function' && id.type.shapeId === 'BuiltInStartTransition'
+  );
+}
+
 export function isSetActionStateType(id: Identifier): boolean {
   return (
     id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetActionState'
@@ -1620,7 +1626,8 @@ export function isStableType(id: Identifier): boolean {
     isSetStateType(id) ||
     isSetActionStateType(id) ||
     isDispatcherType(id) ||
-    isUseRefType(id)
+    isUseRefType(id) ||
+    isStartTransitionType(id)
   );
 }
 
