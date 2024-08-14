@@ -47,7 +47,7 @@ function useCustomRef() {
 function _temp() {}
 
 function Foo() {
-  const $ = _c(3);
+  const $ = _c(2);
   const ref = useCustomRef();
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -60,12 +60,11 @@ function Foo() {
   }
   const onClick = t0;
   let t1;
-  if ($[1] !== onClick) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = <button onClick={onClick} />;
-    $[1] = onClick;
-    $[2] = t1;
+    $[1] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[1];
   }
   return t1;
 }

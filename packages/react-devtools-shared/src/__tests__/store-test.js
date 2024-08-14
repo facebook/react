@@ -2212,4 +2212,280 @@ describe('Store', () => {
         `);
     });
   });
+
+  // @reactVersion > 18.2
+  it('does not show server components without any children reified children', async () => {
+    // A Server Component that doesn't render into anything on the client doesn't show up.
+    const ServerPromise = Promise.resolve(null);
+    ServerPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const App = () => ServerPromise;
+
+    await actAsync(() => render(<App />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <App>
+    `);
+  });
+
+  // @reactVersion > 18.2
+  it('does show a server component that renders into a filtered node', async () => {
+    const ServerPromise = Promise.resolve(<div />);
+    ServerPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const App = () => ServerPromise;
+
+    await actAsync(() => render(<App />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <ServerComponent> [Server]
+    `);
+  });
+
+  it('can render the same server component twice', async () => {
+    function ClientComponent() {
+      return <div />;
+    }
+    const ServerPromise = Promise.resolve(<ClientComponent />);
+    ServerPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const App = () => (
+      <>
+        {ServerPromise}
+        <ClientComponent />
+        {ServerPromise}
+      </>
+    );
+
+    await actAsync(() => render(<App />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent>
+            <ClientComponent>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent>
+    `);
+  });
+
+  // @reactVersion > 18.2
+  it('collapses multiple parent server components into one', async () => {
+    function ClientComponent() {
+      return <div />;
+    }
+    const ServerPromise = Promise.resolve(<ClientComponent />);
+    ServerPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const ServerPromise2 = Promise.resolve(<ClientComponent />);
+    ServerPromise2._debugInfo = [
+      {
+        name: 'ServerComponent2',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const App = ({initial}) => (
+      <>
+        {ServerPromise}
+        {ServerPromise}
+        {ServerPromise2}
+        {initial ? null : ServerPromise2}
+      </>
+    );
+
+    await actAsync(() => render(<App initial={true} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent>
+              <ClientComponent>
+          ▾ <ServerComponent2> [Server]
+              <ClientComponent>
+    `);
+
+    await actAsync(() => render(<App initial={false} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent>
+              <ClientComponent>
+          ▾ <ServerComponent2> [Server]
+              <ClientComponent>
+              <ClientComponent>
+    `);
+  });
+
+  // @reactVersion > 18.2
+  it('can reparent a child when the server components change', async () => {
+    function ClientComponent() {
+      return <div />;
+    }
+    const ServerPromise = Promise.resolve(<ClientComponent />);
+    ServerPromise._debugInfo = [
+      {
+        name: 'ServerAB',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const ServerPromise2 = Promise.resolve(<ClientComponent />);
+    ServerPromise2._debugInfo = [
+      {
+        name: 'ServerA',
+        env: 'Server',
+        owner: null,
+      },
+      {
+        name: 'ServerB',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const App = ({initial}) => (initial ? ServerPromise : ServerPromise2);
+
+    await actAsync(() => render(<App initial={true} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerAB> [Server]
+              <ClientComponent>
+    `);
+
+    await actAsync(() => render(<App initial={false} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerA> [Server]
+            ▾ <ServerB> [Server]
+                <ClientComponent>
+    `);
+  });
+
+  // @reactVersion > 18.2
+  it('splits a server component parent when a different child appears between', async () => {
+    function ClientComponent() {
+      return <div />;
+    }
+    const ServerPromise = Promise.resolve(<ClientComponent />);
+    ServerPromise._debugInfo = [
+      {
+        name: 'ServerComponent',
+        env: 'Server',
+        owner: null,
+      },
+    ];
+    const App = ({initial}) =>
+      initial ? (
+        <>
+          {ServerPromise}
+          {null}
+          {ServerPromise}
+        </>
+      ) : (
+        <>
+          {ServerPromise}
+          <ClientComponent />
+          {ServerPromise}
+        </>
+      );
+
+    await actAsync(() => render(<App initial={true} />));
+    // Initially the Server Component only appears once because the children
+    // are consecutive.
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent>
+              <ClientComponent>
+    `);
+
+    // Later the same instance gets split into two when it is no longer
+    // consecutive so we need two virtual instances to represent two parents.
+    await actAsync(() => render(<App initial={false} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent>
+            <ClientComponent>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent>
+    `);
+  });
+
+  // @reactVersion > 18.2
+  it('can reorder keyed components', async () => {
+    function ClientComponent({text}) {
+      return <div>{text}</div>;
+    }
+    function getServerComponent(key) {
+      const ServerPromise = Promise.resolve(
+        <ClientComponent key={key} text={key} />,
+      );
+      ServerPromise._debugInfo = [
+        {
+          name: 'ServerComponent',
+          env: 'Server',
+          owner: null,
+          // TODO: Ideally the debug info should include the "key" too to
+          // preserve the virtual identity of the server component when
+          // reordered. Atm only the children of it gets reparented.
+        },
+      ];
+      return ServerPromise;
+    }
+    const set1 = ['A', 'B', 'C'].map(getServerComponent);
+    const set2 = ['B', 'A', 'D'].map(getServerComponent);
+
+    const App = ({initial}) => (initial ? set1 : set2);
+
+    await actAsync(() => render(<App initial={true} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent key="A">
+          ▾ <ServerComponent> [Server]
+              <ClientComponent key="B">
+          ▾ <ServerComponent> [Server]
+              <ClientComponent key="C">
+      `);
+
+    await actAsync(() => render(<App initial={false} />));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+          ▾ <ServerComponent> [Server]
+              <ClientComponent key="B">
+          ▾ <ServerComponent> [Server]
+              <ClientComponent key="A">
+          ▾ <ServerComponent> [Server]
+              <ClientComponent key="D">
+      `);
+  });
 });
