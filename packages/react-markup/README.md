@@ -11,7 +11,7 @@ npm install react react-markup
 ## Usage
 
 ```js
-import { renderToHTML } from 'react-markup';
+import { experimental_renderToHTML as renderToHTML } from 'react-markup';
 import EmailTemplate from './my-email-template-component.js'
 
 async function action(email, name) {

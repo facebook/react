@@ -64,7 +64,7 @@ if (!__EXPERIMENTAL__) {
         return React.createElement('div', null, 'hello world');
       }
 
-      const html = await ReactMarkup.renderToHTML(
+      const html = await ReactMarkup.experimental_renderToHTML(
         React.createElement(Component),
       );
       expect(html).toBe('<div>hello world</div>');
@@ -76,15 +76,14 @@ if (!__EXPERIMENTAL__) {
         return React.createElement('div', null, 'hello '.repeat(200) + 'world');
       }
 
-      const html = await ReactMarkup.renderToHTML(
+      const html = await ReactMarkup.experimental_renderToHTML(
         React.createElement(Component),
       );
       expect(html).toBe('<div>' + ('hello '.repeat(200) + 'world') + '</div>');
     });
 
     it('should prefix html tags with a doctype', async () => {
-      const html = await ReactMarkup.renderToHTML(
-        // We can't use JSX because that's client-JSX in our tests.
+      const html = await ReactMarkup.experimental_renderToHTML(
         React.createElement(
           'html',
           null,
@@ -104,8 +103,10 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToHTML(React.createElement(Component));
-      }).rejects.toThrow();
+        await ReactMarkup.experimental_renderToHTML(
+          React.createElement(Component),
+        );
+      }).rejects.toThrow('React.useState is not a function');
     });
 
     it('should error on refs passed to host components', async () => {
@@ -116,8 +117,12 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToHTML(React.createElement(Component));
-      }).rejects.toThrow();
+        await ReactMarkup.experimental_renderToHTML(
+          React.createElement(Component),
+        );
+      }).rejects.toThrow(
+        'Refs cannot be used in Server Components, nor passed to Client Components.',
+      );
     });
 
     it('should error on callbacks passed to event handlers', async () => {
@@ -130,8 +135,20 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToHTML(React.createElement(Component));
-      }).rejects.toThrow();
+        await ReactMarkup.experimental_renderToHTML(
+          React.createElement(Component),
+        );
+      }).rejects.toThrowError(
+        __DEV__
+          ? `Event handlers cannot be passed to Client Component props.\n` +
+              '  <div onClick={function onClick}>\n' +
+              '               ^^^^^^^^^^^^^^^^^^\n' +
+              'If you need interactivity, consider converting part of this to a Client Component.'
+          : `Event handlers cannot be passed to Client Component props.\n` +
+              '  {onClick: function onClick}\n' +
+              '            ^^^^^^^^^^^^^^^^\n' +
+              'If you need interactivity, consider converting part of this to a Client Component.',
+      );
     });
 
     it('supports the useId Hook', async () => {
@@ -173,7 +190,7 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const html = await ReactMarkup.renderToHTML(
+      const html = await ReactMarkup.experimental_renderToHTML(
         React.createElement(Component),
       );
       const container = document.createElement('div');
@@ -204,7 +221,7 @@ if (!__EXPERIMENTAL__) {
         return React.createElement('div', null, a, b);
       }
 
-      const html = await ReactMarkup.renderToHTML(
+      const html = await ReactMarkup.experimental_renderToHTML(
         React.createElement(Component),
       );
       expect(html).toBe('<div>00</div>');
@@ -225,7 +242,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToHTML(
+        await ReactMarkup.experimental_renderToHTML(
           React.createElement('div', null, React.createElement(Foo)),
           {
             onError(error, errorInfo) {
