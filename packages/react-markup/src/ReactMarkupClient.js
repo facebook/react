@@ -31,7 +31,7 @@ type MarkupOptions = {
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
 };
 
-export function renderToMarkup(
+export function renderToHTML(
   children: ReactNodeList,
   options?: MarkupOptions,
 ): Promise<string> {

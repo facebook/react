@@ -71,11 +71,11 @@ type MarkupOptions = {
 
 function noServerCallOrFormAction() {
   throw new Error(
-    'renderToMarkup should not have emitted Server References. This is a bug in React.',
+    'renderToHTML should not have emitted Server References. This is a bug in React.',
   );
 }
 
-export function renderToMarkup(
+export function renderToHTML(
   children: ReactMarkupNodeList,
   options?: MarkupOptions,
 ): Promise<string> {

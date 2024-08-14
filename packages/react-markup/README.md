@@ -11,13 +11,13 @@ npm install react react-markup
 ## Usage
 
 ```js
-import { renderToMarkup } from 'react-markup';
+import { renderToHTML } from 'react-markup';
 import EmailTemplate from './my-email-template-component.js'
 
 async function action(email, name) {
   "use server";
   // ... in your server, e.g. a Server Action...
-  const htmlString = await renderToMarkup(<EmailTemplate name={name} />);
+  const htmlString = await renderToHTML(<EmailTemplate name={name} />);
   // ... send e-mail using some e-mail provider
   await sendEmail({ to: email, contentType: 'text/html', body: htmlString });
 }
