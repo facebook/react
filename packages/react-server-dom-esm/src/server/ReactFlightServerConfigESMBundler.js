@@ -12,7 +12,7 @@ import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
   ClientReference,
   ServerReference,
-} from './ReactFlightESMReferences';
+} from '../ReactFlightESMReferences';
 
 export type {ClientReference, ServerReference};
 
@@ -27,7 +27,10 @@ export type ClientReferenceMetadata = [
 
 export type ClientReferenceKey = string;
 
-export {isClientReference, isServerReference} from './ReactFlightESMReferences';
+export {
+  isClientReference,
+  isServerReference,
+} from '../ReactFlightESMReferences';
 
 export function getClientReferenceKey(
   reference: ClientReference<any>,
