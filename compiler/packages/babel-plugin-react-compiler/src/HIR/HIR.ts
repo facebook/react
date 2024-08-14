@@ -1616,7 +1616,12 @@ export function isDispatcherType(id: Identifier): boolean {
 }
 
 export function isStableType(id: Identifier): boolean {
-  return isSetStateType(id) || isSetActionStateType(id) || isDispatcherType(id);
+  return (
+    isSetStateType(id) ||
+    isSetActionStateType(id) ||
+    isDispatcherType(id) ||
+    isUseRefType(id)
+  );
 }
 
 export function isUseEffectHookType(id: Identifier): boolean {
