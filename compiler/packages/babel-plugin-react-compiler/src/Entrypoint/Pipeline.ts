@@ -104,6 +104,7 @@ import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLoca
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
 import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
+import {validateNoSetStateInPassiveEffects} from '../Validation/ValidateNoSetStateInPassiveEffects';
 
 export type CompilerPipelineValue =
   | {kind: 'ast'; name: string; value: CodegenFunction}
@@ -242,6 +243,10 @@ function* runWithEnvironment(
 
   if (env.config.validateNoSetStateInRender) {
     validateNoSetStateInRender(hir);
+  }
+
+  if (env.config.validateNoSetStateInPassiveEffects) {
+    validateNoSetStateInPassiveEffects(hir);
   }
 
   inferReactivePlaces(hir);
