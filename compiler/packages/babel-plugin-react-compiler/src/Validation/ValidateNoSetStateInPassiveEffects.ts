@@ -14,7 +14,6 @@ import {
   Place,
 } from '../HIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
-import {Err, Ok, Result} from '../Utils/Result';
 
 /**
  * Validates against calling setState in the body of a *passive* effect (useEffect),
@@ -139,8 +138,10 @@ function getSetStateCall(
             isSetStateType(callee.identifier) ||
             setStateFunctions.has(callee.identifier.id)
           ) {
-            // TODO: once we support multiple locations per error, we should link to the
-            // original Place in the case that setStateFunction.has(callee)
+            /*
+             * TODO: once we support multiple locations per error, we should link to the
+             * original Place in the case that setStateFunction.has(callee)
+             */
             return callee;
           }
         }
