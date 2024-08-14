@@ -25878,7 +25878,7 @@ __DEV__ &&
       updateHookTypesDev();
       return rerenderOptimistic(passthrough, reducer);
     };
-    HooksDispatcherOnUpdateInDEV.unstable_useContextWithBailout = function (
+    HooksDispatcherOnRerenderInDEV.unstable_useContextWithBailout = function (
       context,
       select
     ) {
@@ -27528,11 +27528,11 @@ __DEV__ &&
         : flushSyncErrorInBuildsThatSupportLegacyMode;
     (function () {
       var isomorphicReactPackageVersion = React.version;
-      if ("19.0.0-www-classic-d48603a5-20240813" !== isomorphicReactPackageVersion)
+      if ("19.0.0-www-classic-0ad0fac1-20240814" !== isomorphicReactPackageVersion)
         throw Error(
           'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' +
             (isomorphicReactPackageVersion +
-              "\n  - react-dom:  19.0.0-www-classic-d48603a5-20240813\nLearn more: https://react.dev/warnings/version-mismatch")
+              "\n  - react-dom:  19.0.0-www-classic-0ad0fac1-20240814\nLearn more: https://react.dev/warnings/version-mismatch")
         );
     })();
     ("function" === typeof Map &&
@@ -27576,11 +27576,11 @@ __DEV__ &&
       !(function () {
         var internals = {
           bundleType: 1,
-          version: "19.0.0-www-classic-d48603a5-20240813",
+          version: "19.0.0-www-classic-0ad0fac1-20240814",
           rendererPackageName: "react-dom",
           currentDispatcherRef: ReactSharedInternals,
           findFiberByHostInstance: getClosestInstanceFromNode,
-          reconcilerVersion: "19.0.0-www-classic-d48603a5-20240813"
+          reconcilerVersion: "19.0.0-www-classic-0ad0fac1-20240814"
         };
         internals.overrideHookState = overrideHookState;
         internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -28233,7 +28233,7 @@ __DEV__ &&
     exports.useFormStatus = function () {
       return resolveDispatcher().useHostTransitionStatus();
     };
-    exports.version = "19.0.0-www-classic-d48603a5-20240813";
+    exports.version = "19.0.0-www-classic-0ad0fac1-20240814";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

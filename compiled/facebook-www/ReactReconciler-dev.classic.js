@@ -17604,7 +17604,7 @@ __DEV__ &&
       updateHookTypesDev();
       return rerenderOptimistic(passthrough, reducer);
     };
-    HooksDispatcherOnUpdateInDEV.unstable_useContextWithBailout = function (
+    HooksDispatcherOnRerenderInDEV.unstable_useContextWithBailout = function (
       context,
       select
     ) {
@@ -19009,7 +19009,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-d48603a5-20240813"
+        reconcilerVersion: "19.0.0-www-classic-0ad0fac1-20240814"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
