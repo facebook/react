@@ -382,8 +382,6 @@ export type Request = {
   didWarnForKey: null | WeakSet<ReactComponentInfo>,
 };
 
-const AbortSigil = {};
-
 const {
   TaintRegistryObjects,
   TaintRegistryValues,
@@ -594,6 +592,8 @@ function serializeThenable(
         const digest = logRecoverableError(request, x, null);
         emitErrorChunk(request, newTask.id, digest, x);
       }
+      newTask.status = ERRORED;
+      request.abortableTasks.delete(newTask);
       return newTask.id;
     }
     default: {
@@ -650,10 +650,10 @@ function serializeThenable(
         logPostpone(request, postponeInstance.message, newTask);
         emitPostponeChunk(request, newTask.id, postponeInstance);
       } else {
-        newTask.status = ERRORED;
         const digest = logRecoverableError(request, reason, newTask);
         emitErrorChunk(request, newTask.id, digest, reason);
       }
+      newTask.status = ERRORED;
       request.abortableTasks.delete(newTask);
       enqueueFlush(request);
     },
@@ -1114,7 +1114,8 @@ function renderFunctionComponent<Props>(
     // If we aborted during rendering we should interrupt the render but
     // we don't need to provide an error because the renderer will encode
     // the abort error as the reason.
-    throw AbortSigil;
+    // eslint-disable-next-line no-throw-literal
+    throw null;
   }
 
   if (
@@ -1616,7 +1617,8 @@ function renderElement(
           // lazy initializers are user code and could abort during render
           // we don't wan to return any value resolved from the lazy initializer
           // if it aborts so we interrupt rendering here
-          throw AbortSigil;
+          // eslint-disable-next-line no-throw-literal
+          throw null;
         }
         return renderElement(
           request,
@@ -2183,7 +2185,7 @@ function renderModel(
       }
     }
 
-    if (thrownValue === AbortSigil) {
+    if (request.status === ABORTING) {
       task.status = ABORTED;
       const errorId: number = (request.fatalError: any);
       if (wasReactNode) {
@@ -2357,7 +2359,8 @@ function renderModelDestructive(
           // lazy initializers are user code and could abort during render
           // we don't wan to return any value resolved from the lazy initializer
           // if it aborts so we interrupt rendering here
-          throw AbortSigil;
+          // eslint-disable-next-line no-throw-literal
+          throw null;
         }
         if (__DEV__) {
           const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
@@ -3690,7 +3693,7 @@ function retryTask(request: Request, task: Task): void {
       }
     }
 
-    if (x === AbortSigil) {
+    if (request.status === ABORTING) {
       request.abortableTasks.delete(task);
       task.status = ABORTED;
       const errorId: number = (request.fatalError: any);
@@ -3909,7 +3912,9 @@ export function stopFlowing(request: Request): void {
 // This is called to early terminate a request. It creates an error at all pending tasks.
 export function abort(request: Request, reason: mixed): void {
   try {
-    request.status = ABORTING;
+    if (request.status === OPEN) {
+      request.status = ABORTING;
+    }
     const abortableTasks = request.abortableTasks;
     // We have tasks to abort. We'll emit one error row and then emit a reference
     // to that row from every row that's still remaining.
