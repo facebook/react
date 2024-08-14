@@ -439,8 +439,11 @@ function lowerStatement(
               loc: id.parentPath.node.loc ?? GeneratedSource,
             });
             continue;
-          } else if (binding.kind !== 'const' && binding.kind !== 'var') {
-            // Avoid double errors on var declarations, which we do not plan to support anyways
+          } else if (
+            binding.kind !== 'const' &&
+            binding.kind !== 'var' &&
+            binding.kind !== 'let'
+          ) {
             builder.errors.push({
               severity: ErrorSeverity.Todo,
               reason: 'Handle non-const declarations for hoisting',
@@ -463,10 +466,17 @@ function lowerStatement(
             reactive: false,
             loc: id.node.loc ?? GeneratedSource,
           };
+          const kind =
+            // Avoid double errors on var declarations, which we do not plan to support anyways
+            binding.kind === 'const' || binding.kind === 'var'
+              ? InstructionKind.HoistedConst
+              : binding.kind === 'let'
+                ? InstructionKind.HoistedLet
+                : assertExhaustive(binding.kind, 'Unexpected binding kind');
           lowerValueToTemporary(builder, {
             kind: 'DeclareContext',
             lvalue: {
-              kind: InstructionKind.HoistedConst,
+              kind,
               place,
             },
             loc: id.node.loc ?? GeneratedSource,
@@ -2835,6 +2845,21 @@ function isReorderableExpression(
         builder,
         (expr as NodePath<t.TypeCastExpression>).get('expression'),
         allowLocalIdentifiers,
+      );
+    }
+    case 'LogicalExpression': {
+      const logical = expr as NodePath<t.LogicalExpression>;
+      return (
+        isReorderableExpression(
+          builder,
+          logical.get('left'),
+          allowLocalIdentifiers,
+        ) &&
+        isReorderableExpression(
+          builder,
+          logical.get('right'),
+          allowLocalIdentifiers,
+        )
       );
     }
     case 'ConditionalExpression': {

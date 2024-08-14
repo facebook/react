@@ -27,7 +27,7 @@ import { c as _c } from "react/compiler-runtime";
 import { useRef } from "react";
 
 function Component() {
-  const $ = _c(4);
+  const $ = _c(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = { text: { value: null } };
@@ -38,23 +38,16 @@ function Component() {
   const ref = useRef(t0);
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (e) => {
+    const inputChanged = (e) => {
       ref.current.text.value = e.target.value;
     };
+
+    t1 = <input onChange={inputChanged} />;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
-  const inputChanged = t1;
-  let t2;
-  if ($[2] !== inputChanged) {
-    t2 = <input onChange={inputChanged} />;
-    $[2] = inputChanged;
-    $[3] = t2;
-  } else {
-    t2 = $[3];
-  }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

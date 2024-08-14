@@ -66,6 +66,7 @@ import {
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
+  ElementTypeVirtual,
 } from 'react-devtools-shared/src/frontend/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
@@ -484,6 +485,7 @@ export function parseElementDisplayNameFromBackend(
     case ElementTypeForwardRef:
     case ElementTypeFunction:
     case ElementTypeMemo:
+    case ElementTypeVirtual:
       if (displayName.indexOf('(') >= 0) {
         const matches = displayName.match(/[^()]+/g);
         if (matches != null) {

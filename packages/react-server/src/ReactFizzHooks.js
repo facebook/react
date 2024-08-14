@@ -804,7 +804,7 @@ function noop(): void {}
 
 function clientHookNotSupported() {
   throw new Error(
-    'Cannot use state or effect Hooks in renderToMarkup because ' +
+    'Cannot use state or effect Hooks in renderToHTML because ' +
       'this component will never be hydrated.',
   );
 }

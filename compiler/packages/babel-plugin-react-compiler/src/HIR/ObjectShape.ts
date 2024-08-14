@@ -126,6 +126,7 @@ export type HookKind =
   | 'useInsertionEffect'
   | 'useMemo'
   | 'useCallback'
+  | 'useTransition'
   | 'Custom';
 
 /*
@@ -209,6 +210,8 @@ export const BuiltInUseOperatorId = 'BuiltInUseOperator';
 export const BuiltInUseReducerId = 'BuiltInUseReducer';
 export const BuiltInDispatchId = 'BuiltInDispatch';
 export const BuiltInUseContextHookId = 'BuiltInUseContextHook';
+export const BuiltInUseTransitionId = 'BuiltInUseTransition';
+export const BuiltInStartTransitionId = 'BuiltInStartTransition';
 
 // ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
@@ -440,6 +443,25 @@ addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
         returnValueKind: ValueKind.Primitive,
       },
       BuiltInSetStateId,
+    ),
+  ],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInUseTransitionId, [
+  ['0', {kind: 'Primitive'}],
+  [
+    '1',
+    addFunction(
+      BUILTIN_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: null,
+        returnType: PRIMITIVE_TYPE,
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Primitive,
+      },
+      BuiltInStartTransitionId,
     ),
   ],
 ]);
