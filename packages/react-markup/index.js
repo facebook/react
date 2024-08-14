@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/ReactHTMLClient';
+export * from './src/ReactMarkupClient';

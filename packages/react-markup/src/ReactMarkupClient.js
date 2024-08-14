@@ -23,7 +23,7 @@ import {
   createResumableState,
   createRenderState,
   createRootFormatContext,
-} from './ReactFizzConfigHTML';
+} from './ReactFizzConfigMarkup';
 
 type MarkupOptions = {
   identifierPrefix?: string,
@@ -31,7 +31,7 @@ type MarkupOptions = {
   onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
 };
 
-export function renderToMarkup(
+export function renderToHTML(
   children: ReactNodeList,
   options?: MarkupOptions,
 ): Promise<string> {

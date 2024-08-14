@@ -95,14 +95,14 @@ export function pushStartInstance(
       const propValue = props[propKey];
       if (propKey === 'ref' && propValue != null) {
         throw new Error(
-          'Cannot pass ref in renderToMarkup because they will never be hydrated.',
+          'Cannot pass ref in renderToHTML because they will never be hydrated.',
         );
       }
       if (typeof propValue === 'function') {
         throw new Error(
           'Cannot pass event handlers (' +
             propKey +
-            ') in renderToMarkup because ' +
+            ') in renderToHTML because ' +
             'the HTML will never be hydrated so they can never get called.',
         );
       }
