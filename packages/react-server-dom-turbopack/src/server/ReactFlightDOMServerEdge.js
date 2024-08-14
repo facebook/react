@@ -100,6 +100,65 @@ function renderToReadableStream(
   return stream;
 }
 
+type StaticResult = {
+  prelude: ReadableStream,
+};
+
+function prerender(
+  model: ReactClientValue,
+  turbopackMap: ClientManifest,
+  options?: Options,
+): Promise<StaticResult> {
+  return new Promise((resolve, reject) => {
+    const onFatalError = reject;
+    function onAllReady() {
+      const stream = new ReadableStream(
+        {
+          type: 'bytes',
+          start: (controller): ?Promise<void> => {
+            startWork(request);
+          },
+          pull: (controller): ?Promise<void> => {
+            startFlowing(request, controller);
+          },
+          cancel: (reason): ?Promise<void> => {
+            stopFlowing(request);
+            abort(request, reason);
+          },
+        },
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        {highWaterMark: 0},
+      );
+      resolve({prelude: stream});
+    }
+    const request = createRequest(
+      model,
+      turbopackMap,
+      options ? options.onError : undefined,
+      options ? options.identifierPrefix : undefined,
+      options ? options.onPostpone : undefined,
+      options ? options.temporaryReferences : undefined,
+      __DEV__ && options ? options.environmentName : undefined,
+      __DEV__ && options ? options.filterStackFrame : undefined,
+      onAllReady,
+      onFatalError,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort(request, (signal: any).reason);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
+    startWork(request);
+  });
+}
+
 function decodeReply<T>(
   body: string | FormData,
   turbopackMap: ServerManifest,
@@ -121,4 +180,10 @@ function decodeReply<T>(
   return root;
 }
 
-export {renderToReadableStream, decodeReply, decodeAction, decodeFormState};
+export {
+  renderToReadableStream,
+  prerender,
+  decodeReply,
+  decodeAction,
+  decodeFormState,
+};

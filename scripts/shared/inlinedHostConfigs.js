@@ -43,6 +43,8 @@ module.exports = [
       'react-server-dom-webpack/client.node.unbundled',
       'react-server-dom-webpack/server',
       'react-server-dom-webpack/server.node.unbundled',
+      'react-server-dom-webpack/static',
+      'react-server-dom-webpack/static.node.unbundled',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-webpack/client.node
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerNode.js',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node.unbundled',
@@ -82,6 +84,8 @@ module.exports = [
       'react-server-dom-webpack/client.node',
       'react-server-dom-webpack/server',
       'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/static',
+      'react-server-dom-webpack/static.node',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
       'react-server-dom-webpack/src/server/react-flight-dom-server.node',
@@ -123,6 +127,8 @@ module.exports = [
       'react-server-dom-turbopack/client.node.unbundled',
       'react-server-dom-turbopack/server',
       'react-server-dom-turbopack/server.node.unbundled',
+      'react-server-dom-turbopack/static',
+      'react-server-dom-turbopack/static.node.unbundled',
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node.unbundled
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerNode.js',
       'react-server-dom-turbopack/src/server/react-flight-dom-server.node.unbundled',
@@ -164,6 +170,8 @@ module.exports = [
       'react-server-dom-turbopack/client.node',
       'react-server-dom-turbopack/server',
       'react-server-dom-turbopack/server.node',
+      'react-server-dom-turbopack/static',
+      'react-server-dom-turbopack/static.node',
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientNode.js', // react-server-dom-turbopack/client.node
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackServer.js',
@@ -238,6 +246,7 @@ module.exports = [
       'react-server-dom-webpack/client',
       'react-server-dom-webpack/client.browser',
       'react-server-dom-webpack/server.browser',
+      'react-server-dom-webpack/static.browser',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientBrowser.js', // react-server-dom-webpack/client.browser
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackBrowser.js',
@@ -299,6 +308,7 @@ module.exports = [
       'react-server-dom-turbopack/client',
       'react-server-dom-turbopack/client.browser',
       'react-server-dom-turbopack/server.browser',
+      'react-server-dom-turbopack/static.browser',
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientBrowser.js', // react-server-dom-turbopack/client.browser
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackBrowser.js',
@@ -339,6 +349,7 @@ module.exports = [
       'react-server-dom-webpack',
       'react-server-dom-webpack/client.edge',
       'react-server-dom-webpack/server.edge',
+      'react-server-dom-webpack/static.edge',
       'react-server-dom-webpack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-webpack/client.edge
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpack.js',
       'react-server-dom-webpack/src/client/ReactFlightClientConfigBundlerWebpackServer.js',
@@ -378,6 +389,7 @@ module.exports = [
       'react-server-dom-turbopack',
       'react-server-dom-turbopack/client.edge',
       'react-server-dom-turbopack/server.edge',
+      'react-server-dom-turbopack/static.edge',
       'react-server-dom-turbopack/src/client/ReactFlightDOMClientEdge.js', // react-server-dom-turbopack/client.edge
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackServer.js',
@@ -419,6 +431,8 @@ module.exports = [
       'react-server-dom-esm/client.node',
       'react-server-dom-esm/server',
       'react-server-dom-esm/server.node',
+      'react-server-dom-esm/static',
+      'react-server-dom-esm/static.node',
       'react-server-dom-esm/src/client/ReactFlightDOMClientNode.js', // react-server-dom-esm/client.node
       'react-server-dom-esm/src/server/react-flight-dom-server.node',
       'react-server-dom-esm/src/server/ReactFlightDOMServerNode.js', // react-server-dom-esm/src/server/react-flight-dom-server.node

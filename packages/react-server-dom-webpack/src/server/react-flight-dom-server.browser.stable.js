@@ -9,7 +9,6 @@
 
 export {
   renderToReadableStream,
-  prerender,
   decodeReply,
   decodeAction,
   decodeFormState,
@@ -17,4 +16,4 @@ export {
   registerClientReference,
   createClientModuleProxy,
   createTemporaryReferenceSet,
-} from './ReactFlightDOMServerEdge';
+} from './ReactFlightDOMServerBrowser';
