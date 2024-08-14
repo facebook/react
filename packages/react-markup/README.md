@@ -30,3 +30,7 @@ Note that this is an async function that needs to be awaited - unlike the legacy
 ### `react-markup`
 
 See https://react.dev/reference/react-markup
+
+## Thanks
+
+The React team thanks [Nikolai Mavrenkov](https://www.koluch.ru/) for donating the `react-markup` package name.
