@@ -7,4 +7,6 @@
  * @flow
  */
 
-export * from './src/ReactMarkupClient';
+throw new Error(
+  'This is not a working version of react-markup. Make sure to use a later version.',
+);
