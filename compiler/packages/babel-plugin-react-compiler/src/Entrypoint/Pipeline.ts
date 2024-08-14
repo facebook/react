@@ -103,6 +103,7 @@ import {
 import {validateLocalsNotReassignedAfterRender} from '../Validation/ValidateLocalsNotReassignedAfterRender';
 import {outlineFunctions} from '../Optimization/OutlineFunctions';
 import {propagatePhiTypes} from '../TypeInference/PropagatePhiTypes';
+import { validateOnlySafeFunctionCalls } from '../Validation/ValidateOnlySafeFunctionCalls';
 import {lowerContextAccess} from '../Optimization/LowerContextAccess';
 
 export type CompilerPipelineValue =
@@ -338,6 +339,8 @@ function* runWithEnvironment(
     assertTerminalSuccessorsExist(hir);
     assertTerminalPredsExist(hir);
   }
+
+  validateOnlySafeFunctionCalls(hir);
 
   const reactiveFunction = buildReactiveFunction(hir);
   yield log({
