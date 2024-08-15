@@ -175,13 +175,19 @@ const bundles = [
 
   /******* React DOM *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
+    ],
     moduleType: RENDERER,
     entry: 'react-dom',
     global: 'ReactDOM',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: true,
-    externals: ['react'],
+    externals: ['react', 'ReactNativeInternalFeatureFlags'],
   },
   /******* React DOM Client *******/
   {
@@ -206,20 +212,13 @@ const bundles = [
   },
   /******* React DOM FB *******/
   {
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      RN_FB_DEV,
-      RN_FB_PROD,
-      RN_FB_PROFILING,
-    ],
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
     moduleType: RENDERER,
     entry: 'react-dom/src/ReactDOMFB.js',
     global: 'ReactDOM',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: true,
-    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react'],
   },
 
   /******* React DOM React Server *******/
