@@ -5,7 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HIRFunction, Identifier, InstructionId} from '../HIR/HIR';
+import {
+  HIRFunction,
+  Identifier,
+  InstructionId,
+  isRefValueType,
+  isUseRefType,
+} from '../HIR/HIR';
 import DisjointSet from '../Utils/DisjointSet';
 
 export function inferMutableRangesForAlias(
@@ -19,7 +25,10 @@ export function inferMutableRangesForAlias(
      * mutated.
      */
     const mutatingIdentifiers = [...aliasSet].filter(
-      id => id.mutableRange.end - id.mutableRange.start > 1,
+      id =>
+        id.mutableRange.end - id.mutableRange.start > 1 &&
+        !isUseRefType(id) &&
+        !isRefValueType(id),
     );
 
     if (mutatingIdentifiers.length > 0) {
@@ -36,7 +45,11 @@ export function inferMutableRangesForAlias(
        * last mutation.
        */
       for (const alias of aliasSet) {
-        if (alias.mutableRange.end < lastMutatingInstructionId) {
+        if (
+          alias.mutableRange.end < lastMutatingInstructionId &&
+          !isUseRefType(alias) &&
+          !isRefValueType(alias)
+        ) {
           alias.mutableRange.end = lastMutatingInstructionId as InstructionId;
         }
       }

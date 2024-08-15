@@ -11,6 +11,8 @@ import {
   Identifier,
   InstructionId,
   InstructionKind,
+  isRefValueType,
+  isUseRefType,
   makeInstructionId,
   Place,
 } from '../HIR/HIR';
@@ -66,7 +68,9 @@ import {assertExhaustive} from '../Utils/utils';
  */
 
 function infer(place: Place, instrId: InstructionId): void {
-  place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
+  if (!isUseRefType(place.identifier) && !isRefValueType(place.identifier)) {
+    place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
+  }
 }
 
 function inferPlace(
@@ -171,7 +175,11 @@ export function inferMutableLifetimes(
         const declaration = contextVariableDeclarationInstructions.get(
           instr.value.lvalue.place.identifier,
         );
-        if (declaration != null) {
+        if (
+          declaration != null &&
+          !isRefValueType(instr.value.lvalue.place.identifier) &&
+          !isUseRefType(instr.value.lvalue.place.identifier)
+        ) {
           const range = instr.value.lvalue.place.identifier.mutableRange;
           if (range.start === 0) {
             range.start = declaration;

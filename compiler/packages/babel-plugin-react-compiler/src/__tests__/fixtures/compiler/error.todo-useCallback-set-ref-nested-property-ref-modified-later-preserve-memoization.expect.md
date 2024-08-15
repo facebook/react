@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePreserveExistingMemoizationGuarantees
+// @enablePreserveExistingMemoizationGuarantees @validateRefAccessDuringRender
 import {useCallback, useRef} from 'react';
 
 function Component(props) {
@@ -42,7 +42,9 @@ export const FIXTURE_ENTRYPOINT = {
 > 10 |     ref.current.inner = event.target.value;
      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > 11 |   });
-     | ^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (7:11)
+     | ^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value at freeze $44:TObject<BuiltInFunction> (7:11)
+
+InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (14:14)
   12 |
   13 |   // The ref is modified later, extending its range and preventing memoization of onChange
   14 |   ref.current.inner = null;
