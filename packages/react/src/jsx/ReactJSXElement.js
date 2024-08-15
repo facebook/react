@@ -416,15 +416,9 @@ export function jsxProd(type, config, maybeKey) {
       (enableRefAsProp && !('ref' in config))) &&
     !('key' in config)
   ) {
-    // If key was not spread in, we can reuse the original props object. This
-    // only works for `jsx`, not `createElement`, because `jsx` is a compiler
-    // target and the compiler always passes a new object. For `createElement`,
-    // we can't assume a new object is passed every time because it can be
-    // called manually.
-    //
-    // Spreading key is a warning in dev. In a future release, we will not
-    // remove a spread key from the props object. (But we'll still warn.) We'll
-    // always pass the object straight through.
+// When the key is not spread into props, we can reuse the original props object. This is applicable to `jsx` since it always passes a new object, unlike `createElement`,
+// which can be manually invoked with the same object. Spreading keys currently causes a warning in development. In future releases, we'll retain the spread key but will continue to issue a warning.
+
     props = config;
   } else {
     // We need to remove reserved props (key, prop, ref). Create a fresh props
