@@ -104,10 +104,6 @@ Todo: (BuildHIR::lowerStatement) Handle ArrayPattern inits in ForOfStatement (38
 
 Todo: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement (40:40)
 
-Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (49:49)
-
-Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (50:50)
-
 Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `MemberExpression` cannot be safely reordered (57:57)
 
 Todo: (BuildHIR::node.lowerReorderableExpression) Expression type `BinaryExpression` cannot be safely reordered (53:53)

@@ -2385,6 +2385,57 @@ function lowerExpression(
     case 'UpdateExpression': {
       let expr = exprPath as NodePath<t.UpdateExpression>;
       const argument = expr.get('argument');
+      if (argument.isMemberExpression()) {
+        const binaryOperator = expr.node.operator === '++' ? '+' : '-';
+        const leftExpr = argument as NodePath<t.MemberExpression>;
+        const {object, property, value} = lowerMemberExpression(
+          builder,
+          leftExpr,
+        );
+
+        // Store the previous value to a temporary
+        const previousValuePlace = lowerValueToTemporary(builder, value);
+        // Store the new value to a temporary
+        const updatedValue = lowerValueToTemporary(builder, {
+          kind: 'BinaryExpression',
+          operator: binaryOperator,
+          left: {...previousValuePlace},
+          right: lowerValueToTemporary(builder, {
+            kind: 'Primitive',
+            value: 1,
+            loc: GeneratedSource,
+          }),
+          loc: leftExpr.node.loc ?? GeneratedSource,
+        });
+
+        // Save the result back to the property
+        let newValuePlace;
+        if (typeof property === 'string') {
+          newValuePlace = lowerValueToTemporary(builder, {
+            kind: 'PropertyStore',
+            object: {...object},
+            property,
+            value: {...updatedValue},
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+        } else {
+          newValuePlace = lowerValueToTemporary(builder, {
+            kind: 'ComputedStore',
+            object: {...object},
+            property: {...property},
+            value: {...updatedValue},
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+        }
+
+        return {
+          kind: 'LoadLocal',
+          place: expr.node.prefix
+            ? {...newValuePlace}
+            : {...previousValuePlace},
+          loc: exprLoc,
+        };
+      }
       if (!argument.isIdentifier()) {
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
