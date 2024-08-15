@@ -75,7 +75,7 @@ function noServerCallOrFormAction() {
   );
 }
 
-export function renderToHTML(
+export function experimental_renderToHTML(
   children: ReactMarkupNodeList,
   options?: MarkupOptions,
 ): Promise<string> {
