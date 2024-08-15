@@ -2439,7 +2439,7 @@ describe('Store', () => {
   });
 
   // @reactVersion > 18.2
-  it('can reorder keyed components', async () => {
+  it('can reorder keyed server components', async () => {
     function ClientComponent({text}) {
       return <div>{text}</div>;
     }
@@ -2452,9 +2452,7 @@ describe('Store', () => {
           name: 'ServerComponent',
           env: 'Server',
           owner: null,
-          // TODO: Ideally the debug info should include the "key" too to
-          // preserve the virtual identity of the server component when
-          // reordered. Atm only the children of it gets reparented.
+          key: key,
         },
       ];
       return ServerPromise;
@@ -2468,11 +2466,11 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <App>
-          ▾ <ServerComponent> [Server]
+          ▾ <ServerComponent key="A"> [Server]
               <ClientComponent key="A">
-          ▾ <ServerComponent> [Server]
+          ▾ <ServerComponent key="B"> [Server]
               <ClientComponent key="B">
-          ▾ <ServerComponent> [Server]
+          ▾ <ServerComponent key="C"> [Server]
               <ClientComponent key="C">
       `);
 
@@ -2480,11 +2478,11 @@ describe('Store', () => {
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <App>
-          ▾ <ServerComponent> [Server]
+          ▾ <ServerComponent key="B"> [Server]
               <ClientComponent key="B">
-          ▾ <ServerComponent> [Server]
+          ▾ <ServerComponent key="A"> [Server]
               <ClientComponent key="A">
-          ▾ <ServerComponent> [Server]
+          ▾ <ServerComponent key="D"> [Server]
               <ClientComponent key="D">
       `);
   });
