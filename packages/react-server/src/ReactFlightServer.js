@@ -970,6 +970,7 @@ function callWithDebugContextInDEV<A, T>(
   const componentDebugInfo: ReactComponentInfo = {
     name: '',
     env: task.environmentName,
+    key: null,
     owner: task.debugOwner,
   };
   if (enableOwnerStacks) {
@@ -1036,6 +1037,7 @@ function renderFunctionComponent<Props>(
       componentDebugInfo = ({
         name: componentName,
         env: componentEnv,
+        key: key,
         owner: task.debugOwner,
       }: ReactComponentInfo);
       if (enableOwnerStacks) {
@@ -1575,6 +1577,7 @@ function renderElement(
       const componentDebugInfo: ReactComponentInfo = {
         name: 'Fragment',
         env: (0, request.environmentName)(),
+        key: key,
         owner: task.debugOwner,
         stack:
           task.debugStack === null
@@ -2615,6 +2618,7 @@ function renderModelDestructive(
         > = {
           name: (value: any).name,
           env: (value: any).env,
+          key: (value: any).key,
           owner: (value: any).owner,
         };
         if (enableOwnerStacks) {
@@ -3287,6 +3291,7 @@ function renderConsoleValue(
       > = {
         name: (value: any).name,
         env: (value: any).env,
+        key: (value: any).key,
         owner: (value: any).owner,
       };
       if (enableOwnerStacks) {
