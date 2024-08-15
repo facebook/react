@@ -11,12 +11,12 @@ import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
   ImportMetadata,
   ImportManifestEntry,
-} from './shared/ReactFlightImportMetadata';
+} from '../shared/ReactFlightImportMetadata';
 
 import type {
   ClientReference,
   ServerReference,
-} from './ReactFlightTurbopackReferences';
+} from '../ReactFlightWebpackReferences';
 
 export type {ClientReference, ServerReference};
 
@@ -34,7 +34,7 @@ export type ClientReferenceKey = string;
 export {
   isClientReference,
   isServerReference,
-} from './ReactFlightTurbopackReferences';
+} from '../ReactFlightWebpackReferences';
 
 export function getClientReferenceKey(
   reference: ClientReference<any>,

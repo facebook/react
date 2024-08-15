@@ -12,7 +12,7 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
-import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
+import type {ClientManifest} from './ReactFlightServerConfigESMBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
@@ -45,8 +45,7 @@ import {
 export {
   registerServerReference,
   registerClientReference,
-  createClientModuleProxy,
-} from './ReactFlightWebpackReferences';
+} from '../ReactFlightESMReferences';
 
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
@@ -81,12 +80,12 @@ type PipeableStream = {
 
 function renderToPipeableStream(
   model: ReactClientValue,
-  webpackMap: ClientManifest,
+  moduleBasePath: ClientManifest,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
     model,
-    webpackMap,
+    moduleBasePath,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
@@ -127,11 +126,11 @@ function renderToPipeableStream(
 
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
-  webpackMap: ServerManifest,
+  moduleBasePath: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   const response = createResponse(
-    webpackMap,
+    moduleBasePath,
     '',
     options ? options.temporaryReferences : undefined,
   );
@@ -187,7 +186,7 @@ function decodeReplyFromBusboy<T>(
 
 function decodeReply<T>(
   body: string | FormData,
-  webpackMap: ServerManifest,
+  moduleBasePath: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   if (typeof body === 'string') {
@@ -196,7 +195,7 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(
-    webpackMap,
+    moduleBasePath,
     '',
     options ? options.temporaryReferences : undefined,
     body,

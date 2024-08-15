@@ -9,7 +9,7 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {Thenable} from 'shared/ReactTypes';
-import type {ClientManifest} from './ReactFlightServerConfigTurbopackBundler';
+import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
 import {
@@ -35,7 +35,7 @@ export {
   registerServerReference,
   registerClientReference,
   createClientModuleProxy,
-} from './ReactFlightTurbopackReferences';
+} from '../ReactFlightWebpackReferences';
 
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
@@ -55,12 +55,12 @@ type Options = {
 
 function renderToReadableStream(
   model: ReactClientValue,
-  turbopackMap: ClientManifest,
+  webpackMap: ClientManifest,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(
     model,
-    turbopackMap,
+    webpackMap,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
@@ -102,7 +102,7 @@ function renderToReadableStream(
 
 function decodeReply<T>(
   body: string | FormData,
-  turbopackMap: ServerManifest,
+  webpackMap: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   if (typeof body === 'string') {
@@ -111,7 +111,7 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(
-    turbopackMap,
+    webpackMap,
     '',
     options ? options.temporaryReferences : undefined,
     body,

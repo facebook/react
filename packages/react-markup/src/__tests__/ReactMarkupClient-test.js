@@ -43,7 +43,7 @@ if (!__EXPERIMENTAL__) {
         return <div>hello world</div>;
       }
 
-      const html = await ReactMarkup.renderToHTML(<Component />);
+      const html = await ReactMarkup.experimental_renderToHTML(<Component />);
       expect(html).toBe('<div>hello world</div>');
     });
 
@@ -52,14 +52,14 @@ if (!__EXPERIMENTAL__) {
         return <div>{'hello '.repeat(200)}world</div>;
       }
 
-      const html = await ReactMarkup.renderToHTML(
+      const html = await ReactMarkup.experimental_renderToHTML(
         React.createElement(Component),
       );
       expect(html).toBe('<div>' + ('hello '.repeat(200) + 'world') + '</div>');
     });
 
     it('should prefix html tags with a doctype', async () => {
-      const html = await ReactMarkup.renderToHTML(
+      const html = await ReactMarkup.experimental_renderToHTML(
         <html>
           <body>hello</body>
         </html>,
@@ -76,8 +76,10 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToHTML(<Component />);
-      }).rejects.toThrow();
+        await ReactMarkup.experimental_renderToHTML(<Component />);
+      }).rejects.toThrow(
+        'Cannot use state or effect Hooks in renderToHTML because this component will never be hydrated.',
+      );
     });
 
     it('should error on refs passed to host components', async () => {
@@ -87,8 +89,10 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToHTML(<Component />);
-      }).rejects.toThrow();
+        await ReactMarkup.experimental_renderToHTML(<Component />);
+      }).rejects.toThrow(
+        'Cannot pass ref in renderToHTML because they will never be hydrated.',
+      );
     });
 
     it('should error on callbacks passed to event handlers', async () => {
@@ -100,8 +104,10 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToHTML(<Component />);
-      }).rejects.toThrow();
+        await ReactMarkup.experimental_renderToHTML(<Component />);
+      }).rejects.toThrow(
+        'Cannot pass event handlers (onClick) in renderToHTML because the HTML will never be hydrated so they can never get called.',
+      );
     });
 
     it('supports the useId Hook', async () => {
@@ -142,7 +148,7 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const html = await ReactMarkup.renderToHTML(<Component />);
+      const html = await ReactMarkup.experimental_renderToHTML(<Component />);
       const container = document.createElement('div');
       container.innerHTML = html;
 
@@ -176,7 +182,7 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const html = await ReactMarkup.renderToHTML(<Component />);
+      const html = await ReactMarkup.experimental_renderToHTML(<Component />);
       expect(html).toBe('<div>01</div>');
     });
 
@@ -199,7 +205,7 @@ if (!__EXPERIMENTAL__) {
       }
 
       await expect(async () => {
-        await ReactMarkup.renderToHTML(
+        await ReactMarkup.experimental_renderToHTML(
           <div>
             <Foo />
           </div>,

@@ -12,7 +12,7 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
-import type {ClientManifest} from './ReactFlightServerConfigESMBundler';
+import type {ClientManifest} from './ReactFlightServerConfigTurbopackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
@@ -45,7 +45,8 @@ import {
 export {
   registerServerReference,
   registerClientReference,
-} from './ReactFlightESMReferences';
+  createClientModuleProxy,
+} from '../ReactFlightTurbopackReferences';
 
 import type {TemporaryReferenceSet} from 'react-server/src/ReactFlightServerTemporaryReferences';
 
@@ -80,12 +81,12 @@ type PipeableStream = {
 
 function renderToPipeableStream(
   model: ReactClientValue,
-  moduleBasePath: ClientManifest,
+  turbopackMap: ClientManifest,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
     model,
-    moduleBasePath,
+    turbopackMap,
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
@@ -126,11 +127,11 @@ function renderToPipeableStream(
 
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
-  moduleBasePath: ServerManifest,
+  turbopackMap: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   const response = createResponse(
-    moduleBasePath,
+    turbopackMap,
     '',
     options ? options.temporaryReferences : undefined,
   );
@@ -186,7 +187,7 @@ function decodeReplyFromBusboy<T>(
 
 function decodeReply<T>(
   body: string | FormData,
-  moduleBasePath: ServerManifest,
+  turbopackMap: ServerManifest,
   options?: {temporaryReferences?: TemporaryReferenceSet},
 ): Thenable<T> {
   if (typeof body === 'string') {
@@ -195,7 +196,7 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(
-    moduleBasePath,
+    turbopackMap,
     '',
     options ? options.temporaryReferences : undefined,
     body,
