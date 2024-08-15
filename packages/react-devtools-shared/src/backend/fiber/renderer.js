@@ -2220,9 +2220,12 @@ export function attach(
 
     const isProfilingSupported = false; // TODO: Support Tree Base Duration Based on Children.
 
-    const key = null; // TODO: Track keys on ReactComponentInfo;
-    const env = instance.data.env;
-    let displayName = instance.data.name || '';
+    const componentInfo = instance.data;
+
+    const key =
+      typeof componentInfo.key === 'string' ? componentInfo.key : null;
+    const env = componentInfo.env;
+    let displayName = componentInfo.name || '';
     if (typeof env === 'string') {
       // We model environment as an HoC name for now.
       displayName = env + '(' + displayName + ')';
@@ -2855,19 +2858,35 @@ export function attach(
                   );
                 }
               }
-              const firstRemainingChild = remainingReconcilingChildren;
+              // TODO: Find the best matching existing child based on the key if defined.
+
+              let bestMatch = remainingReconcilingChildren;
+              if (componentInfo.key != null) {
+                // If there is a key try to find a matching key in the set.
+                bestMatch = remainingReconcilingChildren;
+                while (bestMatch !== null) {
+                  if (
+                    bestMatch.kind === VIRTUAL_INSTANCE &&
+                    bestMatch.data.key === componentInfo.key
+                  ) {
+                    break;
+                  }
+                  bestMatch = bestMatch.nextSibling;
+                }
+              }
               if (
-                firstRemainingChild !== null &&
-                firstRemainingChild.kind === VIRTUAL_INSTANCE &&
-                firstRemainingChild.data.name === componentInfo.name &&
-                firstRemainingChild.data.env === componentInfo.env
+                bestMatch !== null &&
+                bestMatch.kind === VIRTUAL_INSTANCE &&
+                bestMatch.data.name === componentInfo.name &&
+                bestMatch.data.env === componentInfo.env &&
+                bestMatch.data.key === componentInfo.key
               ) {
                 // If the previous children had a virtual instance in the same slot
                 // with the same name, then we claim it and reuse it for this update.
                 // Update it with the latest entry.
-                firstRemainingChild.data = componentInfo;
-                moveChild(firstRemainingChild);
-                previousVirtualInstance = firstRemainingChild;
+                bestMatch.data = componentInfo;
+                moveChild(bestMatch);
+                previousVirtualInstance = bestMatch;
                 previousVirtualInstanceWasMount = false;
               } else {
                 // Otherwise we create a new instance.
@@ -4321,11 +4340,13 @@ export function attach(
   ): InspectedElement | null {
     const canViewSource = false;
 
-    const key = null; // TODO: Track keys on ReactComponentInfo;
+    const componentInfo = virtualInstance.data;
+    const key =
+      typeof componentInfo.key === 'string' ? componentInfo.key : null;
     const props = null; // TODO: Track props on ReactComponentInfo;
 
-    const env = virtualInstance.data.env;
-    let displayName = virtualInstance.data.name || '';
+    const env = componentInfo.env;
+    let displayName = componentInfo.name || '';
     if (typeof env === 'string') {
       // We model environment as an HoC name for now.
       displayName = env + '(' + displayName + ')';
@@ -4384,7 +4405,7 @@ export function attach(
       // Does the component have legacy context attached to it.
       hasLegacyContext: false,
 
-      key: key != null ? key : null,
+      key: key,
 
       displayName: displayName,
       type: ElementTypeVirtual,
