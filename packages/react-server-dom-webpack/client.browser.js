@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/ReactFlightDOMClientBrowser';
+export * from './src/client/ReactFlightDOMClientBrowser';

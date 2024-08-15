@@ -8,7 +8,8 @@
  */
 
 export {
-  renderToReadableStream,
+  renderToPipeableStream,
+  decodeReplyFromBusboy,
   decodeReply,
   decodeAction,
   decodeFormState,
@@ -16,4 +17,4 @@ export {
   registerClientReference,
   createClientModuleProxy,
   createTemporaryReferenceSet,
-} from './src/server/react-flight-dom-server.browser';
+} from './ReactFlightDOMServerNode';

@@ -13,7 +13,7 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-import type {ImportMetadata} from './shared/ReactFlightImportMetadata';
+import type {ImportMetadata} from '../shared/ReactFlightImportMetadata';
 import type {ModuleLoading} from 'react-client/src/ReactFlightClientConfig';
 
 import {
@@ -21,7 +21,7 @@ import {
   CHUNKS,
   NAME,
   isAsyncImport,
-} from './shared/ReactFlightImportMetadata';
+} from '../shared/ReactFlightImportMetadata';
 import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
 export type SSRModuleMap = {
