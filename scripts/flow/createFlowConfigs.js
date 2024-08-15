@@ -108,7 +108,7 @@ function writeConfig(
 
   const config = configTemplate
     .replace(
-      '%CI_MAX_WORKERS%\n',
+      /%CI_MAX_WORKERS%\r?\n/,
       // On CI, we seem to need to limit workers.
       process.env.CI ? 'server.max_workers=4\n' : '',
     )
