@@ -16,7 +16,7 @@ import type {
 import type {
   ImportMetadata,
   ImportManifestEntry,
-} from './shared/ReactFlightImportMetadata';
+} from '../shared/ReactFlightImportMetadata';
 import type {ModuleLoading} from 'react-client/src/ReactFlightClientConfig';
 
 import {
@@ -24,7 +24,7 @@ import {
   CHUNKS,
   NAME,
   isAsyncImport,
-} from './shared/ReactFlightImportMetadata';
+} from '../shared/ReactFlightImportMetadata';
 
 import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
 
@@ -49,7 +49,7 @@ export opaque type ClientReferenceMetadata = ImportMetadata;
 export opaque type ClientReference<T> = ClientReferenceMetadata;
 
 // The reason this function needs to defined here in this file instead of just
-// being exported directly from the TurbopackDestination... file is because the
+// being exported directly from the WebpackDestination... file is because the
 // ClientReferenceMetadata is opaque and we can't unwrap it there.
 // This should get inlined and we could also just implement an unwrapping function
 // though that risks it getting used in places it shouldn't be. This is unfortunate
@@ -134,13 +134,13 @@ export function resolveServerReference<T>(
 
 // The chunk cache contains all the chunks we've preloaded so far.
 // If they're still pending they're a thenable. This map also exists
-// in Turbopack but unfortunately it's not exposed so we have to
+// in Webpack but unfortunately it's not exposed so we have to
 // replicate it in user space. null means that it has already loaded.
 const chunkCache: Map<string, null | Promise<any>> = new Map();
 
 function requireAsyncModule(id: string): null | Thenable<any> {
   // We've already loaded all the chunks. We can require the module.
-  const promise = __turbopack_require__(id);
+  const promise = __webpack_require__(id);
   if (typeof promise.then !== 'function') {
     // This wasn't a promise after all.
     return null;
@@ -175,16 +175,18 @@ export function preloadModule<T>(
 ): null | Thenable<any> {
   const chunks = metadata[CHUNKS];
   const promises = [];
-  for (let i = 0; i < chunks.length; i++) {
-    const chunkFilename = chunks[i];
-    const entry = chunkCache.get(chunkFilename);
+  let i = 0;
+  while (i < chunks.length) {
+    const chunkId = chunks[i++];
+    const chunkFilename = chunks[i++];
+    const entry = chunkCache.get(chunkId);
     if (entry === undefined) {
-      const thenable = loadChunk(chunkFilename);
+      const thenable = loadChunk(chunkId, chunkFilename);
       promises.push(thenable);
       // $FlowFixMe[method-unbinding]
-      const resolve = chunkCache.set.bind(chunkCache, chunkFilename, null);
+      const resolve = chunkCache.set.bind(chunkCache, chunkId, null);
       thenable.then(resolve, ignoreReject);
-      chunkCache.set(chunkFilename, thenable);
+      chunkCache.set(chunkId, thenable);
     } else if (entry !== null) {
       promises.push(entry);
     }
@@ -207,7 +209,7 @@ export function preloadModule<T>(
 // Actually require the module or suspend if it's not yet ready.
 // Increase priority if necessary.
 export function requireModule<T>(metadata: ClientReference<T>): T {
-  let moduleExports = __turbopack_require__(metadata[ID]);
+  let moduleExports = __webpack_require__(metadata[ID]);
   if (isAsyncImport(metadata)) {
     if (typeof moduleExports.then !== 'function') {
       // This wasn't a promise after all.

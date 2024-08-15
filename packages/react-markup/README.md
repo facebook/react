@@ -11,7 +11,7 @@ npm install react react-markup
 ## Usage
 
 ```js
-import { renderToHTML } from 'react-markup';
+import { experimental_renderToHTML as renderToHTML } from 'react-markup';
 import EmailTemplate from './my-email-template-component.js'
 
 async function action(email, name) {
@@ -30,3 +30,7 @@ Note that this is an async function that needs to be awaited - unlike the legacy
 ### `react-markup`
 
 See https://react.dev/reference/react-markup
+
+## Thanks
+
+The React team thanks [Nikolai Mavrenkov](https://www.koluch.ru/) for donating the `react-markup` package name.

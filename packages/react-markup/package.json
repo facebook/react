@@ -1,8 +1,7 @@
 {
   "name": "react-markup",
   "version": "19.0.0",
-  "private": true,
-  "description": "React package generating embedded HTML markup such as e-mails using Server Components.",
+  "description": "React package generating embedded markup such as e-mails with support for Server Components.",
   "main": "index.js",
   "repository": {
     "type": "git",

@@ -232,6 +232,12 @@ const EnvironmentConfigSchema = z.object({
   validateNoSetStateInRender: z.boolean().default(true),
 
   /**
+   * Validates that setState is not called directly within a passive effect (useEffect).
+   * Scheduling a setState (with an event listener, subscription, etc) is valid.
+   */
+  validateNoSetStateInPassiveEffects: z.boolean().default(false),
+
+  /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
    * that Forget does not introduce infinite renders caused by a dependency changing,
    * triggering an effect, which triggers re-rendering, which causes a dependency to change,
