@@ -4088,7 +4088,7 @@ __DEV__ &&
         (currentlyRenderingFiber$1.updateQueue = updateQueue));
       updateQueue.memoCache = memoCache;
       updateQueue = memoCache.data[memoCache.index];
-      if (void 0 === updateQueue)
+      if (void 0 === updateQueue || ignorePreviousDependencies)
         for (
           updateQueue = memoCache.data[memoCache.index] = Array(size),
             current = 0;
@@ -16189,11 +16189,11 @@ __DEV__ &&
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-www-modern-0ad0fac1-20240814",
+        version: "19.0.0-www-modern-7e8a06cf-20240815",
         rendererPackageName: "react-art",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-modern-0ad0fac1-20240814"
+        reconcilerVersion: "19.0.0-www-modern-7e8a06cf-20240815"
       };
       internals.overrideHookState = overrideHookState;
       internals.overrideHookStateDeletePath = overrideHookStateDeletePath;
@@ -16227,7 +16227,7 @@ __DEV__ &&
     exports.Shape = Shape;
     exports.Surface = Surface;
     exports.Text = Text;
-    exports.version = "19.0.0-www-modern-0ad0fac1-20240814";
+    exports.version = "19.0.0-www-modern-7e8a06cf-20240815";
     "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
       "function" ===
         typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -4380,7 +4380,7 @@ __DEV__ &&
         (currentlyRenderingFiber$1.updateQueue = updateQueue));
       updateQueue.memoCache = memoCache;
       updateQueue = memoCache.data[memoCache.index];
-      if (void 0 === updateQueue)
+      if (void 0 === updateQueue || ignorePreviousDependencies)
         for (
           updateQueue = memoCache.data[memoCache.index] = Array(size),
             current = 0;
@@ -19009,7 +19009,7 @@ __DEV__ &&
         rendererPackageName: rendererPackageName,
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-www-classic-0ad0fac1-20240814"
+        reconcilerVersion: "19.0.0-www-classic-7e8a06cf-20240815"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
