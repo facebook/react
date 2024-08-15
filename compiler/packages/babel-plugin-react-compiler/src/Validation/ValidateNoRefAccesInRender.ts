@@ -184,6 +184,9 @@ function validateNoRefAccessInRenderImpl(
           }
           break;
         }
+        case 'StartMemoize':
+        case 'FinishMemoize':
+          break;
         default: {
           for (const operand of eachInstructionValueOperand(instr.value)) {
             validateNoRefValueAccess(errors, refAccessingFunctions, operand);
