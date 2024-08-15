@@ -105,8 +105,67 @@ async function renderApp(res, returnValue, formState) {
   pipe(res);
 }
 
+async function prerenderApp(res, returnValue, formState) {
+  const {prerenderToNodeStream} = await import(
+    'react-server-dom-webpack/static'
+  );
+  // const m = require('../src/App.js');
+  const m = await import('../src/App.js');
+
+  let moduleMap;
+  let mainCSSChunks;
+  if (process.env.NODE_ENV === 'development') {
+    // Read the module map from the HMR server in development.
+    moduleMap = await (
+      await fetch('http://localhost:3000/react-client-manifest.json')
+    ).json();
+    mainCSSChunks = (
+      await (
+        await fetch('http://localhost:3000/entrypoint-manifest.json')
+      ).json()
+    ).main.css;
+  } else {
+    // Read the module map from the static build in production.
+    moduleMap = JSON.parse(
+      await readFile(
+        path.resolve(__dirname, `../build/react-client-manifest.json`),
+        'utf8'
+      )
+    );
+    mainCSSChunks = JSON.parse(
+      await readFile(
+        path.resolve(__dirname, `../build/entrypoint-manifest.json`),
+        'utf8'
+      )
+    ).main.css;
+  }
+  const App = m.default.default || m.default;
+  const root = React.createElement(
+    React.Fragment,
+    null,
+    // Prepend the App's tree with stylesheets required for this entrypoint.
+    mainCSSChunks.map(filename =>
+      React.createElement('link', {
+        rel: 'stylesheet',
+        href: filename,
+        precedence: 'default',
+        key: filename,
+      })
+    ),
+    React.createElement(App, {prerender: true})
+  );
+  // For client-invoked server actions we refresh the tree and return a return value.
+  const payload = {root, returnValue, formState};
+  const {prelude} = await prerenderToNodeStream(payload, moduleMap);
+  prelude.pipe(res);
+}
+
 app.get('/', async function (req, res) {
-  await renderApp(res, null, null);
+  if ('prerender' in req.query) {
+    await prerenderApp(res, null, null);
+  } else {
+    await renderApp(res, null, null);
+  }
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {

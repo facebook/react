@@ -8,8 +8,8 @@
  */
 
 export {
-  renderToReadableStream,
-  prerender,
+  renderToPipeableStream,
+  decodeReplyFromBusboy,
   decodeReply,
   decodeAction,
   decodeFormState,
@@ -17,4 +17,4 @@ export {
   registerClientReference,
   createClientModuleProxy,
   createTemporaryReferenceSet,
-} from './ReactFlightDOMServerEdge';
+} from './ReactFlightDOMServerNode';

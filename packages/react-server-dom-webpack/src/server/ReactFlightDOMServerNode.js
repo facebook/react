@@ -18,6 +18,8 @@ import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {Thenable} from 'shared/ReactTypes';
 
+import {Readable} from 'stream';
+
 import {
   createRequest,
   startWork,
@@ -125,6 +127,81 @@ function renderToPipeableStream(
   };
 }
 
+function createFakeWritable(readable: any): Writable {
+  // The current host config expects a Writable so we create
+  // a fake writable for now to push into the Readable.
+  return ({
+    write(chunk) {
+      return readable.push(chunk);
+    },
+    end() {
+      readable.push(null);
+    },
+    destroy(error) {
+      readable.destroy(error);
+    },
+  }: any);
+}
+
+type PrerenderOptions = {
+  environmentName?: string | (() => string),
+  filterStackFrame?: (url: string, functionName: string) => boolean,
+  onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
+  identifierPrefix?: string,
+  temporaryReferences?: TemporaryReferenceSet,
+  signal?: AbortSignal,
+};
+
+type StaticResult = {
+  prelude: Readable,
+};
+
+function prerenderToNodeStream(
+  model: ReactClientValue,
+  webpackMap: ClientManifest,
+  options?: PrerenderOptions,
+): Promise<StaticResult> {
+  return new Promise((resolve, reject) => {
+    const onFatalError = reject;
+    function onAllReady() {
+      const readable: Readable = new Readable({
+        read() {
+          startFlowing(request, writable);
+        },
+      });
+      const writable = createFakeWritable(readable);
+      resolve({prelude: readable});
+    }
+
+    const request = createRequest(
+      model,
+      webpackMap,
+      options ? options.onError : undefined,
+      options ? options.identifierPrefix : undefined,
+      options ? options.onPostpone : undefined,
+      options ? options.temporaryReferences : undefined,
+      __DEV__ && options ? options.environmentName : undefined,
+      __DEV__ && options ? options.filterStackFrame : undefined,
+      onAllReady,
+      onFatalError,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort(request, (signal: any).reason);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
+    startWork(request);
+  });
+}
+
 function decodeReplyFromBusboy<T>(
   busboyStream: Busboy,
   webpackMap: ServerManifest,
@@ -208,6 +285,7 @@ function decodeReply<T>(
 
 export {
   renderToPipeableStream,
+  prerenderToNodeStream,
   decodeReplyFromBusboy,
   decodeReply,
   decodeAction,

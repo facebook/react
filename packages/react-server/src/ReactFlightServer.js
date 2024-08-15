@@ -376,6 +376,8 @@ export type Request = {
   taintCleanupQueue: Array<string | bigint>,
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
+  onAllReady: () => void,
+  onFatalError: mixed => void,
   // DEV-only
   environmentName: () => string,
   filterStackFrame: (url: string, functionName: string) => boolean,
@@ -435,6 +437,8 @@ function RequestInstance(
   temporaryReferences: void | TemporaryReferenceSet,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
+  onAllReady: void | (() => void),
+  onFatalError: void | ((error: mixed) => void),
 ) {
   if (
     ReactSharedInternals.A !== null &&
@@ -486,6 +490,8 @@ function RequestInstance(
   this.onError = onError === undefined ? defaultErrorHandler : onError;
   this.onPostpone =
     onPostpone === undefined ? defaultPostponeHandler : onPostpone;
+  this.onAllReady = onAllReady === undefined ? noop : onAllReady;
+  this.onFatalError = onFatalError === undefined ? noop : onFatalError;
 
   if (__DEV__) {
     this.environmentName =
@@ -513,6 +519,8 @@ function RequestInstance(
   pingedTasks.push(rootTask);
 }
 
+function noop(): void {}
+
 export function createRequest(
   model: ReactClientValue,
   bundlerConfig: ClientManifest,
@@ -522,6 +530,8 @@ export function createRequest(
   temporaryReferences: void | TemporaryReferenceSet,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
+  onAllReady: void | (() => void),
+  onFatalError: void | (() => void),
 ): Request {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new RequestInstance(
@@ -533,6 +543,8 @@ export function createRequest(
     temporaryReferences,
     environmentName,
     filterStackFrame,
+    onAllReady,
+    onFatalError,
   );
 }
 
@@ -2890,6 +2902,8 @@ function logRecoverableError(
 }
 
 function fatalError(request: Request, error: mixed): void {
+  const onFatalError = request.onFatalError;
+  onFatalError(error);
   if (enableTaint) {
     cleanupTaintQueue(request);
   }
@@ -3752,6 +3766,11 @@ function performWork(request: Request): void {
     }
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
+    }
+    if (request.abortableTasks.size === 0) {
+      // we're done rendering
+      const onAllReady = request.onAllReady;
+      onAllReady();
     }
   } catch (error) {
     logRecoverableError(request, error, null);
