@@ -411,6 +411,7 @@ const possibleStandardNames = {
   'stroke-opacity': 'strokeOpacity',
   suppresscontenteditablewarning: 'suppressContentEditableWarning',
   suppresshydrationwarning: 'suppressHydrationWarning',
+  suppressreseting: 'suppressReset',
   surfacescale: 'surfaceScale',
   systemlanguage: 'systemLanguage',
   tablevalues: 'tableValues',

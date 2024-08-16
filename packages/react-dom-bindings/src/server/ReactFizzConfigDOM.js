@@ -1266,6 +1266,7 @@ function pushAttribute(
     case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
+    case 'suppressReset':
     case 'ref':
       // Ignored. These are built-in to React on the client.
       return;
@@ -3423,6 +3424,7 @@ function pushStartCustomElement(
           break;
         case 'suppressContentEditableWarning':
         case 'suppressHydrationWarning':
+        case 'suppressReset':
         case 'ref':
           // Ignored. These are built-in to React on the client.
           break;
@@ -5008,6 +5010,7 @@ function writeStyleResourceAttributeInJS(
     case 'dangerouslySetInnerHTML':
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
+    case 'suppressReset':
     case 'style':
     case 'ref':
       // Ignored
@@ -5202,6 +5205,7 @@ function writeStyleResourceAttributeInAttr(
     case 'dangerouslySetInnerHTML':
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
+    case 'suppressReset':
     case 'style':
     case 'ref':
       // Ignored
