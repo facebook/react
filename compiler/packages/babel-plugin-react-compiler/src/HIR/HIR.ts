@@ -1591,6 +1591,10 @@ export function isUseStateType(id: Identifier): boolean {
   return id.type.kind === 'Object' && id.type.shapeId === 'BuiltInUseState';
 }
 
+export function isRefOrRefValue(id: Identifier): boolean {
+  return isUseRefType(id) || isRefValueType(id);
+}
+
 export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === 'Function' && id.type.shapeId === 'BuiltInSetState';
 }
