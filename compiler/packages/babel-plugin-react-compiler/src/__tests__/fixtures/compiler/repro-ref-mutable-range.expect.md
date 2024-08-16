@@ -31,7 +31,7 @@ import { c as _c } from "react/compiler-runtime";
 import { Stringify, identity, mutate, CONST_TRUE } from "shared-runtime";
 
 function Foo(props, ref) {
-  const $ = _c(5);
+  const $ = _c(7);
   let value;
   let t0;
   if ($[0] !== ref) {
@@ -45,19 +45,6 @@ function Foo(props, ref) {
       }
 
       mutate(value);
-      if (CONST_TRUE) {
-        const t1 = identity(ref);
-        let t2;
-        if ($[3] !== t1) {
-          t2 = <Stringify ref={t1} />;
-          $[3] = t1;
-          $[4] = t2;
-        } else {
-          t2 = $[4];
-        }
-        t0 = t2;
-        break bb0;
-      }
     }
     $[0] = ref;
     $[1] = value;
@@ -68,6 +55,25 @@ function Foo(props, ref) {
   }
   if (t0 !== Symbol.for("react.early_return_sentinel")) {
     return t0;
+  }
+  if (CONST_TRUE) {
+    let t1;
+    if ($[3] !== ref) {
+      t1 = identity(ref);
+      $[3] = ref;
+      $[4] = t1;
+    } else {
+      t1 = $[4];
+    }
+    let t2;
+    if ($[5] !== t1) {
+      t2 = <Stringify ref={t1} />;
+      $[5] = t1;
+      $[6] = t2;
+    } else {
+      t2 = $[6];
+    }
+    return t2;
   }
   return value;
 }

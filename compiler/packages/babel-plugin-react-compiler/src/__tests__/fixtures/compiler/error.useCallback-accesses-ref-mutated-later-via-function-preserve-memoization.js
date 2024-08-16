@@ -1,4 +1,4 @@
-// @enablePreserveExistingMemoizationGuarantees
+// @enablePreserveExistingMemoizationGuarantees @validateRefAccessDuringRender
 import {useCallback, useRef} from 'react';
 
 function Component(props) {

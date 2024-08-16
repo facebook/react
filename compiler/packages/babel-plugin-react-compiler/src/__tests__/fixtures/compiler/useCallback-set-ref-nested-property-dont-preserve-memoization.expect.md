@@ -42,21 +42,26 @@ function Component(props) {
     t0 = $[0];
   }
   const ref = useRef(t0);
-
-  const onChange = (event) => {
-    ref.current.inner = event.target.value;
-  };
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = (event) => {
+      ref.current.inner = event.target.value;
+    };
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const onChange = t1;
 
   ref.current.inner = null;
-  let t1;
-  if ($[1] !== onChange) {
-    t1 = <input onChange={onChange} />;
-    $[1] = onChange;
-    $[2] = t1;
+  let t2;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = <input onChange={onChange} />;
+    $[2] = t2;
   } else {
-    t1 = $[2];
+    t2 = $[2];
   }
-  return t1;
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {
