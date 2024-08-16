@@ -28,7 +28,7 @@ export const FIXTURE_ENTRYPOINT = {
    8 |   };
    9 |
 > 10 |   return s;
-     |          ^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value at freeze $25:TObject<BuiltInFunction> (10:10)
+     |          ^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (10:10)
   11 | }
   12 |
   13 | export const FIXTURE_ENTRYPOINT = {
