@@ -30,8 +30,7 @@ import {
   isArrayType,
   isMutableEffect,
   isObjectType,
-  isRefValueType,
-  isUseRefType,
+  isRefOrRefValue,
 } from '../HIR/HIR';
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {
@@ -523,10 +522,7 @@ class InferenceState {
         break;
       }
       case Effect.Mutate: {
-        if (
-          isRefValueType(place.identifier) ||
-          isUseRefType(place.identifier)
-        ) {
+        if (isRefOrRefValue(place.identifier)) {
           // no-op: refs are validate via ValidateNoRefAccessInRender
         } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
@@ -567,10 +563,7 @@ class InferenceState {
         break;
       }
       case Effect.Store: {
-        if (
-          isRefValueType(place.identifier) ||
-          isUseRefType(place.identifier)
-        ) {
+        if (isRefOrRefValue(place.identifier)) {
           // no-op: refs are validate via ValidateNoRefAccessInRender
         } else if (valueKind.kind === ValueKind.Context) {
           functionEffect = {
