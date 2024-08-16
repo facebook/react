@@ -59,20 +59,7 @@ function validateNoRefAccessInRenderImpl(
         case 'JsxExpression':
         case 'JsxFragment': {
           for (const operand of eachInstructionValueOperand(instr.value)) {
-            if (isRefValueType(operand.identifier)) {
-              errors.push({
-                severity: ErrorSeverity.InvalidReact,
-                reason:
-                  'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
-                loc: lookupLocations.get(operand.identifier.id) ?? operand.loc,
-                description:
-                  operand.identifier.name !== null &&
-                  operand.identifier.name.kind === 'named'
-                    ? `Cannot access ref value \`${operand.identifier.name.value}\``
-                    : null,
-                suggestions: null,
-              });
-            }
+            validateNoDirectRefValueAccess(errors, operand, lookupLocations);
           }
           break;
         }
@@ -232,12 +219,17 @@ function validateNoRefAccessInRenderImpl(
       }
     }
     for (const operand of eachTerminalOperand(block.terminal)) {
-      validateNoRefValueAccess(
-        errors,
-        refAccessingFunctions,
-        lookupLocations,
-        operand,
-      );
+      if (block.terminal.kind !== 'return') {
+        validateNoRefValueAccess(
+          errors,
+          refAccessingFunctions,
+          lookupLocations,
+          operand,
+        );
+      } else {
+        // Allow functions containing refs to be returned, but not direct ref values
+        validateNoDirectRefValueAccess(errors, operand, lookupLocations);
+      }
     }
   }
 
@@ -288,6 +280,27 @@ function validateNoRefAccess(
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
       loc: loc,
+      description:
+        operand.identifier.name !== null &&
+        operand.identifier.name.kind === 'named'
+          ? `Cannot access ref value \`${operand.identifier.name.value}\``
+          : null,
+      suggestions: null,
+    });
+  }
+}
+
+function validateNoDirectRefValueAccess(
+  errors: CompilerError,
+  operand: Place,
+  lookupLocations: Map<IdentifierId, SourceLocation>,
+): void {
+  if (isRefValueType(operand.identifier)) {
+    errors.push({
+      severity: ErrorSeverity.InvalidReact,
+      reason:
+        'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+      loc: lookupLocations.get(operand.identifier.id) ?? operand.loc,
       description:
         operand.identifier.name !== null &&
         operand.identifier.name.kind === 'named'
