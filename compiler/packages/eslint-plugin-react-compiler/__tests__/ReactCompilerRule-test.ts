@@ -103,7 +103,7 @@ const tests: CompilerTestCases = {
           return value;
         }
       `,
-    }
+    },
   ],
   invalid: [
     {
@@ -117,8 +117,9 @@ const tests: CompilerTestCases = {
       `,
       errors: [
         {
-          message: 'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)'
-        }
+          message:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+        },
       ],
     },
     {
