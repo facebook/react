@@ -179,7 +179,10 @@ const rule: Rule.RuleModule = {
           if (!isReportableDiagnostic(detail)) {
             return;
           }
-          if (hasFlowSuppression(detail.loc, 'react-rule-hook')) {
+          if (
+            hasFlowSuppression(detail.loc, 'react-rule-hook') ||
+            hasFlowSuppression(detail.loc, 'react-rule-unsafe-ref')
+          ) {
             // If Flow already caught this error, we don't need to report it again.
             return;
           }
