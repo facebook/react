@@ -104,17 +104,6 @@ const tests: CompilerTestCases = {
         }
       `,
     },
-    {
-      name: "'use no forget' directive is respected when errors are present",
-      code: normalizeIndent`
-        let count = 0;
-        function Component() {
-          'use no forget';
-          count++;
-          return <div>Hello world {count}</div>
-        }
-      `,
-    },
   ],
   invalid: [
     {
@@ -207,6 +196,23 @@ const tests: CompilerTestCases = {
         {
           message:
             '[ReactCompilerBailout] (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (@:3:2)',
+        },
+      ],
+    },
+    {
+      name: "'use no forget' does not disable eslint rule",
+      code: normalizeIndent`
+        let count = 0;
+        function Component() {
+          'use no forget';
+          count = count + 1;
+          return <div>Hello world {count}</div>
+        }
+      `,
+      errors: [
+        {
+          message:
+            'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
         },
       ],
     },
