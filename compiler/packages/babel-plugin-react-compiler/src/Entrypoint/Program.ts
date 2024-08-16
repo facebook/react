@@ -442,14 +442,10 @@ export function compileProgram(
     );
     if (useNoForget != null) {
       pass.opts.logger?.logEvent(pass.filename, {
-        kind: 'CompileError',
-        fnLoc: null,
-        detail: {
-          severity: ErrorSeverity.Todo,
-          reason: 'Skipped due to "use no forget" directive.',
-          loc: useNoForget.loc ?? null,
-          suggestions: null,
-        },
+        kind: 'CompileSkip',
+        fnLoc: fn.node.body.loc ?? null,
+        reason: `Skipped due to '${useNoForget.value}' directive.`,
+        loc: useNoForget.loc ?? null,
       });
       return null;
     } else if (!pass.opts.noEmit && !hasCriticalError) {
