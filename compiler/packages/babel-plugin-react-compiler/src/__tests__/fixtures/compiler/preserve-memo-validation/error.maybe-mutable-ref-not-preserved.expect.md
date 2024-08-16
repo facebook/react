@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
    6 | function useFoo() {
    7 |   const r = useRef();
 >  8 |   return useMemo(() => makeArray(r), []);
-     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (8:8)
+     |                                  ^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (8:8)
    9 | }
   10 |
   11 | export const FIXTURE_ENTRYPOINT = {
