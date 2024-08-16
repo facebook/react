@@ -93,8 +93,20 @@ const tests: CompilerTestCases = {
       `,
     },
     {
-      // TODO(gsn): Move this to invalid test suite, when we turn on
-      // validateRefAccessDuringRender validation
+      // Don't report the issue if Flow already has
+      name: '[InvalidInput] Ref access during render',
+      code: normalizeIndent`
+        function Component(props) {
+          const ref = useRef(null);
+          // $FlowFixMe[react-rule-unsafe-ref]
+          const value = ref.current;
+          return value;
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
       name: '[InvalidInput] Ref access during render',
       code: normalizeIndent`
         function Component(props) {
@@ -103,9 +115,13 @@ const tests: CompilerTestCases = {
           return value;
         }
       `,
+      errors: [
+        {
+          message:
+            'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+        },
+      ],
     },
-  ],
-  invalid: [
     {
       name: 'Reportable levels can be configured',
       options: [{reportableLevels: new Set([ErrorSeverity.Todo])}],

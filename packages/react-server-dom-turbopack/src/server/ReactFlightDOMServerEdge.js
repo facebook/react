@@ -12,12 +12,15 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {ClientManifest} from './ReactFlightServerConfigTurbopackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
+import {enableHalt} from 'shared/ReactFeatureFlags';
+
 import {
   createRequest,
   startWork,
   startFlowing,
   stopFlowing,
   abort,
+  halt,
 } from 'react-server/src/ReactFlightServer';
 
 import {
@@ -146,10 +149,20 @@ function prerender(
     if (options && options.signal) {
       const signal = options.signal;
       if (signal.aborted) {
-        abort(request, (signal: any).reason);
+        const reason = (signal: any).reason;
+        if (enableHalt) {
+          halt(request, reason);
+        } else {
+          abort(request, reason);
+        }
       } else {
         const listener = () => {
-          abort(request, (signal: any).reason);
+          const reason = (signal: any).reason;
+          if (enableHalt) {
+            halt(request, reason);
+          } else {
+            abort(request, reason);
+          }
           signal.removeEventListener('abort', listener);
         };
         signal.addEventListener('abort', listener);
