@@ -15,10 +15,12 @@ import BabelPluginReactCompiler, {
   ErrorSeverity,
   parsePluginOptions,
   validateEnvironmentConfig,
+  OPT_OUT_DIRECTIVES,
   type PluginOptions,
 } from 'babel-plugin-react-compiler/src';
 import {Logger} from 'babel-plugin-react-compiler/src/Entrypoint';
 import type {Rule} from 'eslint';
+import {Statement} from 'estree';
 import * as HermesParser from 'hermes-parser';
 
 type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetailOptions, 'loc'> & {
@@ -146,6 +148,7 @@ const rule: Rule.RuleModule = {
         userOpts['__unstable_donotuse_reportAllBailouts'];
     }
 
+    let shouldReportUnusedOptOutDirective = true;
     const options: PluginOptions = {
       ...parsePluginOptions(userOpts),
       ...COMPILER_OPTIONS,
@@ -155,6 +158,7 @@ const rule: Rule.RuleModule = {
       logEvent: (filename, event): void => {
         userLogger?.logEvent(filename, event);
         if (event.kind === 'CompileError') {
+          shouldReportUnusedOptOutDirective = false;
           const detail = event.detail;
           const suggest = makeSuggestions(detail);
           if (__unstable_donotuse_reportAllBailouts && event.fnLoc != null) {
@@ -272,7 +276,52 @@ const rule: Rule.RuleModule = {
         /* errors handled by injected logger */
       }
     }
-    return {};
+
+    function reportUnusedOptOutDirective(stmt: Statement) {
+      if (
+        stmt.type === 'ExpressionStatement' &&
+        stmt.expression.type === 'Literal' &&
+        typeof stmt.expression.value === 'string' &&
+        OPT_OUT_DIRECTIVES.has(stmt.expression.value) &&
+        stmt.loc != null
+      ) {
+        context.report({
+          message: `Unused '${stmt.expression.value}' directive`,
+          loc: stmt.loc,
+          suggest: [
+            {
+              desc: 'Remove the directive',
+              fix(fixer) {
+                return fixer.remove(stmt);
+              },
+            },
+          ],
+        });
+      }
+    }
+    if (shouldReportUnusedOptOutDirective) {
+      return {
+        FunctionDeclaration(fnDecl) {
+          for (const stmt of fnDecl.body.body) {
+            reportUnusedOptOutDirective(stmt);
+          }
+        },
+        ArrowFunctionExpression(fnExpr) {
+          if (fnExpr.body.type === 'BlockStatement') {
+            for (const stmt of fnExpr.body.body) {
+              reportUnusedOptOutDirective(stmt);
+            }
+          }
+        },
+        FunctionExpression(fnExpr) {
+          for (const stmt of fnExpr.body.body) {
+            reportUnusedOptOutDirective(stmt);
+          }
+        },
+      };
+    } else {
+      return {};
+    }
   },
 };
 

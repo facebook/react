@@ -215,6 +215,65 @@ const tests: CompilerTestCases = {
         },
       ],
     },
+    {
+      name: "'use no forget' does not disable eslint rule",
+      code: normalizeIndent`
+        let count = 0;
+        function Component() {
+          'use no forget';
+          count = count + 1;
+          return <div>Hello world {count}</div>
+        }
+      `,
+      errors: [
+        {
+          message:
+            'Unexpected reassignment of a variable which was defined outside of the component. Components and hooks should be pure and side-effect free, but variable reassignment is a form of side-effect. If this variable is used in rendering, use useState instead. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#side-effects-must-run-outside-of-render)',
+        },
+      ],
+    },
+    {
+      name: "Unused 'use no forget' directive is reported when no errors are present on components",
+      code: normalizeIndent`
+        function Component() {
+          'use no forget';
+          return <div>Hello world</div>
+        }
+      `,
+      errors: [
+        {
+          message: "Unused 'use no forget' directive",
+          suggestions: [
+            {
+              output:
+                // yuck
+                '\nfunction Component() {\n  \n  return <div>Hello world</div>\n}\n',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Unused 'use no forget' directive is reported when no errors are present on non-components or hooks",
+      code: normalizeIndent`
+        function notacomponent() {
+          'use no forget';
+          return 1 + 1;
+        }
+      `,
+      errors: [
+        {
+          message: "Unused 'use no forget' directive",
+          suggestions: [
+            {
+              output:
+                // yuck
+                '\nfunction notacomponent() {\n  \n  return 1 + 1;\n}\n',
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 
