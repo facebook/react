@@ -9,7 +9,12 @@
  * @flow strict
  */
 
-import type {ElementRef, ElementType, MixedElement, AbstractComponent} from 'react';
+import type {
+  ElementRef,
+  ElementType,
+  MixedElement,
+  AbstractComponent,
+} from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
