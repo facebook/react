@@ -8,7 +8,7 @@
  */
 import type {Request} from 'react-server/src/ReactFizzServer';
 
-export * from 'react-html/src/ReactFizzConfigHTML.js';
+export * from 'react-markup/src/ReactFizzConfigMarkup.js';
 
 export * from 'react-client/src/ReactClientConsoleConfigPlain';
 

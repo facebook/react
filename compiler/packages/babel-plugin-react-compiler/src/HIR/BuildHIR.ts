@@ -428,19 +428,11 @@ function lowerStatement(
               loc: id.parentPath.node.loc ?? GeneratedSource,
             });
             continue;
-          } else if (!binding.path.get('id').isIdentifier()) {
-            builder.errors.push({
-              severity: ErrorSeverity.Todo,
-              reason: 'Unsupported variable declaration type for hoisting',
-              description: `variable "${
-                binding.identifier.name
-              }" declared with ${binding.path.get('id').type}`,
-              suggestions: null,
-              loc: id.parentPath.node.loc ?? GeneratedSource,
-            });
-            continue;
-          } else if (binding.kind !== 'const' && binding.kind !== 'var') {
-            // Avoid double errors on var declarations, which we do not plan to support anyways
+          } else if (
+            binding.kind !== 'const' &&
+            binding.kind !== 'var' &&
+            binding.kind !== 'let'
+          ) {
             builder.errors.push({
               severity: ErrorSeverity.Todo,
               reason: 'Handle non-const declarations for hoisting',
@@ -463,10 +455,17 @@ function lowerStatement(
             reactive: false,
             loc: id.node.loc ?? GeneratedSource,
           };
+          const kind =
+            // Avoid double errors on var declarations, which we do not plan to support anyways
+            binding.kind === 'const' || binding.kind === 'var'
+              ? InstructionKind.HoistedConst
+              : binding.kind === 'let'
+                ? InstructionKind.HoistedLet
+                : assertExhaustive(binding.kind, 'Unexpected binding kind');
           lowerValueToTemporary(builder, {
             kind: 'DeclareContext',
             lvalue: {
-              kind: InstructionKind.HoistedConst,
+              kind,
               place,
             },
             loc: id.node.loc ?? GeneratedSource,
@@ -2386,6 +2385,57 @@ function lowerExpression(
     case 'UpdateExpression': {
       let expr = exprPath as NodePath<t.UpdateExpression>;
       const argument = expr.get('argument');
+      if (argument.isMemberExpression()) {
+        const binaryOperator = expr.node.operator === '++' ? '+' : '-';
+        const leftExpr = argument as NodePath<t.MemberExpression>;
+        const {object, property, value} = lowerMemberExpression(
+          builder,
+          leftExpr,
+        );
+
+        // Store the previous value to a temporary
+        const previousValuePlace = lowerValueToTemporary(builder, value);
+        // Store the new value to a temporary
+        const updatedValue = lowerValueToTemporary(builder, {
+          kind: 'BinaryExpression',
+          operator: binaryOperator,
+          left: {...previousValuePlace},
+          right: lowerValueToTemporary(builder, {
+            kind: 'Primitive',
+            value: 1,
+            loc: GeneratedSource,
+          }),
+          loc: leftExpr.node.loc ?? GeneratedSource,
+        });
+
+        // Save the result back to the property
+        let newValuePlace;
+        if (typeof property === 'string') {
+          newValuePlace = lowerValueToTemporary(builder, {
+            kind: 'PropertyStore',
+            object: {...object},
+            property,
+            value: {...updatedValue},
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+        } else {
+          newValuePlace = lowerValueToTemporary(builder, {
+            kind: 'ComputedStore',
+            object: {...object},
+            property: {...property},
+            value: {...updatedValue},
+            loc: leftExpr.node.loc ?? GeneratedSource,
+          });
+        }
+
+        return {
+          kind: 'LoadLocal',
+          place: expr.node.prefix
+            ? {...newValuePlace}
+            : {...previousValuePlace},
+          loc: exprLoc,
+        };
+      }
       if (!argument.isIdentifier()) {
         builder.errors.push({
           reason: `(BuildHIR::lowerExpression) Handle UpdateExpression with ${argument.type} argument`,
@@ -2835,6 +2885,21 @@ function isReorderableExpression(
         builder,
         (expr as NodePath<t.TypeCastExpression>).get('expression'),
         allowLocalIdentifiers,
+      );
+    }
+    case 'LogicalExpression': {
+      const logical = expr as NodePath<t.LogicalExpression>;
+      return (
+        isReorderableExpression(
+          builder,
+          logical.get('left'),
+          allowLocalIdentifiers,
+        ) &&
+        isReorderableExpression(
+          builder,
+          logical.get('right'),
+          allowLocalIdentifiers,
+        )
       );
     }
     case 'ConditionalExpression': {

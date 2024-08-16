@@ -1226,7 +1226,7 @@ function useMemoCache(size: number): Array<any> {
   updateQueue.memoCache = memoCache;
 
   let data = memoCache.data[memoCache.index];
-  if (data === undefined) {
+  if (data === undefined || (__DEV__ && ignorePreviousDependencies)) {
     data = memoCache.data[memoCache.index] = new Array(size);
     for (let i = 0; i < size; i++) {
       data[i] = REACT_MEMO_CACHE_SENTINEL;
@@ -4622,7 +4622,7 @@ if (__DEV__) {
       };
   }
   if (enableContextProfiling) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
         select: (T => Array<mixed>) | null,
@@ -4839,7 +4839,7 @@ if (__DEV__) {
       };
   }
   if (enableContextProfiling) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).unstable_useContextWithBailout =
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).unstable_useContextWithBailout =
       function <T>(
         context: ReactContext<T>,
         select: (T => Array<mixed>) | null,

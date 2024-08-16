@@ -130,6 +130,16 @@ function getContextReassignment(
              */
             contextVariables.add(value.lvalue.place.identifier.id);
           }
+          const reassignment = reassigningFunctions.get(
+            value.value.identifier.id,
+          );
+          if (reassignment !== undefined) {
+            reassigningFunctions.set(
+              value.lvalue.place.identifier.id,
+              reassignment,
+            );
+            reassigningFunctions.set(lvalue.identifier.id, reassignment);
+          }
           break;
         }
         default: {

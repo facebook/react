@@ -223,13 +223,19 @@ const EnvironmentConfigSchema = z.object({
   validateHooksUsage: z.boolean().default(true),
 
   // Validate that ref values (`ref.current`) are not accessed during render.
-  validateRefAccessDuringRender: z.boolean().default(false),
+  validateRefAccessDuringRender: z.boolean().default(true),
 
   /*
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */
   validateNoSetStateInRender: z.boolean().default(true),
+
+  /**
+   * Validates that setState is not called directly within a passive effect (useEffect).
+   * Scheduling a setState (with an event listener, subscription, etc) is valid.
+   */
+  validateNoSetStateInPassiveEffects: z.boolean().default(false),
 
   /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
