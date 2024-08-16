@@ -1,5 +1,7 @@
 // @flow @validateRefAccessDuringRender @validatePreserveExistingMemoizationGuarantees
 
+import {useRef} from 'react';
+
 component Foo() {
   const ref = useRef();
 
