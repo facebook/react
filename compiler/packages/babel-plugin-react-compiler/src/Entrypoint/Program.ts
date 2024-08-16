@@ -47,31 +47,19 @@ const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 
 function findDirectiveEnablingMemoization(
-  node: NodePath<t.Program> | NodePath<t.BlockStatement>,
-): Array<NodePath<t.Directive>> {
-  const directives = node.get('directives');
-  if (Array.isArray(directives)) {
-    return (directives as Array<NodePath<t.Directive>>).filter(
-      directive =>
-        directive.isDirective() &&
-        OPT_IN_DIRECTIVES.has(directive.node.value.value),
-    );
-  }
-  return [];
+  directives: Array<t.Directive>,
+): Array<t.Directive> {
+  return directives.filter(directive =>
+    OPT_IN_DIRECTIVES.has(directive.value.value),
+  );
 }
 
 function findDirectiveDisablingMemoization(
-  node: NodePath<t.Program> | NodePath<t.BlockStatement>,
-): Array<NodePath<t.Directive>> {
-  const directives = node.get('directives');
-  if (Array.isArray(directives)) {
-    return (directives as Array<NodePath<t.Directive>>).filter(
-      directive =>
-        directive.isDirective() &&
-        OPT_OUT_DIRECTIVES.has(directive.node.value.value),
-    );
-  }
-  return [];
+  directives: Array<t.Directive>,
+): Array<t.Directive> {
+  return directives.filter(directive =>
+    OPT_OUT_DIRECTIVES.has(directive.value.value),
+  );
 }
 
 function isCriticalError(err: unknown): boolean {
@@ -445,8 +433,10 @@ export function compileProgram(
         prunedMemoValues: compiledFn.prunedMemoValues,
       });
     } catch (err) {
-      if (body.isBlockStatement()) {
-        const optOutDirectives = findDirectiveDisablingMemoization(body);
+      if (fn.node.body.type === 'BlockStatement') {
+        const optOutDirectives = findDirectiveDisablingMemoization(
+          fn.node.body.directives,
+        );
         if (optOutDirectives.length > 0) {
           logError(err, pass, fn.node.loc ?? null);
           return null;
@@ -457,9 +447,13 @@ export function compileProgram(
       return null;
     }
 
-    if (body.isBlockStatement()) {
-      const optInDirectives = findDirectiveEnablingMemoization(body);
-      const optOutDirectives = findDirectiveDisablingMemoization(body);
+    if (fn.node.body.type === 'BlockStatement') {
+      const optInDirectives = findDirectiveEnablingMemoization(
+        fn.node.body.directives,
+      );
+      const optOutDirectives = findDirectiveDisablingMemoization(
+        fn.node.body.directives,
+      );
 
       /**
        * Always compile functions with opt in directives.
@@ -483,8 +477,8 @@ export function compileProgram(
           pass.opts.logger?.logEvent(pass.filename, {
             kind: 'CompileSkip',
             fnLoc: fn.node.body.loc ?? null,
-            reason: `Skipped due to '${directive.node.value.value}' directive.`,
-            loc: directive.node.loc ?? null,
+            reason: `Skipped due to '${directive.value.value}' directive.`,
+            loc: directive.loc ?? null,
           });
         }
         return null;
@@ -537,8 +531,9 @@ export function compileProgram(
     });
   }
 
-  const moduleScopeOptOutDirectives =
-    findDirectiveDisablingMemoization(program);
+  const moduleScopeOptOutDirectives = findDirectiveDisablingMemoization(
+    program.node.directives,
+  );
   if (moduleScopeOptOutDirectives.length > 0) {
     return;
   }
@@ -674,9 +669,8 @@ function getReactFunctionType(
   environment: EnvironmentConfig,
 ): ReactFunctionType | null {
   const hookPattern = environment.hookPattern;
-  const body = fn.get('body');
-  if (Array.isArray(body) === false && body.isBlockStatement()) {
-    if (findDirectiveEnablingMemoization(body).length > 0)
+  if (fn.node.body.type === 'BlockStatement') {
+    if (findDirectiveEnablingMemoization(fn.node.body.directives).length > 0)
       return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
   }
 
