@@ -211,7 +211,6 @@ const tests: CompilerTestCases = {
       ],
     },
     {
-      only: true,
       name: "Unused 'use no forget' directive is reported when no errors are present",
       code: normalizeIndent`
         function Component() {
