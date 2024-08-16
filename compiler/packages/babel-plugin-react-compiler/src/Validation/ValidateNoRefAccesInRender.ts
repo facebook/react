@@ -11,6 +11,7 @@ import {
   IdentifierId,
   Place,
   SourceLocation,
+  isRefOrRefValue,
   isRefValueType,
   isUseRefType,
 } from '../HIR';
@@ -234,8 +235,7 @@ function validateNoRefAccess(
   loc: SourceLocation,
 ): void {
   if (
-    isRefValueType(operand.identifier) ||
-    isUseRefType(operand.identifier) ||
+    isRefOrRefValue(operand.identifier) ||
     refAccessingFunctions.has(operand.identifier.id)
   ) {
     errors.push({

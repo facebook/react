@@ -9,8 +9,7 @@ import {
   HIRFunction,
   Identifier,
   InstructionId,
-  isRefValueType,
-  isUseRefType,
+  isRefOrRefValue,
 } from '../HIR/HIR';
 import DisjointSet from '../Utils/DisjointSet';
 
@@ -26,9 +25,7 @@ export function inferMutableRangesForAlias(
      */
     const mutatingIdentifiers = [...aliasSet].filter(
       id =>
-        id.mutableRange.end - id.mutableRange.start > 1 &&
-        !isUseRefType(id) &&
-        !isRefValueType(id),
+        id.mutableRange.end - id.mutableRange.start > 1 && !isRefOrRefValue(id),
     );
 
     if (mutatingIdentifiers.length > 0) {
@@ -47,8 +44,7 @@ export function inferMutableRangesForAlias(
       for (const alias of aliasSet) {
         if (
           alias.mutableRange.end < lastMutatingInstructionId &&
-          !isUseRefType(alias) &&
-          !isRefValueType(alias)
+          !isRefOrRefValue(alias)
         ) {
           alias.mutableRange.end = lastMutatingInstructionId as InstructionId;
         }

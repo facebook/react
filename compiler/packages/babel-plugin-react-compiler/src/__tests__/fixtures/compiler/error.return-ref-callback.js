@@ -1,18 +1,13 @@
 // @flow @validateRefAccessDuringRender @validatePreserveExistingMemoizationGuarantees
-import {useCallback, useRef} from 'react';
 
 component Foo() {
   const ref = useRef();
 
-  const s = useCallback(() => {
+  const s = () => {
     return ref.current;
-  });
+  };
 
-  return <A r={s} />;
-}
-
-component A(r: mixed) {
-  return <div/>;
+  return s;
 }
 
 export const FIXTURE_ENTRYPOINT = {
