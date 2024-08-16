@@ -14,7 +14,7 @@ export type AbstractComponent<
   +Instance = mixed,
 > = React$AbstractComponent<Config, Instance>;
 export type ElementType = React$ElementType;
-export type MixedElement = React$MixedElement;
+export type MixedElement = React$Element<ElementType>;
 export type Key = React$Key;
 export type Ref<C> = React$Ref<C>;
 export type Node = React$Node;
