@@ -217,7 +217,7 @@ const tests: CompilerTestCases = {
       ],
     },
     {
-      name: "Unused 'use no forget' directive is reported when no errors are present",
+      name: "Unused 'use no forget' directive is reported when no errors are present on components",
       code: normalizeIndent`
         function Component() {
           'use no forget';
@@ -232,6 +232,27 @@ const tests: CompilerTestCases = {
               output:
                 // yuck
                 '\nfunction Component() {\n  \n  return <div>Hello world</div>\n}\n',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Unused 'use no forget' directive is reported when no errors are present on non-components or hooks",
+      code: normalizeIndent`
+        function notacomponent() {
+          'use no forget';
+          return 1 + 1;
+        }
+      `,
+      errors: [
+        {
+          message: "Unused 'use no forget' directive",
+          suggestions: [
+            {
+              output:
+                // yuck
+                '\nfunction notacomponent() {\n  \n  return 1 + 1;\n}\n',
             },
           ],
         },
