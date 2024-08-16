@@ -182,15 +182,6 @@ function getFunctionIdentifier(
   return Array.isArray(id) === false && id.isIdentifier() ? id.node : null;
 }
 
-let count = 0;
-function withIdentifier(id: t.Identifier | null): t.Identifier {
-  if (id != null && id.name != null) {
-    return id;
-  } else {
-    return t.identifier(`anonymous_${count++}`);
-  }
-}
-
 function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   const results = new Map<string, PrintedCompilerPipelineValue[]>();
   const error = new CompilerError();
@@ -208,6 +199,14 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   } else {
     language = 'typescript';
   }
+  let count = 0;
+  const withIdentifier = (id: t.Identifier | null): t.Identifier => {
+    if (id != null && id.name != null) {
+      return id;
+    } else {
+      return t.identifier(`anonymous_${count++}`);
+    }
+  };
   try {
     // Extract the first line to quickly check for custom test directives
     const pragma = source.substring(0, source.indexOf('\n'));
