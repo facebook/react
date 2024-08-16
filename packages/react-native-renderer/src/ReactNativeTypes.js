@@ -9,7 +9,12 @@
  * @flow strict
  */
 
-import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
+import type {
+  ElementRef,
+  ElementType,
+  MixedElement,
+  AbstractComponent,
+} from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -221,7 +226,7 @@ export type ReactNativeType = {
     eventType: string,
   ): void,
   render(
-    element: Element<ElementType>,
+    element: MixedElement,
     containerTag: number,
     callback: ?() => void,
     options: ?RenderRootOptions,
@@ -256,7 +261,7 @@ export type ReactFabricType = {
     eventType: string,
   ): void,
   render(
-    element: Element<ElementType>,
+    element: MixedElement,
     containerTag: number,
     callback: ?() => void,
     concurrentRoot: ?boolean,

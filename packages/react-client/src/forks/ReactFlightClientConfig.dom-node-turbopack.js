@@ -9,7 +9,7 @@
 
 export * from 'react-client/src/ReactFlightClientStreamConfigNode';
 export * from 'react-client/src/ReactClientConsoleConfigServer';
-export * from 'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerNode';
-export * from 'react-server-dom-turbopack/src/ReactFlightClientConfigTargetTurbopackServer';
+export * from 'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerNode';
+export * from 'react-server-dom-turbopack/src/client/ReactFlightClientConfigTargetTurbopackServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 export const usedWithSSR = true;

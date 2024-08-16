@@ -9,8 +9,8 @@
 
 export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
 export * from 'react-client/src/ReactClientConsoleConfigBrowser';
-export * from 'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack';
-export * from 'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackBrowser';
-export * from 'react-server-dom-turbopack/src/ReactFlightClientConfigTargetTurbopackBrowser';
+export * from 'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopack';
+export * from 'react-server-dom-turbopack/src/client/ReactFlightClientConfigBundlerTurbopackBrowser';
+export * from 'react-server-dom-turbopack/src/client/ReactFlightClientConfigTargetTurbopackBrowser';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 export const usedWithSSR = false;

@@ -22,6 +22,11 @@
     "server.edge.js",
     "server.node.js",
     "server.node.unbundled.js",
+    "static.js",
+    "static.browser.js",
+    "static.edge.js",
+    "static.node.js",
+    "static.node.unbundled.js",
     "node-register.js",
     "cjs/",
     "esm/"
@@ -63,6 +68,24 @@
     "./server.edge": "./server.edge.js",
     "./server.node": "./server.node.js",
     "./server.node.unbundled": "./server.node.unbundled.js",
+    "./static": {
+      "react-server": {
+        "workerd": "./static.edge.js",
+        "deno": "./static.browser.js",
+        "node": {
+          "turbopack": "./static.node.js",
+          "webpack": "./static.node.js",
+          "default": "./static.node.unbundled.js"
+        },
+        "edge-light": "./static.edge.js",
+        "browser": "./static.browser.js"
+      },
+      "default": "./static.js"
+    },
+    "./static.browser": "./static.browser.js",
+    "./static.edge": "./static.edge.js",
+    "./static.node": "./static.node.js",
+    "./static.node.unbundled": "./static.node.unbundled.js",
     "./node-loader": "./esm/react-server-dom-turbopack-node-loader.production.js",
     "./node-register": "./node-register.js",
     "./src/*": "./src/*.js",

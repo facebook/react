@@ -307,7 +307,7 @@ describe('ReactFlightDOMEdge', () => {
 
     const serializedContent = await readResult(stream1);
 
-    expect(serializedContent.length).toBeLessThan(410);
+    expect(serializedContent.length).toBeLessThan(425);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
@@ -374,7 +374,7 @@ describe('ReactFlightDOMEdge', () => {
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
-    expect(serializedContent.length).toBeLessThan(__DEV__ ? 590 : 400);
+    expect(serializedContent.length).toBeLessThan(__DEV__ ? 605 : 400);
     expect(timesRendered).toBeLessThan(5);
 
     const model = await ReactServerDOMClient.createFromReadableStream(stream2, {

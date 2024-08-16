@@ -17,6 +17,8 @@
     "client.node.js",
     "server.js",
     "server.node.js",
+    "static.js",
+    "static.node.js",
     "cjs/",
     "esm/"
   ],
@@ -33,6 +35,11 @@
       "default": "./server.js"
     },
     "./server.node": "./server.node.js",
+    "./static": {
+      "react-server": "./static.node.js",
+      "default": "./static.js"
+    },
+    "./static.node": "./static.node.js",
     "./node-loader": "./esm/react-server-dom-esm-node-loader.production.js",
     "./src/*": "./src/*.js",
     "./package.json": "./package.json"

@@ -141,7 +141,11 @@ const EffectSchema = z.enum([
 
 const TypeIDSchema = z.number();
 
-const TypeReferenceSchema = z.union([TypeIDSchema, z.literal('array')]);
+const TypeReferenceSchema = z.union([
+  TypeIDSchema,
+  z.literal('array'),
+  z.literal('ref'),
+]);
 
 const FunctionTypeSchema = z.object({
   positionalParams: z.array(EffectSchema),
@@ -278,13 +282,19 @@ const EnvironmentConfigSchema = z.object({
   validateHooksUsage: z.boolean().default(true),
 
   // Validate that ref values (`ref.current`) are not accessed during render.
-  validateRefAccessDuringRender: z.boolean().default(false),
+  validateRefAccessDuringRender: z.boolean().default(true),
 
   /*
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */
   validateNoSetStateInRender: z.boolean().default(true),
+
+  /**
+   * Validates that setState is not called directly within a passive effect (useEffect).
+   * Scheduling a setState (with an event listener, subscription, etc) is valid.
+   */
+  validateNoSetStateInPassiveEffects: z.boolean().default(false),
 
   /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
@@ -802,7 +812,7 @@ export class Environment {
         );
       }
       case 'ImportSpecifier': {
-        if (this.#isKnownReactModule(binding.module)) {
+        if (this.#isKnownTypedModule(binding.module)) {
           /**
            * For `import {imported as name} from "..."` form, we use the `imported`
            * name rather than the local alias. Because we don't have definitions for
@@ -830,7 +840,7 @@ export class Environment {
       }
       case 'ImportDefault':
       case 'ImportNamespace': {
-        if (this.#isKnownReactModule(binding.module)) {
+        if (this.#isKnownTypedModule(binding.module)) {
           // only resolve imports to modules we know about
           return (
             this.#globals.get(binding.name) ??
@@ -843,11 +853,11 @@ export class Environment {
     }
   }
 
-  #isKnownReactModule(moduleName: string): boolean {
+  #isKnownTypedModule(moduleName: string): boolean {
     return (
       moduleName.toLowerCase() === 'react' ||
       moduleName.toLowerCase() === 'react-dom' ||
-      [...this.#globals.keys()].includes(moduleName) ||
+      this.#globals.has(moduleName) ||
       (this.config.enableSharedRuntime__testonly &&
         moduleName === 'shared-runtime')
     );

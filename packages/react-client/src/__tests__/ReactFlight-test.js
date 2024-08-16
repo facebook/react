@@ -299,6 +299,7 @@ describe('ReactFlight', () => {
               {
                 name: 'Greeting',
                 env: 'Server',
+                key: null,
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
@@ -337,6 +338,7 @@ describe('ReactFlight', () => {
               {
                 name: 'Greeting',
                 env: 'Server',
+                key: null,
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
@@ -2614,6 +2616,7 @@ describe('ReactFlight', () => {
               {
                 name: 'ServerComponent',
                 env: 'Server',
+                key: null,
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
@@ -2631,6 +2634,7 @@ describe('ReactFlight', () => {
               {
                 name: 'ThirdPartyComponent',
                 env: 'third-party',
+                key: null,
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
@@ -2645,6 +2649,7 @@ describe('ReactFlight', () => {
               {
                 name: 'ThirdPartyLazyComponent',
                 env: 'third-party',
+                key: null,
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in myLazy (at **)\n    in lazyInitializer (at **)'
@@ -2659,6 +2664,7 @@ describe('ReactFlight', () => {
               {
                 name: 'ThirdPartyFragmentComponent',
                 env: 'third-party',
+                key: '3',
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
@@ -2732,6 +2738,7 @@ describe('ReactFlight', () => {
               {
                 name: 'ServerComponent',
                 env: 'Server',
+                key: null,
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
@@ -2748,6 +2755,7 @@ describe('ReactFlight', () => {
               {
                 name: 'Keyed',
                 env: 'Server',
+                key: 'keyed',
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in ServerComponent (at **)'
@@ -2763,6 +2771,7 @@ describe('ReactFlight', () => {
               {
                 name: 'ThirdPartyAsyncIterableComponent',
                 env: 'third-party',
+                key: null,
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
@@ -2920,6 +2929,7 @@ describe('ReactFlight', () => {
               {
                 name: 'Component',
                 env: 'A',
+                key: null,
                 owner: null,
                 stack: gate(flag => flag.enableOwnerStacks)
                   ? '    in Object.<anonymous> (at **)'
@@ -3040,6 +3050,7 @@ describe('ReactFlight', () => {
         const greetInfo = {
           name: 'Greeting',
           env: 'Server',
+          key: null,
           owner: null,
           stack: gate(flag => flag.enableOwnerStacks)
             ? '    in Object.<anonymous> (at **)'
@@ -3050,6 +3061,7 @@ describe('ReactFlight', () => {
           {
             name: 'Container',
             env: 'Server',
+            key: null,
             owner: greetInfo,
             stack: gate(flag => flag.enableOwnerStacks)
               ? '    in Greeting (at **)'

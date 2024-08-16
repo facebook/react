@@ -20,6 +20,7 @@ import {
   BuiltInUseReducerId,
   BuiltInUseRefId,
   BuiltInUseStateId,
+  BuiltInUseTransitionId,
   FunctionSignature,
   ShapeRegistry,
   addFunction,
@@ -429,6 +430,17 @@ const REACT_APIS: Array<[string, BuiltInType]> = [
     ),
   ],
   [
+    'useTransition',
+    addHook(DEFAULT_SHAPES, {
+      positionalParams: [],
+      restParam: null,
+      returnType: {kind: 'Object', shapeId: BuiltInUseTransitionId},
+      calleeEffect: Effect.Read,
+      hookKind: 'useTransition',
+      returnValueKind: ValueKind.Frozen,
+    }),
+  ],
+  [
     'use',
     addFunction(
       DEFAULT_SHAPES,
@@ -547,6 +559,8 @@ export function installCustomGlobals(
         func.returnType = {kind: 'Poly'};
       } else if (type.fn.returnType === 'array') {
         func.returnType = {kind: 'Object', shapeId: BuiltInArrayId};
+      } else if (type.fn.returnType === 'ref') {
+        func.returnType = {kind: 'Object', shapeId: BuiltInUseRefId};
       } else if (refMap.has(type.fn.returnType)) {
         func.returnType = refMap.get(type.fn.returnType)!;
       } else {
