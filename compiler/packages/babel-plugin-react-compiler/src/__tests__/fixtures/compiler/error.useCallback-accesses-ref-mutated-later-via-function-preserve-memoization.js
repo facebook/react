@@ -1,7 +1,3 @@
-
-## Input
-
-```javascript
 // @enablePreserveExistingMemoizationGuarantees @validateRefAccessDuringRender
 import {useCallback, useRef} from 'react';
 
@@ -15,7 +11,10 @@ function Component(props) {
   });
 
   // The ref is modified later, extending its range and preventing memoization of onChange
-  ref.current.inner = null;
+  const reset = () => {
+    ref.current.inner = null;
+  };
+  reset();
 
   return <input onChange={onChange} />;
 }
@@ -24,20 +23,3 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{}],
 };
-
-```
-
-
-## Error
-
-```
-  12 |
-  13 |   // The ref is modified later, extending its range and preventing memoization of onChange
-> 14 |   ref.current.inner = null;
-     |   ^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (14:14)
-  15 |
-  16 |   return <input onChange={onChange} />;
-  17 | }
-```
-          
-      
