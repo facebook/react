@@ -166,6 +166,12 @@ export type LoggerEvent =
       detail: Omit<Omit<CompilerErrorDetailOptions, 'severity'>, 'suggestions'>;
     }
   | {
+      kind: 'CompileSkip';
+      fnLoc: t.SourceLocation | null;
+      reason: string;
+      loc: t.SourceLocation | null;
+    }
+  | {
       kind: 'CompileSuccess';
       fnLoc: t.SourceLocation | null;
       fnName: string | null;
