@@ -169,7 +169,7 @@ function getReactFunctionType(id: t.Identifier | null): ReactFunctionType {
   return 'Other';
 }
 
-function getFunctionName(
+function getFunctionIdentifier(
   fn:
     | NodePath<t.FunctionDeclaration>
     | NodePath<t.ArrowFunctionExpression>
@@ -183,7 +183,7 @@ function getFunctionName(
 }
 
 let count = 0;
-function makeIdentifier(id: t.Identifier | null): t.Identifier {
+function withIdentifier(id: t.Identifier | null): t.Identifier {
   if (id != null && id.name != null) {
     return id;
   } else {
@@ -214,7 +214,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
     const config = parseConfigPragma(pragma);
 
     for (const fn of parseFunctions(source, language)) {
-      const id = getFunctionName(fn);
+      const id = withIdentifier(getFunctionIdentifier(fn));
       for (const result of run(
         fn,
         {
@@ -227,7 +227,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
         null,
         null,
       )) {
-        const fnName = id?.name ?? '(anonymous)';
+        const fnName = id.name;
         switch (result.kind) {
           case 'ast': {
             upsert({
@@ -236,7 +236,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
               name: result.name,
               value: {
                 type: 'FunctionDeclaration',
-                id: makeIdentifier(result.value.id),
+                id,
                 async: result.value.async,
                 generator: result.value.generator,
                 body: result.value.body,
