@@ -9,11 +9,9 @@ import * as t from '@babel/types';
 import {z} from 'zod';
 import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
 import {
-  Environment,
   EnvironmentConfig,
   ExternalFunction,
   parseEnvironmentConfig,
-  PartialEnvironmentConfig,
 } from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
 
