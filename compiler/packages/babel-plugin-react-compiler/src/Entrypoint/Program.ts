@@ -47,28 +47,31 @@ const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 
 function findDirectiveEnablingMemoization(
-  directives: Array<t.Directive>,
-): t.Directive | null {
-  for (const directive of directives) {
-    const directiveValue = directive.value.value;
-    if (OPT_IN_DIRECTIVES.has(directiveValue)) {
-      return directive;
-    }
+  node: NodePath<t.Program> | NodePath<t.BlockStatement>,
+): Array<NodePath<t.Directive>> {
+  const directives = node.get('directives');
+  if (Array.isArray(directives)) {
+    return (directives as Array<NodePath<t.Directive>>).filter(
+      directive =>
+        directive.isDirective() &&
+        OPT_IN_DIRECTIVES.has(directive.node.value.value),
+    );
   }
-  return null;
+  return [];
 }
 
 function findDirectiveDisablingMemoization(
-  directives: Array<t.Directive>,
-  options: PluginOptions,
-): t.Directive | null {
-  for (const directive of directives) {
-    const directiveValue = directive.value.value;
-    if (OPT_OUT_DIRECTIVES.has(directiveValue) && !options.ignoreUseNoForget) {
-      return directive;
-    }
+  node: NodePath<t.Program> | NodePath<t.BlockStatement>,
+): Array<NodePath<t.Directive>> {
+  const directives = node.get('directives');
+  if (Array.isArray(directives)) {
+    return (directives as Array<NodePath<t.Directive>>).filter(
+      directive =>
+        directive.isDirective() &&
+        OPT_OUT_DIRECTIVES.has(directive.node.value.value),
+    );
   }
-  return null;
+  return [];
 }
 
 function isCriticalError(err: unknown): boolean {
@@ -100,7 +103,7 @@ export type CompileResult = {
   compiledFn: CodegenFunction;
 };
 
-function handleError(
+function logError(
   err: unknown,
   pass: CompilerPass,
   fnLoc: t.SourceLocation | null,
@@ -129,6 +132,13 @@ function handleError(
       });
     }
   }
+}
+function handleError(
+  err: unknown,
+  pass: CompilerPass,
+  fnLoc: t.SourceLocation | null,
+): void {
+  logError(err, pass, fnLoc);
   if (
     pass.opts.panicThreshold === 'all_errors' ||
     (pass.opts.panicThreshold === 'critical_errors' && isCriticalError(err)) ||
@@ -336,11 +346,6 @@ export function compileProgram(
   }> = [];
   const compiledFns: Array<CompileResult> = [];
 
-  const useNoForget = findDirectiveDisablingMemoization(
-    program.node.directives,
-    pass.opts,
-  );
-
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
     const fnType = getReactFunctionType(fn, pass, environment);
     if (fnType === null || ALREADY_COMPILED.has(fn.node)) {
@@ -411,6 +416,13 @@ export function compileProgram(
       }
     }
 
+    // TS doesn't seem to be able to resolve this type correctly
+    const body = fn.get('body');
+    CompilerError.invariant(Array.isArray(body) === false, {
+      reason: 'Expected fn to only have one body',
+      description: `Got ${body}`,
+      loc: fn.node.loc ?? null,
+    });
     let compiledFn: CodegenFunction;
     try {
       compiledFn = compileFn(
@@ -433,24 +445,53 @@ export function compileProgram(
         prunedMemoValues: compiledFn.prunedMemoValues,
       });
     } catch (err) {
+      if (body.isBlockStatement()) {
+        const optOutDirectives = findDirectiveDisablingMemoization(body);
+        if (optOutDirectives.length > 0) {
+          logError(err, pass, fn.node.loc ?? null);
+          return null;
+        }
+      }
       hasCriticalError ||= isCriticalError(err);
       handleError(err, pass, fn.node.loc ?? null);
       return null;
     }
-    /**
-     * If 'use no forget/memo' is present, we still run the code through the compiler for validation
-     * but we don't mutate the babel AST. This allows us to flag if there is an unused
-     * 'use no forget/memo' directive.
-     */
-    if (useNoForget != null) {
-      pass.opts.logger?.logEvent(pass.filename, {
-        kind: 'CompileSkip',
-        fnLoc: fn.node.body.loc ?? null,
-        reason: `Skipped due to '${useNoForget.value}' directive.`,
-        loc: useNoForget.loc ?? null,
-      });
-      return null;
-    } else if (!pass.opts.noEmit && !hasCriticalError) {
+
+    if (body.isBlockStatement()) {
+      const optInDirectives = findDirectiveEnablingMemoization(body);
+      const optOutDirectives = findDirectiveDisablingMemoization(body);
+
+      /**
+       * Always compile functions with opt in directives.
+       */
+      if (optInDirectives.length > 0) {
+        return compiledFn;
+      } else if (pass.opts.compilationMode === 'annotation') {
+        return null;
+      }
+
+      /**
+       * Otherwise if 'use no forget/memo' is present, we still run the code through the compiler
+       * for validation but we don't mutate the babel AST. This allows us to flag if there is an
+       * unused 'use no forget/memo' directive.
+       */
+      if (
+        pass.opts.ignoreUseNoForget === false &&
+        optOutDirectives.length > 0
+      ) {
+        for (const directive of optOutDirectives) {
+          pass.opts.logger?.logEvent(pass.filename, {
+            kind: 'CompileSkip',
+            fnLoc: fn.node.body.loc ?? null,
+            reason: `Skipped due to '${directive.node.value.value}' directive.`,
+            loc: directive.node.loc ?? null,
+          });
+        }
+        return null;
+      }
+    }
+
+    if (!pass.opts.noEmit && !hasCriticalError) {
       return compiledFn;
     }
     return null;
@@ -494,6 +535,12 @@ export function compileProgram(
       compiledFn: compiled,
       originalFn: current.fn,
     });
+  }
+
+  const moduleScopeOptOutDirectives =
+    findDirectiveDisablingMemoization(program);
+  if (moduleScopeOptOutDirectives.length > 0) {
+    return;
   }
 
   if (pass.opts.gating != null) {
@@ -627,25 +674,10 @@ function getReactFunctionType(
   environment: EnvironmentConfig,
 ): ReactFunctionType | null {
   const hookPattern = environment.hookPattern;
-  if (fn.node.body.type === 'BlockStatement') {
-    // Opt-outs disable compilation regardless of mode
-    const useNoForget = findDirectiveDisablingMemoization(
-      fn.node.body.directives,
-      pass.opts,
-    );
-    if (useNoForget != null) {
-      pass.opts.logger?.logEvent(pass.filename, {
-        kind: 'CompileSkip',
-        fnLoc: fn.node.body.loc ?? null,
-        reason: `Skipped due to '${useNoForget.value}' directive.`,
-        loc: useNoForget.loc ?? null,
-      });
-      return null;
-    }
-    // Otherwise opt-ins enable compilation regardless of mode
-    if (findDirectiveEnablingMemoization(fn.node.body.directives) != null) {
+  const body = fn.get('body');
+  if (Array.isArray(body) === false && body.isBlockStatement()) {
+    if (findDirectiveEnablingMemoization(body).length > 0)
       return getComponentOrHookLike(fn, hookPattern) ?? 'Other';
-    }
   }
 
   // Component and hook declarations are known components/hooks
