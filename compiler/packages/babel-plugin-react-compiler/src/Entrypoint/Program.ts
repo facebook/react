@@ -404,13 +404,6 @@ export function compileProgram(
       }
     }
 
-    // TS doesn't seem to be able to resolve this type correctly
-    const body = fn.get('body');
-    CompilerError.invariant(Array.isArray(body) === false, {
-      reason: 'Expected fn to only have one body',
-      description: `Got ${body}`,
-      loc: fn.node.loc ?? null,
-    });
     let compiledFn: CodegenFunction;
     try {
       compiledFn = compileFn(
@@ -433,6 +426,10 @@ export function compileProgram(
         prunedMemoValues: compiledFn.prunedMemoValues,
       });
     } catch (err) {
+      /**
+       * If an opt out directive is present, log only instead of throwing and don't mark as
+       * containing a critical error.
+       */
       if (fn.node.body.type === 'BlockStatement') {
         const optOutDirectives = findDirectiveDisablingMemoization(
           fn.node.body.directives,
@@ -461,6 +458,9 @@ export function compileProgram(
       if (optInDirectives.length > 0) {
         return compiledFn;
       } else if (pass.opts.compilationMode === 'annotation') {
+        /**
+         * No opt-in directive in annotation mode, so don't insert the compiled function.
+         */
         return null;
       }
 
@@ -531,6 +531,9 @@ export function compileProgram(
     });
   }
 
+  /**
+   * Do not modify source if there is a module scope level opt out directive.
+   */
   const moduleScopeOptOutDirectives = findDirectiveDisablingMemoization(
     program.node.directives,
   );
