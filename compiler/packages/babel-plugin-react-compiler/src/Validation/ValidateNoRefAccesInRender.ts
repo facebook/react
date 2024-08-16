@@ -11,10 +11,10 @@ import {
   IdentifierId,
   Place,
   SourceLocation,
+  isRefOrRefValue,
   isRefValueType,
   isUseRefType,
 } from '../HIR';
-import {printPlace} from '../HIR/PrintHIR';
 import {
   eachInstructionValueOperand,
   eachTerminalOperand,
@@ -52,33 +52,35 @@ function validateNoRefAccessInRenderImpl(
   refAccessingFunctions: Set<IdentifierId>,
 ): Result<void, CompilerError> {
   const errors = new CompilerError();
+  const lookupLocations: Map<IdentifierId, SourceLocation> = new Map();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
         case 'JsxExpression':
         case 'JsxFragment': {
           for (const operand of eachInstructionValueOperand(instr.value)) {
-            if (isRefValueType(operand.identifier)) {
-              errors.push({
-                severity: ErrorSeverity.InvalidReact,
-                reason:
-                  'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
-                loc: operand.loc,
-                description: `Cannot access ref value at ${printPlace(
-                  operand,
-                )}`,
-                suggestions: null,
-              });
-            }
+            validateNoDirectRefValueAccess(errors, operand, lookupLocations);
           }
           break;
         }
         case 'PropertyLoad': {
+          if (
+            isRefValueType(instr.lvalue.identifier) &&
+            instr.value.property === 'current'
+          ) {
+            lookupLocations.set(instr.lvalue.identifier.id, instr.loc);
+          }
           break;
         }
         case 'LoadLocal': {
           if (refAccessingFunctions.has(instr.value.place.identifier.id)) {
             refAccessingFunctions.add(instr.lvalue.identifier.id);
+          }
+          if (isRefValueType(instr.lvalue.identifier)) {
+            const loc = lookupLocations.get(instr.value.place.identifier.id);
+            if (loc !== undefined) {
+              lookupLocations.set(instr.lvalue.identifier.id, loc);
+            }
           }
           break;
         }
@@ -86,6 +88,13 @@ function validateNoRefAccessInRenderImpl(
           if (refAccessingFunctions.has(instr.value.value.identifier.id)) {
             refAccessingFunctions.add(instr.value.lvalue.place.identifier.id);
             refAccessingFunctions.add(instr.lvalue.identifier.id);
+          }
+          if (isRefValueType(instr.value.lvalue.place.identifier)) {
+            const loc = lookupLocations.get(instr.value.value.identifier.id);
+            if (loc !== undefined) {
+              lookupLocations.set(instr.value.lvalue.place.identifier.id, loc);
+              lookupLocations.set(instr.lvalue.identifier.id, loc);
+            }
           }
           break;
         }
@@ -139,7 +148,11 @@ function validateNoRefAccessInRenderImpl(
                 reason:
                   'This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef)',
                 loc: callee.loc,
-                description: `Function ${printPlace(callee)} accesses a ref`,
+                description:
+                  callee.identifier.name !== null &&
+                  callee.identifier.name.kind === 'named'
+                    ? `Function \`${callee.identifier.name.value}\` accesses a ref`
+                    : null,
                 suggestions: null,
               });
             }
@@ -148,7 +161,7 @@ function validateNoRefAccessInRenderImpl(
                 errors,
                 refAccessingFunctions,
                 operand,
-                operand.loc,
+                lookupLocations.get(operand.identifier.id) ?? operand.loc,
               );
             }
           }
@@ -161,7 +174,7 @@ function validateNoRefAccessInRenderImpl(
               errors,
               refAccessingFunctions,
               operand,
-              operand.loc,
+              lookupLocations.get(operand.identifier.id) ?? operand.loc,
             );
           }
           break;
@@ -174,26 +187,49 @@ function validateNoRefAccessInRenderImpl(
             errors,
             refAccessingFunctions,
             instr.value.object,
-            instr.loc,
+            lookupLocations.get(instr.value.object.identifier.id) ?? instr.loc,
           );
           for (const operand of eachInstructionValueOperand(instr.value)) {
             if (operand === instr.value.object) {
               continue;
             }
-            validateNoRefValueAccess(errors, refAccessingFunctions, operand);
+            validateNoRefValueAccess(
+              errors,
+              refAccessingFunctions,
+              lookupLocations,
+              operand,
+            );
           }
           break;
         }
+        case 'StartMemoize':
+        case 'FinishMemoize':
+          break;
         default: {
           for (const operand of eachInstructionValueOperand(instr.value)) {
-            validateNoRefValueAccess(errors, refAccessingFunctions, operand);
+            validateNoRefValueAccess(
+              errors,
+              refAccessingFunctions,
+              lookupLocations,
+              operand,
+            );
           }
           break;
         }
       }
     }
     for (const operand of eachTerminalOperand(block.terminal)) {
-      validateNoRefValueAccess(errors, refAccessingFunctions, operand);
+      if (block.terminal.kind !== 'return') {
+        validateNoRefValueAccess(
+          errors,
+          refAccessingFunctions,
+          lookupLocations,
+          operand,
+        );
+      } else {
+        // Allow functions containing refs to be returned, but not direct ref values
+        validateNoDirectRefValueAccess(errors, operand, lookupLocations);
+      }
     }
   }
 
@@ -207,6 +243,7 @@ function validateNoRefAccessInRenderImpl(
 function validateNoRefValueAccess(
   errors: CompilerError,
   refAccessingFunctions: Set<IdentifierId>,
+  lookupLocations: Map<IdentifierId, SourceLocation>,
   operand: Place,
 ): void {
   if (
@@ -217,8 +254,12 @@ function validateNoRefValueAccess(
       severity: ErrorSeverity.InvalidReact,
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
-      loc: operand.loc,
-      description: `Cannot access ref value at ${printPlace(operand)}`,
+      loc: lookupLocations.get(operand.identifier.id) ?? operand.loc,
+      description:
+        operand.identifier.name !== null &&
+        operand.identifier.name.kind === 'named'
+          ? `Cannot access ref value \`${operand.identifier.name.value}\``
+          : null,
       suggestions: null,
     });
   }
@@ -231,8 +272,7 @@ function validateNoRefAccess(
   loc: SourceLocation,
 ): void {
   if (
-    isRefValueType(operand.identifier) ||
-    isUseRefType(operand.identifier) ||
+    isRefOrRefValue(operand.identifier) ||
     refAccessingFunctions.has(operand.identifier.id)
   ) {
     errors.push({
@@ -240,6 +280,27 @@ function validateNoRefAccess(
       reason:
         'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
       loc: loc,
+      description:
+        operand.identifier.name !== null &&
+        operand.identifier.name.kind === 'named'
+          ? `Cannot access ref value \`${operand.identifier.name.value}\``
+          : null,
+      suggestions: null,
+    });
+  }
+}
+
+function validateNoDirectRefValueAccess(
+  errors: CompilerError,
+  operand: Place,
+  lookupLocations: Map<IdentifierId, SourceLocation>,
+): void {
+  if (isRefValueType(operand.identifier)) {
+    errors.push({
+      severity: ErrorSeverity.InvalidReact,
+      reason:
+        'Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)',
+      loc: lookupLocations.get(operand.identifier.id) ?? operand.loc,
       description:
         operand.identifier.name !== null &&
         operand.identifier.name.kind === 'named'
