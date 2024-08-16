@@ -4,6 +4,8 @@
 ```javascript
 // @flow @validateRefAccessDuringRender @validatePreserveExistingMemoizationGuarantees
 
+import {useRef} from 'react';
+
 component Foo() {
   const ref = useRef();
 
@@ -25,6 +27,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
+
+import { useRef } from "react";
 
 function Foo() {
   const $ = _c(1);
@@ -48,4 +52,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) useRef is not defined
+(kind: ok) "[[ function params=0 ]]"
