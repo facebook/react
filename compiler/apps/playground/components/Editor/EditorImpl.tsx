@@ -66,14 +66,14 @@ function parseFunctions(
   source: string,
   language: 'flow' | 'typescript',
 ): Array<
-  NodePath<
-    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  | NodePath<t.FunctionDeclaration>
+  | NodePath<t.ArrowFunctionExpression>
+  | NodePath<t.FunctionExpression>
 > {
   const items: Array<
-    NodePath<
-      t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-    >
+    | NodePath<t.FunctionDeclaration>
+    | NodePath<t.ArrowFunctionExpression>
+    | NodePath<t.FunctionExpression>
   > = [];
   try {
     const ast = parseInput(source, language);
@@ -155,20 +155,31 @@ function isHookName(s: string): boolean {
   return /^use[A-Z0-9]/.test(s);
 }
 
-function getReactFunctionType(
-  id: NodePath<t.Identifier | null | undefined>,
-): ReactFunctionType {
-  if (id && id.node && id.isIdentifier()) {
-    if (isHookName(id.node.name)) {
+function getReactFunctionType(id: t.Identifier | null): ReactFunctionType {
+  if (id != null) {
+    if (isHookName(id.name)) {
       return 'Hook';
     }
 
     const isPascalCaseNameSpace = /^[A-Z].*/;
-    if (isPascalCaseNameSpace.test(id.node.name)) {
+    if (isPascalCaseNameSpace.test(id.name)) {
       return 'Component';
     }
   }
   return 'Other';
+}
+
+function getFunctionIdentifier(
+  fn:
+    | NodePath<t.FunctionDeclaration>
+    | NodePath<t.ArrowFunctionExpression>
+    | NodePath<t.FunctionExpression>,
+): t.Identifier | null {
+  if (fn.isArrowFunctionExpression()) {
+    return null;
+  }
+  const id = fn.get('id');
+  return Array.isArray(id) === false && id.isIdentifier() ? id.node : null;
 }
 
 function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
@@ -188,27 +199,21 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
   } else {
     language = 'typescript';
   }
+  let count = 0;
+  const withIdentifier = (id: t.Identifier | null): t.Identifier => {
+    if (id != null && id.name != null) {
+      return id;
+    } else {
+      return t.identifier(`anonymous_${count++}`);
+    }
+  };
   try {
     // Extract the first line to quickly check for custom test directives
     const pragma = source.substring(0, source.indexOf('\n'));
     const config = parseConfigPragma(pragma);
 
     for (const fn of parseFunctions(source, language)) {
-      if (!fn.isFunctionDeclaration()) {
-        error.pushErrorDetail(
-          new CompilerErrorDetail({
-            reason: `Unexpected function type ${fn.node.type}`,
-            description:
-              'Playground only supports parsing function declarations',
-            severity: ErrorSeverity.Todo,
-            loc: fn.node.loc ?? null,
-            suggestions: null,
-          }),
-        );
-        continue;
-      }
-
-      const id = fn.get('id');
+      const id = withIdentifier(getFunctionIdentifier(fn));
       for (const result of run(
         fn,
         {
@@ -221,7 +226,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
         null,
         null,
       )) {
-        const fnName = fn.node.id?.name ?? null;
+        const fnName = id.name;
         switch (result.kind) {
           case 'ast': {
             upsert({
@@ -230,7 +235,7 @@ function compile(source: string): [CompilerOutput, 'flow' | 'typescript'] {
               name: result.name,
               value: {
                 type: 'FunctionDeclaration',
-                id: result.value.id,
+                id,
                 async: result.value.async,
                 generator: result.value.generator,
                 body: result.value.body,
