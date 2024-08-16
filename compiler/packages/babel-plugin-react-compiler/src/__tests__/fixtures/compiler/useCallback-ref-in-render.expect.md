@@ -16,7 +16,7 @@ component Foo() {
 }
 
 component A(r: mixed) {
-  return <div/>;
+  return <div />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
