@@ -43,6 +43,7 @@ export type CompilerPass = {
   comments: Array<t.CommentBlock | t.CommentLine>;
   code: string | null;
 };
+export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 
 function findDirectiveEnablingMemoization(
   directives: Array<t.Directive>,
@@ -62,11 +63,7 @@ function findDirectiveDisablingMemoization(
 ): t.Directive | null {
   for (const directive of directives) {
     const directiveValue = directive.value.value;
-    if (
-      (directiveValue === 'use no forget' ||
-        directiveValue === 'use no memo') &&
-      !options.ignoreUseNoForget
-    ) {
+    if (OPT_OUT_DIRECTIVES.has(directiveValue) && !options.ignoreUseNoForget) {
       return directive;
     }
   }
@@ -434,8 +431,28 @@ export function compileProgram(
       handleError(err, pass, fn.node.loc ?? null);
       return null;
     }
-
-    if (!pass.opts.noEmit && !hasCriticalError) {
+    /**
+     * If 'use no forget/memo' is present, we still run the code through the compiler for validation
+     * but we don't mutate the babel AST. This allows us to flag if there is an unused
+     * 'use no forget/memo' directive.
+     */
+    const useNoForget = findDirectiveDisablingMemoization(
+      program.node.directives,
+      pass.opts,
+    );
+    if (useNoForget != null) {
+      pass.opts.logger?.logEvent(pass.filename, {
+        kind: 'CompileError',
+        fnLoc: null,
+        detail: {
+          severity: ErrorSeverity.Todo,
+          reason: 'Skipped due to "use no forget" directive.',
+          loc: useNoForget.loc ?? null,
+          suggestions: null,
+        },
+      });
+      return null;
+    } else if (!pass.opts.noEmit && !hasCriticalError) {
       return compiledFn;
     }
     return null;
@@ -596,24 +613,6 @@ function shouldSkipCompilation(
     }
   }
 
-  // Top level "use no forget", skip this file entirely
-  const useNoForget = findDirectiveDisablingMemoization(
-    program.node.directives,
-    pass.opts,
-  );
-  if (useNoForget != null) {
-    pass.opts.logger?.logEvent(pass.filename, {
-      kind: 'CompileError',
-      fnLoc: null,
-      detail: {
-        severity: ErrorSeverity.Todo,
-        reason: 'Skipped due to "use no forget" directive.',
-        loc: useNoForget.loc ?? null,
-        suggestions: null,
-      },
-    });
-    return true;
-  }
   const moduleName = pass.opts.runtimeModule ?? 'react/compiler-runtime';
   if (hasMemoCacheFunctionImport(program, moduleName)) {
     return true;
@@ -638,14 +637,10 @@ function getReactFunctionType(
     );
     if (useNoForget != null) {
       pass.opts.logger?.logEvent(pass.filename, {
-        kind: 'CompileError',
+        kind: 'CompileSkip',
         fnLoc: fn.node.body.loc ?? null,
-        detail: {
-          severity: ErrorSeverity.Todo,
-          reason: 'Skipped due to "use no forget" directive.',
-          loc: useNoForget.loc ?? null,
-          suggestions: null,
-        },
+        reason: `Skipped due to '${useNoForget.value}' directive.`,
+        loc: useNoForget.loc ?? null,
       });
       return null;
     }
