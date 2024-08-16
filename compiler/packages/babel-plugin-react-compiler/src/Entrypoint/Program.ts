@@ -389,6 +389,17 @@ export function compileProgram(
     fn: BabelFn,
     fnType: ReactFunctionType,
   ): null | CodegenFunction => {
+    let optInDirectives: Array<t.Directive> = [];
+    let optOutDirectives: Array<t.Directive> = [];
+    if (fn.node.body.type === 'BlockStatement') {
+      optInDirectives = findDirectiveEnablingMemoization(
+        fn.node.body.directives,
+      );
+      optOutDirectives = findDirectiveDisablingMemoization(
+        fn.node.body.directives,
+      );
+    }
+
     if (lintError != null) {
       /**
        * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
@@ -400,7 +411,11 @@ export function compileProgram(
         fn,
       );
       if (suppressionsInFunction.length > 0) {
-        handleError(lintError, pass, fn.node.loc ?? null);
+        if (optOutDirectives.length > 0) {
+          logError(lintError, pass, fn.node.loc ?? null);
+        } else {
+          handleError(lintError, pass, fn.node.loc ?? null);
+        }
       }
     }
 
@@ -431,9 +446,6 @@ export function compileProgram(
        * containing a critical error.
        */
       if (fn.node.body.type === 'BlockStatement') {
-        const optOutDirectives = findDirectiveDisablingMemoization(
-          fn.node.body.directives,
-        );
         if (optOutDirectives.length > 0) {
           logError(err, pass, fn.node.loc ?? null);
           return null;
@@ -444,45 +456,33 @@ export function compileProgram(
       return null;
     }
 
-    if (fn.node.body.type === 'BlockStatement') {
-      const optInDirectives = findDirectiveEnablingMemoization(
-        fn.node.body.directives,
-      );
-      const optOutDirectives = findDirectiveDisablingMemoization(
-        fn.node.body.directives,
-      );
-
+    /**
+     * Always compile functions with opt in directives.
+     */
+    if (optInDirectives.length > 0) {
+      return compiledFn;
+    } else if (pass.opts.compilationMode === 'annotation') {
       /**
-       * Always compile functions with opt in directives.
+       * No opt-in directive in annotation mode, so don't insert the compiled function.
        */
-      if (optInDirectives.length > 0) {
-        return compiledFn;
-      } else if (pass.opts.compilationMode === 'annotation') {
-        /**
-         * No opt-in directive in annotation mode, so don't insert the compiled function.
-         */
-        return null;
-      }
+      return null;
+    }
 
-      /**
-       * Otherwise if 'use no forget/memo' is present, we still run the code through the compiler
-       * for validation but we don't mutate the babel AST. This allows us to flag if there is an
-       * unused 'use no forget/memo' directive.
-       */
-      if (
-        pass.opts.ignoreUseNoForget === false &&
-        optOutDirectives.length > 0
-      ) {
-        for (const directive of optOutDirectives) {
-          pass.opts.logger?.logEvent(pass.filename, {
-            kind: 'CompileSkip',
-            fnLoc: fn.node.body.loc ?? null,
-            reason: `Skipped due to '${directive.value.value}' directive.`,
-            loc: directive.loc ?? null,
-          });
-        }
-        return null;
+    /**
+     * Otherwise if 'use no forget/memo' is present, we still run the code through the compiler
+     * for validation but we don't mutate the babel AST. This allows us to flag if there is an
+     * unused 'use no forget/memo' directive.
+     */
+    if (pass.opts.ignoreUseNoForget === false && optOutDirectives.length > 0) {
+      for (const directive of optOutDirectives) {
+        pass.opts.logger?.logEvent(pass.filename, {
+          kind: 'CompileSkip',
+          fnLoc: fn.node.body.loc ?? null,
+          reason: `Skipped due to '${directive.value.value}' directive.`,
+          loc: directive.loc ?? null,
+        });
       }
+      return null;
     }
 
     if (!pass.opts.noEmit && !hasCriticalError) {
