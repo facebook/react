@@ -29,6 +29,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
 let ReactServerDOMServer;
+let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let Suspense;
 let use;
@@ -60,7 +61,13 @@ describe('ReactFlightDOMBrowser', () => {
     serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
-    ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
+    if (__EXPERIMENTAL__) {
+      jest.mock('react-server-dom-webpack/static', () =>
+        require('react-server-dom-webpack/static.browser'),
+      );
+      ReactServerDOMStaticServer = require('react-server-dom-webpack/static');
+    }
 
     __unmockReact();
     jest.resetModules();
@@ -2331,5 +2338,111 @@ describe('ReactFlightDOMBrowser', () => {
     }
     expect(error.digest).toBe('aborted');
     expect(errors).toEqual([reason]);
+  });
+
+  // @gate experimental
+  it('can prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Greeting />
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          <App />,
+          webpackMap,
+        ),
+      };
+    });
+
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+    expect(container.innerHTML).toBe('<div>hello world</div>');
+  });
+
+  // @gate enableHalt
+  it('serializes unfinished tasks with infinite promises when aborting a prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <Greeting />
+          </Suspense>
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const controller = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerender(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+
+    function ClientRoot({response}) {
+      return use(response);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      passThrough(prelude),
+    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<ClientRoot response={response} />);
+    });
+
+    expect(container.innerHTML).toBe('<div>loading...</div>');
   });
 });

@@ -2722,4 +2722,138 @@ describe('ReactFlightDOM', () => {
     await readInto(container, fizzReadable);
     expect(getMeaningfulChildren(container)).toEqual(<div>hello world</div>);
   });
+
+  // @gate enableHalt
+  it('serializes unfinished tasks with infinite promises when aborting a prerender', async () => {
+    let resolveGreeting;
+    const greetingPromise = new Promise(resolve => {
+      resolveGreeting = resolve;
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <Greeting />
+          </Suspense>
+        </div>
+      );
+    }
+
+    async function Greeting() {
+      await greetingPromise;
+      return 'hello world';
+    }
+
+    const controller = new AbortController();
+    const {pendingResult} = await serverAct(async () => {
+      // destructure trick to avoid the act scope from awaiting the returned value
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          webpackMap,
+          {
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    resolveGreeting();
+    const {prelude} = await pendingResult;
+
+    const preludeWeb = Readable.toWeb(prelude);
+    const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+
+    const errors = [];
+    let abortFizz;
+    await serverAct(async () => {
+      const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onError(error) {
+            errors.push(error);
+          },
+        },
+      );
+      pipe(fizzWritable);
+      abortFizz = abort;
+    });
+
+    await serverAct(() => {
+      abortFizz('boom');
+    });
+
+    expect(errors).toEqual(['boom']);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(<div>loading...</div>);
+  });
+
+  // @gate enableHalt
+  it('will leave async iterables in an incomplete state when halting', async () => {
+    let resolve;
+    const wait = new Promise(r => (resolve = r));
+    const errors = [];
+
+    const multiShotIterable = {
+      async *[Symbol.asyncIterator]() {
+        yield {hello: 'A'};
+        await wait;
+        yield {hi: 'B'};
+        return 'C';
+      },
+    };
+
+    const controller = new AbortController();
+    const {pendingResult} = await serverAct(() => {
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          {
+            multiShotIterable,
+          },
+          {},
+          {
+            onError(x) {
+              errors.push(x);
+            },
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+    await serverAct(() => resolve());
+
+    const {prelude} = await pendingResult;
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      Readable.toWeb(prelude),
+    );
+
+    const iterator = result.multiShotIterable[Symbol.asyncIterator]();
+
+    expect(await iterator.next()).toEqual({
+      value: {hello: 'A'},
+      done: false,
+    });
+
+    const race = Promise.race([
+      iterator.next(),
+      new Promise(r => setTimeout(() => r('timeout'), 10)),
+    ]);
+
+    await 1;
+    jest.advanceTimersByTime('100');
+    expect(await race).toBe('timeout');
+  });
 });
