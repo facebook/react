@@ -250,7 +250,9 @@ function* runWithEnvironment(
     validateNoSetStateInPassiveEffects(hir);
   }
 
-  validateNoJSXInTryStatement(hir);
+  if (env.config.validateNoJSXInTryStatements) {
+    validateNoJSXInTryStatement(hir);
+  }
 
   inferReactivePlaces(hir);
   yield log({kind: 'hir', name: 'InferReactivePlaces', value: hir});

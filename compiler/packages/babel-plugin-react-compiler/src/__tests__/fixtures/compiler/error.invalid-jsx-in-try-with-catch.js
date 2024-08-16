@@ -1,3 +1,4 @@
+// @validateNoJSXInTryStatements
 function Component(props) {
   let el;
   try {

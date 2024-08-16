@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateNoJSXInTryStatements
 function Component(props) {
   let el;
   try {
@@ -18,13 +19,13 @@ function Component(props) {
 ## Error
 
 ```
-  2 |   let el;
-  3 |   try {
-> 4 |     el = <div />;
-    |          ^^^^^^^ InvalidReact: Unexpected JSX element within a try statement. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) (4:4)
-  5 |   } catch {
-  6 |     return null;
-  7 |   }
+  3 |   let el;
+  4 |   try {
+> 5 |     el = <div />;
+    |          ^^^^^^^ InvalidReact: Unexpected JSX element within a try statement. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary) (5:5)
+  6 |   } catch {
+  7 |     return null;
+  8 |   }
 ```
           
       

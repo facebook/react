@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateNoJSXInTryStatements
 import {identity} from 'shared-runtime';
 
 function Component(props) {
@@ -25,31 +26,31 @@ function Component(props) {
 ## Error
 
 ```
-   3 | function Component(props) {
-   4 |   let el;
->  5 |   try {
+   4 | function Component(props) {
+   5 |   let el;
+>  6 |   try {
      |   ^^^^^
->  6 |     let value;
+>  7 |     let value;
      | ^^^^^^^^^^^^^^
->  7 |     try {
+>  8 |     try {
      | ^^^^^^^^^^^^^^
->  8 |       value = identity(props.foo);
+>  9 |       value = identity(props.foo);
      | ^^^^^^^^^^^^^^
->  9 |     } catch {
+> 10 |     } catch {
      | ^^^^^^^^^^^^^^
-> 10 |       el = <div value={value} />;
+> 11 |       el = <div value={value} />;
      | ^^^^^^^^^^^^^^
-> 11 |     }
+> 12 |     }
      | ^^^^^^^^^^^^^^
-> 12 |   } finally {
+> 13 |   } finally {
      | ^^^^^^^^^^^^^^
-> 13 |     console.log(el);
+> 14 |     console.log(el);
      | ^^^^^^^^^^^^^^
-> 14 |   }
-     | ^^^^ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (5:14)
-  15 |   return el;
-  16 | }
-  17 |
+> 15 |   }
+     | ^^^^ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (6:15)
+  16 |   return el;
+  17 | }
+  18 |
 ```
           
       

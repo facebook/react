@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateNoJSXInTryStatements
 function Component(props) {
   let el;
   try {
@@ -18,21 +19,21 @@ function Component(props) {
 ## Error
 
 ```
-   1 | function Component(props) {
-   2 |   let el;
->  3 |   try {
+   2 | function Component(props) {
+   3 |   let el;
+>  4 |   try {
      |   ^^^^^
->  4 |     el = <div />;
+>  5 |     el = <div />;
      | ^^^^^^^^^^^^^^^^^
->  5 |   } finally {
+>  6 |   } finally {
      | ^^^^^^^^^^^^^^^^^
->  6 |     console.log(el);
+>  7 |     console.log(el);
      | ^^^^^^^^^^^^^^^^^
->  7 |   }
-     | ^^^^ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (3:7)
-   8 |   return el;
-   9 | }
-  10 |
+>  8 |   }
+     | ^^^^ Todo: (BuildHIR::lowerStatement) Handle TryStatement without a catch clause (4:8)
+   9 |   return el;
+  10 | }
+  11 |
 ```
           
       
