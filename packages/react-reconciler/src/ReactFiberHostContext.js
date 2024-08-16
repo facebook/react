@@ -126,14 +126,19 @@ function popHostContext(fiber: Fiber): void {
     // should be fine.
     pop(hostTransitionProviderCursor, fiber);
 
-    // When popping the transition provider, we reset the context value back
-    // to `NotPendingTransition`. We can do this because you're not allowed to nest forms. If
-    // we allowed for multiple nested host transition providers, then we'd
-    // need to reset this to the parent provider's status.
-    if (isPrimaryRenderer) {
-      HostTransitionContext._currentValue = NotPendingTransition;
-    } else {
-      HostTransitionContext._currentValue2 = NotPendingTransition;
+    // When popping the transition provider, we make sure that the entire queue of
+    // the current transition is completed. This is necessary because popping is also
+    // executed when the state changes for children subscribed to the transition provider
+    if (!fiber.memoizedState.memoizedState.pending) {
+      // When popping the transition provider, we reset the context value back
+      // to `NotPendingTransition`. We can do this because you're not allowed to nest forms. If
+      // we allowed for multiple nested host transition providers, then we'd
+      // need to reset this to the parent provider's status.
+      if (isPrimaryRenderer) {
+        HostTransitionContext._currentValue = NotPendingTransition;
+      } else {
+        HostTransitionContext._currentValue2 = NotPendingTransition;
+      }
     }
   }
 }
