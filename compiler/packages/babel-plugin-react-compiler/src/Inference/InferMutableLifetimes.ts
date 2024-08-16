@@ -11,8 +11,7 @@ import {
   Identifier,
   InstructionId,
   InstructionKind,
-  isRefValueType,
-  isUseRefType,
+  isRefOrRefValue,
   makeInstructionId,
   Place,
 } from '../HIR/HIR';
@@ -68,7 +67,7 @@ import {assertExhaustive} from '../Utils/utils';
  */
 
 function infer(place: Place, instrId: InstructionId): void {
-  if (!isUseRefType(place.identifier) && !isRefValueType(place.identifier)) {
+  if (!isRefOrRefValue(place.identifier)) {
     place.identifier.mutableRange.end = makeInstructionId(instrId + 1);
   }
 }
@@ -177,8 +176,7 @@ export function inferMutableLifetimes(
         );
         if (
           declaration != null &&
-          !isRefValueType(instr.value.lvalue.place.identifier) &&
-          !isUseRefType(instr.value.lvalue.place.identifier)
+          !isRefOrRefValue(instr.value.lvalue.place.identifier)
         ) {
           const range = instr.value.lvalue.place.identifier.mutableRange;
           if (range.start === 0) {
