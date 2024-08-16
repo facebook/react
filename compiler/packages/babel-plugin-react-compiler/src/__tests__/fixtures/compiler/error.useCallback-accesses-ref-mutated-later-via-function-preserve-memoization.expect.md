@@ -37,7 +37,7 @@ export const FIXTURE_ENTRYPOINT = {
   15 |     ref.current.inner = null;
   16 |   };
 > 17 |   reset();
-     |   ^^^^^ InvalidReact: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef). Function mutate? $77[20:22]:TObject<BuiltInFunction> accesses a ref (17:17)
+     |   ^^^^^ InvalidReact: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef) (17:17)
 
 InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (17:17)
   18 |

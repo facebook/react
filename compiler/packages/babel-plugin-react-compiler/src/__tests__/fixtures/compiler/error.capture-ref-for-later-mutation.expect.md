@@ -35,11 +35,11 @@ export const FIXTURE_ENTRYPOINT = {
   10 |   };
   11 |   const moveLeft = {
 > 12 |     handler: handleKey('left'),
-     |              ^^^^^^^^^ InvalidReact: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef). Function mutate? $90[9:17]:TObject<BuiltInFunction> accesses a ref (12:12)
+     |              ^^^^^^^^^ InvalidReact: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef) (12:12)
 
 InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (12:12)
 
-InvalidReact: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef). Function mutate? $96[14:17]:TObject<BuiltInFunction> accesses a ref (15:15)
+InvalidReact: This function accesses a ref value (the `current` property), which may not be accessed during render. (https://react.dev/reference/react/useRef) (15:15)
 
 InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (15:15)
   13 |   };
