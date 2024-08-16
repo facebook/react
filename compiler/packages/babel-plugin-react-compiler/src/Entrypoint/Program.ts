@@ -16,7 +16,6 @@ import {
   EnvironmentConfig,
   ExternalFunction,
   ReactFunctionType,
-  parseEnvironmentConfig,
   tryParseExternalFunction,
 } from '../HIR/Environment';
 import {CodegenFunction} from '../ReactiveScopes';
@@ -292,21 +291,7 @@ export function compileProgram(
     return;
   }
 
-  /*
-   * TODO(lauren): Remove pass.opts.environment nullcheck once PluginOptions
-   * is validated
-   */
-  const environmentResult = parseEnvironmentConfig(pass.opts.environment ?? {});
-  if (environmentResult.isErr()) {
-    CompilerError.throwInvalidConfig({
-      reason:
-        'Error in validating environment config. This is an advanced setting and not meant to be used directly',
-      description: environmentResult.unwrapErr().toString(),
-      suggestions: null,
-      loc: null,
-    });
-  }
-  const environment = environmentResult.unwrap();
+  const environment = pass.opts.environment;
   const restrictedImportsErr = validateRestrictedImports(program, environment);
   if (restrictedImportsErr) {
     handleError(restrictedImportsErr, pass, null);

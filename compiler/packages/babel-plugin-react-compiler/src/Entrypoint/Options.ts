@@ -7,8 +7,12 @@
 
 import * as t from '@babel/types';
 import {z} from 'zod';
-import {CompilerErrorDetailOptions} from '../CompilerError';
-import {ExternalFunction, PartialEnvironmentConfig} from '../HIR/Environment';
+import {CompilerError, CompilerErrorDetailOptions} from '../CompilerError';
+import {
+  EnvironmentConfig,
+  ExternalFunction,
+  parseEnvironmentConfig,
+} from '../HIR/Environment';
 import {hasOwnProperty} from '../Utils/utils';
 
 const PanicThresholdOptionsSchema = z.enum([
@@ -32,7 +36,7 @@ const PanicThresholdOptionsSchema = z.enum([
 export type PanicThresholdOptions = z.infer<typeof PanicThresholdOptionsSchema>;
 
 export type PluginOptions = {
-  environment: PartialEnvironmentConfig | null;
+  environment: EnvironmentConfig;
 
   logger: Logger | null;
 
@@ -194,7 +198,7 @@ export type Logger = {
 export const defaultOptions: PluginOptions = {
   compilationMode: 'infer',
   panicThreshold: 'none',
-  environment: {},
+  environment: parseEnvironmentConfig({}).unwrap(),
   logger: null,
   gating: null,
   noEmit: false,
@@ -218,7 +222,19 @@ export function parsePluginOptions(obj: unknown): PluginOptions {
       // normalize string configs to be case insensitive
       value = value.toLowerCase();
     }
-    if (isCompilerFlag(key)) {
+    if (key === 'environment') {
+      const environmentResult = parseEnvironmentConfig(value);
+      if (environmentResult.isErr()) {
+        CompilerError.throwInvalidConfig({
+          reason:
+            'Error in validating environment config. This is an advanced setting and not meant to be used directly',
+          description: environmentResult.unwrapErr().toString(),
+          suggestions: null,
+          loc: null,
+        });
+      }
+      parsedOptions[key] = environmentResult.unwrap();
+    } else if (isCompilerFlag(key)) {
       parsedOptions[key] = value;
     }
   }
