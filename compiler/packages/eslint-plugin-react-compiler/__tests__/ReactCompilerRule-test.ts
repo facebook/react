@@ -104,6 +104,17 @@ const tests: CompilerTestCases = {
         }
       `,
     },
+    {
+      name: "'use no forget' directive is respected when errors are present",
+      code: normalizeIndent`
+        let count = 0;
+        function Component() {
+          'use no forget';
+          count++;
+          return <div>Hello world {count}</div>
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -196,6 +207,28 @@ const tests: CompilerTestCases = {
         {
           message:
             '[ReactCompilerBailout] (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (@:3:2)',
+        },
+      ],
+    },
+    {
+      only: true,
+      name: "Unused 'use no forget' directive is reported when no errors are present",
+      code: normalizeIndent`
+        function Component() {
+          'use no forget';
+          return <div>Hello world</div>
+        }
+      `,
+      errors: [
+        {
+          message: "Unused 'use no forget' directive",
+          suggestions: [
+            {
+              output:
+                // yuck
+                '\nfunction Component() {\n  \n  return <div>Hello world</div>\n}\n',
+            },
+          ],
         },
       ],
     },
