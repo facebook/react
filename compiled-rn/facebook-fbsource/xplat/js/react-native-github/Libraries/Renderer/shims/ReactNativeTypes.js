@@ -7,10 +7,15 @@
  * @noformat
  * @nolint
  * @flow strict
- * @generated SignedSource<<4405023a5d82ddc01db31d8eb46a7aa0>>
+ * @generated SignedSource<<89361333bb6b688486e35849a9c669a6>>
  */
 
-import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
+import type {
+  ElementRef,
+  ElementType,
+  MixedElement,
+  AbstractComponent,
+} from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -222,7 +227,7 @@ export type ReactNativeType = {
     eventType: string,
   ): void,
   render(
-    element: Element<ElementType>,
+    element: MixedElement,
     containerTag: number,
     callback: ?() => void,
     options: ?RenderRootOptions,
@@ -257,7 +262,7 @@ export type ReactFabricType = {
     eventType: string,
   ): void,
   render(
-    element: Element<ElementType>,
+    element: MixedElement,
     containerTag: number,
     callback: ?() => void,
     concurrentRoot: ?boolean,
