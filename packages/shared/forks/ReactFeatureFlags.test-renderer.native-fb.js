@@ -40,6 +40,7 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableFizzExternalRuntime = true;
 export const enableFlightReadableStream = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
+export const enableHalt = false;
 export const enableInfiniteRenderLoopDetection = true;
 export const enableLazyContextPropagation = false;
 export const enableContextProfiling = false;
