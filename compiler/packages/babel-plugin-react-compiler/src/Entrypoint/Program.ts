@@ -43,6 +43,7 @@ export type CompilerPass = {
   comments: Array<t.CommentBlock | t.CommentLine>;
   code: string | null;
 };
+const OPT_IN_DIRECTIVES = new Set(['use forget', 'use memo']);
 export const OPT_OUT_DIRECTIVES = new Set(['use no forget', 'use no memo']);
 
 function findDirectiveEnablingMemoization(
@@ -50,7 +51,7 @@ function findDirectiveEnablingMemoization(
 ): t.Directive | null {
   for (const directive of directives) {
     const directiveValue = directive.value.value;
-    if (directiveValue === 'use forget' || directiveValue === 'use memo') {
+    if (OPT_IN_DIRECTIVES.has(directiveValue)) {
       return directive;
     }
   }
@@ -335,6 +336,11 @@ export function compileProgram(
   }> = [];
   const compiledFns: Array<CompileResult> = [];
 
+  const useNoForget = findDirectiveDisablingMemoization(
+    program.node.directives,
+    pass.opts,
+  );
+
   const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
     const fnType = getReactFunctionType(fn, pass, environment);
     if (fnType === null || ALREADY_COMPILED.has(fn.node)) {
@@ -436,10 +442,6 @@ export function compileProgram(
      * but we don't mutate the babel AST. This allows us to flag if there is an unused
      * 'use no forget/memo' directive.
      */
-    const useNoForget = findDirectiveDisablingMemoization(
-      program.node.directives,
-      pass.opts,
-    );
     if (useNoForget != null) {
       pass.opts.logger?.logEvent(pass.filename, {
         kind: 'CompileSkip',
