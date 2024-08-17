@@ -454,4 +454,56 @@ describe('ReactDOMFizzStatic', () => {
     });
     expect(getVisibleChildren(container)).toEqual(undefined);
   });
+
+  // @gate enableHalt
+  it('will halt a prerender when aborting with an error during a render', async () => {
+    const controller = new AbortController();
+    function App() {
+      controller.abort('sync');
+      return <div>hello world</div>;
+    }
+
+    const errors = [];
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      signal: controller.signal,
+      onError(error) {
+        errors.push(error);
+      },
+    });
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(errors).toEqual(['sync']);
+    expect(getVisibleChildren(container)).toEqual(undefined);
+  });
+
+  // @gate enableHalt
+  it('will halt a prerender when aborting with an error in a microtask', async () => {
+    const errors = [];
+
+    const controller = new AbortController();
+    function App() {
+      React.use(
+        new Promise(() => {
+          Promise.resolve().then(() => {
+            controller.abort('async');
+          });
+        }),
+      );
+      return <div>hello world</div>;
+    }
+
+    errors.length = 0;
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      signal: controller.signal,
+      onError(error) {
+        errors.push(error);
+      },
+    });
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(errors).toEqual(['async']);
+    expect(getVisibleChildren(container)).toEqual(undefined);
+  });
 });
