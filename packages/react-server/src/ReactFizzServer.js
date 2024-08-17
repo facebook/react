@@ -652,8 +652,6 @@ export function resumeRequest(
   return request;
 }
 
-const AbortSigil = {};
-
 let currentRequest: null | Request = null;
 
 export function resolveRequest(): null | Request {
@@ -1173,7 +1171,7 @@ function renderSuspenseBoundary(
       );
       boundarySegment.status = COMPLETED;
     } catch (thrownValue: mixed) {
-      if (thrownValue === AbortSigil) {
+      if (request.status === ABORTING) {
         boundarySegment.status = ABORTED;
       } else {
         boundarySegment.status = ERRORED;
@@ -1246,7 +1244,7 @@ function renderSuspenseBoundary(
     } catch (thrownValue: mixed) {
       newBoundary.status = CLIENT_RENDERED;
       let error: mixed;
-      if (thrownValue === AbortSigil) {
+      if (request.status === ABORTING) {
         contentRootSegment.status = ABORTED;
         error = request.fatalError;
       } else {
@@ -1601,7 +1599,8 @@ function finishClassComponent(
     nextChildren = instance.render();
   }
   if (request.status === ABORTING) {
-    throw AbortSigil;
+    // eslint-disable-next-line no-throw-literal
+    throw null;
   }
 
   if (__DEV__) {
@@ -1757,7 +1756,8 @@ function renderFunctionComponent(
     legacyContext,
   );
   if (request.status === ABORTING) {
-    throw AbortSigil;
+    // eslint-disable-next-line no-throw-literal
+    throw null;
   }
 
   const hasId = checkDidRenderIdHook();
@@ -2076,7 +2076,8 @@ function renderLazyComponent(
     Component = init(payload);
   }
   if (request.status === ABORTING) {
-    throw AbortSigil;
+    // eslint-disable-next-line no-throw-literal
+    throw null;
   }
   const resolvedProps = resolveDefaultPropsOnNonClassComponent(
     Component,
@@ -2655,7 +2656,8 @@ function retryNode(request: Request, task: Task): void {
           resolvedNode = init(payload);
         }
         if (request.status === ABORTING) {
-          throw AbortSigil;
+          // eslint-disable-next-line no-throw-literal
+          throw null;
         }
         // Now we render the resolved node
         renderNodeDestructive(request, task, resolvedNode, childIndex);
@@ -4127,7 +4129,7 @@ function retryRenderTask(
           // (unstable) API for suspending. This implementation detail can change
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
-        : thrownValue === AbortSigil
+        : request.status === ABORTING
           ? request.fatalError
           : thrownValue;
 
@@ -4250,7 +4252,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     erroredReplay(
       request,
       task.blockedBoundary,
-      x === AbortSigil ? request.fatalError : x,
+      request.status === ABORTING ? request.fatalError : x,
       errorInfo,
       task.replay.nodes,
       task.replay.slots,
