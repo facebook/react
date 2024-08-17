@@ -17,6 +17,7 @@ import {Note} from './cjs/Note.js';
 
 import {like, greet, increment} from './actions.js';
 
+import Preview from './Preview.js';
 import {getServerState} from './ServerState.js';
 
 const promisedText = new Promise(resolve =>
@@ -66,6 +67,7 @@ export default async function App({prerender}) {
           </div>
           <Client />
           <Note />
+          <Preview />
         </Container>
       </body>
     </html>
