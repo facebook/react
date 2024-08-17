@@ -430,11 +430,13 @@ export function setDefaultValue(
   node: HTMLInputElement,
   type: ?string,
   value: ToStringValue,
+  force: ?boolean,
 ) {
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
     type !== 'number' ||
-    getActiveElement(node.ownerDocument) !== node
+    getActiveElement(node.ownerDocument) !== node ||
+    force
   ) {
     if (node.defaultValue !== toString(value)) {
       node.defaultValue = toString(value);
