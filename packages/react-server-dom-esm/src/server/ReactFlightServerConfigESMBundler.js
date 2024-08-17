@@ -70,3 +70,10 @@ export function getServerReferenceBoundArguments<T>(
 ): null | Array<ReactClientValue> {
   return serverReference.$$bound;
 }
+
+export function getServerReferenceLocation<T>(
+  config: ClientManifest,
+  serverReference: ServerReference<T>,
+): void | Error {
+  return serverReference.$$location;
+}

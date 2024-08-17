@@ -23,3 +23,4 @@ export const resolveClientReferenceMetadata =
 export const getServerReferenceId = $$$config.getServerReferenceId;
 export const getServerReferenceBoundArguments =
   $$$config.getServerReferenceBoundArguments;
+export const getServerReferenceLocation = $$$config.getServerReferenceLocation;
