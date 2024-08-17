@@ -3535,8 +3535,7 @@ function RequestInstance(
   pushComponentStack(children);
   pingedTasks.push(children);
 }
-var AbortSigil = {},
-  currentRequest = null;
+var currentRequest = null;
 function pingTask(request, task) {
   request.pingedTasks.push(task);
   1 === request.pingedTasks.length &&
@@ -3907,14 +3906,14 @@ function renderElement(request, task, keyPath, type, props, ref) {
           }
         else defaultProps.queue = null;
       type = newProps.render();
-      if (1 === request.status) throw AbortSigil;
+      if (1 === request.status) throw null;
       props = task.keyPath;
       task.keyPath = keyPath;
       renderNodeDestructive(request, task, type, -1);
       task.keyPath = props;
     } else {
       type = renderWithHooks(request, task, keyPath, type, props, void 0);
-      if (1 === request.status) throw AbortSigil;
+      if (1 === request.status) throw null;
       finishFunctionComponent(
         request,
         task,
@@ -4081,7 +4080,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
                 (boundarySegment.status = 1);
             } catch (thrownValue) {
               throw (
-                ((boundarySegment.status = thrownValue === AbortSigil ? 3 : 4),
+                ((boundarySegment.status = 1 === request.status ? 3 : 4),
                 thrownValue)
               );
             } finally {
@@ -4126,7 +4125,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
               }
             } catch (thrownValue$28) {
               (propName.status = 4),
-                thrownValue$28 === AbortSigil
+                1 === request.status
                   ? ((contentRootSegment.status = 3),
                     (newProps = request.fatalError))
                   : ((contentRootSegment.status = 4),
@@ -4216,7 +4215,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
         case REACT_LAZY_TYPE:
           newProps = type._init;
           type = newProps(type._payload);
-          if (1 === request.status) throw AbortSigil;
+          if (1 === request.status) throw null;
           props = resolveDefaultPropsOnNonClassComponent(type, props);
           renderElement(request, task, keyPath, type, props, ref);
           return;
@@ -4451,7 +4450,7 @@ function retryNode(request, task) {
         case REACT_LAZY_TYPE:
           childNodes = node._init;
           node = childNodes(node._payload);
-          if (1 === request.status) throw AbortSigil;
+          if (1 === request.status) throw null;
           renderNodeDestructive(request, task, node, childIndex);
           return;
       }
@@ -5496,7 +5495,8 @@ exports.renderNextChunk = function (stream) {
                 task$jscomp$0.abortSet.delete(task$jscomp$0);
                 var errorInfo = getThrownInfo(task$jscomp$0.componentStack),
                   boundary = task$jscomp$0.blockedBoundary,
-                  error$jscomp$0 = x === AbortSigil ? request.fatalError : x,
+                  error$jscomp$0 =
+                    1 === request.status ? request.fatalError : x,
                   replayNodes = task$jscomp$0.replay.nodes,
                   resumeSlots = task$jscomp$0.replay.slots;
                 errorDigest = logRecoverableError(
@@ -5548,7 +5548,7 @@ exports.renderNextChunk = function (stream) {
               var x$jscomp$0 =
                 thrownValue === SuspenseException
                   ? getSuspendedThenable()
-                  : thrownValue === AbortSigil
+                  : 1 === request.status
                     ? request.fatalError
                     : thrownValue;
               if (

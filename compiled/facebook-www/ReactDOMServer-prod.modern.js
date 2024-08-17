@@ -3668,8 +3668,7 @@ function createRequest(
     formState
   );
 }
-var AbortSigil = {},
-  currentRequest = null;
+var currentRequest = null;
 function pingTask(request, task) {
   request.pingedTasks.push(task);
   1 === request.pingedTasks.length &&
@@ -4034,14 +4033,14 @@ function renderElement(request, task, keyPath, type, props, ref) {
           }
         else defaultProps.queue = null;
       type = newProps.render();
-      if (1 === request.status) throw AbortSigil;
+      if (1 === request.status) throw null;
       props = task.keyPath;
       task.keyPath = keyPath;
       renderNodeDestructive(request, task, type, -1);
       task.keyPath = props;
     } else {
       type = renderWithHooks(request, task, keyPath, type, props, void 0);
-      if (1 === request.status) throw AbortSigil;
+      if (1 === request.status) throw null;
       finishFunctionComponent(
         request,
         task,
@@ -4211,7 +4210,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
                 (boundarySegment.status = 1);
             } catch (thrownValue) {
               throw (
-                ((boundarySegment.status = thrownValue === AbortSigil ? 3 : 4),
+                ((boundarySegment.status = 1 === request.status ? 3 : 4),
                 thrownValue)
               );
             } finally {
@@ -4259,7 +4258,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
               }
             } catch (thrownValue$28) {
               (propName.status = 4),
-                thrownValue$28 === AbortSigil
+                1 === request.status
                   ? ((contentRootSegment.status = 3),
                     (newProps = request.fatalError))
                   : ((contentRootSegment.status = 4),
@@ -4349,7 +4348,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
         case REACT_LAZY_TYPE:
           newProps = type._init;
           type = newProps(type._payload);
-          if (1 === request.status) throw AbortSigil;
+          if (1 === request.status) throw null;
           props = resolveDefaultPropsOnNonClassComponent(type, props);
           renderElement(request, task, keyPath, type, props, ref);
           return;
@@ -4575,7 +4574,7 @@ function retryNode(request, task) {
         case REACT_LAZY_TYPE:
           childNodes = node._init;
           node = childNodes(node._payload);
-          if (1 === request.status) throw AbortSigil;
+          if (1 === request.status) throw null;
           renderNodeDestructive(request, task, node, childIndex);
           return;
       }
@@ -5119,7 +5118,9 @@ function performWork(request$jscomp$2) {
                 var request$jscomp$1 = request$jscomp$0,
                   boundary = task.blockedBoundary,
                   error$jscomp$0 =
-                    x === AbortSigil ? request$jscomp$0.fatalError : x,
+                    1 === request$jscomp$0.status
+                      ? request$jscomp$0.fatalError
+                      : x,
                   replayNodes = task.replay.nodes,
                   resumeSlots = task.replay.slots;
                 request = logRecoverableError(
@@ -5172,7 +5173,7 @@ function performWork(request$jscomp$2) {
             var x$jscomp$0 =
               thrownValue === SuspenseException
                 ? getSuspendedThenable()
-                : thrownValue === AbortSigil
+                : 1 === request.status
                   ? request.fatalError
                   : thrownValue;
             if (
@@ -5791,4 +5792,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-modern-7e8a06cf-20240815";
+exports.version = "19.0.0-www-modern-7954db93-20240816";

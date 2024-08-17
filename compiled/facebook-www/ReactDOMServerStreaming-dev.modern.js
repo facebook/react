@@ -4883,7 +4883,7 @@ __DEV__ &&
               }
             else defaultProps.queue = null;
           defaultProps = callRenderInDEV(newProps);
-          if (1 === request.status) throw AbortSigil;
+          if (1 === request.status) throw null;
           newProps.props !== props &&
             (didWarnAboutReassigningProps ||
               error$jscomp$2(
@@ -4907,7 +4907,7 @@ __DEV__ &&
               ),
               (didWarnAboutBadClass[newProps] = !0)));
           props = renderWithHooks(request, task, keyPath, type, props, void 0);
-          if (1 === request.status) throw AbortSigil;
+          if (1 === request.status) throw null;
           newProps = 0 !== localIdCounter;
           defaultProps = actionStateCounter;
           addendum = actionStateMatchingIndex;
@@ -5121,8 +5121,7 @@ __DEV__ &&
                     (boundarySegment.status = 1);
                 } catch (thrownValue) {
                   throw (
-                    ((boundarySegment.status =
-                      thrownValue === AbortSigil ? 3 : 4),
+                    ((boundarySegment.status = 1 === request.status ? 3 : 4),
                     thrownValue)
                   );
                 } finally {
@@ -5167,7 +5166,7 @@ __DEV__ &&
                   }
                 } catch (thrownValue$2) {
                   (propName.status = 4),
-                    thrownValue$2 === AbortSigil
+                    1 === request.status
                       ? ((contentRootSegment.status = 3),
                         (newProps = request.fatalError))
                       : ((contentRootSegment.status = 4),
@@ -5275,7 +5274,7 @@ __DEV__ &&
               }
             case REACT_LAZY_TYPE:
               type = callLazyInitInDEV(type);
-              if (1 === request.status) throw AbortSigil;
+              if (1 === request.status) throw null;
               props = resolveDefaultPropsOnNonClassComponent(type, props);
               renderElement(request, task, keyPath, type, props, ref);
               return;
@@ -5510,7 +5509,7 @@ __DEV__ &&
               );
             case REACT_LAZY_TYPE:
               node = callLazyInitInDEV(node);
-              if (1 === request.status) throw AbortSigil;
+              if (1 === request.status) throw null;
               renderNodeDestructive(request, task, node, childIndex);
               return;
           }
@@ -8102,7 +8101,6 @@ __DEV__ &&
       },
       callLazyInitInDEV =
         callLazyInit["react-stack-bottom-frame"].bind(callLazyInit),
-      AbortSigil = {},
       currentRequest = null,
       didWarnAboutBadClass = {},
       didWarnAboutContextTypes = {},
@@ -8207,7 +8205,9 @@ __DEV__ &&
                     erroredReplay(
                       request$jscomp$1,
                       request$jscomp$0.blockedBoundary,
-                      x === AbortSigil ? request$jscomp$1.fatalError : x,
+                      1 === request$jscomp$1.status
+                        ? request$jscomp$1.fatalError
+                        : x,
                       errorInfo,
                       request$jscomp$0.replay.nodes,
                       request$jscomp$0.replay.slots
@@ -8253,7 +8253,7 @@ __DEV__ &&
                   var x$jscomp$0 =
                     thrownValue === SuspenseException
                       ? getSuspendedThenable()
-                      : thrownValue === AbortSigil
+                      : 1 === request$jscomp$0.status
                         ? request$jscomp$0.fatalError
                         : thrownValue;
                   if (

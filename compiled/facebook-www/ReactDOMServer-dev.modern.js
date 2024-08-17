@@ -5114,7 +5114,7 @@ __DEV__ &&
               }
             else defaultProps.queue = null;
           defaultProps = callRenderInDEV(newProps);
-          if (1 === request.status) throw AbortSigil;
+          if (1 === request.status) throw null;
           newProps.props !== props &&
             (didWarnAboutReassigningProps ||
               error$jscomp$2(
@@ -5138,7 +5138,7 @@ __DEV__ &&
               ),
               (didWarnAboutBadClass[newProps] = !0)));
           props = renderWithHooks(request, task, keyPath, type, props, void 0);
-          if (1 === request.status) throw AbortSigil;
+          if (1 === request.status) throw null;
           newProps = 0 !== localIdCounter;
           defaultProps = actionStateCounter;
           addendum = actionStateMatchingIndex;
@@ -5355,8 +5355,7 @@ __DEV__ &&
                     (boundarySegment.status = COMPLETED);
                 } catch (thrownValue) {
                   throw (
-                    ((boundarySegment.status =
-                      thrownValue === AbortSigil ? 3 : 4),
+                    ((boundarySegment.status = 1 === request.status ? 3 : 4),
                     thrownValue)
                   );
                 } finally {
@@ -5404,7 +5403,7 @@ __DEV__ &&
                   }
                 } catch (thrownValue$2) {
                   (propName.status = CLIENT_RENDERED),
-                    thrownValue$2 === AbortSigil
+                    1 === request.status
                       ? ((contentRootSegment.status = 3),
                         (newProps = request.fatalError))
                       : ((contentRootSegment.status = 4),
@@ -5512,7 +5511,7 @@ __DEV__ &&
               }
             case REACT_LAZY_TYPE:
               type = callLazyInitInDEV(type);
-              if (1 === request.status) throw AbortSigil;
+              if (1 === request.status) throw null;
               props = resolveDefaultPropsOnNonClassComponent(type, props);
               renderElement(request, task, keyPath, type, props, ref);
               return;
@@ -5747,7 +5746,7 @@ __DEV__ &&
               );
             case REACT_LAZY_TYPE:
               node = callLazyInitInDEV(node);
-              if (1 === request.status) throw AbortSigil;
+              if (1 === request.status) throw null;
               renderNodeDestructive(request, task, node, childIndex);
               return;
           }
@@ -6472,7 +6471,9 @@ __DEV__ &&
                     erroredReplay(
                       request$jscomp$0,
                       request.blockedBoundary,
-                      x === AbortSigil ? request$jscomp$0.fatalError : x,
+                      1 === request$jscomp$0.status
+                        ? request$jscomp$0.fatalError
+                        : x,
                       errorInfo,
                       request.replay.nodes,
                       request.replay.slots
@@ -6521,7 +6522,7 @@ __DEV__ &&
                   var x$jscomp$0 =
                     thrownValue === SuspenseException
                       ? getSuspendedThenable()
-                      : thrownValue === AbortSigil
+                      : 1 === request.status
                         ? request.fatalError
                         : thrownValue;
                   if (
@@ -8739,7 +8740,6 @@ __DEV__ &&
       FLUSHED = 2,
       POSTPONED = 5,
       CLOSED = 3,
-      AbortSigil = {},
       currentRequest = null,
       didWarnAboutBadClass = {},
       didWarnAboutContextTypes = {},
@@ -8765,5 +8765,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-7e8a06cf-20240815";
+    exports.version = "19.0.0-www-modern-7954db93-20240816";
   })();
