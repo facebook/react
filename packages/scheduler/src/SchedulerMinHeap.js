@@ -59,7 +59,7 @@ function siftDown<T: Node>(heap: Heap<T>, node: T, i: number): void {
   const length = heap.length;
   const halfLength = length >>> 1;
   while (index < halfLength) {
-    const leftIndex = (index + 1) * 2 - 1;
+    const leftIndex = index * 2 + 1;
     const left = heap[leftIndex];
     const rightIndex = leftIndex + 1;
     const right = heap[rightIndex];
