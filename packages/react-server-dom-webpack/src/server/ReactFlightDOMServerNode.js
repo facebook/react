@@ -20,15 +20,13 @@ import type {Thenable} from 'shared/ReactTypes';
 
 import {Readable} from 'stream';
 
-import {enableHalt} from 'shared/ReactFeatureFlags';
-
 import {
   createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
   stopFlowing,
   abort,
-  halt,
 } from 'react-server/src/ReactFlightServer';
 
 import {
@@ -177,35 +175,27 @@ function prerenderToNodeStream(
       resolve({prelude: readable});
     }
 
-    const request = createRequest(
+    const request = createPrerenderRequest(
       model,
       webpackMap,
+      onAllReady,
+      onFatalError,
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.onPostpone : undefined,
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
-      onAllReady,
-      onFatalError,
     );
     if (options && options.signal) {
       const signal = options.signal;
       if (signal.aborted) {
         const reason = (signal: any).reason;
-        if (enableHalt) {
-          halt(request, reason);
-        } else {
-          abort(request, reason);
-        }
+        abort(request, reason);
       } else {
         const listener = () => {
           const reason = (signal: any).reason;
-          if (enableHalt) {
-            halt(request, reason);
-          } else {
-            abort(request, reason);
-          }
+          abort(request, reason);
           signal.removeEventListener('abort', listener);
         };
         signal.addEventListener('abort', listener);
