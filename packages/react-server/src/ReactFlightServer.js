@@ -615,7 +615,7 @@ function serializeThenable(
         request.abortableTasks.delete(newTask);
         newTask.status = ABORTED;
         if (enableHalt && request.fatalError === haltSymbol) {
-          emitModelChunk(request, newTask.id, reusableInfinitePromiseModel);
+          emitBlockedChunk(request, newTask.id);
         } else {
           const errorId: number = (request.fatalError: any);
           const model = stringify(serializeByValueID(errorId));
@@ -1818,7 +1818,6 @@ function serializeLazyID(id: number): string {
 function serializeInfinitePromise(): string {
   return '$@';
 }
-const reusableInfinitePromiseModel = stringify(serializeInfinitePromise());
 
 function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
@@ -2176,9 +2175,6 @@ function renderModel(
       if (typeof x.then === 'function') {
         if (request.status === ABORTING) {
           task.status = ABORTED;
-          if (enableHalt && request.fatalError === haltSymbol) {
-            return serializeInfinitePromise();
-          }
           const errorId: number = (request.fatalError: any);
           if (wasReactNode) {
             return serializeLazyID(errorId);
@@ -2232,9 +2228,6 @@ function renderModel(
 
     if (request.status === ABORTING) {
       task.status = ABORTED;
-      if (enableHalt && request.fatalError === haltSymbol) {
-        return serializeInfinitePromise();
-      }
       const errorId: number = (request.fatalError: any);
       if (wasReactNode) {
         return serializeLazyID(errorId);
@@ -2972,6 +2965,12 @@ function emitPostponeChunk(
     // No reason included in prod.
     row = serializeRowHeader('P', id) + '\n';
   }
+  const processedChunk = stringToChunk(row);
+  request.completedErrorChunks.push(processedChunk);
+}
+
+function emitBlockedChunk(request: Request, id: number): void {
+  const row = serializeRowHeader('#', id) + '\n';
   const processedChunk = stringToChunk(row);
   request.completedErrorChunks.push(processedChunk);
 }
@@ -3725,7 +3724,7 @@ function retryTask(request: Request, task: Task): void {
           request.abortableTasks.delete(task);
           task.status = ABORTED;
           if (enableHalt && request.fatalError === haltSymbol) {
-            emitModelChunk(request, task.id, reusableInfinitePromiseModel);
+            emitBlockedChunk(request, task.id);
           } else {
             const errorId: number = (request.fatalError: any);
             const model = stringify(serializeByValueID(errorId));
@@ -3753,7 +3752,7 @@ function retryTask(request: Request, task: Task): void {
       request.abortableTasks.delete(task);
       task.status = ABORTED;
       if (enableHalt && request.fatalError === haltSymbol) {
-        emitModelChunk(request, task.id, reusableInfinitePromiseModel);
+        emitBlockedChunk(request, task.id);
       } else {
         const errorId: number = (request.fatalError: any);
         const model = stringify(serializeByValueID(errorId));
@@ -3798,6 +3797,7 @@ function performWork(request: Request): void {
   currentRequest = request;
   prepareToUseHooksForRequest(request);
 
+  const hadAbortableTasks = request.abortableTasks.size > 0;
   try {
     const pingedTasks = request.pingedTasks;
     request.pingedTasks = [];
@@ -3808,10 +3808,11 @@ function performWork(request: Request): void {
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
     }
-    if (request.abortableTasks.size === 0) {
-      // we're done rendering
-      const onAllReady = request.onAllReady;
-      onAllReady();
+    if (hadAbortableTasks && request.abortableTasks.size === 0) {
+      // We can ping after completing but if this happens there already
+      // wouldn't be any abortable tasks. So we only call allReady after
+      // the work which actually completed the last pending task
+      allReady(request);
     }
   } catch (error) {
     logRecoverableError(request, error, null);
@@ -3834,15 +3835,6 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   const ref = serializeByValueID(errorId);
   const processedChunk = encodeReferenceChunk(request, task.id, ref);
   request.completedErrorChunks.push(processedChunk);
-}
-
-function haltTask(task: Task, request: Request): void {
-  if (task.status === RENDERING) {
-    // This task will be aborted by the render
-    return;
-  }
-  task.status = ABORTED;
-  emitModelChunk(request, task.id, reusableInfinitePromiseModel);
 }
 
 function flushCompletedChunks(
@@ -4023,6 +4015,7 @@ export function abort(request: Request, reason: mixed): void {
       }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
+      allReady(request);
     }
     const abortListeners = request.abortListeners;
     if (abortListeners.size > 0) {
@@ -4078,8 +4071,11 @@ export function halt(request: Request, reason: mixed): void {
     // to that row from every row that's still remaining.
     if (abortableTasks.size > 0) {
       request.pendingChunks++;
-      abortableTasks.forEach(task => haltTask(task, request));
+      const errorId = request.nextChunkId++;
+      emitBlockedChunk(request, errorId);
+      abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
+      allReady(request);
     }
     const abortListeners = request.abortListeners;
     if (abortListeners.size > 0) {
@@ -4093,4 +4089,9 @@ export function halt(request: Request, reason: mixed): void {
     logRecoverableError(request, error, null);
     fatalError(request, error);
   }
+}
+
+function allReady(request: Request) {
+  const onAllReady = request.onAllReady;
+  onAllReady();
 }
