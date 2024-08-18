@@ -90,3 +90,10 @@ export function getServerReferenceBoundArguments<T>(
       'Use a fixed URL for any forms instead.',
   );
 }
+
+export function getServerReferenceLocation<T>(
+  config: ClientManifest,
+  serverReference: ServerReference<T>,
+): void {
+  return undefined;
+}

@@ -13,6 +13,7 @@ export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
   $$id: string,
   $$bound: null | Array<ReactClientValue>,
+  $$location?: Error,
 };
 
 // eslint-disable-next-line no-unused-vars
@@ -89,15 +90,32 @@ export function registerServerReference<T: Function>(
   id: string,
   exportName: null | string,
 ): ServerReference<T> {
-  return Object.defineProperties((reference: any), {
-    $$typeof: {value: SERVER_REFERENCE_TAG},
-    $$id: {
-      value: exportName === null ? id : id + '#' + exportName,
-      configurable: true,
-    },
-    $$bound: {value: null, configurable: true},
-    bind: {value: bind, configurable: true},
-  });
+  const $$typeof = {value: SERVER_REFERENCE_TAG};
+  const $$id = {
+    value: exportName === null ? id : id + '#' + exportName,
+    configurable: true,
+  };
+  const $$bound = {value: null, configurable: true};
+  return Object.defineProperties(
+    (reference: any),
+    __DEV__
+      ? {
+          $$typeof,
+          $$id,
+          $$bound,
+          $$location: {
+            value: Error('react-stack-top-frame'),
+            configurable: true,
+          },
+          bind: {value: bind, configurable: true},
+        }
+      : {
+          $$typeof,
+          $$id,
+          $$bound,
+          bind: {value: bind, configurable: true},
+        },
+  );
 }
 
 const PROMISE_PROTOTYPE = Promise.prototype;
