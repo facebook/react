@@ -3,18 +3,28 @@
  * React.
  */
 
-import {reactPaths} from './react-loader';
+import { reactPaths } from './react-loader';
 
 const React = window.React;
-const ReactDOM = window.ReactDOM;
 
-export function findDOMNode(target) {
-  const {needsReactDOM} = reactPaths();
+/**
+ * Retrieves the DOM node from a React ref.
+ * This approach is more aligned with modern React practices.
+ * Falls back to `findDOMNode` if necessary, but prefers refs.
+ *
+ * @param {Object} ref - The React ref to get the DOM node from.
+ * @returns {HTMLElement|null} - The DOM node or null if not found.
+ */
+export function getDOMNode(ref) {
+  const { needsReactDOM } = reactPaths();
+
+  if (ref && ref.current) {
+    return ref.current;
+  }
 
   if (needsReactDOM) {
-    return ReactDOM.findDOMNode(target);
-  } else {
-    // eslint-disable-next-line
-    return React.findDOMNode(target);
+    return ReactDOM.findDOMNode(ref);
   }
+
+  return React.findDOMNode(ref);
 }
