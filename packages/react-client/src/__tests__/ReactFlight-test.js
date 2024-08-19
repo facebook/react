@@ -3026,7 +3026,6 @@ describe('ReactFlight', () => {
 
     const promise = mockConsoleLog.mock.calls[0][1].promise;
     expect(promise).toBeInstanceOf(Promise);
-    expect(promise.status).toBe('blocked');
 
     expect(ownerStacks).toEqual(['\n    in App (at **)']);
   });

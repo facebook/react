@@ -1817,6 +1817,10 @@ function serializeLazyID(id: number): string {
   return '$L' + id.toString(16);
 }
 
+function serializeInfinitePromise(): string {
+  return '$@';
+}
+
 function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
 }
@@ -3269,10 +3273,7 @@ function renderConsoleValue(
       }
       // If it hasn't already resolved (and been instrumented) we just encode an infinite
       // promise that will never resolve.
-      request.pendingChunks++;
-      const blockedId = request.nextChunkId++;
-      emitBlockedChunk(request, blockedId);
-      return serializePromiseID(blockedId);
+      return serializeInfinitePromise();
     }
 
     if (existingReference !== undefined) {
