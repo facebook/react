@@ -2952,8 +2952,14 @@ describe('ReactFlight', () => {
     function foo() {
       return 'hello';
     }
+
     function ServerComponent() {
-      console.log('hi', {prop: 123, fn: foo, map: new Map([['foo', foo]])});
+      console.log('hi', {
+        prop: 123,
+        fn: foo,
+        map: new Map([['foo', foo]]),
+        promise: new Promise(() => {}),
+      });
       throw new Error('err');
     }
 
@@ -3017,6 +3023,10 @@ describe('ReactFlight', () => {
     expect(typeof loggedFn2).toBe('function');
     expect(loggedFn2).not.toBe(foo);
     expect(loggedFn2.toString()).toBe(foo.toString());
+
+    const promise = mockConsoleLog.mock.calls[0][1].promise;
+    expect(promise).toBeInstanceOf(Promise);
+    expect(promise.status).toBe('blocked');
 
     expect(ownerStacks).toEqual(['\n    in App (at **)']);
   });

@@ -46,7 +46,6 @@ import {
   enableRefAsProp,
   enableFlightReadableStream,
   enableOwnerStacks,
-  enableHalt,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1194,10 +1193,6 @@ function parseModelString(
       }
       case '@': {
         // Promise
-        if (value.length === 2) {
-          // Infinite promise that never resolves.
-          return new Promise(() => {});
-        }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         return chunk;
@@ -2638,10 +2633,8 @@ function processFullStringRow(
     }
     // Fallthrough
     case 35 /* "#" */: {
-      if (enableHalt) {
-        resolveBlocked(response, id);
-        return;
-      }
+      resolveBlocked(response, id);
+      return;
     }
     // Fallthrough
     default: /* """ "{" "[" "t" "f" "n" "0" - "9" */ {
