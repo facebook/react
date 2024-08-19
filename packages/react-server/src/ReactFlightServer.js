@@ -16,6 +16,7 @@ import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences
 import {
   enableBinaryFlight,
   enablePostpone,
+  enableHalt,
   enableTaint,
   enableRefAsProp,
   enableServerComponentLogs,
@@ -63,6 +64,7 @@ import type {
   ReactComponentInfo,
   ReactAsyncInfo,
   ReactStackTrace,
+  ReactCallSite,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -71,6 +73,7 @@ import {
   resolveClientReferenceMetadata,
   getServerReferenceId,
   getServerReferenceBoundArguments,
+  getServerReferenceLocation,
   getClientReferenceKey,
   isClientReference,
   isServerReference,
@@ -611,11 +614,15 @@ function serializeThenable(
     default: {
       if (request.status === ABORTING) {
         // We can no longer accept any resolved values
-        newTask.status = ABORTED;
-        const errorId: number = (request.fatalError: any);
-        const model = stringify(serializeByValueID(errorId));
-        emitModelChunk(request, newTask.id, model);
         request.abortableTasks.delete(newTask);
+        newTask.status = ABORTED;
+        if (enableHalt && request.fatalError === haltSymbol) {
+          emitModelChunk(request, newTask.id, reusableInfinitePromiseModel);
+        } else {
+          const errorId: number = (request.fatalError: any);
+          const model = stringify(serializeByValueID(errorId));
+          emitModelChunk(request, newTask.id, model);
+        }
         return newTask.id;
       }
       if (typeof thenable.status === 'string') {
@@ -748,23 +755,32 @@ function serializeReadableStream(
     }
     aborted = true;
     request.abortListeners.delete(error);
-    if (
+
+    let cancelWith: mixed;
+    if (enableHalt && request.fatalError === haltSymbol) {
+      cancelWith = reason;
+    } else if (
       enablePostpone &&
       typeof reason === 'object' &&
       reason !== null &&
       (reason: any).$$typeof === REACT_POSTPONE_TYPE
     ) {
+      cancelWith = reason;
       const postponeInstance: Postpone = (reason: any);
       logPostpone(request, postponeInstance.message, streamTask);
       emitPostponeChunk(request, streamTask.id, postponeInstance);
+      enqueueFlush(request);
     } else {
+      cancelWith = reason;
       const digest = logRecoverableError(request, reason, streamTask);
       emitErrorChunk(request, streamTask.id, digest, reason);
+      enqueueFlush(request);
     }
-    enqueueFlush(request);
+
     // $FlowFixMe should be able to pass mixed
-    reader.cancel(reason).then(error, error);
+    reader.cancel(cancelWith).then(error, error);
   }
+
   request.abortListeners.add(error);
   reader.read().then(progress, error);
   return serializeByValueID(streamTask.id);
@@ -866,24 +882,30 @@ function serializeAsyncIterable(
     }
     aborted = true;
     request.abortListeners.delete(error);
-    if (
+    let throwWith: mixed;
+    if (enableHalt && request.fatalError === haltSymbol) {
+      throwWith = reason;
+    } else if (
       enablePostpone &&
       typeof reason === 'object' &&
       reason !== null &&
       (reason: any).$$typeof === REACT_POSTPONE_TYPE
     ) {
+      throwWith = reason;
       const postponeInstance: Postpone = (reason: any);
       logPostpone(request, postponeInstance.message, streamTask);
       emitPostponeChunk(request, streamTask.id, postponeInstance);
+      enqueueFlush(request);
     } else {
+      throwWith = reason;
       const digest = logRecoverableError(request, reason, streamTask);
       emitErrorChunk(request, streamTask.id, digest, reason);
+      enqueueFlush(request);
     }
-    enqueueFlush(request);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
       // $FlowFixMe should be able to pass mixed
-      iterator.throw(reason).then(error, error);
+      iterator.throw(throwWith).then(error, error);
     }
   }
   request.abortListeners.add(error);
@@ -1798,6 +1820,7 @@ function serializeLazyID(id: number): string {
 function serializeInfinitePromise(): string {
   return '$@';
 }
+const reusableInfinitePromiseModel = stringify(serializeInfinitePromise());
 
 function serializePromiseID(id: number): string {
   return '$@' + id.toString(16);
@@ -1934,17 +1957,47 @@ function serializeServerReference(
     return serializeServerReferenceID(existingId);
   }
 
-  const bound: null | Array<any> = getServerReferenceBoundArguments(
+  const boundArgs: null | Array<any> = getServerReferenceBoundArguments(
     request.bundlerConfig,
     serverReference,
   );
+  const bound = boundArgs === null ? null : Promise.resolve(boundArgs);
+  const id = getServerReferenceId(request.bundlerConfig, serverReference);
+
+  let location: null | ReactCallSite = null;
+  if (__DEV__) {
+    const error = getServerReferenceLocation(
+      request.bundlerConfig,
+      serverReference,
+    );
+    if (error) {
+      const frames = parseStackTrace(error, 1);
+      if (frames.length > 0) {
+        location = frames[0];
+      }
+    }
+  }
+
   const serverReferenceMetadata: {
     id: ServerReferenceId,
     bound: null | Promise<Array<any>>,
-  } = {
-    id: getServerReferenceId(request.bundlerConfig, serverReference),
-    bound: bound ? Promise.resolve(bound) : null,
-  };
+    name?: string, // DEV-only
+    env?: string, // DEV-only
+    location?: ReactCallSite, // DEV-only
+  } =
+    __DEV__ && location !== null
+      ? {
+          id,
+          bound,
+          name:
+            typeof serverReference === 'function' ? serverReference.name : '',
+          env: (0, request.environmentName)(),
+          location,
+        }
+      : {
+          id,
+          bound,
+        };
   const metadataId = outlineModel(request, serverReferenceMetadata);
   writtenServerReferences.set(serverReference, metadataId);
   return serializeServerReferenceID(metadataId);
@@ -2066,12 +2119,18 @@ function serializeBlob(request: Request, blob: Blob): string {
     }
     aborted = true;
     request.abortListeners.delete(error);
-    const digest = logRecoverableError(request, reason, newTask);
-    emitErrorChunk(request, newTask.id, digest, reason);
-    request.abortableTasks.delete(newTask);
-    enqueueFlush(request);
+    let cancelWith: mixed;
+    if (enableHalt && request.fatalError === haltSymbol) {
+      cancelWith = reason;
+    } else {
+      cancelWith = reason;
+      const digest = logRecoverableError(request, reason, newTask);
+      emitErrorChunk(request, newTask.id, digest, reason);
+      request.abortableTasks.delete(newTask);
+      enqueueFlush(request);
+    }
     // $FlowFixMe should be able to pass mixed
-    reader.cancel(reason).then(error, error);
+    reader.cancel(cancelWith).then(error, error);
   }
 
   request.abortListeners.add(error);
@@ -2149,6 +2208,9 @@ function renderModel(
       if (typeof x.then === 'function') {
         if (request.status === ABORTING) {
           task.status = ABORTED;
+          if (enableHalt && request.fatalError === haltSymbol) {
+            return serializeInfinitePromise();
+          }
           const errorId: number = (request.fatalError: any);
           if (wasReactNode) {
             return serializeLazyID(errorId);
@@ -2202,6 +2264,9 @@ function renderModel(
 
     if (request.status === ABORTING) {
       task.status = ABORTED;
+      if (enableHalt && request.fatalError === haltSymbol) {
+        return serializeInfinitePromise();
+      }
       const errorId: number = (request.fatalError: any);
       if (wasReactNode) {
         return serializeLazyID(errorId);
@@ -3691,9 +3756,13 @@ function retryTask(request: Request, task: Task): void {
         if (request.status === ABORTING) {
           request.abortableTasks.delete(task);
           task.status = ABORTED;
-          const errorId: number = (request.fatalError: any);
-          const model = stringify(serializeByValueID(errorId));
-          emitModelChunk(request, task.id, model);
+          if (enableHalt && request.fatalError === haltSymbol) {
+            emitModelChunk(request, task.id, reusableInfinitePromiseModel);
+          } else {
+            const errorId: number = (request.fatalError: any);
+            const model = stringify(serializeByValueID(errorId));
+            emitModelChunk(request, task.id, model);
+          }
           return;
         }
         // Something suspended again, let's pick it back up later.
@@ -3715,9 +3784,13 @@ function retryTask(request: Request, task: Task): void {
     if (request.status === ABORTING) {
       request.abortableTasks.delete(task);
       task.status = ABORTED;
-      const errorId: number = (request.fatalError: any);
-      const model = stringify(serializeByValueID(errorId));
-      emitModelChunk(request, task.id, model);
+      if (enableHalt && request.fatalError === haltSymbol) {
+        emitModelChunk(request, task.id, reusableInfinitePromiseModel);
+      } else {
+        const errorId: number = (request.fatalError: any);
+        const model = stringify(serializeByValueID(errorId));
+        emitModelChunk(request, task.id, model);
+      }
       return;
     }
 
@@ -3793,6 +3866,15 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   const ref = serializeByValueID(errorId);
   const processedChunk = encodeReferenceChunk(request, task.id, ref);
   request.completedErrorChunks.push(processedChunk);
+}
+
+function haltTask(task: Task, request: Request): void {
+  if (task.status === RENDERING) {
+    // This task will be aborted by the render
+    return;
+  }
+  task.status = ABORTED;
+  emitModelChunk(request, task.id, reusableInfinitePromiseModel);
 }
 
 function flushCompletedChunks(
@@ -4002,6 +4084,38 @@ export function abort(request: Request, reason: mixed): void {
               : reason;
       }
       abortListeners.forEach(callback => callback(error));
+      abortListeners.clear();
+    }
+    if (request.destination !== null) {
+      flushCompletedChunks(request, request.destination);
+    }
+  } catch (error) {
+    logRecoverableError(request, error, null);
+    fatalError(request, error);
+  }
+}
+
+const haltSymbol = Symbol('halt');
+
+// This is called to stop rendering without erroring. All unfinished work is represented Promises
+// that never resolve.
+export function halt(request: Request, reason: mixed): void {
+  try {
+    if (request.status === OPEN) {
+      request.status = ABORTING;
+    }
+    request.fatalError = haltSymbol;
+    const abortableTasks = request.abortableTasks;
+    // We have tasks to abort. We'll emit one error row and then emit a reference
+    // to that row from every row that's still remaining.
+    if (abortableTasks.size > 0) {
+      request.pendingChunks++;
+      abortableTasks.forEach(task => haltTask(task, request));
+      abortableTasks.clear();
+    }
+    const abortListeners = request.abortListeners;
+    if (abortListeners.size > 0) {
+      abortListeners.forEach(callback => callback(reason));
       abortListeners.clear();
     }
     if (request.destination !== null) {

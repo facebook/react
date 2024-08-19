@@ -13,6 +13,7 @@ import type {
   ReactComponentInfo,
   ReactAsyncInfo,
   ReactStackTrace,
+  ReactCallSite,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -59,7 +60,7 @@ import {
   bindToConsole,
 } from './ReactFlightClientConfig';
 
-import {registerServerReference} from './ReactFlightReplyClient';
+import {createBoundServerReference} from './ReactFlightReplyClient';
 
 import {readTemporaryReference} from './ReactFlightTemporaryReferences';
 
@@ -1001,30 +1002,20 @@ function waitForReference<T>(
 
 function createServerReferenceProxy<A: Iterable<any>, T>(
   response: Response,
-  metaData: {id: any, bound: null | Thenable<Array<any>>},
+  metaData: {
+    id: any,
+    bound: null | Thenable<Array<any>>,
+    name?: string, // DEV-only
+    env?: string, // DEV-only
+    location?: ReactCallSite, // DEV-only
+  },
 ): (...A) => Promise<T> {
-  const callServer = response._callServer;
-  const proxy = function (): Promise<T> {
-    // $FlowFixMe[method-unbinding]
-    const args = Array.prototype.slice.call(arguments);
-    const p = metaData.bound;
-    if (!p) {
-      return callServer(metaData.id, args);
-    }
-    if (p.status === INITIALIZED) {
-      const bound = p.value;
-      return callServer(metaData.id, bound.concat(args));
-    }
-    // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
-    // TODO: Remove the wrapper once that's fixed.
-    return ((Promise.resolve(p): any): Promise<Array<any>>).then(
-      function (bound) {
-        return callServer(metaData.id, bound.concat(args));
-      },
-    );
-  };
-  registerServerReference(proxy, metaData, response._encodeFormAction);
-  return proxy;
+  return createBoundServerReference(
+    metaData,
+    response._callServer,
+    response._encodeFormAction,
+    __DEV__ ? response._debugFindSourceMapURL : undefined,
+  );
 }
 
 function getOutlinedModel<T>(

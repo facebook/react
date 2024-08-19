@@ -8,7 +8,7 @@
  */
 
 import type {ReactPortal, ReactNodeList} from 'shared/ReactTypes';
-import type {ElementRef, Element, ElementType} from 'react';
+import type {ElementRef, ElementType, MixedElement} from 'react';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {RenderRootOptions} from './ReactNativeTypes';
 
@@ -117,7 +117,7 @@ function nativeOnCaughtError(
 }
 
 function render(
-  element: Element<ElementType>,
+  element: MixedElement,
   containerTag: number,
   callback: ?() => void,
   options: ?RenderRootOptions,

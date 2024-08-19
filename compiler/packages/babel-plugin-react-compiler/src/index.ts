@@ -18,6 +18,7 @@ export {
   compileProgram,
   parsePluginOptions,
   run,
+  OPT_OUT_DIRECTIVES,
   type CompilerPipelineValue,
   type PluginOptions,
 } from './Entrypoint';

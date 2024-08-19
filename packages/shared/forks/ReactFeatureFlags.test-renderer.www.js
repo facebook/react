@@ -25,6 +25,7 @@ export const enableFlightReadableStream = true;
 export const enableAsyncIterableChildren = false;
 export const enableTaint = true;
 export const enablePostpone = false;
+export const enableHalt = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
