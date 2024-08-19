@@ -1,0 +1,23 @@
+name: compiler_playground_runson
+
+on: push
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+defaults:
+  run:
+    working-directory: compiler
+
+jobs:
+  test_playground_cloud:
+    runs-on: [runs-on,runner=2cpu-linux-x64,"run-id=${{ github.run_id }}"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'compiler/yarn.lock'
+          hashfile-path: 'compiler/**/yarn.lock'
+      - run: npx playwright install --with-deps chromium
+      - run: yarn workspace playground test

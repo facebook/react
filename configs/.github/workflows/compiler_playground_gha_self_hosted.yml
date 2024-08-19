@@ -1,0 +1,23 @@
+name: compiler_playground_gha_self_hosted
+
+on: push
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+defaults:
+  run:
+    working-directory: compiler
+
+jobs:
+  test_playground_cloud:
+    runs-on: [arc-runner-set]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version-file: '.nvmrc'
+          cache-dependency-path: 'compiler/yarn.lock'
+          hashfile-path: 'compiler/**/yarn.lock'
+      - run: npx playwright install --with-deps chromium
+      - run: yarn workspace playground test

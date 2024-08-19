@@ -1,0 +1,51 @@
+name: shared_lint_runson
+
+on: push
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  prettier_cloud:
+    runs-on: [runs-on,runner=2cpu-linux-x64,"run-id=${{ github.run_id }}"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: '**/yarn.lock'
+      - run: yarn prettier-check
+
+  eslint_cloud:
+    runs-on: [runs-on,runner=2cpu-linux-x64,"run-id=${{ github.run_id }}"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: '**/yarn.lock'
+      - run: node ./scripts/tasks/eslint
+
+  check_license_cloud:
+    runs-on: [runs-on,runner=2cpu-linux-x64,"run-id=${{ github.run_id }}"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: '**/yarn.lock'
+      - run: ./scripts/ci/check_license.sh
+
+  test_print_warnings_cloud:
+    runs-on: [runs-on,runner=2cpu-linux-x64,"run-id=${{ github.run_id }}"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: '**/yarn.lock'
+      - run: ./scripts/ci/test_print_warnings.sh
