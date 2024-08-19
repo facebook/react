@@ -1393,8 +1393,20 @@ describe('ReactFlightDOMBrowser', () => {
           const body = await ReactServerDOMClient.encodeReply(args);
           return callServer(ref, body);
         },
+        undefined,
+        undefined,
+        'upper',
       ),
     };
+
+    expect(ServerModuleBImportedOnClient.upper.name).toBe(
+      __DEV__ ? 'upper' : 'action',
+    );
+    if (__DEV__) {
+      expect(ServerModuleBImportedOnClient.upper.toString()).toBe(
+        '(...args) => server(...args)',
+      );
+    }
 
     function Client({action}) {
       // Client side pass a Server Reference into an action.
