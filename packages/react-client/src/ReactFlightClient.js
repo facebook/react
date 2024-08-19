@@ -46,6 +46,7 @@ import {
   enableRefAsProp,
   enableFlightReadableStream,
   enableOwnerStacks,
+  enableHalt,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1986,6 +1987,20 @@ function resolvePostponeDev(
   }
 }
 
+function resolveBlocked(response: Response, id: number): void {
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  if (!chunk) {
+    chunks.set(id, createBlockedChunk(response));
+  } else if (chunk.status === PENDING) {
+    // This chunk as contructed via other means but it is actually a blocked chunk
+    // so we update it here. We check the status because it might have been aborted
+    // before we attempted to resolve it.
+    const blockedChunk: BlockedChunk<mixed> = (chunk: any);
+    blockedChunk.status = BLOCKED;
+  }
+}
+
 function resolveHint<Code: HintCode>(
   response: Response,
   code: Code,
@@ -2612,6 +2627,13 @@ function processFullStringRow(
       }
     }
     // Fallthrough
+    case 35 /* "#" */: {
+      if (enableHalt) {
+        resolveBlocked(response, id);
+        return;
+      }
+    }
+    // Fallthrough
     default: /* """ "{" "[" "t" "f" "n" "0" - "9" */ {
       // We assume anything else is JSON.
       resolveModel(response, id, row);
@@ -2668,6 +2690,7 @@ export function processBinaryChunk(
           i++;
         } else if (
           (resolvedRowTag > 64 && resolvedRowTag < 91) /* "A"-"Z" */ ||
+          resolvedRowTag === 35 /* "#" */ ||
           resolvedRowTag === 114 /* "r" */ ||
           resolvedRowTag === 120 /* "x" */
         ) {

@@ -2856,4 +2856,105 @@ describe('ReactFlightDOM', () => {
     jest.advanceTimersByTime('100');
     expect(await race).toBe('timeout');
   });
+
+  // @gate enableHalt
+  it('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
+    const controller = new AbortController();
+    function ComponentThatAborts() {
+      controller.abort();
+      return null;
+    }
+
+    async function Greeting() {
+      await 1;
+      return 'hello world';
+    }
+
+    async function Farewell() {
+      return 'goodbye world';
+    }
+
+    async function Wrapper() {
+      return (
+        <Suspense fallback="loading too...">
+          <ComponentThatAborts />
+        </Suspense>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <Greeting />
+          </Suspense>
+          <Wrapper />
+          <Suspense fallback="loading three...">
+            <Farewell />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    const {pendingResult} = await serverAct(() => {
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          {},
+          {
+            onError(x) {
+              errors.push(x);
+            },
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    controller.abort();
+
+    const {prelude} = await pendingResult;
+    expect(errors).toEqual([]);
+
+    const response = ReactServerDOMClient.createFromReadableStream(
+      Readable.toWeb(prelude),
+    );
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+    let abortFizz;
+    await serverAct(async () => {
+      const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onError(error, errorInfo) {
+            errors.push(error);
+          },
+        },
+      );
+      pipe(fizzWritable);
+      abortFizz = abort;
+    });
+
+    await serverAct(() => {
+      abortFizz('boom');
+    });
+
+    // one error per boundary
+    expect(errors).toEqual(['boom', 'boom', 'boom']);
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        {'loading...'}
+        {'loading too...'}
+        {'loading three...'}
+      </div>,
+    );
+  });
 });
