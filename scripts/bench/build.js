@@ -120,3 +120,8 @@ module.exports = {
   buildBenchmarkBundlesFromGitRepo,
   getMergeBaseFromLocalGitRepo,
 };
+
+// NOTE: Asynchronous function is used for the non-blocking
+//       execution of code. This allows the program to 
+//       flow, even if one part of the program blocks the 
+//       code until a particular task is completed.
