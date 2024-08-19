@@ -1,4 +1,4 @@
-name: compiler_playground_cloud_runs_on
+name: compiler_playground_runson
 
 on: push
 

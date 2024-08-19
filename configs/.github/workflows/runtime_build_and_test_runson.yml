@@ -1,4 +1,4 @@
-name: runtime_build_and_test_cloud_runs_on
+name: runtime_build_and_test_runson
 
 on: push
 

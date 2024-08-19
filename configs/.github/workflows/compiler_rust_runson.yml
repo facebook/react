@@ -1,4 +1,4 @@
-name: compiler_rust_cloud_runs_on
+name: compiler_rust_runson
 
 on: push
 
