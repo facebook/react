@@ -190,7 +190,12 @@ type SomeChunk<T> =
   | ErroredChunk<T>;
 
 // $FlowFixMe[missing-this-annot]
-function Chunk(status: any, value: any, reason: any, response: Response) {
+function ReactPromise(
+  status: any,
+  value: any,
+  reason: any,
+  response: Response,
+) {
   this.status = status;
   this.value = value;
   this.reason = reason;
@@ -200,9 +205,9 @@ function Chunk(status: any, value: any, reason: any, response: Response) {
   }
 }
 // We subclass Promise.prototype so that we get other methods like .catch
-Chunk.prototype = (Object.create(Promise.prototype): any);
+ReactPromise.prototype = (Object.create(Promise.prototype): any);
 // TODO: This doesn't return a new Promise chain unlike the real .then
-Chunk.prototype.then = function <T>(
+ReactPromise.prototype.then = function <T>(
   this: SomeChunk<T>,
   resolve: (value: T) => mixed,
   reject?: (reason: mixed) => mixed,
@@ -303,12 +308,12 @@ export function getRoot<T>(response: Response): Thenable<T> {
 
 function createPendingChunk<T>(response: Response): PendingChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(PENDING, null, null, response);
+  return new ReactPromise(PENDING, null, null, response);
 }
 
 function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(BLOCKED, null, null, response);
+  return new ReactPromise(BLOCKED, null, null, response);
 }
 
 function createErrorChunk<T>(
@@ -316,7 +321,7 @@ function createErrorChunk<T>(
   error: Error | Postpone,
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(ERRORED, null, error, response);
+  return new ReactPromise(ERRORED, null, error, response);
 }
 
 function wakeChunk<T>(listeners: Array<(T) => mixed>, value: T): void {
@@ -390,7 +395,7 @@ function createResolvedModelChunk<T>(
   value: UninitializedModel,
 ): ResolvedModelChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, value, null, response);
+  return new ReactPromise(RESOLVED_MODEL, value, null, response);
 }
 
 function createResolvedModuleChunk<T>(
@@ -398,7 +403,7 @@ function createResolvedModuleChunk<T>(
   value: ClientReference<T>,
 ): ResolvedModuleChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODULE, value, null, response);
+  return new ReactPromise(RESOLVED_MODULE, value, null, response);
 }
 
 function createInitializedTextChunk(
@@ -406,7 +411,7 @@ function createInitializedTextChunk(
   value: string,
 ): InitializedChunk<string> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, null, response);
+  return new ReactPromise(INITIALIZED, value, null, response);
 }
 
 function createInitializedBufferChunk(
@@ -414,7 +419,7 @@ function createInitializedBufferChunk(
   value: $ArrayBufferView | ArrayBuffer,
 ): InitializedChunk<Uint8Array> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, null, response);
+  return new ReactPromise(INITIALIZED, value, null, response);
 }
 
 function createInitializedIteratorResultChunk<T>(
@@ -423,7 +428,12 @@ function createInitializedIteratorResultChunk<T>(
   done: boolean,
 ): InitializedChunk<IteratorResult<T, T>> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, {done: done, value: value}, null, response);
+  return new ReactPromise(
+    INITIALIZED,
+    {done: done, value: value},
+    null,
+    response,
+  );
 }
 
 function createInitializedStreamChunk<
@@ -436,7 +446,7 @@ function createInitializedStreamChunk<
   // We use the reason field to stash the controller since we already have that
   // field. It's a bit of a hack but efficient.
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(INITIALIZED, value, controller, response);
+  return new ReactPromise(INITIALIZED, value, controller, response);
 }
 
 function createResolvedIteratorResultChunk<T>(
@@ -448,7 +458,7 @@ function createResolvedIteratorResultChunk<T>(
   const iteratorResultJSON =
     (done ? '{"done":true,"value":' : '{"done":false,"value":') + value + '}';
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-  return new Chunk(RESOLVED_MODEL, iteratorResultJSON, null, response);
+  return new ReactPromise(RESOLVED_MODEL, iteratorResultJSON, null, response);
 }
 
 function resolveIteratorResultChunk<T>(
@@ -1760,7 +1770,7 @@ function startAsyncIterable<T>(
         if (nextReadIndex === buffer.length) {
           if (closed) {
             // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
-            return new Chunk(
+            return new ReactPromise(
               INITIALIZED,
               {done: true, value: undefined},
               null,
