@@ -448,15 +448,11 @@ function RequestInstance(
   onAllReady: () => void,
   onFatalError: (error: mixed) => void,
 ) {
-  if (
-    ReactSharedInternals.A !== null &&
-    ReactSharedInternals.A !== DefaultAsyncDispatcher
-  ) {
-    throw new Error(
-      'Currently React only supports one RSC renderer at a time.',
-    );
+  const previousAsyncDispatcher = ReactSharedInternals.A;
+  if (previousAsyncDispatcher === null) {
+    ReactSharedInternals.A = DefaultAsyncDispatcher;
   }
-  ReactSharedInternals.A = DefaultAsyncDispatcher;
+
   if (__DEV__) {
     // Unlike Fizz or Fiber, we don't reset this and just keep it on permanently.
     // This lets it act more like the AsyncDispatcher so that we can get the
