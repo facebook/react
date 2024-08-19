@@ -64,6 +64,7 @@ import type {
   ReactComponentInfo,
   ReactAsyncInfo,
   ReactStackTrace,
+  ReactCallSite,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -72,6 +73,7 @@ import {
   resolveClientReferenceMetadata,
   getServerReferenceId,
   getServerReferenceBoundArguments,
+  getServerReferenceLocation,
   getClientReferenceKey,
   isClientReference,
   isServerReference,
@@ -1955,17 +1957,47 @@ function serializeServerReference(
     return serializeServerReferenceID(existingId);
   }
 
-  const bound: null | Array<any> = getServerReferenceBoundArguments(
+  const boundArgs: null | Array<any> = getServerReferenceBoundArguments(
     request.bundlerConfig,
     serverReference,
   );
+  const bound = boundArgs === null ? null : Promise.resolve(boundArgs);
+  const id = getServerReferenceId(request.bundlerConfig, serverReference);
+
+  let location: null | ReactCallSite = null;
+  if (__DEV__) {
+    const error = getServerReferenceLocation(
+      request.bundlerConfig,
+      serverReference,
+    );
+    if (error) {
+      const frames = parseStackTrace(error, 1);
+      if (frames.length > 0) {
+        location = frames[0];
+      }
+    }
+  }
+
   const serverReferenceMetadata: {
     id: ServerReferenceId,
     bound: null | Promise<Array<any>>,
-  } = {
-    id: getServerReferenceId(request.bundlerConfig, serverReference),
-    bound: bound ? Promise.resolve(bound) : null,
-  };
+    name?: string, // DEV-only
+    env?: string, // DEV-only
+    location?: ReactCallSite, // DEV-only
+  } =
+    __DEV__ && location !== null
+      ? {
+          id,
+          bound,
+          name:
+            typeof serverReference === 'function' ? serverReference.name : '',
+          env: (0, request.environmentName)(),
+          location,
+        }
+      : {
+          id,
+          bound,
+        };
   const metadataId = outlineModel(request, serverReferenceMetadata);
   writtenServerReferences.set(serverReference, metadataId);
   return serializeServerReferenceID(metadataId);
