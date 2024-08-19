@@ -1,0 +1,248 @@
+name: runtime_build_and_test_gha_self_hosted
+
+on: push
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  # ----- FLOW -----
+  discover_flow_inline_configs_cloud:
+    runs-on: [arc-runner-set]
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.result }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        id: set-matrix
+        with:
+          script: |
+            const inlinedHostConfigs = require('./scripts/shared/inlinedHostConfigs.js');
+            return inlinedHostConfigs.map(config => config.shortName);
+
+  flow_cloud:
+    name: flow_cloud-${{ matrix.flow_inline_config_shortname }}
+    needs: discover_flow_inline_configs_cloud
+    runs-on: [arc-runner-set]
+    continue-on-error: true
+    strategy:
+      matrix:
+        flow_inline_config_shortname: ${{ fromJSON(needs.discover_flow_inline_configs_cloud.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
+      - run: node ./scripts/tasks/flow-ci ${{ matrix.flow_inline_config_shortname }}
+
+  # ----- FIZZ -----
+  check_generated_fizz_runtime_cloud:
+    name: check_generated_fizz_runtime_cloud
+    runs-on: [arc-runner-set]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
+      - run: |
+          yarn generate-inline-fizz-runtime
+          git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+
+  # ----- FEATURE FLAGS -----
+  flags_cloud:
+    name: flags_cloud
+    runs-on: [arc-runner-set]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
+      - run: yarn flags
+
+  # ----- TESTS -----
+  yarn_test_cloud:
+    name: yarn_test_cloud-${{ matrix.params }}-${{ matrix.shard }}
+    runs-on: [arc-runner-set]
+    strategy:
+      matrix:
+        params:
+          - "-r=stable --env=development"
+          - "-r=stable --env=production"
+          - "-r=experimental --env=development"
+          - "-r=experimental --env=production"
+          - "-r=www-classic --env=development --variant=false"
+          - "-r=www-classic --env=production --variant=false"
+          - "-r=www-classic --env=development --variant=true"
+          - "-r=www-classic --env=production --variant=true"
+          - "-r=www-modern --env=development --variant=false"
+          - "-r=www-modern --env=production --variant=false"
+          - "-r=www-modern --env=development --variant=true"
+          - "-r=www-modern --env=production --variant=true"
+          - "-r=xplat --env=development --variant=false"
+          - "-r=xplat --env=development --variant=true"
+          - "-r=xplat --env=production --variant=false"
+          - "-r=xplat --env=production --variant=true"
+          # TODO: Test more persistent configurations?
+          - "-r=stable --env=development --persistent"
+          - "-r=experimental --env=development --persistent"
+        shard:
+          - 1/5
+          - 2/5
+          - 3/5
+          - 4/5
+          - 5/5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
+      - run: yarn test ${{ matrix.params }} --ci=github --shard=${{ matrix.shard }}
+
+  # ----- BUILD -----
+  build_and_lint_cloud:
+    name: build_and_lint_cloud-${{ matrix.worker_id }}-${{ matrix.release_channel }}
+    runs-on: [arc-runner-set]
+    strategy:
+      matrix:
+        # yml is dumb. update the --total arg to yarn build if you change the number of workers
+        worker_id: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+        release_channel: [stable, experimental]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
+      - run: yarn build --index=${{ matrix.worker_id }} --total=20 --r=${{ matrix.release_channel }} --ci=github
+        env:
+          CI: github
+          RELEASE_CHANNEL: ${{ matrix.release_channel }}
+          NODE_INDEX: ${{ matrix.worker_id }}
+      - name: Lint build
+        run: yarn lint-build
+      - name: Display structure of build
+        run: ls -R build
+      - name: Archive build
+        uses: actions/upload-artifact@v4
+        with:
+          name: _build_${{ matrix.worker_id }}_${{ matrix.release_channel }}
+          path: build
+
+  test_build_cloud:
+    name: test_build_cloud-${{ matrix.test_params }}-${{ matrix.shard }}
+    needs: build_and_lint_cloud
+    strategy:
+      matrix:
+        test_params: [
+          # Intentionally passing these as strings instead of creating a
+          # separate parameter per CLI argument, since it's easier to
+          # control/see which combinations we want to run.
+          -r=stable --env=development,
+          -r=stable --env=production,
+          -r=experimental --env=development,
+          -r=experimental --env=production,
+
+          # Dev Tools
+          --project=devtools -r=experimental,
+
+          # TODO: Update test config to support www build tests
+          # - "-r=www-classic --env=development --variant=false"
+          # - "-r=www-classic --env=production --variant=false"
+          # - "-r=www-classic --env=development --variant=true"
+          # - "-r=www-classic --env=production --variant=true"
+          # - "-r=www-modern --env=development --variant=false"
+          # - "-r=www-modern --env=production --variant=false"
+          # - "-r=www-modern --env=development --variant=true"
+          # - "-r=www-modern --env=production --variant=true"
+
+          # TODO: Update test config to support xplat build tests
+          # - "-r=xplat --env=development --variant=false"
+          # - "-r=xplat --env=development --variant=true"
+          # - "-r=xplat --env=production --variant=false"
+          # - "-r=xplat --env=production --variant=true"
+
+          # TODO: Test more persistent configurations?
+        ]
+        shard:
+          - 1/3
+          - 2/3
+          - 3/3
+    continue-on-error: true
+    runs-on: [arc-runner-set]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - run: yarn test --build ${{ matrix.test_params }} --shard=${{ matrix.shard }} --ci=github
+
+  # ----- FLIGHT -----
+  run_fixtures_flight_tests_cloud:
+    needs: build_and_lint_cloud
+    runs-on: [arc-runner-set]
+    steps:
+      # Fixture copies some built packages from the workroot after install.
+      # That means dependencies of the built packages are not installed.
+      # We need to install dependencies of the workroot to fulfill all dependency constraints
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'yarn.lock'
+          hashfile-path: 'yarn.lock'
+      - name: Restore archived build
+        uses: actions/download-artifact@v4
+        with:
+          pattern: _build_*
+          path: build
+          merge-multiple: true
+      - name: Display structure of build
+        run: ls -R build
+      - name: Install fixture dependencies
+        working-directory: fixtures/flight
+        run: |
+          yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+          if [ $? -ne 0 ]; then
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+          fi
+      - name: Playwright install deps
+        working-directory: fixtures/flight
+        run: |
+          npx playwright install
+          sudo npx playwright install-deps
+      - name: Run tests
+        working-directory: fixtures/flight
+        run: yarn test
+        env:
+          # Otherwise the webserver is a blackbox
+          DEBUG: pw:webserver
+      - name: Archive Flight fixture artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-playwright-report
+          path: fixtures/flight/playwright-report
+      - name: Archive Flight fixture artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flight-test-results
+          path: fixtures/flight/test-results

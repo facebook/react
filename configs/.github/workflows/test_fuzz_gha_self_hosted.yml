@@ -1,0 +1,22 @@
+name: test_fuzz_gha_self_hosted
+on: push
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+jobs:
+  test_fuzz_cloud:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: [arc-runner-set]
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version-file: '.nvmrc'
+          skip-electron-download: "1"
+      - name: Run fuzz tests
+        run: |-
+          FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci=github
+          FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci=github

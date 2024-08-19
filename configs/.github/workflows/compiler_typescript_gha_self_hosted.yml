@@ -1,0 +1,61 @@
+name: compiler_typescript_gha_self_hosted
+
+on: push
+
+env:
+  TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+defaults:
+  run:
+    working-directory: compiler
+
+jobs:
+  discover_yarn_workspaces_cloud:
+    runs-on: [arc-runner-set]
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: echo "matrix=$(find packages -mindepth 1 -maxdepth 1 -type d | sed 's!packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
+
+  # Hardcoded to improve parallelism
+  typescript_lint_cloud:
+    runs-on: [arc-runner-set]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'compiler/yarn.lock'
+          hashfile-path: 'compiler/**/yarn.lock'
+      - run: yarn workspace babel-plugin-react-compiler lint
+
+  # Hardcoded to improve parallelism
+  typescript_jest_cloud:
+    runs-on: [arc-runner-set]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'compiler/yarn.lock'
+          hashfile-path: 'compiler/**/yarn.lock'
+      - run: yarn workspace babel-plugin-react-compiler jest
+
+  typescript_test_cloud:
+    name: typescript_test_cloud-${{ matrix.workspace_name }}
+    needs: discover_yarn_workspaces_cloud
+    runs-on: [arc-runner-set]
+    continue-on-error: true
+    strategy:
+      matrix:
+        workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces_cloud.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup_node_modules
+        with:
+          node-version: '18.20.1'
+          cache-dependency-path: 'compiler/yarn.lock'
+          hashfile-path: 'compiler/**/yarn.lock'
+      - run: yarn workspace ${{ matrix.workspace_name }} test
