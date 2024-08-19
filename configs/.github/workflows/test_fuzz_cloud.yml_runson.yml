@@ -1,4 +1,4 @@
-name: runs_on_test_fuzz_cloud
+name: test_fuzz_cloud_runs_on
 on: push
 
 env:

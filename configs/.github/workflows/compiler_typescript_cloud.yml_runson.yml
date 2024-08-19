@@ -1,4 +1,4 @@
-name: runs_on_compiler_typescript_cloud
+name: compiler_typescript_cloud_runs_on
 
 on: push
 

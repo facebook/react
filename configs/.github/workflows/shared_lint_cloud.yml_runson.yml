@@ -1,4 +1,4 @@
-name: runs_on_shared_lint_cloud
+name: shared_lint_cloud_runs_on
 
 on: push
 
