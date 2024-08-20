@@ -17,7 +17,6 @@ import getActiveElement from './getActiveElement';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
-import type {ToStringValue} from './ToStringValue';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
 
 let didWarnValueDefaultValue = false;
@@ -418,26 +417,35 @@ export function restoreControlledInputState(element: Element, props: Object) {
   }
 }
 
-// In Chrome, assigning defaultValue to certain input types triggers input validation.
-// For number inputs, the display value loses trailing decimal points. For email inputs,
-// Chrome raises "The specified value <x> is not a valid email address".
-//
-// Here we check to see if the defaultValue has actually changed, avoiding these problems
-// when the user is inputting text
-//
-// https://github.com/facebook/react/issues/7253
+// Here we check to see if the defaultValue has actually changed and update it
 export function setDefaultValue(
   node: HTMLInputElement,
   type: ?string,
-  value: ToStringValue,
+  value: mixed,
+  force: ?boolean,
 ) {
-  if (
-    // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
-    type !== 'number' ||
-    getActiveElement(node.ownerDocument) !== node
-  ) {
-    if (node.defaultValue !== toString(value)) {
-      node.defaultValue = toString(value);
+  if (['button', 'file', 'hidden', 'image', 'reset', 'submit'].includes(type))
+    return;
+
+  if (['checkbox', 'radio'].includes(type)) {
+    if (node.defaultChecked !== value) {
+      node.defaultChecked = !!value;
     }
+    return;
+  }
+
+  // In Chrome, assigning defaultValue to certain input types triggers input validation.
+  // For number inputs, the display value loses trailing decimal points. For email inputs,
+  // Chrome raises "The specified value <x> is not a valid email address".
+  // https://github.com/facebook/react/issues/7253
+  if (
+    ['number', 'email'].includes(type) &&
+    getActiveElement(node.ownerDocument) === node &&
+    !force
+  )
+    return;
+
+  if (node.defaultValue !== toString(getToStringValue(value))) {
+    node.defaultValue = toString(getToStringValue(value));
   }
 }
