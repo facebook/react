@@ -98,12 +98,11 @@ function extractEvents(
   const form: HTMLFormElement = (nativeEventTarget: any);
 
   if (!disableInputAttributeSyncing) {
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const element of form.elements) {
-      const input: HTMLInputElement = (element: any);
+    for (let i = 0; i < form.elements.length; i++) {
+      const input: HTMLInputElement = (form.elements.item(i): any);
       if (
         input.nodeName.toLowerCase() === 'input' &&
-        ['number', 'email'].includes(input.type)
+        (input.type === 'number' || input.type === 'email')
       ) {
         setDefaultValue(input, input.type, input.value, true);
       }

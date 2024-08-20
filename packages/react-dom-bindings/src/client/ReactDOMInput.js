@@ -424,19 +424,28 @@ export function setDefaultValue(
   value: mixed,
   force: ?boolean,
 ) {
-  if (['button', 'file', 'hidden', 'image', 'reset', 'submit'].includes(type))
+  if (
+    type === 'button' ||
+    type === 'file' ||
+    type === 'hidden' ||
+    type === 'image' ||
+    type === 'reset' ||
+    type === 'submit'
+  ) {
     return;
+  }
 
   // In Chrome, assigning defaultValue to certain input types triggers input validation.
   // For number inputs, the display value loses trailing decimal points. For email inputs,
   // Chrome raises "The specified value <x> is not a valid email address".
   // https://github.com/facebook/react/issues/7253
   if (
-    ['number', 'email'].includes(type) &&
+    (type === 'number' || type === 'email') &&
     getActiveElement(node.ownerDocument) === node &&
     !force
-  )
+  ) {
     return;
+  }
 
   if (node.defaultValue !== toString(getToStringValue(value))) {
     node.defaultValue = toString(getToStringValue(value));
