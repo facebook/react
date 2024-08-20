@@ -1654,8 +1654,6 @@ describe('ReactDOMForm', () => {
 
     await act(() => {
       numberInputRef.current.focus();
-      console.log(document.querySelector('form'));
-
       // Submit the form without input blur. This will trigger an async action
       document.querySelector('form').requestSubmit();
     });
