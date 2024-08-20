@@ -537,18 +537,6 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry:
-      'react-server-dom-turbopack/src/server/react-flight-dom-server.node.unbundled',
-    name: 'react-server-dom-turbopack-server.node.unbundled',
-    condition: 'react-server',
-    global: 'ReactServerDOMServer',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
-  },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
     entry: 'react-server-dom-turbopack/src/server/react-flight-dom-server.edge',
     name: 'react-server-dom-turbopack-server.edge',
     condition: 'react-server',
@@ -580,49 +568,11 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-turbopack/client.node.unbundled',
-    global: 'ReactServerDOMClient',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util'],
-  },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
     entry: 'react-server-dom-turbopack/client.edge',
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'react-dom'],
-  },
-
-  /******* React Server DOM Turbopack Plugin *******/
-  // There is no plugin the moment because Turbopack
-  // does not expose a plugin interface yet.
-
-  /******* React Server DOM Turbopack Node.js Loader *******/
-  {
-    bundleTypes: [ESM_PROD],
-    moduleType: RENDERER_UTILS,
-    entry: 'react-server-dom-turbopack/node-loader',
-    condition: 'react-server',
-    global: 'ReactServerTurbopackNodeLoader',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['acorn'],
-  },
-
-  /******* React Server DOM Turbopack Node.js CommonJS Loader *******/
-  {
-    bundleTypes: [NODE_ES2015],
-    moduleType: RENDERER_UTILS,
-    entry: 'react-server-dom-turbopack/src/ReactFlightTurbopackNodeRegister',
-    name: 'react-server-dom-turbopack-node-register',
-    condition: 'react-server',
-    global: 'ReactFlightWebpackNodeRegister',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['url', 'module', 'react-server-dom-turbopack/server'],
   },
 
   /******* React Server DOM ESM Server *******/
