@@ -127,10 +127,13 @@ function addLocalExportedNames(names: Map<string, string>, node: any) {
 
 function transformServerModule(
   source: string,
-  body: any,
+  program: any,
   url: string,
+  sourceMap: any,
   loader: LoadFunction,
 ): string {
+  const body = program.body;
+
   // If the same local name is exported more than once, we only need one of the names.
   const localNames: Map<string, string> = new Map();
   const localTypes: Map<string, string> = new Map();
@@ -307,10 +310,13 @@ async function parseExportNamesInto(
 }
 
 async function transformClientModule(
-  body: any,
+  program: any,
   url: string,
+  sourceMap: any,
   loader: LoadFunction,
 ): Promise<string> {
+  const body = program.body;
+
   const names: Array<string> = [];
 
   await parseExportNamesInto(body, names, url, loader);
@@ -391,12 +397,30 @@ async function transformModuleIfNeeded(
     return source;
   }
 
-  let body;
+  let sourceMappingURL = null;
+
+  let program;
   try {
-    body = acorn.parse(source, {
+    program = acorn.parse(source, {
       ecmaVersion: '2024',
       sourceType: 'module',
-    }).body;
+      locations: true,
+      onComment(
+        block: boolean,
+        text: string,
+        start: number,
+        end: number,
+        startLoc: {line: number, column: number},
+        endLoc: {line: number, column: number},
+      ) {
+        if (
+          text.startsWith('# sourceMappingURL=') ||
+          text.startsWith('@ sourceMappingURL=')
+        ) {
+          sourceMappingURL = text.slice(19);
+        }
+      },
+    });
   } catch (x) {
     // eslint-disable-next-line react-internal/no-production-logging
     console.error('Error parsing %s %s', url, x.message);
@@ -405,6 +429,8 @@ async function transformModuleIfNeeded(
 
   let useClient = false;
   let useServer = false;
+
+  const body = program.body;
   for (let i = 0; i < body.length; i++) {
     const node = body[i];
     if (node.type !== 'ExpressionStatement' || !node.directive) {
@@ -428,11 +454,32 @@ async function transformModuleIfNeeded(
     );
   }
 
-  if (useClient) {
-    return transformClientModule(body, url, loader);
+  let sourceMap = null;
+  if (sourceMappingURL) {
+    const sourceMapResult = await loader(
+      sourceMappingURL,
+      // $FlowFixMe
+      {
+        format: 'json',
+        conditions: [],
+        importAssertions: {type: 'json'},
+        importAttributes: {type: 'json'},
+      },
+      loader,
+    );
+    const sourceMapString =
+      typeof sourceMapResult.source === 'string'
+        ? sourceMapResult.source
+        : // $FlowFixMe
+          sourceMapResult.source.toString('utf8');
+    sourceMap = JSON.parse(sourceMapString);
   }
 
-  return transformServerModule(source, body, url, loader);
+  if (useClient) {
+    return transformClientModule(program, url, sourceMap, loader);
+  }
+
+  return transformServerModule(source, program, url, sourceMap, loader);
 }
 
 export async function transformSource(
