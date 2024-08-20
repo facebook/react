@@ -6254,9 +6254,9 @@ __DEV__ &&
       } else
         boundary.pendingTasks--,
           boundary.status !== CLIENT_RENDERED &&
-            ((boundary.status = CLIENT_RENDERED),
-            (task = getThrownInfo(task.componentStack)),
+            ((task = getThrownInfo(task.componentStack)),
             (segment = logRecoverableError(request, error, task)),
+            (boundary.status = CLIENT_RENDERED),
             encodeErrorForBoundary(boundary, segment, error, task, !0),
             untrackBoundary(request, boundary),
             boundary.parentFlushed &&
@@ -8765,5 +8765,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-7954db93-20240816";
+    exports.version = "19.0.0-www-modern-2505bf9b-20240820";
   })();

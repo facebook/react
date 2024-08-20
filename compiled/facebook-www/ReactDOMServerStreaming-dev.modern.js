@@ -6015,9 +6015,9 @@ __DEV__ &&
       } else
         boundary.pendingTasks--,
           4 !== boundary.status &&
-            ((boundary.status = 4),
-            (task = getThrownInfo(task.componentStack)),
+            ((task = getThrownInfo(task.componentStack)),
             (segment = logRecoverableError(request, error, task)),
+            (boundary.status = 4),
             encodeErrorForBoundary(boundary, segment, error, task, !0),
             untrackBoundary(request, boundary),
             boundary.parentFlushed &&
