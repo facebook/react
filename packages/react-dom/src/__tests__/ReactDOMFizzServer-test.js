@@ -7746,6 +7746,112 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // @gate enableHalt
+  it('can resume a prerender that was aborted', async () => {
+    const promise = new Promise(r => {});
+
+    let prerendering = true;
+
+    function Wait() {
+      if (prerendering) {
+        return React.use(promise);
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <p>
+              <span>
+                <Suspense fallback="Loading again...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+            <p>
+              <span>
+                <Suspense fallback="Loading again too...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const errors = [];
+    function onError(error) {
+      errors.push(error);
+    }
+    let pendingPrerender;
+    await act(() => {
+      pendingPrerender = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+        signal,
+        onError,
+      });
+    });
+    controller.abort('boom');
+
+    const prerendered = await pendingPrerender;
+
+    expect(errors).toEqual(['boom', 'boom']);
+
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>Loading again...</span>
+        </p>
+        <p>
+          <span>Loading again too...</span>
+        </p>
+      </div>,
+    );
+
+    prerendering = false;
+
+    errors.length = 0;
+    const resumed = await ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+      {
+        onError,
+      },
+    );
+
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>Hello</span>
+        </p>
+        <p>
+          <span>Hello</span>
+        </p>
+      </div>,
+    );
+  });
+
   // @gate enablePostpone
   it('does not call onError when you abort with a postpone instance during resume', async () => {
     let prerendering = true;

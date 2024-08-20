@@ -157,6 +157,7 @@ import {
   enableSuspenseAvoidThisFallbackFizz,
   enableCache,
   enablePostpone,
+  enableHalt,
   enableRenderableContext,
   enableRefAsProp,
   disableDefaultPropsExceptForClasses,
@@ -3625,6 +3626,9 @@ function erroredTask(
 ) {
   // Report the error to a global handler.
   let errorDigest;
+  // We don't handle halts here because we only halt when prerendering and
+  // when prerendering we should be finishing tasks not erroring them when
+  // they halt or postpone
   if (
     enablePostpone &&
     typeof error === 'object' &&
@@ -3812,6 +3816,17 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             logRecoverableError(request, fatal, errorInfo, null);
             fatalError(request, fatal, errorInfo, null);
           }
+        } else if (
+          enableHalt &&
+          request.trackedPostpones !== null &&
+          segment !== null
+        ) {
+          const trackedPostpones = request.trackedPostpones;
+          // We are aborting a prerender and must treat the shell as halted
+          // We log the error but we still resolve the prerender
+          logRecoverableError(request, error, errorInfo, null);
+          trackPostpone(request, trackedPostpones, task, segment);
+          finishedTask(request, null, segment);
         } else {
           logRecoverableError(request, error, errorInfo, null);
           fatalError(request, error, errorInfo, null);
@@ -3856,10 +3871,40 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     }
   } else {
     boundary.pendingTasks--;
+    // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
+    // boundary the message is referring to
+    const errorInfo = getThrownInfo(task.componentStack);
+    const trackedPostpones = request.trackedPostpones;
     if (boundary.status !== CLIENT_RENDERED) {
-      // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
-      // boundary the message is referring to
-      const errorInfo = getThrownInfo(task.componentStack);
+      if (enableHalt) {
+        if (trackedPostpones !== null && segment !== null) {
+          // We are aborting a prerender
+          if (
+            enablePostpone &&
+            typeof error === 'object' &&
+            error !== null &&
+            error.$$typeof === REACT_POSTPONE_TYPE
+          ) {
+            const postponeInstance: Postpone = (error: any);
+            logPostpone(request, postponeInstance.message, errorInfo, null);
+          } else {
+            // We are aborting a prerender and must halt this boundary.
+            // We treat this like other postpones during prerendering
+            logRecoverableError(request, error, errorInfo, null);
+          }
+          trackPostpone(request, trackedPostpones, task, segment);
+          // If this boundary was still pending then we haven't already cancelled its fallbacks.
+          // We'll need to abort the fallbacks, which will also error that parent boundary.
+          boundary.fallbackAbortableTasks.forEach(fallbackTask =>
+            abortTask(fallbackTask, request, error),
+          );
+          boundary.fallbackAbortableTasks.clear();
+          return finishedTask(request, boundary, segment);
+        }
+      }
+      boundary.status = CLIENT_RENDERED;
+      // We are aborting a render or resume which should put boundaries
+      // into an explicitly client rendered state
       let errorDigest;
       if (
         enablePostpone &&
@@ -4144,6 +4189,43 @@ function retryRenderTask(
         : request.status === ABORTING
           ? request.fatalError
           : thrownValue;
+
+    if (
+      enableHalt &&
+      request.status === ABORTING &&
+      request.trackedPostpones !== null
+    ) {
+      // We are aborting a prerender and need to halt this task.
+      const trackedPostpones = request.trackedPostpones;
+      const thrownInfo = getThrownInfo(task.componentStack);
+      task.abortSet.delete(task);
+
+      if (
+        enablePostpone &&
+        typeof x === 'object' &&
+        x !== null &&
+        x.$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (x: any);
+        logPostpone(
+          request,
+          postponeInstance.message,
+          thrownInfo,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        );
+      } else {
+        logRecoverableError(
+          request,
+          x,
+          thrownInfo,
+          __DEV__ && enableOwnerStacks ? task.debugTask : null,
+        );
+      }
+
+      trackPostpone(request, trackedPostpones, task, segment);
+      finishedTask(request, task.blockedBoundary, segment);
+      return;
+    }
 
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]

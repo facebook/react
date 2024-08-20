@@ -307,7 +307,8 @@ describe('ReactDOMFizzStaticBrowser', () => {
   });
 
   // @gate experimental
-  it('should reject if aborting before the shell is complete', async () => {
+  // @gate !enableHalt
+  it('should reject if aborting before the shell is complete and enableHalt is disabled', async () => {
     const errors = [];
     const controller = new AbortController();
     const promise = serverAct(() =>
@@ -339,6 +340,42 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['aborted for reasons']);
   });
 
+  // @gate enableHalt
+  it('should resolve an empty prelude if aborting before the shell is complete', async () => {
+    const errors = [];
+    const controller = new AbortController();
+    const promise = serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <InfiniteSuspend />
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      ),
+    );
+
+    await jest.runAllTimers();
+
+    const theReason = new Error('aborted for reasons');
+    controller.abort(theReason);
+
+    let rejected = false;
+    let prelude;
+    try {
+      ({prelude} = await promise);
+    } catch (error) {
+      rejected = true;
+    }
+    expect(rejected).toBe(false);
+    expect(errors).toEqual(['aborted for reasons']);
+    const content = await readContent(prelude);
+    expect(content).toBe('');
+  });
+
   // @gate experimental
   it('should be able to abort before something suspends', async () => {
     const errors = [];
@@ -365,18 +402,26 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ),
     );
 
-    let caughtError = null;
-    try {
-      await streamPromise;
-    } catch (error) {
-      caughtError = error;
+    if (gate(flags => flags.enableHalt)) {
+      const {prelude} = await streamPromise;
+      const content = await readContent(prelude);
+      expect(errors).toEqual(['The operation was aborted.']);
+      expect(content).toBe('');
+    } else {
+      let caughtError = null;
+      try {
+        await streamPromise;
+      } catch (error) {
+        caughtError = error;
+      }
+      expect(caughtError.message).toBe('The operation was aborted.');
+      expect(errors).toEqual(['The operation was aborted.']);
     }
-    expect(caughtError.message).toBe('The operation was aborted.');
-    expect(errors).toEqual(['The operation was aborted.']);
   });
 
   // @gate experimental
-  it('should reject if passing an already aborted signal', async () => {
+  // @gate !enableHalt
+  it('should reject if passing an already aborted signal and enableHalt is disabled', async () => {
     const errors = [];
     const controller = new AbortController();
     const theReason = new Error('aborted for reasons');
@@ -408,6 +453,44 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
     expect(caughtError).toBe(theReason);
     expect(errors).toEqual(['aborted for reasons']);
+  });
+
+  // @gate enableHalt
+  it('should resolve an empty prelude if passing an already aborted signal', async () => {
+    const errors = [];
+    const controller = new AbortController();
+    const theReason = new Error('aborted for reasons');
+    controller.abort(theReason);
+
+    const promise = serverAct(() =>
+      ReactDOMFizzStatic.prerender(
+        <div>
+          <Suspense fallback={<div>Loading</div>}>
+            <InfiniteSuspend />
+          </Suspense>
+        </div>,
+        {
+          signal: controller.signal,
+          onError(x) {
+            errors.push(x.message);
+          },
+        },
+      ),
+    );
+
+    // Technically we could still continue rendering the shell but currently the
+    // semantics mean that we also abort any pending CPU work.
+    let didThrow = false;
+    let prelude;
+    try {
+      ({prelude} = await promise);
+    } catch (error) {
+      didThrow = true;
+    }
+    expect(didThrow).toBe(false);
+    expect(errors).toEqual(['aborted for reasons']);
+    const content = await readContent(prelude);
+    expect(content).toBe('');
   });
 
   // @gate experimental
