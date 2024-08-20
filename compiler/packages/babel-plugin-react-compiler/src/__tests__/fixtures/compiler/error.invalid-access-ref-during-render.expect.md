@@ -15,10 +15,11 @@ function Component(props) {
 ## Error
 
 ```
+  2 | function Component(props) {
   3 |   const ref = useRef(null);
-  4 |   const value = ref.current;
-> 5 |   return value;
-    |          ^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value at freeze $22:TObject<BuiltInRefValue> (5:5)
+> 4 |   const value = ref.current;
+    |                 ^^^^^^^^^^^ InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef) (4:4)
+  5 |   return value;
   6 | }
   7 |
 ```

@@ -8377,6 +8377,48 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('can support throwing after aborting during a render', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback={<p>loading...</p>}>
+            <ComponentThatAborts />
+          </Suspense>
+        </div>
+      );
+    }
+
+    function ComponentThatAborts() {
+      abortRef.current('boom');
+      throw new Error('bam');
+    }
+
+    const abortRef = {current: null};
+    let finished = false;
+    const errors = [];
+    await act(() => {
+      const {pipe, abort} = renderToPipeableStream(<App />, {
+        onError(err) {
+          errors.push(err);
+        },
+      });
+      abortRef.current = abort;
+      writable.on('finish', () => {
+        finished = true;
+      });
+      pipe(writable);
+    });
+
+    expect(errors).toEqual(['boom']);
+
+    expect(finished).toBe(true);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>loading...</p>
+      </div>,
+    );
+  });
+
   it('should warn for using generators as children props', async () => {
     function* getChildren() {
       yield <h1 key="1">Hello</h1>;

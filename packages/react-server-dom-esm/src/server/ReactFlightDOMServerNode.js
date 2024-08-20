@@ -22,6 +22,7 @@ import {Readable} from 'stream';
 
 import {
   createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
   stopFlowing,
@@ -172,25 +173,27 @@ function prerenderToNodeStream(
       resolve({prelude: readable});
     }
 
-    const request = createRequest(
+    const request = createPrerenderRequest(
       model,
       moduleBasePath,
+      onAllReady,
+      onFatalError,
       options ? options.onError : undefined,
       options ? options.identifierPrefix : undefined,
       options ? options.onPostpone : undefined,
       options ? options.temporaryReferences : undefined,
       __DEV__ && options ? options.environmentName : undefined,
       __DEV__ && options ? options.filterStackFrame : undefined,
-      onAllReady,
-      onFatalError,
     );
     if (options && options.signal) {
       const signal = options.signal;
       if (signal.aborted) {
-        abort(request, (signal: any).reason);
+        const reason = (signal: any).reason;
+        abort(request, reason);
       } else {
         const listener = () => {
-          abort(request, (signal: any).reason);
+          const reason = (signal: any).reason;
+          abort(request, reason);
           signal.removeEventListener('abort', listener);
         };
         signal.addEventListener('abort', listener);

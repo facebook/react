@@ -223,7 +223,7 @@ const EnvironmentConfigSchema = z.object({
   validateHooksUsage: z.boolean().default(true),
 
   // Validate that ref values (`ref.current`) are not accessed during render.
-  validateRefAccessDuringRender: z.boolean().default(false),
+  validateRefAccessDuringRender: z.boolean().default(true),
 
   /*
    * Validates that setState is not unconditionally called during render, as it can lead to
@@ -236,6 +236,12 @@ const EnvironmentConfigSchema = z.object({
    * Scheduling a setState (with an event listener, subscription, etc) is valid.
    */
   validateNoSetStateInPassiveEffects: z.boolean().default(false),
+
+  /**
+   * Validates against creating JSX within a try block and recommends using an error boundary
+   * instead.
+   */
+  validateNoJSXInTryStatements: z.boolean().default(false),
 
   /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure

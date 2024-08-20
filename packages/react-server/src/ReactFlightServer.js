@@ -16,6 +16,7 @@ import type {TemporaryReferenceSet} from './ReactFlightServerTemporaryReferences
 import {
   enableBinaryFlight,
   enablePostpone,
+  enableHalt,
   enableTaint,
   enableRefAsProp,
   enableServerComponentLogs,
@@ -63,6 +64,7 @@ import type {
   ReactComponentInfo,
   ReactAsyncInfo,
   ReactStackTrace,
+  ReactCallSite,
 } from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
@@ -71,6 +73,7 @@ import {
   resolveClientReferenceMetadata,
   getServerReferenceId,
   getServerReferenceBoundArguments,
+  getServerReferenceLocation,
   getClientReferenceKey,
   isClientReference,
   isServerReference,
@@ -350,7 +353,8 @@ type Task = {
 interface Reference {}
 
 export type Request = {
-  status: 0 | 1 | 2 | 3,
+  status: 10 | 11 | 12 | 13,
+  type: 20 | 21,
   flushScheduled: boolean,
   fatalError: mixed,
   destination: null | Destination,
@@ -422,13 +426,17 @@ function defaultPostponeHandler(reason: string) {
   // Noop
 }
 
-const OPEN = 0;
-const ABORTING = 1;
-const CLOSING = 2;
-const CLOSED = 3;
+const OPEN = 10;
+const ABORTING = 11;
+const CLOSING = 12;
+const CLOSED = 13;
+
+const RENDER = 20;
+const PRERENDER = 21;
 
 function RequestInstance(
   this: $FlowFixMe,
+  type: 20 | 21,
   model: ReactClientValue,
   bundlerConfig: ClientManifest,
   onError: void | ((error: mixed) => ?string),
@@ -437,8 +445,8 @@ function RequestInstance(
   temporaryReferences: void | TemporaryReferenceSet,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
-  onAllReady: void | (() => void),
-  onFatalError: void | ((error: mixed) => void),
+  onAllReady: () => void,
+  onFatalError: (error: mixed) => void,
 ) {
   if (
     ReactSharedInternals.A !== null &&
@@ -463,6 +471,7 @@ function RequestInstance(
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
   const hints = createHints();
+  this.type = type;
   this.status = OPEN;
   this.flushScheduled = false;
   this.fatalError = null;
@@ -490,8 +499,8 @@ function RequestInstance(
   this.onError = onError === undefined ? defaultErrorHandler : onError;
   this.onPostpone =
     onPostpone === undefined ? defaultPostponeHandler : onPostpone;
-  this.onAllReady = onAllReady === undefined ? noop : onAllReady;
-  this.onFatalError = onFatalError === undefined ? noop : onFatalError;
+  this.onAllReady = onAllReady;
+  this.onFatalError = onFatalError;
 
   if (__DEV__) {
     this.environmentName =
@@ -519,7 +528,7 @@ function RequestInstance(
   pingedTasks.push(rootTask);
 }
 
-function noop(): void {}
+function noop() {}
 
 export function createRequest(
   model: ReactClientValue,
@@ -530,11 +539,38 @@ export function createRequest(
   temporaryReferences: void | TemporaryReferenceSet,
   environmentName: void | string | (() => string), // DEV-only
   filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
-  onAllReady: void | (() => void),
-  onFatalError: void | (() => void),
 ): Request {
   // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
   return new RequestInstance(
+    RENDER,
+    model,
+    bundlerConfig,
+    onError,
+    identifierPrefix,
+    onPostpone,
+    temporaryReferences,
+    environmentName,
+    filterStackFrame,
+    noop,
+    noop,
+  );
+}
+
+export function createPrerenderRequest(
+  model: ReactClientValue,
+  bundlerConfig: ClientManifest,
+  onAllReady: () => void,
+  onFatalError: () => void,
+  onError: void | ((error: mixed) => ?string),
+  identifierPrefix?: string,
+  onPostpone: void | ((reason: string) => void),
+  temporaryReferences: void | TemporaryReferenceSet,
+  environmentName: void | string | (() => string), // DEV-only
+  filterStackFrame: void | ((url: string, functionName: string) => boolean), // DEV-only
+): Request {
+  // $FlowFixMe[invalid-constructor]: the shapes are exact here but Flow doesn't like constructors
+  return new RequestInstance(
+    PRERENDER,
     model,
     bundlerConfig,
     onError,
@@ -611,11 +647,11 @@ function serializeThenable(
     default: {
       if (request.status === ABORTING) {
         // We can no longer accept any resolved values
+        request.abortableTasks.delete(newTask);
         newTask.status = ABORTED;
         const errorId: number = (request.fatalError: any);
         const model = stringify(serializeByValueID(errorId));
         emitModelChunk(request, newTask.id, model);
-        request.abortableTasks.delete(newTask);
         return newTask.id;
       }
       if (typeof thenable.status === 'string') {
@@ -725,7 +761,7 @@ function serializeReadableStream(
     }
 
     if (entry.done) {
-      request.abortListeners.delete(error);
+      request.abortListeners.delete(abortStream);
       const endStreamRow = streamTask.id.toString(16) + ':C\n';
       request.completedRegularChunks.push(stringToChunk(endStreamRow));
       enqueueFlush(request);
@@ -747,7 +783,20 @@ function serializeReadableStream(
       return;
     }
     aborted = true;
-    request.abortListeners.delete(error);
+    request.abortListeners.delete(abortStream);
+    const digest = logRecoverableError(request, reason, streamTask);
+    emitErrorChunk(request, streamTask.id, digest, reason);
+    enqueueFlush(request);
+
+    // $FlowFixMe should be able to pass mixed
+    reader.cancel(reason).then(error, error);
+  }
+  function abortStream(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(abortStream);
     if (
       enablePostpone &&
       typeof reason === 'object' &&
@@ -756,16 +805,27 @@ function serializeReadableStream(
     ) {
       const postponeInstance: Postpone = (reason: any);
       logPostpone(request, postponeInstance.message, streamTask);
-      emitPostponeChunk(request, streamTask.id, postponeInstance);
+      if (enableHalt && request.type === PRERENDER) {
+        request.pendingChunks--;
+      } else {
+        emitPostponeChunk(request, streamTask.id, postponeInstance);
+        enqueueFlush(request);
+      }
     } else {
       const digest = logRecoverableError(request, reason, streamTask);
-      emitErrorChunk(request, streamTask.id, digest, reason);
+      if (enableHalt && request.type === PRERENDER) {
+        request.pendingChunks--;
+      } else {
+        emitErrorChunk(request, streamTask.id, digest, reason);
+        enqueueFlush(request);
+      }
     }
-    enqueueFlush(request);
+
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
-  request.abortListeners.add(error);
+
+  request.abortListeners.add(abortStream);
   reader.read().then(progress, error);
   return serializeByValueID(streamTask.id);
 }
@@ -821,7 +881,7 @@ function serializeAsyncIterable(
     }
 
     if (entry.done) {
-      request.abortListeners.delete(error);
+      request.abortListeners.delete(abortIterable);
       let endStreamRow;
       if (entry.value === undefined) {
         endStreamRow = streamTask.id.toString(16) + ':C\n';
@@ -865,7 +925,22 @@ function serializeAsyncIterable(
       return;
     }
     aborted = true;
-    request.abortListeners.delete(error);
+    request.abortListeners.delete(abortIterable);
+    const digest = logRecoverableError(request, reason, streamTask);
+    emitErrorChunk(request, streamTask.id, digest, reason);
+    enqueueFlush(request);
+    if (typeof (iterator: any).throw === 'function') {
+      // The iterator protocol doesn't necessarily include this but a generator do.
+      // $FlowFixMe should be able to pass mixed
+      iterator.throw(reason).then(error, error);
+    }
+  }
+  function abortIterable(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(abortIterable);
     if (
       enablePostpone &&
       typeof reason === 'object' &&
@@ -874,19 +949,28 @@ function serializeAsyncIterable(
     ) {
       const postponeInstance: Postpone = (reason: any);
       logPostpone(request, postponeInstance.message, streamTask);
-      emitPostponeChunk(request, streamTask.id, postponeInstance);
+      if (enableHalt && request.type === PRERENDER) {
+        request.pendingChunks--;
+      } else {
+        emitPostponeChunk(request, streamTask.id, postponeInstance);
+        enqueueFlush(request);
+      }
     } else {
       const digest = logRecoverableError(request, reason, streamTask);
-      emitErrorChunk(request, streamTask.id, digest, reason);
+      if (enableHalt && request.type === PRERENDER) {
+        request.pendingChunks--;
+      } else {
+        emitErrorChunk(request, streamTask.id, digest, reason);
+        enqueueFlush(request);
+      }
     }
-    enqueueFlush(request);
     if (typeof (iterator: any).throw === 'function') {
       // The iterator protocol doesn't necessarily include this but a generator do.
       // $FlowFixMe should be able to pass mixed
       iterator.throw(reason).then(error, error);
     }
   }
-  request.abortListeners.add(error);
+  request.abortListeners.add(abortIterable);
   if (__DEV__) {
     callIteratorInDEV(iterator, progress, error);
   } else {
@@ -1934,17 +2018,47 @@ function serializeServerReference(
     return serializeServerReferenceID(existingId);
   }
 
-  const bound: null | Array<any> = getServerReferenceBoundArguments(
+  const boundArgs: null | Array<any> = getServerReferenceBoundArguments(
     request.bundlerConfig,
     serverReference,
   );
+  const bound = boundArgs === null ? null : Promise.resolve(boundArgs);
+  const id = getServerReferenceId(request.bundlerConfig, serverReference);
+
+  let location: null | ReactCallSite = null;
+  if (__DEV__) {
+    const error = getServerReferenceLocation(
+      request.bundlerConfig,
+      serverReference,
+    );
+    if (error) {
+      const frames = parseStackTrace(error, 1);
+      if (frames.length > 0) {
+        location = frames[0];
+      }
+    }
+  }
+
   const serverReferenceMetadata: {
     id: ServerReferenceId,
     bound: null | Promise<Array<any>>,
-  } = {
-    id: getServerReferenceId(request.bundlerConfig, serverReference),
-    bound: bound ? Promise.resolve(bound) : null,
-  };
+    name?: string, // DEV-only
+    env?: string, // DEV-only
+    location?: ReactCallSite, // DEV-only
+  } =
+    __DEV__ && location !== null
+      ? {
+          id,
+          bound,
+          name:
+            typeof serverReference === 'function' ? serverReference.name : '',
+          env: (0, request.environmentName)(),
+          location,
+        }
+      : {
+          id,
+          bound,
+        };
   const metadataId = outlineModel(request, serverReferenceMetadata);
   writtenServerReferences.set(serverReference, metadataId);
   return serializeServerReferenceID(metadataId);
@@ -2049,7 +2163,7 @@ function serializeBlob(request: Request, blob: Blob): string {
       return;
     }
     if (entry.done) {
-      request.abortListeners.delete(error);
+      request.abortListeners.delete(abortBlob);
       aborted = true;
       pingTask(request, newTask);
       return;
@@ -2059,22 +2173,52 @@ function serializeBlob(request: Request, blob: Blob): string {
     // $FlowFixMe[incompatible-call]
     return reader.read().then(progress).catch(error);
   }
-
   function error(reason: mixed) {
     if (aborted) {
       return;
     }
     aborted = true;
-    request.abortListeners.delete(error);
+    request.abortListeners.delete(abortBlob);
     const digest = logRecoverableError(request, reason, newTask);
     emitErrorChunk(request, newTask.id, digest, reason);
-    request.abortableTasks.delete(newTask);
     enqueueFlush(request);
     // $FlowFixMe should be able to pass mixed
     reader.cancel(reason).then(error, error);
   }
+  function abortBlob(reason: mixed) {
+    if (aborted) {
+      return;
+    }
+    aborted = true;
+    request.abortListeners.delete(abortBlob);
+    if (
+      enablePostpone &&
+      typeof reason === 'object' &&
+      reason !== null &&
+      (reason: any).$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      const postponeInstance: Postpone = (reason: any);
+      logPostpone(request, postponeInstance.message, newTask);
+      if (enableHalt && request.type === PRERENDER) {
+        request.pendingChunks--;
+      } else {
+        emitPostponeChunk(request, newTask.id, postponeInstance);
+        enqueueFlush(request);
+      }
+    } else {
+      const digest = logRecoverableError(request, reason, newTask);
+      if (enableHalt && request.type === PRERENDER) {
+        request.pendingChunks--;
+      } else {
+        emitErrorChunk(request, newTask.id, digest, reason);
+        enqueueFlush(request);
+      }
+    }
+    // $FlowFixMe should be able to pass mixed
+    reader.cancel(reason).then(error, error);
+  }
 
-  request.abortListeners.add(error);
+  request.abortListeners.add(abortBlob);
 
   // $FlowFixMe[incompatible-call]
   reader.read().then(progress).catch(error);
@@ -3757,6 +3901,7 @@ function performWork(request: Request): void {
   currentRequest = request;
   prepareToUseHooksForRequest(request);
 
+  const hadAbortableTasks = request.abortableTasks.size > 0;
   try {
     const pingedTasks = request.pingedTasks;
     request.pingedTasks = [];
@@ -3767,8 +3912,10 @@ function performWork(request: Request): void {
     if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
     }
-    if (request.abortableTasks.size === 0) {
-      // we're done rendering
+    if (hadAbortableTasks && request.abortableTasks.size === 0) {
+      // We can ping after completing but if this happens there already
+      // wouldn't be any abortable tasks. So we only call allReady after
+      // the work which actually completed the last pending task
       const onAllReady = request.onAllReady;
       onAllReady();
     }
@@ -3933,17 +4080,17 @@ export function stopFlowing(request: Request): void {
   request.destination = null;
 }
 
-// This is called to early terminate a request. It creates an error at all pending tasks.
 export function abort(request: Request, reason: mixed): void {
   try {
     if (request.status === OPEN) {
       request.status = ABORTING;
     }
     const abortableTasks = request.abortableTasks;
-    // We have tasks to abort. We'll emit one error row and then emit a reference
-    // to that row from every row that's still remaining.
     if (abortableTasks.size > 0) {
-      request.pendingChunks++;
+      // We have tasks to abort. We'll emit one error row and then emit a reference
+      // to that row from every row that's still remaining if we are rendering. If we
+      // are prerendering (and halt semantics are enabled) we will refer to an error row
+      // but not actually emit it so the reciever can at that point rather than error.
       const errorId = request.nextChunkId++;
       request.fatalError = errorId;
       if (
@@ -3954,7 +4101,11 @@ export function abort(request: Request, reason: mixed): void {
       ) {
         const postponeInstance: Postpone = (reason: any);
         logPostpone(request, postponeInstance.message, null);
-        emitPostponeChunk(request, errorId, postponeInstance);
+        if (!enableHalt || request.type === PRERENDER) {
+          // When prerendering with halt semantics we omit the referred to postpone.
+          request.pendingChunks++;
+          emitPostponeChunk(request, errorId, postponeInstance);
+        }
       } else {
         const error =
           reason === undefined
@@ -3969,10 +4120,16 @@ export function abort(request: Request, reason: mixed): void {
                 )
               : reason;
         const digest = logRecoverableError(request, error, null);
-        emitErrorChunk(request, errorId, digest, error);
+        if (!enableHalt || request.type === RENDER) {
+          // When prerendering with halt semantics we omit the referred to error.
+          request.pendingChunks++;
+          emitErrorChunk(request, errorId, digest, error);
+        }
       }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
+      const onAllReady = request.onAllReady;
+      onAllReady();
     }
     const abortListeners = request.abortListeners;
     if (abortListeners.size > 0) {

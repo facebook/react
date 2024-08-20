@@ -2143,29 +2143,18 @@ export function attach(
       const {key} = fiber;
       const displayName = getDisplayNameForFiber(fiber);
       const elementType = getElementTypeForFiber(fiber);
-      const debugOwner = fiber._debugOwner;
 
-      // Ideally we should call getFiberIDThrows() for _debugOwner,
-      // since owners are almost always higher in the tree (and so have already been processed),
-      // but in some (rare) instances reported in open source, a descendant mounts before an owner.
-      // Since this is a DEV only field it's probably okay to also just lazily generate and ID here if needed.
-      // See https://github.com/facebook/react/issues/21445
-      let ownerID: number;
-      if (debugOwner != null) {
-        if (typeof debugOwner.tag === 'number') {
-          const ownerFiberInstance = getFiberInstanceUnsafe((debugOwner: any));
-          if (ownerFiberInstance !== null) {
-            ownerID = ownerFiberInstance.id;
-          } else {
-            ownerID = 0;
-          }
-        } else {
-          // TODO: Track Server Component Owners.
-          ownerID = 0;
-        }
-      } else {
-        ownerID = 0;
-      }
+      // Finding the owner instance might require traversing the whole parent path which
+      // doesn't have great big O notation. Ideally we'd lazily fetch the owner when we
+      // need it but we have some synchronous operations in the front end like Alt+Left
+      // which selects the owner immediately. Typically most owners are only a few parents
+      // away so maybe it's not so bad.
+      const debugOwner = getUnfilteredOwner(fiber);
+      const ownerInstance = findNearestOwnerInstance(
+        parentInstance,
+        debugOwner,
+      );
+      const ownerID = ownerInstance === null ? 0 : ownerInstance.id;
       const parentID = parentInstance ? parentInstance.id : 0;
 
       const displayNameStringID = getStringID(displayName);
@@ -2231,11 +2220,15 @@ export function attach(
       displayName = env + '(' + displayName + ')';
     }
     const elementType = ElementTypeVirtual;
-    // TODO: Support Virtual Owners. To do this we need to find a matching
-    // virtual instance which is not a super cheap parent traversal and so
-    // we should ideally only do that lazily. We should maybe change the
-    // frontend to get it lazily.
-    const ownerID: number = 0;
+
+    // Finding the owner instance might require traversing the whole parent path which
+    // doesn't have great big O notation. Ideally we'd lazily fetch the owner when we
+    // need it but we have some synchronous operations in the front end like Alt+Left
+    // which selects the owner immediately. Typically most owners are only a few parents
+    // away so maybe it's not so bad.
+    const debugOwner = getUnfilteredOwner(componentInfo);
+    const ownerInstance = findNearestOwnerInstance(parentInstance, debugOwner);
+    const ownerID = ownerInstance === null ? 0 : ownerInstance.id;
     const parentID = parentInstance ? parentInstance.id : 0;
 
     const displayNameStringID = getStringID(displayName);
@@ -3354,11 +3347,19 @@ export function attach(
   }
 
   function getUpdatersList(root: any): Array<SerializedElement> | null {
-    return root.memoizedUpdaters != null
-      ? Array.from(root.memoizedUpdaters)
-          .filter(fiber => getFiberIDUnsafe(fiber) !== null)
-          .map(fiberToSerializedElement)
-      : null;
+    const updaters = root.memoizedUpdaters;
+    if (updaters == null) {
+      return null;
+    }
+    const result = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const updater of updaters) {
+      const inst = getFiberInstanceUnsafe(updater);
+      if (inst !== null) {
+        result.push(instanceToSerializedElement(inst));
+      }
+    }
+    return result;
   }
 
   function handleCommitFiberUnmount(fiber: any) {
@@ -3923,13 +3924,26 @@ export function attach(
     }
   }
 
-  function fiberToSerializedElement(fiber: Fiber): SerializedElement {
-    return {
-      displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
-      id: getFiberIDThrows(fiber),
-      key: fiber.key,
-      type: getElementTypeForFiber(fiber),
-    };
+  function instanceToSerializedElement(
+    instance: DevToolsInstance,
+  ): SerializedElement {
+    if (instance.kind === FIBER_INSTANCE) {
+      const fiber = instance.data;
+      return {
+        displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
+        id: instance.id,
+        key: fiber.key,
+        type: getElementTypeForFiber(fiber),
+      };
+    } else {
+      const componentInfo = instance.data;
+      return {
+        displayName: componentInfo.name || 'Anonymous',
+        id: instance.id,
+        key: componentInfo.key == null ? null : componentInfo.key,
+        type: ElementTypeVirtual,
+      };
+    }
   }
 
   function getOwnersList(id: number): Array<SerializedElement> | null {
@@ -3938,33 +3952,97 @@ export function attach(
       console.warn(`Could not find DevToolsInstance with id "${id}"`);
       return null;
     }
-    if (devtoolsInstance.kind !== FIBER_INSTANCE) {
-      // TODO: Handle VirtualInstance.
+    const self = instanceToSerializedElement(devtoolsInstance);
+    const owners = getOwnersListFromInstance(devtoolsInstance);
+    // This is particular API is prefixed with the current instance too for some reason.
+    if (owners === null) {
+      return [self];
+    }
+    owners.unshift(self);
+    owners.reverse();
+    return owners;
+  }
+
+  function getOwnersListFromInstance(
+    instance: DevToolsInstance,
+  ): Array<SerializedElement> | null {
+    let owner = getUnfilteredOwner(instance.data);
+    if (owner === null) {
       return null;
     }
-    const fiber =
-      findCurrentFiberUsingSlowPathByFiberInstance(devtoolsInstance);
-    if (fiber == null) {
-      return null;
-    }
-
-    const owners: Array<SerializedElement> = [fiberToSerializedElement(fiber)];
-
-    let owner = fiber._debugOwner;
-    while (owner != null) {
-      if (typeof owner.tag === 'number') {
-        const ownerFiber: Fiber = (owner: any); // Refined
-        if (!shouldFilterFiber(ownerFiber)) {
-          owners.unshift(fiberToSerializedElement(ownerFiber));
-        }
-        owner = ownerFiber._debugOwner;
+    const owners: Array<SerializedElement> = [];
+    let parentInstance: null | DevToolsInstance = instance.parent;
+    while (parentInstance !== null && owner !== null) {
+      const ownerInstance = findNearestOwnerInstance(parentInstance, owner);
+      if (ownerInstance !== null) {
+        owners.push(instanceToSerializedElement(ownerInstance));
+        // Get the next owner and keep searching from the previous match.
+        owner = getUnfilteredOwner(owner);
+        parentInstance = ownerInstance.parent;
       } else {
-        // TODO: Track Server Component Owners.
         break;
       }
     }
-
     return owners;
+  }
+
+  function getUnfilteredOwner(
+    owner: ReactComponentInfo | Fiber | null | void,
+  ): ReactComponentInfo | Fiber | null {
+    if (owner == null) {
+      return null;
+    }
+    if (typeof owner.tag === 'number') {
+      const ownerFiber: Fiber = (owner: any); // Refined
+      owner = ownerFiber._debugOwner;
+    } else {
+      const ownerInfo: ReactComponentInfo = (owner: any); // Refined
+      owner = ownerInfo.owner;
+    }
+    while (owner) {
+      if (typeof owner.tag === 'number') {
+        const ownerFiber: Fiber = (owner: any); // Refined
+        if (!shouldFilterFiber(ownerFiber)) {
+          return ownerFiber;
+        }
+        owner = ownerFiber._debugOwner;
+      } else {
+        const ownerInfo: ReactComponentInfo = (owner: any); // Refined
+        if (!shouldFilterVirtual(ownerInfo)) {
+          return ownerInfo;
+        }
+        owner = ownerInfo.owner;
+      }
+    }
+    return null;
+  }
+
+  function findNearestOwnerInstance(
+    parentInstance: null | DevToolsInstance,
+    owner: void | null | ReactComponentInfo | Fiber,
+  ): null | DevToolsInstance {
+    if (owner == null) {
+      return null;
+    }
+    // Search the parent path for any instance that matches this kind of owner.
+    while (parentInstance !== null) {
+      if (
+        parentInstance.data === owner ||
+        // Typically both owner and instance.data would refer to the current version of a Fiber
+        // but it is possible for memoization to ignore the owner on the JSX. Then the new Fiber
+        // isn't propagated down as the new owner. In that case we might match the alternate
+        // instead. This is a bit hacky but the fastest check since type casting owner to a Fiber
+        // needs a duck type check anyway.
+        parentInstance.data === (owner: any).alternate
+      ) {
+        return parentInstance;
+      }
+      parentInstance = parentInstance.parent;
+    }
+    // It is technically possible to create an element and render it in a different parent
+    // but this is a weird edge case and it is worth not having to scan the tree or keep
+    // a register for every fiber/component info.
+    return null;
   }
 
   // Fast path props lookup for React Native style editor.
@@ -4047,7 +4125,6 @@ export function attach(
     }
 
     const {
-      _debugOwner: debugOwner,
       stateNode,
       key,
       memoizedProps,
@@ -4174,21 +4251,8 @@ export function attach(
       context = {value: context};
     }
 
-    let owners: null | Array<SerializedElement> = null;
-    let owner = debugOwner;
-    while (owner != null) {
-      if (typeof owner.tag === 'number') {
-        const ownerFiber: Fiber = (owner: any); // Refined
-        if (owners === null) {
-          owners = [];
-        }
-        owners.push(fiberToSerializedElement(ownerFiber));
-        owner = ownerFiber._debugOwner;
-      } else {
-        // TODO: Track Server Component Owners.
-        break;
-      }
-    }
+    const owners: null | Array<SerializedElement> =
+      getOwnersListFromInstance(fiberInstance);
 
     const isTimedOutSuspense =
       tag === SuspenseComponent && memoizedState !== null;
@@ -4352,8 +4416,8 @@ export function attach(
       displayName = env + '(' + displayName + ')';
     }
 
-    // TODO: Support Virtual Owners.
-    const owners: null | Array<SerializedElement> = null;
+    const owners: null | Array<SerializedElement> =
+      getOwnersListFromInstance(virtualInstance);
 
     let rootType = null;
     let targetErrorBoundaryID = null;
