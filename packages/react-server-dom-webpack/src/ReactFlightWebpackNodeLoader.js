@@ -359,7 +359,7 @@ function transformServerModule(
         lastMappedLine++;
       }
 
-      sourceLineCount = program.loc.end.line - 1;
+      sourceLineCount = program.loc.end.line;
       if (sourceLineCount < lastMappedLine) {
         throw new Error(
           'The source map has more mappings than there are lines.',
@@ -374,13 +374,43 @@ function transformServerModule(
       ) {
         mappings += ';';
       }
+    } else {
+      // If a file doesn't have a source map then we generate a blank source map that just
+      // contains the original content and segments pointing to the original lines.
+      sourceLineCount = 1;
+      let idx = -1;
+      while ((idx = source.indexOf('\n', idx + 1)) !== -1) {
+        sourceLineCount++;
+      }
+      mappings = 'AAAA' + ';AACA'.repeat(sourceLineCount - 1);
+      sourceMap = {
+        version: 3,
+        sources: [url],
+        sourcesContent: [source],
+        mappings: mappings,
+        sourceRoot: '',
+      };
+      lastSourceIndex = 0;
+      lastOriginalLine = sourceLineCount;
+      lastOriginalColumn = 0;
+      lastNameIndex = -1;
+      lastMappedLine = sourceLineCount;
+
+      for (let i = 0; i < exportedEntries.length; i++) {
+        // Point each entry to original location.
+        const entry = exportedEntries[i];
+        entry.originalSource = 0;
+        entry.originalLine = entry.loc.start.line;
+        // We use column zero since we do the short-hand line-only source maps above.
+        entry.originalColumn = 0; // entry.loc.start.column;
+      }
     }
 
     newSrc += '\n\n;';
     newSrc +=
       'import {registerServerReference} from "react-server-dom-webpack/server";\n';
     if (mappings) {
-      mappings += ';;;';
+      mappings += ';;';
     }
 
     const createMapping = createMappingsSerializer();
@@ -417,7 +447,7 @@ function transformServerModule(
     }
   }
 
-  if (sourceMap && mappings) {
+  if (sourceMap) {
     // Override with an new mappings and serialize an inline source map.
     sourceMap.mappings = mappings;
     newSrc +=
