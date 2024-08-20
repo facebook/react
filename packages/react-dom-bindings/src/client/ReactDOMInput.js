@@ -427,13 +427,6 @@ export function setDefaultValue(
   if (['button', 'file', 'hidden', 'image', 'reset', 'submit'].includes(type))
     return;
 
-  if (['checkbox', 'radio'].includes(type)) {
-    if (node.defaultChecked !== value) {
-      node.defaultChecked = !!value;
-    }
-    return;
-  }
-
   // In Chrome, assigning defaultValue to certain input types triggers input validation.
   // For number inputs, the display value loses trailing decimal points. For email inputs,
   // Chrome raises "The specified value <x> is not a valid email address".
