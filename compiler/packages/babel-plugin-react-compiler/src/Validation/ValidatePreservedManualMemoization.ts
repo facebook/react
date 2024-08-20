@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ErrorSeverity} from '..';
+import {CompilerError, Effect, ErrorSeverity, printReactiveFunction} from '..';
 import {
   DeclarationId,
   GeneratedSource,
@@ -23,7 +23,11 @@ import {
   ScopeId,
   SourceLocation,
 } from '../HIR';
-import {printManualMemoDependency} from '../HIR/PrintHIR';
+import {
+  printFunction,
+  printIdentifier,
+  printManualMemoDependency,
+} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {
@@ -537,7 +541,9 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
               state.errors.push({
                 reason:
                   'React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.',
-                description: null,
+                description: DEBUG
+                  ? `${printIdentifier(identifier)} was not memoized`
+                  : null,
                 severity: ErrorSeverity.CannotPreserveMemoization,
                 loc,
                 suggestions: null,
