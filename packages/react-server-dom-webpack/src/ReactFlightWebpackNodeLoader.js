@@ -9,6 +9,9 @@
 
 import * as acorn from 'acorn-loose';
 
+import readMappings from 'webpack-sources/lib/helpers/readMappings.js';
+import createMappingsSerializer from 'webpack-sources/lib/helpers/createMappingsSerializer.js';
+
 type ResolveContext = {
   conditions: Array<string>,
   parentURL: string | void,
@@ -95,32 +98,85 @@ export async function getSource(
   return defaultGetSource(url, context, defaultGetSource);
 }
 
-function addLocalExportedNames(names: Map<string, string>, node: any) {
+type ExportedEntry = {
+  localName: string,
+  exportedName: string,
+  type: null | string,
+  loc: {
+    start: {line: number, column: number},
+    end: {line: number, column: number},
+  },
+  originalLine: number,
+  originalColumn: number,
+  originalSource: number,
+  nameIndex: number,
+};
+
+function addExportedEntry(
+  exportedEntries: Array<ExportedEntry>,
+  localNames: Set<string>,
+  localName: string,
+  exportedName: string,
+  type: null | 'function',
+  loc: {
+    start: {line: number, column: number},
+    end: {line: number, column: number},
+  },
+) {
+  if (localNames.has(localName)) {
+    // If the same local name is exported more than once, we only need one of the names.
+    return;
+  }
+  exportedEntries.push({
+    localName,
+    exportedName,
+    type,
+    loc,
+    originalLine: -1,
+    originalColumn: -1,
+    originalSource: -1,
+    nameIndex: -1,
+  });
+}
+
+function addLocalExportedNames(
+  exportedEntries: Array<ExportedEntry>,
+  localNames: Set<string>,
+  node: any,
+) {
   switch (node.type) {
     case 'Identifier':
-      names.set(node.name, node.name);
+      addExportedEntry(
+        exportedEntries,
+        localNames,
+        node.name,
+        node.name,
+        null,
+        node.loc,
+      );
       return;
     case 'ObjectPattern':
       for (let i = 0; i < node.properties.length; i++)
-        addLocalExportedNames(names, node.properties[i]);
+        addLocalExportedNames(exportedEntries, localNames, node.properties[i]);
       return;
     case 'ArrayPattern':
       for (let i = 0; i < node.elements.length; i++) {
         const element = node.elements[i];
-        if (element) addLocalExportedNames(names, element);
+        if (element)
+          addLocalExportedNames(exportedEntries, localNames, element);
       }
       return;
     case 'Property':
-      addLocalExportedNames(names, node.value);
+      addLocalExportedNames(exportedEntries, localNames, node.value);
       return;
     case 'AssignmentPattern':
-      addLocalExportedNames(names, node.left);
+      addLocalExportedNames(exportedEntries, localNames, node.left);
       return;
     case 'RestElement':
-      addLocalExportedNames(names, node.argument);
+      addLocalExportedNames(exportedEntries, localNames, node.argument);
       return;
     case 'ParenthesizedExpression':
-      addLocalExportedNames(names, node.expression);
+      addLocalExportedNames(exportedEntries, localNames, node.expression);
       return;
   }
 }
@@ -134,9 +190,10 @@ function transformServerModule(
 ): string {
   const body = program.body;
 
-  // If the same local name is exported more than once, we only need one of the names.
-  const localNames: Map<string, string> = new Map();
-  const localTypes: Map<string, string> = new Map();
+  // This entry list needs to be in source location order.
+  const exportedEntries: Array<ExportedEntry> = [];
+  // Dedupe set.
+  const localNames: Set<string> = new Set();
 
   for (let i = 0; i < body.length; i++) {
     const node = body[i];
@@ -146,11 +203,24 @@ function transformServerModule(
         break;
       case 'ExportDefaultDeclaration':
         if (node.declaration.type === 'Identifier') {
-          localNames.set(node.declaration.name, 'default');
+          addExportedEntry(
+            exportedEntries,
+            localNames,
+            node.declaration.name,
+            'default',
+            null,
+            node.declaration.loc,
+          );
         } else if (node.declaration.type === 'FunctionDeclaration') {
           if (node.declaration.id) {
-            localNames.set(node.declaration.id.name, 'default');
-            localTypes.set(node.declaration.id.name, 'function');
+            addExportedEntry(
+              exportedEntries,
+              localNames,
+              node.declaration.id.name,
+              'default',
+              'function',
+              node.declaration.id.loc,
+            );
           } else {
             // TODO: This needs to be rewritten inline because it doesn't have a local name.
           }
@@ -161,41 +231,200 @@ function transformServerModule(
           if (node.declaration.type === 'VariableDeclaration') {
             const declarations = node.declaration.declarations;
             for (let j = 0; j < declarations.length; j++) {
-              addLocalExportedNames(localNames, declarations[j].id);
+              addLocalExportedNames(
+                exportedEntries,
+                localNames,
+                declarations[j].id,
+              );
             }
           } else {
             const name = node.declaration.id.name;
-            localNames.set(name, name);
-            if (node.declaration.type === 'FunctionDeclaration') {
-              localTypes.set(name, 'function');
-            }
+            addExportedEntry(
+              exportedEntries,
+              localNames,
+              name,
+              name,
+
+              node.declaration.type === 'FunctionDeclaration'
+                ? 'function'
+                : null,
+              node.declaration.id.loc,
+            );
           }
         }
         if (node.specifiers) {
           const specifiers = node.specifiers;
           for (let j = 0; j < specifiers.length; j++) {
             const specifier = specifiers[j];
-            localNames.set(specifier.local.name, specifier.exported.name);
+            addExportedEntry(
+              exportedEntries,
+              localNames,
+              specifier.local.name,
+              specifier.exported.name,
+              null,
+              specifier.local.loc,
+            );
           }
         }
         continue;
     }
   }
-  if (localNames.size === 0) {
-    return source;
-  }
-  let newSrc = source + '\n\n;';
-  newSrc +=
-    'import {registerServerReference} from "react-server-dom-webpack/server";\n';
-  localNames.forEach(function (exported, local) {
-    if (localTypes.get(local) !== 'function') {
-      // We first check if the export is a function and if so annotate it.
-      newSrc += 'if (typeof ' + local + ' === "function") ';
+
+  let mappings =
+    sourceMap && typeof sourceMap.mappings === 'string'
+      ? sourceMap.mappings
+      : '';
+  let newSrc = source;
+
+  if (exportedEntries.length > 0) {
+    let lastSourceIndex = 0;
+    let lastOriginalLine = 0;
+    let lastOriginalColumn = 0;
+    let lastNameIndex = 0;
+    let sourceLineCount = 0;
+    let lastMappedLine = 0;
+
+    if (sourceMap) {
+      // We iterate source mapping entries and our matched exports in parallel to source map
+      // them to their original location.
+      let nextEntryIdx = 0;
+      let nextEntryLine = exportedEntries[nextEntryIdx].loc.start.line;
+      let nextEntryColumn = exportedEntries[nextEntryIdx].loc.start.column;
+      readMappings(
+        mappings,
+        (
+          generatedLine: number,
+          generatedColumn: number,
+          sourceIndex: number,
+          originalLine: number,
+          originalColumn: number,
+          nameIndex: number,
+        ) => {
+          if (
+            generatedLine > nextEntryLine ||
+            (generatedLine === nextEntryLine &&
+              generatedColumn > nextEntryColumn)
+          ) {
+            // We're past the entry which means that the best match we have is the previous entry.
+            if (lastMappedLine === nextEntryLine) {
+              // Match
+              exportedEntries[nextEntryIdx].originalLine = lastOriginalLine;
+              exportedEntries[nextEntryIdx].originalColumn = lastOriginalColumn;
+              exportedEntries[nextEntryIdx].originalSource = lastSourceIndex;
+              exportedEntries[nextEntryIdx].nameIndex = lastNameIndex;
+            } else {
+              // Skip if we didn't have any mappings on the exported line.
+            }
+            nextEntryIdx++;
+            if (nextEntryIdx < exportedEntries.length) {
+              nextEntryLine = exportedEntries[nextEntryIdx].loc.start.line;
+              nextEntryColumn = exportedEntries[nextEntryIdx].loc.start.column;
+            } else {
+              nextEntryLine = -1;
+              nextEntryColumn = -1;
+            }
+          }
+          lastMappedLine = generatedLine;
+          if (sourceIndex > -1) {
+            lastSourceIndex = sourceIndex;
+          }
+          if (originalLine > -1) {
+            lastOriginalLine = originalLine;
+          }
+          if (originalColumn > -1) {
+            lastOriginalColumn = originalColumn;
+          }
+          if (nameIndex > -1) {
+            lastNameIndex = nameIndex;
+          }
+        },
+      );
+      if (nextEntryIdx < exportedEntries.length) {
+        if (lastMappedLine === nextEntryLine) {
+          // Match
+          exportedEntries[nextEntryIdx].originalLine = lastOriginalLine;
+          exportedEntries[nextEntryIdx].originalColumn = lastOriginalColumn;
+          exportedEntries[nextEntryIdx].originalSource = lastSourceIndex;
+          exportedEntries[nextEntryIdx].nameIndex = lastNameIndex;
+        }
+      }
+
+      for (
+        let lastIdx = mappings.length - 1;
+        lastIdx >= 0 && mappings[lastIdx] === ';';
+        lastIdx--
+      ) {
+        // If the last mapped lines don't contain any segments, we don't get a callback from readMappings
+        // so we need to pad the number of mapped lines, with one for each empty line.
+        lastMappedLine++;
+      }
+
+      sourceLineCount = program.loc.end.line - 1;
+      if (sourceLineCount < lastMappedLine) {
+        throw new Error(
+          'The source map has more mappings than there are lines.',
+        );
+      }
+      // If the original source string had more lines than there are mappings in the source map.
+      // Add some extra padding of unmapped lines so that any lines that we add line up.
+      for (
+        let extraLines = sourceLineCount - lastMappedLine;
+        extraLines > 0;
+        extraLines--
+      ) {
+        mappings += ';';
+      }
     }
-    newSrc += 'registerServerReference(' + local + ',';
-    newSrc += JSON.stringify(url) + ',';
-    newSrc += JSON.stringify(exported) + ');\n';
-  });
+
+    newSrc += '\n\n;';
+    newSrc +=
+      'import {registerServerReference} from "react-server-dom-webpack/server";\n';
+    if (mappings) {
+      mappings += ';;;';
+    }
+
+    const createMapping = createMappingsSerializer();
+
+    // Create an empty mapping pointing to where we last left off to reset the counters.
+    let generatedLine = 1;
+    createMapping(
+      generatedLine,
+      0,
+      lastSourceIndex,
+      lastOriginalLine,
+      lastOriginalColumn,
+      lastNameIndex,
+    );
+    for (let i = 0; i < exportedEntries.length; i++) {
+      const entry = exportedEntries[i];
+      generatedLine++;
+      if (entry.type !== 'function') {
+        // We first check if the export is a function and if so annotate it.
+        newSrc += 'if (typeof ' + entry.localName + ' === "function") ';
+      }
+      newSrc += 'registerServerReference(' + entry.localName + ',';
+      newSrc += JSON.stringify(url) + ',';
+      newSrc += JSON.stringify(entry.exportedName) + ');\n';
+
+      mappings += createMapping(
+        generatedLine,
+        0,
+        entry.originalSource,
+        entry.originalLine,
+        entry.originalColumn,
+        entry.nameIndex,
+      );
+    }
+  }
+
+  if (sourceMap && mappings) {
+    // Override with an new mappings and serialize an inline source map.
+    sourceMap.mappings = mappings;
+    newSrc +=
+      '//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
+      Buffer.from(JSON.stringify(sourceMap)).toString('base64');
+  }
+
   return newSrc;
 }
 
@@ -357,6 +586,9 @@ async function transformClientModule(
     newSrc += JSON.stringify(url) + ',';
     newSrc += JSON.stringify(name) + ');\n';
   }
+
+  // TODO: Generate source maps for Client Reference functions so they can point to their
+  // original locations.
   return newSrc;
 }
 
@@ -398,6 +630,9 @@ async function transformModuleIfNeeded(
   }
 
   let sourceMappingURL = null;
+  let sourceMappingStart = 0;
+  let sourceMappingEnd = 0;
+  let sourceMappingLines = 0;
 
   let program;
   try {
@@ -418,6 +653,9 @@ async function transformModuleIfNeeded(
           text.startsWith('@ sourceMappingURL=')
         ) {
           sourceMappingURL = text.slice(19);
+          sourceMappingStart = start;
+          sourceMappingEnd = end;
+          sourceMappingLines = endLoc.line - startLoc.line;
         }
       },
     });
@@ -473,6 +711,12 @@ async function transformModuleIfNeeded(
         : // $FlowFixMe
           sourceMapResult.source.toString('utf8');
     sourceMap = JSON.parse(sourceMapString);
+
+    // Strip the source mapping comment. We'll re-add it below if needed.
+    source =
+      source.slice(0, sourceMappingStart) +
+      '\n'.repeat(sourceMappingLines) +
+      source.slice(sourceMappingEnd);
   }
 
   if (useClient) {
