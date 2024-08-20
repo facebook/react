@@ -649,9 +649,13 @@ function serializeThenable(
         // We can no longer accept any resolved values
         request.abortableTasks.delete(newTask);
         newTask.status = ABORTED;
-        const errorId: number = (request.fatalError: any);
-        const model = stringify(serializeByValueID(errorId));
-        emitModelChunk(request, newTask.id, model);
+        if (enableHalt && request.type === PRERENDER) {
+          request.pendingChunks--;
+        } else {
+          const errorId: number = (request.fatalError: any);
+          const model = stringify(serializeByValueID(errorId));
+          emitModelChunk(request, newTask.id, model);
+        }
         return newTask.id;
       }
       if (typeof thenable.status === 'string') {
@@ -1633,6 +1637,24 @@ function outlineTask(request: Request, task: Task): ReactJSONValue {
   return serializeLazyID(newTask.id);
 }
 
+function outlineHaltedTask(
+  request: Request,
+  task: Task,
+  allowLazy: boolean,
+): ReactJSONValue {
+  // In the future if we track task state for resuming we'll maybe need to
+  // construnct an actual task here but since we're never going to retry it
+  // we just claim the id and serialize it according to the proper convention
+  const taskId = request.nextChunkId++;
+  if (allowLazy) {
+    // We're halting in a position that can handle a lazy reference
+    return serializeLazyID(taskId);
+  } else {
+    // We're halting in a position that needs a value reference
+    return serializeByValueID(taskId);
+  }
+}
+
 function renderElement(
   request: Request,
   task: Task,
@@ -2278,6 +2300,20 @@ function renderModel(
       ((model: any).$$typeof === REACT_ELEMENT_TYPE ||
         (model: any).$$typeof === REACT_LAZY_TYPE);
 
+    if (request.status === ABORTING) {
+      task.status = ABORTED;
+      if (enableHalt && request.type === PRERENDER) {
+        // This will create a new task and refer to it in this slot
+        // the new task won't be retried because we are aborting
+        return outlineHaltedTask(request, task, wasReactNode);
+      }
+      const errorId = (request.fatalError: any);
+      if (wasReactNode) {
+        return serializeLazyID(errorId);
+      }
+      return serializeByValueID(errorId);
+    }
+
     const x =
       thrownValue === SuspenseException
         ? // This is a special type of exception used for Suspense. For historical
@@ -2291,14 +2327,6 @@ function renderModel(
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
-        if (request.status === ABORTING) {
-          task.status = ABORTED;
-          const errorId: number = (request.fatalError: any);
-          if (wasReactNode) {
-            return serializeLazyID(errorId);
-          }
-          return serializeByValueID(errorId);
-        }
         // Something suspended, we'll need to create a new task and resolve it later.
         const newTask = createTask(
           request,
@@ -2342,15 +2370,6 @@ function renderModel(
         }
         return serializeByValueID(postponeId);
       }
-    }
-
-    if (request.status === ABORTING) {
-      task.status = ABORTED;
-      const errorId: number = (request.fatalError: any);
-      if (wasReactNode) {
-        return serializeLazyID(errorId);
-      }
-      return serializeByValueID(errorId);
     }
 
     // Restore the context. We assume that this will be restored by the inner
@@ -3820,6 +3839,22 @@ function retryTask(request: Request, task: Task): void {
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
   } catch (thrownValue) {
+    if (request.status === ABORTING) {
+      request.abortableTasks.delete(task);
+      task.status = ABORTED;
+      if (enableHalt && request.type === PRERENDER) {
+        // When aborting a prerener with halt semantics we don't emit
+        // anything into the slot for a task that aborts, it remains unresolved
+        request.pendingChunks--;
+      } else {
+        // Otherwise we emit an error chunk into the task slot.
+        const errorId: number = (request.fatalError: any);
+        const model = stringify(serializeByValueID(errorId));
+        emitModelChunk(request, task.id, model);
+      }
+      return;
+    }
+
     const x =
       thrownValue === SuspenseException
         ? // This is a special type of exception used for Suspense. For historical
@@ -3832,14 +3867,6 @@ function retryTask(request: Request, task: Task): void {
     if (typeof x === 'object' && x !== null) {
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
-        if (request.status === ABORTING) {
-          request.abortableTasks.delete(task);
-          task.status = ABORTED;
-          const errorId: number = (request.fatalError: any);
-          const model = stringify(serializeByValueID(errorId));
-          emitModelChunk(request, task.id, model);
-          return;
-        }
         // Something suspended again, let's pick it back up later.
         task.status = PENDING;
         task.thenableState = getThenableStateAfterSuspending();
@@ -3854,15 +3881,6 @@ function retryTask(request: Request, task: Task): void {
         emitPostponeChunk(request, task.id, postponeInstance);
         return;
       }
-    }
-
-    if (request.status === ABORTING) {
-      request.abortableTasks.delete(task);
-      task.status = ABORTED;
-      const errorId: number = (request.fatalError: any);
-      const model = stringify(serializeByValueID(errorId));
-      emitModelChunk(request, task.id, model);
-      return;
     }
 
     request.abortableTasks.delete(task);
@@ -3940,6 +3958,17 @@ function abortTask(task: Task, request: Request, errorId: number): void {
   const ref = serializeByValueID(errorId);
   const processedChunk = encodeReferenceChunk(request, task.id, ref);
   request.completedErrorChunks.push(processedChunk);
+}
+
+function haltTask(task: Task, request: Request): void {
+  if (task.status === RENDERING) {
+    // this task will be halted by the render
+    return;
+  }
+  task.status = ABORTED;
+  // We don't actually emit anything for this task id because we are intentionally
+  // leaving the reference unfulfilled.
+  request.pendingChunks--;
 }
 
 function flushCompletedChunks(
@@ -4087,12 +4116,6 @@ export function abort(request: Request, reason: mixed): void {
     }
     const abortableTasks = request.abortableTasks;
     if (abortableTasks.size > 0) {
-      // We have tasks to abort. We'll emit one error row and then emit a reference
-      // to that row from every row that's still remaining if we are rendering. If we
-      // are prerendering (and halt semantics are enabled) we will refer to an error row
-      // but not actually emit it so the reciever can at that point rather than error.
-      const errorId = request.nextChunkId++;
-      request.fatalError = errorId;
       if (
         enablePostpone &&
         typeof reason === 'object' &&
@@ -4101,10 +4124,20 @@ export function abort(request: Request, reason: mixed): void {
       ) {
         const postponeInstance: Postpone = (reason: any);
         logPostpone(request, postponeInstance.message, null);
-        if (!enableHalt || request.type === PRERENDER) {
-          // When prerendering with halt semantics we omit the referred to postpone.
+        if (enableHalt && request.type === PRERENDER) {
+          // When prerendering with halt semantics we simply halt the task
+          // and leave the reference unfulfilled.
+          abortableTasks.forEach(task => haltTask(task, request));
+          abortableTasks.clear();
+        } else {
+          // When rendering we produce a shared postpone chunk and then
+          // fulfill each task with a reference to that chunk.
+          const errorId = request.nextChunkId++;
+          request.fatalError = errorId;
           request.pendingChunks++;
           emitPostponeChunk(request, errorId, postponeInstance);
+          abortableTasks.forEach(task => abortTask(task, request, errorId));
+          abortableTasks.clear();
         }
       } else {
         const error =
@@ -4120,14 +4153,22 @@ export function abort(request: Request, reason: mixed): void {
                 )
               : reason;
         const digest = logRecoverableError(request, error, null);
-        if (!enableHalt || request.type === RENDER) {
-          // When prerendering with halt semantics we omit the referred to error.
+        if (enableHalt && request.type === PRERENDER) {
+          // When prerendering with halt semantics we simply halt the task
+          // and leave the reference unfulfilled.
+          abortableTasks.forEach(task => haltTask(task, request));
+          abortableTasks.clear();
+        } else {
+          // When rendering we produce a shared error chunk and then
+          // fulfill each task with a reference to that chunk.
+          const errorId = request.nextChunkId++;
+          request.fatalError = errorId;
           request.pendingChunks++;
           emitErrorChunk(request, errorId, digest, error);
+          abortableTasks.forEach(task => abortTask(task, request, errorId));
+          abortableTasks.clear();
         }
       }
-      abortableTasks.forEach(task => abortTask(task, request, errorId));
-      abortableTasks.clear();
       const onAllReady = request.onAllReady;
       onAllReady();
     }

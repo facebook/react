@@ -2797,7 +2797,16 @@ describe('ReactFlightDOM', () => {
       abortFizz('bam');
     });
 
-    expect(errors).toEqual(['bam']);
+    if (__DEV__) {
+      expect(errors).toEqual([new Error('Connection closed.')]);
+    } else {
+      // This is likely a bug. In Dev we get a connection closed error
+      // because the debug info creates a chunk that has a pending status
+      // and when the stream finishes we error if any chunks are still pending.
+      // In production there is no debug info so the missing chunk is never instantiated
+      // because nothing triggers model evaluation before the stream completes
+      expect(errors).toEqual(['bam']);
+    }
 
     const container = document.createElement('div');
     await readInto(container, fizzReadable);
@@ -2919,10 +2928,11 @@ describe('ReactFlightDOM', () => {
     });
 
     const {prelude} = await pendingResult;
+
     expect(errors).toEqual(['boom']);
-    const response = ReactServerDOMClient.createFromReadableStream(
-      Readable.toWeb(prelude),
-    );
+
+    const preludeWeb = Readable.toWeb(prelude);
+    const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
 
     const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
 
@@ -2949,7 +2959,17 @@ describe('ReactFlightDOM', () => {
     });
 
     // one error per boundary
-    expect(errors).toEqual(['boom', 'boom', 'boom']);
+    if (__DEV__) {
+      const err = new Error('Connection closed.');
+      expect(errors).toEqual([err, err, err]);
+    } else {
+      // This is likely a bug. In Dev we get a connection closed error
+      // because the debug info creates a chunk that has a pending status
+      // and when the stream finishes we error if any chunks are still pending.
+      // In production there is no debug info so the missing chunk is never instantiated
+      // because nothing triggers model evaluation before the stream completes
+      expect(errors).toEqual(['boom', 'boom', 'boom']);
+    }
 
     const container = document.createElement('div');
     await readInto(container, fizzReadable);
