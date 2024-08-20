@@ -3857,7 +3857,6 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   } else {
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
-      boundary.status = CLIENT_RENDERED;
       // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
       // boundary the message is referring to
       const errorInfo = getThrownInfo(task.componentStack);
@@ -3870,11 +3869,24 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       ) {
         const postponeInstance: Postpone = (error: any);
         logPostpone(request, postponeInstance.message, errorInfo, null);
+        if (request.trackedPostpones !== null && segment !== null) {
+          trackPostpone(request, request.trackedPostpones, task, segment);
+          finishedTask(request, task.blockedBoundary, segment);
+
+          // If this boundary was still pending then we haven't already cancelled its fallbacks.
+          // We'll need to abort the fallbacks, which will also error that parent boundary.
+          boundary.fallbackAbortableTasks.forEach(fallbackTask =>
+            abortTask(fallbackTask, request, error),
+          );
+          boundary.fallbackAbortableTasks.clear();
+          return;
+        }
         // TODO: Figure out a better signal than a magic digest value.
         errorDigest = 'POSTPONE';
       } else {
         errorDigest = logRecoverableError(request, error, errorInfo, null);
       }
+      boundary.status = CLIENT_RENDERED;
       encodeErrorForBoundary(boundary, errorDigest, error, errorInfo, true);
 
       untrackBoundary(request, boundary);
