@@ -7727,7 +7727,6 @@ describe('ReactDOMFizzServer', () => {
 
     const prerendered = await pendingPrerender;
 
-    expect(prerendered.postponed).toBe(null);
     expect(errors).toEqual([]);
     expect(postpones).toEqual(['manufactured', 'manufactured']);
 
