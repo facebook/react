@@ -5003,8 +5003,9 @@ function abortTask(task, request, error) {
     }
   } else
     boundary.pendingTasks--,
+      (task = getThrownInfo(task.componentStack)),
       4 !== boundary.status &&
-        ((task = getThrownInfo(task.componentStack)),
+        ((boundary.status = 4),
         (task = logRecoverableError(request, error, task)),
         (boundary.status = 4),
         (boundary.errorDigest = task),
@@ -5878,4 +5879,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "19.0.0-www-classic-2505bf9b-20240820";
+exports.version = "19.0.0-www-classic-85180b8c-20240820";

@@ -4797,8 +4797,9 @@ function abortTask(task, request, error) {
     }
   } else
     boundary.pendingTasks--,
+      (task = getThrownInfo(task.componentStack)),
       4 !== boundary.status &&
-        ((task = getThrownInfo(task.componentStack)),
+        ((boundary.status = 4),
         (task = logRecoverableError(request, error, task)),
         (boundary.status = 4),
         (boundary.errorDigest = task),
