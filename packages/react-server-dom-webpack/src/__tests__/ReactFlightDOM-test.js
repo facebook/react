@@ -2724,7 +2724,7 @@ describe('ReactFlightDOM', () => {
   });
 
   // @gate enableHalt
-  it('serializes unfinished tasks with infinite promises when aborting a prerender', async () => {
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
       resolveGreeting = resolve;
@@ -2746,6 +2746,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const controller = new AbortController();
+    const errors = [];
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
@@ -2754,14 +2755,19 @@ describe('ReactFlightDOM', () => {
           webpackMap,
           {
             signal: controller.signal,
+            onError(err) {
+              errors.push(err);
+            },
           },
         ),
       };
     });
 
-    controller.abort();
+    controller.abort('boom');
     resolveGreeting();
     const {prelude} = await pendingResult;
+
+    expect(errors).toEqual(['boom']);
 
     const preludeWeb = Readable.toWeb(prelude);
     const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
@@ -2772,7 +2778,7 @@ describe('ReactFlightDOM', () => {
       return use(response);
     }
 
-    const errors = [];
+    errors.length = 0;
     let abortFizz;
     await serverAct(async () => {
       const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
@@ -2788,10 +2794,10 @@ describe('ReactFlightDOM', () => {
     });
 
     await serverAct(() => {
-      abortFizz('boom');
+      abortFizz('bam');
     });
 
-    expect(errors).toEqual(['boom']);
+    expect(errors).toEqual(['bam']);
 
     const container = document.createElement('div');
     await readInto(container, fizzReadable);
@@ -2861,7 +2867,7 @@ describe('ReactFlightDOM', () => {
   it('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
     const controller = new AbortController();
     function ComponentThatAborts() {
-      controller.abort();
+      controller.abort('boom');
       return null;
     }
 
@@ -2912,11 +2918,8 @@ describe('ReactFlightDOM', () => {
       };
     });
 
-    controller.abort();
-
     const {prelude} = await pendingResult;
-    expect(errors).toEqual([]);
-
+    expect(errors).toEqual(['boom']);
     const response = ReactServerDOMClient.createFromReadableStream(
       Readable.toWeb(prelude),
     );
@@ -2926,6 +2929,7 @@ describe('ReactFlightDOM', () => {
     function ClientApp() {
       return use(response);
     }
+    errors.length = 0;
     let abortFizz;
     await serverAct(async () => {
       const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(

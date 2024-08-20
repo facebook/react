@@ -443,7 +443,7 @@ describe('ReactFlightDOMNode', () => {
   });
 
   // @gate enableHalt
-  it('serializes unfinished tasks with infinite promises when aborting a prerender', async () => {
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
       resolveGreeting = resolve;
@@ -465,6 +465,7 @@ describe('ReactFlightDOMNode', () => {
     }
 
     const controller = new AbortController();
+    const errors = [];
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
@@ -473,14 +474,18 @@ describe('ReactFlightDOMNode', () => {
           webpackMap,
           {
             signal: controller.signal,
+            onError(err) {
+              errors.push(err);
+            },
           },
         ),
       };
     });
 
-    controller.abort();
+    controller.abort('boom');
     resolveGreeting();
     const {prelude} = await pendingResult;
+    expect(errors).toEqual(['boom']);
 
     function ClientRoot({response}) {
       return use(response);
@@ -492,7 +497,7 @@ describe('ReactFlightDOMNode', () => {
         moduleLoading: null,
       },
     });
-    const errors = [];
+    errors.length = 0;
     const ssrStream = await serverAct(() =>
       ReactDOMServer.renderToPipeableStream(
         React.createElement(ClientRoot, {response}),
@@ -503,8 +508,8 @@ describe('ReactFlightDOMNode', () => {
         },
       ),
     );
-    ssrStream.abort('boom');
-    expect(errors).toEqual(['boom']);
+    ssrStream.abort('bam');
+    expect(errors).toEqual(['bam']);
     // Should still match the result when parsed
     const result = await readResult(ssrStream);
     const div = document.createElement('div');
