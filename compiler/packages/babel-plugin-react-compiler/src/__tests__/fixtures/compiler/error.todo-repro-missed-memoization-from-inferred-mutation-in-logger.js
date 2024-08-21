@@ -4,16 +4,14 @@ import LogEvent from 'LogEvent';
 import {useCallback, useMemo} from 'react';
 
 component Component(id) {
-  const {data} = useFragment();
-  const items = data.items.edges;
+  const items = useFragment();
 
-  const [prevId, setPrevId] = useState(id);
   const [index, setIndex] = useState(0);
 
   const logData = useMemo(() => {
     const item = items[index];
     return {
-      key: item.key ?? '',
+      key: item.key,
     };
   }, [index, items]);
 
@@ -31,7 +29,6 @@ component Component(id) {
   );
 
   if (prevId !== id) {
-    setPrevId(id);
     setCurrentIndex(0);
   }
 
