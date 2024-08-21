@@ -48,6 +48,21 @@ export function makeSharedRuntimeTypeProvider({
           returnType: {kind: 'type', name: 'Primitive'},
           returnValueKind: ValueKindEnum.Primitive,
         },
+        useFreeze: {
+          kind: 'hook',
+          returnType: {kind: 'type', name: 'Any'},
+        },
+        useFragment: {
+          kind: 'hook',
+          returnType: {kind: 'type', name: 'MixedReadonly'},
+          noAlias: true,
+        },
+        useNoAlias: {
+          kind: 'hook',
+          returnType: {kind: 'type', name: 'Any'},
+          returnValueKind: ValueKindEnum.Mutable,
+          noAlias: true,
+        },
       },
     };
   };

@@ -27,7 +27,7 @@ import { c as _c } from "react/compiler-runtime";
 import { useNoAlias } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(9);
+  const $ = _c(5);
   let t0;
   if ($[0] !== props.a) {
     t0 = { a: props.a };
@@ -37,35 +37,19 @@ function Component(props) {
     t0 = $[1];
   }
   const item = t0;
+  const x = useNoAlias(item, () => {
+    console.log(props);
+  }, [props.a]);
   let t1;
-  if ($[2] !== props) {
-    t1 = () => {
-      console.log(props);
-    };
-    $[2] = props;
-    $[3] = t1;
+  if ($[2] !== x || $[3] !== item) {
+    t1 = [x, item];
+    $[2] = x;
+    $[3] = item;
+    $[4] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[4];
   }
-  let t2;
-  if ($[4] !== props.a) {
-    t2 = [props.a];
-    $[4] = props.a;
-    $[5] = t2;
-  } else {
-    t2 = $[5];
-  }
-  const x = useNoAlias(item, t1, t2);
-  let t3;
-  if ($[6] !== x || $[7] !== item) {
-    t3 = [x, item];
-    $[6] = x;
-    $[7] = item;
-    $[8] = t3;
-  } else {
-    t3 = $[8];
-  }
-  return t3;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

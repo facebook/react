@@ -215,35 +215,6 @@ function makePluginOptions(
   const options = {
     environment: {
       ...config,
-      customHooks: new Map([
-        [
-          'useFreeze',
-          {
-            valueKind: 'frozen' as ValueKind,
-            effectKind: 'freeze' as Effect,
-            transitiveMixedData: false,
-            noAlias: false,
-          },
-        ],
-        [
-          'useFragment',
-          {
-            valueKind: 'frozen' as ValueKind,
-            effectKind: 'freeze' as Effect,
-            transitiveMixedData: true,
-            noAlias: true,
-          },
-        ],
-        [
-          'useNoAlias',
-          {
-            valueKind: 'mutable' as ValueKind,
-            effectKind: 'read' as Effect,
-            transitiveMixedData: false,
-            noAlias: true,
-          },
-        ],
-      ]),
       moduleTypeProvider: makeSharedRuntimeTypeProvider({
         EffectEnum,
         ValueKindEnum,
