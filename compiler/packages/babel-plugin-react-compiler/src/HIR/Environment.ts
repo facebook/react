@@ -47,7 +47,6 @@ import {
 } from './ObjectShape';
 import {Scope as BabelScope} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
-import prettyFormat from 'pretty-format';
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
