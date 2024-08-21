@@ -38,6 +38,7 @@ import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
   scheduleWork,
+  scheduleMicrotask,
   beginWriting,
   writeChunk,
   writeChunkAndReturn,
@@ -669,7 +670,11 @@ function pingTask(request: Request, task: Task): void {
   pingedTasks.push(task);
   if (request.pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
-    scheduleWork(() => performWork(request));
+    if (request.trackedPostpones !== null) {
+      scheduleMicrotask(() => performWork(request));
+    } else {
+      scheduleWork(() => performWork(request));
+    }
   }
 }
 
@@ -4893,12 +4898,22 @@ function flushCompletedQueues(
 
 export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
-  if (supportsRequestStorage) {
-    scheduleWork(() => requestStorage.run(request, performWork, request));
+  if (request.trackedPostpones !== null) {
+    // When prerendering we use microtasks for pinging work
+    if (supportsRequestStorage) {
+      scheduleMicrotask(() =>
+        requestStorage.run(request, performWork, request),
+      );
+    } else {
+      scheduleMicrotask(() => performWork(request));
+    }
   } else {
-    scheduleWork(() => performWork(request));
-  }
-  if (request.trackedPostpones === null) {
+    // When rendering/resuming we use regular tasks and we also emit early preloads
+    if (supportsRequestStorage) {
+      scheduleWork(() => requestStorage.run(request, performWork, request));
+    } else {
+      scheduleWork(() => performWork(request));
+    }
     // this is either a regular render or a resume. For regular render we want
     // to call emitEarlyPreloads after the first performWork because we want
     // are responding to a live request and need to balance sending something early
