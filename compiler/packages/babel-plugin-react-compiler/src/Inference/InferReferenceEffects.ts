@@ -14,7 +14,6 @@ import {
   CallExpression,
   Effect,
   FunctionEffect,
-  FunctionExpression,
   GeneratedSource,
   HIRFunction,
   IdentifierId,
@@ -36,7 +35,6 @@ import {
 import {FunctionSignature} from '../HIR/ObjectShape';
 import {
   printIdentifier,
-  printInstruction,
   printMixedHIR,
   printPlace,
   printSourceLocation,
@@ -468,10 +466,12 @@ class InferenceState {
           this.#env.config.enableTransitivelyFreezeFunctionExpressions
         ) {
           if (value.kind === 'FunctionExpression') {
-            // We want to freeze the captured values, not mark the operands
-            // themselves as frozen. There could be mutations that occur
-            // before the freeze we are processing, and it would be invalid
-            // to overwrite those mutations as a freeze.
+            /*
+             * We want to freeze the captured values, not mark the operands
+             * themselves as frozen. There could be mutations that occur
+             * before the freeze we are processing, and it would be invalid
+             * to overwrite those mutations as a freeze.
+             */
             for (const operand of eachInstructionValueOperand(value)) {
               const operandValues = this.#variables.get(operand.identifier.id);
               if (operandValues !== undefined) {
