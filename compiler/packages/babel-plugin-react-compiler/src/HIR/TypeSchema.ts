@@ -18,9 +18,9 @@ export const ObjectPropertiesSchema: z.ZodType<ObjectPropertiesConfig> = z
   )
   .refine(record => {
     return Object.keys(record).every(
-      key => key === '*' || isValidIdentifier(key),
+      key => key === '*' || key === 'default' || isValidIdentifier(key),
     );
-  }, 'Expected all "object" property names to be valid identifiers or `*` to match any property');
+  }, 'Expected all "object" property names to be valid identifier, `*` to match any property, of `default` to define a module default export');
 
 export type ObjectTypeConfig = {
   kind: 'object';

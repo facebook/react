@@ -814,8 +814,14 @@ export class Environment {
         } else {
           const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
-            // TODO: distinguish default/namespace cases
-            return moduleType;
+            if (binding.kind === 'ImportDefault') {
+              const defaultType = this.getPropertyType(moduleType, 'default');
+              if (defaultType !== null) {
+                return defaultType;
+              }
+            } else {
+              return moduleType;
+            }
           }
           return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }

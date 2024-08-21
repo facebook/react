@@ -24,6 +24,14 @@ export function makeSharedRuntimeTypeProvider({
     return {
       kind: 'object',
       properties: {
+        default: {
+          kind: 'function',
+          calleeEffect: EffectEnum.Read,
+          positionalParams: [],
+          restParam: EffectEnum.Read,
+          returnType: {kind: 'type', name: 'Primitive'},
+          returnValueKind: ValueKindEnum.Primitive,
+        },
         typedArrayPush: {
           kind: 'function',
           calleeEffect: EffectEnum.Read,

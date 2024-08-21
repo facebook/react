@@ -352,6 +352,7 @@ export function typedArrayPush<T>(array: Array<T>, item: T): void {
   array.push(item);
 }
 
-export function typedLog(...values: Array<string>): void {
+export function typedLog(...values: Array<any>): void {
   console.log(...values);
 }
+export default typedLog;
