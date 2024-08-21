@@ -47,6 +47,7 @@ import {
 } from './ObjectShape';
 import {Scope as BabelScope} from '@babel/traverse';
 import {TypeSchema} from './TypeSchema';
+import prettyFormat from 'pretty-format';
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -126,11 +127,6 @@ const HookSchema = z.object({
 
 export type Hook = z.infer<typeof HookSchema>;
 
-export const ModuleTypeResolver = z
-  .function()
-  .args(z.string())
-  .returns(z.nullable(TypeSchema));
-
 /*
  * TODO(mofeiZ): User defined global types (with corresponding shapes).
  * User defined global types should have inline ObjectShapes instead of directly
@@ -148,7 +144,7 @@ const EnvironmentConfigSchema = z.object({
    * A function that, given the name of a module, can optionally return a description
    * of that module's type signature.
    */
-  moduleTypeProvider: z.nullable(ModuleTypeResolver).default(null),
+  moduleTypeProvider: z.nullable(z.function().args(z.string())).default(null),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -718,15 +714,25 @@ export class Environment {
     }
     let moduleType = this.#moduleTypes.get(moduleName);
     if (moduleType === undefined) {
-      const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
-      if (unparsedModuleConfig != null) {
-        const moduleConfig = TypeSchema.parse(unparsedModuleConfig);
-        moduleType = installTypeConfig(
-          this.#globals,
-          this.#shapes,
-          moduleConfig,
-        );
-      } else {
+      try {
+        const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+        if (unparsedModuleConfig != null) {
+          const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
+          if (!parsedModuleConfig.success) {
+            console.error(parsedModuleConfig.error.toString());
+            process.exit(1);
+          }
+          const moduleConfig = parsedModuleConfig.data;
+          moduleType = installTypeConfig(
+            this.#globals,
+            this.#shapes,
+            moduleConfig,
+          );
+        } else {
+          moduleType = null;
+        }
+      } catch (e) {
+        console.error((e as Error).stack);
         moduleType = null;
       }
       this.#moduleTypes.set(moduleName, moduleType);
@@ -819,9 +825,7 @@ export class Environment {
   #isKnownReactModule(moduleName: string): boolean {
     return (
       moduleName.toLowerCase() === 'react' ||
-      moduleName.toLowerCase() === 'react-dom' ||
-      (this.config.enableSharedRuntime__testonly &&
-        moduleName === 'shared-runtime')
+      moduleName.toLowerCase() === 'react-dom'
     );
   }
 

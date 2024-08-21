@@ -8,7 +8,7 @@
 import {isValidIdentifier} from '@babel/types';
 import {z} from 'zod';
 import {Effect, ValueKind} from '..';
-import {EffectSchema} from './HIR';
+import {EffectSchema, ValueKindSchema} from './HIR';
 
 export type ObjectPropertiesConfig = {[key: string]: TypeConfig};
 export const ObjectPropertiesSchema: z.ZodType<ObjectPropertiesConfig> = z
@@ -45,7 +45,7 @@ export const FunctionTypeSchema: z.ZodType<FunctionTypeConfig> = z.object({
   restParam: EffectSchema.nullable(),
   calleeEffect: EffectSchema,
   returnType: z.lazy(() => TypeSchema),
-  returnValueKind: z.nativeEnum(ValueKind),
+  returnValueKind: ValueKindSchema,
 });
 
 export type BuiltInTypeConfig = 'Ref' | 'Array' | 'Primitive' | 'MixedReadonly';

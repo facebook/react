@@ -31,7 +31,7 @@ import path from 'path';
 import prettier from 'prettier';
 import SproutTodoFilter from './SproutTodoFilter';
 import {isExpectError} from './fixture-utils';
-import {sharedRuntimeTypeProvider} from './sprout/shared-runtime-type-provider';
+import {makeSharedRuntimeTypeProvider} from './sprout/shared-runtime-type-provider';
 export function parseLanguage(source: string): 'flow' | 'typescript' {
   return source.indexOf('@flow') !== -1 ? 'flow' : 'typescript';
 }
@@ -39,6 +39,8 @@ export function parseLanguage(source: string): 'flow' | 'typescript' {
 function makePluginOptions(
   firstLine: string,
   parseConfigPragmaFn: typeof ParseConfigPragma,
+  EffectEnum: typeof Effect,
+  ValueKindEnum: typeof ValueKind,
 ): [PluginOptions, Array<{filename: string | null; event: LoggerEvent}>] {
   let gating = null;
   let enableEmitInstrumentForget = null;
@@ -242,7 +244,10 @@ function makePluginOptions(
           },
         ],
       ]),
-      moduleTypeProvider: sharedRuntimeTypeProvider,
+      moduleTypeProvider: makeSharedRuntimeTypeProvider({
+        EffectEnum,
+        ValueKindEnum,
+      }),
       customMacros,
       enableEmitFreeze,
       enableEmitInstrumentForget,
@@ -385,6 +390,8 @@ export async function transformFixtureInput(
   parseConfigPragmaFn: typeof ParseConfigPragma,
   plugin: BabelCore.PluginObj,
   includeEvaluator: boolean,
+  EffectEnum: typeof Effect,
+  ValueKindEnum: typeof ValueKind,
 ): Promise<{kind: 'ok'; value: TransformResult} | {kind: 'err'; msg: string}> {
   // Extract the first line to quickly check for custom test directives
   const firstLine = input.substring(0, input.indexOf('\n'));
@@ -407,7 +414,12 @@ export async function transformFixtureInput(
   /**
    * Get Forget compiled code
    */
-  const [options, logs] = makePluginOptions(firstLine, parseConfigPragmaFn);
+  const [options, logs] = makePluginOptions(
+    firstLine,
+    parseConfigPragmaFn,
+    EffectEnum,
+    ValueKindEnum,
+  );
   const forgetResult = transformFromAstSync(inputAst, input, {
     filename: virtualFilepath,
     highlightCode: false,
