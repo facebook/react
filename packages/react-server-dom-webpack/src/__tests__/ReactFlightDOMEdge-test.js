@@ -23,10 +23,6 @@ if (typeof File === 'undefined' || typeof FormData === 'undefined') {
 // Patch for Edge environments for global scope
 global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
-const {
-  patchMessageChannel,
-} = require('../../../../scripts/jest/patchMessageChannel');
-
 let serverExports;
 let clientExports;
 let webpackMap;
@@ -39,7 +35,6 @@ let ReactServerDOMServer;
 let ReactServerDOMStaticServer;
 let ReactServerDOMClient;
 let use;
-let ReactServerScheduler;
 let reactServerAct;
 
 function normalizeCodeLocInfo(str) {
@@ -55,9 +50,7 @@ describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactServerScheduler = require('scheduler');
-    patchMessageChannel(ReactServerScheduler);
-    reactServerAct = require('internal-test-utils').act;
+    reactServerAct = require('internal-test-utils').serverAct;
 
     // Simulate the condition resolution
     jest.mock('react', () => require('react/react.react-server'));

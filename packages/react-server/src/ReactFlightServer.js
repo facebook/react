@@ -1794,7 +1794,11 @@ function pingTask(request: Request, task: Task): void {
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
     request.flushScheduled = request.destination !== null;
-    scheduleMicrotask(() => performWork(request));
+    if (request.type === PRERENDER) {
+      scheduleMicrotask(() => performWork(request));
+    } else {
+      scheduleWork(() => performWork(request));
+    }
   }
 }
 
@@ -4056,10 +4060,20 @@ function flushCompletedChunks(
 
 export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
-  if (supportsRequestStorage) {
-    scheduleWork(() => requestStorage.run(request, performWork, request));
+  if (request.type === PRERENDER) {
+    if (supportsRequestStorage) {
+      scheduleMicrotask(() => {
+        requestStorage.run(request, performWork, request);
+      });
+    } else {
+      scheduleMicrotask(() => performWork(request));
+    }
   } else {
-    scheduleWork(() => performWork(request));
+    if (supportsRequestStorage) {
+      scheduleWork(() => requestStorage.run(request, performWork, request));
+    } else {
+      scheduleWork(() => performWork(request));
+    }
   }
 }
 
@@ -4073,6 +4087,8 @@ function enqueueFlush(request: Request): void {
     request.destination !== null
   ) {
     request.flushScheduled = true;
+    // Unlike startWork and pingTask we intetionally use scheduleWork
+    // here even during prerenders to allow as much batching as possible
     scheduleWork(() => {
       request.flushScheduled = false;
       const destination = request.destination;
