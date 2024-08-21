@@ -1002,6 +1002,20 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
+  it('should properly control 0.0 for a number input', async () => {
+    await act(() => {
+      root.render(<input type="number" value={0} onChange={emptyFunction} />);
+    });
+    const node = container.firstChild;
+
+    setUntrackedValue.call(node, '0.0');
+    await act(() => {
+      dispatchEventOnNode(node, 'input');
+    });
+
+    expect(node.value).toBe('0.0');
+  });
+
   it('should properly transition from an empty value to 0', async () => {
     await act(() => {
       root.render(<input type="text" value="" onChange={emptyFunction} />);
