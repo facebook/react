@@ -3195,7 +3195,9 @@ function ensureFormComponentIsStateful(formFiber: Fiber) {
 }
 
 export function requestFormReset(formFiber: Fiber) {
-  if (formFiber.memoizedProps.suppressReset) return;
+  if (formFiber.memoizedProps.suppressReset) {
+    return;
+  }
 
   const transition = requestCurrentTransition();
 
