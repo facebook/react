@@ -2402,7 +2402,7 @@ describe('ReactFlightDOMBrowser', () => {
   });
 
   // @gate enableHalt
-  it('serializes unfinished tasks with infinite promises when aborting a prerender', async () => {
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
       resolveGreeting = resolve;
@@ -2424,6 +2424,7 @@ describe('ReactFlightDOMBrowser', () => {
     }
 
     const controller = new AbortController();
+    const errors = [];
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
@@ -2432,14 +2433,18 @@ describe('ReactFlightDOMBrowser', () => {
           webpackMap,
           {
             signal: controller.signal,
+            onError(err) {
+              errors.push(err);
+            },
           },
         ),
       };
     });
 
-    controller.abort();
+    controller.abort('boom');
     resolveGreeting();
     const {prelude} = await pendingResult;
+    expect(errors).toEqual(['boom']);
 
     function ClientRoot({response}) {
       return use(response);
@@ -2449,12 +2454,28 @@ describe('ReactFlightDOMBrowser', () => {
       passThrough(prelude),
     );
     const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
+    errors.length = 0;
+    const root = ReactDOMClient.createRoot(container, {
+      onUncaughtError(err) {
+        errors.push(err);
+      },
+    });
 
     await act(() => {
       root.render(<ClientRoot response={response} />);
     });
 
-    expect(container.innerHTML).toBe('<div>loading...</div>');
+    if (__DEV__) {
+      expect(errors).toEqual([new Error('Connection closed.')]);
+      expect(container.innerHTML).toBe('');
+    } else {
+      // This is likely a bug. In Dev we get a connection closed error
+      // because the debug info creates a chunk that has a pending status
+      // and when the stream finishes we error if any chunks are still pending.
+      // In production there is no debug info so the missing chunk is never instantiated
+      // because nothing triggers model evaluation before the stream completes
+      expect(errors).toEqual([]);
+      expect(container.innerHTML).toBe('<div>loading...</div>');
+    }
   });
 });

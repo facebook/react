@@ -2724,7 +2724,7 @@ describe('ReactFlightDOM', () => {
   });
 
   // @gate enableHalt
-  it('serializes unfinished tasks with infinite promises when aborting a prerender', async () => {
+  it('does not propagate abort reasons errors when aborting a prerender', async () => {
     let resolveGreeting;
     const greetingPromise = new Promise(resolve => {
       resolveGreeting = resolve;
@@ -2746,6 +2746,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const controller = new AbortController();
+    const errors = [];
     const {pendingResult} = await serverAct(async () => {
       // destructure trick to avoid the act scope from awaiting the returned value
       return {
@@ -2754,14 +2755,19 @@ describe('ReactFlightDOM', () => {
           webpackMap,
           {
             signal: controller.signal,
+            onError(err) {
+              errors.push(err);
+            },
           },
         ),
       };
     });
 
-    controller.abort();
+    controller.abort('boom');
     resolveGreeting();
     const {prelude} = await pendingResult;
+
+    expect(errors).toEqual(['boom']);
 
     const preludeWeb = Readable.toWeb(prelude);
     const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
@@ -2772,7 +2778,7 @@ describe('ReactFlightDOM', () => {
       return use(response);
     }
 
-    const errors = [];
+    errors.length = 0;
     let abortFizz;
     await serverAct(async () => {
       const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
@@ -2788,10 +2794,19 @@ describe('ReactFlightDOM', () => {
     });
 
     await serverAct(() => {
-      abortFizz('boom');
+      abortFizz('bam');
     });
 
-    expect(errors).toEqual(['boom']);
+    if (__DEV__) {
+      expect(errors).toEqual([new Error('Connection closed.')]);
+    } else {
+      // This is likely a bug. In Dev we get a connection closed error
+      // because the debug info creates a chunk that has a pending status
+      // and when the stream finishes we error if any chunks are still pending.
+      // In production there is no debug info so the missing chunk is never instantiated
+      // because nothing triggers model evaluation before the stream completes
+      expect(errors).toEqual(['bam']);
+    }
 
     const container = document.createElement('div');
     await readInto(container, fizzReadable);
@@ -2855,5 +2870,115 @@ describe('ReactFlightDOM', () => {
     await 1;
     jest.advanceTimersByTime('100');
     expect(await race).toBe('timeout');
+  });
+
+  // @gate enableHalt
+  it('will halt unfinished chunks inside Suspense when aborting a prerender', async () => {
+    const controller = new AbortController();
+    function ComponentThatAborts() {
+      controller.abort('boom');
+      return null;
+    }
+
+    async function Greeting() {
+      await 1;
+      return 'hello world';
+    }
+
+    async function Farewell() {
+      return 'goodbye world';
+    }
+
+    async function Wrapper() {
+      return (
+        <Suspense fallback="loading too...">
+          <ComponentThatAborts />
+        </Suspense>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="loading...">
+            <Greeting />
+          </Suspense>
+          <Wrapper />
+          <Suspense fallback="loading three...">
+            <Farewell />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    const {pendingResult} = await serverAct(() => {
+      return {
+        pendingResult: ReactServerDOMStaticServer.prerenderToNodeStream(
+          <App />,
+          {},
+          {
+            onError(x) {
+              errors.push(x);
+            },
+            signal: controller.signal,
+          },
+        ),
+      };
+    });
+
+    const {prelude} = await pendingResult;
+
+    expect(errors).toEqual(['boom']);
+
+    const preludeWeb = Readable.toWeb(prelude);
+    const response = ReactServerDOMClient.createFromReadableStream(preludeWeb);
+
+    const {writable: fizzWritable, readable: fizzReadable} = getTestStream();
+
+    function ClientApp() {
+      return use(response);
+    }
+    errors.length = 0;
+    let abortFizz;
+    await serverAct(async () => {
+      const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
+        React.createElement(ClientApp),
+        {
+          onError(error, errorInfo) {
+            errors.push(error);
+          },
+        },
+      );
+      pipe(fizzWritable);
+      abortFizz = abort;
+    });
+
+    await serverAct(() => {
+      abortFizz('boom');
+    });
+
+    // one error per boundary
+    if (__DEV__) {
+      const err = new Error('Connection closed.');
+      expect(errors).toEqual([err, err, err]);
+    } else {
+      // This is likely a bug. In Dev we get a connection closed error
+      // because the debug info creates a chunk that has a pending status
+      // and when the stream finishes we error if any chunks are still pending.
+      // In production there is no debug info so the missing chunk is never instantiated
+      // because nothing triggers model evaluation before the stream completes
+      expect(errors).toEqual(['boom', 'boom', 'boom']);
+    }
+
+    const container = document.createElement('div');
+    await readInto(container, fizzReadable);
+    expect(getMeaningfulChildren(container)).toEqual(
+      <div>
+        {'loading...'}
+        {'loading too...'}
+        {'loading three...'}
+      </div>,
+    );
   });
 });

@@ -238,6 +238,12 @@ const EnvironmentConfigSchema = z.object({
   validateNoSetStateInPassiveEffects: z.boolean().default(false),
 
   /**
+   * Validates against creating JSX within a try block and recommends using an error boundary
+   * instead.
+   */
+  validateNoJSXInTryStatements: z.boolean().default(false),
+
+  /**
    * Validates that the dependencies of all effect hooks are memoized. This helps ensure
    * that Forget does not introduce infinite renders caused by a dependency changing,
    * triggering an effect, which triggers re-rendering, which causes a dependency to change,

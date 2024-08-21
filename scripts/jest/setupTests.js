@@ -205,8 +205,17 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     }
   };
 
+  const coerceGateConditionToFunction = gateFnOrString => {
+    return typeof gateFnOrString === 'string'
+      ? // `gate('foo')` is treated as equivalent to `gate(flags => flags.foo)`
+        flags => flags[gateFnOrString]
+      : // Assume this is already a function
+        gateFnOrString;
+  };
+
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
-  global._test_gate = (gateFn, testName, callback, timeoutMS) => {
+  global._test_gate = (gateFnOrString, testName, callback, timeoutMS) => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     let shouldPass;
     try {
       const flags = getTestFlags();
@@ -230,7 +239,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
         expectTestToFail(callback, error, timeoutMS));
     }
   };
-  global._test_gate_focus = (gateFn, testName, callback, timeoutMS) => {
+  global._test_gate_focus = (gateFnOrString, testName, callback, timeoutMS) => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     let shouldPass;
     try {
       const flags = getTestFlags();
@@ -259,8 +269,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   };
 
   // Dynamic version of @gate pragma
-  global.gate = fn => {
+  global.gate = gateFnOrString => {
+    const gateFn = coerceGateConditionToFunction(gateFnOrString);
     const flags = getTestFlags();
-    return fn(flags);
+    return gateFn(flags);
   };
 }
