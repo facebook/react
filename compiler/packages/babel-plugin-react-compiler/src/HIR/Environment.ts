@@ -714,28 +714,23 @@ export class Environment {
     }
     let moduleType = this.#moduleTypes.get(moduleName);
     if (moduleType === undefined) {
-      try {
-        const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
-        if (unparsedModuleConfig != null) {
-          const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
-          if (!parsedModuleConfig.success) {
-            CompilerError.throwInvalidConfig({
-              reason: `Could not parse module type, the configured \`moduleTypeProvider\` function returned an invalid module description`,
-              description: parsedModuleConfig.error.toString(),
-              loc,
-            });
-          }
-          const moduleConfig = parsedModuleConfig.data;
-          moduleType = installTypeConfig(
-            this.#globals,
-            this.#shapes,
-            moduleConfig,
-          );
-        } else {
-          moduleType = null;
+      const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+      if (unparsedModuleConfig != null) {
+        const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
+        if (!parsedModuleConfig.success) {
+          CompilerError.throwInvalidConfig({
+            reason: `Could not parse module type, the configured \`moduleTypeProvider\` function returned an invalid module description`,
+            description: parsedModuleConfig.error.toString(),
+            loc,
+          });
         }
-      } catch (e) {
-        console.error((e as Error).stack);
+        const moduleConfig = parsedModuleConfig.data;
+        moduleType = installTypeConfig(
+          this.#globals,
+          this.#shapes,
+          moduleConfig,
+        );
+      } else {
         moduleType = null;
       }
       this.#moduleTypes.set(moduleName, moduleType);
