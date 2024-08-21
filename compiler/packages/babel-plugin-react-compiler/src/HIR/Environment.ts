@@ -17,6 +17,7 @@ import {
   Global,
   GlobalRegistry,
   installReAnimatedTypes,
+  installTypeConfig,
 } from './Globals';
 import {
   BlockId,
@@ -45,6 +46,7 @@ import {
   addHook,
 } from './ObjectShape';
 import {Scope as BabelScope} from '@babel/traverse';
+import {TypeSchema} from './TypeSchema';
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -124,6 +126,11 @@ const HookSchema = z.object({
 
 export type Hook = z.infer<typeof HookSchema>;
 
+export const ModuleTypeResolver = z
+  .function()
+  .args(z.string())
+  .returns(z.nullable(TypeSchema));
+
 /*
  * TODO(mofeiZ): User defined global types (with corresponding shapes).
  * User defined global types should have inline ObjectShapes instead of directly
@@ -136,6 +143,12 @@ export type Hook = z.infer<typeof HookSchema>;
 
 const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
+
+  /**
+   * A function that, given the name of a module, can optionally return a description
+   * of that module's type signature.
+   */
+  resolveModuleTypeSchema: z.nullable(ModuleTypeResolver).default(null),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -577,6 +590,7 @@ export function printFunctionType(type: ReactFunctionType): string {
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
+  #moduleTypes: Map<string, Global | null> = new Map();
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
@@ -698,6 +712,28 @@ export class Environment {
     return this.#outlinedFunctions;
   }
 
+  #resolveModuleType(moduleName: string): Global | null {
+    if (this.config.resolveModuleTypeSchema == null) {
+      return null;
+    }
+    let moduleType = this.#moduleTypes.get(moduleName);
+    if (moduleType === undefined) {
+      const moduleConfig = this.config.resolveModuleTypeSchema(moduleName);
+      if (moduleConfig != null) {
+        const moduleTypes = TypeSchema.parse(moduleConfig);
+        moduleType = installTypeConfig(
+          this.#globals,
+          this.#shapes,
+          moduleTypes,
+        );
+      } else {
+        moduleType = null;
+      }
+      this.#moduleTypes.set(moduleName, moduleType);
+    }
+    return moduleType;
+  }
+
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
@@ -736,6 +772,17 @@ export class Environment {
             (isHookName(binding.imported) ? this.#getCustomHookType() : null)
           );
         } else {
+          const moduleType = this.#resolveModuleType(binding.module);
+          if (moduleType !== null) {
+            const importedType = this.getPropertyType(
+              moduleType,
+              binding.imported,
+            );
+            if (importedType != null) {
+              return importedType;
+            }
+          }
+
           /**
            * For modules we don't own, we look at whether the original name or import alias
            * are hook-like. Both of the following are likely hooks so we would return a hook
@@ -758,6 +805,11 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
+          const moduleType = this.#resolveModuleType(binding.module);
+          if (moduleType !== null) {
+            // TODO: distinguish default/namespace cases
+            return moduleType;
+          }
           return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }
       }

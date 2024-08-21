@@ -12,6 +12,7 @@ import {assertExhaustive} from '../Utils/utils';
 import {Environment, ReactFunctionType} from './Environment';
 import {HookKind} from './ObjectShape';
 import {Type, makeType} from './Types';
+import {z} from 'zod';
 
 /*
  * *******************************************************************************************
@@ -1388,6 +1389,15 @@ export enum Effect {
   // This reference may alias to (mutate) the value
   Store = 'store',
 }
+
+export const EffectSchema = z.enum([
+  Effect.Read,
+  Effect.Mutate,
+  Effect.ConditionallyMutate,
+  Effect.Capture,
+  Effect.Store,
+  Effect.Freeze,
+]);
 
 export function isMutableEffect(
   effect: Effect,
