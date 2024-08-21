@@ -697,8 +697,8 @@ describe('InspectedElement', () => {
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "anonymous_fn": Dehydrated {
-          "preview_short": () {},
-          "preview_long": () {},
+          "preview_short": () => {},
+          "preview_long": () => {},
         },
         "array_buffer": Dehydrated {
           "preview_short": ArrayBuffer(3),
@@ -778,8 +778,8 @@ describe('InspectedElement', () => {
           "Symbol(name)": "hello",
         },
         "proxy": Dehydrated {
-          "preview_short": () {},
-          "preview_long": () {},
+          "preview_short": () => {},
+          "preview_long": () => {},
         },
         "react_element": Dehydrated {
           "preview_short": <span />,
@@ -2018,16 +2018,16 @@ describe('InspectedElement', () => {
       {
         "proxy": {
           "$$typeof": Dehydrated {
-            "preview_short": () {},
-            "preview_long": () {},
+            "preview_short": () => {},
+            "preview_long": () => {},
           },
           "Symbol(Symbol.iterator)": Dehydrated {
-            "preview_short": () {},
-            "preview_long": () {},
+            "preview_short": () => {},
+            "preview_long": () => {},
           },
           "constructor": Dehydrated {
-            "preview_short": () {},
-            "preview_long": () {},
+            "preview_short": () => {},
+            "preview_long": () => {},
           },
         },
       }
