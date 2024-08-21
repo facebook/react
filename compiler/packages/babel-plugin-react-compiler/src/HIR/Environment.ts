@@ -590,6 +590,7 @@ export function printFunctionType(type: ReactFunctionType): string {
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
+  #moduleTypes: Map<string, Global | null> = new Map();
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
@@ -711,6 +712,28 @@ export class Environment {
     return this.#outlinedFunctions;
   }
 
+  #resolveModuleType(moduleName: string): Global | null {
+    if (this.config.resolveModuleTypeSchema == null) {
+      return null;
+    }
+    let moduleType = this.#moduleTypes.get(moduleName);
+    if (moduleType === undefined) {
+      const moduleConfig = this.config.resolveModuleTypeSchema(moduleName);
+      if (moduleConfig != null) {
+        const moduleTypes = TypeSchema.parse(moduleConfig);
+        moduleType = installTypeConfig(
+          this.#globals,
+          this.#shapes,
+          moduleTypes,
+        );
+      } else {
+        moduleType = null;
+      }
+      this.#moduleTypes.set(moduleName, moduleType);
+    }
+    return moduleType;
+  }
+
   getGlobalDeclaration(binding: NonLocalBinding): Global | null {
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
@@ -749,23 +772,14 @@ export class Environment {
             (isHookName(binding.imported) ? this.#getCustomHookType() : null)
           );
         } else {
-          const resolveModuleTypeSchema = this.config.resolveModuleTypeSchema;
-          if (resolveModuleTypeSchema != null) {
-            const moduleConfig = resolveModuleTypeSchema(binding.module);
-            if (moduleConfig != null) {
-              const moduleTypes = TypeSchema.parse(moduleConfig);
-              const module = installTypeConfig(
-                this.#globals,
-                this.#shapes,
-                moduleTypes,
-              );
-              const importedType = this.getPropertyType(
-                module,
-                binding.imported,
-              );
-              if (importedType != null) {
-                return importedType;
-              }
+          const moduleType = this.#resolveModuleType(binding.module);
+          if (moduleType !== null) {
+            const importedType = this.getPropertyType(
+              moduleType,
+              binding.imported,
+            );
+            if (importedType != null) {
+              return importedType;
             }
           }
 
@@ -791,19 +805,10 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
-          const resolveModuleTypeSchema = this.config.resolveModuleTypeSchema;
-          if (resolveModuleTypeSchema != null) {
-            const moduleConfig = resolveModuleTypeSchema(binding.module);
-            if (moduleConfig != null) {
-              const moduleTypes = TypeSchema.parse(moduleConfig);
-              const module = installTypeConfig(
-                this.#globals,
-                this.#shapes,
-                moduleTypes,
-              );
-              // TODO: distinguish handling of import default/namespace
-              return module;
-            }
+          const moduleType = this.#resolveModuleType(binding.module);
+          if (moduleType !== null) {
+            // TODO: distinguish default/namespace cases
+            return moduleType;
           }
           return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }
