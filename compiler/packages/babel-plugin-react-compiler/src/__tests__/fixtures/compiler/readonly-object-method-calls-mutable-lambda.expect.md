@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+import {useFragment} from 'shared-runtime';
+
 function Component(props) {
   const x = makeObject();
   const user = useFragment(
@@ -28,6 +30,8 @@ function Component(props) {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
+import { useFragment } from "shared-runtime";
+
 function Component(props) {
   const $ = _c(3);
   const x = makeObject();

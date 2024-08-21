@@ -17,6 +17,7 @@ import {
   Global,
   GlobalRegistry,
   installReAnimatedTypes,
+  installTypeConfig,
 } from './Globals';
 import {
   BlockId,
@@ -28,6 +29,7 @@ import {
   NonLocalBinding,
   PolyType,
   ScopeId,
+  SourceLocation,
   Type,
   ValidatedIdentifier,
   ValueKind,
@@ -45,6 +47,7 @@ import {
   addHook,
 } from './ObjectShape';
 import {Scope as BabelScope} from '@babel/traverse';
+import {TypeSchema} from './TypeSchema';
 
 export const ExternalFunctionSchema = z.object({
   // Source for the imported module that exports the `importSpecifierName` functions
@@ -136,6 +139,12 @@ export type Hook = z.infer<typeof HookSchema>;
 
 const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
+
+  /**
+   * A function that, given the name of a module, can optionally return a description
+   * of that module's type signature.
+   */
+  moduleTypeProvider: z.nullable(z.function().args(z.string())).default(null),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -577,6 +586,7 @@ export function printFunctionType(type: ReactFunctionType): string {
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
+  #moduleTypes: Map<string, Global | null> = new Map();
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
   #nextScope: number = 0;
@@ -698,7 +708,40 @@ export class Environment {
     return this.#outlinedFunctions;
   }
 
-  getGlobalDeclaration(binding: NonLocalBinding): Global | null {
+  #resolveModuleType(moduleName: string, loc: SourceLocation): Global | null {
+    if (this.config.moduleTypeProvider == null) {
+      return null;
+    }
+    let moduleType = this.#moduleTypes.get(moduleName);
+    if (moduleType === undefined) {
+      const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+      if (unparsedModuleConfig != null) {
+        const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
+        if (!parsedModuleConfig.success) {
+          CompilerError.throwInvalidConfig({
+            reason: `Could not parse module type, the configured \`moduleTypeProvider\` function returned an invalid module description`,
+            description: parsedModuleConfig.error.toString(),
+            loc,
+          });
+        }
+        const moduleConfig = parsedModuleConfig.data;
+        moduleType = installTypeConfig(
+          this.#globals,
+          this.#shapes,
+          moduleConfig,
+        );
+      } else {
+        moduleType = null;
+      }
+      this.#moduleTypes.set(moduleName, moduleType);
+    }
+    return moduleType;
+  }
+
+  getGlobalDeclaration(
+    binding: NonLocalBinding,
+    loc: SourceLocation,
+  ): Global | null {
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
@@ -736,6 +779,17 @@ export class Environment {
             (isHookName(binding.imported) ? this.#getCustomHookType() : null)
           );
         } else {
+          const moduleType = this.#resolveModuleType(binding.module, loc);
+          if (moduleType !== null) {
+            const importedType = this.getPropertyType(
+              moduleType,
+              binding.imported,
+            );
+            if (importedType != null) {
+              return importedType;
+            }
+          }
+
           /**
            * For modules we don't own, we look at whether the original name or import alias
            * are hook-like. Both of the following are likely hooks so we would return a hook
@@ -758,6 +812,17 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
+          const moduleType = this.#resolveModuleType(binding.module, loc);
+          if (moduleType !== null) {
+            if (binding.kind === 'ImportDefault') {
+              const defaultType = this.getPropertyType(moduleType, 'default');
+              if (defaultType !== null) {
+                return defaultType;
+              }
+            } else {
+              return moduleType;
+            }
+          }
           return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }
       }
@@ -767,9 +832,7 @@ export class Environment {
   #isKnownReactModule(moduleName: string): boolean {
     return (
       moduleName.toLowerCase() === 'react' ||
-      moduleName.toLowerCase() === 'react-dom' ||
-      (this.config.enableSharedRuntime__testonly &&
-        moduleName === 'shared-runtime')
+      moduleName.toLowerCase() === 'react-dom'
     );
   }
 
