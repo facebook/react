@@ -9,25 +9,12 @@
 
 import LRU from 'lru-cache';
 import {
-  isElement,
-  typeOf,
-  ContextConsumer,
-  ContextProvider,
-  ForwardRef,
-  Fragment,
-  Lazy,
-  Memo,
-  Portal,
-  Profiler,
-  StrictMode,
-  Suspense,
-} from 'react-is';
-import {
   REACT_CONSUMER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
+  REACT_ELEMENT_TYPE,
   REACT_LEGACY_ELEMENT_TYPE,
   REACT_MEMO_TYPE,
   REACT_PORTAL_TYPE,
@@ -35,9 +22,8 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_SUSPENSE_TYPE,
-  REACT_TRACING_MARKER_TYPE as TracingMarker,
+  REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {
@@ -632,10 +618,6 @@ export function getDataType(data: Object): DataType {
     return 'undefined';
   }
 
-  if (isElement(data)) {
-    return 'react_element';
-  }
-
   if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
     return 'html_element';
   }
@@ -657,6 +639,12 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
+      if (
+        data.$$typeof === REACT_ELEMENT_TYPE ||
+        data.$$typeof === REACT_LEGACY_ELEMENT_TYPE
+      ) {
+        return 'react_element';
+      }
       if (isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
@@ -717,6 +705,7 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
   if (typeof object === 'object' && object !== null) {
     const $$typeof = object.$$typeof;
     switch ($$typeof) {
+      case REACT_ELEMENT_TYPE:
       case REACT_LEGACY_ELEMENT_TYPE:
         const type = object.type;
 
@@ -761,31 +750,33 @@ function typeOfWithLegacyElementSymbol(object: any): mixed {
 export function getDisplayNameForReactElement(
   element: React$Element<any>,
 ): string | null {
-  const elementType = typeOf(element) || typeOfWithLegacyElementSymbol(element);
+  const elementType = typeOfWithLegacyElementSymbol(element);
   switch (elementType) {
-    case ContextConsumer:
+    case REACT_CONSUMER_TYPE:
       return 'ContextConsumer';
-    case ContextProvider:
+    case REACT_PROVIDER_TYPE:
       return 'ContextProvider';
-    case ForwardRef:
+    case REACT_CONTEXT_TYPE:
+      return 'Context';
+    case REACT_FORWARD_REF_TYPE:
       return 'ForwardRef';
-    case Fragment:
+    case REACT_FRAGMENT_TYPE:
       return 'Fragment';
-    case Lazy:
+    case REACT_LAZY_TYPE:
       return 'Lazy';
-    case Memo:
+    case REACT_MEMO_TYPE:
       return 'Memo';
-    case Portal:
+    case REACT_PORTAL_TYPE:
       return 'Portal';
-    case Profiler:
+    case REACT_PROFILER_TYPE:
       return 'Profiler';
-    case StrictMode:
+    case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
-    case Suspense:
+    case REACT_SUSPENSE_TYPE:
       return 'Suspense';
-    case SuspenseList:
+    case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
-    case TracingMarker:
+    case REACT_TRACING_MARKER_TYPE:
       return 'TracingMarker';
     default:
       const {type} = element;
