@@ -347,3 +347,11 @@ export function useFragment(..._args: Array<any>): object {
     b: {c: {d: 4}},
   };
 }
+
+export function typedArrayPush<T>(array: Array<T>, item: T): void {
+  array.push(item);
+}
+
+export function typedLog(...values: Array<string>): void {
+  console.log(...values);
+}

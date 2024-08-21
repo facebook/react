@@ -148,7 +148,7 @@ const EnvironmentConfigSchema = z.object({
    * A function that, given the name of a module, can optionally return a description
    * of that module's type signature.
    */
-  resolveModuleTypeSchema: z.nullable(ModuleTypeResolver).default(null),
+  moduleTypeProvider: z.nullable(ModuleTypeResolver).default(null),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -713,18 +713,18 @@ export class Environment {
   }
 
   #resolveModuleType(moduleName: string): Global | null {
-    if (this.config.resolveModuleTypeSchema == null) {
+    if (this.config.moduleTypeProvider == null) {
       return null;
     }
     let moduleType = this.#moduleTypes.get(moduleName);
     if (moduleType === undefined) {
-      const moduleConfig = this.config.resolveModuleTypeSchema(moduleName);
-      if (moduleConfig != null) {
-        const moduleTypes = TypeSchema.parse(moduleConfig);
+      const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+      if (unparsedModuleConfig != null) {
+        const moduleConfig = TypeSchema.parse(unparsedModuleConfig);
         moduleType = installTypeConfig(
           this.#globals,
           this.#shapes,
-          moduleTypes,
+          moduleConfig,
         );
       } else {
         moduleType = null;

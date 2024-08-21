@@ -31,6 +31,7 @@ import path from 'path';
 import prettier from 'prettier';
 import SproutTodoFilter from './SproutTodoFilter';
 import {isExpectError} from './fixture-utils';
+import {sharedRuntimeTypeProvider} from './sprout/shared-runtime-type-provider';
 export function parseLanguage(source: string): 'flow' | 'typescript' {
   return source.indexOf('@flow') !== -1 ? 'flow' : 'typescript';
 }
@@ -241,6 +242,7 @@ function makePluginOptions(
           },
         ],
       ]),
+      moduleTypeProvider: sharedRuntimeTypeProvider,
       customMacros,
       enableEmitFreeze,
       enableEmitInstrumentForget,
