@@ -28,7 +28,7 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
 
-describe('ReactFlightDOMEdge', () => {
+describe('ReactFlightTurbopackDOMEdge', () => {
   beforeEach(() => {
     jest.resetModules();
 
