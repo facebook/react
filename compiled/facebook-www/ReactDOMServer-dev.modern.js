@@ -7189,9 +7189,10 @@ __DEV__ &&
     }
     function startWork(request) {
       request.flushScheduled = null !== request.destination;
-      performWork(request);
-      null === request.trackedPostpones &&
-        safelyEmitEarlyPreloads(request, 0 === request.pendingRootTasks);
+      null !== request.trackedPostpones
+        ? performWork(request)
+        : (performWork(request),
+          safelyEmitEarlyPreloads(request, 0 === request.pendingRootTasks));
     }
     function enqueueFlush(request) {
       if (
@@ -8766,5 +8767,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-85180b8c-20240820";
+    exports.version = "19.0.0-www-modern-ab24f643-20240821";
   })();
