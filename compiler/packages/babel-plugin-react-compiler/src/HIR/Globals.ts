@@ -551,6 +551,9 @@ export function installTypeConfig(
         case 'Ref': {
           return {kind: 'Object', shapeId: BuiltInUseRefId};
         }
+        case 'Any': {
+          return {kind: 'Poly'};
+        }
         default: {
           assertExhaustive(
             typeConfig.name,
@@ -566,6 +569,20 @@ export function installTypeConfig(
         calleeEffect: typeConfig.calleeEffect,
         returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
         returnValueKind: typeConfig.returnValueKind,
+        noAlias: typeConfig.noAlias === true,
+        mutableOnlyIfOperandsAreMutable:
+          typeConfig.mutableOnlyIfOperandsAreMutable === true,
+      });
+    }
+    case 'hook': {
+      return addHook(shapes, {
+        hookKind: 'Custom',
+        positionalParams: typeConfig.positionalParams ?? [],
+        restParam: typeConfig.restParam ?? Effect.Freeze,
+        calleeEffect: Effect.Read,
+        returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
+        returnValueKind: typeConfig.returnValueKind ?? ValueKind.Frozen,
+        noAlias: typeConfig.noAlias === true,
       });
     }
     case 'object': {
@@ -576,6 +593,12 @@ export function installTypeConfig(
           key,
           installTypeConfig(globals, shapes, value),
         ]),
+      );
+    }
+    default: {
+      assertExhaustive(
+        typeConfig,
+        `Unexpected type kind '${(typeConfig as any).kind}'`,
       );
     }
   }
