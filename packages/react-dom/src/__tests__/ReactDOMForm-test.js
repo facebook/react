@@ -9,8 +9,6 @@
 
 'use strict';
 
-const {disableInputAttributeSyncing} = require('shared/ReactFeatureFlags');
-
 global.IS_REACT_ACT_ENVIRONMENT = true;
 
 // Our current version of JSDOM doesn't implement the event dispatching
@@ -1670,7 +1668,7 @@ describe('ReactDOMForm', () => {
     await act(() => resolveText('Done'));
     assertLog(['Async action ended']);
 
-    if (disableInputAttributeSyncing) {
+    if (gate(flags => flags.disableInputAttributeSyncing)) {
       // The DOM resets after action end when "disableInputAttributeSyncing" enabled
       expect(textInputRef.current.value).toBe('');
       expect(numberInputRef.current.value).toBe('');
