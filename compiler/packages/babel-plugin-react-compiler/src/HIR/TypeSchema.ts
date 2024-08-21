@@ -8,7 +8,7 @@
 import {isValidIdentifier} from '@babel/types';
 import {z} from 'zod';
 import {Effect, ValueKind} from '..';
-import {EffectSchema} from './HIR';
+import {EffectSchema, ValueKindSchema} from './HIR';
 
 export type ObjectPropertiesConfig = {[key: string]: TypeConfig};
 export const ObjectPropertiesSchema: z.ZodType<ObjectPropertiesConfig> = z
@@ -18,9 +18,9 @@ export const ObjectPropertiesSchema: z.ZodType<ObjectPropertiesConfig> = z
   )
   .refine(record => {
     return Object.keys(record).every(
-      key => key === '*' || isValidIdentifier(key),
+      key => key === '*' || key === 'default' || isValidIdentifier(key),
     );
-  }, 'Expected all "object" property names to be valid identifiers or `*` to match any property');
+  }, 'Expected all "object" property names to be valid identifier, `*` to match any property, of `default` to define a module default export');
 
 export type ObjectTypeConfig = {
   kind: 'object';
@@ -38,6 +38,8 @@ export type FunctionTypeConfig = {
   calleeEffect: Effect;
   returnType: TypeConfig;
   returnValueKind: ValueKind;
+  noAlias?: boolean | null | undefined;
+  mutableOnlyIfOperandsAreMutable?: boolean | null | undefined;
 };
 export const FunctionTypeSchema: z.ZodType<FunctionTypeConfig> = z.object({
   kind: z.literal('function'),
@@ -45,11 +47,36 @@ export const FunctionTypeSchema: z.ZodType<FunctionTypeConfig> = z.object({
   restParam: EffectSchema.nullable(),
   calleeEffect: EffectSchema,
   returnType: z.lazy(() => TypeSchema),
-  returnValueKind: z.nativeEnum(ValueKind),
+  returnValueKind: ValueKindSchema,
+  noAlias: z.boolean().nullable().optional(),
+  mutableOnlyIfOperandsAreMutable: z.boolean().nullable().optional(),
 });
 
-export type BuiltInTypeConfig = 'Ref' | 'Array' | 'Primitive' | 'MixedReadonly';
+export type HookTypeConfig = {
+  kind: 'hook';
+  positionalParams?: Array<Effect> | null | undefined;
+  restParam?: Effect | null | undefined;
+  returnType: TypeConfig;
+  returnValueKind?: ValueKind | null | undefined;
+  noAlias?: boolean | null | undefined;
+};
+export const HookTypeSchema: z.ZodType<HookTypeConfig> = z.object({
+  kind: z.literal('hook'),
+  positionalParams: z.array(EffectSchema).nullable().optional(),
+  restParam: EffectSchema.nullable().optional(),
+  returnType: z.lazy(() => TypeSchema),
+  returnValueKind: ValueKindSchema.nullable().optional(),
+  noAlias: z.boolean().nullable().optional(),
+});
+
+export type BuiltInTypeConfig =
+  | 'Any'
+  | 'Ref'
+  | 'Array'
+  | 'Primitive'
+  | 'MixedReadonly';
 export const BuiltInTypeSchema: z.ZodType<BuiltInTypeConfig> = z.union([
+  z.literal('Any'),
   z.literal('Ref'),
   z.literal('Array'),
   z.literal('Primitive'),
@@ -68,9 +95,11 @@ export const TypeReferenceSchema: z.ZodType<TypeReferenceConfig> = z.object({
 export type TypeConfig =
   | ObjectTypeConfig
   | FunctionTypeConfig
+  | HookTypeConfig
   | TypeReferenceConfig;
 export const TypeSchema: z.ZodType<TypeConfig> = z.union([
   ObjectTypeSchema,
   FunctionTypeSchema,
+  HookTypeSchema,
   TypeReferenceSchema,
 ]);

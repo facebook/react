@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+import {useFragment} from 'shared-runtime';
+
 function Component(props) {
   const user = useFragment(
     graphql`
@@ -19,6 +21,8 @@ function Component(props) {
 ## Code
 
 ```javascript
+import { useFragment } from "shared-runtime";
+
 function Component(props) {
   const user = useFragment(
     graphql`

@@ -29,6 +29,7 @@ import {
   NonLocalBinding,
   PolyType,
   ScopeId,
+  SourceLocation,
   Type,
   ValidatedIdentifier,
   ValueKind,
@@ -126,11 +127,6 @@ const HookSchema = z.object({
 
 export type Hook = z.infer<typeof HookSchema>;
 
-export const ModuleTypeResolver = z
-  .function()
-  .args(z.string())
-  .returns(z.nullable(TypeSchema));
-
 /*
  * TODO(mofeiZ): User defined global types (with corresponding shapes).
  * User defined global types should have inline ObjectShapes instead of directly
@@ -148,7 +144,7 @@ const EnvironmentConfigSchema = z.object({
    * A function that, given the name of a module, can optionally return a description
    * of that module's type signature.
    */
-  resolveModuleTypeSchema: z.nullable(ModuleTypeResolver).default(null),
+  moduleTypeProvider: z.nullable(z.function().args(z.string())).default(null),
 
   /**
    * A list of functions which the application compiles as macros, where
@@ -712,19 +708,27 @@ export class Environment {
     return this.#outlinedFunctions;
   }
 
-  #resolveModuleType(moduleName: string): Global | null {
-    if (this.config.resolveModuleTypeSchema == null) {
+  #resolveModuleType(moduleName: string, loc: SourceLocation): Global | null {
+    if (this.config.moduleTypeProvider == null) {
       return null;
     }
     let moduleType = this.#moduleTypes.get(moduleName);
     if (moduleType === undefined) {
-      const moduleConfig = this.config.resolveModuleTypeSchema(moduleName);
-      if (moduleConfig != null) {
-        const moduleTypes = TypeSchema.parse(moduleConfig);
+      const unparsedModuleConfig = this.config.moduleTypeProvider(moduleName);
+      if (unparsedModuleConfig != null) {
+        const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
+        if (!parsedModuleConfig.success) {
+          CompilerError.throwInvalidConfig({
+            reason: `Could not parse module type, the configured \`moduleTypeProvider\` function returned an invalid module description`,
+            description: parsedModuleConfig.error.toString(),
+            loc,
+          });
+        }
+        const moduleConfig = parsedModuleConfig.data;
         moduleType = installTypeConfig(
           this.#globals,
           this.#shapes,
-          moduleTypes,
+          moduleConfig,
         );
       } else {
         moduleType = null;
@@ -734,7 +738,10 @@ export class Environment {
     return moduleType;
   }
 
-  getGlobalDeclaration(binding: NonLocalBinding): Global | null {
+  getGlobalDeclaration(
+    binding: NonLocalBinding,
+    loc: SourceLocation,
+  ): Global | null {
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
@@ -772,7 +779,7 @@ export class Environment {
             (isHookName(binding.imported) ? this.#getCustomHookType() : null)
           );
         } else {
-          const moduleType = this.#resolveModuleType(binding.module);
+          const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
             const importedType = this.getPropertyType(
               moduleType,
@@ -805,10 +812,16 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
-          const moduleType = this.#resolveModuleType(binding.module);
+          const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
-            // TODO: distinguish default/namespace cases
-            return moduleType;
+            if (binding.kind === 'ImportDefault') {
+              const defaultType = this.getPropertyType(moduleType, 'default');
+              if (defaultType !== null) {
+                return defaultType;
+              }
+            } else {
+              return moduleType;
+            }
           }
           return isHookName(binding.name) ? this.#getCustomHookType() : null;
         }
@@ -819,9 +832,7 @@ export class Environment {
   #isKnownReactModule(moduleName: string): boolean {
     return (
       moduleName.toLowerCase() === 'react' ||
-      moduleName.toLowerCase() === 'react-dom' ||
-      (this.config.enableSharedRuntime__testonly &&
-        moduleName === 'shared-runtime')
+      moduleName.toLowerCase() === 'react-dom'
     );
   }
 

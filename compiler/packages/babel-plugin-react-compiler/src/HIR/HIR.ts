@@ -1361,6 +1361,15 @@ export enum ValueKind {
   Context = 'context',
 }
 
+export const ValueKindSchema = z.enum([
+  ValueKind.MaybeFrozen,
+  ValueKind.Frozen,
+  ValueKind.Primitive,
+  ValueKind.Global,
+  ValueKind.Mutable,
+  ValueKind.Context,
+]);
+
 // The effect with which a value is modified.
 export enum Effect {
   // Default value: not allowed after lifetime inference
