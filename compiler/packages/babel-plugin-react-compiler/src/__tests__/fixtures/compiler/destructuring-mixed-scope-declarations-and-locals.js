@@ -1,4 +1,4 @@
-import { useFragment } from "shared-runtime";
+import {useFragment} from 'shared-runtime';
 
 function Component(props) {
   const post = useFragment(
