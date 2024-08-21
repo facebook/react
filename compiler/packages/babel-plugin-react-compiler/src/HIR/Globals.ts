@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {builtinModules} from 'module';
 import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
