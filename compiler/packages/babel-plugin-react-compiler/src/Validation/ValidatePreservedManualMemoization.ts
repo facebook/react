@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {CompilerError, Effect, ErrorSeverity, printReactiveFunction} from '..';
+import {CompilerError, Effect, ErrorSeverity} from '..';
 import {
   DeclarationId,
   GeneratedSource,
@@ -23,11 +23,7 @@ import {
   ScopeId,
   SourceLocation,
 } from '../HIR';
-import {
-  printFunction,
-  printIdentifier,
-  printManualMemoDependency,
-} from '../HIR/PrintHIR';
+import {printIdentifier, printManualMemoDependency} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand} from '../HIR/visitors';
 import {collectMaybeMemoDependencies} from '../Inference/DropManualMemoization';
 import {
