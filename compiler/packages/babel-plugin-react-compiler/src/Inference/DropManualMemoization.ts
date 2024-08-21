@@ -127,7 +127,7 @@ function collectTemporaries(
       break;
     }
     case 'LoadGlobal': {
-      const global = env.getGlobalDeclaration(value.binding);
+      const global = env.getGlobalDeclaration(value.binding, value.loc);
       const hookKind = global !== null ? getHookKindForType(env, global) : null;
       const lvalId = instr.lvalue.identifier.id;
       if (hookKind === 'useMemo' || hookKind === 'useCallback') {

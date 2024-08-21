@@ -29,6 +29,7 @@ import {
   NonLocalBinding,
   PolyType,
   ScopeId,
+  SourceLocation,
   Type,
   ValidatedIdentifier,
   ValueKind,
@@ -707,7 +708,7 @@ export class Environment {
     return this.#outlinedFunctions;
   }
 
-  #resolveModuleType(moduleName: string): Global | null {
+  #resolveModuleType(moduleName: string, loc: SourceLocation): Global | null {
     if (this.config.moduleTypeProvider == null) {
       return null;
     }
@@ -718,8 +719,11 @@ export class Environment {
         if (unparsedModuleConfig != null) {
           const parsedModuleConfig = TypeSchema.safeParse(unparsedModuleConfig);
           if (!parsedModuleConfig.success) {
-            console.error(parsedModuleConfig.error.toString());
-            process.exit(1);
+            CompilerError.throwInvalidConfig({
+              reason: `Could not parse module type, the configured \`moduleTypeProvider\` function returned an invalid module description`,
+              description: parsedModuleConfig.error.toString(),
+              loc,
+            });
           }
           const moduleConfig = parsedModuleConfig.data;
           moduleType = installTypeConfig(
@@ -739,7 +743,10 @@ export class Environment {
     return moduleType;
   }
 
-  getGlobalDeclaration(binding: NonLocalBinding): Global | null {
+  getGlobalDeclaration(
+    binding: NonLocalBinding,
+    loc: SourceLocation,
+  ): Global | null {
     if (this.config.hookPattern != null) {
       const match = new RegExp(this.config.hookPattern).exec(binding.name);
       if (
@@ -777,7 +784,7 @@ export class Environment {
             (isHookName(binding.imported) ? this.#getCustomHookType() : null)
           );
         } else {
-          const moduleType = this.#resolveModuleType(binding.module);
+          const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
             const importedType = this.getPropertyType(
               moduleType,
@@ -810,7 +817,7 @@ export class Environment {
             (isHookName(binding.name) ? this.#getCustomHookType() : null)
           );
         } else {
-          const moduleType = this.#resolveModuleType(binding.module);
+          const moduleType = this.#resolveModuleType(binding.module, loc);
           if (moduleType !== null) {
             // TODO: distinguish default/namespace cases
             return moduleType;
