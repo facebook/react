@@ -8,16 +8,14 @@ import LogEvent from 'LogEvent';
 import {useCallback, useMemo} from 'react';
 
 component Component(id) {
-  const {data} = useFragment();
-  const items = data.items.edges;
+  const items = useFragment();
 
-  const [prevId, setPrevId] = useState(id);
   const [index, setIndex] = useState(0);
 
   const logData = useMemo(() => {
     const item = items[index];
     return {
-      key: item.key ?? '',
+      key: item.key,
     };
   }, [index, items]);
 
@@ -35,7 +33,6 @@ component Component(id) {
   );
 
   if (prevId !== id) {
-    setPrevId(id);
     setCurrentIndex(0);
   }
 
@@ -55,29 +52,27 @@ component Component(id) {
 ## Error
 
 ```
-  19 |
-  20 |   const setCurrentIndex = useCallback(
-> 21 |     (index: number) => {
-     |     ^^^^^^^^^^^^^^^^^^^^
-> 22 |       const object = {
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 23 |         tracking: logData.key,
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 24 |       };
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 25 |       // We infer that this may mutate `object`, which in turn aliases
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 26 |       // data from `logData`, such that `logData` may be mutated.
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 27 |       LogEvent.log(() => object);
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 28 |       setIndex(index);
-     | ^^^^^^^^^^^^^^^^^^^^^^
-> 29 |     },
-     | ^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (21:29)
-  30 |     [index, logData, items]
-  31 |   );
-  32 |
+   9 |   const [index, setIndex] = useState(0);
+  10 |
+> 11 |   const logData = useMemo(() => {
+     |                   ^^^^^^^^^^^^^^^
+> 12 |     const item = items[index];
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 13 |     return {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 14 |       key: item.key,
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 15 |     };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 16 |   }, [index, items]);
+     | ^^^^^^^^^^^^^^^^^^^^^ CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (11:16)
+
+CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly (28:28)
+
+CannotPreserveMemoization: React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output. (19:27)
+  17 |
+  18 |   const setCurrentIndex = useCallback(
+  19 |     (index: number) => {
 ```
           
       
