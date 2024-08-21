@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {builtinModules} from 'module';
 import {Effect, ValueKind, ValueReason} from './HIR';
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInMixedReadonlyId,
   BuiltInUseActionStateId,
   BuiltInUseContextHookId,
   BuiltInUseEffectHookId,
@@ -25,6 +27,8 @@ import {
   addObject,
 } from './ObjectShape';
 import {BuiltInType, PolyType} from './Types';
+import {TypeConfig} from './TypeSchema';
+import {assertExhaustive} from '../Utils/utils';
 
 /*
  * This file exports types and defaults for JavaScript global objects.
@@ -527,6 +531,56 @@ DEFAULT_GLOBALS.set(
   'global',
   addObject(DEFAULT_SHAPES, 'global', TYPED_GLOBALS),
 );
+
+export function installTypeConfig(
+  globals: GlobalRegistry,
+  shapes: ShapeRegistry,
+  typeConfig: TypeConfig,
+): Global {
+  switch (typeConfig.kind) {
+    case 'type': {
+      switch (typeConfig.name) {
+        case 'Array': {
+          return {kind: 'Object', shapeId: BuiltInArrayId};
+        }
+        case 'MixedReadonly': {
+          return {kind: 'Object', shapeId: BuiltInMixedReadonlyId};
+        }
+        case 'Primitive': {
+          return {kind: 'Primitive'};
+        }
+        case 'Ref': {
+          return {kind: 'Object', shapeId: BuiltInUseRefId};
+        }
+        default: {
+          assertExhaustive(
+            typeConfig.name,
+            `Unexpected type '${(typeConfig as any).name}'`,
+          );
+        }
+      }
+    }
+    case 'function': {
+      return addFunction(shapes, [], {
+        positionalParams: typeConfig.positionalParams,
+        restParam: typeConfig.restParam,
+        calleeEffect: typeConfig.calleeEffect,
+        returnType: installTypeConfig(globals, shapes, typeConfig.returnType),
+        returnValueKind: typeConfig.returnValueKind,
+      });
+    }
+    case 'object': {
+      return addObject(
+        shapes,
+        null,
+        Object.entries(typeConfig.properties ?? {}).map(([key, value]) => [
+          key,
+          installTypeConfig(globals, shapes, value),
+        ]),
+      );
+    }
+  }
+}
 
 export function installReAnimatedTypes(
   globals: GlobalRegistry,
