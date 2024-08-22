@@ -285,7 +285,7 @@ export type HIRFunction = {
   fnType: ReactFunctionType;
   env: Environment;
   params: Array<Place | SpreadPattern>;
-  returnType: t.FlowType | t.TSType | null;
+  returnTypeAnnotation: t.FlowType | t.TSType | null;
   returnIdentifier: Identifier;
   context: Array<Place>;
   effects: Array<FunctionEffect> | null;
