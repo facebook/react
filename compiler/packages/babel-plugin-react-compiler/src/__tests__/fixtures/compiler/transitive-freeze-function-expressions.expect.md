@@ -33,7 +33,7 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime"; // @enableTransitivelyFreezeFunctionExpressions
 function Component(props) {
-  const $ = _c(9);
+  const $ = _c(11);
   const { data, loadNext, isLoadingNext } =
     usePaginationFragment(props.key).items ?? [];
   let t0;
@@ -53,7 +53,6 @@ function Component(props) {
   }
   const loadMoreWithTiming = t0;
   let t1;
-  let t2;
   if ($[3] !== isLoadingNext || $[4] !== loadMoreWithTiming) {
     t1 = () => {
       if (isLoadingNext) {
@@ -62,23 +61,29 @@ function Component(props) {
 
       loadMoreWithTiming();
     };
-    t2 = [isLoadingNext, loadMoreWithTiming];
     $[3] = isLoadingNext;
     $[4] = loadMoreWithTiming;
     $[5] = t1;
-    $[6] = t2;
   } else {
     t1 = $[5];
-    t2 = $[6];
+  }
+  let t2;
+  if ($[6] !== isLoadingNext || $[7] !== loadMoreWithTiming) {
+    t2 = [isLoadingNext, loadMoreWithTiming];
+    $[6] = isLoadingNext;
+    $[7] = loadMoreWithTiming;
+    $[8] = t2;
+  } else {
+    t2 = $[8];
   }
   useEffect(t1, t2);
   let t3;
-  if ($[7] !== data) {
+  if ($[9] !== data) {
     t3 = data.map(_temp);
-    $[7] = data;
-    $[8] = t3;
+    $[9] = data;
+    $[10] = t3;
   } else {
-    t3 = $[8];
+    t3 = $[10];
   }
   const items = t3;
   return items;

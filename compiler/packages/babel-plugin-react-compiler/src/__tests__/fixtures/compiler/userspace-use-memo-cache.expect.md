@@ -30,7 +30,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { c as _c } from "react-forget-runtime"; // @runtimeModule="react-forget-runtime"
 function Component(props) {
-  const $ = _c(5);
+  const $ = _c(7);
   const [x, setX] = useState(1);
   let y;
   if ($[0] !== props.cond || $[1] !== x) {
@@ -47,19 +47,23 @@ function Component(props) {
   const t0 = y;
   let t1;
   if ($[3] !== t0) {
-    t1 = (
-      <Button
-        onClick={() => {
-          setX(10 * y);
-        }}
-      />
-    );
+    t1 = () => {
+      setX(10 * y);
+    };
     $[3] = t0;
     $[4] = t1;
   } else {
     t1 = $[4];
   }
-  return t1;
+  let t2;
+  if ($[5] !== t1) {
+    t2 = <Button onClick={t1} />;
+    $[5] = t1;
+    $[6] = t2;
+  } else {
+    t2 = $[6];
+  }
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

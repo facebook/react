@@ -26,7 +26,7 @@ function Component(props) {
 ```javascript
 import { c as _c } from "react/compiler-runtime";
 function Component(props) {
-  const $ = _c(6);
+  const $ = _c(7);
   const dispatch = useDispatch();
   useFreeze(dispatch);
   let t0;
@@ -41,26 +41,30 @@ function Component(props) {
   }
   const onUpdate = t0;
   let t1;
-  let t2;
   if ($[2] !== onUpdate) {
     t1 = () => {
       onUpdate();
     };
-    t2 = [onUpdate];
     $[2] = onUpdate;
     $[3] = t1;
-    $[4] = t2;
   } else {
     t1 = $[3];
-    t2 = $[4];
+  }
+  let t2;
+  if ($[4] !== onUpdate) {
+    t2 = [onUpdate];
+    $[4] = onUpdate;
+    $[5] = t2;
+  } else {
+    t2 = $[5];
   }
   useEffect(t1, t2);
   let t3;
-  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = <div />;
-    $[5] = t3;
+    $[6] = t3;
   } else {
-    t3 = $[5];
+    t3 = $[6];
   }
   return t3;
 }
