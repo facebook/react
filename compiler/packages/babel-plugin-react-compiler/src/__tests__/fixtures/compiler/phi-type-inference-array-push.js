@@ -1,5 +1,3 @@
-import {makeArray} from 'shared-runtime';
-
 function Component(props) {
   const x = {};
   let y;

@@ -2,8 +2,6 @@
 ## Input
 
 ```javascript
-import {makeArray} from 'shared-runtime';
-
 function Component(props) {
   const x = {};
   let y;
@@ -37,8 +35,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { c as _c } from "react/compiler-runtime";
-import { makeArray } from "shared-runtime";
-
 function Component(props) {
   const $ = _c(3);
   let t0;
