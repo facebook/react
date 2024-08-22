@@ -360,7 +360,11 @@ function* generateInstructionTypes(
 
     case 'FunctionExpression': {
       yield* generate(value.loweredFunc.func);
-      yield equation(left, {kind: 'Function', shapeId: BuiltInFunctionId, return: value.loweredFunc.func.returnIdentifier.type});
+      yield equation(left, {
+        kind: 'Function',
+        shapeId: BuiltInFunctionId,
+        return: value.loweredFunc.func.returnIdentifier.type,
+      });
       break;
     }
 

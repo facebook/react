@@ -556,8 +556,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
             }
           })
           .join(', ') ?? '';
-      const type = printType(instrValue.loweredFunc.func.returnIdentifier.type).trim();
-      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]${type!== '' ? ` return${type}` : ''}:\n${fn}`;
+      const type = printType(
+        instrValue.loweredFunc.func.returnIdentifier.type,
+      ).trim();
+      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {
