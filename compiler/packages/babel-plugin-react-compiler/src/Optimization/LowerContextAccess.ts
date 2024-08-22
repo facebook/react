@@ -23,6 +23,7 @@ import {
   isUseContextHookType,
   makeBlockId,
   makeInstructionId,
+  makeType,
   markInstructionIds,
   promoteTemporary,
   reversePostorderBlocks,
@@ -238,10 +239,6 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     phis: new Set(),
   };
 
-  const returnIdentifier = createTemporaryPlace(
-    env,
-    GeneratedSource,
-  ).identifier;
   const fn: HIRFunction = {
     loc: GeneratedSource,
     id: null,
@@ -249,7 +246,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     env,
     params: [obj],
     returnTypeAnnotation: null,
-    returnIdentifier,
+    returnType: makeType(),
     context: [],
     effects: null,
     body: {
