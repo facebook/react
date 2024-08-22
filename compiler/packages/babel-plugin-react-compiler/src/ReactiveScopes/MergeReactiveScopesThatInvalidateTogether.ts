@@ -481,14 +481,20 @@ function canMergeScopes(
 }
 
 function isAlwaysInvalidatingType(type: Type): boolean {
-  if (type.kind === 'Object') {
-    switch (type.shapeId) {
-      case BuiltInArrayId:
-      case BuiltInObjectId:
-      case BuiltInFunctionId:
-      case BuiltInJsxId: {
-        return true;
+  switch (type.kind) {
+    case 'Object': {
+      switch (type.shapeId) {
+        case BuiltInArrayId:
+        case BuiltInObjectId:
+        case BuiltInFunctionId:
+        case BuiltInJsxId: {
+          return true;
+        }
       }
+      break;
+    }
+    case 'Function': {
+      return true;
     }
   }
   return false;

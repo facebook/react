@@ -41,7 +41,7 @@ import { c as _c } from "react/compiler-runtime";
 import { useFragment } from "shared-runtime";
 
 function Component(props) {
-  const $ = _c(8);
+  const $ = _c(4);
   const post = useFragment(
     graphql`
       fragment F on T {
@@ -50,15 +50,13 @@ function Component(props) {
     `,
     props.post,
   );
-  let media;
-  let onClick;
+  let t0;
   if ($[0] !== post) {
     const allUrls = [];
 
-    const { media: t0, comments, urls } = post;
-    media = t0;
+    const { media, comments, urls } = post;
     let t1;
-    if ($[3] !== comments.length) {
+    if ($[2] !== comments.length) {
       t1 = (e) => {
         if (!comments.length) {
           return;
@@ -66,29 +64,19 @@ function Component(props) {
 
         console.log(comments.length);
       };
-      $[3] = comments.length;
-      $[4] = t1;
+      $[2] = comments.length;
+      $[3] = t1;
     } else {
-      t1 = $[4];
+      t1 = $[3];
     }
-    onClick = t1;
+    const onClick = t1;
 
     allUrls.push(...urls);
-    $[0] = post;
-    $[1] = media;
-    $[2] = onClick;
-  } else {
-    media = $[1];
-    onClick = $[2];
-  }
-  let t0;
-  if ($[5] !== media || $[6] !== onClick) {
     t0 = <Media media={media} onClick={onClick} />;
-    $[5] = media;
-    $[6] = onClick;
-    $[7] = t0;
+    $[0] = post;
+    $[1] = t0;
   } else {
-    t0 = $[7];
+    t0 = $[1];
   }
   return t0;
 }

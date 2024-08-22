@@ -32,7 +32,7 @@ import { c as _c } from "react/compiler-runtime"; // @validateMemoizedEffectDepe
 import { useEffect } from "react";
 
 function Component(props) {
-  const $ = _c(6);
+  const $ = _c(5);
   let t0;
   if ($[0] !== props.value) {
     t0 = [[props.value]];
@@ -43,22 +43,18 @@ function Component(props) {
   }
   const y = t0;
   let t1;
+  let t2;
   if ($[2] !== y) {
     t1 = () => {
       console.log(y);
     };
+    t2 = [y];
     $[2] = y;
     $[3] = t1;
+    $[4] = t2;
   } else {
     t1 = $[3];
-  }
-  let t2;
-  if ($[4] !== y) {
-    t2 = [y];
-    $[4] = y;
-    $[5] = t2;
-  } else {
-    t2 = $[5];
+    t2 = $[4];
   }
   useEffect(t1, t2);
   return y;
