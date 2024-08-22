@@ -211,11 +211,14 @@ export function lower(
     null,
   );
 
+  const returnIdentifier = builder.makeTemporary(func.node.loc ?? GeneratedSource);
+
   return Ok({
     id,
     params,
     fnType: parent == null ? env.fnType : 'Other',
     returnType: null, // TODO: extract the actual return type node if present
+    returnIdentifier,
     body: builder.build(),
     context,
     generator: func.node.generator === true,
