@@ -248,7 +248,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     fnType: 'Other',
     env,
     params: [obj],
-    returnType: null,
+    returnTypeAnnotation: null,
     returnIdentifier,
     context: [],
     effects: null,
