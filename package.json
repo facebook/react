@@ -5,7 +5,7 @@
   ],
   "devDependencies": {
     "@babel/cli": "^7.10.5",
-    "@babel/code-frame": "^7.10.4",
+
     "@babel/core": "^7.11.1",
     "@babel/helper-module-imports": "^7.10.4",
     "@babel/parser": "^7.11.3",
