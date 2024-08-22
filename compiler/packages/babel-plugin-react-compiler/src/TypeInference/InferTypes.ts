@@ -88,7 +88,7 @@ function apply(func: HIRFunction, unifier: Unifier): void {
       }
     }
   }
-  func.returnIdentifier.type = unifier.get(func.returnIdentifier.type);
+  func.returnType = unifier.get(func.returnType);
 }
 
 type TypeEquation = {
@@ -141,12 +141,12 @@ function* generate(
     }
   }
   if (returnTypes.length > 1) {
-    yield equation(func.returnIdentifier.type, {
+    yield equation(func.returnType, {
       kind: 'Phi',
       operands: returnTypes,
     });
   } else if (returnTypes.length === 1) {
-    yield equation(func.returnIdentifier.type, returnTypes[0]!);
+    yield equation(func.returnType, returnTypes[0]!);
   }
 }
 
@@ -363,7 +363,7 @@ function* generateInstructionTypes(
       yield equation(left, {
         kind: 'Function',
         shapeId: BuiltInFunctionId,
-        return: value.loweredFunc.func.returnIdentifier.type,
+        return: value.loweredFunc.func.returnType,
       });
       break;
     }

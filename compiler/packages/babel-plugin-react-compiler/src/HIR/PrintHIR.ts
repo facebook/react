@@ -72,7 +72,7 @@ export function printFunction(fn: HIRFunction): string {
   if (definition.length !== 0) {
     output.push(definition);
   }
-  output.push(printType(fn.returnIdentifier.type));
+  output.push(printType(fn.returnType));
   output.push(printHIR(fn.body));
   output.push(...fn.directives);
   return output.join('\n');
@@ -556,9 +556,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
             }
           })
           .join(', ') ?? '';
-      const type = printType(
-        instrValue.loweredFunc.func.returnIdentifier.type,
-      ).trim();
+      const type = printType(instrValue.loweredFunc.func.returnType).trim();
       value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
       break;
     }
