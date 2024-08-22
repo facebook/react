@@ -211,7 +211,9 @@ export function lower(
     null,
   );
 
-  const returnIdentifier = builder.makeTemporary(func.node.loc ?? GeneratedSource);
+  const returnIdentifier = builder.makeTemporary(
+    func.node.loc ?? GeneratedSource,
+  );
 
   return Ok({
     id,

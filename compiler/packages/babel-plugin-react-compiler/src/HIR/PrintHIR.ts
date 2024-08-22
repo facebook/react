@@ -72,6 +72,7 @@ export function printFunction(fn: HIRFunction): string {
   if (definition.length !== 0) {
     output.push(definition);
   }
+  output.push(printType(fn.returnIdentifier.type));
   output.push(printHIR(fn.body));
   output.push(...fn.directives);
   return output.join('\n');
@@ -555,7 +556,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
             }
           })
           .join(', ') ?? '';
-      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]:\n${fn}`;
+      const type = printType(
+        instrValue.loweredFunc.func.returnIdentifier.type,
+      ).trim();
+      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {

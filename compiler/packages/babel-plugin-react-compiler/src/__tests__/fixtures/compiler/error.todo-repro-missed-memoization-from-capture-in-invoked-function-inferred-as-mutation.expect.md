@@ -13,7 +13,7 @@ component Component() {
     if (data != null) {
       return true;
     } else {
-      return false;
+      return {};
     }
   };
 
