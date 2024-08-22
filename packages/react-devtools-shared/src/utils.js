@@ -843,9 +843,10 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
-      return truncateForDisplay(
-        `ƒ ${typeof data.name === 'function' ? '' : data.name}() {}`,
-      );
+      if (typeof data.name === 'function' || data.name === '') {
+        return '() => {}';
+      }
+      return `${truncateForDisplay(data.name)}() {}`;
     case 'string':
       return `"${data}"`;
     case 'bigint':
