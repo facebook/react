@@ -23,7 +23,7 @@ import { c as _c } from "react/compiler-runtime"; // arrayInstance.push should h
 //  - read on all args (rest parameter)
 //  - mutate on receiver
 function Component(props) {
-  const $ = _c(8);
+  const $ = _c(7);
   let t0;
   if ($[0] !== props.x) {
     t0 = foo(props.x);
@@ -45,14 +45,7 @@ function Component(props) {
   let arr;
   if ($[4] !== x || $[5] !== y) {
     arr = [];
-    let t2;
-    if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
-      t2 = {};
-      $[7] = t2;
-    } else {
-      t2 = $[7];
-    }
-    arr.push(t2);
+    arr.push({});
     arr.push(x, y);
     $[4] = x;
     $[5] = y;

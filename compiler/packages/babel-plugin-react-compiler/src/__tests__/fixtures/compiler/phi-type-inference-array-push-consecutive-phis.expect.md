@@ -8,7 +8,11 @@ function Component(props) {
   const x = {};
   let y;
   if (props.cond) {
-    y = [props.value];
+    if (props.cond2) {
+      y = [props.value];
+    } else {
+      y = [props.value2];
+    }
   } else {
     y = [];
   }
@@ -23,11 +27,16 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{cond: true, value: 42}],
+  params: [{cond: true, cond2: true, value: 42}],
   sequentialRenders: [
-    {cond: true, value: 3.14},
-    {cond: false, value: 3.14},
-    {cond: true, value: 42},
+    {cond: true, cond2: true, value: 3.14},
+    {cond: true, cond2: true, value: 42},
+    {cond: true, cond2: true, value: 3.14},
+    {cond: true, cond2: false, value2: 3.14},
+    {cond: true, cond2: false, value2: 42},
+    {cond: true, cond2: false, value2: 3.14},
+    {cond: false},
+    {cond: false},
   ],
 };
 
@@ -53,7 +62,11 @@ function Component(props) {
   if ($[1] !== props) {
     let y;
     if (props.cond) {
-      y = [props.value];
+      if (props.cond2) {
+        y = [props.value];
+      } else {
+        y = [props.value2];
+      }
     } else {
       y = [];
     }
@@ -71,11 +84,16 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true, value: 42 }],
+  params: [{ cond: true, cond2: true, value: 42 }],
   sequentialRenders: [
-    { cond: true, value: 3.14 },
-    { cond: false, value: 3.14 },
-    { cond: true, value: 42 },
+    { cond: true, cond2: true, value: 3.14 },
+    { cond: true, cond2: true, value: 42 },
+    { cond: true, cond2: true, value: 3.14 },
+    { cond: true, cond2: false, value2: 3.14 },
+    { cond: true, cond2: false, value2: 42 },
+    { cond: true, cond2: false, value2: 3.14 },
+    { cond: false },
+    { cond: false },
   ],
 };
 
@@ -83,5 +101,10 @@ export const FIXTURE_ENTRYPOINT = {
       
 ### Eval output
 (kind: ok) [{},[3.14,"[[ cyclic ref *1 ]]"]]
-[{},["[[ cyclic ref *1 ]]"]]
 [{},[42,"[[ cyclic ref *1 ]]"]]
+[{},[3.14,"[[ cyclic ref *1 ]]"]]
+[{},[3.14,"[[ cyclic ref *1 ]]"]]
+[{},[42,"[[ cyclic ref *1 ]]"]]
+[{},[3.14,"[[ cyclic ref *1 ]]"]]
+[{},["[[ cyclic ref *1 ]]"]]
+[{},["[[ cyclic ref *1 ]]"]]

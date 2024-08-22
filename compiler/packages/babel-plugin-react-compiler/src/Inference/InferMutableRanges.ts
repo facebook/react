@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {printFunction} from '../HIR';
 import {HIRFunction, Identifier} from '../HIR/HIR';
 import {inferAliases} from './InferAlias';
 import {inferAliasForPhis} from './InferAliasForPhis';
@@ -51,7 +52,17 @@ export function inferMutableRanges(ir: HIRFunction): void {
   inferMutableLifetimes(ir, true);
 
   // Re-infer mutable ranges for aliases
-  inferMutableRangesForAlias(ir, aliases);
+  prevAliases = aliases.canonicalize();
+  while (true) {
+    inferMutableRangesForAlias(ir, aliases);
+    inferAliasForStores(ir, aliases);
+    inferAliasForPhis(ir, aliases);
+    const nextAliases = aliases.canonicalize();
+    if (areEqualMaps(prevAliases, nextAliases)) {
+      break;
+    }
+    prevAliases = nextAliases;
+  }
 }
 
 function areEqualMaps<T>(a: Map<T, T>, b: Map<T, T>): boolean {
