@@ -238,6 +238,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     phis: new Set(),
   };
 
+  const returnIdentifier = createTemporaryPlace(env, GeneratedSource).identifier;
   const fn: HIRFunction = {
     loc: GeneratedSource,
     id: null,
@@ -245,6 +246,7 @@ function emitSelectorFn(env: Environment, keys: Array<string>): Instruction {
     env,
     params: [obj],
     returnType: null,
+    returnIdentifier, 
     context: [],
     effects: null,
     body: {
