@@ -68,7 +68,7 @@ export function inferTypes(func: HIRFunction): void {
 function apply(func: HIRFunction, unifier: Unifier): void {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      phi.type = unifier.get(phi.type);
+      phi.id.type = unifier.get(phi.id.type);
     }
     for (const instr of block.instructions) {
       for (const operand of eachInstructionLValue(instr)) {
@@ -126,7 +126,7 @@ function* generate(
   const returnTypes: Array<Type> = [];
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      yield equation(phi.type, {
+      yield equation(phi.id.type, {
         kind: 'Phi',
         operands: [...phi.operands.values()].map(id => id.type),
       });
