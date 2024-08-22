@@ -25,3 +25,4 @@ export const enableShallowPropDiffing = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
 export const enableFabricCompleteRootInCommitPhase = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
+export const enableSiblingPrerendering = __VARIANT__;
