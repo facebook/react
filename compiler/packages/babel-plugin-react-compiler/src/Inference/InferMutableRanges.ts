@@ -50,7 +50,28 @@ export function inferMutableRanges(ir: HIRFunction): void {
   // Re-infer mutable ranges for all values
   inferMutableLifetimes(ir, true);
 
-  // Re-infer mutable ranges for aliases, but *not* for stores
+  /**
+   * The second inferMutableLifetimes() call updates mutable ranges
+   * of values to account for Store effects. Now we need to update
+   * all aliases of such values to extend their ranges as well. Note
+   * that the store only mutates the the directly aliased value and
+   * not any of its inner captured references. For example:
+   *
+   * ```
+   * let y;
+   * if (cond) {
+   *   y = [];
+   * } else {
+   *   y = [{}];
+   * }
+   * y.push(z);
+   * ```
+   *
+   * The Store effect from the `y.push` modifies the values that `y`
+   * directly aliases - the two arrays from the if/else branches -
+   * but does not modify values that `y` "contains" such as the
+   * object literal or `z`.
+   */
   prevAliases = aliases.canonicalize();
   while (true) {
     inferMutableRangesForAlias(ir, aliases);
