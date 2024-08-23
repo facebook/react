@@ -525,8 +525,17 @@ function areEqualDependencies(
   return true;
 }
 
-export function areEqualPaths(a: Array<string>, b: Array<string>): boolean {
-  return a.length === b.length && a.every((item, ix) => item === b[ix]);
+export function areEqualPaths(
+  a: Array<{property: string; optional: boolean}>,
+  b: Array<{property: string; optional: boolean}>,
+): boolean {
+  return (
+    a.length === b.length &&
+    a.every(
+      (item, ix) =>
+        item.property === b[ix].property && item.optional === b[ix].optional,
+    )
+  );
 }
 
 /**
