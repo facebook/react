@@ -2575,14 +2575,15 @@ export function attach(
           const fallbackChildFragment = primaryChildFragment
             ? primaryChildFragment.sibling
             : null;
-          const fallbackChild = fallbackChildFragment
-            ? fallbackChildFragment.child
-            : null;
-          if (fallbackChild !== null) {
-            mountChildrenRecursively(
-              fallbackChild,
-              traceNearestHostComponentUpdate,
-            );
+          if (fallbackChildFragment) {
+            const fallbackChild = fallbackChildFragment.child;
+            if (fallbackChild !== null) {
+              updateTrackedPathStateBeforeMount(fallbackChildFragment);
+              mountChildrenRecursively(
+                fallbackChild,
+                traceNearestHostComponentUpdate,
+              );
+            }
           }
         } else {
           let primaryChild: Fiber | null = null;
@@ -2592,6 +2593,7 @@ export function attach(
             primaryChild = fiber.child;
           } else if (fiber.child !== null) {
             primaryChild = fiber.child.child;
+            updateTrackedPathStateBeforeMount(fiber.child);
           }
           if (primaryChild !== null) {
             mountChildrenRecursively(
