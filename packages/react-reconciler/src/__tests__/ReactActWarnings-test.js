@@ -349,7 +349,14 @@ describe('act warnings', () => {
           root.render(<App showMore={true} />);
         });
       });
-      assertLog(['Suspend! [Async]', 'Loading...']);
+      assertLog([
+        'Suspend! [Async]',
+        'Loading...',
+
+        ...(gate('enableSiblingPrerendering')
+          ? ['Suspend! [Async]', 'Loading...']
+          : []),
+      ]);
       expect(root).toMatchRenderedOutput('(empty)');
 
       // This is a ping, not a retry, because no fallback is showing.
