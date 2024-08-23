@@ -131,7 +131,7 @@ import type {
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
 import type {Source} from 'react-devtools-shared/src/shared/types';
-import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
+import {getSourceLocationByFiber} from './DevToolsFiberComponentStack';
 
 // Kinds
 const FIBER_INSTANCE = 0;
@@ -152,7 +152,7 @@ type FiberInstance = {
   previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number, // Force Error/Suspense
-  componentStack: null | string,
+  source: null | Source, // the source location of this component function
   errors: null | Map<string, number>, // error messages and count
   warnings: null | Map<string, number>, // warning messages and count
   data: Fiber, // one of a Fiber pair
@@ -167,7 +167,7 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     previousSibling: null,
     nextSibling: null,
     flags: 0,
-    componentStack: null,
+    source: null,
     errors: null,
     warnings: null,
     data: fiber,
@@ -187,7 +187,7 @@ type VirtualInstance = {
   previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number,
-  componentStack: null | string,
+  source: null,
   // Errors and Warnings happen per ReactComponentInfo which can appear in
   // multiple places but we track them per stateful VirtualInstance so
   // that old errors/warnings don't disappear when the instance is refreshed.
@@ -209,7 +209,7 @@ function createVirtualInstance(
     previousSibling: null,
     nextSibling: null,
     flags: 0,
-    componentStack: null,
+    source: null,
     errors: null,
     warnings: null,
     data: debugEntry,
@@ -4328,7 +4328,7 @@ export function attach(
 
     let source = null;
     if (canViewSource) {
-      source = getSourceForFiber(fiber);
+      source = getSourceForFiberInstance(fiberInstance);
     }
 
     return {
@@ -5668,39 +5668,27 @@ export function attach(
     return idToDevToolsInstanceMap.has(id);
   }
 
-  function getComponentStackForFiber(fiber: Fiber): string | null {
-    // TODO: This should really just take an DevToolsInstance directly.
-    let fiberInstance = fiberToFiberInstanceMap.get(fiber);
-    if (fiberInstance === undefined && fiber.alternate !== null) {
-      fiberInstance = fiberToFiberInstanceMap.get(fiber.alternate);
-    }
-    if (fiberInstance === undefined) {
-      // We're no longer tracking this instance.
-      return null;
-    }
-    if (fiberInstance.componentStack !== null) {
-      // Cached entry.
-      return fiberInstance.componentStack;
+  function getSourceForFiberInstance(
+    fiberInstance: FiberInstance,
+  ): Source | null {
+    if (fiberInstance.source !== null) {
+      return fiberInstance.source;
     }
     const dispatcherRef = getDispatcherRef(renderer);
-    if (dispatcherRef == null) {
+    const stackFrame =
+      dispatcherRef == null
+        ? null
+        : getSourceLocationByFiber(
+            ReactTypeOfWork,
+            fiberInstance.data,
+            dispatcherRef,
+          );
+    if (stackFrame === null) {
       return null;
     }
-
-    return (fiberInstance.componentStack = getStackByFiberInDevAndProd(
-      ReactTypeOfWork,
-      fiber,
-      dispatcherRef,
-    ));
-  }
-
-  function getSourceForFiber(fiber: Fiber): Source | null {
-    const componentStack = getComponentStackForFiber(fiber);
-    if (componentStack == null) {
-      return null;
-    }
-
-    return parseSourceFromComponentStack(componentStack);
+    const source = parseSourceFromComponentStack(stackFrame);
+    fiberInstance.source = source;
+    return source;
   }
 
   return {
