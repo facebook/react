@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {PATTERNLIKE_TYPES} from '@babel/types';
 import {CompilerError} from '../CompilerError';
 import {Identifier, ReactiveScopeDependency} from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
 import {assertExhaustive} from '../Utils/utils';
+import {printReactiveScopeSummary} from './PrintReactiveFunction';
 
 /*
  * We need to understand optional member expressions only when determining
@@ -51,7 +53,9 @@ export type ReactiveScopePropertyDependency = ReactiveScopeDependency & {
  * @param initialDeps
  * @returns
  */
+let nextId = 0;
 export class ReactiveScopeDependencyTree {
+  #inst: number = nextId++;
   #roots: Map<Identifier, DependencyNode> = new Map();
 
   #getOrCreateRoot(identifier: Identifier): DependencyNode {
@@ -69,6 +73,11 @@ export class ReactiveScopeDependencyTree {
   }
 
   add(dep: ReactiveScopePropertyDependency, inConditional: boolean): void {
+    // console.log(
+    //   `add(${this.#inst}): ${printIdentifier(dep.identifier)}${dep.path.length ? `.${dep.path.join('.')}` : ''}${dep.optionalPath.length ? `?.${dep.optionalPath.join('?.')}` : ''} inConditional=${inConditional}`,
+    // );
+    // console.log(this.debug());
+    // console.log();
     const {path, optionalPath} = dep;
     let currNode = this.#getOrCreateRoot(dep.identifier);
 
@@ -76,7 +85,7 @@ export class ReactiveScopeDependencyTree {
       ? PropertyAccessType.ConditionalAccess
       : PropertyAccessType.UnconditionalAccess;
 
-    for (const property of path) {
+    for (const {property} of path) {
       // all properties read 'on the way' to a dependency are marked as 'access'
       let currChild = getOrMakeProperty(currNode, property);
       currChild.accessType = merge(currChild.accessType, accessType);
@@ -111,7 +120,10 @@ export class ReactiveScopeDependencyTree {
         let currChild = getOrMakeProperty(currNode, property);
         currChild.accessType = merge(
           currChild.accessType,
-          PropertyAccessType.ConditionalAccess,
+          // Conditional access takes precedence over optional access
+          inConditional
+            ? PropertyAccessType.ConditionalAccess
+            : PropertyAccessType.OptionalAccess,
         );
         currNode = currChild;
       }
@@ -119,18 +131,24 @@ export class ReactiveScopeDependencyTree {
       // The final node should be marked as a conditional dependency.
       currNode.accessType = merge(
         currNode.accessType,
-        PropertyAccessType.ConditionalDependency,
+        // Conditional access takes precedence over optional access
+        inConditional
+          ? PropertyAccessType.ConditionalDependency
+          : PropertyAccessType.OptionalDependency,
       );
     }
   }
 
   deriveMinimalDependencies(): Set<ReactiveScopeDependency> {
+    console.log(this.debug());
     const results = new Set<ReactiveScopeDependency>();
     for (const [rootId, rootNode] of this.#roots.entries()) {
       const deps = deriveMinimalDependenciesInSubtree(rootNode);
       CompilerError.invariant(
         deps.every(
-          dep => dep.accessType === PropertyAccessType.UnconditionalDependency,
+          dep =>
+            dep.accessType === PropertyAccessType.UnconditionalDependency ||
+            dep.accessType === PropertyAccessType.OptionalDependency,
         ),
         {
           reason:
@@ -215,6 +233,27 @@ export class ReactiveScopeDependencyTree {
     }
     return res.flat().join('\n');
   }
+
+  debug(): string {
+    const buf: Array<string> = [`tree(${this.#inst}) [`];
+    for (const [rootId, rootNode] of this.#roots) {
+      buf.push(`${printIdentifier(rootId)} (${rootNode.accessType}):`);
+      this.#debugImpl(buf, rootNode, 1);
+    }
+    buf.push(']');
+    return buf.length > 2 ? buf.join('\n') : buf.join('');
+  }
+
+  #debugImpl(
+    buf: Array<string>,
+    node: DependencyNode,
+    depth: number = 0,
+  ): void {
+    for (const [property, childNode] of node.properties) {
+      buf.push(`${'  '.repeat(depth)}.${property} (${childNode.accessType}):`);
+      this.#debugImpl(buf, childNode, depth + 1);
+    }
+  }
 }
 
 /*
@@ -237,6 +276,8 @@ export class ReactiveScopeDependencyTree {
  *    ```
  */
 enum PropertyAccessType {
+  OptionalAccess = 'OptionalAccess',
+  OptionalDependency = 'OptionalDependency',
   ConditionalAccess = 'ConditionalAccess',
   UnconditionalAccess = 'UnconditionalAccess',
   ConditionalDependency = 'ConditionalDependency',
@@ -253,7 +294,20 @@ function isUnconditional(access: PropertyAccessType): boolean {
 function isDependency(access: PropertyAccessType): boolean {
   return (
     access === PropertyAccessType.ConditionalDependency ||
-    access === PropertyAccessType.UnconditionalDependency
+    access === PropertyAccessType.UnconditionalDependency ||
+    access === PropertyAccessType.OptionalDependency
+  );
+}
+function isOptional(access: PropertyAccessType): boolean {
+  return (
+    access === PropertyAccessType.OptionalAccess ||
+    access == PropertyAccessType.OptionalDependency
+  );
+}
+function _isConditional(access: PropertyAccessType): boolean {
+  return (
+    access === PropertyAccessType.ConditionalAccess ||
+    access === PropertyAccessType.ConditionalDependency
   );
 }
 
@@ -264,6 +318,7 @@ function merge(
   const resultIsUnconditional =
     isUnconditional(access1) || isUnconditional(access2);
   const resultIsDependency = isDependency(access1) || isDependency(access2);
+  const resultIsOptional = isOptional(access1) || isOptional(access2);
 
   /*
    * Straightforward merge.
@@ -278,6 +333,12 @@ function merge(
       return PropertyAccessType.UnconditionalDependency;
     } else {
       return PropertyAccessType.UnconditionalAccess;
+    }
+  } else if (resultIsOptional) {
+    if (resultIsDependency) {
+      return PropertyAccessType.OptionalDependency;
+    } else {
+      return PropertyAccessType.OptionalAccess;
     }
   } else {
     if (resultIsDependency) {
@@ -294,21 +355,28 @@ type DependencyNode = {
 };
 
 type ReduceResultNode = {
-  relativePath: Array<string>;
+  relativePath: Array<{property: string; optional: boolean}>;
   accessType: PropertyAccessType;
 };
 
-const promoteUncondResult = [
+const promoteUncondResult: Array<ReduceResultNode> = [
   {
     relativePath: [],
     accessType: PropertyAccessType.UnconditionalDependency,
   },
 ];
 
-const promoteCondResult = [
+const promoteCondResult: Array<ReduceResultNode> = [
   {
     relativePath: [],
     accessType: PropertyAccessType.ConditionalDependency,
+  },
+];
+
+const promoteOptionalResult: Array<ReduceResultNode> = [
+  {
+    relativePath: [],
+    accessType: PropertyAccessType.OptionalDependency,
   },
 ];
 
@@ -337,11 +405,33 @@ function deriveMinimalDependenciesInSubtree(
     case PropertyAccessType.UnconditionalDependency: {
       return promoteUncondResult;
     }
+    case PropertyAccessType.OptionalDependency: {
+      if (results.length === 0) {
+        return promoteOptionalResult;
+      } else if (
+        results.every(
+          ({accessType}) =>
+            accessType === PropertyAccessType.UnconditionalDependency ||
+            accessType === PropertyAccessType.OptionalDependency,
+        )
+      ) {
+        // all children are unconditional dependencies, return them to preserve granularity
+        return results;
+      } else {
+        /*
+         * at least one child is accessed conditionally, so this node needs to be promoted to
+         * unconditional dependency
+         */
+        return promoteUncondResult;
+      }
+    }
+    case PropertyAccessType.OptionalAccess:
     case PropertyAccessType.UnconditionalAccess: {
       if (
         results.every(
           ({accessType}) =>
-            accessType === PropertyAccessType.UnconditionalDependency,
+            accessType === PropertyAccessType.UnconditionalDependency ||
+            accessType === PropertyAccessType.OptionalDependency,
         )
       ) {
         // all children are unconditional dependencies, return them to preserve granularity

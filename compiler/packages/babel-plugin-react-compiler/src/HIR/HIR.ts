@@ -1494,7 +1494,7 @@ export type ReactiveScopeDeclaration = {
 
 export type ReactiveScopeDependency = {
   identifier: Identifier;
-  path: Array<string>;
+  path: Array<{property: string; optional: boolean}>;
 };
 
 /*

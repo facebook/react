@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import prettyFormat from 'pretty-format';
 import {CompilerError} from '../CompilerError';
 import {
   BlockId,
   DeclarationId,
   GeneratedSource,
   Identifier,
+  IdentifierId,
   InstructionId,
   InstructionKind,
   isObjectMethodType,
@@ -28,6 +30,7 @@ import {
   ReactiveValue,
   ScopeId,
 } from '../HIR/HIR';
+import {printIdentifier, printInstruction, printPlace} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand, eachPatternOperand} from '../HIR/visitors';
 import {empty, Stack} from '../Utils/Stack';
 import {assertExhaustive, Iterable_some} from '../Utils/utils';
@@ -36,6 +39,11 @@ import {
   ReactiveScopePropertyDependency,
 } from './DeriveMinimalDependencies';
 import {areEqualPaths} from './MergeReactiveScopesThatInvalidateTogether';
+import {
+  printDependency,
+  printReactiveFunction,
+  printReactiveValue,
+} from './PrintReactiveFunction';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
@@ -45,6 +53,7 @@ import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
  * their direct dependencies and those of their child scopes.
  */
 export function propagateScopeDependencies(fn: ReactiveFunction): void {
+  console.log();
   const escapingTemporaries: TemporariesUsedOutsideDefiningScope = {
     declarations: new Map(),
     usedOutsideDeclaringScope: new Set(),
@@ -70,6 +79,7 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
     new PropagationVisitor(fn.env.config.enableTreatFunctionDepsAsConditional),
     context,
   );
+  console.log(printReactiveFunction(fn));
 }
 
 type TemporariesUsedOutsideDefiningScope = {
@@ -302,6 +312,8 @@ class Context {
   #properties: Map<Identifier, ReactiveScopePropertyDependency> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
   #inConditionalWithinScope: boolean = false;
+  #optionalValues: Set<IdentifierId> = new Set();
+
   /*
    * Reactive dependencies used unconditionally in the current conditional.
    * Composed of dependencies:
@@ -354,8 +366,12 @@ class Context {
     this.#inConditionalWithinScope = prevInConditional;
 
     // Derive minimal dependencies now, since next line may mutate scopedDependencies
+    console.log(`deps for @${scope.id}`);
     const minInnerScopeDependencies =
       scopedDependencies.deriveMinimalDependencies();
+    for (const dep of minInnerScopeDependencies) {
+      console.log(printDependency(dep));
+    }
 
     /*
      * propagate dependencies upward using the same rules as normal dependency
@@ -424,6 +440,23 @@ class Context {
     return result;
   }
 
+  enterOptional(
+    lhs: Place,
+    optional: boolean,
+    fn: () => void,
+  ): ReactiveScopeDependencyTree {
+    if (!optional) {
+      return this.enterConditional(fn);
+    }
+    const previousOptionals = this.#optionalValues;
+    this.#optionalValues = new Set(this.#optionalValues);
+    this.#optionalValues.add(lhs.identifier.id);
+    fn();
+    const result = this.#depsInCurrentConditional;
+    this.#optionalValues = previousOptionals;
+    return result;
+  }
+
   /*
    * Add dependencies from exhaustive CFG paths into the current ReactiveDeps
    * tree. If a property is used in every CFG path, it is promoted to an
@@ -465,7 +498,6 @@ class Context {
   #getProperty(
     object: Place,
     property: string,
-    isConditional: boolean,
   ): ReactiveScopePropertyDependency {
     const resolvedObject = this.resolveTemporary(object);
     const resolvedDependency = this.#properties.get(resolvedObject.identifier);
@@ -497,17 +529,17 @@ class Context {
        * e.g. for `a.b?.c.d`, `d` should be added to optionalPath
        */
       objectDependency.optionalPath.push(property);
-    } else if (isConditional) {
+    } else if (this.#optionalValues.has(object.identifier.id)) {
       objectDependency.optionalPath.push(property);
     } else {
-      objectDependency.path.push(property);
+      objectDependency.path.push({property, optional: false});
     }
 
     return objectDependency;
   }
 
   declareProperty(lvalue: Place, object: Place, property: string): void {
-    const nextDependency = this.#getProperty(object, property, false);
+    const nextDependency = this.#getProperty(object, property);
     this.#properties.set(lvalue.identifier, nextDependency);
   }
 
@@ -516,7 +548,7 @@ class Context {
     // ref.current access is not a valid dep
     if (
       isUseRefType(maybeDependency.identifier) &&
-      maybeDependency.path.at(0) === 'current'
+      maybeDependency.path.at(0)?.property === 'current'
     ) {
       return false;
     }
@@ -589,7 +621,7 @@ class Context {
   }
 
   visitProperty(object: Place, property: string): void {
-    const nextDependency = this.#getProperty(object, property, false);
+    const nextDependency = this.#getProperty(object, property);
     this.visitDependency(nextDependency);
   }
 
@@ -785,8 +817,17 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         for (const instr of inner.instructions) {
           this.visitInstruction(instr, context);
         }
+        const lastInstruction = inner.instructions.at(-1);
+        CompilerError.invariant(
+          lastInstruction !== undefined && lastInstruction.lvalue !== null,
+          {
+            reason:
+              'Expected OptionalExpresion to have an instruction with an lvalue',
+            loc: value.loc,
+          },
+        );
         // The final value is the conditional portion following the `?`
-        context.enterConditional(() => {
+        context.enterOptional(lastInstruction.lvalue, value.optional, () => {
           this.visitReactiveValue(context, id, inner.value);
         });
         break;
@@ -911,6 +952,50 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
           id,
           scope: context.currentScope,
         });
+      }
+    } else if (value.kind === 'OptionalExpression') {
+      const inner = value.value;
+      /*
+       * OptionalExpression value is a SequenceExpression where the instructions
+       * represent the code prior to the `?` and the final value represents the
+       * conditional code that follows.
+       */
+      CompilerError.invariant(inner.kind === 'SequenceExpression', {
+        reason: 'Expected OptionalExpression value to be a SequenceExpression',
+        description: `Found a \`${value.kind}\``,
+        loc: value.loc,
+        suggestions: null,
+      });
+      // Instructions are the unconditionally executed portion before the `?`
+      for (const instr of inner.instructions) {
+        this.visitInstruction(instr, context);
+      }
+      const lastInstruction = inner.instructions.at(-1);
+      CompilerError.invariant(
+        lastInstruction !== undefined && lastInstruction.lvalue !== null,
+        {
+          reason:
+            'Expected OptionalExpresion to have an instruction with an lvalue',
+          loc: value.loc,
+        },
+      );
+      // The final value is the conditional portion following the `?`
+      context.enterOptional(lastInstruction.lvalue, value.optional, () => {
+        this.visitReactiveValue(context, id, inner.value);
+      });
+      let innerValue = inner.value;
+      while (innerValue.kind === 'SequenceExpression') {
+        innerValue = innerValue.value;
+      }
+      CompilerError.invariant(innerValue.kind === 'LoadLocal', {
+        reason:
+          'Expected OptionalExpression to end in a SequenceExpression with a LoadLocal',
+        loc: innerValue.loc,
+      });
+      if (lvalue !== null && !context.isUsedOutsideDeclaringScope(lvalue)) {
+        context.declareTemporary(lvalue, innerValue.place);
+      } else {
+        context.visitOperand(innerValue.place);
       }
     } else {
       this.visitReactiveValue(context, id, value);
