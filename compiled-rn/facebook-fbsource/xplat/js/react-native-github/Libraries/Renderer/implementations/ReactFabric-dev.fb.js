@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<78375cf6fe95ac987318d3ca5093a46d>>
+ * @generated SignedSource<<746002f099c7204907e443cbabc48477>>
  */
 
 "use strict";
@@ -2647,28 +2647,41 @@ __DEV__ &&
         0 === root.tag &&
         (ReactSharedInternals.didScheduleLegacyUpdate = !0);
     }
-    function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
+    function flushSyncWorkAcrossRoots_impl(syncTransitionLanes, onlyLegacy) {
       if (!isFlushingWork && mightHavePendingSyncWork) {
         isFlushingWork = !0;
         do {
           var didPerformSomeWork = !1;
           for (var root = firstScheduledRoot; null !== root; ) {
-            if (!onlyLegacy || 0 === root.tag) {
-              var workInProgressRootRenderLanes$jscomp$0 =
-                workInProgressRootRenderLanes;
-              workInProgressRootRenderLanes$jscomp$0 = getNextLanes(
-                root,
-                root === workInProgressRoot
-                  ? workInProgressRootRenderLanes$jscomp$0
-                  : 0
-              );
-              0 !== (workInProgressRootRenderLanes$jscomp$0 & 3) &&
-                ((didPerformSomeWork = !0),
-                performSyncWorkOnRoot(
-                  root,
-                  workInProgressRootRenderLanes$jscomp$0
-                ));
-            }
+            if (!onlyLegacy || 0 === root.tag)
+              if (0 !== syncTransitionLanes) {
+                var pendingLanes = root.pendingLanes;
+                if (0 === pendingLanes) var nextLanes = 0;
+                else {
+                  var suspendedLanes = root.suspendedLanes,
+                    pingedLanes = root.pingedLanes;
+                  nextLanes =
+                    (1 << (31 - clz32(42 | syncTransitionLanes) + 1)) - 1;
+                  nextLanes &= pendingLanes & ~(suspendedLanes & ~pingedLanes);
+                  nextLanes =
+                    nextLanes & 201326677
+                      ? (nextLanes & 201326677) | 1
+                      : nextLanes
+                        ? nextLanes | 2
+                        : 0;
+                }
+                0 !== nextLanes &&
+                  ((didPerformSomeWork = !0),
+                  performSyncWorkOnRoot(root, nextLanes));
+              } else
+                (nextLanes = workInProgressRootRenderLanes),
+                  (nextLanes = getNextLanes(
+                    root,
+                    root === workInProgressRoot ? nextLanes : 0
+                  )),
+                  0 !== (nextLanes & 3) &&
+                    ((didPerformSomeWork = !0),
+                    performSyncWorkOnRoot(root, nextLanes));
             root = root.next;
           }
         } while (didPerformSomeWork);
@@ -2680,6 +2693,7 @@ __DEV__ &&
         didScheduleMicrotask_act =
         didScheduleMicrotask =
           !1;
+      0 !== currentEventTransitionLane && (currentEventTransitionLane = 0);
       for (
         var currentTime = now$1(), prev = null, root = firstScheduledRoot;
         null !== root;
@@ -2695,8 +2709,7 @@ __DEV__ &&
             0 !== (nextLanes & 3) && (mightHavePendingSyncWork = !0));
         root = next;
       }
-      currentEventTransitionLane = 0;
-      flushSyncWorkAcrossRoots_impl(!1);
+      flushSyncWorkAcrossRoots_impl(0, !1);
     }
     function scheduleTaskForRootDuringMicrotask(root, currentTime) {
       for (
@@ -11710,7 +11723,7 @@ __DEV__ &&
             0 !== (fiber.mode & 1) ||
             ReactSharedInternals.isBatchingLegacy ||
             ((workInProgressRootRenderTargetTime = now$1() + RENDER_TIMEOUT_MS),
-            flushSyncWorkAcrossRoots_impl(!0));
+            flushSyncWorkAcrossRoots_impl(0, !0));
     }
     function performConcurrentWorkOnRoot(root, didTimeout) {
       nestedUpdateScheduled = currentUpdateIsNested = !1;
@@ -12017,7 +12030,7 @@ __DEV__ &&
     }
     function flushSyncWork() {
       return (executionContext & (RenderContext | CommitContext)) === NoContext
-        ? (flushSyncWorkAcrossRoots_impl(!1), !1)
+        ? (flushSyncWorkAcrossRoots_impl(0, !1), !1)
         : !0;
     }
     function resetWorkInProgressStack() {
@@ -12706,7 +12719,7 @@ __DEV__ &&
             ? nestedUpdateCount++
             : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root)))
         : (nestedUpdateCount = 0);
-      flushSyncWorkAcrossRoots_impl(!1);
+      flushSyncWorkAcrossRoots_impl(0, !1);
       markCommitStopped();
       return null;
     }
@@ -12836,7 +12849,7 @@ __DEV__ &&
               injectedProfilingHooks.markPassiveEffectsStopped();
             commitDoubleInvokeEffectsInDEV(priority, !0);
             executionContext = prevExecutionContext;
-            flushSyncWorkAcrossRoots_impl(!1);
+            flushSyncWorkAcrossRoots_impl(0, !1);
             didScheduleUpdateDuringPassiveEffects
               ? priority === rootWithPassiveNestedUpdates
                 ? nestedPassiveUpdateCount++
@@ -16909,18 +16922,18 @@ __DEV__ &&
           executionContext !== NoContext ||
             ReactSharedInternals.isBatchingLegacy ||
             ((workInProgressRootRenderTargetTime = now$1() + RENDER_TIMEOUT_MS),
-            flushSyncWorkAcrossRoots_impl(!0));
+            flushSyncWorkAcrossRoots_impl(0, !0));
       }
     };
     var roots = new Map();
     (function () {
       var internals = {
         bundleType: 1,
-        version: "19.0.0-native-fb-85fb95cd-20240816",
+        version: "19.0.0-native-fb-ee7f6757-20240823",
         rendererPackageName: "react-native-renderer",
         currentDispatcherRef: ReactSharedInternals,
         findFiberByHostInstance: getInstanceFromNode,
-        reconcilerVersion: "19.0.0-native-fb-85fb95cd-20240816"
+        reconcilerVersion: "19.0.0-native-fb-ee7f6757-20240823"
       };
       null !== extraDevToolsConfig &&
         (internals.rendererConfig = extraDevToolsConfig);
