@@ -25,6 +25,7 @@ import {
   BuiltInArrayId,
   BuiltInFunctionId,
   BuiltInJsxId,
+  BuiltInMixedReadonlyId,
   BuiltInObjectId,
   BuiltInPropsId,
   BuiltInRefValueId,
@@ -496,8 +497,13 @@ class Unifier {
         if (candidateType === null) {
           candidateType = resolved;
         } else if (!typeEquals(resolved, candidateType)) {
-          candidateType = null;
-          break;
+          const unionType = tryUnionTypes(resolved, candidateType);
+          if (unionType === null) {
+            candidateType = null;
+            break;
+          } else {
+            candidateType = unionType;
+          }
         } // else same type, continue
       }
 
@@ -649,4 +655,40 @@ const RefLikeNameRE = /^(?:[a-zA-Z$_][a-zA-Z$_0-9]*)Ref$|^ref$/;
 
 function isRefLikeName(t: PropType): boolean {
   return RefLikeNameRE.test(t.objectName) && t.propertyName === 'current';
+}
+
+function tryUnionTypes(ty1: Type, ty2: Type): Type | null {
+  let readonlyType: Type;
+  let otherType: Type;
+  if (ty1.kind === 'Object' && ty1.shapeId === BuiltInMixedReadonlyId) {
+    readonlyType = ty1;
+    otherType = ty2;
+  } else if (ty2.kind === 'Object' && ty2.shapeId === BuiltInMixedReadonlyId) {
+    readonlyType = ty2;
+    otherType = ty1;
+  } else {
+    return null;
+  }
+  if (otherType.kind === 'Primitive') {
+    /**
+     * Union(Primitive | MixedReadonly) = MixedReadonly
+     *
+     * For example, `data ?? null` could return `data`, the fact that RHS
+     * is a primitive doesn't guarantee the result is a primitive.
+     */
+    return readonlyType;
+  } else if (
+    otherType.kind === 'Object' &&
+    otherType.shapeId === BuiltInArrayId
+  ) {
+    /**
+     * Union(Array | MixedReadonly) = Array
+     *
+     * In practice this pattern means the result is always an array. Given
+     * that this behavior requires opting-in to the mixedreadonly type
+     * (via moduleTypeProvider) this seems like a reasonable heuristic.
+     */
+    return otherType;
+  }
+  return null;
 }
