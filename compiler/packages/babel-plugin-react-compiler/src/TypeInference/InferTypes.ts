@@ -14,7 +14,9 @@ import {
   Identifier,
   IdentifierId,
   Instruction,
+  isArrayType,
   makeType,
+  ObjectType,
   PropType,
   Type,
   typeEquals,
@@ -25,6 +27,7 @@ import {
   BuiltInArrayId,
   BuiltInFunctionId,
   BuiltInJsxId,
+  BuiltInMixedReadonlyId,
   BuiltInObjectId,
   BuiltInPropsId,
   BuiltInRefValueId,
@@ -496,8 +499,23 @@ class Unifier {
         if (candidateType === null) {
           candidateType = resolved;
         } else if (!typeEquals(resolved, candidateType)) {
-          candidateType = null;
-          break;
+          function isArrayOrMixedReadonly(ty: Type): ty is ObjectType {
+            return (
+              ty.kind === 'Object' &&
+              (ty.shapeId === BuiltInArrayId ||
+                ty.shapeId === BuiltInMixedReadonlyId)
+            );
+          }
+          if (
+            isArrayOrMixedReadonly(resolved) &&
+            isArrayOrMixedReadonly(candidateType)
+          ) {
+            candidateType =
+              resolved.shapeId === BuiltInArrayId ? resolved : candidateType;
+          } else {
+            candidateType = null;
+            break;
+          }
         } // else same type, continue
       }
 
