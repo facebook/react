@@ -50,11 +50,10 @@ export function inferMutableRanges(ir: HIRFunction): void {
   // Re-infer mutable ranges for all values
   inferMutableLifetimes(ir, true);
 
-  // Re-infer mutable ranges for aliases
+  // Re-infer mutable ranges for aliases, but *not* for stores
   prevAliases = aliases.canonicalize();
   while (true) {
     inferMutableRangesForAlias(ir, aliases);
-    inferAliasForStores(ir, aliases);
     inferAliasForPhis(ir, aliases);
     const nextAliases = aliases.canonicalize();
     if (areEqualMaps(prevAliases, nextAliases)) {

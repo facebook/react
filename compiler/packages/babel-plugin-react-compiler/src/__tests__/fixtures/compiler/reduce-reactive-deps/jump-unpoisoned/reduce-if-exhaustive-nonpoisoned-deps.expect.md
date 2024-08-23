@@ -31,7 +31,7 @@ import { c as _c } from "react/compiler-runtime";
 import { identity } from "shared-runtime";
 
 function useFoo(t0) {
-  const $ = _c(7);
+  const $ = _c(9);
   const { input, hasAB, returnNull } = t0;
   let x;
   let t1;
@@ -40,19 +40,27 @@ function useFoo(t0) {
     bb0: {
       x = [];
       if (!hasAB) {
-        x.push(identity(input.a));
+        let t2;
+        if ($[5] !== input.a) {
+          t2 = identity(input.a);
+          $[5] = input.a;
+          $[6] = t2;
+        } else {
+          t2 = $[6];
+        }
+        x.push(t2);
         if (!returnNull) {
           t1 = null;
           break bb0;
         }
       } else {
         let t2;
-        if ($[5] !== input.a.b) {
+        if ($[7] !== input.a.b) {
           t2 = identity(input.a.b);
-          $[5] = input.a.b;
-          $[6] = t2;
+          $[7] = input.a.b;
+          $[8] = t2;
         } else {
-          t2 = $[6];
+          t2 = $[8];
         }
         x.push(t2);
       }

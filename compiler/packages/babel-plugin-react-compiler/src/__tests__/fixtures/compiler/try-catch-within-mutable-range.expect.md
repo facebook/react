@@ -29,14 +29,28 @@ import { c as _c } from "react/compiler-runtime";
 const { throwErrorWithMessage, shallowCopy } = require("shared-runtime");
 
 function Component(props) {
-  const $ = _c(2);
+  const $ = _c(4);
   let x;
   if ($[0] !== props.value) {
     x = [];
     try {
-      x.push(throwErrorWithMessage("oops"));
+      let t0;
+      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+        t0 = throwErrorWithMessage("oops");
+        $[2] = t0;
+      } else {
+        t0 = $[2];
+      }
+      x.push(t0);
     } catch {
-      x.push(shallowCopy({}));
+      let t0;
+      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+        t0 = shallowCopy({});
+        $[3] = t0;
+      } else {
+        t0 = $[3];
+      }
+      x.push(t0);
     }
 
     x.push(props.value);
