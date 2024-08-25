@@ -95,7 +95,10 @@ if (!__EXPERIMENTAL__) {
 
     it('shares cache between RSC renderers', async () => {
       let n = 0;
-      const random = ReactServer.cache(() => n++);
+      const uncachedFunction = jest.fn(() => {
+        return n++;
+      });
+      const random = ReactServer.cache(uncachedFunction);
 
       function Random() {
         return random();
@@ -114,7 +117,16 @@ if (!__EXPERIMENTAL__) {
         );
       }
 
-      const model = <Preview />;
+      function App() {
+        return (
+          <>
+            <Preview />
+            <Preview />
+          </>
+        );
+      }
+
+      const model = <App />;
       const transport = ReactNoopFlightServer.render(model);
 
       await act(async () => {
@@ -125,8 +137,11 @@ if (!__EXPERIMENTAL__) {
         <>
           <p>RSC A: 0</p>
           <p>RSC B: 0</p>
+          <p>RSC A: 0</p>
+          <p>RSC B: 0</p>
         </>,
       );
+      expect(uncachedFunction).toHaveBeenCalledTimes(1);
     });
 
     it('shows correct stacks in nested RSC renderers', async () => {
