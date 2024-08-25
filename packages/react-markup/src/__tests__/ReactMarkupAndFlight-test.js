@@ -26,6 +26,15 @@ let ReactNoop;
 let ReactNoopFlightServer;
 let ReactNoopFlightClient;
 
+function normalizeCodeLocInfo(str) {
+  return (
+    str &&
+    String(str).replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+      return '\n    in ' + name + ' (at **)';
+    })
+  );
+}
+
 if (!__EXPERIMENTAL__) {
   it('should not be built in stable', () => {
     try {
@@ -122,45 +131,102 @@ if (!__EXPERIMENTAL__) {
 
     it('shows correct stacks in nested RSC renderers', async () => {
       const thrownError = new Error('hi');
+
+      const caughtNestedRendererErrors = [];
+      const ownerStacksDuringParentRendererThrow = [];
+      const ownerStacksDuringNestedRendererThrow = [];
       function Throw() {
+        if (gate(flags => flags.enableOwnerStacks)) {
+          const stack = ReactServer.captureOwnerStack();
+          ownerStacksDuringNestedRendererThrow.push(
+            normalizeCodeLocInfo(stack),
+          );
+        }
         throw thrownError;
       }
 
-      const caughtErrors = [];
+      function Indirection() {
+        return ReactServer.createElement(Throw);
+      }
+
+      function App() {
+        return ReactServer.createElement(Indirection);
+      }
+
       async function Preview() {
         try {
-          await ReactMarkup.experimental_renderToHTML(<Throw />, {
-            onError: (error, errorInfo) => {
-              caughtErrors.push({
-                error: error,
-                parentStack: errorInfo.componentStack,
-                ownerStack: React.captureOwnerStack
-                  ? React.captureOwnerStack()
-                  : null,
-              });
+          await ReactMarkup.experimental_renderToHTML(
+            ReactServer.createElement(App),
+            {
+              onError: (error, errorInfo) => {
+                caughtNestedRendererErrors.push({
+                  error: error,
+                  parentStack: errorInfo.componentStack,
+                  ownerStack: gate(flags => flags.enableOwnerStacks)
+                    ? ReactServer.captureOwnerStack()
+                    : null,
+                });
+              },
             },
-          });
+          );
         } catch (error) {
+          let stack = '';
+          if (gate(flags => flags.enableOwnerStacks)) {
+            stack = ReactServer.captureOwnerStack();
+            ownerStacksDuringParentRendererThrow.push(
+              normalizeCodeLocInfo(stack),
+            );
+          }
+
           return 'did error';
         }
       }
 
-      const model = <Preview />;
+      function PreviewApp() {
+        return ReactServer.createElement(Preview);
+      }
+
+      const model = ReactServer.createElement(PreviewApp);
       const transport = ReactNoopFlightServer.render(model);
 
       await act(async () => {
         ReactNoop.render(await ReactNoopFlightClient.read(transport));
       });
 
-      expect(ReactNoop).toMatchRenderedOutput('did error');
-      expect(caughtErrors).toEqual([
+      expect(caughtNestedRendererErrors).toEqual([
         {
           error: thrownError,
-          // FIXME: This is not the correct stack
-          ownerStack: null,
+          ownerStack:
+            __DEV__ && gate(flags => flags.enableOwnerStacks)
+              ? // TODO: Shouldn't this read the same as the one we got during render?
+                ''
+              : null,
+          // TODO: Shouldn't a parent stack exist?
           parentStack: undefined,
         },
       ]);
+      expect(ownerStacksDuringParentRendererThrow).toEqual(
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              __DEV__
+                ? // TODO: Should have an owner stack
+                  ''
+                : null,
+            ]
+          : [],
+      );
+      expect(ownerStacksDuringNestedRendererThrow).toEqual(
+        gate(flags => flags.enableOwnerStacks)
+          ? [
+              __DEV__
+                ? '\n' +
+                  //
+                  '    in Indirection (at **)\n' +
+                  '    in App (at **)'
+                : null,
+            ]
+          : [],
+      );
     });
   });
 }
