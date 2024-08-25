@@ -395,6 +395,8 @@ const {
   TaintRegistryPendingRequests,
 } = ReactSharedInternals;
 
+ReactSharedInternals.A = DefaultAsyncDispatcher;
+
 function throwTaintViolation(message: string) {
   // eslint-disable-next-line react-internal/prod-error-codes
   throw new Error(message);
@@ -448,11 +450,6 @@ function RequestInstance(
   onAllReady: () => void,
   onFatalError: (error: mixed) => void,
 ) {
-  const previousAsyncDispatcher = ReactSharedInternals.A;
-  if (previousAsyncDispatcher === null) {
-    ReactSharedInternals.A = DefaultAsyncDispatcher;
-  }
-
   if (__DEV__) {
     // Unlike Fizz or Fiber, we don't reset this and just keep it on permanently.
     // This lets it act more like the AsyncDispatcher so that we can get the

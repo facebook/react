@@ -12,10 +12,13 @@ import type {ReactComponentInfo} from 'shared/ReactTypes';
 import type {AsyncDispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 import {resolveRequest, getCache} from '../ReactFlightServer';
+import ReactSharedInternals from '../ReactSharedInternalsServer';
 
 import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {resolveOwner} from './ReactFlightCurrentOwner';
+
+const previousAsyncDispatcher = ReactSharedInternals.A;
 
 function resolveCache(): Map<Function, mixed> {
   const request = resolveRequest();
@@ -30,9 +33,19 @@ export const DefaultAsyncDispatcher: AsyncDispatcher = ({
     const cache = resolveCache();
     let entry: T | void = (cache.get(resourceType): any);
     if (entry === undefined) {
-      entry = resourceType();
-      // TODO: Warn if undefined?
-      cache.set(resourceType, entry);
+      const chainedEntry: T | void =
+        previousAsyncDispatcher !== null
+          ? previousAsyncDispatcher.getCacheForType(resourceType)
+          : undefined;
+
+      if (chainedEntry !== undefined) {
+        entry = chainedEntry;
+        cache.set(resourceType, chainedEntry);
+      } else {
+        entry = resourceType();
+        // TODO: Warn if undefined?
+        cache.set(resourceType, entry);
+      }
     }
     return entry;
   },
