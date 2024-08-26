@@ -3874,27 +3874,28 @@ export function attach(
 
   // END copied code
 
-  function prepareViewAttributeSource(
+  function getElementAttributeByPath(
     id: number,
     path: Array<string | number>,
-  ): void {
+  ): mixed {
     if (isMostRecentlyInspectedElement(id)) {
-      window.$attribute = getInObject(
+      return getInObject(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
       );
     }
+    return undefined;
   }
 
-  function prepareViewElementSource(id: number): void {
+  function getElementSourceFunctionById(id: number): null | Function {
     const devtoolsInstance = idToDevToolsInstanceMap.get(id);
     if (devtoolsInstance === undefined) {
       console.warn(`Could not find DevToolsInstance with id "${id}"`);
-      return;
+      return null;
     }
     if (devtoolsInstance.kind !== FIBER_INSTANCE) {
       // TODO: Handle VirtualInstance.
-      return;
+      return null;
     }
     const fiber = devtoolsInstance.data;
 
@@ -3906,21 +3907,16 @@ export function attach(
       case IncompleteFunctionComponent:
       case IndeterminateComponent:
       case FunctionComponent:
-        global.$type = type;
-        break;
+        return type;
       case ForwardRef:
-        global.$type = type.render;
-        break;
+        return type.render;
       case MemoComponent:
       case SimpleMemoComponent:
-        global.$type =
-          elementType != null && elementType.type != null
-            ? elementType.type
-            : type;
-        break;
+        return elementType != null && elementType.type != null
+          ? elementType.type
+          : type;
       default:
-        global.$type = null;
-        break;
+        return null;
     }
   }
 
@@ -5727,8 +5723,8 @@ export function attach(
     inspectElement,
     logElementToConsole,
     patchConsoleForStrictMode,
-    prepareViewAttributeSource,
-    prepareViewElementSource,
+    getElementAttributeByPath,
+    getElementSourceFunctionById,
     overrideError,
     overrideSuspense,
     overrideValueAtPath,
