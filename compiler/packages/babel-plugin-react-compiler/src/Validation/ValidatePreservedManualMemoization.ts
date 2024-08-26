@@ -167,12 +167,16 @@ function compareDeps(
 
   let isSubpath = true;
   for (let i = 0; i < Math.min(inferred.path.length, source.path.length); i++) {
-    if (
-      inferred.path[i].property !== source.path[i].property ||
-      inferred.path[i].optional !== source.path[i].optional
-    ) {
+    if (inferred.path[i].property !== source.path[i].property) {
       isSubpath = false;
       break;
+    } else if (inferred.path[i].optional && !source.path[i].optional) {
+      /**
+       * The inferred path must be at least as precise as the manual path:
+       * if the inferred path is optional, then the source path must have
+       * been optional too.
+       */
+      return CompareDependencyResult.PathDifference;
     }
   }
 
