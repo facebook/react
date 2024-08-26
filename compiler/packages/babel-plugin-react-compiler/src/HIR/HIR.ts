@@ -759,7 +759,6 @@ export type Phi = {
   kind: 'Phi';
   id: Identifier;
   operands: Map<BlockId, Identifier>;
-  type: Type;
 };
 
 /**

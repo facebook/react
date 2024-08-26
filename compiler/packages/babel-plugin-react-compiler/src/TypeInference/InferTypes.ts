@@ -25,6 +25,7 @@ import {
   BuiltInArrayId,
   BuiltInFunctionId,
   BuiltInJsxId,
+  BuiltInMixedReadonlyId,
   BuiltInObjectId,
   BuiltInPropsId,
   BuiltInRefValueId,
@@ -68,7 +69,7 @@ export function inferTypes(func: HIRFunction): void {
 function apply(func: HIRFunction, unifier: Unifier): void {
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      phi.type = unifier.get(phi.type);
+      phi.id.type = unifier.get(phi.id.type);
     }
     for (const instr of block.instructions) {
       for (const operand of eachInstructionLValue(instr)) {
@@ -126,7 +127,7 @@ function* generate(
   const returnTypes: Array<Type> = [];
   for (const [_, block] of func.body.blocks) {
     for (const phi of block.phis) {
-      yield equation(phi.type, {
+      yield equation(phi.id.type, {
         kind: 'Phi',
         operands: [...phi.operands.values()].map(id => id.type),
       });
@@ -483,28 +484,138 @@ class Unifier {
     }
 
     if (type.kind === 'Phi') {
-      const operands = new Set(type.operands.map(i => this.get(i).kind));
-
-      CompilerError.invariant(operands.size > 0, {
+      CompilerError.invariant(type.operands.length > 0, {
         reason: 'there should be at least one operand',
         description: null,
         loc: null,
         suggestions: null,
       });
-      const kind = operands.values().next().value;
 
-      // there's only one unique type and it's not a type var
-      if (operands.size === 1 && kind !== 'Type') {
-        this.unify(v, type.operands[0]);
+      let candidateType: Type | null = null;
+      for (const operand of type.operands) {
+        const resolved = this.get(operand);
+        if (candidateType === null) {
+          candidateType = resolved;
+        } else if (!typeEquals(resolved, candidateType)) {
+          const unionType = tryUnionTypes(resolved, candidateType);
+          if (unionType === null) {
+            candidateType = null;
+            break;
+          } else {
+            candidateType = unionType;
+          }
+        } // else same type, continue
+      }
+
+      if (candidateType !== null) {
+        this.unify(v, candidateType);
         return;
       }
     }
 
     if (this.occursCheck(v, type)) {
+      const resolvedType = this.tryResolveType(v, type);
+      if (resolvedType !== null) {
+        this.substitutions.set(v.id, resolvedType);
+        return;
+      }
       throw new Error('cycle detected');
     }
 
     this.substitutions.set(v.id, type);
+  }
+
+  tryResolveType(v: TypeVar, type: Type): Type | null {
+    switch (type.kind) {
+      case 'Phi': {
+        /**
+         * Resolve the type of the phi by recursively removing `v` as an operand.
+         * For example we can end up with types like this:
+         *
+         * v = Phi [
+         *   T1
+         *   T2
+         *   Phi [
+         *     T3
+         *     Phi [
+         *       T4
+         *       v <-- cycle!
+         *     ]
+         *   ]
+         * ]
+         *
+         * By recursively removing `v`, we end up with:
+         *
+         * v = Phi [
+         *   T1
+         *   T2
+         *   Phi [
+         *     T3
+         *     Phi [
+         *       T4
+         *     ]
+         *   ]
+         * ]
+         *
+         * Which avoids the cycle
+         */
+        const operands = [];
+        for (const operand of type.operands) {
+          if (operand.kind === 'Type' && operand.id === v.id) {
+            continue;
+          }
+          const resolved = this.tryResolveType(v, operand);
+          if (resolved === null) {
+            return null;
+          }
+          operands.push(resolved);
+        }
+        return {kind: 'Phi', operands};
+      }
+      case 'Type': {
+        const substitution = this.get(type);
+        if (substitution !== type) {
+          const resolved = this.tryResolveType(v, substitution);
+          if (resolved !== null) {
+            this.substitutions.set(type.id, resolved);
+          }
+          return resolved;
+        }
+        return type;
+      }
+      case 'Property': {
+        const objectType = this.tryResolveType(v, this.get(type.objectType));
+        if (objectType === null) {
+          return null;
+        }
+        return {
+          kind: 'Property',
+          objectName: type.objectName,
+          objectType,
+          propertyName: type.propertyName,
+        };
+      }
+      case 'Function': {
+        const returnType = this.tryResolveType(v, this.get(type.return));
+        if (returnType === null) {
+          return null;
+        }
+        return {
+          kind: 'Function',
+          return: returnType,
+          shapeId: type.shapeId,
+        };
+      }
+      case 'ObjectMethod':
+      case 'Object':
+      case 'Primitive':
+      case 'Poly': {
+        return type;
+      }
+      default: {
+        assertExhaustive(type, `Unexpected type kind '${(type as any).kind}'`);
+      }
+    }
   }
 
   occursCheck(v: TypeVar, type: Type): boolean {
@@ -544,4 +655,40 @@ const RefLikeNameRE = /^(?:[a-zA-Z$_][a-zA-Z$_0-9]*)Ref$|^ref$/;
 
 function isRefLikeName(t: PropType): boolean {
   return RefLikeNameRE.test(t.objectName) && t.propertyName === 'current';
+}
+
+function tryUnionTypes(ty1: Type, ty2: Type): Type | null {
+  let readonlyType: Type;
+  let otherType: Type;
+  if (ty1.kind === 'Object' && ty1.shapeId === BuiltInMixedReadonlyId) {
+    readonlyType = ty1;
+    otherType = ty2;
+  } else if (ty2.kind === 'Object' && ty2.shapeId === BuiltInMixedReadonlyId) {
+    readonlyType = ty2;
+    otherType = ty1;
+  } else {
+    return null;
+  }
+  if (otherType.kind === 'Primitive') {
+    /**
+     * Union(Primitive | MixedReadonly) = MixedReadonly
+     *
+     * For example, `data ?? null` could return `data`, the fact that RHS
+     * is a primitive doesn't guarantee the result is a primitive.
+     */
+    return readonlyType;
+  } else if (
+    otherType.kind === 'Object' &&
+    otherType.shapeId === BuiltInArrayId
+  ) {
+    /**
+     * Union(Array | MixedReadonly) = Array
+     *
+     * In practice this pattern means the result is always an array. Given
+     * that this behavior requires opting-in to the mixedreadonly type
+     * (via moduleTypeProvider) this seems like a reasonable heuristic.
+     */
+    return otherType;
+  }
+  return null;
 }
