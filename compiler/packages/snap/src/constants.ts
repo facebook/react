@@ -17,6 +17,7 @@ export const COMPILER_PATH = path.join(
   'Babel',
   'BabelPlugin.js',
 );
+export const COMPILER_INDEX_PATH = path.join(process.cwd(), 'dist', 'index');
 export const LOGGER_PATH = path.join(
   process.cwd(),
   'dist',

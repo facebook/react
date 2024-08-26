@@ -72,6 +72,7 @@ export function printFunction(fn: HIRFunction): string {
   if (definition.length !== 0) {
     output.push(definition);
   }
+  output.push(printType(fn.returnType));
   output.push(printHIR(fn.body));
   output.push(...fn.directives);
   return output.join('\n');
@@ -164,7 +165,7 @@ export function printPhi(phi: Phi): string {
   const items = [];
   items.push(printIdentifier(phi.id));
   items.push(printMutableRange(phi.id));
-  items.push(printType(phi.type));
+  items.push(printType(phi.id.type));
   items.push(': phi(');
   const phis = [];
   for (const [blockId, id] of phi.operands) {
@@ -555,7 +556,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
             }
           })
           .join(', ') ?? '';
-      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]:\n${fn}`;
+      const type = printType(instrValue.loweredFunc.func.returnType).trim();
+      value = `${kind} ${name} @deps[${deps}] @context[${context}] @effects[${effects}]${type !== '' ? ` return${type}` : ''}:\n${fn}`;
       break;
     }
     case 'TaggedTemplateExpression': {

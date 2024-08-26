@@ -697,8 +697,8 @@ describe('InspectedElement', () => {
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "anonymous_fn": Dehydrated {
-          "preview_short": ƒ () {},
-          "preview_long": ƒ () {},
+          "preview_short": () => {},
+          "preview_long": () => {},
         },
         "array_buffer": Dehydrated {
           "preview_short": ArrayBuffer(3),
@@ -715,8 +715,8 @@ describe('InspectedElement', () => {
           "preview_long": 123n,
         },
         "bound_fn": Dehydrated {
-          "preview_short": ƒ bound exampleFunction() {},
-          "preview_long": ƒ bound exampleFunction() {},
+          "preview_short": bound exampleFunction() {},
+          "preview_long": bound exampleFunction() {},
         },
         "data_view": Dehydrated {
           "preview_short": DataView(3),
@@ -727,8 +727,8 @@ describe('InspectedElement', () => {
           "preview_long": Tue Dec 31 2019 23:42:42 GMT+0000 (Coordinated Universal Time),
         },
         "fn": Dehydrated {
-          "preview_short": ƒ exampleFunction() {},
-          "preview_long": ƒ exampleFunction() {},
+          "preview_short": exampleFunction() {},
+          "preview_long": exampleFunction() {},
         },
         "html_element": Dehydrated {
           "preview_short": <div />,
@@ -778,8 +778,8 @@ describe('InspectedElement', () => {
           "Symbol(name)": "hello",
         },
         "proxy": Dehydrated {
-          "preview_short": ƒ () {},
-          "preview_long": ƒ () {},
+          "preview_short": () => {},
+          "preview_long": () => {},
         },
         "react_element": Dehydrated {
           "preview_short": <span />,
@@ -2018,16 +2018,16 @@ describe('InspectedElement', () => {
       {
         "proxy": {
           "$$typeof": Dehydrated {
-            "preview_short": ƒ () {},
-            "preview_long": ƒ () {},
+            "preview_short": () => {},
+            "preview_long": () => {},
           },
           "Symbol(Symbol.iterator)": Dehydrated {
-            "preview_short": ƒ () {},
-            "preview_long": ƒ () {},
+            "preview_short": () => {},
+            "preview_long": () => {},
           },
           "constructor": Dehydrated {
-            "preview_short": ƒ () {},
-            "preview_long": ƒ () {},
+            "preview_short": () => {},
+            "preview_long": () => {},
           },
         },
       }

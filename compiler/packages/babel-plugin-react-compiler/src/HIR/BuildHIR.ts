@@ -215,7 +215,8 @@ export function lower(
     id,
     params,
     fnType: parent == null ? env.fnType : 'Other',
-    returnType: null, // TODO: extract the actual return type node if present
+    returnTypeAnnotation: null, // TODO: extract the actual return type node if present
+    returnType: makeType(),
     body: builder.build(),
     context,
     generator: func.node.generator === true,

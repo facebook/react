@@ -66,13 +66,38 @@ function bind(this: ServerReference<any>): any {
   // $FlowFixMe[unsupported-syntax]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
+    if (__DEV__) {
+      const thisBind = arguments[0];
+      if (thisBind != null) {
+        console.error(
+          'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+        );
+      }
+    }
     const args = ArraySlice.call(arguments, 1);
-    return Object.defineProperties((newFn: any), {
-      $$typeof: {value: SERVER_REFERENCE_TAG},
-      $$id: {value: this.$$id},
-      $$bound: {value: this.$$bound ? this.$$bound.concat(args) : args},
-      bind: {value: bind},
-    });
+    const $$typeof = {value: SERVER_REFERENCE_TAG};
+    const $$id = {value: this.$$id};
+    const $$bound = {value: this.$$bound ? this.$$bound.concat(args) : args};
+    return Object.defineProperties(
+      (newFn: any),
+      __DEV__
+        ? {
+            $$typeof,
+            $$id,
+            $$bound,
+            $$location: {
+              value: this.$$location,
+              configurable: true,
+            },
+            bind: {value: bind, configurable: true},
+          }
+        : {
+            $$typeof,
+            $$id,
+            $$bound,
+            bind: {value: bind, configurable: true},
+          },
+    );
   }
   return newFn;
 }
