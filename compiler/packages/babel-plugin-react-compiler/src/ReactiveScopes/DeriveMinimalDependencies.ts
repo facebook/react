@@ -9,6 +9,7 @@ import {CompilerError} from '../CompilerError';
 import {DependencyPath, Identifier, ReactiveScopeDependency} from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
 import {assertExhaustive} from '../Utils/utils';
+import {printDependency} from './PrintReactiveFunction';
 
 /*
  * We need to understand optional member expressions only when determining
@@ -172,6 +173,27 @@ export class ReactiveScopeDependencyTree {
       res.push(rootResults);
     }
     return res.flat().join('\n');
+  }
+
+  debug(): string {
+    const buf: Array<string> = [`tree() [`];
+    for (const [rootId, rootNode] of this.#roots) {
+      buf.push(`${printIdentifier(rootId)} (${rootNode.accessType}):`);
+      this.#debugImpl(buf, rootNode, 1);
+    }
+    buf.push(']');
+    return buf.length > 2 ? buf.join('\n') : buf.join('');
+  }
+
+  #debugImpl(
+    buf: Array<string>,
+    node: DependencyNode,
+    depth: number = 0,
+  ): void {
+    for (const [property, childNode] of node.properties) {
+      buf.push(`${'  '.repeat(depth)}.${property} (${childNode.accessType}):`);
+      this.#debugImpl(buf, childNode, depth + 1);
+    }
   }
 }
 

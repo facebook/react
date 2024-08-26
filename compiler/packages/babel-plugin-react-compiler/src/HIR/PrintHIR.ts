@@ -191,7 +191,7 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     case 'branch': {
       value = `[${terminal.id}] Branch (${printPlace(terminal.test)}) then:bb${
         terminal.consequent
-      } else:bb${terminal.alternate}`;
+      } else:bb${terminal.alternate} fallthrough:bb${terminal.fallthrough}`;
       break;
     }
     case 'logical': {
