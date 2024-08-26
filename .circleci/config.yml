@@ -82,6 +82,9 @@ jobs:
           keys:
             - cargo-cache-{{ checksum "Cargo.lock" }}
       - run:
+          name: cargo install
+          command: sudo apt install cargo
+      - run:
           name: cargo build
           command: cargo build --release
       - save_cache:
@@ -109,6 +112,9 @@ jobs:
       - restore_cache:
           keys:
             - cargo-cache-{{ checksum "Cargo.lock" }}
+      - run:
+          name: cargo install
+          command: sudo apt install cargo         
       - run:
           name: cargo test
           command: cargo test --manifest-path=Cargo.toml --locked
@@ -379,19 +385,19 @@ jobs:
 
 workflows:
 
-  compiler_playground_cloud:
-    jobs:
-      - test_playground_cloud
-  
-  # compiler_rust_cloud:
+  # compiler_playground_cloud:
   #   jobs:
-  #     - rust_build_cloud
-  #     - rust_test_cloud:
-  #         requires:
-  #           - rust_build_cloud
-  #     - rust_lint_cloud:
-  #         requires:
-  #           - rust_build_cloud
+  #     - test_playground_cloud
+  
+  compiler_rust_cloud:
+    jobs:
+      - rust_build_cloud
+      - rust_test_cloud:
+          requires:
+            - rust_build_cloud
+      - rust_lint_cloud:
+          requires:
+            - rust_build_cloud
   
   # compiler_typescript_cloud:
   #   jobs:
