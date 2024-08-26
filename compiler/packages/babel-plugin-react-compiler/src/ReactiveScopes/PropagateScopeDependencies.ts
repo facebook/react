@@ -485,7 +485,7 @@ class Context {
       };
     }
 
-    objectDependency.path.push({property});
+    objectDependency.path.push({property, optional: false});
 
     return objectDependency;
   }

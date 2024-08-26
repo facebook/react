@@ -68,7 +68,8 @@ export function collectMaybeMemoDependencies(
       if (object != null) {
         return {
           root: object.root,
-          path: [...object.path, {property: value.property}],
+          // TODO: determine if the access is optional
+          path: [...object.path, {property: value.property, optional: false}],
         };
       }
       break;
