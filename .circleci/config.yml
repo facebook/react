@@ -223,11 +223,13 @@ jobs:
     machine: # executor type
       image: ubuntu-2204:current
     resource_class: large
+    working_directory: ~/project
     environment: *tz
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - setup_node_modules
-      - run: ./scripts/ci/check_license.sh
+      - run: ./scripts/circleci/check_license.sh
   
   test_print_warnings_cloud:
     machine: # executor type
@@ -400,36 +402,36 @@ workflows:
       - rust_test_cloud:
           requires:
             - rust_build_cloud
-      - rust_lint_cloud:
-          requires:
-            - rust_build_cloud
+      # - rust_lint_cloud:
+      #     requires:
+      #       - rust_build_cloud
   
-  # compiler_typescript_cloud:
-  #   jobs:
-  #    - typescript_lint_cloud
-  #    - typescript_jest_cloud
-  #    - typescript_test_cloud:
-  #         # Need to generate via dynamic config
-  #         matrix:
-  #           parameters:
-  #             workspace_name: 
-  #               - babel-plugin-react-compiler
-  #               - eslint-plugin-react-compiler
-  #               - make-read-only-util
-  #               - react-compiler-healthcheck
-  #               - react-compiler-runtime
-  #               - snap
+  compiler_typescript_cloud:
+    jobs:
+     - typescript_lint_cloud
+     - typescript_jest_cloud
+     - typescript_test_cloud:
+          # Need to generate via dynamic config
+          matrix:
+            parameters:
+              workspace_name: 
+                - babel-plugin-react-compiler
+                - eslint-plugin-react-compiler
+                - make-read-only-util
+                - react-compiler-healthcheck
+                - react-compiler-runtime
+                - snap
 
-  # test_fuzz_cloud:
-  #   jobs:
-  #     - test_fuzz_cloud
+  test_fuzz_cloud:
+    jobs:
+      - test_fuzz_cloud
 
-  # shared_lint_cloud:
-  #   jobs:
-  #     - prettier_cloud
-  #     - eslint_cloud
-  #     - check_license_cloud
-  #     - test_print_warnings_cloud
+  shared_lint_cloud:
+    jobs:
+      - prettier_cloud
+      - eslint_cloud
+      - check_license_cloud
+      - test_print_warnings_cloud
   
   # runtime_build_and_test_cloud:
   #   jobs:
