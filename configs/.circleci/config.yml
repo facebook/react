@@ -373,6 +373,332 @@ jobs:
           path: fixtures/flight/test-results
           destination: flight-test-results
 
+#### MACHINE EXECUTOR REACT
+  test_playground_cloud_machine:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    working_directory: ~/project/compiler
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout:
+          path: ~/project
+      - setup_node_modules
+      - run: npx playwright install --with-deps chromium
+      - run: yarn workspace playground test
+  
+# compiler_rust Jobs
+  rust_build_cloud:
+      docker:
+        - image: cimg/rust:1.80.0
+      working_directory: ~/project/compiler
+      resource_class: large
+      environment:
+        <<: *tz
+        CARGO_TERM_COLOR: always
+        RUSTFLAGS: -Dwarnings
+      steps:
+        - checkout:
+            path: ~/project
+        - run:
+            name: Install libicu-dev
+            command: sudo apt-get update && sudo apt-get install -y libicu-dev
+        - restore_cache:
+            keys:
+              - cargo-cache-{{ checksum "Cargo.lock" }}
+        - run:
+            name: cargo build
+            command: cargo build --release
+        - save_cache:
+            key: cargo-cache-{{ checksum "Cargo.lock" }}
+            paths:
+              - ~/.cargo/registry
+              - target
+
+  rust_test_cloud:
+    docker:
+      - image: cimg/rust:1.80.0
+    working_directory: ~/project/compiler
+    resource_class: large
+    environment:
+      <<: *tz
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -Dwarnings
+
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Install libicu-dev
+          command: sudo apt-get update && sudo apt-get install -y libicu-dev
+      - restore_cache:
+          keys:
+            - cargo-cache-{{ checksum "Cargo.lock" }}
+      - run:
+          name: cargo test
+          command: cargo test --manifest-path=Cargo.toml --locked
+  
+  rust_lint_cloud:
+    docker:
+      - image: cimg/rust:1.80.0
+    working_directory: ~/project/compiler
+    resource_class: large
+    environment:
+      <<: *tz
+      CARGO_TERM_COLOR: always
+      RUSTFLAGS: -Dwarnings
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - cargo-cache-{{ checksum "Cargo.lock" }}
+      - run:
+          name: Install Rust nightly
+          command: rustup install nightly && rustup override set nightly
+      - run:
+          name: rustfmt
+          command: grep -r --include "*.rs" --files-without-match "@generated" crates | xargs rustup run nightly-2023-08-01 rustfmt --check --config="skip_children=true"
+
+# compiler_typescript Jobs
+  typescript_lint_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    working_directory: ~/project/compiler
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout:
+          path: ~/project
+      - setup_node_modules
+      - run: yarn workspace babel-plugin-react-compiler lint
+  
+  typescript_jest_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    working_directory: ~/project/compiler
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout:
+          path: ~/project
+      - setup_node_modules
+      - run: yarn workspace babel-plugin-react-compiler jest
+  
+  typescript_test_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    working_directory: ~/project/compiler
+    resource_class: large
+    environment: *tz
+    parameters:
+      workspace_name:
+        type: string
+        default: ""
+    steps:
+      - checkout:
+          path: ~/project
+      - setup_node_modules
+      - run: yarn workspace << parameters.workspace_name >> test
+
+# test_fuzz Jobs
+  test_fuzz_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: |
+         FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci=circleci
+         FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci=circleci
+
+# shared_lint Jobs
+  prettier_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: yarn prettier-check
+  
+  eslint_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: node ./scripts/tasks/eslint
+  
+  check_license_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: ./scripts/ci/check_license.sh
+  
+  test_print_warnings_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: ./scripts/ci/test_print_warnings.sh
+
+# runtime_build_and_test Jobs
+  flow_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    parameters:
+      flow_inline_config_shortname:
+        type: string
+        default: ""
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: node ./scripts/tasks/flow-ci << parameters.flow_inline_config_shortname >> 
+  
+  check_generated_fizz_runtime_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: |
+          yarn generate-inline-fizz-runtime
+          git diff --quiet || (echo "There was a change to the Fizz runtime. Run `yarn generate-inline-fizz-runtime` and check in the result." && false)
+
+  flags_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: yarn flags
+  
+  yarn_test_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: 2xlarge
+    environment: *tz
+    parameters:
+      params: 
+        type: string
+        default: ""
+      shard:
+        type: string
+        default: ""
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: | 
+          yarn test << parameters.params >> --ci=circleci --shard=<< parameters.shard >>
+  
+  build_and_lint_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    parameters:
+      worker_id:
+        type: integer
+        default: 0
+      release_channel:
+        type: string
+        default: ""
+    steps:
+      - checkout
+      - setup_node_modules
+      - run: 
+          command: yarn build --index=<< parameters.worker_id >> --total=20 --r=<< parameters.release_channel >> --ci=circleci
+          environment:
+            CI: circleci
+            RELEASE_CHANNEL: << parameters.release_channel >>
+            NODE_INDEX: << parameters.worker_id >>
+      - run: yarn lint-build
+      - run: ls -R build
+      - run: |
+              mkdir -p /tmp/artifacts/_build_<< parameters.worker_id >>_<< parameters.release_channel >>
+              cp -R build/* /tmp/artifacts/_build_<< parameters.worker_id >>_<< parameters.release_channel >>
+      - persist_to_workspace:
+          root: /tmp/artifacts
+          paths:
+            - _build_<< parameters.worker_id >>_<< parameters.release_channel >>
+  
+  test_build_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: xlarge
+    environment: *tz
+    parameters:
+      test_params:
+        type: string
+        default: ""
+      shard:
+        type: string
+        default: ""
+    steps:
+      - checkout
+      - setup_node_modules
+      - attach_workspace:
+          at: /tmp/artifacts
+      - run: ls -R /tmp/artifacts
+      - run: yarn test --build=<< parameters.test_params >> --shard=<< parameters.shard >> --ci=circleci
+  
+  run_fixtures_flight_tests_cloud:
+    docker:
+      - image: cimg/node:18.20.1-browsers
+    resource_class: large
+    environment: *tz
+    steps: 
+      - checkout
+      - attach_workspace:
+          at: build
+      - run: 
+          name: Display structure of build
+          command: ls -R build
+      - run: 
+          name: Install fixture dependencies
+          working-directory: fixtures/flight
+          command: |
+            yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            if [ $? -ne 0 ]; then
+              yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
+            fi
+      - run:
+          name: Playwright install deps
+          working-directory: fixtures/flight
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run:
+          name: Run tests
+          working-directory: fixtures/flight
+          command: yarn test
+          environment:
+            DEBUG: pw:webserver
+      - store_artifacts:
+          path: fixtures/flight/playwright-report
+          destination: flight-playwright-report
+      - store_artifacts:
+          path: fixtures/flight/test-results
+          destination: flight-test-results
 
 workflows:
 

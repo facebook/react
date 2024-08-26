@@ -394,7 +394,9 @@ workflows:
 
   compiler_playground_cloud:
     jobs:
-      - test_playground_cloud
+      - test_playground_cloud:
+          context:
+            - react-benchmarking
   
   # compiler_rust_cloud:
   #   jobs:
