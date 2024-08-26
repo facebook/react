@@ -491,7 +491,7 @@ export type BranchTerminal = {
   alternate: BlockId;
   id: InstructionId;
   loc: SourceLocation;
-  fallthrough?: never;
+  fallthrough: BlockId;
 };
 
 export type SwitchTerminal = {

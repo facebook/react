@@ -660,11 +660,13 @@ export function mapTerminalSuccessors(
     case 'branch': {
       const consequent = fn(terminal.consequent);
       const alternate = fn(terminal.alternate);
+      const fallthrough = fn(terminal.fallthrough);
       return {
         kind: 'branch',
         test: terminal.test,
         consequent,
         alternate,
+        fallthrough,
         id: makeInstructionId(0),
         loc: terminal.loc,
       };
@@ -883,7 +885,6 @@ export function terminalHasFallthrough<
 >(terminal: T): terminal is U {
   switch (terminal.kind) {
     case 'maybe-throw':
-    case 'branch':
     case 'goto':
     case 'return':
     case 'throw':
@@ -892,6 +893,7 @@ export function terminalHasFallthrough<
       const _: undefined = terminal.fallthrough;
       return false;
     }
+    case 'branch':
     case 'try':
     case 'do-while':
     case 'for-of':
