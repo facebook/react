@@ -2194,7 +2194,7 @@ export function attach(
     if (isProfilingSupported) {
       idToRootMap.set(id, currentRootID);
 
-      recordProfilingDurations(fiber);
+      recordProfilingDurations(fiberInstance);
     }
     return fiberInstance;
   }
@@ -2248,8 +2248,6 @@ export function attach(
 
     if (isProfilingSupported) {
       idToRootMap.set(id, currentRootID);
-      // TODO: Include tree base duration of children somehow.
-      // recordProfilingDurations(...);
     }
   }
 
@@ -2401,6 +2399,8 @@ export function attach(
         traceNearestHostComponentUpdate,
         virtualLevel + 1,
       );
+      // Must be called after all children have been appended.
+      recordVirtualProfilingDurations(virtualInstance);
     } finally {
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
@@ -2655,8 +2655,9 @@ export function attach(
     removeChild(instance);
   }
 
-  function recordProfilingDurations(fiber: Fiber) {
-    const id = getFiberIDThrows(fiber);
+  function recordProfilingDurations(fiberInstance: FiberInstance) {
+    const id = fiberInstance.id;
+    const fiber = fiberInstance.data;
     const {actualDuration, treeBaseDuration} = fiber;
 
     idToTreeBaseDurationMap.set(id, treeBaseDuration || 0);
@@ -2720,6 +2721,41 @@ export function attach(
         }
       }
     }
+  }
+
+  function recordVirtualProfilingDurations(virtualInstance: VirtualInstance) {
+    const id = virtualInstance.id;
+
+    let treeBaseDuration = 0;
+    // Add up the base duration of the child instances. The virtual base duration
+    // will be the same as children's duration since we don't take up any render
+    // time in the virtual instance.
+    for (
+      let child = virtualInstance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      const childDuration = idToTreeBaseDurationMap.get(child.id);
+      if (childDuration !== undefined) {
+        treeBaseDuration += childDuration;
+      }
+    }
+
+    if (isProfiling) {
+      const previousTreeBaseDuration = idToTreeBaseDurationMap.get(id);
+      if (treeBaseDuration !== previousTreeBaseDuration) {
+        // Tree base duration updates are included in the operations typed array.
+        // So we have to convert them from milliseconds to microseconds so we can send them as ints.
+        const convertedTreeBaseDuration = Math.floor(
+          (treeBaseDuration || 0) * 1000,
+        );
+        pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
+        pushOperation(id);
+        pushOperation(convertedTreeBaseDuration);
+      }
+    }
+
+    idToTreeBaseDurationMap.set(id, treeBaseDuration || 0);
   }
 
   function recordResetChildren(parentInstance: DevToolsInstance) {
@@ -2789,6 +2825,8 @@ export function attach(
       ) {
         recordResetChildren(virtualInstance);
       }
+      // Must be called after all children have been appended.
+      recordVirtualProfilingDurations(virtualInstance);
     } finally {
       unmountRemainingChildren();
       reconcilingParent = stashedParent;
@@ -3236,11 +3274,11 @@ export function attach(
         }
       }
 
-      if (shouldIncludeInTree) {
+      if (fiberInstance !== null) {
         const isProfilingSupported =
           nextFiber.hasOwnProperty('treeBaseDuration');
         if (isProfilingSupported) {
-          recordProfilingDurations(nextFiber);
+          recordProfilingDurations(fiberInstance);
         }
       }
       if (shouldResetChildren) {
