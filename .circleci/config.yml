@@ -59,7 +59,7 @@ jobs:
       - setup_node_modules
       - run: npm install
       - run: |
-          npx playwright install --with-deps chromium
+          npx playwright install
       - run: yarn workspace playground test
   
 # compiler_rust Jobs
