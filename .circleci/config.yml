@@ -134,6 +134,9 @@ jobs:
       - restore_cache:
           keys:
             - cargo-cache-{{ checksum "Cargo.lock" }}
+      - run: 
+          name: install rust
+          command: curl https://sh.rustup.rs -sSf | sh -s -- -y
       - run:
           name: Install Rust nightly
           command: rustup install nightly && rustup override set nightly
@@ -230,11 +233,13 @@ jobs:
     machine: # executor type
       image: ubuntu-2204:current
     resource_class: large
+    working_directory: ~/project
     environment: *tz
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - setup_node_modules
-      - run: ./scripts/ci/test_print_warnings.sh
+      - run: ./scripts/circleci/test_print_warnings.sh
 
 # runtime_build_and_test Jobs
   flow_cloud:
