@@ -776,7 +776,7 @@ export type ManualMemoDependency = {
         value: Place;
       }
     | {kind: 'Global'; identifierName: string};
-  path: Array<string>;
+  path: DependencyPath;
 };
 
 export type StartMemoize = {
@@ -1494,8 +1494,16 @@ export type ReactiveScopeDeclaration = {
 
 export type ReactiveScopeDependency = {
   identifier: Identifier;
-  path: Array<string>;
+  path: DependencyPath;
 };
+
+export function areEqualPaths(a: DependencyPath, b: DependencyPath): boolean {
+  return (
+    a.length === b.length &&
+    a.every((item, ix) => item.property === b[ix].property)
+  );
+}
+export type DependencyPath = Array<{property: string}>;
 
 /*
  * Simulated opaque type for BlockIds to prevent using normal numbers as block ids

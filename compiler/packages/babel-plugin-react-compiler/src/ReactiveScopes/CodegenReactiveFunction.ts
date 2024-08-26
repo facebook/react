@@ -1411,7 +1411,7 @@ function printDependencyComment(dependency: ReactiveScopeDependency): string {
   let name = identifier.name;
   if (dependency.path !== null) {
     for (const path of dependency.path) {
-      name += `.${path}`;
+      name += `.${path.property}`;
     }
   }
   return name;
@@ -1448,7 +1448,7 @@ function codegenDependency(
   let object: t.Expression = convertIdentifier(dependency.identifier);
   if (dependency.path !== null) {
     for (const path of dependency.path) {
-      object = t.memberExpression(object, t.identifier(path));
+      object = t.memberExpression(object, t.identifier(path.property));
     }
   }
   return object;

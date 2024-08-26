@@ -8,6 +8,7 @@
 import {CompilerError} from '..';
 import {
   DeclarationId,
+  DependencyPath,
   InstructionId,
   InstructionKind,
   Place,
@@ -19,6 +20,7 @@ import {
   ReactiveScopeDependency,
   ReactiveStatement,
   Type,
+  areEqualPaths,
   makeInstructionId,
 } from '../HIR';
 import {
@@ -523,10 +525,6 @@ function areEqualDependencies(
     }
   }
   return true;
-}
-
-export function areEqualPaths(a: Array<string>, b: Array<string>): boolean {
-  return a.length === b.length && a.every((item, ix) => item === b[ix]);
 }
 
 /**

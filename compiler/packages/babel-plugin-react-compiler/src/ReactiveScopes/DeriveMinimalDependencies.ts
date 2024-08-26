@@ -14,20 +14,8 @@ import {assertExhaustive} from '../Utils/utils';
  * We need to understand optional member expressions only when determining
  * dependencies of a ReactiveScope (i.e. in {@link PropagateScopeDependencies}),
  * hence why this type lives here (not in HIR.ts)
- *
- * {@link ReactiveScopePropertyDependency.optionalPath} is populated only if the Property
- * represents an optional member expression, and it represents the property path
- * loaded conditionally.
- * e.g. the member expr a.b.c?.d.e?.f is represented as
- * {
- *    identifier: 'a';
- *    path: ['b', 'c'],
- *    optionalPath: ['d', 'e', 'f'].
- * }
  */
-export type ReactiveScopePropertyDependency = ReactiveScopeDependency & {
-  optionalPath: Array<string>;
-};
+export type ReactiveScopePropertyDependency = ReactiveScopeDependency;
 
 /*
  * Finalizes a set of ReactiveScopeDependencies to produce a set of minimal unconditional
@@ -69,59 +57,29 @@ export class ReactiveScopeDependencyTree {
   }
 
   add(dep: ReactiveScopePropertyDependency, inConditional: boolean): void {
-    const {path, optionalPath} = dep;
+    const {path} = dep;
     let currNode = this.#getOrCreateRoot(dep.identifier);
 
     const accessType = inConditional
       ? PropertyAccessType.ConditionalAccess
       : PropertyAccessType.UnconditionalAccess;
 
-    for (const property of path) {
+    for (const item of path) {
       // all properties read 'on the way' to a dependency are marked as 'access'
-      let currChild = getOrMakeProperty(currNode, property);
+      let currChild = getOrMakeProperty(currNode, item.property);
       currChild.accessType = merge(currChild.accessType, accessType);
       currNode = currChild;
     }
 
-    if (optionalPath.length === 0) {
-      /*
-       * If this property does not have a conditional path (i.e. a.b.c), the
-       * final property node should be marked as an conditional/unconditional
-       * `dependency` as based on control flow.
-       */
-      const depType = inConditional
-        ? PropertyAccessType.ConditionalDependency
-        : PropertyAccessType.UnconditionalDependency;
+    /**
+     * The final property node should be marked as an conditional/unconditional
+     * `dependency` as based on control flow.
+     */
+    const depType = inConditional
+      ? PropertyAccessType.ConditionalDependency
+      : PropertyAccessType.UnconditionalDependency;
 
-      currNode.accessType = merge(currNode.accessType, depType);
-    } else {
-      /*
-       * Technically, we only depend on whether unconditional path `dep.path`
-       * is nullish (not its actual value). As long as we preserve the nullthrows
-       * behavior of `dep.path`, we can keep it as an access (and not promote
-       * to a dependency).
-       * See test `reduce-reactive-cond-memberexpr-join` for example.
-       */
-
-      /*
-       * If this property has an optional path (i.e. a?.b.c), all optional
-       * nodes should be marked accordingly.
-       */
-      for (const property of optionalPath) {
-        let currChild = getOrMakeProperty(currNode, property);
-        currChild.accessType = merge(
-          currChild.accessType,
-          PropertyAccessType.ConditionalAccess,
-        );
-        currNode = currChild;
-      }
-
-      // The final node should be marked as a conditional dependency.
-      currNode.accessType = merge(
-        currNode.accessType,
-        PropertyAccessType.ConditionalDependency,
-      );
-    }
+    currNode.accessType = merge(currNode.accessType, depType);
   }
 
   deriveMinimalDependencies(): Set<ReactiveScopeDependency> {
@@ -294,7 +252,7 @@ type DependencyNode = {
 };
 
 type ReduceResultNode = {
-  relativePath: Array<string>;
+  relativePath: Array<{property: string}>;
   accessType: PropertyAccessType;
 };
 
@@ -325,7 +283,7 @@ function deriveMinimalDependenciesInSubtree(
     const childResult = deriveMinimalDependenciesInSubtree(childNode).map(
       ({relativePath, accessType}) => {
         return {
-          relativePath: [childName, ...relativePath],
+          relativePath: [{property: childName}, ...relativePath],
           accessType,
         };
       },
