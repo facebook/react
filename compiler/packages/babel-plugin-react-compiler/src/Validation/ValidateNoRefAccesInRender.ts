@@ -11,7 +11,6 @@ import {
   IdentifierId,
   Place,
   SourceLocation,
-  isRefOrRefValue,
   isRefValueType,
   isUseRefType,
 } from '../HIR';
