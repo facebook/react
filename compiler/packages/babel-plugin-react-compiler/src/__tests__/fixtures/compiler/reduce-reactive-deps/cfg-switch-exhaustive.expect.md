@@ -42,7 +42,7 @@ import { identity } from "shared-runtime";
 function useCondDepInSwitch(props, other) {
   const $ = _c(3);
   let x;
-  if ($[0] !== other || $[1] !== props) {
+  if ($[0] !== other || $[1] !== props.a.b) {
     x = {};
     bb0: switch (identity(other)) {
       case 1: {
@@ -58,7 +58,7 @@ function useCondDepInSwitch(props, other) {
       }
     }
     $[0] = other;
-    $[1] = props;
+    $[1] = props.a.b;
     $[2] = x;
   } else {
     x = $[2];

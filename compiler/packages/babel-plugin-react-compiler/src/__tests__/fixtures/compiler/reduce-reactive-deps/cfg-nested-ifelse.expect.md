@@ -43,7 +43,7 @@ import { getNull, identity } from "shared-runtime";
 function useCondDepInNestedIfElse(props, cond) {
   const $ = _c(3);
   let x;
-  if ($[0] !== cond || $[1] !== props) {
+  if ($[0] !== cond || $[1] !== props.a.b) {
     x = {};
     if (identity(cond)) {
       if (getNull()) {
@@ -59,7 +59,7 @@ function useCondDepInNestedIfElse(props, cond) {
       }
     }
     $[0] = cond;
-    $[1] = props;
+    $[1] = props.a.b;
     $[2] = x;
   } else {
     x = $[2];

@@ -45,7 +45,7 @@ function useFoo(t0) {
   const { input, cond2, cond1 } = t0;
   let x;
   let t1;
-  if ($[0] !== cond1 || $[1] !== cond2 || $[2] !== input) {
+  if ($[0] !== cond1 || $[1] !== cond2 || $[2] !== input.a.b) {
     t1 = Symbol.for("react.early_return_sentinel");
     bb0: {
       x = [];
@@ -87,7 +87,7 @@ function useFoo(t0) {
     }
     $[0] = cond1;
     $[1] = cond2;
-    $[2] = input;
+    $[2] = input.a.b;
     $[3] = x;
     $[4] = t1;
   } else {

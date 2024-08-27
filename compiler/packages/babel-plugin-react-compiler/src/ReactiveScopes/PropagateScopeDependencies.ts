@@ -629,7 +629,7 @@ class Context {
 
     if (this.#checkValidDependency(maybeDependency)) {
       const isPoisoned = this.isPoisoned;
-      // this.#depsInCurrentConditional.add(maybeDependency, isPoisoned);
+      this.#depsInCurrentConditional.add(maybeDependency, isPoisoned);
       /*
        * Add info about this dependency to the existing tree
        * We do not try to join/reduce dependencies here due to missing info

@@ -32,10 +32,10 @@ import { identity, addOne } from "shared-runtime";
 function useCondDepInConditionalExpr(props, cond) {
   const $ = _c(3);
   let t0;
-  if ($[0] !== cond || $[1] !== props) {
+  if ($[0] !== cond || $[1] !== props.a.b) {
     t0 = identity(cond) ? addOne(props.a.b) : identity(props.a.b);
     $[0] = cond;
-    $[1] = props;
+    $[1] = props.a.b;
     $[2] = t0;
   } else {
     t0 = $[2];
