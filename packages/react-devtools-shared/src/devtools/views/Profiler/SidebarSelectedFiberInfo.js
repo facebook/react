@@ -142,7 +142,7 @@ export default function SidebarSelectedFiberInfo(): React.Node {
           </div>
         )}
         {listItems.length === 0 && (
-          <div>Did not render during this profiling session.</div>
+          <div>Did not render on the client during this profiling session.</div>
         )}
       </div>
     </Fragment>
