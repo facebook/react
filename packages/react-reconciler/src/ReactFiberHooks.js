@@ -1226,20 +1226,17 @@ function useMemoCache(size: number): Array<any> {
   updateQueue.memoCache = memoCache;
 
   let data = memoCache.data[memoCache.index];
-  if (data === undefined || (__DEV__ && ignorePreviousDependencies)) {
+  if (
+    data === undefined ||
+    // Reset the cache on FastRefresh
+    (__DEV__ && ignorePreviousDependencies) ||
+    // FastRefresh plugin may not be used everywhere, as a fallback always reset if the cache size
+    // changes between renders.
+    data.length !== size
+  ) {
     data = memoCache.data[memoCache.index] = new Array(size);
     for (let i = 0; i < size; i++) {
       data[i] = REACT_MEMO_CACHE_SENTINEL;
-    }
-  } else if (data.length !== size) {
-    // TODO: consider warning or throwing here
-    if (__DEV__) {
-      console.error(
-        'Expected a constant size argument for each invocation of useMemoCache. ' +
-          'The previous cache was allocated with size %s but size %s was requested.',
-        data.length,
-        size,
-      );
     }
   }
   memoCache.index++;
