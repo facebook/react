@@ -34,6 +34,9 @@ const SUBSEPARATOR = ':';
  *
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
+ * @example
+ * escape('foo:bar=baz') // Returns '$foo=2bar=0baz'
+ * escape('simple') // Returns '$simple'
  */
 function escape(key: string): string {
   const escapeRegex = /[=:]/g;
