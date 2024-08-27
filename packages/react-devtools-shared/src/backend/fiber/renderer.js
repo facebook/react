@@ -164,6 +164,7 @@ type FiberInstance = {
   source: null | string | Error | Source, // source location of this component function, or owned child stack
   errors: null | Map<string, number>, // error messages and count
   warnings: null | Map<string, number>, // warning messages and count
+  treeBaseDuration: number, // the profiled time of the last render of this subtree
   data: Fiber, // one of a Fiber pair
 };
 
@@ -179,6 +180,7 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     source: null,
     errors: null,
     warnings: null,
+    treeBaseDuration: 0,
     data: fiber,
   };
 }
@@ -202,6 +204,7 @@ type VirtualInstance = {
   // that old errors/warnings don't disappear when the instance is refreshed.
   errors: null | Map<string, number>, // error messages and count
   warnings: null | Map<string, number>, // warning messages and count
+  treeBaseDuration: number, // the profiled time of the last render of this subtree
   // The latest info for this instance. This can be updated over time and the
   // same info can appear in more than once ServerComponentInstance.
   data: ReactComponentInfo,
@@ -221,6 +224,7 @@ function createVirtualInstance(
     source: null,
     errors: null,
     warnings: null,
+    treeBaseDuration: 0,
     data: debugEntry,
   };
 }
@@ -1355,16 +1359,6 @@ export function attach(
     }
   }
 
-  // When profiling is supported, we store the latest tree base durations for each Fiber.
-  // This is so that we can quickly capture a snapshot of those values if profiling starts.
-  // If we didn't store these values, we'd have to crawl the tree when profiling started,
-  // and use a slow path to find each of the current Fibers.
-  const idToTreeBaseDurationMap: Map<number, number> = new Map();
-
-  // When profiling is supported, we store the latest tree base durations for each Fiber.
-  // This map enables us to filter these times by root when sending them to the frontend.
-  const idToRootMap: Map<number, number> = new Map();
-
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
@@ -2211,9 +2205,7 @@ export function attach(
     }
 
     if (isProfilingSupported) {
-      idToRootMap.set(id, currentRootID);
-
-      recordProfilingDurations(fiber);
+      recordProfilingDurations(fiberInstance);
     }
     return fiberInstance;
   }
@@ -2225,8 +2217,6 @@ export function attach(
     const id = instance.id;
 
     idToDevToolsInstanceMap.set(id, instance);
-
-    const isProfilingSupported = false; // TODO: Support Tree Base Duration Based on Children.
 
     const componentInfo = instance.data;
 
@@ -2274,12 +2264,6 @@ export function attach(
     pushOperation(ownerID);
     pushOperation(displayNameStringID);
     pushOperation(keyStringID);
-
-    if (isProfilingSupported) {
-      idToRootMap.set(id, currentRootID);
-      // TODO: Include tree base duration of children somehow.
-      // recordProfilingDurations(...);
-    }
   }
 
   function recordUnmount(fiberInstance: FiberInstance): void {
@@ -2314,12 +2298,6 @@ export function attach(
     }
 
     untrackFiber(fiberInstance);
-
-    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
-    if (isProfilingSupported) {
-      idToRootMap.delete(id);
-      idToTreeBaseDurationMap.delete(id);
-    }
   }
 
   // Running state of the remaining children from the previous version of this parent that
@@ -2430,6 +2408,8 @@ export function attach(
         traceNearestHostComponentUpdate,
         virtualLevel + 1,
       );
+      // Must be called after all children have been appended.
+      recordVirtualProfilingDurations(virtualInstance);
     } finally {
       reconcilingParent = stashedParent;
       previouslyReconciledSibling = stashedPrevious;
@@ -2445,12 +2425,6 @@ export function attach(
 
     const id = instance.id;
     pendingRealUnmountedIDs.push(id);
-
-    const isProfilingSupported = false; // TODO: Profiling support.
-    if (isProfilingSupported) {
-      idToRootMap.delete(id);
-      idToTreeBaseDurationMap.delete(id);
-    }
   }
 
   function mountVirtualChildrenRecursively(
@@ -2684,11 +2658,12 @@ export function attach(
     removeChild(instance);
   }
 
-  function recordProfilingDurations(fiber: Fiber) {
-    const id = getFiberIDThrows(fiber);
+  function recordProfilingDurations(fiberInstance: FiberInstance) {
+    const id = fiberInstance.id;
+    const fiber = fiberInstance.data;
     const {actualDuration, treeBaseDuration} = fiber;
 
-    idToTreeBaseDurationMap.set(id, treeBaseDuration || 0);
+    fiberInstance.treeBaseDuration = treeBaseDuration || 0;
 
     if (isProfiling) {
       const {alternate} = fiber;
@@ -2749,6 +2724,38 @@ export function attach(
         }
       }
     }
+  }
+
+  function recordVirtualProfilingDurations(virtualInstance: VirtualInstance) {
+    const id = virtualInstance.id;
+
+    let treeBaseDuration = 0;
+    // Add up the base duration of the child instances. The virtual base duration
+    // will be the same as children's duration since we don't take up any render
+    // time in the virtual instance.
+    for (
+      let child = virtualInstance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      treeBaseDuration += child.treeBaseDuration;
+    }
+
+    if (isProfiling) {
+      const previousTreeBaseDuration = virtualInstance.treeBaseDuration;
+      if (treeBaseDuration !== previousTreeBaseDuration) {
+        // Tree base duration updates are included in the operations typed array.
+        // So we have to convert them from milliseconds to microseconds so we can send them as ints.
+        const convertedTreeBaseDuration = Math.floor(
+          (treeBaseDuration || 0) * 1000,
+        );
+        pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
+        pushOperation(id);
+        pushOperation(convertedTreeBaseDuration);
+      }
+    }
+
+    virtualInstance.treeBaseDuration = treeBaseDuration;
   }
 
   function recordResetChildren(parentInstance: DevToolsInstance) {
@@ -2818,6 +2825,8 @@ export function attach(
       ) {
         recordResetChildren(virtualInstance);
       }
+      // Must be called after all children have been appended.
+      recordVirtualProfilingDurations(virtualInstance);
     } finally {
       unmountRemainingChildren();
       reconcilingParent = stashedParent;
@@ -3265,11 +3274,11 @@ export function attach(
         }
       }
 
-      if (shouldIncludeInTree) {
+      if (fiberInstance !== null) {
         const isProfilingSupported =
           nextFiber.hasOwnProperty('treeBaseDuration');
         if (isProfilingSupported) {
-          recordProfilingDurations(nextFiber);
+          recordProfilingDurations(fiberInstance);
         }
       }
       if (shouldResetChildren) {
@@ -5121,8 +5130,8 @@ export function attach(
   let currentCommitProfilingMetadata: CommitProfilingData | null = null;
   let displayNamesByRootID: DisplayNamesByRootID | null = null;
   let idToContextsMap: Map<number, any> | null = null;
-  let initialTreeBaseDurationsMap: Map<number, number> | null = null;
-  let initialIDToRootMap: Map<number, number> | null = null;
+  let initialTreeBaseDurationsMap: Map<number, Array<[number, number]>> | null =
+    null;
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let recordChangeDescriptions: boolean = false;
@@ -5141,24 +5150,15 @@ export function attach(
     rootToCommitProfilingMetadataMap.forEach(
       (commitProfilingMetadata, rootID) => {
         const commitData: Array<CommitDataBackend> = [];
-        const initialTreeBaseDurations: Array<[number, number]> = [];
 
         const displayName =
           (displayNamesByRootID !== null && displayNamesByRootID.get(rootID)) ||
           'Unknown';
 
-        if (initialTreeBaseDurationsMap != null) {
-          initialTreeBaseDurationsMap.forEach((treeBaseDuration, id) => {
-            if (
-              initialIDToRootMap != null &&
-              initialIDToRootMap.get(id) === rootID
-            ) {
-              // We don't need to convert milliseconds to microseconds in this case,
-              // because the profiling summary is JSON serialized.
-              initialTreeBaseDurations.push([id, treeBaseDuration]);
-            }
-          });
-        }
+        const initialTreeBaseDurations: Array<[number, number]> =
+          (initialTreeBaseDurationsMap !== null &&
+            initialTreeBaseDurationsMap.get(rootID)) ||
+          [];
 
         commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
           const {
@@ -5245,6 +5245,22 @@ export function attach(
     };
   }
 
+  function snapshotTreeBaseDurations(
+    instance: DevToolsInstance,
+    target: Array<[number, number]>,
+  ) {
+    // We don't need to convert milliseconds to microseconds in this case,
+    // because the profiling summary is JSON serialized.
+    target.push([instance.id, instance.treeBaseDuration]);
+    for (
+      let child = instance.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      snapshotTreeBaseDurations(child, target);
+    }
+  }
+
   function startProfiling(shouldRecordChangeDescriptions: boolean) {
     if (isProfiling) {
       return;
@@ -5257,16 +5273,19 @@ export function attach(
     // since either of these may change during the profiling session
     // (e.g. when a fiber is re-rendered or when a fiber gets removed).
     displayNamesByRootID = new Map();
-    initialTreeBaseDurationsMap = new Map(idToTreeBaseDurationMap);
-    initialIDToRootMap = new Map(idToRootMap);
+    initialTreeBaseDurationsMap = new Map();
     idToContextsMap = new Map();
 
     hook.getFiberRoots(rendererID).forEach(root => {
-      const rootID = getFiberIDThrows(root.current);
+      const rootInstance = getFiberInstanceThrows(root.current);
+      const rootID = rootInstance.id;
       ((displayNamesByRootID: any): DisplayNamesByRootID).set(
         rootID,
         getDisplayNameForRoot(root.current),
       );
+      const initialTreeBaseDurations: Array<[number, number]> = [];
+      snapshotTreeBaseDurations(rootInstance, initialTreeBaseDurations);
+      (initialTreeBaseDurationsMap: any).set(rootID, initialTreeBaseDurations);
 
       if (shouldRecordChangeDescriptions) {
         // Record all contexts at the time profiling is started.
