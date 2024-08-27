@@ -452,6 +452,7 @@ export type Dispatcher = {
 };
 
 export type AsyncDispatcher = {
+  getActiveCache: () => Map<Function, mixed> | null,
   getCacheForType: <T>(resourceType: () => T) => T,
   // DEV-only (or !disableStringRefs)
   getOwner: () => null | Fiber | ReactComponentInfo | ComponentStackNode,

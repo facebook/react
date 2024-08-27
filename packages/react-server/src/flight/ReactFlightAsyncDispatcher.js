@@ -29,16 +29,34 @@ function resolveCache(): Map<Function, mixed> {
 }
 
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
-  getCacheForType<T>(resourceType: () => T): T {
-    if (previousAsyncDispatcher !== null) {
-      return previousAsyncDispatcher.getCacheForType(resourceType);
+  getActiveCache(): Map<Function, mixed> | null {
+    const request = resolveRequest();
+    if (request) {
+      return getCache(request);
     }
+    return null;
+  },
+  getCacheForType<T>(resourceType: () => T): T {
+    const outerCache: Map<Function, mixed> | null =
+      previousAsyncDispatcher !== null
+        ? previousAsyncDispatcher.getActiveCache()
+        : null;
+    if (outerCache !== null) {
+      const entry: T | void = (outerCache.get(resourceType): any);
+      if (entry !== undefined) {
+        return entry;
+      }
+    }
+
     const cache = resolveCache();
     let entry: T | void = (cache.get(resourceType): any);
     if (entry === undefined) {
       entry = resourceType();
       // TODO: Warn if undefined?
       cache.set(resourceType, entry);
+    }
+    if (outerCache !== null) {
+      outerCache.set(resourceType, entry);
     }
     return entry;
   },

@@ -93,6 +93,78 @@ if (!__EXPERIMENTAL__) {
       expect(ReactNoop).toMatchRenderedOutput(<pre>Hello, Dave!</pre>);
     });
 
+    it('has a cache if the first renderer is used standalone', async () => {
+      let n = 0;
+      const uncachedFunction = jest.fn(() => {
+        return n++;
+      });
+      const random = ReactServer.cache(uncachedFunction);
+
+      function Random() {
+        return random();
+      }
+
+      function App() {
+        return (
+          <>
+            <p>
+              RSC A_1: <Random />
+            </p>
+            <p>
+              RSC A_2: <Random />
+            </p>
+          </>
+        );
+      }
+
+      const model = <App />;
+      const transport = ReactNoopFlightServer.render(model);
+
+      await act(async () => {
+        ReactNoop.render(await ReactNoopFlightClient.read(transport));
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <p>RSC A_1: 0</p>
+          <p>RSC A_2: 0</p>
+        </>,
+      );
+      expect(uncachedFunction).toHaveBeenCalledTimes(1);
+    });
+
+    it('has a cache if the second renderer is used standalone', async () => {
+      let n = 0;
+      const uncachedFunction = jest.fn(() => {
+        return n++;
+      });
+      const random = ReactServer.cache(uncachedFunction);
+
+      function Random() {
+        return random();
+      }
+
+      function App() {
+        return (
+          <>
+            <p>
+              RSC B_1: <Random />
+            </p>
+            <p>
+              RSC B_2: <Random />
+            </p>
+          </>
+        );
+      }
+
+      const html = await ReactMarkup.experimental_renderToHTML(
+        ReactServer.createElement(App),
+      );
+
+      expect(html).toEqual('<p>RSC B_1: 0</p><p>RSC B_2: 0</p>');
+      expect(uncachedFunction).toHaveBeenCalledTimes(1);
+    });
+
     it('shares cache between RSC renderers', async () => {
       let n = 0;
       const uncachedFunction = jest.fn(() => {

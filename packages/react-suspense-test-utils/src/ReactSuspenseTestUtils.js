@@ -13,6 +13,9 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 export function waitForSuspense<T>(fn: () => T): Promise<T> {
   const cache: Map<Function, mixed> = new Map();
   const testDispatcher: AsyncDispatcher = {
+    getActiveCache() {
+      return cache;
+    },
     getCacheForType<R>(resourceType: () => R): R {
       let entry: R | void = (cache.get(resourceType): any);
       if (entry === undefined) {

@@ -18,20 +18,27 @@ import {disableStringRefs} from 'shared/ReactFeatureFlags';
 
 import {current as currentOwner} from './ReactCurrentFiber';
 
+function getActiveCache(): Map<Function, mixed> {
+  const cache: Cache = readContext(CacheContext);
+
+  return cache.data;
+}
+
 function getCacheForType<T>(resourceType: () => T): T {
   if (!enableCache) {
     throw new Error('Not implemented.');
   }
-  const cache: Cache = readContext(CacheContext);
-  let cacheForType: T | void = (cache.data.get(resourceType): any);
+  const cache = getActiveCache();
+  let cacheForType: T | void = (cache.get(resourceType): any);
   if (cacheForType === undefined) {
     cacheForType = resourceType();
-    cache.data.set(resourceType, cacheForType);
+    cache.set(resourceType, cacheForType);
   }
   return cacheForType;
 }
 
 export const DefaultAsyncDispatcher: AsyncDispatcher = ({
+  getActiveCache,
   getCacheForType,
 }: any);
 
