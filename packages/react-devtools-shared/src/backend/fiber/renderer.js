@@ -158,7 +158,6 @@ type FiberInstance = {
   id: number,
   parent: null | DevToolsInstance, // filtered parent, including virtual
   firstChild: null | DevToolsInstance, // filtered first child, including virtual
-  previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number, // Force Error/Suspense
   source: null | string | Error | Source, // source location of this component function, or owned child stack
@@ -174,7 +173,6 @@ function createFiberInstance(fiber: Fiber): FiberInstance {
     id: getUID(),
     parent: null,
     firstChild: null,
-    previousSibling: null,
     nextSibling: null,
     flags: 0,
     source: null,
@@ -195,7 +193,6 @@ type VirtualInstance = {
   id: number,
   parent: null | DevToolsInstance, // filtered parent, including virtual
   firstChild: null | DevToolsInstance, // filtered first child, including virtual
-  previousSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   nextSibling: null | DevToolsInstance, // filtered next sibling, including virtual
   flags: number,
   source: null | string | Error | Source, // source location of this server component, or owned child stack
@@ -218,7 +215,6 @@ function createVirtualInstance(
     id: getUID(),
     parent: null,
     firstChild: null,
-    previousSibling: null,
     nextSibling: null,
     flags: 0,
     source: null,
@@ -1088,8 +1084,6 @@ export function attach(
         '  '.repeat(indent) + '- ' + instance.id + ' (' + name + ')',
         'parent',
         instance.parent === null ? ' ' : instance.parent.id,
-        'prev',
-        instance.previousSibling === null ? ' ' : instance.previousSibling.id,
         'next',
         instance.nextSibling === null ? ' ' : instance.nextSibling.id,
       );
@@ -2321,21 +2315,25 @@ export function attach(
     if (previouslyReconciledSibling === null) {
       previouslyReconciledSibling = instance;
       parentInstance.firstChild = instance;
-      instance.previousSibling = null;
     } else {
       previouslyReconciledSibling.nextSibling = instance;
-      instance.previousSibling = previouslyReconciledSibling;
       previouslyReconciledSibling = instance;
     }
     instance.nextSibling = null;
   }
 
-  function moveChild(instance: DevToolsInstance): void {
-    removeChild(instance);
+  function moveChild(
+    instance: DevToolsInstance,
+    previousSibling: null | DevToolsInstance,
+  ): void {
+    removeChild(instance, previousSibling);
     insertChild(instance);
   }
 
-  function removeChild(instance: DevToolsInstance): void {
+  function removeChild(
+    instance: DevToolsInstance,
+    previousSibling: null | DevToolsInstance,
+  ): void {
     if (instance.parent === null) {
       if (remainingReconcilingChildren === instance) {
         throw new Error(
@@ -2343,8 +2341,6 @@ export function attach(
         );
       } else if (instance.nextSibling !== null) {
         throw new Error('A deleted instance should not have next siblings');
-      } else if (instance.previousSibling !== null) {
-        throw new Error('A deleted instance should not have previous siblings');
       }
       // Already deleted.
       return;
@@ -2360,7 +2356,7 @@ export function attach(
     }
     // Remove an existing child from its current position, which we assume is in the
     // remainingReconcilingChildren set.
-    if (instance.previousSibling === null) {
+    if (previousSibling === null) {
       // We're first in the remaining set. Remove us.
       if (remainingReconcilingChildren !== instance) {
         throw new Error(
@@ -2369,13 +2365,9 @@ export function attach(
       }
       remainingReconcilingChildren = instance.nextSibling;
     } else {
-      instance.previousSibling.nextSibling = instance.nextSibling;
-    }
-    if (instance.nextSibling !== null) {
-      instance.nextSibling.previousSibling = instance.previousSibling;
+      previousSibling.nextSibling = instance.nextSibling;
     }
     instance.nextSibling = null;
-    instance.previousSibling = null;
     instance.parent = null;
   }
 
@@ -2655,7 +2647,7 @@ export function attach(
     } else {
       recordVirtualUnmount(instance);
     }
-    removeChild(instance);
+    removeChild(instance, null);
   }
 
   function recordProfilingDurations(fiberInstance: FiberInstance) {
@@ -2889,8 +2881,7 @@ export function attach(
                   );
                 }
               }
-              // TODO: Find the best matching existing child based on the key if defined.
-
+              let previousSiblingOfBestMatch = null;
               let bestMatch = remainingReconcilingChildren;
               if (componentInfo.key != null) {
                 // If there is a key try to find a matching key in the set.
@@ -2902,6 +2893,7 @@ export function attach(
                   ) {
                     break;
                   }
+                  previousSiblingOfBestMatch = bestMatch;
                   bestMatch = bestMatch.nextSibling;
                 }
               }
@@ -2916,7 +2908,7 @@ export function attach(
                 // with the same name, then we claim it and reuse it for this update.
                 // Update it with the latest entry.
                 bestMatch.data = componentInfo;
-                moveChild(bestMatch);
+                moveChild(bestMatch, previousSiblingOfBestMatch);
                 previousVirtualInstance = bestMatch;
                 previousVirtualInstanceWasMount = false;
               } else {
@@ -2965,26 +2957,59 @@ export function attach(
           }
           previousVirtualInstance = null;
         }
+
         // We've reached the end of the virtual levels, but not beyond,
         // and now continue with the regular fiber.
+
+        // Do a fast pass over the remaining children to find the previous instance.
+        // TODO: This doesn't have the best O(n) for a large set of children that are
+        // reordered. Consider using a temporary map if it's not the very next one.
+        let prevChild;
         if (prevChildAtSameIndex === nextChild) {
           // This set is unchanged. We're just going through it to place all the
           // children again.
-          if (
-            updateFiberRecursively(
-              nextChild,
-              nextChild,
-              traceNearestHostComponentUpdate,
-            )
-          ) {
-            throw new Error('Updating the same fiber should not cause reorder');
+          prevChild = nextChild;
+        } else {
+          // We don't actually need to rely on the alternate here. We could also
+          // reconcile against stateNode, key or whatever. Doesn't have to be same
+          // Fiber pair.
+          prevChild = nextChild.alternate;
+        }
+        let previousSiblingOfExistingInstance = null;
+        let existingInstance = null;
+        if (prevChild !== null) {
+          existingInstance = remainingReconcilingChildren;
+          while (existingInstance !== null) {
+            if (existingInstance.data === prevChild) {
+              break;
+            }
+            previousSiblingOfExistingInstance = existingInstance;
+            existingInstance = existingInstance.nextSibling;
           }
-        } else if (nextChild.alternate) {
-          const prevChild = nextChild.alternate;
+        }
+        if (existingInstance !== null) {
+          // Common case. Match in the same parent.
+          const fiberInstance: FiberInstance = (existingInstance: any); // Only matches if it's a Fiber.
+
+          // We keep track if the order of the children matches the previous order.
+          // They are always different referentially, but if the instances line up
+          // conceptually we'll want to know that.
+          if (prevChild !== prevChildAtSameIndex) {
+            shouldResetChildren = true;
+          }
+
+          // Register the new alternate in case it's not already in.
+          fiberToFiberInstanceMap.set(nextChild, fiberInstance);
+
+          // Update the Fiber so we that we always keep the current Fiber on the data.
+          fiberInstance.data = nextChild;
+          moveChild(fiberInstance, previousSiblingOfExistingInstance);
+
           if (
             updateFiberRecursively(
+              fiberInstance,
               nextChild,
-              prevChild,
+              (prevChild: any),
               traceNearestHostComponentUpdate,
             )
           ) {
@@ -2993,14 +3018,32 @@ export function attach(
             // propagate the need to reset child order upwards to this Fiber.
             shouldResetChildren = true;
           }
-          // However we also keep track if the order of the children matches
-          // the previous order. They are always different referentially, but
-          // if the instances line up conceptually we'll want to know that.
-          if (prevChild !== prevChildAtSameIndex) {
+        } else if (prevChild !== null && shouldFilterFiber(nextChild)) {
+          // If this Fiber should be filtered, we need to still update its children.
+          // This relies on an alternate since we don't have an Instance with the previous
+          // child on it. Ideally, the reconciliation wouldn't need previous Fibers that
+          // are filtered from the tree.
+          if (
+            updateFiberRecursively(
+              null,
+              nextChild,
+              prevChild,
+              traceNearestHostComponentUpdate,
+            )
+          ) {
             shouldResetChildren = true;
           }
         } else {
+          // It's possible for a FiberInstance to be reparented when virtual parents
+          // get their sequence split or change structure with the same render result.
+          // In this case we unmount the and remount the FiberInstances.
+          // This might cause us to lose the selection but it's an edge case.
+
+          // We let the previous instance remain in the "remaining queue" it is
+          // in to be deleted at the end since it'll have no match.
+
           mountFiberRecursively(nextChild, traceNearestHostComponentUpdate);
+          // Need to mark the parent set to remount the new instance.
           shouldResetChildren = true;
         }
       }
@@ -3059,6 +3102,7 @@ export function attach(
 
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
   function updateFiberRecursively(
+    fiberInstance: null | FiberInstance, // null if this should be filtered
     nextFiber: Fiber,
     prevFiber: Fiber,
     traceNearestHostComponentUpdate: boolean,
@@ -3092,34 +3136,10 @@ export function attach(
       }
     }
 
-    let fiberInstance: null | FiberInstance = null;
-    const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
-    if (shouldIncludeInTree) {
-      const entry = fiberToFiberInstanceMap.get(prevFiber);
-      if (entry !== undefined && entry.parent === reconcilingParent) {
-        // Common case. Match in the same parent.
-        fiberInstance = entry;
-        // Register the new alternate in case it's not already in.
-        fiberToFiberInstanceMap.set(nextFiber, fiberInstance);
-
-        // Update the Fiber so we that we always keep the current Fiber on the data.
-        fiberInstance.data = nextFiber;
-        moveChild(fiberInstance);
-      } else {
-        // It's possible for a FiberInstance to be reparented when virtual parents
-        // get their sequence split or change structure with the same render result.
-        // In this case we unmount the and remount the FiberInstances.
-        // This might cause us to lose the selection but it's an edge case.
-
-        // We let the previous instance remain in the "remaining queue" it is
-        // in to be deleted at the end since it'll have no match.
-
-        mountFiberRecursively(nextFiber, traceNearestHostComponentUpdate);
-
-        // Need to mark the parent set to remount the new instance.
-        return true;
-      }
-
+    const stashedParent = reconcilingParent;
+    const stashedPrevious = previouslyReconciledSibling;
+    const stashedRemaining = remainingReconcilingChildren;
+    if (fiberInstance !== null) {
       if (
         mostRecentlyInspectedElement !== null &&
         mostRecentlyInspectedElement.id === fiberInstance.id &&
@@ -3129,12 +3149,6 @@ export function attach(
         // If it is inspected again, it may need to be re-run to obtain updated hooks values.
         hasElementUpdatedSinceLastInspected = true;
       }
-    }
-
-    const stashedParent = reconcilingParent;
-    const stashedPrevious = previouslyReconciledSibling;
-    const stashedRemaining = remainingReconcilingChildren;
-    if (fiberInstance !== null) {
       // Push a new DevTools instance parent while reconciling this subtree.
       reconcilingParent = fiberInstance;
       previouslyReconciledSibling = null;
@@ -3189,7 +3203,7 @@ export function attach(
         if (
           nextFallbackChildSet != null &&
           prevFallbackChildSet != null &&
-          updateFiberRecursively(
+          updateChildrenRecursively(
             nextFallbackChildSet,
             prevFallbackChildSet,
             traceNearestHostComponentUpdate,
@@ -3284,10 +3298,8 @@ export function attach(
       if (shouldResetChildren) {
         // We need to crawl the subtree for closest non-filtered Fibers
         // so that we can display them in a flat children set.
-        if (shouldIncludeInTree) {
-          if (reconcilingParent !== null) {
-            recordResetChildren(reconcilingParent);
-          }
+        if (fiberInstance !== null) {
+          recordResetChildren(fiberInstance);
           // We've handled the child order change for this Fiber.
           // Since it's included, there's no need to invalidate parent child order.
           return false;
@@ -3299,7 +3311,7 @@ export function attach(
         return false;
       }
     } finally {
-      if (shouldIncludeInTree) {
+      if (fiberInstance !== null) {
         unmountRemainingChildren();
         reconcilingParent = stashedParent;
         previouslyReconciledSibling = stashedPrevious;
@@ -3489,7 +3501,7 @@ export function attach(
         mountFiberRecursively(current, false);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
-        updateFiberRecursively(current, alternate, false);
+        updateFiberRecursively(rootInstance, current, alternate, false);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         removeRootPseudoKey(currentRootID);
