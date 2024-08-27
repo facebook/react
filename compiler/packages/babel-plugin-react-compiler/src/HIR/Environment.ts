@@ -224,6 +224,14 @@ const EnvironmentConfigSchema = z.object({
 
   enableReactiveScopesInHIR: z.boolean().default(true),
 
+  /**
+   * Enables inference of optional dependency chains. Without this flag
+   * a property chain such as `props?.items?.foo` will infer as a dep on
+   * just `props`. With this flag enabled, we'll infer that full path as
+   * the dependency.
+   */
+  enableOptionalDependencies: z.boolean().default(false),
+
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
    * When disabled, the component is assumed to follow the rules (though the Babel plugin looks

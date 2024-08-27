@@ -6,6 +6,7 @@
  */
 
 import {CompilerError} from '../CompilerError';
+import {Environment} from '../HIR';
 import {
   areEqualPaths,
   BlockId,
@@ -66,11 +67,7 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
       });
     }
   }
-  visitReactiveFunction(
-    fn,
-    new PropagationVisitor(fn.env.config.enableTreatFunctionDepsAsConditional),
-    context,
-  );
+  visitReactiveFunction(fn, new PropagationVisitor(fn.env), context);
 }
 
 type TemporariesUsedOutsideDefiningScope = {
@@ -678,12 +675,11 @@ class Context {
 }
 
 class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
-  enableTreatFunctionDepsAsConditional = false;
+  env: Environment;
 
-  constructor(enableTreatFunctionDepsAsConditional: boolean) {
+  constructor(env: Environment) {
     super();
-    this.enableTreatFunctionDepsAsConditional =
-      enableTreatFunctionDepsAsConditional;
+    this.env = env;
   }
 
   override visitScope(scope: ReactiveScopeBlock, context: Context): void {
@@ -896,7 +892,11 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
      * will record that optional chain as a dependency (since we know it's about
      * to be referenced via its lvalue which is non-null).
      */
-    if (lvalue !== null && value.optional) {
+    if (
+      lvalue !== null &&
+      value.optional &&
+      this.env.config.enableOptionalDependencies
+    ) {
       const inner = this.extractOptionalProperty(context, value, lvalue);
       if (inner !== null) {
         context.visitProperty(inner.object, inner.property, inner.optional);
@@ -961,30 +961,6 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         break;
       }
       case 'SequenceExpression': {
-        /**
-         * Sequence
-         *   <lvalue> = Sequence <-- we're here
-         *     <lvalue> = ...
-         *     LoadLocal <lvalue>
-         */
-        if (
-          lvalue !== null &&
-          value.instructions.length === 1 &&
-          value.value.kind === 'LoadLocal' &&
-          value.value.place.identifier.id === lvalue.identifier.id &&
-          value.instructions[0].lvalue !== null &&
-          value.instructions[0].lvalue.identifier.id ===
-            value.value.place.identifier.id
-        ) {
-          this.visitInstructionValue(
-            context,
-            value.instructions[0].id,
-            value.instructions[0].value,
-            lvalue,
-          );
-          break;
-        }
-
         for (const instr of value.instructions) {
           this.visitInstruction(instr, context);
         }
@@ -992,7 +968,7 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         break;
       }
       case 'FunctionExpression': {
-        if (this.enableTreatFunctionDepsAsConditional) {
+        if (this.env.config.enableTreatFunctionDepsAsConditional) {
           context.enterConditional(() => {
             for (const operand of eachInstructionValueOperand(value)) {
               context.visitOperand(operand);
