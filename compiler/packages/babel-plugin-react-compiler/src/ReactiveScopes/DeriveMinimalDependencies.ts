@@ -61,13 +61,14 @@ export class ReactiveScopeDependencyTree {
     const {path} = dep;
     let currNode = this.#getOrCreateRoot(dep.identifier);
 
-    const accessType = inConditional
-      ? PropertyAccessType.ConditionalAccess
-      : PropertyAccessType.UnconditionalAccess;
-
     for (const item of path) {
       // all properties read 'on the way' to a dependency are marked as 'access'
       let currChild = getOrMakeProperty(currNode, item.property);
+      const accessType = inConditional
+        ? PropertyAccessType.ConditionalAccess
+        : item.optional
+          ? PropertyAccessType.OptionalAccess
+          : PropertyAccessType.UnconditionalAccess;
       currChild.accessType = merge(currChild.accessType, accessType);
       currNode = currChild;
     }
@@ -78,7 +79,9 @@ export class ReactiveScopeDependencyTree {
      */
     const depType = inConditional
       ? PropertyAccessType.ConditionalDependency
-      : PropertyAccessType.UnconditionalDependency;
+      : isOptional(currNode.accessType)
+        ? PropertyAccessType.OptionalDependency
+        : PropertyAccessType.UnconditionalDependency;
 
     currNode.accessType = merge(currNode.accessType, depType);
   }
@@ -89,7 +92,9 @@ export class ReactiveScopeDependencyTree {
       const deps = deriveMinimalDependenciesInSubtree(rootNode);
       CompilerError.invariant(
         deps.every(
-          dep => dep.accessType === PropertyAccessType.UnconditionalDependency,
+          dep =>
+            dep.accessType === PropertyAccessType.UnconditionalDependency ||
+            dep.accessType == PropertyAccessType.OptionalDependency,
         ),
         {
           reason:
@@ -218,8 +223,10 @@ export class ReactiveScopeDependencyTree {
  */
 enum PropertyAccessType {
   ConditionalAccess = 'ConditionalAccess',
+  OptionalAccess = 'OptionalAccess',
   UnconditionalAccess = 'UnconditionalAccess',
   ConditionalDependency = 'ConditionalDependency',
+  OptionalDependency = 'OptionalDependency',
   UnconditionalDependency = 'UnconditionalDependency',
 }
 
@@ -233,7 +240,14 @@ function isUnconditional(access: PropertyAccessType): boolean {
 function isDependency(access: PropertyAccessType): boolean {
   return (
     access === PropertyAccessType.ConditionalDependency ||
+    access === PropertyAccessType.OptionalDependency ||
     access === PropertyAccessType.UnconditionalDependency
+  );
+}
+function isOptional(access: PropertyAccessType): boolean {
+  return (
+    access === PropertyAccessType.OptionalAccess ||
+    access === PropertyAccessType.OptionalDependency
   );
 }
 
@@ -244,6 +258,7 @@ function merge(
   const resultIsUnconditional =
     isUnconditional(access1) || isUnconditional(access2);
   const resultIsDependency = isDependency(access1) || isDependency(access2);
+  const resultIsOptional = isOptional(access1) || isOptional(access2);
 
   /*
    * Straightforward merge.
@@ -258,6 +273,12 @@ function merge(
       return PropertyAccessType.UnconditionalDependency;
     } else {
       return PropertyAccessType.UnconditionalAccess;
+    }
+  } else if (resultIsOptional) {
+    if (resultIsDependency) {
+      return PropertyAccessType.OptionalDependency;
+    } else {
+      return PropertyAccessType.OptionalAccess;
     }
   } else {
     if (resultIsDependency) {
@@ -278,17 +299,23 @@ type ReduceResultNode = {
   accessType: PropertyAccessType;
 };
 
-const promoteUncondResult = [
+const promoteUncondResult: Array<ReduceResultNode> = [
   {
     relativePath: [],
     accessType: PropertyAccessType.UnconditionalDependency,
   },
 ];
 
-const promoteCondResult = [
+const promoteCondResult: Array<ReduceResultNode> = [
   {
     relativePath: [],
     accessType: PropertyAccessType.ConditionalDependency,
+  },
+];
+const promoteOptionalResult: Array<ReduceResultNode> = [
+  {
+    relativePath: [],
+    accessType: PropertyAccessType.OptionalDependency,
   },
 ];
 
@@ -306,7 +333,7 @@ function deriveMinimalDependenciesInSubtree(
       ({relativePath, accessType}) => {
         return {
           relativePath: [
-            {property: childName, optional: false},
+            {property: childName, optional: isOptional(accessType)},
             ...relativePath,
           ],
           accessType,
@@ -324,7 +351,8 @@ function deriveMinimalDependenciesInSubtree(
       if (
         results.every(
           ({accessType}) =>
-            accessType === PropertyAccessType.UnconditionalDependency,
+            accessType === PropertyAccessType.UnconditionalDependency ||
+            accessType === PropertyAccessType.OptionalDependency,
         )
       ) {
         // all children are unconditional dependencies, return them to preserve granularity
@@ -335,6 +363,27 @@ function deriveMinimalDependenciesInSubtree(
          * unconditional dependency
          */
         return promoteUncondResult;
+      }
+    }
+    case PropertyAccessType.OptionalDependency: {
+      return promoteOptionalResult;
+    }
+    case PropertyAccessType.OptionalAccess: {
+      if (
+        results.every(
+          ({accessType}) =>
+            accessType === PropertyAccessType.UnconditionalDependency ||
+            accessType === PropertyAccessType.OptionalDependency,
+        )
+      ) {
+        // all children are unconditional dependencies, return them to preserve granularity
+        return results;
+      } else {
+        /*
+         * at least one child is accessed conditionally, so this node needs to be promoted to
+         * unconditional dependency
+         */
+        return promoteOptionalResult;
       }
     }
     case PropertyAccessType.ConditionalAccess:

@@ -37,7 +37,7 @@ import { identity } from "shared-runtime";
 function useCondDepInDirectIfElse(props, cond) {
   const $ = _c(3);
   let x;
-  if ($[0] !== cond || $[1] !== props.a.b) {
+  if ($[0] !== cond || $[1] !== props) {
     x = {};
     if (identity(cond)) {
       x.b = props.a.b;
@@ -45,7 +45,7 @@ function useCondDepInDirectIfElse(props, cond) {
       x.c = props.a.b;
     }
     $[0] = cond;
-    $[1] = props.a.b;
+    $[1] = props;
     $[2] = x;
   } else {
     x = $[2];
