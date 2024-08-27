@@ -8,7 +8,6 @@
 import {CompilerError} from '..';
 import {
   DeclarationId,
-  DependencyPath,
   InstructionId,
   InstructionKind,
   Place,

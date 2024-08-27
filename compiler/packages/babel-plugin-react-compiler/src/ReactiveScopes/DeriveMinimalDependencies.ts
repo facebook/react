@@ -9,7 +9,6 @@ import {CompilerError} from '../CompilerError';
 import {DependencyPath, Identifier, ReactiveScopeDependency} from '../HIR';
 import {printIdentifier} from '../HIR/PrintHIR';
 import {assertExhaustive} from '../Utils/utils';
-import {printDependency} from './PrintReactiveFunction';
 
 /*
  * We need to understand optional member expressions only when determining

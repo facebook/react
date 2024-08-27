@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import prettyFormat from 'pretty-format';
 import {CompilerError} from '../CompilerError';
 import {
   areEqualPaths,
@@ -18,7 +17,6 @@ import {
   isObjectMethodType,
   isRefValueType,
   isUseRefType,
-  LoadLocal,
   makeInstructionId,
   Place,
   PrunedReactiveScopeBlock,
@@ -32,7 +30,6 @@ import {
   ReactiveValue,
   ScopeId,
 } from '../HIR/HIR';
-import {printIdentifier, printPlace} from '../HIR/PrintHIR';
 import {eachInstructionValueOperand, eachPatternOperand} from '../HIR/visitors';
 import {empty, Stack} from '../Utils/Stack';
 import {assertExhaustive, Iterable_some} from '../Utils/utils';
@@ -40,7 +37,6 @@ import {
   ReactiveScopeDependencyTree,
   ReactiveScopePropertyDependency,
 } from './DeriveMinimalDependencies';
-import {printDependency, printReactiveFunction} from './PrintReactiveFunction';
 import {ReactiveFunctionVisitor, visitReactiveFunction} from './visitors';
 
 /*
@@ -307,7 +303,6 @@ class Context {
   #properties: Map<Identifier, ReactiveScopePropertyDependency> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
   #inConditionalWithinScope: boolean = false;
-  inOptional: boolean = false;
   /*
    * Reactive dependencies used unconditionally in the current conditional.
    * Composed of dependencies:
@@ -756,14 +751,160 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     });
   }
 
+  extractOptionalProperty(
+    context: Context,
+    optionalValue: ReactiveOptionalCallValue,
+    lvalue: Place,
+  ): {
+    lvalue: Place;
+    object: Place;
+    property: string;
+    optional: boolean;
+  } | null {
+    const sequence = optionalValue.value;
+    CompilerError.invariant(sequence.kind === 'SequenceExpression', {
+      reason: 'Expected OptionalExpression value to be a SequenceExpression',
+      description: `Found a \`${sequence.kind}\``,
+      loc: sequence.loc,
+    });
+    /**
+     * Base case: inner `<variable> "." or "?."" <property>`
+     *```
+     * <lvalue> = OptionalExpression optional=true (`optionalValue` is here)
+     *  Sequence (`sequence` is here)
+     *    t0 = LoadLocal <variable>
+     *    Sequence
+     *      t1 = PropertyLoad t0 . <property>
+     *      LoadLocal t1
+     * ```
+     */
+    if (
+      sequence.instructions.length === 1 &&
+      sequence.instructions[0].value.kind === 'LoadLocal' &&
+      sequence.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.place.identifier.name !== null &&
+      !context.isUsedOutsideDeclaringScope(sequence.instructions[0].lvalue) &&
+      sequence.value.kind === 'SequenceExpression' &&
+      sequence.value.instructions.length === 1 &&
+      sequence.value.instructions[0].value.kind === 'PropertyLoad' &&
+      sequence.value.instructions[0].value.object.identifier.id ===
+        sequence.instructions[0].lvalue.identifier.id &&
+      sequence.value.instructions[0].lvalue !== null &&
+      sequence.value.value.kind === 'LoadLocal' &&
+      sequence.value.value.place.identifier.id ===
+        sequence.value.instructions[0].lvalue.identifier.id
+    ) {
+      context.declareTemporary(
+        sequence.instructions[0].lvalue,
+        sequence.instructions[0].value.place,
+      );
+      const propertyLoad = sequence.value.instructions[0].value;
+      return {
+        lvalue,
+        object: propertyLoad.object,
+        property: propertyLoad.property,
+        optional: optionalValue.optional,
+      };
+    }
+    /**
+     * Composed case: `<base-case> "." or "?." <property>`
+     *
+     * This case is convoluted, note how `t0` appears as an lvalue *twice*
+     * and then is an operand of an intermediate LoadLocal and then the
+     * object of the final PropertyLoad:
+     *
+     * ```
+     * <lvalue> = OptionalExpression optional=false (`optionalValue` is here)
+     *  Sequence (`sequence` is here)
+     *      t0 = Sequence
+     *        t0 =
+     *           <nested>
+     *        LoadLocal t0
+     *      Sequence
+     *        t1 = PropertyLoad t0. <property>
+     *        LoadLocal t1
+     * ```
+     */
+    if (
+      sequence.instructions.length === 1 &&
+      sequence.instructions[0].value.kind === 'SequenceExpression' &&
+      sequence.instructions[0].value.instructions.length === 1 &&
+      sequence.instructions[0].value.instructions[0].lvalue !== null &&
+      sequence.instructions[0].value.instructions[0].value.kind ===
+        'OptionalExpression' &&
+      sequence.instructions[0].value.value.kind === 'LoadLocal' &&
+      sequence.instructions[0].value.value.place.identifier.id ===
+        sequence.instructions[0].value.instructions[0].lvalue.identifier.id &&
+      sequence.value.kind === 'SequenceExpression' &&
+      sequence.value.instructions.length === 1 &&
+      sequence.value.instructions[0].lvalue !== null &&
+      sequence.value.instructions[0].value.kind === 'PropertyLoad' &&
+      sequence.value.instructions[0].value.object.identifier.id ===
+        sequence.instructions[0].value.value.place.identifier.id &&
+      sequence.value.value.kind === 'LoadLocal' &&
+      sequence.value.value.place.identifier.id ===
+        sequence.value.instructions[0].lvalue.identifier.id
+    ) {
+      const {lvalue: innerLvalue, value: innerOptional} =
+        sequence.instructions[0].value.instructions[0];
+      const innerProperty = this.extractOptionalProperty(
+        context,
+        innerOptional,
+        innerLvalue,
+      );
+      if (innerProperty === null) {
+        return null;
+      }
+      context.declareProperty(
+        innerProperty.lvalue,
+        innerProperty.object,
+        innerProperty.property,
+        innerProperty.optional,
+      );
+      const propertyLoad = sequence.value.instructions[0].value;
+      return {
+        lvalue,
+        object: propertyLoad.object,
+        property: propertyLoad.property,
+        optional: optionalValue.optional,
+      };
+    }
+    return null;
+  }
+
   visitOptionalExpression(
     context: Context,
     id: InstructionId,
     value: ReactiveOptionalCallValue,
     lvalue: Place | null,
   ): void {
-    const wasWithinOptional = context.inOptional;
-    const isOptional = wasWithinOptional || value.optional;
+    /**
+     * If this is the first optional=true optional in a recursive OptionalExpression
+     * subtree, we check to see if the subtree is of the form:
+     * ```
+     * NestedOptional =
+     *   `<variable> . / ?. <property>`
+     *   `<nested-optional> . / ?. <property>`
+     * ```
+     *
+     * Ie strictly a chain like `foo?.bar?.baz` or `a?.b.c`. If the subtree contains
+     * any other types of expressions - for example `foo?.[makeKey(a)]` - then this
+     * will return null and we'll go to the default handling below.
+     *
+     * If the tree does match the NestedOptional shape, then we'll have recorded
+     * a sequence of declareProperty calls, and the final visitProperty call here
+     * will record that optional chain as a dependency (since we know it's about
+     * to be referenced via its lvalue which is non-null).
+     */
+    if (lvalue !== null && value.optional) {
+      const inner = this.extractOptionalProperty(context, value, lvalue);
+      if (inner !== null) {
+        context.visitProperty(inner.object, inner.property, inner.optional);
+        return;
+      }
+    }
+
+    // Otherwise we treat everything after the optional as conditional
     const inner = value.value;
     /*
      * OptionalExpression value is a SequenceExpression where the instructions
@@ -774,55 +915,15 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       reason: 'Expected OptionalExpression value to be a SequenceExpression',
       description: `Found a \`${value.kind}\``,
       loc: value.loc,
+      suggestions: null,
     });
     // Instructions are the unconditionally executed portion before the `?`
-    context.inOptional = isOptional;
     for (const instr of inner.instructions) {
       this.visitInstruction(instr, context);
     }
-    context.inOptional = wasWithinOptional;
-    const innerValue = inner.value;
-    if (
-      innerValue.kind !== 'SequenceExpression' ||
-      innerValue.value.kind !== 'LoadLocal'
-    ) {
-      CompilerError.invariant(false, {
-        reason:
-          'Expected OptionalExpression inner value to be a SequenceExpression',
-        description: `Found a \`${innerValue.kind}\``,
-        loc: innerValue.loc,
-      });
-    }
-    if (
-      isOptional &&
-      innerValue.instructions.length === 1 &&
-      innerValue.instructions[0].value.kind === 'PropertyLoad' &&
-      innerValue.instructions[0].lvalue !== null &&
-      innerValue.instructions[0].lvalue.identifier.id ===
-        innerValue.value.place.identifier.id
-    ) {
-      const propertyLoad = innerValue.instructions[0].value;
-      if (lvalue !== null && !context.isUsedOutsideDeclaringScope(lvalue)) {
-        context.declareProperty(
-          lvalue,
-          propertyLoad.object,
-          propertyLoad.property,
-          value.optional,
-        );
-      } else {
-        context.visitProperty(
-          propertyLoad.object,
-          propertyLoad.property,
-          value.optional,
-        );
-      }
-      if (isOptional && !wasWithinOptional && lvalue !== null) {
-        context.visitOperand(lvalue);
-      }
-      return;
-    }
+    // The final value is the conditional portion following the `?`
     context.enterConditional(() => {
-      this.visitReactiveValue(context, id, innerValue, lvalue);
+      this.visitReactiveValue(context, id, inner.value, lvalue);
     });
   }
 

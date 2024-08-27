@@ -35,9 +35,9 @@ function Component(props) {
     props.item,
   );
   let t0;
-  if ($[0] !== item.items) {
+  if ($[0] !== item) {
     t0 = item.items?.map(_temp) ?? [];
-    $[0] = item.items;
+    $[0] = item;
     $[1] = t0;
   } else {
     t0 = $[1];
