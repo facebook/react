@@ -6014,6 +6014,53 @@ __DEV__ &&
           void 0 !== boundary &&
             ((boundary.length = 4), (boundary[2] = []), (boundary[3] = null))));
     }
+    function spawnNewSuspendedReplayTask(request, task, thenableState) {
+      return createReplayTask(
+        request,
+        thenableState,
+        task.replay,
+        task.node,
+        task.childIndex,
+        task.blockedBoundary,
+        task.hoistableState,
+        task.abortSet,
+        task.keyPath,
+        task.formatContext,
+        task.context,
+        task.treeContext,
+        task.componentStack,
+        task.isFallback
+      );
+    }
+    function spawnNewSuspendedRenderTask(request, task, thenableState) {
+      var segment = task.blockedSegment,
+        newSegment = createPendingSegment(
+          request,
+          segment.chunks.length,
+          null,
+          task.formatContext,
+          segment.lastPushedText,
+          !0
+        );
+      segment.children.push(newSegment);
+      segment.lastPushedText = !1;
+      return createRenderTask(
+        request,
+        thenableState,
+        task.node,
+        task.childIndex,
+        task.blockedBoundary,
+        newSegment,
+        task.hoistableState,
+        task.abortSet,
+        task.keyPath,
+        task.formatContext,
+        task.context,
+        task.treeContext,
+        task.componentStack,
+        task.isFallback
+      );
+    }
     function renderNode(request, task, node, childIndex) {
       var previousFormatContext = task.formatContext,
         previousContext = task.context,
@@ -6031,35 +6078,36 @@ __DEV__ &&
               thrownValue === SuspenseException
                 ? getSuspendedThenable()
                 : thrownValue),
-            "object" === typeof node &&
-              null !== node &&
-              "function" === typeof node.then)
+            "object" === typeof node && null !== node)
           ) {
-            childIndex = getThenableStateAfterSuspending();
-            request = createReplayTask(
-              request,
-              childIndex,
-              task.replay,
-              task.node,
-              task.childIndex,
-              task.blockedBoundary,
-              task.hoistableState,
-              task.abortSet,
-              task.keyPath,
-              task.formatContext,
-              task.context,
-              task.treeContext,
-              task.componentStack,
-              task.isFallback
-            ).ping;
-            node.then(request, request);
-            task.formatContext = previousFormatContext;
-            task.context = previousContext;
-            task.keyPath = previousKeyPath;
-            task.treeContext = previousTreeContext;
-            task.componentStack = previousComponentStack;
-            switchContext(previousContext);
-            return;
+            if ("function" === typeof node.then) {
+              childIndex = getThenableStateAfterSuspending();
+              request = spawnNewSuspendedReplayTask(
+                request,
+                task,
+                childIndex
+              ).ping;
+              node.then(request, request);
+              task.formatContext = previousFormatContext;
+              task.context = previousContext;
+              task.keyPath = previousKeyPath;
+              task.treeContext = previousTreeContext;
+              task.componentStack = previousComponentStack;
+              switchContext(previousContext);
+              return;
+            }
+            if ("Maximum call stack size exceeded" === node.message) {
+              node = getThenableStateAfterSuspending();
+              node = spawnNewSuspendedReplayTask(request, task, node);
+              request.pingedTasks.push(node);
+              task.formatContext = previousFormatContext;
+              task.context = previousContext;
+              task.keyPath = previousKeyPath;
+              task.treeContext = previousTreeContext;
+              task.componentStack = previousComponentStack;
+              switchContext(previousContext);
+              return;
+            }
           }
         }
       else {
@@ -6076,46 +6124,36 @@ __DEV__ &&
               thrownValue$4 === SuspenseException
                 ? getSuspendedThenable()
                 : thrownValue$4),
-            "object" === typeof node &&
-              null !== node &&
-              "function" === typeof node.then)
+            "object" === typeof node && null !== node)
           ) {
-            childIndex = getThenableStateAfterSuspending();
-            segment = task.blockedSegment;
-            childrenLength = createPendingSegment(
-              request,
-              segment.chunks.length,
-              null,
-              task.formatContext,
-              segment.lastPushedText,
-              !0
-            );
-            segment.children.push(childrenLength);
-            segment.lastPushedText = !1;
-            request = createRenderTask(
-              request,
-              childIndex,
-              task.node,
-              task.childIndex,
-              task.blockedBoundary,
-              childrenLength,
-              task.hoistableState,
-              task.abortSet,
-              task.keyPath,
-              task.formatContext,
-              task.context,
-              task.treeContext,
-              task.componentStack,
-              task.isFallback
-            ).ping;
-            node.then(request, request);
-            task.formatContext = previousFormatContext;
-            task.context = previousContext;
-            task.keyPath = previousKeyPath;
-            task.treeContext = previousTreeContext;
-            task.componentStack = previousComponentStack;
-            switchContext(previousContext);
-            return;
+            if ("function" === typeof node.then) {
+              childIndex = getThenableStateAfterSuspending();
+              request = spawnNewSuspendedRenderTask(
+                request,
+                task,
+                childIndex
+              ).ping;
+              node.then(request, request);
+              task.formatContext = previousFormatContext;
+              task.context = previousContext;
+              task.keyPath = previousKeyPath;
+              task.treeContext = previousTreeContext;
+              task.componentStack = previousComponentStack;
+              switchContext(previousContext);
+              return;
+            }
+            if ("Maximum call stack size exceeded" === node.message) {
+              node = getThenableStateAfterSuspending();
+              node = spawnNewSuspendedRenderTask(request, task, node);
+              request.pingedTasks.push(node);
+              task.formatContext = previousFormatContext;
+              task.context = previousContext;
+              task.keyPath = previousKeyPath;
+              task.treeContext = previousTreeContext;
+              task.componentStack = previousComponentStack;
+              switchContext(previousContext);
+              return;
+            }
           }
         }
       }
@@ -8767,5 +8805,5 @@ __DEV__ &&
         'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
       );
     };
-    exports.version = "19.0.0-www-modern-dcae56f8-20240826";
+    exports.version = "19.0.0-www-modern-96aca5f4-20240827";
   })();
